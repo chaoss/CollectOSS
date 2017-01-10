@@ -33,7 +33,7 @@ setup(
 
     keywords='github api data',
 
-    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    py_modules=['cli', 'ghdata'],
 
     install_requires=['Click', 'PyGithub'],
 
@@ -44,7 +44,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'ghdata=cli:main',
+            'ghdata=cli:cli',
         ],
     },
 )
