@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ghdata',
-    version='0.1.0',
+    version='0.1.1',
     description='Library/CLI that gathers data related to GitHub repos',
     long_description=long_description,
     url='https://github.com/OSSHealth/github-data-cli',
@@ -35,7 +35,7 @@ setup(
 
     py_modules=['cli', 'ghdata'],
 
-    install_requires=['Click', 'PyGithub'],
+    install_requires=['Click', 'PyGithub', 'mysql-python', 'records', 'requests', 'python-dateutil', 'wget'],
 
     extras_require={
         'dev': ['check-manifest'],
