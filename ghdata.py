@@ -1,35 +1,28 @@
-import datetime
-from github import Github, GithubException 
-import json
-import csv
+import sqlalchemy as s
 import records
-import requests
 
 class GHData:
-    def __init__(self, username, password=None, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass=None, db_name='ghtorrent', apionly=False):
-        try:
-            self.github_api = Github(username, password)
-        except e:
-            if e is GithubException.BadCredentialsException:
-                print('Bad credentials.')
-    
-    # Concatenates the two list and returns it in the requested format
-    def concat(self, GHAPIList=None, GHTorrentList=None):
-        result = []
-        if (GHAPIList is not None):
-            result += GHAPIList
-        if (GHTorrentList is not None and self.apionly == False):
-            result += GHTorrentList
-
-        return result
+    def __init__(self, dbstr):
+        self.db = records.Database(dbstr)
 
 
-    # Gets information about the current user
+    def __generate_predicate_dates(table, start=None, end=None):
+        if (start and end):
+            return "date(created_at) >= {} AND created_at <= {}".format(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))
+        elif (start): 
+            return "date(created_at) >= {}".format(start.strftime('%Y-%m-%d'))
+        elif (end):
+            return "date(created_at) <= {}".format(end.strftime('%Y-%m-%d'))
+
+
+    # Gets information about users
     def user(self, username=None, start=None, end=None):
-        if (username and len(username)):
-            user = self.github_api.get_user(username)
-        else:
-            user = self.github_api.get_user()
-
-        GHAPIList = [user.raw_data]
-        return concat(GHAPIList=GHAPIList)
+        meta = s.MetaData()
+        users = s.Table('users', meta, autoload=True, autoload_with=self.db.db)
+        q = s.select([users])
+        if (start or end):
+            q = q.where(s.sql.text(self.__generate_predicate_dates(start, end)))
+        if (username):
+            q = q.where(s.sql.text('login = :username').bindparams(s.bindparam('username')))
+            return self.db.query(str(q), username=username)
+        return self.db.query(str(q))

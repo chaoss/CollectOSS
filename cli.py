@@ -3,73 +3,81 @@ import wget
 import os
 import sys
 import datetime
-import json
-import csv
-from dateutil import parser
+import ConfigParser
+from dateutil import parser, tz
 from ghdata import GHData
 
 # @todo: Support saving config as a dotfile
 class GHDataClient:
     """Stores configuration of the CLI, which can be set using options at the command line"""
-    def __init__(self, token=None, username=None, password=None, file=None, dataformat=None, start=None, end=None, now=None):
-        if (token):
-            self.ghdata = GHData(token)
-        if (username and password):
-            self.ghdata = GHData(username, password)
+    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, dataformat=None, start=None, end=None):
+        self.dbstr = 'mysql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
+        self.ghdata = GHData(self.dbstr)
         self.file = file
         self.dataformat = dataformat
-        self.now = now
 
-        #Parse start time
-        print(start)
-        if (start == 'beginning'):
+        # Parse start time
+        if (start == 'earliest'):
             self.start = None
         elif (start != None):
             self.start = parser.parse(start, fuzzy=True)
+            self.start = self.start
         
-        #Parse end time
-        if (end == 'now'):
+        # Parse end time
+        if (end == 'latest'):
             self.end = None
         else:
             self.end = parser.parse(end, fuzzy=True)
 
-    def GHDataToText(self, aDict):
-        if (self.dataformat == 'json'):
-            self.output(json.dumps(GHObj))
 
-    def output(self, text):
+    def output(self, obj):
         # @todo: Support saving to file
-        text = self.GHDataToText(self.ghdata.user())
-        click.echo(text)
+        # @todo: Support all requests support
+        click.echo(obj.export('csv'))
 
-    def user(username):
-        self.output()
+    def user(self, username):
+        self.output(self.ghdata.user(username, self.start, self.end))
 
 
 
 # Globals
 client = None # Initalized in the base group function below
-
+# 
 # Flags and Initialization
 @click.group()
-@click.option('--token', help='GitHub personal access token')
-@click.option('--username', help='GitHub username (if not using tokens)')
-@click.option('--password', help='GitHub password (if not using tokens)')
-@click.option('--file', type=click.File('wb'), default=False, help='Output file')
-@click.option('--format', 'dataformat', default='csv', help='json, csv, or human')
-@click.option('--start', default='beginning', help='First date to get data from. Keyword \'beginning\' includes all avaliable historical data (default).')
-@click.option('--end', default='now', help='Last date to appear in the data dump. Keyword \'now\' includes realtime data from GitHub API (default).')
-@click.option('--now', default=False, is_flag=True, help='Ignore GHTorrent and only interact with the GitHub API. Overrides start/end.')
-def cli(token, username, password, file, dataformat, start, end, now):
+@click.option('--host', default='127.0.0.1', help='Database host (default: localhost)')
+@click.option('--port', default='3306', help='Database port (default: 3306)')
+@click.option('--db', default='ghtorrent', help='Database name (default: ghtorrent)')
+@click.option('--user', default='root', help='Database user (default: root)')
+@click.option('--password', default='root', help='Database pass (default: root)')
+@click.option('--file', type=click.File('wb'), default=sys.stdout, help='Output file')
+@click.option('--config', type=click.File('rb'), default='', help='Configuration file')
+@click.option('--format', 'dataformat', default='csv', help='csv (default), json, yaml, json, xls, xlsx, human')
+@click.option('--start', default='earliest', help='First date to get data from. Keyword \'earliest\' includes oldest data (default).')
+@click.option('--end', default='latest', help='Last date to get data from. Keyword \'latest\' includes newest data (default)' )
+def cli(host, port, db, user, password, file, config, dataformat, start, end):
     """Tool to gather data about GitHub repositories.
 
-    Export the environment variable GITHUB_TOKEN to avoid having to pass it each time.
-    To generate a personal access token, go here: https://github.com/settings/tokens/new
+    Requires the GHTorrent MySQL database (http://ghtorrent.org/).
+
+    To get an up to date copy:  https://github.com/OSSHealth/ghtorrent-sync
 
     To get help on subcommands, type the command with --help.
     """
+    # Read config file if passed
+    if (config):
+        parser = ConfigParser.ConfigParser()
+        parser.readfp(config)
+        host = parser.get('Database', 'host')
+        port = parser.get('Database', 'port')
+        user = parser.get('Database', 'user')
+        password = parser.get('Database', 'pass')
+        db = parser.get('Database', 'name')
+        dataformat = parser.get('Format', 'format')
+
     global client
-    client = GHDataClient(token, username, password, file, dataformat, start, end, now)
+    
+    client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, file=file, dataformat=dataformat, start=start, end=end)
 
 
 
@@ -84,7 +92,7 @@ def user(username):
 
 # Get information about repos, includes subcommands
 @cli.group()
-def repo(username):
+def repo():
     """Events for a given repository"""
     # @todo: All events related to a repo
     return
@@ -132,27 +140,25 @@ def releases(username):
     # @todo: Releases
     return
 
+# Generates a default config file
+@cli.command(name="create-default-config")
+@click.argument('username', default='')
+def create_default_config(username):
+    """Generates default .cfg file"""
+    config = ConfigParser.RawConfigParser()
+    config.add_section('Database')
+    config.set('Database', 'host', '127.0.0.1')
+    config.set('Database', 'port', '3306')
+    config.set('Database', 'user', 'root')
+    config.set('Database', 'pass', 'root')
+    config.set('Database', 'name', 'ghtorrent')
+    config.add_section('Format')
+    config.set('Format', 'format', 'csv')
+    # Writing our configuration file to 'example.cfg'
+    with open('default.cfg', 'wb') as configfile:
+        config.write(configfile)
+    click.echo('Default config saved to default.cfg')
 
-
-# Do
-@cli.command(name='download-dump')
-@click.option('--url', default='', help='URL of a specific dump')
-@click.confirmation_option(prompt='This will download a large database (>40GB compressed). Continue?')
-def getdump(url):
-    """Downloads the latest GHTorrent MySQL dump"""
-    if (url == ''):
-        url = 'https://ghtstorage.blob.core.windows.net/downloads/mysql-' + datetime.datetime.now().strftime('%Y-%m') + '-01.tar.gz'
-
-    print('Downloading...' + url)
-    wget.download(url)
-    
-    # @todo: Directly import into database
-    click.echo('Downloaded. See https://github.com/gousiosg/github-mirror/tree/master/sql for install instructions.')
-
-# Utility function to stop dangerous operations if user backs out
-def abort_if_false(ctx, param, value):
-    if not value:
-        ctx.abort()
 
 if __name__ == '__main__':
-    cli(auto_envvar_prefix='GITHUB') #Says that we want environment variables prefixed with GITHUB
+    cli(auto_envvar_prefix='GHDATA') #Says that we want environment variables prefixed with GHDATA
