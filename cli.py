@@ -1,9 +1,11 @@
 import click
-import wget
 import os
 import sys
 import datetime
-import ConfigParser
+if (sys.version_info > (3, 0)):
+    import configparser as configparser
+else:
+    import ConfigParser as configparser
 from dateutil import parser, tz
 from ghdata import GHData
 
@@ -11,7 +13,7 @@ from ghdata import GHData
 class GHDataClient:
     """Stores configuration of the CLI, which can be set using options at the command line"""
     def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, dataformat=None, start=None, end=None):
-        self.dbstr = 'mysql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
+        self.dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
         self.ghdata = GHData(self.dbstr)
         self.file = file
         self.dataformat = dataformat
@@ -51,7 +53,7 @@ client = None # Initalized in the base group function below
 @click.option('--user', default='root', help='Database user (default: root)')
 @click.option('--password', default='root', help='Database pass (default: root)')
 @click.option('--file', type=click.File('wb'), default=sys.stdout, help='Output file')
-@click.option('--config', type=click.File('rb'), default='', help='Configuration file')
+@click.option('--config', type=click.File('r'), default='', help='Configuration file')
 @click.option('--format', 'dataformat', default='csv', help='csv (default), json, yaml, json, xls, xlsx, human')
 @click.option('--start', default='earliest', help='First date to get data from. Keyword \'earliest\' includes oldest data (default).')
 @click.option('--end', default='latest', help='Last date to get data from. Keyword \'latest\' includes newest data (default)' )
@@ -66,7 +68,7 @@ def cli(host, port, db, user, password, file, config, dataformat, start, end):
     """
     # Read config file if passed
     if (config):
-        parser = ConfigParser.ConfigParser()
+        parser = configparser.ConfigParser()
         parser.readfp(config)
         host = parser.get('Database', 'host')
         port = parser.get('Database', 'port')
@@ -145,7 +147,7 @@ def releases(username):
 @click.argument('username', default='')
 def create_default_config(username):
     """Generates default .cfg file"""
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.add_section('Database')
     config.set('Database', 'host', '127.0.0.1')
     config.set('Database', 'port', '3306')

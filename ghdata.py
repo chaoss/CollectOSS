@@ -23,6 +23,6 @@ class GHData:
         if (start or end):
             q = q.where(s.sql.text(self.__generate_predicate_dates(start, end)))
         if (username):
-            q = q.where(s.sql.text('login = :username').bindparams(s.bindparam('username')))
+            q = q.where(s.sql.text('login IN (:username)').bindparams(s.bindparam('username')))
             return self.db.query(str(q), username=username)
         return self.db.query(str(q))
