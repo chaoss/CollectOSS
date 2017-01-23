@@ -9,16 +9,13 @@ GHData aims to provide an interface to data related to GitHub repositories. This
 
 GHData is under heavy development; expect frequent backwards-incompatible changes until a 1.x.x release!
 
-To install development version: `pip install --upgrade git+git://github.com/OSSHealth/ghdata.git`
-
-A MySQL installation is required. The GHTorrent database requires a large amount of disk space.
 
 License and Copyright
 ---------------------
 
 Copyright © 2017 University of Nebraska at Omaha and the University of Missouri
 
-GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Free Software Foundation. See the file LICENSE for more details.
+GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file LICENSE for more details.
 
 All associated documentation is licensed under the terms of the Creative Commons Attribution Share-Alike 4.0 license. See the file CC-BY-SA-4.0 for more details.
 
@@ -26,10 +23,10 @@ All associated documentation is licensed under the terms of the Creative Commons
 Dependencies
 ------------
 
-- Python 2.7.x
+- Python 3.4.x
 
 Optional:
-- PostgreSQL 8.x or later version (can be on a separate machine)
+- MySQL 5.x or later version (can be on a separate machine)
 
 Python libraries:
 - All Python dependencies are handled automatically by `pip`.
@@ -40,60 +37,25 @@ Installation
 
 ### Step 1 - Download and install
 
-[Grab the source tarball for the latest
-release](https://github.com/ttgurney/dosocs2/releases) and use `pip` to install
+[Grab the source tarball for the latest release](https://github.com/xxx) and use `pip` to install
 it as a package. Replace `0.x.x` with the latest release version number.
 
-I recommend doing this inside a Python
-[virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/), but it
-is not a requirement. If you are not inside a virtualenv you may have to run
-`pip` as root (not recommended!).
-
+We recommend doing this inside a Python [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/), but it
+is not a requirement. If you are not inside a virtualenv you may have to run `pip` as root (not recommended!).
 
     $ tar xf 0.x.x.tar.gz
     $ pip install ./DoSOCSv2-0.x.x
 
-Then run the install script for the default license scanner:
+Then run the install script for the default system:
 
-    $ ./DoSOCSv2-0.x.x/scripts/install-nomos.sh
+    $ ./GHData.x.x/scripts/install-ghdata.sh
 
 ### Step 2 (Optional) - Change the default configuration
 
-Not required, but strongly recommended, is to generate an initial config
-file:
-
-    $ dosocs2 newconfig
-    dosocs2: wrote config file to /home/tom/.config/dosocs2/dosocs2.conf
-
-The default config points to a SQLite database stored in your home directory.
-For example, for user `tom`, this database would be created at
-`/home/tom/.config/dosocs2/dosocs2.sqlite3`. If you like, you can open the
-config file and change the `connection_uri` variable to use a different
-location for the database.
+Not required, but strongly recommended, is to generate an initial config file:
 
 
-### Step 3 (Optional) - Add PostgreSQL configuration
-
-Follow this step if you want to use PostgreSQL instead of SQLite for the
-SPDX database.
-
-You will have to create the `spdx` (or whatever name you want) role and
-database yourself.  I recommend setting a different password than the
-one given...:
-
-    $ sudo -u postgres psql
-    psql (9.3.9)
-    Type "help" for help.
-
-    postgres=# create role spdx with login password 'spdx';
-    CREATE ROLE
-    postgres=# create database spdx with owner spdx;
-    CREATE DATABASE
-
-Then change the `connection_uri` variable in your `dosocs2.conf`:
-
-    # connection_uri = postgresql://user:pass@host:port/database
-    connection_uri = postgresql://spdx:spdx@localhost:5432/spdx
+### Step 3 (Optional) - Add MySQL configuration
 
 
 ### Step 4 - Database setup
