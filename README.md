@@ -2,8 +2,8 @@
 
 branch | status
 --- | ---
-master | [![Build Status](https://travis-ci.org/OSSHealth/ghdata)
-dev | [![Build Status](https://travis-ci.org/OSSHealth/ghdata)
+master | [![Build Status](https://travis-ci.org/OSSHealth/ghdata)]
+dev | [![Build Status](https://travis-ci.org/OSSHealth/ghdata)]
 
 This project aims to provide an interface to data related to GitHub repositories. This project requires the GHTorrent database. [Backups of this database are avaliable](http://ghtorrent.org/downloads.html) and [it can be synchronized with current data](https://github.com/OSSHealth/ghtorrent-sync). Support for all event types reported by the [GitHub Events API](https://developer.github.com/v3/activity/events/) are planned for the version 1.0.0 milestone.
 
