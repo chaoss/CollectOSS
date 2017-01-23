@@ -62,81 +62,29 @@ Not required, but strongly recommended, is to generate an initial config file:
 
 Finally, to create all necessary tables and views in the database:
 
-    $ dosocs2 dbinit
+    $ ghdata dbinit
 
-You only need to do this once. **This command will drop all
-existing tables from your SPDX database, so be careful!**
+You only need to do this once. **This command will drop all existing tables from your GHData database, so be careful!**
 
 Usage
 -----
 
-The simplest use case is scanning a package, generating a
-document, and printing an SPDX document in one shot:
 
-    $ dosocs2 oneshot package.tar.gz
-    dosocs2: package.tar.gz: package_id: 1
-    dosocs2: running nomos on package 1
-    dosocs2: package.tar.gz: document_id: 1
-    [... document output here ...]
-
-Also works on directories:
-
-    $ dosocs2 oneshot ./path/to/directory
-
-The scan results and other collected metadata are saved in the database
-so that subsequent document generations will be much faster.
-
-To just scan a package and store its information in the database:
-
-    $ dosocs2 scan package.tar.gz
-    dosocs2: package_tar_gz: package_id: 456
-    dosocs2: running nomos on package 456
-
-In the default configuration, if a scanner is not specified, only `nomos`
-is run by default. It gathers license information, but is a bit slow.
-One can use the `-s` option to explicitly specify which scanners to run:
-
-    $ dosocs2 scan -s nomos_deep,dummy package.tar.gz
-    dosocs2: package_tar_gz: package_id: 456
-    dosocs2: running nomos_deep on package 456
-    dosocs2: running dummy on package 456
-
-After `dosocs2 scan`, no SPDX document has yet been created.
-To create one in the database (specifying the package ID):
-
-    $ dosocs2 generate 456
-    dosocs2: (package_id 456): document_id: 123
-
-Then, to compile and output the document in tag-value format:
-
-    $ dosocs2 print 123
-    [... document output here ...]
-
-Use `dosocs2 --help` to get the full help text. The `doc` directory
-here also provides more detailed information about how `dosocs2` works
-and how to use it.
-
-Potential Organizational Use of dosocs2
+DFD Descritpion of GHData
 ---------------------------------------
 
-![alt text](https://cloud.githubusercontent.com/assets/656208/20320341/30b9468c-ab37-11e6-8e3f-c63543b85453.png)
+DFD Image Here
+
 
 History
 -------
 
-dosocs2 owes its name and concept to the
-[DoSOCS](https://github.com/socs-dev-env/DoSOCS) tool created by Zac
-McFarland, which in turn was spun off from the [do_spdx](https://github.com/ttgurney/yocto-spdx/blob/master/src/spdx.bbclass) plugin for Yocto
-Project, created by Jake Cloyd and Liang Cao.
 
-dosocs2 aims to fill the same role as DoSOCS, but with support for SPDX 2.x, a
-larger feature set, and a more modular implementation, among other changes.
 
 
 Maintainers
 -----------
 
-[DoSOCSv2 organization](https://github.com/DoSOCSv2)
 
 
-(This work has been funded through the National Science Foundation VOSS-IOS Grant: 1122642.)
+(This work has been funded through the Alfred P. Sloan Foundation)
