@@ -44,7 +44,7 @@ We recommend doing this inside a Python [virtualenv](http://docs.python-guide.or
 is not a requirement. If you are not inside a virtualenv you may have to run `pip` as root (not recommended!).
 
     $ tar xf 0.x.x.tar.gz
-    $ pip install ./DoSOCSv2-0.x.x
+    $ pip install ./GHData.x.x
 
 Then run the install script for the default system:
 
