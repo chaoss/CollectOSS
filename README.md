@@ -37,34 +37,14 @@ Installation
 
 ### Step 1 - Download and install
 
-[Grab the source tarball for the latest release](https://github.com/xxx) and use `pip` to install
-it as a package. Replace `0.x.x` with the latest release version number.
+To install stable version: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/master.zip`
+To install development version: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/dev.zip`
 
-We recommend doing this inside a Python [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/), but it
-is not a requirement. If you are not inside a virtualenv you may have to run `pip` as root (not recommended!).
+### Step 2 (Optional if using command line arguments) - Change the default configuration
 
-    $ tar xf 0.x.x.tar.gz
-    $ pip install ./GHData.x.x
+Not required, but strongly recommended, is to generate an initial config file: `ghdata create-default-config`
 
-Then run the install script for the default system:
-
-    $ ./GHData.x.x/scripts/install-ghdata.sh
-
-### Step 2 (Optional) - Change the default configuration
-
-Not required, but strongly recommended, is to generate an initial config file:
-
-
-### Step 3 (Optional) - Add MySQL configuration
-
-
-### Step 4 - Database setup
-
-Finally, to create all necessary tables and views in the database:
-
-    $ ghdata dbinit
-
-You only need to do this once. **This command will drop all existing tables from your GHData database, so be careful!**
+Edit `default.cfg` with your database settings. Run with `ghdata --config default.cfg [commands]` 
 
 Usage
 -----
