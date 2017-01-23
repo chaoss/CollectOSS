@@ -24,9 +24,12 @@ Dependencies
 ------------
 
 - Python 3.4.x
+- MySQL 5.x or later version (can be on a separate machine)
+- GHTorrent in database (can be installed with `ghdata install --historical` on Linux/OS X machines)
 
 Optional:
-- MySQL 5.x or later version (can be on a separate machine)
+- Running version of GHTorrent (can be installed with `ghtorrent install`)
+  - Requires Ruby and Git
 
 Python libraries:
 - All Python dependencies are handled automatically by `pip`.
@@ -38,6 +41,7 @@ Installation
 ### Step 1 - Download and install
 
 To install stable version: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/master.zip`
+
 To install development version: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/dev.zip`
 
 ### Step 2 (Optional if using command line arguments) - Change the default configuration
