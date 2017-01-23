@@ -26,6 +26,7 @@ Dependencies
 - Python 3.4.x
 - MySQL 5.x or later version (can be on a separate machine)
 - GHTorrent in database (can be installed with `ghdata install --historical` on Linux/OS X machines)
+  - 50GB download, requires ~1TB free space for the database
 
 Optional:
 - Running version of GHTorrent (can be installed with `ghtorrent install`)
