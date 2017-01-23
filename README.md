@@ -63,9 +63,9 @@ The site provides instructions on how to restore it.  Here are some alternate in
 
   Rename the extracted file to end with .sql
   
-	Create a new schema/database
+  Create a new schema/database
   
-	Import the extracted file into the new schema (For example, use MySQL Workbench by clicking Server -> Data Import and then following the instructions in the wizard)
+  Import the extracted file into the new schema (For example, use MySQL Workbench by clicking Server -> Data Import and then following the instructions in the wizard)
 
 Usage
 -----
