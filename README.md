@@ -5,66 +5,22 @@ branch | status
 master | [![Build Status](https://travis-ci.org/OSSHealth/ghdata.svg?branch=master)](https://travis-ci.org/OSSHealth/ghdata)
 dev | [![Build Status](https://travis-ci.org/OSSHealth/ghdata.svg?branch=dev)](https://travis-ci.org/OSSHealth/ghdata)
 
-This project aims to provide an interface to data related to GitHub repositories. This project requires the GHTorrent database. [Backups of this database are avaliable](http://ghtorrent.org/downloads.html) and [it can be synchronized with current data](https://github.com/OSSHealth/ghtorrent-sync). Support for all event types reported by the [GitHub Events API](https://developer.github.com/v3/activity/events/) are planned for the version 1.0.0 milestone.
+GHData aims to provide an interface to data related to GitHub repositories. This project requires the GHTorrent database. [Backups of this database are avaliable](http://ghtorrent.org/downloads.html) and [it can be synchronized with current data](https://github.com/OSSHealth/ghtorrent-sync). Support for all event types reported by the [GitHub Events API](https://developer.github.com/v3/activity/events/) are planned for the version 1.0.0 milestone.
+
+GHData is under heavy development; expect frequent backwards-incompatible changes until a 1.x.x release!
 
 To install development version: `pip install --upgrade git+git://github.com/OSSHealth/ghdata.git`
 
 A MySQL installation is required. The GHTorrent database requires a large amount of disk space.
 
-
-dosocs2 
-=======
-
-
-
-dosocs2 is a command-line tool for managing SPDX 2.0 documents and data. It can
-scan source code distributions to produce SPDX information, store that
-information in a relational database, and extract it in a plain-text format
-on request.
-
-The discovery and presentation of software package license information is a complex
-problem facing organizations that rely on open source software within their 
-innovation streams. dosocs2 enables creation of an SPDX document for any 
-software package to represent associated license information. In addition, dosocs2 
-can be used in the creation and continuous maintenance of an inventory of all 
-open-source software used in an organization. The primary audience for dosocs2 is open source
-software teams seeking to advance the representation and maintenance of open source 
-software package license information. 
-
-[SPDX](http://www.spdx.org) is a standard format for communicating information
-about the contents of a software package, including license and copyright
-information. dosocs2 supports the SPDX 2.0 standard, released in May 2015.
-
-dosocs2 is under heavy development; expect frequent backwards-incompatible
-changes until a 1.x.x release!
-
-### Current deviations from SPDX 2.0 specification
-
-* Exactly one package per document is required. (SPDX 2.0 allows zero or more
-  packages per document.)
-* Files in a document can only exist within a package. (SPDX 2.0 allows files
-  to exist outside of a package.)
-* Checksums are always assumed to be SHA-1. (SPDX 2.0 permits SHA-1, SHA-256,
-  and MD5)
-* A file may be an artifact of only one project.
-* License expression syntax is not parsed; license expressions are interpreted as license
-  names that are not on the SPDX license list.
-* Deprecated fields from SPDX 1.2 (reviewer info and file dependencies) are not supported.
-
-
 License and Copyright
 ---------------------
 
-Copyright © 2015 University of Nebraska at Omaha
+Copyright © 2017 University of Nebraska at Omaha and the University of Missouri
 
-dosocs2 is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 2 of the License, or (at your option) any later
-version. See the file LICENSE for more details.
+GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Free Software Foundation. See the file LICENSE for more details.
 
-All associated documentation is licensed under the terms of the Creative
-Commons Attribution Share-Alike 3.0 license. See the file CC-BY-SA-3.0 for more
-details.
+All associated documentation is licensed under the terms of the Creative Commons Attribution Share-Alike 4.0 license. See the file CC-BY-SA-4.0 for more details.
 
 
 Dependencies
