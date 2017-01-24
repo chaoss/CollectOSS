@@ -15,9 +15,9 @@
 #   I got mysql.connector for python 3.4 through the mysql installer which can be downloaded here: https://dev.mysql.com/downloads/installer/
 #   I found this as an alternate site for installation, with more python options: https://dev.mysql.com/downloads/connector/python/
 #
-#   The database is a mySQL database named 'github'
+#   The database used is a mySQL database named 'github'
 #   It has the table 'githubevents'
-#   and three columns: an unused column, 'EventName' and 'EventTotal'
+#   and three columns: an id column (unused here), 'EventName' varchar(255)  and 'EventTotal' int(11)
 
 from django.shortcuts import render
 from django.http import HttpResponse
