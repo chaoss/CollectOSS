@@ -17,7 +17,7 @@
 #
 #   The database used is a mySQL database named 'github'
 #   It has the table 'githubevents'
-#   and three columns: an id column (unused here), 'EventName' varchar(255)  and 'EventTotal' int(11)
+#   with three columns: an id column (unused here), 'EventName' varchar(255)  and 'EventTotal' int(11)
 
 from django.shortcuts import render
 from django.http import HttpResponse
