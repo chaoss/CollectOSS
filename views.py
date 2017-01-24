@@ -13,7 +13,11 @@ def index(request):
     cursor = cnx.cursor(buffered=True)
     cursor2 = cnx.cursor(buffered=True)
     
-    #Get the github api's events.
+    #Get the github api's events
+    #this is events for all public repos.
+    #However, it still returns only a small number of events
+    #Because the events are paginated.  If a page is not specified,
+    #only page 1 will be provided
     response = requests.get('https://api.github.com/events')
     eventData = response.json()
 	
