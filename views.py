@@ -2,7 +2,7 @@
 #1. mysql.connector is only compatible with Python 3.4.  A different database driver, such as MySQLdb is probably better
 #2. Handling pagination: The api's github events are paginated.  The following code only uses page 1.
 #3. My database tables contained simple sums of event types, but my code doesn't take into account whether an event was 
-#   already added last time.  It would have to have a way of making sure not to duplicate data. i.e. event id / event date)
+#   already added last time.  It would have to have a way of making sure not to duplicate data. i.e. event id / event date
 #
 #   Some good information on using github events api: https://developer.github.com/v3/activity/events/
 #   Some good information on using github api pagination: https://developer.github.com/v3/#pagination
