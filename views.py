@@ -7,7 +7,12 @@
 #   Some good information on using github events api: https://developer.github.com/v3/activity/events/
 #   Some good information on using github api pagination: https://developer.github.com/v3/#pagination
 #
-#   This code is run using Django and depends on the 4 libraries imported at top.
+#   This code is run using Django and depends on the 4 libraries imported at top. 
+#   render and HttpResponse should come with Django.
+#   requests: pip install requests
+#   I got mysql.connector through the mysql installer which can be downloaded here https://dev.mysql.com/downloads/installer/
+#   However, it will not allow you to install mysql.connector unless you have python 3.4 specifically (even 3.5 will not work)
+#   I found this as an alternate site for installation, with more python options: https://dev.mysql.com/downloads/connector/python/
 
 from django.shortcuts import render
 from django.http import HttpResponse
