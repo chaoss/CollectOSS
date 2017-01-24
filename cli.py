@@ -12,12 +12,17 @@ from ghdata import GHData
 # @todo: Support saving config as a dotfile
 class GHDataClient:
     """Stores configuration of the CLI, which can be set using options at the command line"""
-    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, dataformat=None, start=None, end=None):
-        self.dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
-        self.ghdata = GHData(self.dbstr)
+    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, dataformat=None, start=None, end=None, connect=False):
+        self.db_host = db_host
+        self.db_port = db_port
+        self.db_user = db_user
+        self.db_pass = db_pass
+        self.db_name = db_name
         self.file = file
         self.dataformat = dataformat
 
+        if (connect):
+            self.connect()
         # Parse start time
         if (start == 'earliest'):
             self.start = None
@@ -31,11 +36,12 @@ class GHDataClient:
         else:
             self.end = parser.parse(end, fuzzy=True)
 
+    def connect(self):
+        self.dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.db_user, self.db_pass, self.db_host, self.db_port, self.db_name)
+        self.ghdata = GHData(self.dbstr)
 
     def output(self, obj):
-        # @todo: Support saving to file
-        # @todo: Support all requests support
-        click.echo(obj.export('csv'))
+        click.echo(obj.export(self.dataformat))
 
     def user(self, username):
         self.output(self.ghdata.user(username, self.start, self.end))
@@ -44,7 +50,6 @@ class GHDataClient:
 
 # Globals
 client = None # Initalized in the base group function below
-# 
 # Flags and Initialization
 @click.group()
 @click.option('--host', default='127.0.0.1', help='Database host (default: localhost)')
@@ -53,7 +58,7 @@ client = None # Initalized in the base group function below
 @click.option('--user', default='root', help='Database user (default: root)')
 @click.option('--password', default='root', help='Database pass (default: root)')
 @click.option('--file', type=click.File('wb'), default=sys.stdout, help='Output file')
-@click.option('--config', type=click.File('r'), default='', help='Configuration file')
+@click.option('--config', type=click.File('rb'), help='Configuration file')
 @click.option('--format', 'dataformat', default='csv', help='csv (default), json, yaml, json, xls, xlsx, human')
 @click.option('--start', default='earliest', help='First date to get data from. Keyword \'earliest\' includes oldest data (default).')
 @click.option('--end', default='latest', help='Last date to get data from. Keyword \'latest\' includes newest data (default)' )
@@ -89,6 +94,7 @@ def cli(host, port, db, user, password, file, config, dataformat, start, end):
 @click.argument('username', default='')
 def user(username):
     """Events for a given user"""
+    client.connect()
     client.user(username)
 
 

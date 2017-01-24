@@ -8,11 +8,11 @@ class GHData:
 
     def __generate_predicate_dates(table, start=None, end=None):
         if (start and end):
-            return "date(created_at) >= {} AND created_at <= {}".format(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))
+            return "created_at >= '{}'' AND created_at <= '{}'".format(start.isoformat(), end.isoformat())
         elif (start): 
-            return "date(created_at) >= {}".format(start.strftime('%Y-%m-%d'))
+            return "created_at >= '{}'".format(start.isoformat())
         elif (end):
-            return "date(created_at) <= {}".format(end.strftime('%Y-%m-%d'))
+            return "created_at <= '{}'".format(end.isoformat())
 
 
     # Gets information about users
@@ -23,6 +23,6 @@ class GHData:
         if (start or end):
             q = q.where(s.sql.text(self.__generate_predicate_dates(start, end)))
         if (username):
-            q = q.where(s.sql.text('login IN (:username)').bindparams(s.bindparam('username')))
-            return self.db.query(str(q), username=username)
+            q = q.where(users.c.login == username)
+            return self.db.query(str(q), login_1=username)
         return self.db.query(str(q))
