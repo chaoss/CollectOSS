@@ -6,6 +6,8 @@
 #
 #   Some good information on using github events api: https://developer.github.com/v3/activity/events/
 #   Some good information on using github api pagination: https://developer.github.com/v3/#pagination
+#
+#   This code is run using Django and depends on the 4 libraries imported at top.
 
 from django.shortcuts import render
 from django.http import HttpResponse
