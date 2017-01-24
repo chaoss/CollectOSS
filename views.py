@@ -17,7 +17,7 @@
 #
 #   The database is a mySQL database named 'github'
 #   It has the table 'githubevents'
-#   and the columns 'EventName' and 'EventTotal'
+#   and three columns: an unused column, 'EventName' and 'EventTotal'
 
 from django.shortcuts import render
 from django.http import HttpResponse
