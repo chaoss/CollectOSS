@@ -1,5 +1,6 @@
 #changes I would make for next time if we were to access the API like this:
-#1. mysql.connector is only compatible with Python 3.4.  A different database driver, such as MySQLdb is probably better
+#1. mysql.connector, installed from the mysql site, is picky about which version of python you have.
+#   I would likely use a different driver, such as MySQLdb
 #2. Handling pagination: The api's github events are paginated.  The following code only uses page 1.
 #3. My database tables contained simple sums of event types, but my code doesn't take into account whether an event was 
 #   already added last time.  It would have to have a way of making sure not to duplicate data. i.e. event id / event date
@@ -10,8 +11,8 @@
 #   This code is run using Django and depends on the 4 libraries imported at top. 
 #   render and HttpResponse should come with Django.
 #   requests: pip install requests
-#   I got mysql.connector through the mysql installer which can be downloaded here https://dev.mysql.com/downloads/installer/
-#   However, it will not allow you to install mysql.connector unless you have python 3.4 specifically (even 3.5 will not work)
+#   connector:
+#   I got mysql.connector for python 3.4 through the mysql installer which can be downloaded here: https://dev.mysql.com/downloads/installer/
 #   I found this as an alternate site for installation, with more python options: https://dev.mysql.com/downloads/connector/python/
 
 from django.shortcuts import render
