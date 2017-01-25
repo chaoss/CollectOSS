@@ -16,6 +16,9 @@ setup(
     url='https://github.com/OSSHealth/github-data-cli',
     author='Derek Howard',
     author_email='derek@howderek.com',
+		packages=['ghdata'],
+		package_dir={'ghdata': 'ghdata'},
+		package_data={'': 'LICENSE'},
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -32,19 +35,14 @@ setup(
     ],
 
     keywords='ghtorrent github api data',
-
-    py_modules=['cli', 'ghdata'],
-
     install_requires=['Click', 'PyMySQL', 'records', 'requests', 'python-dateutil', 'sqlalchemy'],
-
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
     },
-
     entry_points={
         'console_scripts': [
-            'ghdata=cli:cli',
+            'ghdata=ghdata.cli:cli',
         ],
     },
 )
