@@ -49,8 +49,6 @@ To install development version: `pip install --upgrade https://github.com/OSSHea
 
 Not required, but strongly recommended, is to generate an initial config file: `ghdata create-default-config`
 
-Edit `default.cfg` with your database settings. Run with `ghdata --config default.cfg [commands]`
-
 ### Step 3 (Optional if you are able to get the full database) - Install a small, local testing database
 
 Go to: http://ghtorrent.org/msr14.html
