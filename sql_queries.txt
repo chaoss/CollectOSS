@@ -1,0 +1,83 @@
+The following queries are based on GHTorrent database.  The sql is for all repos, but the addition
+of a where clause will make any of them specific to a certain repo:
+
+
+
+Number of members per project:
+
+select count(distinct project_members.user_id) as num_members, projects.name as project_name, url
+from project_members join projects on project_members.repo_id = projects.id
+group by repo_id
+
+
+
+Number of contributers per project:
+
+Github defines contributors as those who have made "Contributions to master, excluding merge commits"
+
+I do not see in the GHTorrent database schema a way to determine commits to master vs other branches,
+Nor a way to differentiate merge commits from other commits.
+
+Because of this, for the following sql query I will define contributors as "users who have made a commit"
+
+When viewing the table, one may notice that there is a separate author_id and committer_id for each commit
+the commit author has written the code of the commit.
+the commit committer has made the commit
+example: author writes some code and does a pull request.  committer approves/merges the pull request
+
+For the following sql, I am considering the author to be the contributer.
+
+select projects.name as project_name, projects.url as url, count(distinct commits.author_id) as num_contributers from 
+	commits 
+    join project_commits on commits.id = project_commits.commit_id
+    join projects on projects.id = project_commits.project_id
+    group by project_commits.project_id
+	
+	
+
+total number of commits per project:
+
+select count(commits.id) as num_commits, projects.name as project_name, projects.url as url
+from
+	commits join project_commits on commits.id = project_commits.project_id
+			join projects on projects.id = project_commits.project_id
+group by projects.id          
+
+
+
+Activity level of contributors
+
+For the purposes of this sql, I have defined it as the median number of commits to this repo per contributer.
+I decided against mean because this could lead to skewing if one committer commits 1000 and the rest commit 1
+
+Unfortunately, there is no median calculaton in sql.
+
+I have found a median calculation for sql on stackoverflow and tested it on a test table.
+Here it is, column and table names modified for clarity
+
+http://dba.stackexchange.com/questions/2519/how-do-i-find-the-median-value-of-a-column-in-mysql
+answered by Jeff Humphreys
+
+SELECT AVG(column_name) median 
+FROM(
+  SELECT x.column_name, SUM(SIGN(1.0-SIGN(y.column_name-x.column_name))) diff, count(*) nofitems, floor(count(*)+1/2)
+  FROM table_name x, table_name y
+  GROUP BY x.column_name
+  HAVING SUM(SIGN(1.0-SIGN(y.column_name-x.column_name))) = floor((COUNT(*)+1)/2)
+      OR SUM(SIGN(1.0-SIGN(y.column_name-x.column_name))) = ceiling((COUNT(*)+1)/2)
+) x;
+
+
+Next I will create some sql to find the total number of commits per repo per contributor.
+This sql will then be combined with the median calculation from above 
+to determine median commits per repo per contributor (or it could be used
+in combination with other methods of determining activity level)
+
+select project_commits.project_id as project_id, commits.author_id as author_id, count(project_commits.commit_id) as num_commits
+	from commits
+    join project_commits on commits.id = project_commits.commit_id
+    join projects on projects.id = project_commits.project_id
+group by project_id, author_id
+
+
+I am working on a combination query, but so far my attempts take too long to run and mysql server times out.
