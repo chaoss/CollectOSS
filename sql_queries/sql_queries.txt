@@ -112,3 +112,10 @@ Pull requests rejected
 		FROM msr14.pull_request_history
 		where action = 'merged')
 	group by projects.id
+	
+	
+Project watchers:
+	select count(user_id) as num_watchers, projects.name as project_name, url
+	from watchers
+		join projects on watchers.repo_id = projects.id
+	group by projects.id
