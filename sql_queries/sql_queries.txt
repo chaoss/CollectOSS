@@ -92,18 +92,19 @@ Pull requests accepted
 	A note: some of these results look unusual, in that projects that I would believe would be very active have few approved pull requests.
 	Possibly these groups do not use pull requests as often and edit master directly?
 
-	SELECT count(pull_request_id) as num_approved, projects.name as project_name, projects.url as url
+	SELECT count(distinct pull_request_id) as num_approved, projects.name as project_name, projects.url as url
 	FROM msr14.pull_request_history
 		join pull_requests on pull_request_history.pull_request_id = pull_requests.id
 		join projects on pull_requests.base_repo_id = projects.id
 	where action = 'merged'
 	group by projects.id
 	
+	
 
 Pull requests rejected
 	For this I will assume that a pull request with a history record of being 'closed' but lacking one of being 'merged' has been rejected.
 	
-	SELECT count(pull_request_id) as num_rejected, projects.name as project_name, projects.url as url
+	SELECT count(distinct pull_request_id) as num_rejected, projects.name as project_name, projects.url as url
 	FROM msr14.pull_request_history
 		join pull_requests on pull_request_history.pull_request_id = pull_requests.id
 		join projects on pull_requests.base_repo_id = projects.id
@@ -113,9 +114,19 @@ Pull requests rejected
 		where action = 'merged')
 	group by projects.id
 	
-	
-Project watchers:
+
+Project watchers
 	select count(user_id) as num_watchers, projects.name as project_name, url
 	from watchers
 		join projects on watchers.repo_id = projects.id
+	group by projects.id
+	
+Number of open issues (current)
+	SELECT count(distinct issue_events.issue_id) as num_open_issues, projects.name as project_name, url as url
+	FROM msr14.issue_events
+		join issues on issues.id = issue_events.issue_id
+		join projects on issues.repo_id = projects.id
+	where issue_events.issue_id not in
+		(SELECT issue_id FROM msr14.issue_events
+		where action = 'closed')
 	group by projects.id
