@@ -142,3 +142,35 @@ Average comments per issue per project:
 		GROUP BY projects.id, issues.id
 	) as comments_per_issue
 	GROUP BY project_id
+	
+	
+Amount of time a closed issue was open before closing (excludes open issues):
+	Useful info on mysql date handling: https://dev.mysql.com/doc/refman/5.5/en/date-and-time-functions.html
+	
+	Days open by issue:
+	select issue_id, open_date, closed_date, DATEDIFF(closed_date, open_date) as days_open, projects.name as project_name, url
+	FROM
+	(SELECT issues.id as issue_id, issues.created_at as open_date, issue_events.created_at as closed_date, repo_id
+	FROM msr14.issue_events
+		join issues on issues.id = issue_events.issue_id
+	where action = 'closed') as closed_issues
+	JOIN projects on projects.id = closed_issues.repo_id
+	
+	
+	Average days open by project:
+	select avg(days_open) as average_days_til_issue_closed, project_name, url
+	FROM
+	(
+		select DATEDIFF(closed_date, open_date) as days_open, projects.name as project_name, url, projects.id as project_id
+		FROM
+			(SELECT issues.id as issue_id, issues.created_at as open_date, issue_events.created_at as closed_date, repo_id
+			FROM msr14.issue_events
+				join issues on issues.id = issue_events.issue_id
+			where action = 'closed') as closed_issues
+		JOIN projects on projects.id = closed_issues.repo_id) as issues_days_open
+	group by project_id
+	
+
+Amount of time a currently open issue has been open (excludes closed issues):
+	
+	In progress
