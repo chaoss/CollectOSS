@@ -188,7 +188,7 @@ Average days issue was open before closing by project:
 		JOIN projects on projects.id = closed_issues.repo_id) as issues_days_open
 	group by project_id
 
-Amount of time a currently open issue has been open (excludes closed issues):
+## Amount of time a currently open issue has been open (excludes closed issues):
 	
 	SELECT avg(date_difference) / 365.25 as average_in_years, avg(date_difference) as average_in_days, project_name, url
 	FROM
