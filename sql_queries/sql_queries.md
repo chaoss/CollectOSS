@@ -205,3 +205,15 @@ Average days issue was open before closing by project:
 			) as open_issues
 	) as date_diffs
 	group by project_id
+	
+## Issue tags by project:
+A note on this: I see some unusual results, such as projects with many issues but no "bug" tags.
+A possibility is that some communities handle tags differently from others, and may use the "bug" tags more heavily than others.
+This may become a problem in future queries I will write specifically targeting the "bug" tag (in that the results may not
+be a good comparison between repos)
+	
+	SELECT count(issue_id) as num_issues_with_this_tag, repo_labels.name as tag, projects.name as project_name, url 
+	FROM msr14.repo_labels
+		join projects on repo_labels.repo_id = projects.id
+		join issue_labels on issue_labels.label_id = repo_labels.id
+	group by projects.id, repo_labels.id 
