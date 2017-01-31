@@ -37,7 +37,7 @@ For the following SQL, I am considering the author to be the contributer.
 	join projects on projects.id = project_commits.project_id
 	group by project_commits.project_id
 	
-total number of commits per project:
+## total number of commits per project:
 
 	select count(commits.id) as num_commits, projects.name as project_name, projects.url as url
 	from commits 
