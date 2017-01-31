@@ -190,4 +190,18 @@ Average days issue was open before closing by project:
 
 Amount of time a currently open issue has been open (excludes closed issues):
 	
-	In progress
+	SELECT avg(date_difference) / 365.25 as average_in_years, avg(date_difference) as average_in_days, project_name, url
+	FROM
+	(
+		SELECT CURDATE() as curr_date, open_date, DATEDIFF(CURDATE(), open_date) as date_difference, issue_id, project_name, url, project_id
+		FROM
+			(SELECT distinct issue_events.issue_id as issue_id, projects.name as project_name, url as url, issues.created_at as open_date, projects.id as project_id
+				FROM msr14.issue_events
+					join issues on issues.id = issue_events.issue_id
+					join projects on issues.repo_id = projects.id
+				where issue_events.issue_id not in
+					(SELECT issue_id FROM msr14.issue_events
+					where action = 'closed')
+			) as open_issues
+	) as date_diffs
+	group by project_id
