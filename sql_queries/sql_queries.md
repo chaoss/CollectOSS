@@ -220,9 +220,9 @@ be a good comparison between repos)
 
 ## Number of issues tagged as 'bug' by project:
 	
-SELECT count(issue_id) num_bug_tags, repo_labels.name as tag, projects.name as project_name, url 
-FROM msr14.repo_labels
-	join projects on repo_labels.repo_id = projects.id
-	join issue_labels on issue_labels.label_id = repo_labels.id
-where repo_labels.name = 'bug'
-group by projects.id, repo_labels.id 
+	SELECT count(issue_id) num_bug_tags, repo_labels.name as tag, projects.name as project_name, url 
+	FROM msr14.repo_labels
+		join projects on repo_labels.repo_id = projects.id
+		join issue_labels on issue_labels.label_id = repo_labels.id
+	where repo_labels.name = 'bug'
+	group by projects.id, repo_labels.id 
