@@ -227,7 +227,7 @@ be a good comparison between repos)
 	where repo_labels.name = 'bug'
 	group by projects.id, repo_labels.id 
 	
-## Average days an issue tagged with 'bug' exists until a member comments:
+## Average days an issue tagged with 'bug' exists until a project member comments:
 
 	SELECT avg(time_to_member_comment_in_days) as avg_days_to_member_comment, project_name, url
 	FROM
