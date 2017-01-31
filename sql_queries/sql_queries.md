@@ -5,7 +5,7 @@ of a where clause will make any of them specific to a certain repo:
 
 
 
-## Number of members per project
+## Number of Members per Project
 
 
 	select count(distinct project_members.user_id) as num_members, projects.name as project_name, url
