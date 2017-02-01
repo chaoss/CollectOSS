@@ -44,6 +44,14 @@ For the following SQL, I am considering the author to be the contributer.
 		join project_commits on commits.id = project_commits.project_id
 		join projects on projects.id = project_commits.project_id
 	group by projects.id          
+	
+## Project Watchers
+
+	select count(user_id) as num_watchers, projects.name as project_name, url
+	from watchers
+		join projects on watchers.repo_id = projects.id
+	group by projects.id
+
 
 ### Activity Level of Contributors
 
@@ -177,13 +185,6 @@ Alternately, using the "company" field in the users table instead of the organiz
 		where action = 'merged')
 	group by projects.id
 
-
-# Project Watchers
-
-	select count(user_id) as num_watchers, projects.name as project_name, url
-	from watchers
-		join projects on watchers.repo_id = projects.id
-	group by projects.id
 
 # Issues
 
