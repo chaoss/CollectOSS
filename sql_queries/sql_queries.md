@@ -249,7 +249,7 @@ be a good comparison between repos)
 			group by issues.id) as earliest_member_comments) as time_to_member_comment
 	group by project_id
 
-## Total number of organizations by project making pull requests:
+## Total number of organizations by project making pull requests (approved or not):
 
 	SELECT count(distinct org_id) as num_organizations, projects.name as project_name, url
 	FROM
@@ -271,3 +271,19 @@ Alternately, using the "company" field in the users table instead of the organiz
 	    join projects on pull_requests.base_repo_id = projects.id
 	WHERE pull_request_history.action = 'opened' 
 	GROUP BY projects.id
+	
+## Number of organizations by project making pull requests that are approved:
+
+	SELECT count(distinct org_id), projects.name as project_name, url
+	FROM
+		organization_members
+	    join users on organization_members.user_id = users.id
+	    join pull_request_history on pull_request_history.actor_id = users.id
+	    join pull_requests on pull_request_history.pull_request_id = pull_requests.id
+	    join projects on pull_requests.base_repo_id = projects.id
+	WHERE pull_request_history.action = 'opened'
+		AND pull_requests.id in
+	    (SELECT pull_request_id 
+			from pull_request_history
+		where action = 'merged')
+	group by projects.id
