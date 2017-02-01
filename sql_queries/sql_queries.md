@@ -345,24 +345,3 @@ be a good comparison between repos)
 				and issue_comments.user_id = project_members.user_id
 			group by issues.id) as earliest_member_comments) as time_to_member_comment
 	group by project_id
-
-## Average days any issue (regardless of tag) exists until a project member comments:
-
-	SELECT avg(time_to_member_comment_in_days) as avg_days_to_member_comment, project_name, url
-	FROM
-	(
-		SELECT DATEDIFF(earliest_member_comment, issue_created) time_to_member_comment_in_days, project_id, issue_id, project_name, url
-		FROM
-			(SELECT projects.id as project_id, 
-					MIN(issue_comments.created_at) as earliest_member_comment, 
-					issues.created_at as issue_created, 
-					issues.id as issue_id, projects.name as project_name, url
-			FROM msr14.repo_labels
-				join projects on repo_labels.repo_id = projects.id
-				join issue_labels on issue_labels.label_id = repo_labels.id
-				join project_members on projects.id = project_members.repo_id
-				join issues on issue_labels.issue_id = issues.id
-				join issue_comments on issue_comments.issue_id = issues.id
-			where issue_comments.user_id = project_members.user_id
-			group by issues.id) as earliest_member_comments) as time_to_member_comment
-	group by project_id
