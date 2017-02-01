@@ -10,7 +10,7 @@ SET @proj = (SELECT projects.id FROM projects INNER JOIN users ON projects.owner
 
 SELECT * FROM
 
-	(
+   (
    SELECT users.id        as "user_id", 
 	        users.login     as "login",
 	        com.count       as "commits",
