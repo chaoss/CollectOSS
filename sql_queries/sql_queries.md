@@ -140,14 +140,14 @@ Assume that a pull request with a history record of being 'closed' but lacking o
 
 
 
-### Project Watchers
+# Project Watchers
 
 	select count(user_id) as num_watchers, projects.name as project_name, url
 	from watchers
 		join projects on watchers.repo_id = projects.id
 	group by projects.id
 
-
+# Issues
 
 
 ### Number of Open Issues (current)
