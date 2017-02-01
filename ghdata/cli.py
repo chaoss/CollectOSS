@@ -1,3 +1,5 @@
+#SPDX-License-Identifier: MIT
+
 import click
 import os
 import sys
