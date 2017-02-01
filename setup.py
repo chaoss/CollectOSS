@@ -1,4 +1,8 @@
-#SPDX-License-Identifier: MIT
+'''
+SPDX-License-Identifier: MIT
+
+Install ghdata package with pip.
+'''
 
 from setuptools import setup, find_packages
 from codecs import open
