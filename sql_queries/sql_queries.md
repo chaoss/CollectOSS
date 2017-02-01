@@ -248,3 +248,26 @@ be a good comparison between repos)
 				and issue_comments.user_id = project_members.user_id
 			group by issues.id) as earliest_member_comments) as time_to_member_comment
 	group by project_id
+
+## Total number of organizations by project making pull requests:
+
+	SELECT count(distinct org_id), projects.name as project_name, url
+	FROM
+		organization_members
+	    join users on organization_members.user_id = users.id
+	    join pull_request_history on pull_request_history.actor_id = users.id
+	    join pull_requests on pull_request_history.pull_request_id = pull_requests.id
+	    join projects on pull_requests.base_repo_id = projects.id
+	WHERE pull_request_history.action = 'opened'
+	group by projects.id
+
+Alternately, using the "company" field in the users table instead of the organization:
+
+	SELECT count(distinct company) as num_organizations, projects.name as project_name, url
+	FROM
+	    users
+	    join pull_request_history on pull_request_history.actor_id = users.id
+	    join pull_requests on pull_request_history.pull_request_id = pull_requests.id
+	    join projects on pull_requests.base_repo_id = projects.id
+	WHERE pull_request_history.action = 'opened' 
+	GROUP BY projects.id
