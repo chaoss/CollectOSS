@@ -92,7 +92,7 @@ I am working on a combination query for the median of contributer activity, but 
 
 ### Pull Requests Opened
 
-	SELECT count(distinct pull_request_id) as num_approved, projects.name as project_name, projects.url as url
+	SELECT count(distinct pull_request_id) as num_opened, projects.name as project_name, projects.url as url
 	FROM msr14.pull_request_history
 	    join pull_requests on pull_request_history.pull_request_id = pull_requests.id
 	    join projects on pull_requests.base_repo_id = projects.id
@@ -101,7 +101,7 @@ I am working on a combination query for the median of contributer activity, but 
 	
 ### Pull Requests Closed
 
-	SELECT count(distinct pull_request_id) as num_approved, projects.name as project_name, projects.url as url
+	SELECT count(distinct pull_request_id) as num_closed, projects.name as project_name, projects.url as url
 	FROM msr14.pull_request_history
 	    join pull_requests on pull_request_history.pull_request_id = pull_requests.id
 	    join projects on pull_requests.base_repo_id = projects.id
@@ -171,7 +171,7 @@ Alternately, using the "company" field in the users table instead of the organiz
 	
 ## Number of organizations by project making pull requests that are approved:
 
-	SELECT count(distinct org_id), projects.name as project_name, url
+	SELECT count(distinct org_id) as num_organizations, projects.name as project_name, url
 	FROM
 		organization_members
 	    join users on organization_members.user_id = users.id
