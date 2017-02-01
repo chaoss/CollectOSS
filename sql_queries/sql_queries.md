@@ -251,7 +251,7 @@ be a good comparison between repos)
 
 ## Total number of organizations by project making pull requests:
 
-	SELECT count(distinct org_id), projects.name as project_name, url
+	SELECT count(distinct org_id) as num_organizations, projects.name as project_name, url
 	FROM
 		organization_members
 	    join users on organization_members.user_id = users.id
@@ -263,7 +263,7 @@ be a good comparison between repos)
 
 Alternately, using the "company" field in the users table instead of the organization:
 
-	SELECT count(distinct company) as num_organizations, projects.name as project_name, url
+	SELECT count(distinct company) as num_companies, projects.name as project_name, url
 	FROM
 	    users
 	    join pull_request_history on pull_request_history.actor_id = users.id
