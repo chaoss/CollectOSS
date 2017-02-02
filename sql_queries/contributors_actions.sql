@@ -3,8 +3,8 @@
 SET @owner = "rails";
 SET @repo  = "rails";
 
-USE 'msr14'; # Test database
-# USE 'ghtorrent'; # Production database
+USE msr14; # Test database
+# USE ghtorrent; # Production database
 
 SET @proj = (SELECT projects.id FROM projects INNER JOIN users ON projects.owner_id = users.id WHERE projects.name = @repo AND users.login = @owner);
 
