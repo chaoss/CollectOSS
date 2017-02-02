@@ -22,7 +22,7 @@ SELECT * FROM
 	        
    FROM users
 
-   LEFT JOIN (SELECT committer_id AS id, COUNT(*) AS count FROM commits WHERE commits.project_id = @proj GROUP BY commits.committer_id) AS com
+   LEFT JOIN (SELECT committer_id AS id, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = @proj GROUP BY commits.committer_id) AS com
    ON com.id = users.id
 
    LEFT JOIN (SELECT pull_request_history.actor_id AS id, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = @proj AND pull_request_history.action = 'merged' GROUP BY pull_request_history.actor_id) AS pulls
@@ -31,7 +31,7 @@ SELECT * FROM
    LEFT JOIN (SELECT reporter_id AS id, COUNT(*) AS count FROM issues WHERE issues.repo_id = @proj GROUP BY issues.reporter_id) AS iss
    ON iss.id = users.id
 
-   LEFT JOIN (SELECT commit_comments.user_id AS id, COUNT(*) AS count FROM commit_comments JOIN commits ON commit_comments.commit_id = commits.id WHERE commits.project_id = @proj GROUP BY commit_comments.user_id) AS comcoms
+   LEFT JOIN (SELECT commit_comments.user_id AS id, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = @proj GROUP BY commit_comments.user_id) AS comcoms
    ON comcoms.id = users.id
 
    LEFT JOIN (SELECT pull_request_comments.user_id AS id, COUNT(*) AS count FROM pull_request_comments JOIN pull_requests ON pull_request_comments.pull_request_id = pull_requests.id WHERE pull_requests.base_repo_id = @proj GROUP BY pull_request_comments.user_id) AS pullscoms
@@ -41,7 +41,7 @@ SELECT * FROM
    ON isscoms.id = users.id
 
    GROUP BY users.id
-   ORDER BY com.count
+   ORDER BY com.count DESC
    ) user_activity
 
 WHERE commits IS NOT NULL
