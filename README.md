@@ -47,7 +47,7 @@ To install development version: `pip install --upgrade https://github.com/OSSHea
 
 ### Step 2 (Optional if using command line arguments) - Change the default configuration
 
-The command to create the default configuration file is not yet working.
+Not required, but strongly recommended, is to generate an initial config file: `ghdata create-default-config`
 
 ### Step 3 (Optional if you are able to get the full database) - Install a small, local testing database
 
