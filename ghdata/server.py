@@ -9,7 +9,7 @@ if (sys.version_info > (3, 0)):
 else:
     import ConfigParser as configparser
 from dateutil import parser, tz
-from ghdata import GHData
+from .ghdata import GHData
 
 # @todo: Support saving config as a dotfile
 class GHDataClient:
