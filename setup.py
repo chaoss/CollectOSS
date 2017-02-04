@@ -1,3 +1,9 @@
+'''
+SPDX-License-Identifier: MIT
+
+Install ghdata package with pip.
+'''
+
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
@@ -10,8 +16,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ghdata',
-    version='0.1.5',
-    description='Library/CLI that gathers data related to GitHub repos',
+    version='0.1.6',
+    description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,
     url='https://github.com/OSSHealth/github-data-cli',
     author='Derek Howard',
@@ -35,14 +41,14 @@ setup(
     ],
 
     keywords='ghtorrent github api data',
-    install_requires=['Click', 'PyMySQL', 'records', 'requests', 'python-dateutil', 'sqlalchemy'],
+    install_requires=['flask', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
     },
     entry_points={
         'console_scripts': [
-            'ghdata=ghdata.cli:cli',
+            'ghdata=ghdata.server:init',
         ],
     },
 )

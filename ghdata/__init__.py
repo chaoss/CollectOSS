@@ -1,1 +1,1 @@
-from ghdata import GHData
+from ghdata import *
