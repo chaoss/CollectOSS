@@ -11,10 +11,13 @@ else:
 from dateutil import parser, tz
 from .ghdata import GHData
 
+API_VERSION = 'unstable'
+
 # @todo: Support saving config as a dotfile
 class GHDataClient:
-    """Stores configuration of the CLI, which can be set using options at the command line"""
+    
     def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, dataformat=None, start=None, end=None, connect=False):
+        """Stores configuration of the CLI, which can be set using options at the command line"""
         self.__db_host = db_host
         self.__db_port = db_port
         self.__db_user = db_user
@@ -40,18 +43,22 @@ class GHDataClient:
             self.__end = parser.parse(end, fuzzy=True)
         """
 
-
     def __connect(self):
-        if (self.__ghdata):
-            self.__dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.db_user, self.db_pass, self.db_host, self.db_port, self.db_name)
-            self.__ghdata = GHData(self.dbstr)
-         
+        """Connect to the database"""
+        if (hasattr(self, '__ghdata') == False):
+            self.__dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.__db_user, self.__db_pass, self.__db_host, self.__db_port, self.__db_name)
+            self.__ghdata = GHData(self.__dbstr)
 
-    """If an attribute doesn't exist, assume it's a GHData method and handle that"""
+    
     def get(self, key, **args):
+        """Interact with ghdata and convert dataframes to JSON"""
         self.__connect()
-        print(self.__ghdata.__class__.__dict__)
-        self.__output(getattr(self.__ghdata, key)(start=self.__start, end=self.__end, **args))
+        data = getattr(self.__ghdata, key)(**args)
+        if (hasattr(data, 'to_json')):
+
+            return data.to_json(date_format='iso', orient='records')
+        else:
+            return data
 
 
 
@@ -78,9 +85,8 @@ def init():
         user = parser.get('Database', 'user')
         password = parser.get('Database', 'pass')
         db = parser.get('Database', 'name')
-        dataformat = parser.get('Format', 'format')
         global client
-        client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, file=file, dataformat=dataformat)
+        client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, file=file)
         app.run()
     except:
         print('Failed to open config file.')
@@ -91,29 +97,34 @@ def init():
         config.set('Database', 'user', 'root')
         config.set('Database', 'pass', 'root')
         config.set('Database', 'name', 'ghtorrent')
-        config.add_section('Format')
-        config.set('Format', 'format', 'csv')
         # Writing our configuration file to 'example.cfg'
         with open('ghdata.cfg', 'wb') as configfile:
             config.write(configfile)
         print('Default config saved to ghdata.cfg')
     
 
-"""
 
-"""
-
-
-@app.route('/')
+@app.route('/{}/'.format(API_VERSION))
 def root():
-    info = Response(response='{"status": "active"}',
+    info = Response(response='{"status": "online"}'.format(API_VERSION),
                     status=200,
                     mimetype="application/json")
     return info
 
-@app.route('/user/:username')
+@app.route('/{}/user/<username>'.format(API_VERSION))
 def user(username):
-    return ''
+    info = Response(response='{"username": "' + username + '"}',
+                    status=200,
+                    mimetype="application/json")
+    return info
+
+@app.route('/{}/<owner>/<repo>/stargazers'.format(API_VERSION))
+def stargazers(owner, repo):
+    repoid = client.get('repoid', owner=owner, repo=repo)
+    print(repoid)
+    return Response(response=client.get('stargazers', repoid=repoid),
+                    status=200,
+                    mimetype="application/json")
 
 # Generates a default config file
 def create_default_config(username):

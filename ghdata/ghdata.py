@@ -3,7 +3,6 @@
 import sqlalchemy as s
 import pandas as pd
 
-
 class GHData(object):
     def __init__(self, dbstr):
         self.db = s.create_engine(dbstr)
@@ -31,14 +30,21 @@ class GHData(object):
             return self.db.execute(str(q), login_1=username)
         return self.db.execute(str(q))
 
-    def stargazers(self, repo=None, start=None, end=None):
-        stargazers = self.__schema['watchers']
-        q = s.select([stargazers])
-        if (start or end):
-            q = q.where(s.sql.text(self.__generate_predicate_dates(start, end)))
-        if (repo):
-            projects = self.__schema['projects']
-            q = q.join(projects)
-            q = q.where(projects.c.name == repo)
-            return self.db.execute(str(q), name_1=repo)
+    def repoid(self, owner, repo):
+        reposql = s.sql.text('SELECT projects.id FROM projects INNER JOIN users ON projects.owner_id = users.id WHERE projects.name = :repo AND users.login = :owner')
+        result = self.db.execute(reposql, repo=repo, owner=owner,)
+        repoid = 0
+        for row in result:
+            repoid = row[0]
+        return repoid
+
+    def stargazers(self, repoid, start=None, end=None):
+        stargazersSQL = s.sql.text(
+            """
+            SELECT date(created_at) AS "date", COUNT(*) AS "watchers"
+            FROM watchers
+            WHERE repo_id = :repoid
+            GROUP BY DATE(created_at)
+            """)
+        return pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
 
