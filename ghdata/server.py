@@ -78,7 +78,7 @@ def init():
     """
     # Read config file if passed
     try:
-        parser = configparser.ConfigParser()
+        parser = configparser.RawConfigParser()
         parser.read('ghdata.cfg')
         host = parser.get('Database', 'host')
         port = parser.get('Database', 'port')
@@ -86,7 +86,7 @@ def init():
         password = parser.get('Database', 'pass')
         db = parser.get('Database', 'name')
         global client
-        client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, file=file)
+        client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db)
         app.run()
     except:
         print('Failed to open config file.')
@@ -98,7 +98,7 @@ def init():
         config.set('Database', 'pass', 'root')
         config.set('Database', 'name', 'ghtorrent')
         # Writing our configuration file to 'example.cfg'
-        with open('ghdata.cfg', 'wb') as configfile:
+        with open('ghdata.cfg', 'w') as configfile:
             config.write(configfile)
         print('Default config saved to ghdata.cfg')
     
@@ -121,7 +121,6 @@ def user(username):
 @app.route('/{}/<owner>/<repo>/stargazers'.format(API_VERSION))
 def stargazers(owner, repo):
     repoid = client.get('repoid', owner=owner, repo=repo)
-    print(repoid)
     return Response(response=client.get('stargazers', repoid=repoid),
                     status=200,
                     mimetype="application/json")
