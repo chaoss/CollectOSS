@@ -5,7 +5,7 @@ branch | status
 master | [![Build Status](https://travis-ci.org/OSSHealth/ghdata.svg?branch=master)](https://travis-ci.org/OSSHealth/ghdata)
 dev | [![Build Status](https://travis-ci.org/OSSHealth/ghdata.svg?branch=dev)](https://travis-ci.org/OSSHealth/ghdata)
 
-GHData aims to provide an interface to data related to GitHub repositories. This project requires the GHTorrent database. [Backups of this database are avaliable](http://ghtorrent.org/downloads.html) and [it can be synchronized with current data](https://github.com/OSSHealth/ghtorrent-sync). Support for all event types reported by the [GitHub Events API](https://developer.github.com/v3/activity/events/) are planned for the version 1.0.0 milestone.
+GHData is a Python library and REST server that provides data related to GitHub repositories. Hosting GHData project requires the GHTorrent database. [Backups of this database are avaliable](http://ghtorrent.org/downloads.html) and [it can be synchronized with current data](https://github.com/OSSHealth/ghtorrent-sync). Support for all event types reported by the [GitHub Events API](https://developer.github.com/v3/activity/events/) are planned for the version 1.0.0 milestone.
 
 GHData is under heavy development; expect frequent backwards-incompatible changes until a 1.x.x release!
 
@@ -69,6 +69,23 @@ The site provides instructions on how to restore it.  Here are some alternate in
 
 Usage
 -----
+
+To run GHData as a server: 
+  1. Type `ghdata`. A config file will be generated. 
+  2. Edit the ghdata.cfg file with your database settings. 
+  3. Type `ghdata` again to start the server.
+
+
+To use as a Python package:
+```
+from ghdata import GHData
+
+client = GHData('mysql+pymysql://<user>:<pass>@<host>:<port>/<database name>')
+railsID = client.repoid(owner='rails', repo='rails')
+railsStars = client.stargazers(railsID)
+```
+
+TODO: More/Better API documentation
 
 DFD Descritpion of GHData
 ---------------------------------------
