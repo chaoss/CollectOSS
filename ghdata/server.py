@@ -11,10 +11,11 @@ else:
 from dateutil import parser, tz
 from .ghdata import GHData
 
-API_VERSION = 'unstable'
+GHDATA_API_VERSION = 'unstable'
 
 # @todo: Support saving config as a dotfile
 class GHDataClient:
+    """Wrangles unrefined free-range dataframes into 100% pure JSON"""
     
     def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, dataformat=None, start=None, end=None, connect=False):
         """Stores configuration of the CLI, which can be set using options at the command line"""
@@ -28,20 +29,6 @@ class GHDataClient:
 
         if (connect):
             self.__connect()
-        # Parse start time
-        """
-        if (start == 'earliest'):
-            self.__start = None
-        elif (start != None):
-            self.__start = parser.parse(start, fuzzy=True)
-            self.__start = self.start
-        
-        # Parse end time
-        if (end == 'latest'):
-            self.__end = None
-        else:
-            self.__end = parser.parse(end, fuzzy=True)
-        """
 
     def __connect(self):
         """Connect to the database"""
@@ -59,8 +46,18 @@ class GHDataClient:
             return data.to_json(date_format='iso', orient='records')
         else:
             return data
+        
 
 
+def basic_endpoint(flaskapp, table):
+    """Simplifies API endpoints that just accept owner, repo, and params"""
+    def generated_function(owner, repo):
+        repoid = client.get('repoid', owner=owner, repo=repo)
+        return Response(response=client.get(table, repoid=repoid),
+                status=200,
+                mimetype="application/json")
+    generated_function.__name__ = table
+    return generated_function
 
 # Globals
 client = None # Initalized in the base group function below
@@ -68,16 +65,9 @@ app = Flask(__name__)
 # Flags and Initialization
 
 def init():
-    """Tool to gather data about GitHub repositories.
-
-    Requires the GHTorrent MySQL database (http://ghtorrent.org/).
-
-    To get an up to date copy:  https://github.com/OSSHealth/ghtorrent-sync
-
-    To get help on subcommands, type the command with --help.
-    """
-    # Read config file if passed
+    """Reads the config file"""
     try:
+        # Try to open the config file and parse it
         parser = configparser.RawConfigParser()
         parser.read('ghdata.cfg')
         host = parser.get('Database', 'host')
@@ -89,6 +79,7 @@ def init():
         client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db)
         app.run()
     except:
+        # Uh-oh. Save a new config file.
         print('Failed to open config file.')
         config = configparser.RawConfigParser()
         config.add_section('Database')
@@ -101,35 +92,27 @@ def init():
         with open('ghdata.cfg', 'w') as configfile:
             config.write(configfile)
         print('Default config saved to ghdata.cfg')
-    
 
 
-@app.route('/{}/'.format(API_VERSION))
+##################
+#     Routes     #
+##################
+
+@app.route('/{}/'.format(GHDATA_API_VERSION))
 def root():
-    info = Response(response='{"status": "online"}'.format(API_VERSION),
+    """API status"""
+    # @todo: When we support multiple data sources this should keep track of their status
+    info = Response(response='{"status": "healthy", "ghtorrent": "online"}'.format(GHDATA_API_VERSION),
                     status=200,
                     mimetype="application/json")
     return info
 
-@app.route('/{}/user/<username>'.format(API_VERSION))
-def user(username):
-    info = Response(response='{"username": "' + username + '"}',
-                    status=200,
-                    mimetype="application/json")
-    return info
-
-@app.route('/{}/<owner>/<repo>/stargazers'.format(API_VERSION))
-def stargazers(owner, repo):
-    repoid = client.get('repoid', owner=owner, repo=repo)
-    return Response(response=client.get('stargazers', repoid=repoid),
-                    status=200,
-                    mimetype="application/json")
-
-# Generates a default config file
-def create_default_config(username):
-    """Generates default .cfg file"""
-    
-
+# Timeseries
+app.route('/{}/<owner>/<repo>/ts/commits'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'commits'))
+app.route('/{}/<owner>/<repo>/ts/forks'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'forks'))
+app.route('/{}/<owner>/<repo>/ts/issues'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issues'))
+app.route('/{}/<owner>/<repo>/ts/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
+app.route('/{}/<owner>/<repo>/ts/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
 
 if __name__ == '__main__':
     init()
