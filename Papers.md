@@ -4,7 +4,7 @@
   - Metrics in the past
   - How people do this (CII Census project (core infrastructure white paper))
   - Signaling theory ??
-  - Venue: Possibly MISQ or ISR, especially if we frame it through the lens of signaling theory. 
+  - Venue: Possibly MISQ or ISR, especially if we frame it through the lens of signaling theory.
 2. Initial empirical exploration of health and sustainability (Empirical Heavy)
   - Hermeneutic circle for the sense making
     - Continue to do interviews and outreach
@@ -24,3 +24,6 @@
   - The work of people and companies in communities
   - Changing nature of work ?? Kind ..
   - Venue: ISR or MISQ
+  - Possibly about these communities and the integration of things within communities .. figuring out how work has changed until today ... not about now or looking into the future ... 
+  - ** Changing nature of work ** : These are longer pole questions, IMHO ... Kate offered for us to connect with Fossology, and .. perhaps the third paper is about the changing nature of work from a case perspective ... perhaps as a case study of Fossology ..
+  - ** Zephyr ** community may be another candidate, in addition to Fossology ..
