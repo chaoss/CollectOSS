@@ -14,6 +14,5 @@
     - Using open source and bringing it in as part of your own internal innovation stream
     - You're a foundation, and you're looking to onboard an open source community or help manage the communities you are currently brokering.
       - Bradly coon : Software freedom conservancy
-    - Possibly Fourth Use Case: Understanding the uptake, use and participation of individual in open source software projects. 
-
-3.
+    - Possibly Fourth Use Case: Understanding the uptake, use and participation of individual in open source software projects.
+3.  Multidisciplinary Survey: Short descriptions of the theoretical models. Possibly a classification of the research models. Possibly a framework that relates the theoretical models. Possibly a list of open research questions. 
