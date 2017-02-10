@@ -24,6 +24,6 @@
   - The work of people and companies in communities
   - Changing nature of work ?? Kind ..
   - Venue: ISR or MISQ
-  - Possibly about these communities and the integration of things within communities .. figuring out how work has changed until today ... not about now or looking into the future ... 
+  - Possibly about these communities and the integration of things within communities .. figuring out how work has changed until today ... not about now or looking into the future ...
   - ** Changing nature of work ** : These are longer pole questions, IMHO ... Kate offered for us to connect with Fossology, and .. perhaps the third paper is about the changing nature of work from a case perspective ... perhaps as a case study of Fossology ..
   - ** Zephyr ** community may be another candidate, in addition to Fossology ..
