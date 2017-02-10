@@ -1,5 +1,11 @@
 # Sloan Papers
 
+## Sloan Paper Goals as Stated
+1. A multidisciplinary survey of theoretical models of work within organizations and the ways that open source software development complicates them
+2. Public dissemination of open source software used to determine open source community health and sustainability
+3. Archiving and documentation of repository health and sustainability extracted from Github trace data
+
+## Detailed Planning
 1. Review of health and sustainability (Theory Heavy)
   - Metrics in the past
   - How people do this (CII Census project (core infrastructure white paper))
