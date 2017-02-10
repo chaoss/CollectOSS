@@ -3,7 +3,8 @@
 1. Review of health and sustainability (Theory Heavy)
   - Metrics in the past
   - How people do this (CII Census project (core infrastructure white paper))
-  - Venue: 
+  - Signaling theory ??
+  - Venue: Possibly MISQ or ISR, especially if we frame it through the lens of signaling theory. 
 2. Initial empirical exploration of health and sustainability (Empirical Heavy)
   - Hermeneutic circle for the sense making
     - Continue to do interviews and outreach
