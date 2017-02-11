@@ -71,13 +71,13 @@ Usage
 -----
 
 To run GHData as a server: 
-  1. Type `ghdata`. A config file will be generated. 
+  1. Type `ghdata` in a terminal. A config file named ghdata.cfg will be generated. 
   2. Edit the ghdata.cfg file with your database settings. 
   3. Type `ghdata` again to start the server.
 
 
 To use as a Python package:
-```
+```python
 from ghdata import GHData
 
 client = GHData('mysql+pymysql://<user>:<pass>@<host>:<port>/<database name>')

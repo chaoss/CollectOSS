@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 
 from flask import Flask, Response, json
+from flask_cors import CORS, cross_origin
 import os
 import sys
 import datetime
@@ -62,6 +63,7 @@ def basic_endpoint(flaskapp, table):
 # Globals
 client = None # Initalized in the base group function below
 app = Flask(__name__)
+CORS(app)
 # Flags and Initialization
 
 def init():

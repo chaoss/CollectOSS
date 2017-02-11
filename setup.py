@@ -41,7 +41,7 @@ setup(
     ],
 
     keywords='ghtorrent github api data',
-    install_requires=['flask', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas'],
+    install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
