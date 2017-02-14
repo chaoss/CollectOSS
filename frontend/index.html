@@ -1,0 +1,36 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Health Report</title>
+    <link rel="stylesheet" href="styles/ghdata-dashboard.css">
+    <script src="scripts/ghdata-api-client.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="scripts/metricsgraphics.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row report">
+        <section>
+          <div class="row">
+            <div class="nine columns"><h1 id="repo"> facebook / folly </h1></div>
+            <div class="three columns"><div id="status" class="badge healthy">healthy</div></div>
+          </div>
+        </section>
+        
+        <section>
+          <h2>Growth Indicators</h2>
+          <div class="row trends">
+            <div class="four columns" id="commits-over-time"></div>
+            <div class="four columns" id="stargazers-over-time"></div>
+            <div class="four columns" id="forks-over-time"></div>
+          </div>
+        </section>
+
+      </div>
+      </div> <!-- end of report -->
+      </div> <!-- end of container -->
+      <script src="scripts/health-report.js"></script>
+    </body>
+  </html>
