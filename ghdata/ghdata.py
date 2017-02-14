@@ -8,8 +8,6 @@ class GHData(object):
     def __init__(self, dbstr):
         """Connect to GHTorrent and infer the schema"""
         self.db = s.create_engine(dbstr)
-        self.schema = s.MetaData()
-        self.schema.reflect(bind=self.db)
 
     def __single_table_count_by_date(self, table, repo_col='project_id'):
         """Returns query string to count occurances of rows per date for a given table.
@@ -32,17 +30,6 @@ class GHData(object):
         else:
             return ''
 
-    def user(self, username=None, start=None, end=None):
-        """Returns basic information about users"""
-        users = self.schema.table['users']
-        q = s.select([users])
-        if (start or end):
-            q = q.where(s.sql.text(self.__generate_predicate_dates(start, end)))
-        if (username):
-            q = q.where(users.c.login == username)
-            return self.db.execute(str(q), login_1=username)
-        return self.db.execute(str(q))
-
     def repoid(self, owner, repo):
         """Returns the project.id given an owner and a repo"""
         reposql = s.sql.text('SELECT projects.id FROM projects INNER JOIN users ON projects.owner_id = users.id WHERE projects.name = :repo AND users.login = :owner')
@@ -63,7 +50,7 @@ class GHData(object):
 
     def forks(self, repoid, start=None, end=None):
         forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from'))
-        return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)})
+        return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
     def issues(self, repoid, start=None, end=None):
         issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id'))
