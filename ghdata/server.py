@@ -77,9 +77,7 @@ def init():
         user = parser.get('Database', 'user')
         password = parser.get('Database', 'pass')
         db = parser.get('Database', 'name')
-        global client
-        client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db)
-        app.run()
+        
     except:
         # Uh-oh. Save a new config file.
         print('Failed to open config file.')
@@ -94,6 +92,10 @@ def init():
         with open('ghdata.cfg', 'w') as configfile:
             config.write(configfile)
         print('Default config saved to ghdata.cfg')
+
+    global client
+    client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db)
+    app.run()
 
 
 ##################

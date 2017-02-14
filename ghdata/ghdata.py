@@ -18,7 +18,7 @@ class GHData(object):
             SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
             FROM {0}
             WHERE {1} = :repoid
-            GROUP BY DATE(created_at)""".format(table, repo_col)
+            GROUP BY WEEK(created_at)""".format(table, repo_col)
 
 
     def __predicate_dates(table, start=None, end=None):
@@ -46,8 +46,8 @@ class GHData(object):
     def repoid(self, owner, repo):
         """Returns the project.id given an owner and a repo"""
         reposql = s.sql.text('SELECT projects.id FROM projects INNER JOIN users ON projects.owner_id = users.id WHERE projects.name = :repo AND users.login = :owner')
-        result = self.db.execute(reposql, repo=repo, owner=owner,)
         repoid = 0
+        result = self.db.execute(reposql, repo=repo, owner=owner)
         for row in result:
             repoid = row[0]
         return repoid
@@ -80,6 +80,6 @@ class GHData(object):
             ON pull_request_history.pull_request_id = pull_requests.id
             WHERE pull_requests.head_repo_id = :repoid
             AND pull_request_history.action = "merged"
-            GROUP BY date(pull_request_history.created_at)
+            GROUP BY WEEK(pull_request_history.created_at)
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
