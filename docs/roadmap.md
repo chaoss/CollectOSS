@@ -1,3 +1,7 @@
+#ROADMAP
+
+The goal of OSSHealth is to provide community resources in the development of community health and sustainability metrics that can provide value in a variety of contexts. 
+
 ## February 24: Portlandia 
 
 ### Technical
