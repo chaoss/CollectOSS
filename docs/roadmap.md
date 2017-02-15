@@ -15,7 +15,7 @@ The goal of OSSHealth is to provide community resources in the development of co
 - Identify participants from LF OSLS and people Matt knows
 
 ### Academic
-- Update indicators based on observations and discussions at LF OSLS
+- Update indicators based on observations and discussions at LF OSLS - [HealthIndicators/15](https://github.com/OSSHealth/HealthIndicators/issues/15), [HealthIndicators/16](https://github.com/OSSHealth/HealthIndicators/issues/16)
 - Summarize signalling theory for paper 1 (Georg)
 - Start collecting literature on 
   - community health and sustainability 
