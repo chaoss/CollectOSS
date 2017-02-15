@@ -24,7 +24,7 @@ setup(
     author_email='derek@howderek.com',
 		packages=['ghdata'],
 		package_dir={'ghdata': 'ghdata'},
-		package_data={'': 'LICENSE'},
+		package_data={'': 'LICENSE', 'frontend': ['frontend/*']},
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -39,7 +39,6 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
-
     keywords='ghtorrent github api data',
     install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas'],
     extras_require={

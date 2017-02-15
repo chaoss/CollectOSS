@@ -2,6 +2,7 @@
 
 import sqlalchemy as s
 import pandas as pd
+import re
 
 class GHData(object):
     """Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators"""
@@ -39,6 +40,16 @@ class GHData(object):
             repoid = row[0]
         return repoid
 
+    def userid(self, username):
+        """Returns the userid given a username"""
+        reposql = s.sql.text('SELECT users.id FROM users WHERE users.login = :username')
+        userid = 0
+        result = self.db.execute(reposql, username=username)
+        for row in result:
+            userid = row[0]
+        return userid
+
+
     # Basic timeseries queries
     def stargazers(self, repoid, start=None, end=None):
         stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id'))
@@ -70,3 +81,49 @@ class GHData(object):
             GROUP BY WEEK(pull_request_history.created_at)
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
+
+    def contributors(self, repoid):
+        return 0
+
+    def contributions(self, repoid, userid=None):
+        """Returns dataframe with contributions over time for a repo, optionally limited by user"""
+        rawContributionsSQL = """
+            SELECT  DATE(coms.created_at) as "date",
+                    coms.count            as "commits",
+                    pulls.count           as "pull_requests",
+                    iss.count             as "issues",
+                    comcoms.count         as "commit_comments",
+                    pullscoms.count       as "pull_request_comments",
+                    isscoms.count         as "issue_comments"
+
+            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(created_at)) coms
+
+            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged'[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(created_at)) AS pulls
+            ON DATE(pulls.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(created_at)) AS iss
+            ON DATE(iss.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT commit_comments.created_at AS created_at, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid[[ AND commit_comments.user_id = :userid]] GROUP BY DATE(commit_comments.created_at)) AS comcoms
+            ON DATE(comcoms.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT pull_request_comments.created_at AS created_at, COUNT(*) AS count FROM pull_request_comments JOIN pull_requests ON pull_request_comments.pull_request_id = pull_requests.id WHERE pull_requests.base_repo_id = :repoid[[ AND pull_request_comments.user_id = :userid]] GROUP BY DATE(pull_request_comments.created_at)) AS pullscoms
+            ON DATE(pullscoms.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT issue_comments.created_at AS created_at, COUNT(*) AS count FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid[[ AND issue_comments.user_id = :userid]] GROUP BY DATE(issue_comments.created_at)) AS isscoms
+            ON DATE(isscoms.created_at) = DATE(coms.created_at)
+
+            ORDER BY DATE(coms.created_at)
+        """
+
+        if (userid > -1):
+            rawContributionsSQL = rawContributionsSQL.replace('[[', '')
+            rawContributionsSQL = rawContributionsSQL.replace(']]', '')
+            parameterized = s.sql.text(rawContributionsSQL)
+            return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid), "userid": str(userid)})
+        else:
+            rawContributionsSQL = re.sub(r'\[\[.+?\]\]', '', rawContributionsSQL)
+            parameterized = s.sql.text(rawContributionsSQL)
+            return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
+
+       
