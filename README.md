@@ -102,8 +102,4 @@ History
 Maintainers
 -----------
 
-
-
-Support
--------
-This work has been funded through the Alfred P. Sloan Foundation
+(This work has been funded through the Alfred P. Sloan Foundation)
