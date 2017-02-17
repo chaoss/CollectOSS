@@ -16,17 +16,20 @@ GHDATA_API_VERSION = 'unstable'
 
 # @todo: Support saving config as a dotfile
 class GHDataClient:
-    """Wrangles unrefined free-range dataframes into 100% pure JSON"""
+    """
+    Reads the configuration file, creates an instance of GHData, handles
+    """
     
-    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, dataformat=None, start=None, end=None, connect=False, debug=False):
-        """Stores configuration of the CLI, which can be set using options at the command line"""
+    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, connect=False, debug=False):
+        """
+        Stores configuration, optionally connects to the database
+        """
         self.__db_host = db_host
         self.__db_port = db_port
         self.__db_user = db_user
         self.__db_pass = db_pass
         self.__db_name = db_name
         self.__file = file
-        self.__dataformat = dataformat
 
         if (debug == '1'):
             self.DEBUG = True
@@ -37,8 +40,10 @@ class GHDataClient:
             self.__connect()
 
     def __connect(self):
+        """
+        Generates the dbstr from the configuration loaded earlier, opens the connection
+        """
         try:
-            """Connect to the database"""
             if (hasattr(self, '__ghdata') == False):
                 self.__dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.__db_user, self.__db_pass, self.__db_host, self.__db_port, self.__db_name)
                 self.__ghdata = GHData(self.__dbstr)
@@ -48,21 +53,20 @@ class GHDataClient:
 
     
     def get(self, key, **args):
-        """Interact with ghdata and convert dataframes to JSON"""
+        # Interact with ghdata and convert dataframes to JSON"""
         self.__connect()
         data = getattr(self.__ghdata, key)(**args)
         if (hasattr(data, 'to_json')):
-            if ('date' in data):
-                return data.fillna(0, downcast='infer').to_json(orient='records', date_format='iso', date_unit='s')
-            else:
-                return data.to_json(orient='records', date_format='iso', date_unit='s')
+            return data.to_json(orient='records', date_format='iso', date_unit='ms')
         else:
             return data
         
 
 
 def basic_endpoint(flaskapp, table):
-    """Simplifies API endpoints that just accept owner, repo, and params"""
+    """
+    Simplifies API endpoints that just accept owner and repo
+    """
     def generated_function(owner, repo):
         repoid = client.get('repoid', owner=owner, repo=repo)
         return Response(response=client.get(table, repoid=repoid),
@@ -115,6 +119,7 @@ def init():
 
     if (client.DEBUG):
         # Serve the front-end files in debug mode to make it easier for developers to work on the interface
+        # @todo: Figure out why this isn't working.
         @app.route('/')
         def root():
             return app.send_static_file('frontend/index.html')
@@ -136,10 +141,6 @@ def init():
 #     Routes     #
 ##################
 
-# Serve static files (For development only!)
-
-
-
 @app.route('/{}/'.format(GHDATA_API_VERSION))
 def api_root():
     """API status"""
@@ -157,7 +158,8 @@ app.route('/{}/<owner>/<repo>/ts/pulls'.format(GHDATA_API_VERSION))(basic_endpoi
 app.route('/{}/<owner>/<repo>/ts/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
 
 # Contribution Trends
-@app.route('/{}/<owner>/<repo>/contribs'.format(GHDATA_API_VERSION))
+app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'contributors'))
+@app.route('/{}/<owner>/<repo>/contributions'.format(GHDATA_API_VERSION))
 def contributions(owner, repo):
     repoid = client.get('repoid', owner=owner, repo=repo)
     user = request.args.get('user')
