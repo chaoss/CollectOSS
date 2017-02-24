@@ -17,7 +17,7 @@ GHDATA_API_VERSION = 'unstable'
 # @todo: Support saving config as a dotfile
 class GHDataClient:
     """
-    Reads the configuration file, creates an instance of GHData, handles
+    Reads the configuration file, creates an instance of GHData, serializes dataframes into JSON
     """
     
     def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, connect=False, debug=False):
@@ -99,7 +99,7 @@ def init():
         except:
             print('Couldn\'t start. Double check ghdata.cfg for errors.')
         
-    except IOError:
+    except:
         # Uh-oh. Save a new config file.
         print('Failed to open config file.')
         config = configparser.RawConfigParser()
@@ -171,6 +171,9 @@ def contributions(owner, repo):
     return Response(response=contribs,
                     status=200,
                     mimetype="application/json")
+
+# Diversity
+app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'committer_locations'))
 
 if __name__ == '__main__':
     init()

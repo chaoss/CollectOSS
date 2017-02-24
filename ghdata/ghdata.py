@@ -9,7 +9,7 @@ class GHData(object):
 
     def __init__(self, dbstr):
         """
-        Connect to GHTorrent and infer the schema
+        Connect to GHTorrent
 
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
         """
@@ -102,6 +102,27 @@ class GHData(object):
         issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id'))
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
+    def issues_with_close(self, repoid):
+        """
+        How long on average each week it takes to close an issue
+
+        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :return: DataFrame with issues/day
+        """
+        issuesSQL = s.sql.text("""
+            SELECT issues.id as "id",
+                   issues.created_at as "date",
+                   DATEDIFF(closed.created_at, issues.created_at)  AS "days_to_close"
+            FROM issues 
+             
+           JOIN 
+                (SELECT * FROM issue_events
+                 WHERE issue_events.action = "closed") closed
+            ON issues.id = closed.issue_id
+            
+            WHERE issues.repo_id = :repoid""")
+        return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
+
     def pulls(self, repoid):
         """
         Timeseries of when people starred a repo
@@ -136,6 +157,7 @@ class GHData(object):
                (
                SELECT   users.id        as "user_id",
                         users.login     as "login",
+                        users.location  as "location",
                         com.count       as "commits",
                         pulls.count     as "pull_requests",
                         iss.count       as "issues",
@@ -223,5 +245,28 @@ class GHData(object):
             rawContributionsSQL = re.sub(r'\[\[.+?\]\]', '', rawContributionsSQL)
             parameterized = s.sql.text(rawContributionsSQL)
             return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
+
+    def commiter_locations(self, repoid):
+        """
+        Return committers and their locations
+
+        @todo: Group by country code instead of users, needs the new schema
+
+        :param repoid: The id of the project in the projects table.
+        :return: DataFrame with users and locations sorted by commtis
+        """
+        rawContributionsSQL = s.sql.text("""
+            SELECT users.login, users.location, COUNT(*) AS "commits"
+            FROM commits
+            JOIN project_commits 
+            ON commits.id = project_commits.commit_id
+            JOIN users
+            ON users.id = commits.author_id
+            WHERE project_commits.project_id = :repoid
+            AND LENGTH(users.location) > 1
+            GROUP BY users.id
+            ORDER BY commits DESC
+        """)
+        return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
 
        
