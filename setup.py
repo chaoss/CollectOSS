@@ -39,7 +39,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords='ghtorrent github api data',
-    install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'py.test'],
+    install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
