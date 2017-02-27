@@ -163,7 +163,8 @@ class GHData(object):
                         iss.count       as "issues",
                         comcoms.count   as "commit_comments",
                         pullscoms.count as "pull_request_comments",
-                        isscoms.count   as "issue_comments"
+                        isscoms.count   as "issue_comments",
+                        com.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as "total"
 
                FROM users
 
@@ -214,7 +215,8 @@ class GHData(object):
                     iss.count             as "issues",
                     comcoms.count         as "commit_comments",
                     pullscoms.count       as "pull_request_comments",
-                    isscoms.count         as "issue_comments"
+                    isscoms.count         as "issue_comments",
+                    coms.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as "total"
 
             FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(created_at)) coms
 
@@ -236,7 +238,7 @@ class GHData(object):
             ORDER BY DATE(coms.created_at)
         """
 
-        if (userid > -1):
+        if (userid is not None and len(userid) > 0):
             rawContributionsSQL = rawContributionsSQL.replace('[[', '')
             rawContributionsSQL = rawContributionsSQL.replace(']]', '')
             parameterized = s.sql.text(rawContributionsSQL)
@@ -246,7 +248,7 @@ class GHData(object):
             parameterized = s.sql.text(rawContributionsSQL)
             return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
 
-    def commiter_locations(self, repoid):
+    def committer_locations(self, repoid):
         """
         Return committers and their locations
 
@@ -268,5 +270,33 @@ class GHData(object):
             ORDER BY commits DESC
         """)
         return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
+
+
+    def issue_response_time(self, repoid):
+        """
+        How long it takes for issues to be responded to by people who have commits associate with the project
+
+        :param repoid: The id of the project in the projects table. 
+        :return: DataFrame with the issues' id the date it was
+                 opened, and the date it was first responded to
+        """
+        issuesSQL = s.sql.text("""
+            SELECT issues.created_at               AS "created_at",
+                   MIN(issue_comments.created_at)  AS "responded_at"
+            FROM issues
+            JOIN issue_comments
+            ON issue_comments.issue_id = issues.id
+            WHERE issue_comments.user_id IN 
+                (SELECT users.id
+                FROM users
+                JOIN commits
+                WHERE commits.author_id = users.id
+                AND commits.project_id = 78852)
+            AND issues.repo_id = 78852
+            GROUP BY issues.id
+        """)
+        return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
+
+
 
        

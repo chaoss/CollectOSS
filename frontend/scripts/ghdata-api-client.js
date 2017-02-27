@@ -97,7 +97,7 @@ GHDataAPIClient.prototype.get = function (endpoint, params) {
  * @returns {Promise} Resolves with commits timeseries object
  */
 GHDataAPIClient.prototype.commits = function (params) {
-  return this.get('ts/commits', params);
+  return this.get('commits', params);
 };
 
 /** 
@@ -106,7 +106,7 @@ GHDataAPIClient.prototype.commits = function (params) {
  * @returns {Promise} Resolves with forks timeeseries object
  */
 GHDataAPIClient.prototype.forks = function (params) {
-  return this.get('ts/forks', params);
+  return this.get('forks', params);
 };
 
 /** 
@@ -115,7 +115,7 @@ GHDataAPIClient.prototype.forks = function (params) {
  * @returns {Promise} Resolves with commits timeseries object
  */
 GHDataAPIClient.prototype.stargazers = function (params) {
-  return this.get('ts/stargazers', params);
+  return this.get('stargazers', params);
 };
 
 /** 
@@ -124,5 +124,5 @@ GHDataAPIClient.prototype.stargazers = function (params) {
  * @returns {Promise} Resolves with commits timeseries object
  */
 GHDataAPIClient.prototype.pullrequests = function (params) {
-  return this.get('ts/pulls', params);
+  return this.get('pulls', params);
 };

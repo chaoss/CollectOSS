@@ -151,11 +151,12 @@ def api_root():
     return info
 
 # Timeseries
-app.route('/{}/<owner>/<repo>/ts/commits'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'commits'))
-app.route('/{}/<owner>/<repo>/ts/forks'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'forks'))
-app.route('/{}/<owner>/<repo>/ts/issues'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issues'))
-app.route('/{}/<owner>/<repo>/ts/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
-app.route('/{}/<owner>/<repo>/ts/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
+app.route('/{}/<owner>/<repo>/commits'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'commits'))
+app.route('/{}/<owner>/<repo>/forks'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'forks'))
+app.route('/{}/<owner>/<repo>/issues'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issues'))
+app.route('/{}/<owner>/<repo>/issues/response_time'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issue_response_time'))
+app.route('/{}/<owner>/<repo>/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
+app.route('/{}/<owner>/<repo>/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
 
 # Contribution Trends
 app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'contributors'))
