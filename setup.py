@@ -24,7 +24,6 @@ setup(
     author_email='derek@howderek.com',
 		packages=['ghdata'],
 		package_dir={'ghdata': 'ghdata'},
-		package_data={'': 'LICENSE', 'frontend': ['frontend/*']},
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',
