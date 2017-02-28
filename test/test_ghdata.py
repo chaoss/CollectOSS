@@ -13,6 +13,13 @@ def test_repoid(gh):
 def test_userid(gh):
     assert gh.userid('howderek') == 417486
 
+"""
+Pandas testing format
+
+assert gh.<function>('<repoid>, <userid>').isin(['<data that should be in dataframe>']).any
+
+The tests check if a value is anywhere in the dataframe
+"""
 def test_stargazers(gh):
     assert gh.stargazers('1').isin(["2011-09-14"]).any
 
@@ -32,7 +39,10 @@ def test_contributors(gh):
     assert gh.contributors('10').isin(["sergiocampama"]).any
 
 def test_contributions(gh):
-    assert gh.contributions(11, 15).isin(["ariya"]).any
+    assert gh.contributions(11, '15').isin(["ariya"]).any
 
-def test_commiter_locations(gh):
-    assert gh.commiter_locations(4).isin(["Berkeley, CA"]).any
+def test_committer_locations(gh):
+    assert gh.committer_locations('4').isin(["Berkeley, CA"]).any
+
+def test_issue_response_time(gh):
+    assert gh.issue_response_time('2').isin(["2013-09-16 17:00:54"]).any
