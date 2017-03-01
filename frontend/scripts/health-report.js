@@ -70,6 +70,22 @@ GHDataReport.prototype.buildReport = function () {
       target: '#forks-over-time'
     });
   });
+
+  // Commits
+  this.api.issues().then(function (issues) {
+    MG.data_graphic({
+      title: "Issues/Day",
+      data: MG.convert.date(issues, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
+      chart_type: 'point',
+      least_squares: true,
+      full_width: true,
+      height: 300,
+      color_range: ['#aaa'],
+      x_accessor: 'date',
+      y_accessor: 'issues',
+      target: '#issues-over-time'
+    });
+  });
 };
 
 var client = new GHDataReport();

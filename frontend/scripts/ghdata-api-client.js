@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 
-/** 
- * Handles interaction with a GHData server. 
+/**
+ * Handles interaction with a GHData server.
  * @constructor
  */
 function GHDataAPIClient (apiUrl, owner, repo, apiVersion) {
@@ -16,7 +16,7 @@ function GHDataAPIClient (apiUrl, owner, repo, apiVersion) {
  * Create a friendly wrapper around XMLHttpRequest
 --------------------------------------------------------------*/
 
-/** 
+/**
  * Wraps XMLHttpRequest with many goodies. Credit to SomeKittens on StackOverflow.
  * @param {Object} opts - Stores the url (opts.url), method (opts.method), headers (opts.headers) and query parameters (opt.params). All optional.
  * @returns {Promise} Resolves with XMLHttpResponse.response
@@ -62,7 +62,7 @@ GHDataAPIClient.prototype.request = function (opts) {
   });
 };
 
-/** 
+/**
  * Wraps the GET requests with the correct options for most GHData calls
  * @param {String} endpoint - Endpoint to send the request to
  * @param {Object} params - Query string params to pass to the API
@@ -91,7 +91,7 @@ GHDataAPIClient.prototype.get = function (endpoint, params) {
  * Wrap all the API endpoints to make it as simple as possible
 --------------------------------------------------------------*/
 
-/** 
+/**
  * Commits timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
@@ -100,7 +100,7 @@ GHDataAPIClient.prototype.commits = function (params) {
   return this.get('ts/commits', params);
 };
 
-/** 
+/**
  * Forks timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with forks timeeseries object
@@ -109,7 +109,7 @@ GHDataAPIClient.prototype.forks = function (params) {
   return this.get('ts/forks', params);
 };
 
-/** 
+/**
  * Stargazers timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
@@ -118,7 +118,16 @@ GHDataAPIClient.prototype.stargazers = function (params) {
   return this.get('ts/stargazers', params);
 };
 
-/** 
+/**
+ * Stargazers timeseries
+ * @param {Object} params - Query string params to pass to the API
+ * @returns {Promise} Resolves with commits timeseries object
+ */
+GHDataAPIClient.prototype.issues = function (params) {
+  return this.get('ts/issues', params);
+};
+
+/**
  * Pull Requests timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
