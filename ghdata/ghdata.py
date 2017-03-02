@@ -291,12 +291,11 @@ class GHData(object):
                 FROM users
                 JOIN commits
                 WHERE commits.author_id = users.id
-                AND commits.project_id = 78852)
-            AND issues.repo_id = 78852
+                AND commits.project_id = :repoid)
+            AND issues.repo_id = :repoid
             GROUP BY issues.id
         """)
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
-
 
 
        
