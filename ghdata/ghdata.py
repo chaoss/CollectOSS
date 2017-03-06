@@ -2,7 +2,11 @@
 
 import sqlalchemy as s
 import pandas as pd
-import urllib
+import sys
+if (sys.version_info > (3, 0)):
+    import urllib.parse as url
+else:
+    import urllib as url
 import json
 import re
 
@@ -317,11 +321,9 @@ class GHData(object):
             repo_url = row[0]
 
         # Find websites that link to that repo
-        query = '<a+href%3D"{repourl}"'.format(repourl=urllib.quote_plus(repo_url.replace('api.', '').replace('repos/', '')))
+        query = '<a+href%3D"{repourl}"'.format(repourl=url.quote_plus(repo_url.replace('api.', '').replace('repos/', '')))
         r = 'https://publicwww.com/websites/{query}/?export=csv&apikey={apikey}'.format(query=query, apikey=self.PUBLIC_WWW_API_KEY)
-        print(r)
         result =  pd.read_csv(r, delimiter=';', header=None, names=['url', 'rank'])
-        print(result)
         return result
 
 
