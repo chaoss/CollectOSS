@@ -20,7 +20,7 @@ class GHDataClient:
     Reads the configuration file, creates an instance of GHData, serializes dataframes into JSON
     """
     
-    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', file=None, connect=False, debug=False):
+    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', public_www_api_key=None, file=None, connect=False, debug=False):
         """
         Stores configuration, optionally connects to the database
         """
@@ -29,6 +29,7 @@ class GHDataClient:
         self.__db_user = db_user
         self.__db_pass = db_pass
         self.__db_name = db_name
+        self.__public_www_api_key = public_www_api_key
         self.__file = file
 
         if (debug == '1'):
@@ -46,7 +47,7 @@ class GHDataClient:
         try:
             if (hasattr(self, '__ghdata') == False):
                 self.__dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.__db_user, self.__db_pass, self.__db_host, self.__db_port, self.__db_name)
-                self.__ghdata = GHData(self.__dbstr)
+                self.__ghdata = GHData(dbstr=self.__dbstr, public_www_api_key=self.__public_www_api_key)
         except:
             print('Failed to connect to database using:')
             print(self.__dbstr)
@@ -92,10 +93,11 @@ def init():
         user = parser.get('Database', 'user')
         password = parser.get('Database', 'pass')
         db = parser.get('Database', 'name')
+        public_www_api_key = parser.get('PublicWWW', 'APIKey')
         debug = parser.get('Development', 'developer')
         try:
             global client
-            client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, debug=debug)
+            client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, public_www_api_key=public_www_api_key, debug=debug)
         except:
             print('Couldn\'t start. Double check ghdata.cfg for errors.')
         
@@ -109,12 +111,15 @@ def init():
         config.set('Database', 'user', 'root')
         config.set('Database', 'pass', 'root')
         config.set('Database', 'name', 'ghtorrent')
+        config.add_section('PublicWWW')
+        config.set('PublicWWW', 'APIKey', '0')
         config.add_section('Development')
         config.set('Development', 'developer', '0')
         # Writing our configuration file to 'example.cfg'
         with open('ghdata.cfg', 'w') as configfile:
             config.write(configfile)
         print('Default config saved to ghdata.cfg')
+        sys.exit()
 
 
     if (client.DEBUG):
@@ -175,6 +180,9 @@ def contributions(owner, repo):
 
 # Diversity
 app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'committer_locations'))
+
+# Popularity
+app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'linking_websites'))
 
 if __name__ == '__main__':
     init()
