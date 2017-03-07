@@ -46,3 +46,6 @@ def test_committer_locations(gh):
 
 def test_issue_response_time(gh):
     assert gh.issue_response_time('2').isin(["2013-09-16 17:00:54"]).any
+
+def test_linking_websites(gh):
+    assert gh.linking_websites('6').isin(["sohu.com"]).any
