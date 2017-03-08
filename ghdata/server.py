@@ -19,7 +19,7 @@ class GHDataClient:
     """
     Reads the configuration file, creates an instance of GHData, serializes dataframes into JSON
     """
-    
+
     def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', public_www_api_key=None, file=None, connect=False, debug=False):
         """
         Stores configuration, optionally connects to the database
@@ -52,7 +52,7 @@ class GHDataClient:
             print('Failed to connect to database using:')
             print(self.__dbstr)
 
-    
+
     def get(self, key, **args):
         # Interact with ghdata and convert dataframes to JSON"""
         self.__connect()
@@ -61,7 +61,7 @@ class GHDataClient:
             return data.to_json(orient='records', date_format='iso', date_unit='ms')
         else:
             return data
-        
+
 
 
 def basic_endpoint(flaskapp, table):
@@ -100,7 +100,7 @@ def init():
             client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, public_www_api_key=public_www_api_key, debug=debug)
         except:
             print('Couldn\'t start. Double check ghdata.cfg for errors.')
-        
+
     except:
         # Uh-oh. Save a new config file.
         print('Failed to open config file.')
@@ -162,6 +162,7 @@ app.route('/{}/<owner>/<repo>/issues'.format(GHDATA_API_VERSION))(basic_endpoint
 app.route('/{}/<owner>/<repo>/issues/response_time'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issue_response_time'))
 app.route('/{}/<owner>/<repo>/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
 app.route('/{}/<owner>/<repo>/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
+app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pull_acceptance_rate'))
 
 # Contribution Trends
 app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'contributors'))

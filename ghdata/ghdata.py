@@ -21,7 +21,7 @@ class GHData(object):
         """
         self.db = s.create_engine(dbstr)
         self.PUBLIC_WWW_API_KEY = public_www_api_key
-        
+
     def __single_table_count_by_date(self, table, repo_col='project_id'):
         """
         Generates query string to count occurances of rows per date for a given table.
@@ -120,13 +120,13 @@ class GHData(object):
             SELECT issues.id as "id",
                    issues.created_at as "date",
                    DATEDIFF(closed.created_at, issues.created_at)  AS "days_to_close"
-            FROM issues 
-             
-           JOIN 
+            FROM issues
+
+           JOIN
                 (SELECT * FROM issue_events
                  WHERE issue_events.action = "closed") closed
             ON issues.id = closed.issue_id
-            
+
             WHERE issues.repo_id = :repoid""")
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
@@ -141,7 +141,7 @@ class GHData(object):
             SELECT date(pull_request_history.created_at) AS "date",
             (COUNT(pull_requests.id)) AS "pull_requests",
             (SELECT COUNT(*) FROM pull_request_comments
-            WHERE pull_request_comments.pull_request_id = pull_request_history.pull_request_id) AS "comments" 
+            WHERE pull_request_comments.pull_request_id = pull_request_history.pull_request_id) AS "comments"
             FROM pull_request_history
             INNER JOIN pull_requests
             ON pull_request_history.pull_request_id = pull_requests.id
@@ -267,7 +267,7 @@ class GHData(object):
         rawContributionsSQL = s.sql.text("""
             SELECT users.login, users.location, COUNT(*) AS "commits"
             FROM commits
-            JOIN project_commits 
+            JOIN project_commits
             ON commits.id = project_commits.commit_id
             JOIN users
             ON users.id = commits.author_id
@@ -283,7 +283,7 @@ class GHData(object):
         """
         How long it takes for issues to be responded to by people who have commits associate with the project
 
-        :param repoid: The id of the project in the projects table. 
+        :param repoid: The id of the project in the projects table.
         :return: DataFrame with the issues' id the date it was
                  opened, and the date it was first responded to
         """
@@ -293,7 +293,7 @@ class GHData(object):
             FROM issues
             JOIN issue_comments
             ON issue_comments.issue_id = issues.id
-            WHERE issue_comments.user_id IN 
+            WHERE issue_comments.user_id IN
                 (SELECT users.id
                 FROM users
                 JOIN commits
@@ -308,7 +308,7 @@ class GHData(object):
         """
         Finds the repo's popularity on the internet
 
-        :param repoid: The id of the project in the projects table. 
+        :param repoid: The id of the project in the projects table.
         :return: DataFrame with the issues' id the date it was
                  opened, and the date it was first responded to
         """
@@ -326,9 +326,34 @@ class GHData(object):
         result =  pd.read_csv(r, delimiter=';', header=None, names=['url', 'rank'])
         return result
 
+    def pull_acceptance_rate(self, repoid):
+        """
+        Timeseries of pull request acceptance rate (Number of pull requests merged on a date over Number of pull requests opened on a date)
 
+        :param repoid: The id of the project in the projects table.
+        :return: DataFrame with the pull acceptance rate and the dates
+        """
 
+        pullAcceptanceSQL = s.sql.text("""
 
+        SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
+        FROM
+            (SELECT COUNT(DISTINCT pull_request_id) AS num_approved, DATE(pull_request_history.created_at) AS accepted_on
+            FROM pull_request_history
+            JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
+            WHERE action = 'merged' AND pull_requests.base_repo_id = :repoid
+            GROUP BY accepted_on) accepted
+        JOIN
+            (SELECT count(distinct pull_request_id) AS num_open, DATE(pull_request_history.created_at) AS date_created
+            FROM pull_request_history
+            JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
+            WHERE pull_request_id IN
+                (SELECT pull_request_id
+                FROM pull_request_history
+                WHERE ACTION = 'opened' AND pull_requests.base_repo_id = :repoid)
+            AND pull_requests.base_repo_id = :repoid
+            GROUP BY date_created) opened
+        ON opened.date_created = accepted.accepted_on
+        """)
 
-
-       
+        return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
