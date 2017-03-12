@@ -119,7 +119,7 @@ GHDataAPIClient.prototype.stargazers = function (params) {
 };
 
 /**
- * Stargazers timeseries
+ * Issues timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
  */
