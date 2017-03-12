@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: MIT -->
 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,9 +14,8 @@
   </head>
   <body>
 
-    <div class="row" style="margin-top:30px">
-      <div class="col-md-6 col-md-offset-3">
-      <form name="input" method="GET">
+    <div class="row">
+      <form name="input" method="GET" style="background:#ddd; padding:30px">
         <div class="form-group">
           <label for="owner">Owner</label>
           <input type="text" class="form-control" name="owner" id="owner">
@@ -25,9 +24,8 @@
           <label for="repo">Repository</label>
           <input type="text" class="form-control" name="repo" id="repo">
         </div>
-        <button type="submit" class="btn btn-default">Submit</button>
+        <button type="submit" class="" style="background:white">Submit</button>
         </form>
-      </div>
     </div>
 
     <div class="container">
@@ -35,7 +33,7 @@
         <section>
           <div class="row">
             <div class="nine columns"><h1 id="repo-label"> facebook / folly </h1></div>
-            <div class="three columns"><div id="status" class="btn btn-success">healthy</div></div>
+            <div class="three columns"><div id="status" class="badge healthy">healthy</div></div>
           </div>
         </section>
 
@@ -55,13 +53,5 @@
         </div> <!-- end of report -->
       </div> <!-- end of container -->
       <script src="scripts/health-report.js"></script>
-      <script>
-        function redirect(){
-          alert("owner");
-          // var q1 = document.getElementById('owner').value;
-          // var q2 = document.getElementById('repo').value
-          // window.location = "http://www.google.com";
-        }
-      </script>
     </body>
   </html>
