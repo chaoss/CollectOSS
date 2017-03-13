@@ -97,7 +97,7 @@ GHDataAPIClient.prototype.get = function (endpoint, params) {
  * @returns {Promise} Resolves with commits timeseries object
  */
 GHDataAPIClient.prototype.commits = function (params) {
-  return this.get('ts/commits', params);
+  return this.get('commits', params);
 };
 
 /**
@@ -106,7 +106,7 @@ GHDataAPIClient.prototype.commits = function (params) {
  * @returns {Promise} Resolves with forks timeeseries object
  */
 GHDataAPIClient.prototype.forks = function (params) {
-  return this.get('ts/forks', params);
+  return this.get('forks', params);
 };
 
 /**
@@ -115,7 +115,7 @@ GHDataAPIClient.prototype.forks = function (params) {
  * @returns {Promise} Resolves with commits timeseries object
  */
 GHDataAPIClient.prototype.stargazers = function (params) {
-  return this.get('ts/stargazers', params);
+  return this.get('stargazers', params);
 };
 
 /**
@@ -132,6 +132,42 @@ GHDataAPIClient.prototype.issues = function (params) {
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
  */
-GHDataAPIClient.prototype.pullrequests = function (params) {
-  return this.get('ts/pulls', params);
+GHDataAPIClient.prototype.pullRequests = function (params) {
+  return this.get('pulls', params);
+};
+
+/** 
+ * How quickly after issues are made they are commented on
+ * @param {Object} params - Query string params to pass to the API
+ * @returns {Promise} Resolves with commits timeseries object
+ */
+GHDataAPIClient.prototype.issuesResponseTime = function (params) {
+  return this.get('issues/response_time', params);
+};
+
+/** 
+ * Pull Requests timeseries
+ * @param {Object} params - Query string params to pass to the API
+ * @returns {Promise} Resolves with commits timeseries object
+ */
+GHDataAPIClient.prototype.contributors = function (params) {
+  return this.get('contributors', params);
+};
+
+/** 
+ * Pull Requests timeseries
+ * @param {Object} params - Query string params to pass to the API
+ * @returns {Promise} Resolves with commits timeseries object
+ */
+GHDataAPIClient.prototype.contributions = function (params) {
+  return this.get('contributions', params);
+};
+
+/** 
+ * Locations of the committers
+ * @param {Object} params - Query string params to pass to the API
+ * @returns {Promise} Resolves with commits timeseries object
+ */
+GHDataAPIClient.prototype.committerLocations = function (params) {
+  return this.get('commits/locations', params);
 };

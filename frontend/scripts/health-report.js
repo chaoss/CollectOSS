@@ -26,7 +26,7 @@ GHDataReport.prototype.buildReport = function () {
   // Commits
   this.api.commits().then(function (commits) {
     MG.data_graphic({
-      title: "Commits/Day",
+      title: "Commits/Week",
       data: MG.convert.date(commits, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,
@@ -42,7 +42,7 @@ GHDataReport.prototype.buildReport = function () {
   // Stargazers
   this.api.stargazers().then(function (stargazers) {
     MG.data_graphic({
-      title: "Stars/Day",
+      title: "Stars/Week",
       data: MG.convert.date(stargazers, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,
@@ -58,7 +58,7 @@ GHDataReport.prototype.buildReport = function () {
   // Forks
   this.api.forks().then(function (forks) {
     MG.data_graphic({
-      title: "Forks/Day",
+      title: "Forks/Week",
       data: MG.convert.date(forks, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,

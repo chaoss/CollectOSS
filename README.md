@@ -9,6 +9,11 @@ GHData is a Python library and REST server that provides data related to GitHub 
 
 GHData is under heavy development; expect frequent backwards-incompatible changes until a 1.x.x release!
 
+Roadmap
+-------
+
+Our technical, outreach, and academic goals [roadmap](docs/roadmap.md).
+
 
 License and Copyright
 ---------------------
@@ -102,4 +107,6 @@ History
 Maintainers
 -----------
 
+
 (This work has been funded through the Alfred P. Sloan Foundation)
+
