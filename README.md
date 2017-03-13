@@ -108,7 +108,5 @@ Maintainers
 -----------
 
 
+(This work has been funded through the Alfred P. Sloan Foundation)
 
-Support
--------
-This work has been funded through the Alfred P. Sloan Foundation

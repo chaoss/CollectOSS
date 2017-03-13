@@ -39,7 +39,7 @@ GHDataReport.prototype.buildReport = function () {
     });
   });
 
-  // Commits
+  // Stargazers
   this.api.stargazers().then(function (stargazers) {
     MG.data_graphic({
       title: "Stars/Week",
@@ -55,7 +55,7 @@ GHDataReport.prototype.buildReport = function () {
     });
   });
 
-  // Commits
+  // Forks
   this.api.forks().then(function (forks) {
     MG.data_graphic({
       title: "Forks/Week",
@@ -68,6 +68,38 @@ GHDataReport.prototype.buildReport = function () {
       x_accessor: 'date',
       y_accessor: 'projects',
       target: '#forks-over-time'
+    });
+  });
+
+  // Issues
+  this.api.issues().then(function (issues) {
+    MG.data_graphic({
+      title: "Issues/Day",
+      data: MG.convert.date(issues, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
+      chart_type: 'point',
+      least_squares: true,
+      full_width: true,
+      height: 300,
+      color_range: ['#aaa'],
+      x_accessor: 'date',
+      y_accessor: 'issues',
+      target: '#issues-over-time'
+    });
+  });
+
+  // Pull Requests
+  this.api.pullrequests().then(function (pulls) {
+    MG.data_graphic({
+      title: "Pullrequests/Day",
+      data: MG.convert.date(pulls, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
+      chart_type: 'point',
+      least_squares: true,
+      full_width: true,
+      height: 300,
+      color_range: ['#aaa'],
+      x_accessor: 'date',
+      y_accessor: 'pull_requests',
+      target: '#pulls-over-time'
     });
   });
 };
