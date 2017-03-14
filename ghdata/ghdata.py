@@ -356,6 +356,5 @@ class GHData(object):
             GROUP BY date_created) opened
         ON opened.date_created = accepted.accepted_on
         """)
-
+        
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
-
