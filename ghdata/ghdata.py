@@ -2,6 +2,7 @@
 
 import sqlalchemy as s
 import pandas as pd
+import requests
 import sys
 if (sys.version_info > (3, 0)):
     import urllib.parse as url
@@ -357,3 +358,4 @@ class GHData(object):
         """)
 
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
+
