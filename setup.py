@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ghdata',
-    version='0.1.7',
+    version='0.2.0',
     description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,
     url='https://github.com/OSSHealth/github-data-cli',
@@ -24,7 +24,6 @@ setup(
     author_email='derek@howderek.com',
 		packages=['ghdata'],
 		package_dir={'ghdata': 'ghdata'},
-		package_data={'': 'LICENSE'},
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -39,9 +38,8 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
-
     keywords='ghtorrent github api data',
-    install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas'],
+    install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],

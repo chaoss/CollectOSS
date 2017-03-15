@@ -1,4 +1,7 @@
 <!-- SPDX-License-Identifier: MIT -->
+
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,15 +13,32 @@
     <script src="scripts/metricsgraphics.min.js"></script>
   </head>
   <body>
+
+    <!-- basic form to get the owner and repo. GET causes auto formating into the URL on submit -->
+    <div class="row">
+      <form name="input" method="GET" style="background:#ddd; padding:30px">
+        <div class="form-group">
+          <label for="owner">Owner</label>
+          <input type="text" class="form-control" name="owner" id="owner">
+        </div>
+        <div class="form-group">
+          <label for="repo">Repository</label>
+          <input type="text" class="form-control" name="repo" id="repo">
+        </div>
+        <button type="submit" class="" style="background:white">Submit</button>
+        <br><small>Currently only repositories in the <a href="http://ghtorrent.org/msr14.html">MSR14 dataset</a> are supported. The projects on that site are listed as &lt;repo&gt;/&lt;owner&gt;<br>(for instance, devtoos/hadley would is the project devtools by the owner hadley)</small>
+        </form>
+    </div>
+
     <div class="container">
       <div class="row report">
         <section>
           <div class="row">
-            <div class="nine columns"><h1 id="repo"> facebook / folly </h1></div>
+            <div class="nine columns"><h1 id="repo-label"> facebook / folly </h1></div>
             <div class="three columns"><div id="status" class="badge healthy">healthy</div></div>
           </div>
         </section>
-        
+
         <section>
           <h2>Growth Indicators</h2>
           <div class="row trends">
@@ -26,10 +46,14 @@
             <div class="four columns" id="stargazers-over-time"></div>
             <div class="four columns" id="forks-over-time"></div>
           </div>
+          <!-- <h2>Growth Indicators</h2> -->
+          <div class="row trends">
+            <div class="four columns" id="issues-over-time"></div>
+            <div class="four columns" id="pulls-over-time"></div>
+          </div>
         </section>
+        </div> <!-- end of report -->
 
-      </div>
-      </div> <!-- end of report -->
       </div> <!-- end of container -->
       <script src="scripts/health-report.js"></script>
     </body>

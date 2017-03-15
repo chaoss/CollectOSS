@@ -22,11 +22,11 @@ GHDataReport.prototype.getParameterByName = function(name, url) {
 };
 
 GHDataReport.prototype.buildReport = function () {
-  document.getElementById('repo').innerHTML = this.api.owner + ' / ' + this.api.repo;
+  document.getElementById('repo-label').innerHTML = this.api.owner + ' / ' + this.api.repo;
   // Commits
-  this.api.commits().then(function (commits) {
+  this.api.commitsByWeek().then(function (commits) {
     MG.data_graphic({
-      title: "Commits/Day",
+      title: "Commits/Week",
       data: MG.convert.date(commits, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,
@@ -39,10 +39,10 @@ GHDataReport.prototype.buildReport = function () {
     });
   });
 
-  // Commits
-  this.api.stargazers().then(function (stargazers) {
+  // Stargazers
+  this.api.stargazersByWeek().then(function (stargazers) {
     MG.data_graphic({
-      title: "Stars/Day",
+      title: "Stars/Week",
       data: MG.convert.date(stargazers, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,
@@ -55,10 +55,10 @@ GHDataReport.prototype.buildReport = function () {
     });
   });
 
-  // Commits
-  this.api.forks().then(function (forks) {
+  // Forks
+  this.api.forksByWeek().then(function (forks) {
     MG.data_graphic({
-      title: "Forks/Day",
+      title: "Forks/Week",
       data: MG.convert.date(forks, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,
@@ -68,6 +68,38 @@ GHDataReport.prototype.buildReport = function () {
       x_accessor: 'date',
       y_accessor: 'projects',
       target: '#forks-over-time'
+    });
+  });
+
+  // Issues
+  this.api.issuesByWeek().then(function (issues) {
+    MG.data_graphic({
+      title: "Issues/Week",
+      data: MG.convert.date(issues, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
+      chart_type: 'point',
+      least_squares: true,
+      full_width: true,
+      height: 300,
+      color_range: ['#aaa'],
+      x_accessor: 'date',
+      y_accessor: 'issues',
+      target: '#issues-over-time'
+    });
+  });
+
+  // Pull Requests
+  this.api.pullRequestsByWeek().then(function (pulls) {
+    MG.data_graphic({
+      title: "Pull Requests/Week",
+      data: MG.convert.date(pulls, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
+      chart_type: 'point',
+      least_squares: true,
+      full_width: true,
+      height: 300,
+      color_range: ['#aaa'],
+      x_accessor: 'date',
+      y_accessor: 'pull_requests',
+      target: '#pulls-over-time'
     });
   });
 };
