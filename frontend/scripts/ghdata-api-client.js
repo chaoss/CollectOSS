@@ -96,8 +96,8 @@ GHDataAPIClient.prototype.get = function (endpoint, params) {
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
  */
-GHDataAPIClient.prototype.commits = function (params) {
-  return this.get('commits', params);
+GHDataAPIClient.prototype.commitsByWeek = function (params) {
+  return this.get('timeseries/commits', params);
 };
 
 /**
@@ -105,8 +105,8 @@ GHDataAPIClient.prototype.commits = function (params) {
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with forks timeeseries object
  */
-GHDataAPIClient.prototype.forks = function (params) {
-  return this.get('forks', params);
+GHDataAPIClient.prototype.forksByWeek = function (params) {
+  return this.get('timeseries/forks', params);
 };
 
 /**
@@ -114,8 +114,8 @@ GHDataAPIClient.prototype.forks = function (params) {
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
  */
-GHDataAPIClient.prototype.stargazers = function (params) {
-  return this.get('stargazers', params);
+GHDataAPIClient.prototype.stargazersByWeek = function (params) {
+  return this.get('timeseries/stargazers', params);
 };
 
 /**
@@ -123,8 +123,8 @@ GHDataAPIClient.prototype.stargazers = function (params) {
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
  */
-GHDataAPIClient.prototype.issues = function (params) {
-  return this.get('ts/issues', params);
+GHDataAPIClient.prototype.issuesByWeek = function (params) {
+  return this.get('timeseries/issues', params);
 };
 
 /**
@@ -132,8 +132,17 @@ GHDataAPIClient.prototype.issues = function (params) {
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
  */
-GHDataAPIClient.prototype.pullRequests = function (params) {
-  return this.get('pulls', params);
+GHDataAPIClient.prototype.pullRequestsByWeek = function (params) {
+  return this.get('timeseries/pulls', params);
+};
+
+/** 
+ * Pull Requests timeseries
+ * @param {Object} params - Query string params to pass to the API
+ * @returns {Promise} Resolves with commits timeseries object
+ */
+GHDataAPIClient.prototype.contributionsByWeek = function (params) {
+  return this.get('timeseries/contributions', params);
 };
 
 /** 
@@ -142,25 +151,16 @@ GHDataAPIClient.prototype.pullRequests = function (params) {
  * @returns {Promise} Resolves with commits timeseries object
  */
 GHDataAPIClient.prototype.issuesResponseTime = function (params) {
-  return this.get('issues/response_time', params);
+  return this.get('timeseries/issues/response_time', params);
 };
 
 /** 
- * Pull Requests timeseries
+ * Contributions timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
  */
 GHDataAPIClient.prototype.contributors = function (params) {
-  return this.get('contributors', params);
-};
-
-/** 
- * Pull Requests timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.contributions = function (params) {
-  return this.get('contributions', params);
+  return this.get('timeseries/contributors', params);
 };
 
 /** 

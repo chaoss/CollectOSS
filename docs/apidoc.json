@@ -1,0 +1,7 @@
+{
+  "name": "GHData API",
+  "version": "0.0.1",
+  "description": "REST API for Health and Sustainability Metrics",
+  "title": "GHData API",
+  "url" : "http://localhost:5000/unstable"
+}

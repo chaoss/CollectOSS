@@ -54,7 +54,7 @@ class GHDataClient:
 
 
     def get(self, key, **args):
-        # Interact with ghdata and convert dataframes to JSON"""
+        # Interact with ghdata and convert dataframes to JSON
         self.__connect()
         data = getattr(self.__ghdata, key)(**args)
         if (hasattr(data, 'to_json')):
@@ -142,10 +142,11 @@ def init():
     app.run(debug=client.DEBUG)
 
 
-##################
-#     Routes     #
-##################
-
+"""
+@api {get} / API Status
+@apiName Status
+@apiGroup Misc
+"""
 @app.route('/{}/'.format(GHDATA_API_VERSION))
 def api_root():
     """API status"""
@@ -155,17 +156,237 @@ def api_root():
                     mimetype="application/json")
     return info
 
-# Timeseries
-app.route('/{}/<owner>/<repo>/commits'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'commits'))
-app.route('/{}/<owner>/<repo>/forks'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'forks'))
-app.route('/{}/<owner>/<repo>/issues'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issues'))
-app.route('/{}/<owner>/<repo>/issues/response_time'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issue_response_time'))
-app.route('/{}/<owner>/<repo>/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
-app.route('/{}/<owner>/<repo>/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
+#######################
+#     Timeseries      #
+#######################
+
+"""
+@api {get} /:owner/:repo/commits Commits by Week
+@apiName CommitsByWeek
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z", 
+                            "commits": 153
+                        }, 
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "commits": 192
+                        }
+                    ]
+"""
+app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'commits'))
+
+"""
+@api {get} /:owner/:repo/forks Forks by Week
+@apiName ForksByWeek
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z", 
+                            "forks": 13
+                        }, 
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "forks": 12
+                        }
+                    ]
+"""
+app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'forks'))
+
+"""
+@api {get} /:owner/:repo/issues Issues by Week
+@apiName IssuesByWeek
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z", 
+                            "issues":13
+                        }, 
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "issues":15
+                        }
+                    ]
+"""
+app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issues'))
+
+"""
+@api {get} /:owner/:repo/issues/response_time Response Time for Issues
+@apiName IssueResponseTime
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "created_at": "2013-09-16T17:00:54.000Z",
+                            "responded_at": "2013-09-16T17:20:58.000Z"
+                        },
+                        {
+                            "created_at": "2013-09-16T09:31:34.000Z",
+                            "responded_at": "2013-09-16T09:43:03.000Z"
+                        }
+                    ]
+"""
+app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issue_response_time'))
+
+"""
+@api {get} /:owner/:repo/pulls Pull Requests by Week
+@apiName PullRequestsByWeek
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z", 
+                            "pull_requests": 1
+                            "comments": 11
+                        }, 
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "pull_requests": 2
+                            "comments": 31
+                        }
+                    ]
+"""
+app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
+
+"""
+@api {get} /:owner/:repo/stargazers Stargazers by Week
+@apiName StargazersByWeek
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z", 
+                            "watchers": 133
+                        }, 
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "watchers": 54
+                        }
+                    ]
+"""
+app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
+
+"""
+@api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
+@apiDescription For each week, the rate is calculated as (pull requests merged that week) / (pull requests opened that week)
+@apiName Stargazers
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z", 
+                            "rate": 0.5
+                        }, 
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "rate": 0.33
+                        }
+                    ]
+"""
 app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pull_acceptance_rate'))
 
 # Contribution Trends
+"""
+@api {get} /:owner/:repo/contributors Total Contributions by User
+@apiName TotalContributions
+@apiGroup Users
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                   [
+                        {
+                            "login": "foo",
+                            "location": "Springfield",
+                            "commits": 1337.0,
+                            "pull_requests": 60.0,
+                            "issues": null,
+                            "commit_comments": 158.0,
+                            "pull_request_comments": 718.0,
+                            "issue_comments": 1668.0
+                        },
+                        {
+                            "login": "bar",
+                            "location": null,
+                            "commits": 3968.0,
+                            "pull_requests": null,
+                            "issues": 12.0,
+                            "commit_comments": 158.0,
+                            "pull_request_comments": 718.0,
+                            "issue_comments": 1568.0
+                        }
+                    ]
+"""
 app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'contributors'))
+
+#######################
+# Contribution Trends #
+#######################
+
+"""
+@api {get} /:owner/:repo/contributions Contributions by Week
+@apiName ContributionsByWeek
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+@apiParam (String) user Limit results to the given user's contributions
+
+@apiSuccessExample {json} Success-Response:
+                   [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z", 
+                            "commits": 37.0,
+                            "pull_requests": null,
+                            "issues": null,
+                            "commit_comments": 7.0,
+                            "pull_request_comments": 8.0,
+                            "issue_comments": 17.0
+                        },
+                        {
+                            "date": "2015-01-08T00:00:00.000Z", 
+                            "commits": 68.0,
+                            "pull_requests": null,
+                            "issues": 12.0,
+                            "commit_comments": 18.0,
+                            "pull_request_comments": 13.0,
+                            "issue_comments": 28.0
+                        }
+                    ]
+"""
 @app.route('/{}/<owner>/<repo>/contributions'.format(GHDATA_API_VERSION))
 def contributions(owner, repo):
     repoid = client.get('repoid', owner=owner, repo=repo)
@@ -180,9 +401,53 @@ def contributions(owner, repo):
                     mimetype="application/json")
 
 # Diversity
+
+"""
+@api {get} /:owner/:repo/commits/locations Commits and Location by User
+@apiName Stargazers
+@apiGroup Diversity
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "login": "bonnie",
+                            "location": "Rowena, TX",
+                            "commits": 12
+                        },
+                        {   
+                            "login":"clyde",
+                            "location":"Ellis County, TX",
+                            "commits": 12
+                        }
+                    ]
+"""
 app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'committer_locations'))
 
 # Popularity
+"""
+@api {get} /:owner/:repo/linking_websites Linking Websites
+@apiDescription Returns an array of websites and their rank according to http://publicwww.com/
+@apiName LinkingWebsites
+@apiGroup Popularity
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "url": "missouri.edu",
+                            "rank": "1"
+                        },
+                        {
+                            "url": "unomaha.edu",
+                            "rank": "2"
+                        }
+                    ]
+"""
 app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'linking_websites'))
 
 if __name__ == '__main__':

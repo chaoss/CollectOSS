@@ -348,13 +348,10 @@ class GHData(object):
             (SELECT count(distinct pull_request_id) AS num_open, DATE(pull_request_history.created_at) AS date_created
             FROM pull_request_history
             JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
-            WHERE pull_request_id IN
-                (SELECT pull_request_id
-                FROM pull_request_history
-                WHERE ACTION = 'opened' AND pull_requests.base_repo_id = :repoid)
+            WHERE action = 'opened'
             AND pull_requests.base_repo_id = :repoid
             GROUP BY date_created) opened
         ON opened.date_created = accepted.accepted_on
         """)
-        
+
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})

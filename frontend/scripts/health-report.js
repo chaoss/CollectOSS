@@ -24,7 +24,7 @@ GHDataReport.prototype.getParameterByName = function(name, url) {
 GHDataReport.prototype.buildReport = function () {
   document.getElementById('repo').innerHTML = this.api.owner + ' / ' + this.api.repo;
   // Commits
-  this.api.commits().then(function (commits) {
+  this.api.commitsByWeek().then(function (commits) {
     MG.data_graphic({
       title: "Commits/Week",
       data: MG.convert.date(commits, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
@@ -40,7 +40,7 @@ GHDataReport.prototype.buildReport = function () {
   });
 
   // Stargazers
-  this.api.stargazers().then(function (stargazers) {
+  this.api.stargazersByWeek().then(function (stargazers) {
     MG.data_graphic({
       title: "Stars/Week",
       data: MG.convert.date(stargazers, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
@@ -56,7 +56,7 @@ GHDataReport.prototype.buildReport = function () {
   });
 
   // Forks
-  this.api.forks().then(function (forks) {
+  this.api.forksByWeek().then(function (forks) {
     MG.data_graphic({
       title: "Forks/Week",
       data: MG.convert.date(forks, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
@@ -72,9 +72,9 @@ GHDataReport.prototype.buildReport = function () {
   });
 
   // Issues
-  this.api.issues().then(function (issues) {
+  this.api.issuesByWeek().then(function (issues) {
     MG.data_graphic({
-      title: "Issues/Day",
+      title: "Issues/Week",
       data: MG.convert.date(issues, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,
@@ -88,9 +88,9 @@ GHDataReport.prototype.buildReport = function () {
   });
 
   // Pull Requests
-  this.api.pullrequests().then(function (pulls) {
+  this.api.pullRequestsByWeek().then(function (pulls) {
     MG.data_graphic({
-      title: "Pullrequests/Day",
+      title: "Pull Requests/Week",
       data: MG.convert.date(pulls, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
       chart_type: 'point',
       least_squares: true,
