@@ -22,7 +22,7 @@ GHDataReport.prototype.getParameterByName = function(name, url) {
 };
 
 GHDataReport.prototype.buildReport = function () {
-  document.getElementById('repo').innerHTML = this.api.owner + ' / ' + this.api.repo;
+  document.getElementById('repo-label').innerHTML = this.api.owner + ' / ' + this.api.repo;
   // Commits
   this.api.commitsByWeek().then(function (commits) {
     MG.data_graphic({
