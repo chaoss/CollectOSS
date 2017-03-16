@@ -13,3 +13,9 @@ http://localhost:8000
 Try entering "hadley" as the repo owner and "devtools" as the repo when you fire it up.
 
 ## Development and Contribution Pathways.
+
+With these two components of ghdata in mind, it might be helpful to take a step back and look at the project's overall technical architecture.
+
+Then, go ahead and look at some of the items the Linux Foundation and our other stakeholders are interested in measuring with regards to OSS Project Health.
+
+https://wiki.linuxfoundation.org/oss-health-metrics/metrics
