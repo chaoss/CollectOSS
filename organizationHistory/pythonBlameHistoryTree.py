@@ -10,8 +10,10 @@
 #Edit the line in this code that says db = sqlalchemy.create_engine to match your username:password@hostname:port/database.
 
 #This file is hardcoded to download the ghdata repository.
-#Since it is a preliminary example, each time it runs, it deletes the local ghdata repo and re-downloads it (though this might not be a good option for the future).
-#Because of this: if you have a folder named ghdata whose contents you do not want deleted, do not place this file in the same folder as your ghdata folder.
+#Since it is a preliminary example, each time it runs, 
+#it deletes the local ghdata repo and re-downloads it (though this might not be a good option for the future).
+#Because of this: if you have a folder named ghdata whose contents you do not want deleted, 
+#do not place this file in the same folder as your ghdata folder.
 
 #to run this, type "python pythonBlameHistoryTree.py" into the command prompt
 #You will see some output about running on 127.0.0.1:5000 in the command prompt
