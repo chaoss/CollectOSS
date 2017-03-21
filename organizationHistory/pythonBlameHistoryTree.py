@@ -58,7 +58,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def pythonBlameHistory():
+    #path is the hardcoded folder for the last download of ghdata
     path = './ghdata'
+    #We must remove the old ghdata if we want to download a new copy.
+    #In order to delete it, we must first change the permissions
+    #To be writable for all files and directories.
     if os.path.exists(path):
         for root, directories, files in os.walk(path):  
             for directory in directories:  
@@ -67,45 +71,94 @@ def pythonBlameHistory():
                 os.chmod(os.path.join(root, file), stat.S_IWRITE)
         os.chmod(path, stat.S_IWRITE)
     
+        #delete the old ghdata
         shutil.rmtree(path)
     
+    #connect to the database username:password@hostname:port/databasename
     db = sqlalchemy.create_engine('mysql+pymysql://root:password@localhost:3306/msr14')
     schema = sqlalchemy.MetaData()
     schema.reflect(bind=db)
     
+    #Get the ghdata repository from GitHub
     repo = Repo.init('ghdata')
     origin = repo.create_remote('origin','https://github.com/OSSHealth/ghdata.git')
     origin.fetch()
     origin.pull(origin.refs[0].remote_head)
     
+    #Dictionary to store results of sql queries
+    #associating emails with organizations.
+    #Without this dictionary, we would have to repeat
+    #the same query over and over, which on my local machine
+    #meant a runtime of over 24 hours (as opposed to several minutes using the dictionary)
     emailsAndOrganizations = {}
+    #This dictionary keeps track of the lines written per organization for a single file.
     organizationTotals = {}
+    #This is the total number of lines in a single file
     lineTotal = 0
+    #this is used later to hold percentage results for output
     percentage = 0
+    #This is the total number of lines in an entire repo
     repoTotalLines = 0
+    #This dictionary keeps track of the lines written per organization for the entire repo.
     repoOrganizationTotals = {}
     
+    #The output string will be displayed to the screen once everything is done running.
     outputString = ""
+    #Outer loop: loop through each commit in the master branch.
+    #This corresponds to the history of commits over time.
     for thisCommit in repo.iter_commits('master'):
+        #Since we want to see the change over time in repo percentage by organization,
+        #clear the variables for total lines and organization lines for each new commit
+        #we examine.
         repoOrganizationTotals = {}
         repoTotalLines = 0
+        #Testing output: only purpose is to show you it's still running :)
         print("Outer loop: " + str(thisCommit))
+        #Now loop through every file in the repo.
+        #You cannot use the os library file/directory loop for this part.
+        #(as was used above to change file permissions)
+        #That is because some files do not exist in every commit.
+        #You must loop through the commit tree, not the ghdata directory.
         for entry in thisCommit.tree.traverse():
+            #For each file, we want to clear out the total lines and organization totals per file.
+            #That's because we're starting over with a new file.
             organizationTotals = {}
             lineTotal = 0
+            #Files are of the blob type.  This if statement prevents us from trying
+            #to examine 'lines' in a directory.
             if entry.type == 'blob':
+                #Now for each file, perform git blame.  This will traverse
+                #the lines in the file.
+                #You can see there are now two variables of type commit:
+                #thisCommit and commit (will improve variable naming in a future update)
+                #thisCommit is the commit with respect to the overall repo history.
+                #commit is the commit in which this line was most recently changed
+                #as obtained through git blame.  We use the "commit" variable
+                #to obtain the author of the commit for when the lines were last changed.
                 for commit, lines in repo.blame(thisCommit, entry.path):
+                    #Git blame does not always return one line at a time.
+                    #Sometimes we are returned several lines committed by the same author.
+                    #In that case, we must count how many lines there are or our
+                    #total will not match the actual file.
                     blameLineCount = 0
                     for line in lines:
+                        #increment lines to later attribute to an organization.
                         blameLineCount += 1
+                        #increment lines in the file as a whole
                         lineTotal += 1
+                    #Testing output: only shows that things are still running.
                     print("Inner loop: " + str(commit))
+                    #Get the email address of the author of this commit.
+                    #If we already have it in our dictionary, increase the total
+                    #lines for the associated organization by blameLineCount
                     if commit.author.email in emailsAndOrganizations:
                         for organization in emailsAndOrganizations[commit.author.email]:
                             if organization not in organizationTotals:
                                 organizationTotals[organization] = blameLineCount
                             else:
                                 organizationTotals[organization] += blameLineCount
+                    #If the email address is not in our dictionary, we must query
+                    #the database to get any associated organizations.
                     else:
                         sql = text('select orgUser.login as org_name '
                                    'from users as thisUser join organization_members '
@@ -113,27 +166,41 @@ def pythonBlameHistory():
                                    'join users as orgUser on organization_members.org_id = orgUser.id '
                                    'where thisUser.email = "' + commit.author.email + '"')
                         result = db.engine.execute(sql)
+                        #add the email to the dictionary
                         emailsAndOrganizations[commit.author.email] = []
+                        #if there are organizations in the result, associate those organizations with the
+                        #user email in the dictionary.
+                        #Then, set or add blameLineCount to the organization total.
                         for row in result:
                             emailsAndOrganizations[commit.author.email] = emailsAndOrganizations[commit.author.email] + [row[0]]
                             if row[0] not in organizationTotals:
                                 organizationTotals[row[0]] = blameLineCount
                             else:
                                 organizationTotals[row[0]] += blameLineCount
+                #If there is more than one line in this file
                 if lineTotal > 0:
+                    #Add the total lines in this file to the total lines in the repo.
                     repoTotalLines += lineTotal
+                    #Loop through the organization total lines for this file.
+                    #Add each organization to the repo's organization total lines.
                     for key in organizationTotals:
                         if key not in repoOrganizationTotals:
                             repoOrganizationTotals[key] = organizationTotals[key]
                         else:
                             repoOrganizationTotals[key] += organizationTotals[key]
+                        #Calculate the percentage for this file by organization (no longer used: former testing output)
                         percentage = organizationTotals[key] / lineTotal * 100
+        #Construct output for this commit.  First output the commit, date, and total lines in the repo.
         outputString = outputString + "REPO TOTALS FOR COMMIT: " + str(thisCommit) + " authored at " + time.strftime("%I:%M %p, %b %d, %Y", time.gmtime(thisCommit.authored_date)) + " <br>" 
         outputString = outputString + "TOTAL REPO LINES: " + str(repoTotalLines) + "<br>"
+        #Now loop through the organizations and calculate the percentage of the repo for each.
+        #Output a line for each organization showing organization name, lines from that organization, percentage of the file
         for key in repoOrganizationTotals:
             percentage = repoOrganizationTotals[key] / repoTotalLines * 100
             outputString = outputString + " ORGANIZATION: " + str(key) + " ORG TOTAL LINES: " + str(repoOrganizationTotals[key]) + " PERCENTAGE OF REPO: " + str(percentage) + "%<br>"
+        #Output line between each commit in the history for easier legibility.
         outputString = outputString + "----------------------------------------------------------------------------<br>"
+    #Show the outputString in the browser.
     return outputString
 
 if __name__ == "__main__":
