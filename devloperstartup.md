@@ -1,5 +1,7 @@
 ## Running the ghdata project
 
+These instructions assume that you have already cloned the repository into a local directory called "ghdata". This can be accomplished with the github windows client, mac client or command line. 
+
 There are two ways to run the project. The recommended way is from a github download that allows you to store and commit changes locally and ultimately back to your team repo. For example, if you clone a repo locally, you would then navigate to that directory and follow these four steps.
 
 1. Start the server
