@@ -10,7 +10,7 @@ if (sys.version_info > (3, 0)):
 else:
     import ConfigParser as configparser
 from dateutil import parser, tz
-from ghdata import GHData
+import ghdata
 
 GHDATA_API_VERSION = 'unstable'
 
@@ -45,18 +45,19 @@ class GHDataClient:
         Generates the dbstr from the configuration loaded earlier, opens the connection
         """
         try:
-            if (hasattr(self, '__ghdata') == False):
+            if (hasattr(self, '__ghtorrent') == False):
                 self.__dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.__db_user, self.__db_pass, self.__db_host, self.__db_port, self.__db_name)
-                self.__ghdata = GHData(dbstr=self.__dbstr, public_www_api_key=self.__public_www_api_key)
+                self.__ghtorrent = ghdata.GHTorrent(dbstr=self.__dbstr)
+                self.__publicwww = ghdata.PublicWWW(public_www_api_key=self.__public_www_api_key)
         except:
             print('Failed to connect to database using:')
             print(self.__dbstr)
 
 
-    def get(self, key, **args):
+    def get(self, func, **args):
         # Interact with ghdata and convert dataframes to JSON
         self.__connect()
-        data = getattr(self.__ghdata, key)(**args)
+        data = func(**args)
         if (hasattr(data, 'to_json')):
             return data.to_json(orient='records', date_format='iso', date_unit='ms')
         else:
@@ -64,13 +65,14 @@ class GHDataClient:
 
 
 
-def basic_endpoint(flaskapp, table):
+def jsonify(flaskapp, func):
     """
-    Simplifies API endpoints that just accept owner and repo
+    Simplifies API endpoints that just accept owner and repo,
+    serializes them and spits them out
     """
     def generated_function(owner, repo):
         repoid = client.get('repoid', owner=owner, repo=repo)
-        return Response(response=client.get(table, repoid=repoid),
+        return Response(response=client.get(func, repoid=repoid),
                 status=200,
                 mimetype="application/json")
     generated_function.__name__ = table
@@ -180,7 +182,7 @@ def api_root():
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'commits'))
+app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.commits))
 
 """
 @api {get} /:owner/:repo/forks Forks by Week
@@ -202,7 +204,7 @@ app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(ba
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'forks'))
+app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.forks))
 
 """
 @api {get} /:owner/:repo/issues Issues by Week
@@ -224,10 +226,10 @@ app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(basi
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issues'))
+app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.issues))
 
 """
-@api {get} /:owner/:repo/issues/response_time Response Time for Issues
+@api {get} /:owner/:repo/issues/response_time Issue Response Time
 @apiName IssueResponseTime
 @apiGroup Timeseries
 
@@ -246,7 +248,7 @@ app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(bas
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issue_response_time'))
+app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.issue_response_time))
 
 """
 @api {get} /:owner/:repo/pulls Pull Requests by Week
@@ -270,7 +272,7 @@ app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
+app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.pulls))
 
 """
 @api {get} /:owner/:repo/stargazers Stargazers by Week
@@ -292,7 +294,7 @@ app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(basi
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
+app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.stargazers))
 
 """
 @api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
@@ -315,7 +317,7 @@ app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pull_acceptance_rate'))
+app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.pull_acceptance_rate))
 
 # Contribution Trends
 """
@@ -350,7 +352,7 @@ app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'contributors'))
+app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.contributors))
 
 #######################
 # Contribution Trends #
@@ -424,7 +426,7 @@ def contributions(owner, repo):
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'committer_locations'))
+app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(jsonify(app, client.__ghtorrent.committer_locations))
 
 # Popularity
 """
@@ -448,7 +450,7 @@ app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(bas
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'linking_websites'))
+app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(jsonify(app, client.__publicwww.linking_websites))
 
 if __name__ == '__main__':
     init()
