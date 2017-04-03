@@ -34,5 +34,12 @@ ifndef DB_TEST_URL
 	@ exit 1
 endif
 
+ifndef PUBLIC_WWW_TEST_API_KEY
+	@ printf "Please set PUBLIC_WWW_TEST_API_KEY to a valid API key. Get one here:\n\
+	\n\
+	    https://publicwww.com/\n\n"
+	@ exit 1
+endif
+
 test: check-test-env
 		python -m pytest

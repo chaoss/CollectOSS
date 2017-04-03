@@ -5,5 +5,4 @@ the health and sustainability of GitHub repositories.
 
 Most functions in the library return Pandas DataFrames.
 """
-from .services.ghtorrent import GHTorrent
-from .services.publicwww import PublicWWW
+from services import *

@@ -1,4 +1,5 @@
 import pandas as pd
+import urllib as url
 import requests
 
 
@@ -27,7 +28,8 @@ class PublicWWW(object):
         """
 
         # Find websites that link to that repo
-        query = '<a+href%3D"{repourl}"'.format(repourl=url.quote_plus(repo_url.replace('api.', '').replace('repos/', '')))
+        repo_url="https://github.com/{owner}/{repo}".format(owner=owner, repo=repo)
+        query = '<a+href%3D"{repourl}"'.format(repourl=url.quote_plus(repo_url))
         r = 'https://publicwww.com/websites/{query}/?export=csv&apikey={apikey}'.format(query=query, apikey=self.PUBLIC_WWW_API_KEY)
         result =  pd.read_csv(r, delimiter=';', header=None, names=['url', 'rank'])
         return result
