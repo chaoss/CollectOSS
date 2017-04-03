@@ -26,11 +26,6 @@ def pythonBlameHistory():
         #delete the old ghdata
         shutil.rmtree(repo_path)
     
-    #connect to the database username:password@hostname:port/databasename
-    db = sqlalchemy.create_engine('mysql+pymysql://root:r00tPW###@localhost:3306/msr14')
-    schema = sqlalchemy.MetaData()
-    schema.reflect(bind=db)
-    
     #Get the ghdata repository from GitHub
     repo = Repo.init('ghdata')
     origin = repo.create_remote('origin','https://github.com/OSSHealth/ghdata.git')
