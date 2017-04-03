@@ -36,6 +36,10 @@
 #User1 is a member of Microsoft and IBM
 #Microsoft wrote 100% of the repository.  IBM also wrote 100% of the repository for a total of 200%
 
+#Other issues:
+#If a user does not have both an email and organization available in GHTorrent database,
+#the user will not be counted towards any organization.
+
 #Future changes planned for this file:
 #Code cleanup for better readability
 #Code commenting for each portion
