@@ -178,7 +178,7 @@ def pythonBlameHistory():
                                 lines_per_organization_per_file[organization_row[0]] = blameLineCount
                             else:
                                 lines_per_organization_per_file[organization_row[0]] += blameLineCount
-                #If there is more than one line in this file
+                #If there is at least one line in this file
                 if total_lines_in_file > 0:
                     #Add the total lines in this file to the total lines in the repo.
                     total_lines_in_repo += total_lines_in_file
