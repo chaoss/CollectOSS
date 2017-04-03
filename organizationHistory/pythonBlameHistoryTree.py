@@ -131,10 +131,10 @@ def pythonBlameHistory():
                 #Now for each file, perform git blame.  This will traverse
                 #the lines in the file.
                 #You can see there are now two variables of type commit:
-                #history_commit and commit (will improve variable naming in a future update)
+                #history_commit and blame_commit (will improve variable naming in a future update)
                 #history_commit is the commit with respect to the overall repo history.
-                #commit is the commit in which this line was most recently changed
-                #as obtained through git blame.  We use the "commit" variable
+                #blame_commit is the commit in which this line was most recently changed
+                #as obtained through git blame.  We use the "blame_commit" variable
                 #to obtain the author of the commit for when the lines were last changed.
                 for blame_commit, lines in repo.blame(history_commit, file_in_repo.path):
                     #Git blame does not always return one line at a time.
