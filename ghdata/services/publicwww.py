@@ -1,5 +1,9 @@
 import pandas as pd
-import urllib as url
+import sys
+if (sys.version_info > (3, 0)):
+    import urllib.parse as url
+else:
+    import urllib as url
 import requests
 
 

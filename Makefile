@@ -11,7 +11,8 @@ default:
 	\e[1mdocs \e[0m        Generates all documentation\n"
 
 install:
-		pip install --upgrade .
+		pip2 install --upgrade .
+		pip3 install --upgrade .
 
 install-dev: install
 		npm install -g apidoc
@@ -42,4 +43,5 @@ ifndef PUBLIC_WWW_TEST_API_KEY
 endif
 
 test: check-test-env
-		python -m pytest
+		python2 -m pytest
+		python3 -m pytest
