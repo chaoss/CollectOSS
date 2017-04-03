@@ -5,4 +5,4 @@ the health and sustainability of GitHub repositories.
 
 Most functions in the library return Pandas DataFrames.
 """
-from services import *
+from .services import * 
