@@ -36,12 +36,6 @@ def pythonBlameHistory():
     origin.fetch()
     origin.pull(origin.refs[0].remote_head)
     
-    #Dictionary to store results of sql queries
-    #associating emails with users.
-    #Without this dictionary, we would have to repeat
-    #the same query over and over, which on my local machine
-    #meant a runtime of over 24 hours (as opposed to several minutes using the dictionary)
-    user_associated_with_email = {}
     #This dictionary keeps track of the lines written per user for a single file.
     lines_per_user_per_file = {}
     #This is the total number of lines in a single file
@@ -59,8 +53,6 @@ def pythonBlameHistory():
     #This corresponds to the history of commits over time.
     lines_per_user_entire_repo = {}
     total_lines_in_repo = 0
-    #Testing output: only purpose is to show you it's still running :)
-    print("Outer loop: " + str(repo.head.commit))
     #Now loop through every file in the repo.
     #You cannot use the os library file/directory loop for this part.
     #(as was used above to change file permissions)
@@ -112,8 +104,6 @@ def pythonBlameHistory():
     for user in lines_per_user_entire_repo:
         percentage = lines_per_user_entire_repo[user] / total_lines_in_repo * 100
         outputString = outputString + " user: " + str(user) + " USER TOTAL LINES: " + str(lines_per_user_entire_repo[user]) + " PERCENTAGE OF REPO: " + str(percentage) + "%<br>"
-    #Output line between each commit in the history for easier legibility.
-    outputString = outputString + "----------------------------------------------------------------------------<br>"
     #Show the outputString in the browser.
     return outputString
 
