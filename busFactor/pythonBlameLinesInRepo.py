@@ -54,13 +54,6 @@ def pythonBlameHistory():
         #Files are of the blob type.  This if statement prevents us from trying
         #to examine 'lines' in a directory.
         if file_in_repo.type == 'blob':
-            #Now for each file, perform git blame.  This will traverse
-            #the lines in the file.
-            #You can see there are now two variables of type commit:
-            #history_commit and blame_commit (will improve variable naming in a future update)
-            #history_commit is the commit with respect to the overall repo history.
-            #blame_commit is the commit in which this line was most recently changed
-            #as obtained through git blame.
             for blame_commit, lines in repo.blame('HEAD', file_in_repo.path):
                 #Git blame does not always return one line at a time.
                 #Sometimes we are returned several lines committed by the same author.
