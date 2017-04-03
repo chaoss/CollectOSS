@@ -1,3 +1,7 @@
+#Percentage of code associated with each author email.
+#Author email is chosen in place of username because
+#not all users have an email in GHTorrent/MSR14
+
 from flask import Flask
 from git import *
 import shutil
