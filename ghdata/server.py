@@ -52,7 +52,8 @@ def flaskify(flaskapp, func):
     generated_function.__name__ = func.__name__
     return generated_function
 
-app = Flask(__name__, static_url_path=os.path.abspath('../static/'))
+
+app = Flask(__name__, static_url_path=os.path.abspath('static/'))
 CORS(app)
 # Flags and Initialization
 
@@ -416,7 +417,6 @@ if (DEBUG):
     # @todo: Figure out why this isn't working.
     @app.route('/')
     def root():
-        print('AHH')
         return app.send_static_file('index.html')
 
     @app.route('/scripts/<path>')
@@ -429,5 +429,8 @@ if (DEBUG):
 
     app.debug = True
 
-if __name__ == '__main__':
+def run():
     app.run(host=host, port=int(port), debug=DEBUG)
+
+if __name__ == '__main__':
+    run()
