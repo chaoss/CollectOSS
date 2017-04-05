@@ -28,7 +28,7 @@
      ```
 
   2. Edit [ghdata repo]/frontend/scripts/health-report.js and 
-     replace 'http://localhost:5000/' with 'http://[your EC2 hostname>]:5000/'
+     replace 'http://localhost:5000/' with 'http://[your EC2 hostname]:5000/'
 
   3. Move the files in frontend to a publicly accessible folder. 
 
