@@ -10,136 +10,94 @@ if (sys.version_info > (3, 0)):
 else:
     import ConfigParser as configparser
 from dateutil import parser, tz
-from ghdata import GHData
+import ghdata
+
 
 GHDATA_API_VERSION = 'unstable'
 
-# @todo: Support saving config as a dotfile
-class GHDataClient:
+
+def serialize(func, **args):
     """
-    Reads the configuration file, creates an instance of GHData, serializes dataframes into JSON
+    Serailizes a function that returns a dataframe
     """
-
-    def __init__(self, db_host='127.0.0.1', db_port=3306, db_user='root', db_pass='', db_name='ghtorrent', public_www_api_key=None, file=None, connect=False, debug=False):
-        """
-        Stores configuration, optionally connects to the database
-        """
-        self.__db_host = db_host
-        self.__db_port = db_port
-        self.__db_user = db_user
-        self.__db_pass = db_pass
-        self.__db_name = db_name
-        self.__public_www_api_key = public_www_api_key
-        self.__file = file
-
-        if (debug == '1'):
-            self.DEBUG = True
-        else:
-            self.DEBUG = False
-
-        if (connect):
-            self.__connect()
-
-    def __connect(self):
-        """
-        Generates the dbstr from the configuration loaded earlier, opens the connection
-        """
-        try:
-            if (hasattr(self, '__ghdata') == False):
-                self.__dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.__db_user, self.__db_pass, self.__db_host, self.__db_port, self.__db_name)
-                self.__ghdata = GHData(dbstr=self.__dbstr, public_www_api_key=self.__public_www_api_key)
-        except:
-            print('Failed to connect to database using:')
-            print(self.__dbstr)
+    data = func(**args)
+    if (hasattr(data, 'to_json')):
+        return data.to_json(orient='records', date_format='iso', date_unit='ms')
+    else:
+        return data
 
 
-    def get(self, key, **args):
-        # Interact with ghdata and convert dataframes to JSON
-        self.__connect()
-        data = getattr(self.__ghdata, key)(**args)
-        if (hasattr(data, 'to_json')):
-            return data.to_json(orient='records', date_format='iso', date_unit='ms')
-        else:
-            return data
-
-
-
-def basic_endpoint(flaskapp, table):
+def flaskify_ghtorrent(flaskapp, func):
     """
-    Simplifies API endpoints that just accept owner and repo
+    Simplifies API endpoints that just accept owner and repo,
+    serializes them and spits them out
     """
     def generated_function(owner, repo):
-        repoid = client.get('repoid', owner=owner, repo=repo)
-        return Response(response=client.get(table, repoid=repoid),
+        repoid = ghtorrent.repoid(owner=owner, repo=repo)
+        return Response(response=serialize(func, repoid=repoid),
                 status=200,
                 mimetype="application/json")
-    generated_function.__name__ = table
+    generated_function.__name__ = func.__name__
     return generated_function
 
-# Globals
-client = None # Initalized in the base group function below
-app = Flask(__name__)
+def flaskify(flaskapp, func):
+    """
+    Simplifies API endpoints that just accept owner and repo,
+    serializes them and spits them out
+    """
+    def generated_function(owner, repo):
+        return Response(response=serialize(func, owner=owner, repo=repo),
+                status=200,
+                mimetype="application/json")
+    generated_function.__name__ = func.__name__
+    return generated_function
+
+app = Flask(__name__, static_url_path=os.path.abspath('../static/'))
 CORS(app)
 # Flags and Initialization
 
-def init():
-    """Reads the config file"""
+"""Reads the config file"""
+try:
+    # Try to open the config file and parse it
+    parser = configparser.RawConfigParser()
+    parser.read('ghdata.cfg')
+    host = parser.get('Server', 'host')
+    port = parser.get('Server', 'port')
     try:
-        # Try to open the config file and parse it
-        parser = configparser.RawConfigParser()
-        parser.read('ghdata.cfg')
-        host = parser.get('Database', 'host')
-        port = parser.get('Database', 'port')
-        user = parser.get('Database', 'user')
-        password = parser.get('Database', 'pass')
-        db = parser.get('Database', 'name')
-        public_www_api_key = parser.get('PublicWWW', 'APIKey')
-        debug = parser.get('Development', 'developer')
-        try:
-            global client
-            client = GHDataClient(db_host=host, db_port=port, db_user=user, db_pass=password, db_name=db, public_www_api_key=public_www_api_key, debug=debug)
-        except:
-            print('Couldn\'t start. Double check ghdata.cfg for errors.')
+        dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(parser.get('Database', 'user'), parser.get('Database', 'pass'), parser.get('Database', 'host'), parser.get('Database', 'port'), parser.get('Database', 'name'))
+        ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
+    except Exception as e:
+        print("Failed to connect to database (" + str(e) + ")");
+    publicwww = ghdata.PublicWWW(public_www_api_key=parser.get('PublicWWW', 'APIKey'))
+    if (parser.get('Development', 'developer') == '1'):
+        DEBUG = True
+    else:
+        DEBUG = False
 
-    except:
-        # Uh-oh. Save a new config file.
-        print('Failed to open config file.')
-        config = configparser.RawConfigParser()
-        config.add_section('Database')
-        config.set('Database', 'host', '127.0.0.1')
-        config.set('Database', 'port', '3306')
-        config.set('Database', 'user', 'root')
-        config.set('Database', 'pass', 'root')
-        config.set('Database', 'name', 'ghtorrent')
-        config.add_section('PublicWWW')
-        config.set('PublicWWW', 'APIKey', '0')
-        config.add_section('Development')
-        config.set('Development', 'developer', '0')
-        # Writing our configuration file to 'example.cfg'
-        with open('ghdata.cfg', 'w') as configfile:
-            config.write(configfile)
-        print('Default config saved to ghdata.cfg')
-        sys.exit()
+except Exception as e:
+    # Uh-oh. Save a new config file.
+    print('Failed to open config file.')
+    print('Error: ' + str(e))
+    config = configparser.RawConfigParser()
+    config.add_section('Server')
+    config.set('Server', 'host', '0.0.0.0')
+    config.set('Server', 'port', '5000')
+    config.add_section('Database')
+    config.set('Database', 'host', '127.0.0.1')
+    config.set('Database', 'port', '3306')
+    config.set('Database', 'user', 'root')
+    config.set('Database', 'pass', 'root')
+    config.set('Database', 'name', 'ghtorrent')
+    config.add_section('PublicWWW')
+    config.set('PublicWWW', 'APIKey', '0')
+    config.add_section('Development')
+    config.set('Development', 'developer', '0')
+    # Writing our configuration file to 'example.cfg'
+    with open('ghdata.cfg', 'w') as configfile:
+        config.write(configfile)
+    print('Default config saved to ghdata.cfg')
+    sys.exit()
 
-
-    if (client.DEBUG):
-        # Serve the front-end files in debug mode to make it easier for developers to work on the interface
-        # @todo: Figure out why this isn't working.
-        @app.route('/')
-        def root():
-            return app.send_static_file('frontend/index.html')
-
-        @app.route('/scripts/<path>')
-        def send_scripts(path):
-            return send_from_directory('frontend/scripts', path)
-
-        @app.route('/styles/<path>')
-        def send_styles(path):
-            return send_from_directory('frontend/styles', path)
-
-        app.debug = True
-
-    app.run(debug=client.DEBUG)
 
 
 """
@@ -159,6 +117,8 @@ def api_root():
 #######################
 #     Timeseries      #
 #######################
+
+# @todo: Link to LF Metrics
 
 """
 @api {get} /:owner/:repo/commits Commits by Week
@@ -180,7 +140,7 @@ def api_root():
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'commits'))
+app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.commits))
 
 """
 @api {get} /:owner/:repo/forks Forks by Week
@@ -202,7 +162,7 @@ app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(ba
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'forks'))
+app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.forks))
 
 """
 @api {get} /:owner/:repo/issues Issues by Week
@@ -224,10 +184,10 @@ app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(basi
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issues'))
+app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.issues))
 
 """
-@api {get} /:owner/:repo/issues/response_time Response Time for Issues
+@api {get} /:owner/:repo/issues/response_time Issue Response Time
 @apiName IssueResponseTime
 @apiGroup Timeseries
 
@@ -246,7 +206,7 @@ app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(bas
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'issue_response_time'))
+app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.issue_response_time))
 
 """
 @api {get} /:owner/:repo/pulls Pull Requests by Week
@@ -270,7 +230,7 @@ app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pulls'))
+app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.pulls))
 
 """
 @api {get} /:owner/:repo/stargazers Stargazers by Week
@@ -292,7 +252,7 @@ app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(basi
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'stargazers'))
+app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.stargazers))
 
 """
 @api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
@@ -315,7 +275,7 @@ app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'pull_acceptance_rate'))
+app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.pull_acceptance_rate))
 
 # Contribution Trends
 """
@@ -350,7 +310,7 @@ app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'contributors'))
+app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.contributors))
 
 #######################
 # Contribution Trends #
@@ -389,13 +349,13 @@ app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(basic_en
 """
 @app.route('/{}/<owner>/<repo>/contributions'.format(GHDATA_API_VERSION))
 def contributions(owner, repo):
-    repoid = client.get('repoid', owner=owner, repo=repo)
+    repoid = ghtorrent.repoid(owner=owner, repo=repo)
     user = request.args.get('user')
     if (user):
-        userid = client.get('userid', username=user)
-        contribs = client.get('contributions', repoid=repoid, userid=userid)
+        userid = ghtorrent.userid(username=user)
+        contribs = ghtorrent.contributions(repoid=repoid, userid=userid)
     else:
-        contribs = client.get('contributions', repoid=repoid)
+        contribs = ghtorrent.contributions(repoid=repoid)
     return Response(response=contribs,
                     status=200,
                     mimetype="application/json")
@@ -424,7 +384,7 @@ def contributions(owner, repo):
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'committer_locations'))
+app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.committer_locations))
 
 # Popularity
 """
@@ -448,7 +408,26 @@ app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(bas
                         }
                     ]
 """
-app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(basic_endpoint(app, 'linking_websites'))
+app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(flaskify(app, publicwww.linking_websites))
+
+
+if (DEBUG):
+    # Serve the front-end files in debug mode to make it easier for developers to work on the interface
+    # @todo: Figure out why this isn't working.
+    @app.route('/')
+    def root():
+        print('AHH')
+        return app.send_static_file('index.html')
+
+    @app.route('/scripts/<path>')
+    def send_scripts(path):
+        return send_from_directory('static/scripts', path)
+
+    @app.route('/styles/<path>')
+    def send_styles(path):
+        return send_from_directory('static/styles', path)
+
+    app.debug = True
 
 if __name__ == '__main__':
-    init()
+    app.run(host=host, port=int(port), debug=DEBUG)

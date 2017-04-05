@@ -1,49 +1,48 @@
-## Temporary GHData development deployment instructions
+## Running the ghdata project
 
-  1. Enter the following commands to download ghdata and set it up:
+These instructions assume that you have already cloned the repository into a local directory called "ghdata". This can be accomplished with the github windows client, mac client or command line. 
 
-     ```bash
-     sudo apt-get update && sudo apt-get install python3-pip
-     git clone https://github.com/OSSHealth/ghdata && cd ghdata
-     sudo pip3 install --upgrade .
-     ```
-  2. Configure ghdata.cfg for the opendata server. 
-     This can be done with the following command:
-    
-      ```bash
-     cat > ghdata.cfg <<SOFTDEV-CONFIG
-     [Database]
-     host = opendata.missouri.edu
-     port = 3306
-     user = msr
-     pass = ghtorrent
-     name = msr
+There are two ways to run the project. The recommended way is from a github download that allows you to store and commit changes locally and ultimately back to your team repo. For example, if you clone a repo locally, you would then navigate to that directory and follow these four steps.
 
-     [PublicWWW]
-     apikey = 0
+1. Start the server
 
-     [Development]
-     developer = 1
-     SOFTDEV-CONFIG
-     ```
+  > **mwc-084037:ghdata gogginss$** python -m ghdata.server
 
-  2. Edit [ghdata repo]/frontend/scripts/health-report.js and 
-     replace 'http://localhost:5000/' with 'http://[your EC2 hostname]:5000/'
+  > Failed to open config file.
 
-  3. Move the files in frontend to a publicly accessible folder. 
+  > Default config saved to ghdata.cfg
 
-     If you don't have one, you can run  
-     
-     `screen -S frontend -dm bash -c "cd frontend; python3 -m http.server"` 
-         
-     and kill it with 
-     
-     `screen -X -S frontend kill`
+2. Configure the ghtdata.cfg to be as below
 
-  4. Run the following command to start ghdata:
-      
-      ```bash
-      flask run --host 0.0.0.0
-      ```
-      
-      You should be good to go. Visit http://[your EC2 server]:5000/ to make sure everything worked!
+  > **mwc-084037:ghdata gogginss$**
+
+  > **ghdata.cfg should look like this:**
+
+  > [Database]
+
+  > host = opendata.missouri.edu
+
+  > port = 3306
+
+  > user = msr
+
+  > pass = ghtorrent
+
+  > name = msr
+  >
+  > [PublicWWW]
+  >
+  > apikey = 0
+  >
+  > [Development]
+
+  > developer = 1
+
+3. Restart the server
+  > **mwc-084037:ghdata gogginss$** python -m ghdata.server
+
+4. Start Front End
+
+ > **mwc-084037:ghtdata gogginss$** cd frontend
+
+ > **mwc-084037:frontend gogginss$** python -m http.server

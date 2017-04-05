@@ -11,10 +11,15 @@ default:
 	\e[1mdocs \e[0m        Generates all documentation\n"
 
 install:
-		pip install --upgrade .
+		sudo pip2 install --upgrade . && pip3 install --upgrade .
 
 install-dev: install
 		npm install -g apidoc
+
+run-debug:
+		export FLASK_APP=server.py &&\
+		export FLASK_DEBUG=1 &&\
+		flask run --host 0.0.0.0
 
 python-docs:
 		cd docs/python   \
@@ -34,5 +39,13 @@ ifndef DB_TEST_URL
 	@ exit 1
 endif
 
+ifndef PUBLIC_WWW_TEST_API_KEY
+	@ printf "Please set PUBLIC_WWW_TEST_API_KEY to a valid API key. Get one here:\n\
+	\n\
+	    https://publicwww.com/\n\n"
+	@ exit 1
+endif
+
 test: check-test-env
-		python -m pytest
+		python2 -m pytest
+		python3 -m pytest

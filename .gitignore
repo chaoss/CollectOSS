@@ -41,3 +41,8 @@
 ehthumbs.db
 Thumbs.db
 *.cache
+
+# Python junk #
+###############
+__pycache__
+_pycache_
