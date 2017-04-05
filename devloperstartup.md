@@ -43,5 +43,7 @@
   4. Run the following command to start ghdata:
       
       ```bash
-      flask run ghdata --host 0.0.0.0
+      flask run --host 0.0.0.0
       ```
+      
+      You should be good to go. Visit http://[your EC2 server]:5000/ to make sure everything worked!
