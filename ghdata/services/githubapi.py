@@ -20,7 +20,7 @@ class GitHubAPI(object):
         Gets number of addtions and deletions in each file by user
 
         Puts it in dataframe with columns:
-        File    User    Num of Additions    Num of Deletion   Total Changes
+        file    user    num of additions    num of deletion   total changes
 
         Currently ignores changes from local users unattributed to Github users
 
@@ -32,12 +32,12 @@ class GitHubAPI(object):
         for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
             for file in commit.files:
                 try:
-                    df.append({'User': commit.author.login, 'File': file.filename, 'Number of Additions': file.additions, 'Number of Deletions': file.deletions, 'Total': file.changes})
+                    df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
                 except AttributeError:
                     pass
 
         df = pd.DataFrame(df)
 
-        df.groupby(["File" ,"User"]).sum()
+        df.groupby(["file" ,"user"]).sum()
 
         return df
