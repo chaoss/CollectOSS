@@ -16,10 +16,10 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ghdata',
-    version='0.2.1',
+    version='0.2.2',
     description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,
-    url='https://github.com/OSSHealth/github-data-cli',
+    url='https://github.com/OSSHealth/ghdata',
     author='Derek Howard',
     author_email='derek@howderek.com',
 		packages=['ghdata'],
@@ -38,7 +38,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
-    keywords='ghtorrent github api data',
+    keywords='ghtorrent github api data science',
     install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent'],
     extras_require={
         'dev': ['check-manifest'],
@@ -46,7 +46,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'ghdata=ghdata.server:init',
+            'ghdata=ghdata.server:run',
         ],
     },
 )

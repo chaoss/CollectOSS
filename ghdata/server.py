@@ -52,7 +52,8 @@ def flaskify(flaskapp, func):
     generated_function.__name__ = func.__name__
     return generated_function
 
-app = Flask(__name__, static_url_path=os.path.abspath('../static/'))
+
+app = Flask(__name__, static_url_path=os.path.abspath('static/'))
 CORS(app)
 # Flags and Initialization
 
@@ -131,9 +132,9 @@ def api_root():
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "commits": 153
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "commits": 192
@@ -153,9 +154,9 @@ app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(fl
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "forks": 13
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "forks": 12
@@ -175,9 +176,9 @@ app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(flas
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "issues":13
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "issues":15
@@ -219,10 +220,10 @@ app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "pull_requests": 1
                             "comments": 11
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "pull_requests": 2
@@ -243,9 +244,9 @@ app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(flas
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "watchers": 133
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "watchers": 54
@@ -266,9 +267,9 @@ app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "rate": 0.5
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "rate": 0.33
@@ -328,7 +329,7 @@ app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(flaskify
 @apiSuccessExample {json} Success-Response:
                    [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "commits": 37.0,
                             "pull_requests": null,
                             "issues": null,
@@ -337,7 +338,7 @@ app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(flaskify
                             "issue_comments": 17.0
                         },
                         {
-                            "date": "2015-01-08T00:00:00.000Z", 
+                            "date": "2015-01-08T00:00:00.000Z",
                             "commits": 68.0,
                             "pull_requests": null,
                             "issues": 12.0,
@@ -377,7 +378,7 @@ def contributions(owner, repo):
                             "location": "Rowena, TX",
                             "commits": 12
                         },
-                        {   
+                        {
                             "login":"clyde",
                             "location":"Ellis County, TX",
                             "commits": 12
@@ -416,7 +417,6 @@ if (DEBUG):
     # @todo: Figure out why this isn't working.
     @app.route('/')
     def root():
-        print('AHH')
         return app.send_static_file('index.html')
 
     @app.route('/scripts/<path>')
@@ -429,5 +429,8 @@ if (DEBUG):
 
     app.debug = True
 
-if __name__ == '__main__':
+def run():
     app.run(host=host, port=int(port), debug=DEBUG)
+
+if __name__ == '__main__':
+    run()
