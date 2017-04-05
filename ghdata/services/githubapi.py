@@ -1,4 +1,4 @@
-import pandas
+import pandas as pd
 
 
 class GitHubAPI(object):
@@ -20,14 +20,23 @@ class GitHubAPI(object):
         Gets number of addtions and deletions in each file by user
 
         Puts it in dataframe with columns:
-        User    File    Num of Additions    Num of Deletions
+        file    user    num of additions    num of deletion   total changes
+
+        Currently ignores changes from local users unattributed to Github users
 
         WORK IN PROGRESS
+
         """
-        df = pd.DataFrame()
-        commits = self.g.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
-        for commit in commits:
+        df = []
+        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
             for file in commit.files:
-                df.append({'user': commit.author, 'file': file.filename, 'additions': file.additions, 'deletions': file.deletions, 'total': file.changes})
+                try:
+                    df.append({'user': commit.author.login, 'file': file.filename, 'additions': file.additions, 'deletions': file.deletions, 'total': file.changes})
+                except AttributeError:
+                    pass
+
+        df = pd.DataFrame(df)
+
+        df.groupby(["file" ,"user"]).sum()
 
         return df
