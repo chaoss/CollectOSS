@@ -11,11 +11,15 @@ default:
 	\e[1mdocs \e[0m        Generates all documentation\n"
 
 install:
-		pip2 install --upgrade .
-		pip3 install --upgrade .
+		sudo pip2 install --upgrade . && pip3 install --upgrade .
 
 install-dev: install
 		npm install -g apidoc
+
+run-debug:
+		export FLASK_APP=server.py &&\
+		export FLASK_DEBUG=1 &&\
+		flask run --host 0.0.0.0
 
 python-docs:
 		cd docs/python   \

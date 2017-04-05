@@ -24,11 +24,10 @@ class GitHubAPI(object):
 
         WORK IN PROGRESS
         """
-        df = []
-        for commit in self.g.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
+        df = pd.DataFrame()
+        commits = self.g.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
+        for commit in commits:
             for file in commit.files:
-                df.append({'User': commit.author, 'File': file.filename, 'Number of Additions': file.additions, 'Number of Deletions': file.deletions, 'Total': file.changes})
-
-        pd.DataFrame(df)
+                df.append({'user': commit.author, 'file': file.filename, 'additions': file.additions, 'deletions': file.deletions, 'total': file.changes})
 
         return df

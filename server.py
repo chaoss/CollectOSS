@@ -52,7 +52,7 @@ def flaskify(flaskapp, func):
     generated_function.__name__ = func.__name__
     return generated_function
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path=os.path.abspath('../static/'))
 CORS(app)
 # Flags and Initialization
 
@@ -61,6 +61,8 @@ try:
     # Try to open the config file and parse it
     parser = configparser.RawConfigParser()
     parser.read('ghdata.cfg')
+    host = parser.get('Server', 'host')
+    port = parser.get('Server', 'port')
     try:
         dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(parser.get('Database', 'user'), parser.get('Database', 'pass'), parser.get('Database', 'host'), parser.get('Database', 'port'), parser.get('Database', 'name'))
         ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
@@ -77,6 +79,9 @@ except Exception as e:
     print('Failed to open config file.')
     print('Error: ' + str(e))
     config = configparser.RawConfigParser()
+    config.add_section('Server')
+    config.set('Server', 'host', '0.0.0.0')
+    config.set('Server', 'port', '5000')
     config.add_section('Database')
     config.set('Database', 'host', '127.0.0.1')
     config.set('Database', 'port', '3306')
@@ -112,6 +117,8 @@ def api_root():
 #######################
 #     Timeseries      #
 #######################
+
+# @todo: Link to LF Metrics
 
 """
 @api {get} /:owner/:repo/commits Commits by Week
@@ -409,16 +416,18 @@ if (DEBUG):
     # @todo: Figure out why this isn't working.
     @app.route('/')
     def root():
-        return app.send_static_file('frontend/index.html')
+        print('AHH')
+        return app.send_static_file('index.html')
 
     @app.route('/scripts/<path>')
     def send_scripts(path):
-        return send_from_directory('frontend/scripts', path)
+        return send_from_directory('static/scripts', path)
 
     @app.route('/styles/<path>')
     def send_styles(path):
-        return send_from_directory('frontend/styles', path)
+        return send_from_directory('static/styles', path)
 
     app.debug = True
 
-app.run(debug=DEBUG)
+if __name__ == '__main__':
+    app.run(host=host, port=int(port), debug=DEBUG)
