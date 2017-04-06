@@ -13,7 +13,7 @@
       1. You have a repo on GitHub and
       2. You have a fresh EC2 instance
     - Run this:
-      - bash < (curl -Ls https://www.dropbox.com/s/ttogu0p0kdo59c1/software-engineering-ghdata.sh?dl=1)
+      - bash <(curl -Ls https://www.dropbox.com/s/ttogu0p0kdo59c1/software-engineering-ghdata.sh?dl=1)
 
   - To step through it on your own, and inspect the shell script first, then you can follow this process
     - login to you server
