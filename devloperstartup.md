@@ -17,6 +17,7 @@
      If you are working on your own fork, set the upstream remote:
 
      ```bash
+     git clone https://[yourrepo]/ ghdata # The repo must be named ghdata to serve local files
      git remote remove upstream
      git remote add upstream git://github.com/OSSHealth/ghdata
      ```
