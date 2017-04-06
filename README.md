@@ -37,8 +37,8 @@ Installation
 
 First, install ghdata
 
-Stable: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/master.zip`
-Development: `git clone -b dev https://github.com/OSSHealth/ghdata/ && pip install --upgrade ./ghdata/`
+- Stable: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/master.zip`
+- Development: `git clone -b dev https://github.com/OSSHealth/ghdata/ && pip install --upgrade ./ghdata/`
 
 Then, run `ghdata` to create a new config file. Edit the generated `ghdata.cfg` file with your database settings.
 
