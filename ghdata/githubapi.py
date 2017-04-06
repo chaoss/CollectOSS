@@ -27,11 +27,12 @@ class GitHubAPI(object):
         TODO: Have filename or file object as param and only calculate for that file
 
         """
+
         df = []
         for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
             for file in commit.files:
                 try:
-                    df.append({'user': commit.author.login, 'file': file.filename, 'additions': file.additions, 'deletions': file.deletions, 'total': file.changes})
+                    df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
                 except AttributeError:
                     pass
 
@@ -50,14 +51,14 @@ class GitHubAPI(object):
 
         Currently ignores changes from local users unattributed to Github user
 
-        May equal to more than 100% due to rounding
+        May equal to more than 100% due to rounding to one decimal
 
         TODO: Have filename or file object as param and only calculate for that file
 
         """
 
         df = []
-        for commit in self.__api.get_repo(('OSSHealth' + "/" + 'ghdata')).get_commits():
+        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
             try:
                 df.append({'user': commit.author.login})
             except AttributeError:
@@ -67,4 +68,4 @@ class GitHubAPI(object):
 
         df = df.groupby(['user']).user.count() / df.groupby(['user']).user.count().sum() * 100
 
-        return df.round()
+        return df
