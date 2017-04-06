@@ -22,8 +22,8 @@ setup(
     url='https://github.com/OSSHealth/ghdata',
     author='Derek Howard',
     author_email='derek@howderek.com',
-		packages=['ghdata'],
-		package_dir={'ghdata': 'ghdata'},
+	packages=['ghdata'],
+	package_dir={'ghdata': 'ghdata'},
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',

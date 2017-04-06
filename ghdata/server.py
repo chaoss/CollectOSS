@@ -70,7 +70,7 @@ try:
     except Exception as e:
         print("Failed to connect to database (" + str(e) + ")");
     publicwww = ghdata.PublicWWW(public_www_api_key=parser.get('PublicWWW', 'APIKey'))
-    if (parser.get('Development', 'developer') == '1'):
+    if (parser.get('Development', 'developer') == '1' or os.getenv('FLASK_DEBUG') == '1'):
         DEBUG = True
     else:
         DEBUG = False
@@ -95,7 +95,7 @@ except Exception as e:
     config.set('Development', 'developer', '0')
     # Writing our configuration file to 'example.cfg'
     with open('ghdata.cfg', 'w') as configfile:
-        config.write(configfile)
+        config.write(Pconfigfile)
     print('Default config saved to ghdata.cfg')
     sys.exit()
 
@@ -110,10 +110,7 @@ except Exception as e:
 def api_root():
     """API status"""
     # @todo: When we support multiple data sources this should keep track of their status
-    info = Response(response='{"status": "healthy", "ghtorrent": "online"}'.format(GHDATA_API_VERSION),
-                    status=200,
-                    mimetype="application/json")
-    return info
+    return """{"status": "healthy", "ghtorrent": "online"}"""
 
 #######################
 #     Timeseries      #
@@ -413,19 +410,24 @@ app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(flas
 
 
 if (DEBUG):
+    print(" * Serving static routes")
     # Serve the front-end files in debug mode to make it easier for developers to work on the interface
     # @todo: Figure out why this isn't working.
     @app.route('/')
-    def root():
-        return app.send_static_file('index.html')
+    def index():
+        root_dir = os.path.dirname(os.getcwd())
+        print(root_dir + '/ghdata/static')
+        return send_from_directory(root_dir + '/ghdata/ghdata/static', 'index.html')
 
     @app.route('/scripts/<path>')
     def send_scripts(path):
-        return send_from_directory('static/scripts', path)
+        root_dir = os.path.dirname(os.getcwd())
+        return send_from_directory(root_dir + '/ghdata/ghdata/static/scripts', path)
 
     @app.route('/styles/<path>')
     def send_styles(path):
-        return send_from_directory('static/styles', path)
+        root_dir = os.path.dirname(os.getcwd())
+        return send_from_directory(root_dir+ '/ghdata/ghdata/static/styles', path)
 
     app.debug = True
 
