@@ -95,7 +95,7 @@ except Exception as e:
     config.set('Development', 'developer', '0')
     # Writing our configuration file to 'example.cfg'
     with open('ghdata.cfg', 'w') as configfile:
-        config.write(Pconfigfile)
+        config.write(configfile)
     print('Default config saved to ghdata.cfg')
     sys.exit()
 
