@@ -41,16 +41,9 @@
 ehthumbs.db
 Thumbs.db
 *.cache
-<<<<<<< HEAD
 *.pyc
-
-*.pyc
-
-*.pyc
-=======
 
 # Python junk #
 ###############
 __pycache__
 _pycache_
->>>>>>> origin/master
