@@ -60,3 +60,7 @@
       ```bash
       ghdata
       ```
+      or, if you want to run it in the background:
+      ```
+      ~/ghdata$ ghdata >ghdata.log 2>ghdata.err &
+      ```
