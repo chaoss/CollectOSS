@@ -1,27 +1,21 @@
 #SPDX-License-Identifier: MIT
-
-import sqlalchemy as s
 import pandas as pd
-import requests
+import sqlalchemy as s
 import sys
-if (sys.version_info > (3, 0)):
-    import urllib.parse as url
-else:
-    import urllib as url
 import json
 import re
 
-class GHData(object):
+class GHTorrent(object):
     """Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators"""
 
-    def __init__(self, dbstr, public_www_api_key=None):
+    def __init__(self, dbstr):
         """
         Connect to GHTorrent
 
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
         """
+        self.DB_STR = dbstr
         self.db = s.create_engine(dbstr)
-        self.PUBLIC_WWW_API_KEY = public_www_api_key
 
     def __single_table_count_by_date(self, table, repo_col='project_id'):
         """
@@ -304,28 +298,6 @@ class GHData(object):
             GROUP BY issues.id
         """)
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
-
-    def linking_websites(self, repoid):
-        """
-        Finds the repo's popularity on the internet
-
-        :param repoid: The id of the project in the projects table.
-        :return: DataFrame with the issues' id the date it was
-                 opened, and the date it was first responded to
-        """
-
-        # Get the url of the repo
-        repo_url_query = s.sql.text('SELECT projects.url FROM projects WHERE projects.id = :repoid')
-        repo_url = ''
-        result = self.db.execute(repo_url_query, repoid=repoid)
-        for row in result:
-            repo_url = row[0]
-
-        # Find websites that link to that repo
-        query = '<a+href%3D"{repourl}"'.format(repourl=url.quote_plus(repo_url.replace('api.', '').replace('repos/', '')))
-        r = 'https://publicwww.com/websites/{query}/?export=csv&apikey={apikey}'.format(query=query, apikey=self.PUBLIC_WWW_API_KEY)
-        result =  pd.read_csv(r, delimiter=';', header=None, names=['url', 'rank'])
-        return result
 
     def pull_acceptance_rate(self, repoid):
         """

@@ -15,11 +15,9 @@ that indicate the health and sustainability of the repository.
 ## Triggers (What prompts the use case to start?)
 1. A user (leader) seeks to understand the current health and sustainability
    of a repository to devise actions.
-2. A manager seeks to understand the current health and sustainability of their projects to see the effectivness of interventions.
 
 ## Actors (Who is involved?)
-1. Community Leaders
-2. Managers
+1. User
 
 ## Preconditions (This includes things like “data loaded”. Or, project is flagged as “of interest”; etc.)
 1. User provides URL to a GitHub repository
@@ -28,12 +26,11 @@ that indicate the health and sustainability of the repository.
 1. All metrics that can be computed from the provided repository are displayed.
 
 ## Alternate Success Scenarios
-1. Managers can see (via dashboard) the health and sustainability of their projects
+1. N/A
 
 ## Failed End Condition
 1. The provided URL points to a non-existent GitHub repository, metrics cannot
    be calculated, and an error message explaining the condition is shown to user.
-2. The repository does not have enough contributions to calculate any metrics
 
 ## Extensions
 1. Compare metrics between repositories.

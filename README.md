@@ -28,49 +28,21 @@ All associated documentation is licensed under the terms of the Creative Commons
 Dependencies
 ------------
 
-- Python 3.4.x
-- MySQL 5.x or later version (can be on a separate machine)
-- GHTorrent in database (can be installed with `ghdata install --historical` on Linux/OS X machines)
-  - 50GB download, requires ~1TB free space for the database
-
-Optional:
-- Running version of GHTorrent (can be installed with `ghtorrent install`)
-  - Requires Ruby and Git
-
-Python libraries:
-- All Python dependencies are handled automatically by `pip`.
-
+- Python 3.4.x and `pip`
+- MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/) [MSR14 dataset](http://ghtorrent.org/) for testing
+  - [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
 
 Installation
 ------------
 
-### Step 1 - Download and install
+First, install ghdata
 
-To install stable version: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/master.zip`
+- Stable: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/master.zip`
+- Development: `git clone -b dev https://github.com/OSSHealth/ghdata/ && pip install --upgrade ./ghdata/`
 
-To install development version: `pip install --upgrade https://github.com/OSSHealth/ghdata/archive/dev.zip`
+Then, run `ghdata` to create a new config file. Edit the generated `ghdata.cfg` file with your database settings.
 
-### Step 2 (Optional if using command line arguments) - Change the default configuration
-
-Not required, but strongly recommended, is to generate an initial config file: `ghdata create-default-config`
-
-### Step 3 (Optional if you are able to get the full database) - Install a small, local testing database
-
-Go to: http://ghtorrent.org/msr14.html
-
-Download the MySQL database dump
-
-Extract it (for example using 7-zip)
-
-Extracted file will be named msr14-mysql
-
-The site provides instructions on how to restore it.  Here are some alternate instructions:
-
-  Rename the extracted file to end with .sql
-  
-  Create a new schema/database
-  
-  Import the extracted file into the new schema (For example, use MySQL Workbench by clicking Server -> Data Import and then following the instructions in the wizard)
+Run `ghdata` again. For development, use `make run-debug`, that will start the server with Werkzeug's debugging on.
 
 Usage
 -----
