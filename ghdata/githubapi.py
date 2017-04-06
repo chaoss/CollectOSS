@@ -27,12 +27,11 @@ class GitHubAPI(object):
         TODO: Have filename or file object as param and only calculate for that file
 
         """
-
         df = []
         for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
             for file in commit.files:
                 try:
-                    df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
+                    df.append({'user': commit.author.login, 'file': file.filename, 'additions': file.additions, 'deletions': file.deletions, 'total': file.changes})
                 except AttributeError:
                     pass
 

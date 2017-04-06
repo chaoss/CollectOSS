@@ -44,4 +44,5 @@ Thumbs.db
 
 # Python junk #
 ###############
+__pycache__
 _pycache_

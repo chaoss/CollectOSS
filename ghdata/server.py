@@ -52,7 +52,8 @@ def flaskify(flaskapp, func):
     generated_function.__name__ = func.__name__
     return generated_function
 
-app = Flask(__name__)
+
+app = Flask(__name__, static_url_path=os.path.abspath('static/'))
 CORS(app)
 # Flags and Initialization
 
@@ -61,13 +62,15 @@ try:
     # Try to open the config file and parse it
     parser = configparser.RawConfigParser()
     parser.read('ghdata.cfg')
+    host = parser.get('Server', 'host')
+    port = parser.get('Server', 'port')
     try:
         dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(parser.get('Database', 'user'), parser.get('Database', 'pass'), parser.get('Database', 'host'), parser.get('Database', 'port'), parser.get('Database', 'name'))
         ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
     except Exception as e:
         print("Failed to connect to database (" + str(e) + ")");
     publicwww = ghdata.PublicWWW(public_www_api_key=parser.get('PublicWWW', 'APIKey'))
-    if (parser.get('Development', 'developer') == '1'):
+    if (parser.get('Development', 'developer') == '1' or os.getenv('FLASK_DEBUG') == '1'):
         DEBUG = True
     else:
         DEBUG = False
@@ -77,6 +80,9 @@ except Exception as e:
     print('Failed to open config file.')
     print('Error: ' + str(e))
     config = configparser.RawConfigParser()
+    config.add_section('Server')
+    config.set('Server', 'host', '0.0.0.0')
+    config.set('Server', 'port', '5000')
     config.add_section('Database')
     config.set('Database', 'host', '127.0.0.1')
     config.set('Database', 'port', '3306')
@@ -104,14 +110,13 @@ except Exception as e:
 def api_root():
     """API status"""
     # @todo: When we support multiple data sources this should keep track of their status
-    info = Response(response='{"status": "healthy", "ghtorrent": "online"}'.format(GHDATA_API_VERSION),
-                    status=200,
-                    mimetype="application/json")
-    return info
+    return """{"status": "healthy", "ghtorrent": "online"}"""
 
 #######################
 #     Timeseries      #
 #######################
+
+# @todo: Link to LF Metrics
 
 """
 @api {get} /:owner/:repo/commits Commits by Week
@@ -124,9 +129,9 @@ def api_root():
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "commits": 153
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "commits": 192
@@ -146,9 +151,9 @@ app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(fl
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "forks": 13
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "forks": 12
@@ -168,9 +173,9 @@ app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(flas
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "issues":13
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "issues":15
@@ -212,10 +217,10 @@ app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "pull_requests": 1
                             "comments": 11
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "pull_requests": 2
@@ -236,9 +241,9 @@ app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(flas
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "watchers": 133
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "watchers": 54
@@ -259,9 +264,9 @@ app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "rate": 0.5
-                        }, 
+                        },
                         {
                             "date": "2015-01-08T00:00:00.000Z",
                             "rate": 0.33
@@ -321,7 +326,7 @@ app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(flaskify
 @apiSuccessExample {json} Success-Response:
                    [
                         {
-                            "date": "2015-01-01T00:00:00.000Z", 
+                            "date": "2015-01-01T00:00:00.000Z",
                             "commits": 37.0,
                             "pull_requests": null,
                             "issues": null,
@@ -330,7 +335,7 @@ app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(flaskify
                             "issue_comments": 17.0
                         },
                         {
-                            "date": "2015-01-08T00:00:00.000Z", 
+                            "date": "2015-01-08T00:00:00.000Z",
                             "commits": 68.0,
                             "pull_requests": null,
                             "issues": 12.0,
@@ -370,7 +375,7 @@ def contributions(owner, repo):
                             "location": "Rowena, TX",
                             "commits": 12
                         },
-                        {   
+                        {
                             "login":"clyde",
                             "location":"Ellis County, TX",
                             "commits": 12
@@ -405,20 +410,29 @@ app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(flas
 
 
 if (DEBUG):
+    print(" * Serving static routes")
     # Serve the front-end files in debug mode to make it easier for developers to work on the interface
     # @todo: Figure out why this isn't working.
     @app.route('/')
-    def root():
-        return app.send_static_file('frontend/index.html')
+    def index():
+        root_dir = os.path.dirname(os.getcwd())
+        print(root_dir + '/ghdata/static')
+        return send_from_directory(root_dir + '/ghdata/ghdata/static', 'index.html')
 
     @app.route('/scripts/<path>')
     def send_scripts(path):
-        return send_from_directory('frontend/scripts', path)
+        root_dir = os.path.dirname(os.getcwd())
+        return send_from_directory(root_dir + '/ghdata/ghdata/static/scripts', path)
 
     @app.route('/styles/<path>')
     def send_styles(path):
-        return send_from_directory('frontend/styles', path)
+        root_dir = os.path.dirname(os.getcwd())
+        return send_from_directory(root_dir+ '/ghdata/ghdata/static/styles', path)
 
     app.debug = True
 
-app.run(debug=DEBUG)
+def run():
+    app.run(host=host, port=int(port), debug=DEBUG)
+
+if __name__ == '__main__':
+    run()

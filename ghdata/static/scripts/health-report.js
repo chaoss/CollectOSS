@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 
 function GHDataReport(apiUrl) {
-  apiUrl = apiUrl || 'http://localhost:5000/';
+  apiUrl = apiUrl || '/';
   var owner = this.getParameterByName('owner');
   var repo = this.getParameterByName('repo');
   this.api = new GHDataAPIClient(apiUrl, owner, repo);

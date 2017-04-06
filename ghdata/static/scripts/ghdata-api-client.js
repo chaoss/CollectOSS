@@ -136,7 +136,7 @@ GHDataAPIClient.prototype.pullRequestsByWeek = function (params) {
   return this.get('timeseries/pulls', params);
 };
 
-/** 
+/**
  * Pull Requests timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
@@ -145,7 +145,7 @@ GHDataAPIClient.prototype.contributionsByWeek = function (params) {
   return this.get('timeseries/contributions', params);
 };
 
-/** 
+/**
  * How quickly after issues are made they are commented on
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
@@ -154,7 +154,7 @@ GHDataAPIClient.prototype.issuesResponseTime = function (params) {
   return this.get('timeseries/issues/response_time', params);
 };
 
-/** 
+/**
  * Contributions timeseries
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object
@@ -163,7 +163,7 @@ GHDataAPIClient.prototype.contributors = function (params) {
   return this.get('timeseries/contributors', params);
 };
 
-/** 
+/**
  * Locations of the committers
  * @param {Object} params - Query string params to pass to the API
  * @returns {Promise} Resolves with commits timeseries object

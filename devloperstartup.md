@@ -1,48 +1,61 @@
-## Running the ghdata project
+## Detailed installation instructions for Ubuntu
 
-These instructions assume that you have already cloned the repository into a local directory called "ghdata". This can be accomplished with the github windows client, mac client or command line. 
+  1. Install Python:
 
-There are two ways to run the project. The recommended way is from a github download that allows you to store and commit changes locally and ultimately back to your team repo. For example, if you clone a repo locally, you would then navigate to that directory and follow these four steps.
+      ```bash
+      sudo apt-get install python3-pip
+      ```
 
-1. Start the server
+  2. Clone the repo:
 
-  > **mwc-084037:ghdata gogginss$** python -m ghdata.server
+     If you are downloading the official version:
 
-  > Failed to open config file.
+     ```bash
+      git clone https://github.com/OSSHealth/ghdata && cd ghdata
+      ```
 
-  > Default config saved to ghdata.cfg
+     If you are working on your own fork, set the upstream remote:
 
-2. Configure the ghtdata.cfg to be as below
+     ```bash
+     git remote remove upstream
+     git remote add upstream git://github.com/OSSHealth/ghdata
+     ```
 
-  > **mwc-084037:ghdata gogginss$**
+     You can then `git fetch` and `git merge upstream/master` to get upstream changes.
 
-  > **ghdata.cfg should look like this:**
+  
+  3. Create a configuration file. The following command will create
+     a file ghdata.cfg suitable for development:
 
-  > [Database]
+      ```bash
+      cat > ghdata.cfg <<SOFTDEV-CONFIG
+      [Server]
+      host = 0.0.0.0
+      port = 5000
 
-  > host = opendata.missouri.edu
+      [Database]
+      host = opendata.missouri.edu
+      port = 3306
+      user = msr
+      pass = ghtorrent
+      name = msr
 
-  > port = 3306
+      [PublicWWW]
+      apikey = 0
 
-  > user = msr
+      [Development]
+      developer = 1
+      SOFTDEV-CONFIG
+      ```
 
-  > pass = ghtorrent
+  4. Install GHData
 
-  > name = msr
-  >
-  > [PublicWWW]
-  >
-  > apikey = 0
-  >
-  > [Development]
+      ```bash
+      sudo pip3 install --upgrade .
+      ```
 
-  > developer = 1
+  4. Run:
 
-3. Restart the server
-  > **mwc-084037:ghdata gogginss$** python -m ghdata.server
-
-4. Start Front End
-
- > **mwc-084037:ghtdata gogginss$** cd frontend
-
- > **mwc-084037:frontend gogginss$** python -m http.server
+      ```bash
+      ghdata
+      ```
