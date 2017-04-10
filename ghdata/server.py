@@ -1,33 +1,30 @@
 #SPDX-License-Identifier: MIT
+import ghdata
 
-from flask import Flask, request, Response, json, send_from_directory
-from flask_cors import CORS, cross_origin
 import os
 import sys
-import datetime
 if (sys.version_info > (3, 0)):
     import configparser as configparser
 else:
     import ConfigParser as configparser
-from dateutil import parser, tz
-import ghdata
 
+from flask import Flask, request, Response, send_from_directory
+from flask_cors import CORS
 
 GHDATA_API_VERSION = 'unstable'
-
 
 def serialize(func, **args):
     """
     Serailizes a function that returns a dataframe
     """
     data = func(**args)
-    if (hasattr(data, 'to_json')):
+    if hasattr(data, 'to_json'):
         return data.to_json(orient='records', date_format='iso', date_unit='ms')
     else:
         return data
 
 
-def flaskify_ghtorrent(flaskapp, func):
+def flaskify_ghtorrent(ghtorrent, func):
     """
     Simplifies API endpoints that just accept owner and repo,
     serializes them and spits them out
@@ -35,20 +32,20 @@ def flaskify_ghtorrent(flaskapp, func):
     def generated_function(owner, repo):
         repoid = ghtorrent.repoid(owner=owner, repo=repo)
         return Response(response=serialize(func, repoid=repoid),
-                status=200,
-                mimetype="application/json")
+                        status=200,
+                        mimetype="application/json")
     generated_function.__name__ = func.__name__
     return generated_function
 
-def flaskify(flaskapp, func):
+def flaskify(func):
     """
     Simplifies API endpoints that just accept owner and repo,
     serializes them and spits them out
     """
     def generated_function(owner, repo):
         return Response(response=serialize(func, owner=owner, repo=repo),
-                status=200,
-                mimetype="application/json")
+                        status=200,
+                        mimetype="application/json")
     generated_function.__name__ = func.__name__
     return generated_function
 
@@ -57,9 +54,6 @@ def run():
 
     app = Flask(__name__, static_url_path=os.path.abspath('static/'))
     CORS(app)
-    # Flags and Initialization
-
-    """Reads the config file"""
     try:
         # Try to open the config file and parse it
         parser = configparser.RawConfigParser()
@@ -67,15 +61,24 @@ def run():
         host = parser.get('Server', 'host')
         port = parser.get('Server', 'port')
         try:
-            dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(parser.get('Database', 'user'), parser.get('Database', 'pass'), parser.get('Database', 'host'), parser.get('Database', 'port'), parser.get('Database', 'name'))
+            dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
+                parser.get('Database', 'user'),
+                parser.get('Database', 'pass'),
+                parser.get('Database', 'host'),
+                parser.get('Database', 'port'),
+                parser.get('Database', 'name')
+            )
             ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
         except Exception as e:
             print("Failed to connect to database (" + str(e) + ")");
-        publicwww = ghdata.PublicWWW(public_www_api_key=parser.get('PublicWWW', 'APIKey'))
+        
+        publicwww = ghdata.PublicWWW(api_key=parser.get('PublicWWW', 'APIKey'))
+        github = ghdata.GitHubAPI(api_key=parser.get('GitHub', 'APIKey'))
+        
         if (parser.get('Development', 'developer') == '1' or os.getenv('FLASK_DEBUG') == '1'):
-            DEBUG = True
+            debugmode = True
         else:
-            DEBUG = False
+            debugmode = False
 
     except Exception as e:
         # Uh-oh. Save a new config file.
@@ -93,6 +96,8 @@ def run():
         config.set('Database', 'name', 'ghtorrent')
         config.add_section('PublicWWW')
         config.set('PublicWWW', 'APIKey', '0')
+        config.add_section('GitHub')
+        config.set('GitHub', 'APIKey', '0')
         config.add_section('Development')
         config.set('Development', 'developer', '0')
         # Writing our configuration file to 'example.cfg'
@@ -140,7 +145,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.commits))
+    app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.commits))
 
     """
     @api {get} /:owner/:repo/forks Forks by Week
@@ -162,7 +168,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.forks))
+    app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.forks))
 
     """
     @api {get} /:owner/:repo/issues Issues by Week
@@ -184,7 +191,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.issues))
+    app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.issues))
 
     """
     @api {get} /:owner/:repo/issues/response_time Issue Response Time
@@ -206,7 +214,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.issue_response_time))
+    app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.issue_response_time))
 
     """
     @api {get} /:owner/:repo/pulls Pull Requests by Week
@@ -230,7 +239,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.pulls))
+    app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.pulls))
 
     """
     @api {get} /:owner/:repo/stargazers Stargazers by Week
@@ -252,7 +262,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.stargazers))
+    app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.stargazers))
 
     """
     @api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
@@ -275,7 +286,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.pull_acceptance_rate))
+    app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.pull_acceptance_rate))
 
     # Contribution Trends
     """
@@ -310,7 +322,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.contributors))
+    app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.contributors))
 
     #######################
     # Contribution Trends #
@@ -384,7 +397,8 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(flaskify_ghtorrent(app, ghtorrent.committer_locations))
+    app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(
+        flaskify_ghtorrent(ghtorrent, ghtorrent.committer_locations))
 
     # Popularity
     """
@@ -408,10 +422,10 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(flaskify(app, publicwww.linking_websites))
+    app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(flaskify(publicwww.linking_websites))
 
 
-    if (DEBUG):
+    if (debugmode):
         print(" * Serving static routes")
         # Serve the front-end files in debug mode to make it easier for developers to work on the interface
         # @todo: Figure out why this isn't working.
@@ -433,7 +447,7 @@ def run():
 
         app.debug = True
 
-    app.run(host=host, port=int(port), debug=DEBUG)
+    app.run(host=host, port=int(port), debug=debugmode)
 
 if __name__ == '__main__':
     run()

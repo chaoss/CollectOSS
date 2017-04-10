@@ -1,8 +1,6 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
 import sqlalchemy as s
-import sys
-import json
 import re
 
 class GHTorrent(object):
@@ -327,3 +325,7 @@ class GHTorrent(object):
         """)
 
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
+
+    def classify_contributors(self, repoid):
+        contributors = self.contributors(repoid)
+        return contributors

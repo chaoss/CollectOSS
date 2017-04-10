@@ -27,7 +27,7 @@ python-docs:
 		&& rm -rf _build \
 		&& make html
 
-api-docs:l
+api-docs:
 		apidoc -i ghdata/ -o docs/api/
 
 docs: api-docs python-docs
