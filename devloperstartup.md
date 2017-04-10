@@ -31,9 +31,11 @@
      git push
      ```
      
-    This pushes the changes from the parent repository up to the repository you are using on GitHub.  Then your teammates can have access to your updates.  Their deployment should be much simpler. 
+     This pushes the changes from the parent repository up to the repository you are using on GitHub.  
+     Then your teammates can have access to your updates.  Their deployment should be much simpler. 
     
-    You also should change the directory name, in this case.  The automated script does this for you if you run it; otherwise, you will need to change the root yourself. 
+    You also should change the directory name, in this case.  The automated script does this for you if you run it; 
+    otherwise, you will need to change the root yourself. 
     
     ```bash
     cd 
