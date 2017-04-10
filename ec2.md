@@ -31,8 +31,8 @@
 =====
 ## Other Information of Use
 ### Working Example Sites
-1. Goggins: http://ec2-52-72-21-8.compute-1.amazonaws.com:5000/?owner=cakephp&repo=cakephp
-2. Group 8: http://ec2-52-3-228-114.compute-1.amazonaws.com:5000/?owner=facebook&repo=folly  
+1. Test1: http://ec2-54-236-59-219.compute-1.amazonaws.com:5000/?owner=hadley&repo=devtools 
+2. Test2: http://ec2-34-201-11-60.compute-1.amazonaws.com:5000/?owner=facebook&repo=folly  
 
 ### Instructions for installation
 1. https://github.com/OSSHealth/ghdata/blob/master/devloperstartup.md
