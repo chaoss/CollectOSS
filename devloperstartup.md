@@ -39,7 +39,7 @@
     
      ```bash
      cd 
-     mv ghdata-myteam-sprint1-32 ghdata
+     mv [yourrepo] ghdata
      cd ghdata
      ```
      
