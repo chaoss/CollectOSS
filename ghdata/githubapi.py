@@ -1,5 +1,6 @@
+import datetime
+from dateutil.parser import parse
 import pandas as pd
-
 
 class GitHubAPI(object):
     """
@@ -27,6 +28,11 @@ class GitHubAPI(object):
         TODO: Have filename or file object as param and only calculate for that file
 
         """
+        if start != None:
+            start = dateutil.parser.parse(start)
+
+        if end != None
+            end = dateutil.parser.parse(end)
 
         df = []
         for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
@@ -51,11 +57,14 @@ class GitHubAPI(object):
 
         Currently ignores changes from local users unattributed to Github user
 
-        May equal to more than 100% due to rounding to one decimal
-
         TODO: Have filename or file object as param and only calculate for that file
 
         """
+        if start != None:
+            start = dateutil.parser.parse(start)
+
+        if end != None
+            end = dateutil.parser.parse(end)
 
         df = []
         for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
