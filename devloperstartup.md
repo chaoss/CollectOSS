@@ -42,7 +42,13 @@
      mv [yourrepo] ghdata
      cd ghdata
      ```
+     For example: 
      
+     ```bash
+     cd
+     mv ghdata-team39-sprint1 ghdata
+     cd ghdata
+     ```
   
   3. Create a configuration file. The following command will create
      a file ghdata.cfg suitable for development:
