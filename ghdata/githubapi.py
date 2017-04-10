@@ -1,6 +1,8 @@
 import datetime
 from dateutil.parser import parse
 import pandas as pd
+import github
+
 
 class GitHubAPI(object):
     """
@@ -12,7 +14,6 @@ class GitHubAPI(object):
 
         :param api_key: GitHub API key
         """
-        import github
         self.GITUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
@@ -29,22 +30,27 @@ class GitHubAPI(object):
 
         """
         if start != None:
-            start = dateutil.parser.parse(start)
+            start = parse(start)
+        else:
+            start = github.GithubObject.NotSet
 
-        if end != None
-            end = dateutil.parser.parse(end)
+        if end != None:
+            end = parse(end)
+        else:
+            end = github.GithubObject.NotSet
 
         df = []
-        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
+        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end):
             for file in commit.files:
                 try:
-                    df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
+                    if file.changes != 0:
+                        df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
                 except AttributeError:
                     pass
 
         df = pd.DataFrame(df)
 
-        df.groupby(["file" ,"user"]).sum()
+        df.groupby(["file", "user"]).sum()
 
         return df
 
@@ -61,13 +67,17 @@ class GitHubAPI(object):
 
         """
         if start != None:
-            start = dateutil.parser.parse(start)
+            start = parse(start)
+        else:
+            start = github.GithubObject.NotSet
 
-        if end != None
-            end = dateutil.parser.parse(end)
+        if end != None:
+            end = parse(end)
+        else:
+            end = github.GithubObject.NotSet
 
         df = []
-        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start,until=end):
+        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end):
             try:
                 df.append({'user': commit.author.login})
             except AttributeError:
