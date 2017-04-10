@@ -37,11 +37,11 @@
      You also should change the directory name, in this case.  The automated script does this for you if you run it; 
      otherwise, you will need to change the root yourself. 
     
-    ```bash
-    cd 
-    mv ghdata-myteam-sprint1-32 ghdata
-    cd ghdata
-    ```
+     ```bash
+     cd 
+     mv ghdata-myteam-sprint1-32 ghdata
+     cd ghdata
+     ```
      
   
   3. Create a configuration file. The following command will create
