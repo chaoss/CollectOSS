@@ -17,16 +17,27 @@ class GitHubAPI(object):
         self.GITUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
-    def contributions_by_file(self, owner, repo, start=None, end=None):
+    def file_check(self, filename, commits):
+        """
+        Checks if inputted file exists in repo
+
+        Returns true, else raises file not found error
+
+        :param filename: File name
+        :param commits; pygitub Commit Object or Pagnated List of Commit Objects
+        """
+
+        for commit in commits:
+            for file in commit.files:
+                if file.filename == filename:
+                    return True
+        raise FileNotFoundError
+
+    def contributions_by_file(self, owner, repo, filename=None, start=None, end=None):
         """
         Gets number of addtions and deletions in each file by user
 
-        Puts it in dataframe with columns:
-        file    user    num of additions    num of deletion   total changes
-
         Currently ignores changes from local users unattributed to Github users
-
-        TODO: Have filename or file object as param and only calculate for that file
 
         """
         if start != None:
@@ -39,14 +50,27 @@ class GitHubAPI(object):
         else:
             end = github.GithubObject.NotSet
 
+        commits = self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
+
+        if filename != None:
+            self.file_check(filename, commits)
+
         df = []
-        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end):
+
+        for commit in commits:
             for file in commit.files:
-                try:
-                    if file.changes != 0:
-                        df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
-                except AttributeError:
-                    pass
+                if filename != None:
+                    try:
+                        if file.changes != 0 and file.filename == filename:
+                            df.append({'user': commit.author.login, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
+                    except AttributeError:
+                        pass
+                else:
+                    try:
+                        if file.changes != 0:
+                            df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
+                    except AttributeError:
+                        pass
 
         df = pd.DataFrame(df)
 
@@ -54,7 +78,7 @@ class GitHubAPI(object):
 
         return df
 
-    def contributions_by_percentage(self, owner, repo, start=None, end=None):
+    def contributions_by_percentage(self, owner, repo, filename=None, start=None, end=None):
         """
         Calculates percentage of commits in repo by user
 
@@ -76,12 +100,28 @@ class GitHubAPI(object):
         else:
             end = github.GithubObject.NotSet
 
+        commits = self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
+
+        if filename != None:
+            self.file_check(filename, commits)
+
         df = []
-        for commit in self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end):
-            try:
-                df.append({'user': commit.author.login})
-            except AttributeError:
-                pass
+
+        if filename != None:
+            for commit in commits:
+                for file in commit.files:
+                    if file.filename == filename:
+                        try:
+                            df.append({'user': commit.author.login})
+                        except AttributeError:
+                            pass
+                        break
+        else:
+            for commit in commits:
+                try:
+                    df.append({'user': commit.author.login})
+                except AttributeError:
+                    pass
 
         df = pd.DataFrame(df)
 
