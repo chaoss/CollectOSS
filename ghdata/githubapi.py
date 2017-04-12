@@ -17,22 +17,6 @@ class GitHubAPI(object):
         self.GITUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
-    def file_check(self, filename, commits):
-        """
-        Checks if inputted file exists in repo
-
-        Returns true, else raises file not found error
-
-        :param filename: File name
-        :param commits; pygitub Commit Object or Pagnated List of Commit Objects
-        """
-
-        for commit in commits:
-            for file in commit.files:
-                if file.filename == filename:
-                    return True
-        raise FileNotFoundError
-
     def contributions_by_file(self, owner, repo, filename=None, start=None, end=None):
         """
         Gets number of addtions and deletions in each file by user
@@ -53,7 +37,7 @@ class GitHubAPI(object):
         commits = self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
 
         if filename != None:
-            self.file_check(filename, commits)
+            self.__api.get_repo((owner + "/" + repo)).get_contents(filename)
 
         df = []
 
@@ -103,7 +87,7 @@ class GitHubAPI(object):
         commits = self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
 
         if filename != None:
-            self.file_check(filename, commits)
+            self.__api.get_repo((owner + "/" + repo)).get_contents(filename)
 
         df = []
 
