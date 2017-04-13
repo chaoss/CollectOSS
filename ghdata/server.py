@@ -49,62 +49,51 @@ def flaskify(func):
     generated_function.__name__ = func.__name__
     return generated_function
 
+def read_config(parser, section, name, environment_variable, default):
+    try:
+        value = os.getenv(environment_variable, parser.get(section, name))
+        return value
+    except:
+        if not parser.has_section(section):
+            parser.add_section(section)
+        parser.set(section, name, default)
+        with open('ghdata.cfg', 'w') as configfile:
+            parser.write(configfile)
+        return default
+
 
 def run(): 
 
     app = Flask(__name__, static_url_path=os.path.abspath('static/'))
     CORS(app)
-    try:
-        # Try to open the config file and parse it
-        parser = configparser.RawConfigParser()
-        parser.read('ghdata.cfg')
-        host = parser.get('Server', 'host')
-        port = parser.get('Server', 'port')
-        try:
-            dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-                parser.get('Database', 'user'),
-                parser.get('Database', 'pass'),
-                parser.get('Database', 'host'),
-                parser.get('Database', 'port'),
-                parser.get('Database', 'name')
-            )
-            ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
-        except Exception as e:
-            print("Failed to connect to database (" + str(e) + ")");
-        
-        publicwww = ghdata.PublicWWW(api_key=parser.get('PublicWWW', 'APIKey'))
-        github = ghdata.GitHubAPI(api_key=parser.get('GitHub', 'APIKey'))
-        
-        if (parser.get('Development', 'developer') == '1' or os.getenv('FLASK_DEBUG') == '1'):
-            debugmode = True
-        else:
-            debugmode = False
+    # Try to open the config file and parse it
+    parser = configparser.RawConfigParser()
+    parser.read('ghdata.cfg')
 
+    try:
+        dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
+            read_config(parser, 'Database', 'user', 'GHDATA_DB_USER', 'root'),
+            read_config(parser, 'Database', 'pass', 'GHDATA_DB_PASS', 'password'),
+            read_config(parser, 'Database', 'host', 'GHDATA_DB_HOST', '127.0.0.1'),
+            read_config(parser, 'Database', 'port', 'GHDATA_DB_PORT', '3306'),
+            read_config(parser, 'Database', 'name', 'GHDATA_DB_NAME', 'msr14')
+        )
+        ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
     except Exception as e:
-        # Uh-oh. Save a new config file.
-        print('Failed to open config file.')
-        print('Error: ' + str(e))
-        config = configparser.RawConfigParser()
-        config.add_section('Server')
-        config.set('Server', 'host', '0.0.0.0')
-        config.set('Server', 'port', '5000')
-        config.add_section('Database')
-        config.set('Database', 'host', '127.0.0.1')
-        config.set('Database', 'port', '3306')
-        config.set('Database', 'user', 'root')
-        config.set('Database', 'pass', 'root')
-        config.set('Database', 'name', 'ghtorrent')
-        config.add_section('PublicWWW')
-        config.set('PublicWWW', 'APIKey', '0')
-        config.add_section('GitHub')
-        config.set('GitHub', 'APIKey', '0')
-        config.add_section('Development')
-        config.set('Development', 'developer', '0')
-        # Writing our configuration file to 'example.cfg'
-        with open('ghdata.cfg', 'w') as configfile:
-            config.write(configfile)
-        print('Default config saved to ghdata.cfg')
-        sys.exit()
+        print("Failed to connect to database (" + str(e) + ")");
+
+    host = read_config(parser, 'Server', 'host', 'GHDATA_DEBUG_HOST', '0.0.0.0'),
+    port = read_config(parser, 'Server', 'port', 'GHDATA_DEBUG_PORT', '5000')
+
+    publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_KEY', 'None'))
+    github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
+
+    if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
+        debugmode = True
+    else:
+        debugmode = False
+
+    sys.exit()
 
 
 
