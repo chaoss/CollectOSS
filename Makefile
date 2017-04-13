@@ -9,7 +9,8 @@ default:
 	\e[1mrun-debug \e[0m   Runs GHData in development mode\n\
 	\e[1mpython-docs \e[0m Generates new Sphinx documentation\n\
 	\e[1mapi-docs \e[0m    Generates new apidocjs documentation\n\
-	\e[1mdocs \e[0m        Generates all documentation\n"
+	\e[1mdocs \e[0m        Generates all documentation\n\
+	\e[1mupdate-deps \e[0m Generates updated requirements.txt\n"
 
 install:
 		sudo pip2 install --upgrade . && pip3 install --upgrade .
@@ -50,3 +51,7 @@ endif
 test: check-test-env
 		python2 -m pytest
 		python3 -m pytest
+
+update-deps:
+		@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
+		pipreqs ./
