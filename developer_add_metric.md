@@ -74,4 +74,4 @@ MG.data_graphic({
 
 
 
-You're done! The metric should be fully integrated into GHData.
+The metric should be fully integrated into GHData. To install your updated version of GHData, run `pip3 install --upgrade .` in the root of your repo.
