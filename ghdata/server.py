@@ -78,22 +78,21 @@ def run():
             read_config(parser, 'Database', 'port', 'GHDATA_DB_PORT', '3306'),
             read_config(parser, 'Database', 'name', 'GHDATA_DB_NAME', 'msr14')
         )
+        print("Connecting with " + dbstr)
         ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
     except Exception as e:
         print("Failed to connect to database (" + str(e) + ")");
 
-    host = read_config(parser, 'Server', 'host', 'GHDATA_DEBUG_HOST', '0.0.0.0'),
-    port = read_config(parser, 'Server', 'port', 'GHDATA_DEBUG_PORT', '5000')
+    host = read_config(parser, 'Server', 'host', 'GHDATA_HOST', '0.0.0.0')
+    port = read_config(parser, 'Server', 'port', 'GHDATA_PORT', '5000')
 
-    publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_KEY', 'None'))
+    publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
     github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
 
     if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
         debugmode = True
     else:
         debugmode = False
-
-    sys.exit()
 
 
 
@@ -106,7 +105,11 @@ def run():
     def api_root():
         """API status"""
         # @todo: When we support multiple data sources this should keep track of their status
-        return """{"status": "healthy", "ghtorrent": "online"}"""
+        # @todo: Add GHTorrent test to determine status
+        ghtorrent_status = "good"
+        # @todo: Add GitHub API status
+        # @todo: Add PublicWWW API status
+        return """{"status": "healthy", "ghtorrent": "{}"}""".format(ghtorrent_status)
 
     #######################
     #     Timeseries      #
@@ -436,7 +439,7 @@ def run():
 
         app.debug = True
 
-    app.run(host=host, port=int(port), debug=debugmode)
+    app.run(host=host, port=port, debug=debugmode)
 
 if __name__ == '__main__':
     run()
