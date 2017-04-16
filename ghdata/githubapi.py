@@ -1,3 +1,4 @@
+
 import datetime
 from dateutil.parser import parse
 import pandas as pd
@@ -46,7 +47,7 @@ class GitHubAPI(object):
                 if filename != None:
                     try:
                         if file.changes != 0 and file.filename == filename:
-                            df.append({'user': commit.author.login, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
+                            df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
                     except AttributeError:
                         pass
                 else:
@@ -58,7 +59,7 @@ class GitHubAPI(object):
 
         df = pd.DataFrame(df)
 
-        df.groupby(["file", "user"]).sum()
+        df = df.groupby(["file", "user"]).sum()
 
         return df
 
