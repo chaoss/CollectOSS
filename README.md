@@ -62,6 +62,11 @@ railsID = client.repoid(owner='rails', repo='rails')
 railsStars = client.stargazers(railsID)
 ```
 
+Uninstall
+------------
+To uninstall, run `pip uninstall ghdata`
+
+
 TODO: More/Better API documentation
 
 DFD Descritpion of GHData
@@ -72,8 +77,6 @@ DFD Image Here
 
 History
 -------
-
-
 
 
 Maintainers
