@@ -439,7 +439,7 @@ def run():
 
         app.debug = True
 
-    app.run(host=host, port=port, debug=debugmode)
+    app.run(host=host, port=int(port), debug=debugmode)
 
 if __name__ == '__main__':
     run()

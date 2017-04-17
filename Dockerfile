@@ -1,9 +1,8 @@
 FROM python:3
 
-# Copy the repo
-COPY ./ /ghdata/
-RUN rm -rf ghdata/ghdata.cfg && pip install --upgrade ./ghdata
-
-EXPOSE 80
+RUN mkdir /ghdata
+WORKDIR /ghdata
+ADD . /ghdata
+RUN pip install --upgrade .
 
 CMD ["ghdata"]
