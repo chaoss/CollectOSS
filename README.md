@@ -5,14 +5,14 @@ branch | status
 master | [![Build Status](https://travis-ci.org/OSSHealth/ghdata.svg?branch=master)](https://travis-ci.org/OSSHealth/ghdata)
 dev | [![Build Status](https://travis-ci.org/OSSHealth/ghdata.svg?branch=dev)](https://travis-ci.org/OSSHealth/ghdata)
 
-GHData is a Python library and REST server that provides data related to GitHub repositories. Hosting GHData project requires the GHTorrent database. [Backups of this database are avaliable](http://ghtorrent.org/downloads.html) and [it can be synchronized with current data](https://github.com/OSSHealth/ghtorrent-sync). Support for all event types reported by the [GitHub Events API](https://developer.github.com/v3/activity/events/) are planned for the version 1.0.0 milestone.
+GHData is a Python library and REST server that provides data related to GitHub repositories. Hosting the GHData project requires a copy of the [GHTorrent database](http://ghtorrent.org/downloads.html).
 
 GHData is under heavy development; expect frequent backwards-incompatible changes until a 1.x.x release!
 
 Roadmap
 -------
 
-Our technical, outreach, and academic goals [roadmap](docs/roadmap.md).
+Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHealth/ghdata/wiki/Release-Schedule).
 
 
 License and Copyright
@@ -62,6 +62,11 @@ railsID = client.repoid(owner='rails', repo='rails')
 railsStars = client.stargazers(railsID)
 ```
 
+Uninstall
+------------
+To uninstall, run `pip uninstall ghdata`
+
+
 TODO: More/Better API documentation
 
 DFD Descritpion of GHData
@@ -72,8 +77,6 @@ DFD Image Here
 
 History
 -------
-
-
 
 
 Maintainers
