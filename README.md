@@ -12,7 +12,7 @@ GHData is under heavy development; expect frequent backwards-incompatible change
 Roadmap
 -------
 
-Our technical, outreach, and academic goals [roadmap](docs/roadmap.md).
+Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHealth/ghdata/wiki/Release-Schedule).
 
 
 License and Copyright
