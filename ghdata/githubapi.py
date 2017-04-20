@@ -18,12 +18,18 @@ class GitHubAPI(object):
         self.GITUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
-    def contributions_by_file(self, owner, repo, filename=None, start=None, end=None):
+    def contributions_by_file(self, owner, repo, filename=None, start=None, end=None, ascending=False):
         """
         Gets number of addtions and deletions in each file by user
 
         Currently ignores changes from local users unattributed to Github users
 
+        :param owner: repo owner username
+        :param repo: repo name
+        :param filename: optional; file or directory for function to run on
+        :param start: optional; start time for analysis
+        :param end: optional; end time for analysis
+        :param ascending: Default False; returns dataframe in ascending order
         """
         if start != None:
             start = parse(start)
@@ -61,11 +67,11 @@ class GitHubAPI(object):
 
         df = df.groupby(["file", "user"]).sum()
 
-        df.sort(ascending=False)
+        df = df.sort_values(ascending=ascending)
 
         return df
 
-    def contributions_by_percentage(self, owner, repo, filename=None, start=None, end=None):
+    def contributions_by_percentage(self, owner, repo, filename=None, start=None, end=None, ascending=False):
         """
         Calculates percentage of commits in repo by user
 
@@ -74,6 +80,12 @@ class GitHubAPI(object):
 
         Currently ignores changes from local users unattributed to Github user
 
+        :param owner: repo owner username
+        :param repo: repo name
+        :param filename: optional; file or directory for function to run on
+        :param start: optional; start time for analysis
+        :param end: optional; end time for analysis
+        :param ascending: Default False; returns dataframe in ascending order
         """
         if start != None:
             start = parse(start)
@@ -112,21 +124,27 @@ class GitHubAPI(object):
 
         df = df.groupby(['user']).user.count() / df.groupby(['user']).user.count().sum() * 100
 
-        df.sort(ascending=False)
+        df = df.sort_values(ascending=ascending)
 
         return df
 
-        def worst_bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
-            """
-            Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
+    def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50, best=False):
+        """
+        Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
 
+        :param owner: repo owner username
+        :param repo: repo name
+        :param filename: optional; file or directory for function to run on
+        :param start: optional; start time for analysis
+        :param end: optional; end time for analysis
+        :param threshold: Default 50;
+        :param best: Default False; If true, sums from lowest to highestn
+        """
 
-            """
+        df = self.contributions_by_percentage(owner, repo, filename, start, end, best)
 
-            df = contributions_by_percentage(self, owner, repo, filename=None, start=None, end=None)
-
-            sum = 0
-
-            while(sum < threshold):
-
-                pass
+        i = 0
+        for num in df.cumsum():
+            i = i + 1
+            if num >= 50:
+                return i
