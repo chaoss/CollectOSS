@@ -61,6 +61,8 @@ class GitHubAPI(object):
 
         df = df.groupby(["file", "user"]).sum()
 
+        df.sort(ascending=False)
+
         return df
 
     def contributions_by_percentage(self, owner, repo, filename=None, start=None, end=None):
@@ -71,8 +73,6 @@ class GitHubAPI(object):
         user    percentage of commits
 
         Currently ignores changes from local users unattributed to Github user
-
-        TODO: Have filename or file object as param and only calculate for that file
 
         """
         if start != None:
@@ -112,4 +112,21 @@ class GitHubAPI(object):
 
         df = df.groupby(['user']).user.count() / df.groupby(['user']).user.count().sum() * 100
 
+        df.sort(ascending=False)
+
         return df
+
+        def worst_bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
+            """
+            Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
+
+
+            """
+
+            df = contributions_by_percentage(self, owner, repo, filename=None, start=None, end=None)
+
+            sum = 0
+
+            while(sum < threshold):
+
+                pass
