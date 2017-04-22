@@ -64,7 +64,7 @@ def read_config(parser, section, name, environment_variable, default):
 
 def run(): 
 
-    app = Flask(__name__, static_url_path=os.path.abspath('static/'))
+    app = Flask(__name__)
     CORS(app)
     # Try to open the config file and parse it
     parser = configparser.RawConfigParser()
