@@ -147,4 +147,4 @@ class GitHubAPI(object):
         for num in df.cumsum():
             i = i + 1
             if num >= 50:
-                return i
+                return {"repo" : repo, "bus_factor" : i}

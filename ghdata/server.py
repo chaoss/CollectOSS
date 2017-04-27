@@ -62,7 +62,7 @@ def read_config(parser, section, name, environment_variable, default):
         return default
 
 
-def run(): 
+def run():
 
     app = Flask(__name__)
     CORS(app)
@@ -415,6 +415,35 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/linking_websites'.format(GHDATA_API_VERSION))(flaskify(publicwww.linking_websites))
+
+    #######################
+    #     GitHub API     #
+    #######################
+
+    """
+    @api {get} /:owner/:repo/bus_factor Bus Factor
+    @apiDescription Returns an integer that is the number of develpers that have a summed percentage of contributions higher than the threshold
+    @apiName GitHub
+    @apiGroup Users
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+    @apiParam {String} filename: optional; file or directory for function to run on
+    @apiParam {String} start: optional; start time for analysis
+    @apiParam {String} end: optional; end time for analysis
+    @apiParam {String} threshold: Default 50;
+    @apiParam {String} best: Default False; If true, sums from lowest to highest
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "repo": "ghdata",
+                                "bus_factor": "2"
+                            }
+                        ]
+    """
+    app.route('/{}/<owner>/<repo>/bus_factor'.format(GHDATA_API_VERSION))(flaskify(github.bus_factor))
+
 
 
     if (debugmode):
