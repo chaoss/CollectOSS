@@ -146,5 +146,6 @@ class GitHubAPI(object):
         i = 0
         for num in df.cumsum():
             i = i + 1
-            if num >= 50:
-                return {"repo" : repo, "bus_factor" : i}
+            if num >= threshold:
+                bus_factor = pd.Series(i, index=["Bus Factor"])
+                return bus_factor
