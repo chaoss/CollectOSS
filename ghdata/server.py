@@ -442,7 +442,10 @@ def run():
                             }
                         ]
     """
-    app.route('/{}/<owner>/<repo>/bus_factor'.format(GHDATA_API_VERSION))(flaskify(github.bus_factor))
+    @app.route('/{}/<owner>/<repo>/bus_factor'.format(GHDATA_API_VERSION))
+    def bus_factor(owner,repo):
+        kwargs = request.args.to_dict()
+        return Response(response=github.bus_factor(owner, repo, **kwargs).to_json(), status=200, mimetype="application/json")
 
 
 
