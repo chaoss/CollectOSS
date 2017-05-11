@@ -1,8 +1,6 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
 import sqlalchemy as s
-import sys
-import json
 import re
 
 class GHTorrent(object):
@@ -16,6 +14,10 @@ class GHTorrent(object):
         """
         self.DB_STR = dbstr
         self.db = s.create_engine(dbstr)
+        try:
+            self.userid('howderek')
+        except Exception as e:
+            print("Could not connect to database.\nError: " + str(e))
 
     def __single_table_count_by_date(self, table, repo_col='project_id'):
         """
@@ -327,3 +329,38 @@ class GHTorrent(object):
         """)
 
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
+
+    def classify_contributors(self, repoid):
+        """
+        Classify everyone who has interacted with a repo into
+          - user
+          - tester
+          - rejected_contributor
+          - contributor
+          - major_contributor
+          - maintainer
+
+        :param repoid: The id of the project in the projects table.
+        :return: DataFrame with the login and role of contributors
+        """
+        contributors = self.contributors(repoid)
+        sums = contributors.sum()
+
+        def classify(row):
+            role = 'user'
+            ratio = row / sums
+            if (ratio['issue_comments'] > 0.05):
+                role = 'tester'
+            if (row['pull_requests'] >= 1 and row['commits'] == 0):
+                role = 'rejected_contributor'
+            if (row['pull_requests'] >= 1 and row['commits'] >= 1):
+                role = 'contributor'
+            if (ratio['pull_requests'] > 0.10 or ratio['commits'] > 0.01):
+                role = 'major_contributor'
+            if (ratio['commits'] > 0.02 or ratio['pull_request_comments'] > 0.15):
+                role = 'maintainer'
+
+            return pd.Series({'login': row['login'], 'role': role})
+
+        roles = contributors.apply(classify, axis=1)
+        return roles

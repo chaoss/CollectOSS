@@ -1,0 +1,46 @@
+ version: '3'
+ services:
+
+   db:
+     build: ./docker/database
+     restart: always
+     command: mysqld --verbose
+     volumes:
+       - /var/lib/mysql
+     ports:
+       - "3306:3306"
+     environment:
+       MYSQL_BASE: "msr14"
+       MYSQL_USER: "msr14"
+       MYSQL_PASSWORD: "password"
+       MYSQL_ROOT_PASSWORD: "root"
+       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+
+   ghdata:
+     build: .
+     restart: always
+     volumes:
+       - .:/ghdata
+     ports:
+       - "5000:5000"
+     links:
+       - db
+     depends_on:
+       - db
+     environment:
+       GHDATA_DB_USER: "root"
+       GHDATA_DB_PASS: "root"
+       GHDATA_DB_PORT: "3306"
+       GHDATA_DB_HOST: "db"
+       GHDATA_DB_NAME: "msr14"
+       GHDATA_GITHUB_API_KEY:
+       GHDATA_PUBLIC_WWW_API_KEY:
+       GHDATA_HOST:
+       GHDATA_PORT:
+
+   web:
+     build:
+       context: ./
+       dockerfile: ./docker/static-web/Dockerfile
+     ports:
+       - "80:80"

@@ -30,6 +30,7 @@
 *.sqlite
 *.ini
 *.cfg
+*.cfg.old
 
 # OS generated files #
 ######################
