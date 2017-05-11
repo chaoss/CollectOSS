@@ -35,7 +35,11 @@ Installation without Docker
 
 After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a user for GHData. GHData only needs `SELECT` privileges.
 
-Once the database is set up, clone GHData (`git clone https://github.com/OSSHealth/ghdata/` then install `cd ghdata && pip install -U .`
+Once the database is set up, clone GHData
+```bash
+git clone https://github.com/OSSHealth/ghdata/
+cd ghdata && pip install -U .
+```
 
 Run `ghdata` to create the configuration file (ghdata.cfg). Edit the file to reflect your database credentials.
 
