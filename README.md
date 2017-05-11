@@ -19,9 +19,9 @@ Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHeal
 
 Installation with Docker
 ------------------------
-1. Clone the repo
-2  `docker-compose build`
-3. `docker-compose up`
+  1. Clone the repo
+  2  `docker-compose build`
+  3. `docker-compose up`
 
 
 
