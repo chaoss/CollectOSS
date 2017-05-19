@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
 import sqlalchemy as s
+import numpy as np
 import re
 
 class GHTorrent(object):
@@ -32,7 +33,8 @@ class GHTorrent(object):
             SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
             FROM {0}
             WHERE {1} = :repoid
-            GROUP BY WEEK(created_at)""".format(table, repo_col)
+            GROUP BY YEARWEEK(created_at)""".format(table, repo_col)
+
 
     def repoid(self, owner, repo):
         """
@@ -66,7 +68,7 @@ class GHTorrent(object):
 
 
     # Basic timeseries queries
-    def stargazers(self, repoid, start=None, end=None):
+    def stargazers(self, repoid):
         """
         Timeseries of when people starred a repo
 
@@ -106,7 +108,7 @@ class GHTorrent(object):
         issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id'))
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
-    def issues_with_close(self, repoid):
+    def issues_with_close(self, repoid, **args):
         """
         How long on average each week it takes to close an issue
 
@@ -239,6 +241,7 @@ class GHTorrent(object):
             LEFT JOIN (SELECT issue_comments.created_at AS created_at, COUNT(*) AS count FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid[[ AND issue_comments.user_id = :userid]] GROUP BY DATE(issue_comments.created_at)) AS isscoms
             ON DATE(isscoms.created_at) = DATE(coms.created_at)
 
+            GROUP BY YEARWEEK(coms.created_at)
             ORDER BY DATE(coms.created_at)
         """
 
@@ -299,7 +302,12 @@ class GHTorrent(object):
             AND issues.repo_id = :repoid
             GROUP BY issues.id
         """)
-        return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
+        df = pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
+        df['created_at'] = pd.to_datetime(df['created_at'])
+        df['responded_at'] = pd.to_datetime(df['responded_at'])
+        df['hours_between'] = np.floor((df['responded_at'] - df['created_at']) / np.timedelta64(1, 'h'))
+        df = df['hours_between'].value_counts().reset_index().rename(columns={'index': 'hours_between', 'hours_between': 'count'})
+        return df
 
     def pull_acceptance_rate(self, repoid):
         """

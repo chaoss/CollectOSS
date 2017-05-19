@@ -13,6 +13,12 @@ html {
   -webkit-text-size-adjust: 100%; /* 2 */
 }
 
+* {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+
 /**
  * Remove default margin.
  */
@@ -1060,7 +1066,6 @@ select {
   padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
   background-color: #fff;
   border: 1px solid #D1D1D1;
-  border-radius: 4px;
   box-shadow: none;
   box-sizing: border-box; }
 /* Removes awkward default styles on some inputs for iOS */
@@ -1135,11 +1140,13 @@ code {
   white-space: nowrap;
   background: #F1F1F1;
   border: 1px solid #E1E1E1;
-  border-radius: 4px; }
+}
+
 pre > code {
   display: block;
   padding: 1rem 1.5rem;
-  white-space: pre; }
+  white-space: pre;
+}
 
 
 /* Tables
@@ -1228,7 +1235,7 @@ there.
 @media (min-width: 400px) {}
 
 /* Larger than phablet (also point when grid becomes active) */
-@media (min-width: 550px) {}
+
 
 /* Larger than tablet */
 @media (min-width: 750px) {}
@@ -1240,22 +1247,90 @@ there.
 @media (min-width: 1200px) {}
 
 
+/* Landing page
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+githubform {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  margin: 10px auto 100px auto;
+  padding:30px;
+  text-align: center;
+}
+
+.logo {
+  width: 60%;
+  margin-bottom: 100px;
+}
+
+githubform input[type="text"] {
+  width: 100%;
+  float:left;
+  border-radius: 0;
+
+}
+
+githubform button {
+  width: 100%;
+  background-color: #eee;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  margin-bottom: 30px;
+}
+
+@media (min-width: 550px) {
+
+  githubform {
+    margin: 100px auto 100px auto;
+  }
+
+  .logo {
+    width: 60%;
+    margin-bottom: 70px
+  }
+
+  githubform input[type="text"] {
+    width: 85%;
+    border-right: 0;
+  }
+
+  githubform button {
+    width: 15%;
+    float: left;
+    padding: 0;
+    margin: 0 0 50px 0;
+  }
+
+}
+
+.hidden {
+  display: none;
+}
+
+.spacer {
+  display: block;
+  width: 100%;
+  height: 50px;
+}
+
 /* Report Specific Styles
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-.report {
+healthreport {
   margin-top: 5%;
 }
 
-.report h1, h2, h3, h4 {
+healthreport h1, h2, h3, h4 {
   font-weight: bold;
 }
 
-.report h2 {
+healthreport h2 {
   font-size: 2.5rem;
 }
 
-.report .badge {
+healthreport .badge {
   margin-top: 1.5rem;
   padding: 0.5rem;
   text-align: center;
@@ -1268,7 +1343,7 @@ there.
   background-color: #595;
 }
 
-.report section {
+healthreport section {
   margin-bottom: 3rem;
 }
 
@@ -1280,4 +1355,11 @@ there.
 .trends tspan.mg-points-mono {
     fill: #ccc;
     stroke: #ccc;
+}
+
+
+timeseriesgraph {
+  display: block;
+  float: left;
+  width: 100%;
 }

@@ -4,11 +4,12 @@
  * Handles interaction with a GHData server.
  * @constructor
  */
-function GHDataAPIClient (apiUrl, owner, repo, apiVersion) {
+export function GHDataAPIClient (apiUrl, owner, repo, apiVersion) {
   this.owner = owner || '';
   this.repo = repo || '';
   this.url = apiUrl || 'http://' + document.location.hostname + ':5000/';
   this.apiversion = apiVersion || 'unstable';
+  return this;
 }
 
 

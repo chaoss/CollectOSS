@@ -13,13 +13,13 @@ from flask_cors import CORS
 
 GHDATA_API_VERSION = 'unstable'
 
-def serialize(func, **args):
-    """
-    Serailizes a function that returns a dataframe
-    """
-    data = func(**args)
+def serialize(data, orient='records'):
+
+    if (orient is None):
+        orient = 'records'
+
     if hasattr(data, 'to_json'):
-        return data.to_json(orient='records', date_format='iso', date_unit='ms')
+        return data.to_json(orient=orient, date_format='iso', date_unit='ms')
     else:
         return data
 
@@ -31,7 +31,8 @@ def flaskify_ghtorrent(ghtorrent, func):
     """
     def generated_function(owner, repo):
         repoid = ghtorrent.repoid(owner=owner, repo=repo)
-        return Response(response=serialize(func, repoid=repoid),
+        df = func(repoid=repoid)
+        return Response(response=serialize(df, orient=request.args.get('orient')),
                         status=200,
                         mimetype="application/json")
     generated_function.__name__ = func.__name__
@@ -43,7 +44,8 @@ def flaskify(func):
     serializes them and spits them out
     """
     def generated_function(owner, repo):
-        return Response(response=serialize(func, owner=owner, repo=repo),
+        df = func(owner=owner, repo=repo)
+        return Response(response=serialize(df, orient=request.args.get('orient')),
                         status=200,
                         mimetype="application/json")
     generated_function.__name__ = func.__name__
@@ -78,7 +80,6 @@ def run():
             read_config(parser, 'Database', 'port', 'GHDATA_DB_PORT', '3306'),
             read_config(parser, 'Database', 'name', 'GHDATA_DB_NAME', 'msr14')
         )
-        print("Connecting with " + dbstr)
         ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
     except Exception as e:
         print("Failed to connect to database (" + str(e) + ")");
@@ -361,7 +362,8 @@ def run():
             contribs = ghtorrent.contributions(repoid=repoid, userid=userid)
         else:
             contribs = ghtorrent.contributions(repoid=repoid)
-        return Response(response=contribs,
+        serialized_contributors = serialize(contribs, orient=request.args.get('orient'))
+        return Response(response=serialized_contributors,
                         status=200,
                         mimetype="application/json")
 
@@ -450,24 +452,7 @@ def run():
 
 
     if (debugmode):
-        print(" * Serving static routes")
-        # Serve the front-end files in debug mode to make it easier for developers to work on the interface
-        # @todo: Figure out why this isn't working.
-        @app.route('/')
-        def index():
-            root_dir = os.path.dirname(os.getcwd())
-            print(root_dir + '/ghdata/static')
-            return send_from_directory(root_dir + '/ghdata/ghdata/static', 'index.html')
-
-        @app.route('/scripts/<path>')
-        def send_scripts(path):
-            root_dir = os.path.dirname(os.getcwd())
-            return send_from_directory(root_dir + '/ghdata/ghdata/static/scripts', path)
-
-        @app.route('/styles/<path>')
-        def send_styles(path):
-            root_dir = os.path.dirname(os.getcwd())
-            return send_from_directory(root_dir+ '/ghdata/ghdata/static/styles', path)
+        print(" * Debug mode on, please note this no longer serves static files.")
 
         app.debug = True
 

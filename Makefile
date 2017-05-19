@@ -1,4 +1,4 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart
 
 default:
 	@ printf "Please type a valid command.\n\
@@ -13,15 +13,25 @@ default:
 	\e[1mupdate-deps \e[0m Generates updated requirements.txt\n"
 
 install:
-		sudo pip2 install --upgrade . && pip3 install --upgrade .
+		pip install --upgrade .
 
 install-dev: install
-		npm install -g apidoc
+	  pip2 install --upgrade .
+	  pip3 install --upgrade .
+		npm install -g apidoc brunch
+		cd ghdata/static/ && npm install
 
-run-debug:
-		export FLASK_APP=ghdata.server &&\
-		export FLASK_DEBUG=1 &&\
-		flask run --host 0.0.0.0
+
+dev-start:
+		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && python -m ghdata.server"
+		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s"
+		@ printf '\nDevelopment servers started.\nBrunch server: screen -r "ghdata-frontend"\nGHData:        screen -r "ghdata-backend"\n\n'
+
+dev-stop:
+		screen -S "ghdata-backend" -X kill
+		screen -S "ghdata-frontend" -X kill
+
+dev-restart: dev-stop dev-start
 
 python-docs:
 		cd docs/python   \
@@ -29,9 +39,12 @@ python-docs:
 		&& make html
 
 api-docs:
-		apidoc -i ghdata/ -o docs/api/
+		apidoc --debug -f "\.py" -i ghdata/ -o docs/api/
 
 docs: api-docs python-docs
+
+build: docs
+		cd ghdata/static/ && brunch build
 
 check-test-env:
 ifndef DB_TEST_URL

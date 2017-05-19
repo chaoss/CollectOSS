@@ -1,0 +1,27 @@
+{
+  "name": "your-app",
+  "description": "Description",
+  "author": "Your Name",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "start": "brunch watch --server",
+    "test": "brunch test"
+  },
+  "dependencies": {
+    "auto-reload-brunch": ">= 1.0 < 1.8",
+    "babel-brunch": "^6.1.1",
+    "babel-preset-es2015-riot": "^1.1.0",
+    "body-parser": "1.11.0",
+    "clean-css-brunch": ">= 1.0 < 1.8",
+    "css-brunch": ">= 1.0 < 1.8",
+    "echarts": "^3.5.4",
+    "express": "4.11.2",
+    "javascript-brunch": ">= 1.0 < 1.8",
+    "riot-brunch": "0.0.1",
+    "uglify-js-brunch": ">= 1.0 < 1.8"
+  }
+}
