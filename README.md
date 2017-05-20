@@ -24,11 +24,11 @@ Installation with Docker
   3. `docker-compose up`
 
 
-
 Installation without Docker
 ---------------------------
 ### Dependencies
-- Python 3.4.x and `pip`
+- Python 3.4.x/Python 2.7.x and `pip`
+- Static web server such as nginx or Apache
 - MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
 - [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
@@ -40,13 +40,39 @@ Once the database is set up, clone GHData
 git clone https://github.com/OSSHealth/ghdata/
 cd ghdata && pip install -U .
 ```
+Copy the files in [ghdata repo]/frontend/public to your webserver:
+```bash
 
 Run `ghdata` to create the configuration file (ghdata.cfg). Edit the file to reflect your database credentials.
 
-Move ./ghdata/ghdata/static/ to a static host on the same domain. If you would like GHData to serve the files itself, set the "developer" flag to 1 in ghdata.cfg. *`ghdata` must be run in the base of the repo if it is serving the static files*
+Run `ghdata` to start the backend. Visit your front
 
-Run `ghdata` to start the backend.
 
+Developer Installation
+----------------------
+
+### Dependencies
+- Python 3.4.x and Python 2.7.x with `pip2` and `pip3`
+- MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
+  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
+- NodeJS 7.x or newer
+
+First, clone the repo and checkout the dev branch:
+ 
+    ```bash
+    git clone https://github.com/OSSHealth/ghdata/ && git checkout dev
+    ```
+
+If you are updating the documentation or the frontend, you'll need to
+install the node packages `apidoc` and `brunch` globally and install the
+frontend's dependencies:
+
+    ```bash
+    npm install -g apidoc brunch
+    cd ghdata/static/ && npm install
+    ```
+
+In one shell, you'll want to run `ghdata`, in another run `cd frontend/ && brunch watch -s`
 
 
 License and Copyright
