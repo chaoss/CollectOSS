@@ -17,7 +17,7 @@ Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHeal
 
 
 
-Installation with Docker
+Installation with Docker (easy to get up and running)
 ------------------------
   1. Clone the repo
   2. `docker-compose build`
@@ -25,13 +25,14 @@ Installation with Docker
 
 
 
-Installation without Docker
+Installation without Docker (recommended for developers)
 ---------------------------
 ### Dependencies
 - Python 3.4.x and `pip`
 - MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
-- [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
+  - Our Development team has a public read only database you can request access to
+  - If you want to install your own copy of the MSR14 dataset [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
 
 After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a user for GHData. GHData only needs `SELECT` privileges.
 
