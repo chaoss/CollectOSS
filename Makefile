@@ -24,8 +24,12 @@ install-dev: install
 
 dev-start:
 		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && python -m ghdata.server"
-		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s"
-		@ printf '\nDevelopment servers started.\nBrunch server: screen -r "ghdata-frontend"\nGHData:        screen -r "ghdata-backend"\n\n'
+		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s -n"
+		@ printf '\nDevelopment servers started.\n\nBrunch server  |  Port: 3333      To see log: screen -r "ghdata-frontend"\nGHData         |  Port: 5000      To see log: screen -r "ghdata-backend"\n\n'
+dev-start-public:
+		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && export GHDATA_HOST='0.0.0.0' && python -m ghdata.server"
+		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s -n"
+		@ printf '\nDevelopment servers started. If ports 5000 and 3333 are open on your firewall, these will be avalible network-wide\n\nBrunch server  |  Port: 3333      To see log: screen -r "ghdata-frontend"\nGHData         |  Port: 5000      To see log: screen -r "ghdata-backend"\n\n'
 
 dev-stop:
 		screen -S "ghdata-backend" -X kill
