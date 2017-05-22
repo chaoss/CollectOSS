@@ -58,18 +58,18 @@ Developer Installation
 
 First, clone the repo and checkout the dev branch:
  
-    ```bash
-    git clone https://github.com/OSSHealth/ghdata/ && git checkout dev
-    ```
+```bash
+git clone https://github.com/OSSHealth/ghdata/ && git checkout dev
+```
 
 If you are updating the documentation or the frontend, you'll need to
 install the node packages `apidoc` and `brunch` globally and install the
 frontend's dependencies:
 
-    ```bash
-    npm install -g apidoc brunch
-    cd ghdata/static/ && npm install
-    ```
+```bash
+npm install -g apidoc brunch
+cd ghdata/static/ && npm install
+```
 
 In one shell, you'll want to run `ghdata`, in another run `cd frontend/ && brunch watch -s`
 
