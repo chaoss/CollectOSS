@@ -41,7 +41,6 @@ git clone https://github.com/OSSHealth/ghdata/
 cd ghdata && pip install -U .
 ```
 Copy the files in [ghdata repo]/frontend/public to your webserver:
-```bash
 
 Run `ghdata` to create the configuration file (ghdata.cfg). Edit the file to reflect your database credentials.
 
