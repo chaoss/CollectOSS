@@ -69,7 +69,11 @@ make install-dev
 
 You're good to go.
 
-In one shell, you'll want to run `ghdata`, in another run `cd frontend/ && brunch watch -s`. If you have GNU Screen installed. this can be done automatically using `make dev-start`. The screen sessions can be killed with `make dev-stop`
+In one shell, you'll want to run `ghdata`, in another run `cd frontend/ && brunch watch -s`.
+
+If you have GNU Screen installed. this can be done automatically using `make dev-start`. 
+
+The screen sessions can be killed with `make dev-stop`
 
 License and Copyright
 ---------------------
