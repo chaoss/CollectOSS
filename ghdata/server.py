@@ -1,6 +1,4 @@
 #SPDX-License-Identifier: MIT
-import ghdata
-
 import os
 import sys
 if (sys.version_info > (3, 0)):
@@ -8,7 +6,10 @@ if (sys.version_info > (3, 0)):
 else:
     import ConfigParser as configparser
 
-from flask import Flask, request, Response, send_from_directory
+sys.path.append('..')
+
+import ghdata
+from flask import Flask, request, Response
 from flask_cors import CORS
 
 GHDATA_API_VERSION = 'unstable'
@@ -458,5 +459,5 @@ def run():
 
     app.run(host=host, port=int(port), debug=debugmode)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()
