@@ -216,7 +216,18 @@ fi
 # Node
 #
 echo "Installing brunch, apidoc, and yarn..."
-sudo npm install --global yarn apidoc brunch
+npm install --global yarn apidoc brunch
+if [[ $? != 0 ]]
+then
+  echo "NPM failed to install the packages. Some systems require root priviledges."
+  yes_or_no_critical "Try again with sudo?" "GHData installed, but node install failed.\napidoc and brunch are required for development."
+  sudo npm install --global yarn apidoc brunch
+  if [[ $? != 0 ]]
+  then
+    echo "Installation failed."
+    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
+  fi
+fi
 
 echo "Installing GHData frontend node dependencies..."
 cd frontend
