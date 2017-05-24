@@ -185,7 +185,7 @@ then
       mysql --defaults-extra-file=<(printf "[client]\nuser = root\npassword = %s" "$DBPASS") --host=$DBHOST -e 'CREATE DATABASE msr;'
       zcat msr14-mysql.gz | mysql --defaults-extra-file=<(printf "[client]\nuser = root\npassword = %s" "$DBPASS") --host=$DBHOST msr
     else
-      mysql --uroot --host=$DBHOST -e 'CREATE DATABASE msr;'
+      mysql -uroot --host=$DBHOST -e 'CREATE DATABASE msr;'
       zcat msr14-mysql.gz | mysql -uroot --host=$DBHOST msr
     fi
     rm msr14-mysql.gz
@@ -216,7 +216,7 @@ fi
 # Node
 #
 echo "Installing brunch, apidoc, and yarn..."
-npm install --global yarn apidoc brunch
+sudo npm install --global yarn apidoc brunch
 
 echo "Installing GHData frontend node dependencies..."
 cd frontend
