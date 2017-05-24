@@ -33,18 +33,6 @@ Installation without Docker
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
 - [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
 
-### Developer Install
-- Also include NodeJS
-- You do not need to have an nginx or Apache server, as the brunch server works for developement
-```
-   ## Python Installs on UBUNUTU
-   sudo apt-get install python-pip
-   sudo apt-get install python3-pip
-   
-   ## For Development you need NodeJS
-   sudo apt-get install nodejs
-```
-
 After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a user for GHData. GHData only needs `SELECT` privileges.
 
 Once the database is set up, clone GHData
@@ -68,6 +56,16 @@ Developer Installation
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
 - NodeJS 7.x or newer
 
+#### Ubuntu
+```
+   ## Python Installs on UBUNUTU
+   sudo apt-get install python-pip
+   sudo apt-get install python3-pip
+   
+   ## For Development you need NodeJS
+   sudo apt-get install nodejs
+```
+
 First, clone the repo and checkout the dev branch:
  
 ```bash
@@ -78,6 +76,8 @@ Install the Python and Node developer dependencies:
 ```bash
 make install-dev
 ```
+
+
 
 You're good to go.
 
