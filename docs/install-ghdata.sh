@@ -201,10 +201,7 @@ echo "Now we're going to set up the database. We'll need MySQL root credentials 
 
 if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, ghdata and a default ghdata.cfg file will be created. Edit that file with the correct database settings.\nOr, run "
 then
-  curl -sOL https://raw.githubusercontent.com/OSSHealth/ghdata/dev/docs/install-msr.sh
-  chmod +x install-msr.sh
-  ./install-msr.sh
-  rm install-msr.sh
+  ./docs/install-msr.sh
 fi
 
 
