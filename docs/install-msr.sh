@@ -14,10 +14,11 @@ function yes_or_no {
 
 echo -n "Database host [localhost]: "
 read DBHOST
-DBHOST=${DBHOST:-locahost}
+DBHOST=${DBHOST:-localhost}
 echo -n "root@$DBHOST password [none]: "
 read -s DBPASS
 DBPASS=${DBPASS:-""}
+echo
 echo "Downloading MSR14 database dump (105MB)..."
 curl -Lk https://ghtstorage.blob.core.windows.net/downloads/msr14-mysql.gz > msr14-mysql.gz
 echo "Loading MSR14 dump..."
