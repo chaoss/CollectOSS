@@ -199,47 +199,9 @@ echo "GHData Python application installed."
 #
 echo "Now we're going to set up the database. We'll need MySQL root credentials to proceed."
 
-if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, ghdata and a default ghdata.cfg file will be created. Edit that file with the correct database settings."
+if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, ghdata and a default ghdata.cfg file will be created. Edit that file with the correct database settings.\nOr, run "
 then
-  echo -n "Database host [localhost]: "
-  read DBHOST
-  DBHOST=${DBHOST:-locahost}
-  echo -n "root@$DBHOST password [none]: "
-  read -s DBPASS
-  DBPASS=${DBPASS:-""}
-
-  if [[ $DEVELOPER == 1 ]]
-  then
-    echo "Downloading MSR14 database dump (105MB)..."
-    curl -Lk https://ghtstorage.blob.core.windows.net/downloads/msr14-mysql.gz > msr14-mysql.gz
-    echo "Loading MSR14 dump..."
-    if [[ "$DBPASS" == "" ]]
-    then
-      mysql --defaults-extra-file=<(printf "[client]\nuser = root\npassword = %s" "$DBPASS") --host=$DBHOST -e 'CREATE DATABASE msr;'
-      zcat msr14-mysql.gz | mysql --defaults-extra-file=<(printf "[client]\nuser = root\npassword = %s" "$DBPASS") --host=$DBHOST msr
-    else
-      mysql -uroot --host=$DBHOST -e 'CREATE DATABASE msr;'
-      zcat msr14-mysql.gz | mysql -uroot --host=$DBHOST msr
-    fi
-    rm msr14-mysql.gz
-    if yes_or_no "Would you like to create a GHData config file with the root database user information?" "To create a config file later on, run ghdata. It will be generated automatically. Edit the file with the correct information."
-    then
-      cat > ghdata.cfg <<ENDCONFIG
-[Database]
-host = $DBHOST
-port = 3306
-user = root
-pass = $DBPASS
-name = msr
-ENDCONFIG
-      echo "ghdata.cfg was created with the information you provided."
-    fi
-  else
-    echo "Downloading the GHTorrent dump not currently supported."
-    echo "Please visit https://github.comf/gousiosg/github-mirror/tree/master/sql"
-    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
-  fi
-  echo "Database installed."
+  curl -sL https://raw.githubusercontent.com/OSSHealth/ghdata/dev/docs/install-msr.sh | bash -
 fi
 
 
