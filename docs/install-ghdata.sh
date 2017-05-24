@@ -114,7 +114,7 @@ fi
 if [[ "$INSTALL_ANACONDA" == "1"  ]]
 then
   printf "It is highly recommended to install Anaconda. GHData uses many packages included with Anaconda as well as Conda virtual environments.\nNot installing Anaconda may require sudo pip, which can potentially break system Python."
-  if yes_or_no "Install Anaconda (474MB)?" "Anaconda not installed. Installation will use global Python environment."
+  if yes_or_no "Install Miniconda (34MB)?" "Anaconda not installed. Installation will use global Python environment."
   then
       curl -LOk https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
       chmod +x Miniconda3-latest-Linux-x86_64.sh

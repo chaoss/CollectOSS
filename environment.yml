@@ -13,7 +13,6 @@ dependencies:
 - conda-forge::flask-cors=3.0.2=py27_0
 - conda-forge::itsdangerous=0.24=py27_1
 - conda-forge::jinja2=2.9.5=py27_0
-- conda-forge::libgfortran=3.0.0=0
 - conda-forge::markupsafe=1.0=py27_0
 - conda-forge::mysql-connector-python=2.2.2=py27_0
 - conda-forge::ncurses=5.9=10
