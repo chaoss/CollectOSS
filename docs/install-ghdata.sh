@@ -199,7 +199,7 @@ echo "GHData Python application installed."
 #
 echo "Now we're going to set up the database. We'll need MySQL root credentials to proceed."
 
-if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, ghdata and a default ghdata.cfg file will be created. Edit that file with the correct database settings.\nOr, run "
+if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, ghdata and a default ghdata.cfg file will be created. Edit that file with the correct database settings.\nOr, run:\n\n curl -sOL https://raw.githubusercontent.com/OSSHealth/ghdata/dev/docs/install-msr.sh\nchmod +x install-msr.sh\n./install-msr.sh\n"
 then
   ./docs/install-msr.sh
 fi
