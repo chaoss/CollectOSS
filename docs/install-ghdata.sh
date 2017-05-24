@@ -90,7 +90,7 @@ fi
 
 echo "+-------------+----------+"
 
-# Install cURL
+# Install dependencies for the installer to work
 if [[ "$PACKAGE_MANAGER" != "$SCRIPT_DEPENDENCY_INSTALL_COMMAND"  ]]
 then
   echo "This installation requires curl and unzip to work."
@@ -110,16 +110,20 @@ then
   fi
 fi
 
-# Install cURL
+# Install Anaconda
 if [[ "$INSTALL_ANACONDA" == "1"  ]]
 then
   printf "It is highly recommended to install Anaconda. GHData uses many packages included with Anaconda as well as Conda virtual environments.\nNot installing Anaconda may require sudo pip, which can potentially break system Python."
   if yes_or_no "Install Anaconda (474MB)?" "Anaconda not installed. Installation will use global Python environment."
   then
-      curl -LOk https://repo.continuum.io/archive/Anaconda3-4.3.1-Linux-x86_64.sh
-      chmod +x Anaconda3-4.3.1-Linux-x86_64.sh
-      ./Anaconda3-4.3.1-Linux-x86_64.sh
-      rm Anaconda3-4.3.1-Linux-x86_64.sh
+      curl -LOk https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+      chmod +x Miniconda3-latest-Linux-x86_64.sh
+      ./Miniconda3-latest-Linux-x86_64.sh -b -p ~/.anaconda
+      printf "# Added by GHData install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.bashrc
+      printf " Added by GHData install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.zshrc
+      export PATH="$HOME/.anaconda/bin:$PATH"
+      rm Miniconda3-latest-Linux-x86_64.sh
+      echo "Anaconda installed to ~/.anaconda"
       conda install -c conda conda-env
   fi
 fi
