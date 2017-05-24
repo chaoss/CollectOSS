@@ -24,11 +24,11 @@ curl -Lk https://ghtstorage.blob.core.windows.net/downloads/msr14-mysql.gz > msr
 echo "Loading MSR14 dump..."
 if [[ "$DBPASS" == "" ]]
 then
-  mysql --host=$DBHOST -uroot -p$DBPASS -e "CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
-  zcat msr14-mysql.gz | mysql --host=$DBHOST -uroot -p$DBPASS msr
+  mysql --host=$DBHOST -uroot -p$DBPASS -e "DROP DATABASE IF EXISTS msr; CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
+  zcat msr14-mysql.gz | mysql --host=$DBHOST -umsr -pmsr msr
 else
-  mysql -umsr -pmsr --host=$DBHOST -e "CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
-  zcat msr14-mysql.gz | mysql -uroot --host=$DBHOST msr
+  mysql -umsr -pmsr --host=$DBHOST -e "DROP DATABASE IF EXISTS msr; CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
+  zcat msr14-mysql.gz | mysql -umsr -pmsr --host=$DBHOST msr
 fi
 rm msr14-mysql.gz
 
