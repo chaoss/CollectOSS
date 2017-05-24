@@ -125,6 +125,15 @@ then
       rm Miniconda3-latest-Linux-x86_64.sh
       echo "Anaconda installed to ~/.anaconda"
       conda install -c conda conda-env
+  else
+    INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
+    if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
+      echo "Python development files are missing." >&2
+      if yes_or_no_critical "$PACKAGE_MANAGER $PYTHON_DEV" "Installation aborted."
+      then
+        $PACKAGE_MANAGER $PYTHON_DEV
+      fi
+    fi
   fi
 fi
 
@@ -137,14 +146,7 @@ then
   fi
 fi
 
-INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
-if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
-    echo "Python development files are missing." >&2
-    if yes_or_no_critical "$PACKAGE_MANAGER $PYTHON_DEV" "Installation aborted."
-    then
-      $PACKAGE_MANAGER $PYTHON_DEV
-    fi
-fi
+
 
 echo "All dependencies in place."
 
