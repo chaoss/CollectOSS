@@ -6,7 +6,7 @@ MYSQL_PACKAGE="mysql-server"
 NODE_PACKAGE="nodejs"
 CURL_PACKAGE="curl"
 UNZIP_PACKAGE="unzip"
-INSTALL_CURL=0
+INSTALL_ANACONDA=0
 INSTALL_NODE_PPA=0
 PYTHON_DEV="python-dev"
 PYTHON_PACKAGE="python python-pip $PYTHON_DEV"
@@ -67,6 +67,13 @@ else
   DEPENDENCY_INSTALL_COMMAND+=" $PYTHON_PACKAGE"
 fi
 
+if hash conda 2>/dev/null; then
+  echo "| Anaconda    |    found |"
+else
+  echo "| Anaconda    |  missing |"
+  INSTALL_ANACONDA=1
+fi
+
 if hash curl 2>/dev/null; then
   echo "| cURL        |    found |"
 else
@@ -100,6 +107,20 @@ then
   if yes_or_no "Add NodeSource PPA (requires root priviledges)?" "NodeSource PPA skipped. Distribution node versions may not be compatible with GHData development."
   then
     curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
+  fi
+fi
+
+# Install cURL
+if [[ "$INSTALL_ANACONDA" != "1"  ]]
+then
+  printf "It is highly recommended to install Anaconda. GHData uses many packages included with Anaconda as well as Conda virtual environments.\nNot installing Anaconda may require sudo pip, which can potentially break system Python."
+  if yes_or_no "Install Anaconda (474MB)?" "Anaconda not installed. Installation will use global Python environment."
+  then
+      curl -LOk https://repo.continuum.io/archive/Anaconda3-4.3.1-Linux-x86_64.sh
+      chmod +x Anaconda3-4.3.1-Linux-x86_64.sh
+      ./Anaconda3-4.3.1-Linux-x86_64.sh
+      rm Anaconda3-4.3.1-Linux-x86_64.sh
+      conda install -c conda conda-env
   fi
 fi
 
@@ -142,6 +163,12 @@ fi
 
 unzip ghdata.zip
 cd ghdata-*
+if hash conda 2>/dev/null; then
+  echo "Creating conda environment..."
+  conda env create -f environment.yml
+  source activate ghdata
+fi
+
 pip install --upgrade .
 
 if [[ $? != 0 ]]
