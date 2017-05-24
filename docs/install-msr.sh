@@ -24,23 +24,21 @@ curl -Lk https://ghtstorage.blob.core.windows.net/downloads/msr14-mysql.gz > msr
 echo "Loading MSR14 dump..."
 if [[ "$DBPASS" == "" ]]
 then
-  mysql --defaults-extra-file=<(printf "[client]\nuser = root\npassword = %s" "$DBPASS") --host=$DBHOST -e 'CREATE DATABASE msr;'
-  zcat msr14-mysql.gz | mysql --defaults-extra-file=<(printf "[client]\nuser = root\npassword = %s" "$DBPASS") --host=$DBHOST msr
+  mysql --host=$DBHOST -uroot -p$DBPASS -e "CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
+  zcat msr14-mysql.gz | mysql --host=$DBHOST -uroot -p$DBPASS msr
 else
-  mysql -uroot --host=$DBHOST -e 'CREATE DATABASE msr;'
+  mysql -umsr -pmsr --host=$DBHOST -e "CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
   zcat msr14-mysql.gz | mysql -uroot --host=$DBHOST msr
 fi
 rm msr14-mysql.gz
-if yes_or_no "Would you like to create a GHData config file with the root database user information (generally not recommended)?" "To create a config file later on, run ghdata.\nA config file with default parameters will be created automatically. Edit the file with the correct information."
-then
-  cat > ghdata.cfg <<ENDCONFIG
+
+cat > ghdata.cfg <<ENDCONFIG
 [Database]
 host = $DBHOST
 port = 3306
-user = root
-pass = $DBPASS
+user = msr
+pass = msr
 name = msr
 ENDCONFIG
-  echo "ghdata.cfg was created with the information you provided."
-fi
+echo "ghdata.cfg was generated. New database user 'msr' with password 'msr' was created."
 echo "Database installed."
