@@ -8,7 +8,8 @@ CURL_PACKAGE="curl"
 UNZIP_PACKAGE="unzip"
 INSTALL_CURL=0
 INSTALL_NODE_PPA=0
-PYTHON_PACKAGE="python python-pip"
+PYTHON_DEV="python-dev"
+PYTHON_PACKAGE="python python-pip $PYTHON_DEV"
 DEPENDENCY_INSTALL_COMMAND="$PACKAGE_MANAGER"
 SCRIPT_DEPENDENCY_INSTALL_COMMAND="$PACKAGE_MANAGER"
 
@@ -109,13 +110,18 @@ then
   then
     $DEPENDENCY_INSTALL_COMMAND
   fi
-else
-  echo "All dependencies in place."
 fi
 
+INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
+if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
+    echo "Python development files are missing." >&2
+    if yes_or_no_critical "$PACKAGE_MANAGER $PYTHON_DEV" "Installation aborted."
+    then
+      $PACKAGE_MANAGER $PYTHON_DEV
+    fi
+fi
 
-
-
+echo "All dependencies in place."
 
 
 #
