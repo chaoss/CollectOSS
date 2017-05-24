@@ -1,13 +1,14 @@
 #!/bin/bash
+
+# TODO: Packages for more OSes
 PACKAGE_MANAGER="sudo apt-get -y install"
 MYSQL_PACKAGE="mysql-server"
 NODE_PACKAGE="nodejs"
-CURL_PACKAGE="nodejs"
+CURL_PACKAGE="curl"
 INSTALL_CURL=0
 INSTALL_NODE_PPA=0
 PYTHON_PACKAGE="python python-pip"
 DEPENDENCY_INSTALL_COMMAND="$PACKAGE_MANAGER"
-TEMP_DIR=$(mktemp -d /tmp/ghdata-install.XXXXXX)
 
 function yes_or_no {
     read -p "$1 [y/n]: " -n 1 -r
@@ -64,9 +65,9 @@ else
 fi
 
 if hash curl 2>/dev/null; then
-    echo "| cURL       |    found |"
+    echo "| cURL        |    found |"
 else
-    echo "| cURL       |  missing |"
+    echo "| cURL        |  missing |"
   INSTALL_CURL=1
 fi
 
