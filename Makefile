@@ -1,26 +1,57 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart download-upgrade upgrade
+
+PY2 := $(shell command -v python2 2> /dev/null)
+PY3 := $(shell command -v python3 2> /dev/null)
+NODE := $(shell command -v npm 2> /dev/null)
+CONDA := $(shell command -v conda 2> /dev/null)
 
 default:
-	@ printf "Please type a valid command.\n\
-	\n\
-	\e[1minstall \e[0m     Installs ghdata using pip\n\
-	\e[1minstall-dev \e[0m Installs ghdata's developer dependencies (requires npm and pip)\n\
-	\e[1mtest \e[0m        Run unit tests\n\
-	\e[1mrun-debug \e[0m   Runs GHData in development mode\n\
-	\e[1mpython-docs \e[0m Generates new Sphinx documentation\n\
-	\e[1mapi-docs \e[0m    Generates new apidocjs documentation\n\
-	\e[1mdocs \e[0m        Generates all documentation\n\
-	\e[1mupdate-deps \e[0m Generates updated requirements.txt\n"
+	@ echo "Commands:"
+	@ echo
+	@ echo "    install          Installs ghdata using pip"
+	@ echo "    install-dev      Installs ghdata's developer dependencies (requires npm and pip)"
+	@ echo "    install-msr      Installs MSR14 dataset"
+	@ echo "    upgrade          Pulls newest version and installs"
+	@ echo "    test             Run pytest unit tests"
+	@ echo "    dev-start        Starts GHData and Brunch screen sessions"
+	@ echo "    dev-stop         Kills GHData and Brunch screen sessions"
+	@ echo "    python-docs      Generates new Sphinx documentation"
+	@ echo "    api-docs         Generates new apidocjs documentation"
+	@ echo "    docs             Generates all documentation"
+	@ echo "    build            Builds documentation and frontend"
+	@ echo "    update-deps      Generates updated requirements.txt and environment.yml"
+	@ echo
 
-install:
+conda:
+ifdef CONDA
+		@ echo "Detected Anaconda, updating environment..."
+		@ if ! source activate ghdata; then conda env create -f environment.yml && source activate ghdata; else conda env update -f environment.yml && source activate ghdata; fi
+endif
+
+install: conda
 		pip install --upgrade .
 
-install-dev: install
+install-dev: conda
+		pip install pipreqs || (echo "Install failed. Trying again with sudo..." && sudo pip install pipreqs)
+ifdef PY2
 	  pip2 install --upgrade .
-	  pip3 install --upgrade .
-		npm install -g apidoc brunch
-		cd ghdata/static/ && npm install
+endif
+ifdef PY3
+		pip3 install --upgrade .
+endif
+ifdef NODE
+		npm install -g apidoc brunch yarn
+		cd ghdata/static/ && yarn install
+endif
 
+install-msr:
+		@ ./docs/install-msr.sh
+
+download-upgrade:
+		git pull
+
+upgrade: download-upgrade install
+		@ echo "Upgraded."
 
 dev-start:
 		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && python -m ghdata.server"
@@ -66,9 +97,20 @@ ifndef PUBLIC_WWW_TEST_API_KEY
 endif
 
 test: check-test-env
+ifdef PY2
 		python2 -m pytest
+else
+		@ echo "Python 2 not installed, skipping..."
+endif
+ifdef PY3
 		python3 -m pytest
+else
+		@ echo "Python 3 not installed, skipping..."
+endif
 
 update-deps:
 		@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
 		pipreqs ./
+ifdef CONDA
+		conda env export > environment.yml
+endif
