@@ -22,12 +22,12 @@ echo
 echo "Downloading MSR14 database dump (105MB)..."
 curl -Lk https://ghtstorage.blob.core.windows.net/downloads/msr14-mysql.gz > msr14-mysql.gz
 echo "Loading MSR14 dump..."
-if [[ "$DBPASS" == "" ]]
+if [[ "$DBPASS" != "" ]]
 then
-  mysql --host=$DBHOST -uroot -p$DBPASS -e "DROP DATABASE IF EXISTS msr; CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
+  mysql --host=$DBHOST -uroot -p$DBPASS -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY','')); DROP DATABASE IF EXISTS msr; CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
   zcat msr14-mysql.gz | mysql --host=$DBHOST -umsr -pmsr msr
 else
-  mysql -umsr -pmsr --host=$DBHOST -e "DROP DATABASE IF EXISTS msr; CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
+  mysql -uroot --host=$DBHOST -e "SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY','')); DROP DATABASE IF EXISTS msr; CREATE DATABASE msr; CREATE USER 'msr'@'%' IDENTIFIED BY 'msr'; GRANT ALL PRIVILEGES ON msr.* TO 'msr'@'%';"
   zcat msr14-mysql.gz | mysql -umsr -pmsr --host=$DBHOST msr
 fi
 rm msr14-mysql.gz
