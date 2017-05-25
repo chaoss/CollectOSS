@@ -8,7 +8,9 @@ else:
 
 sys.path.append('..')
 
-import ghdata
+from .ghtorrent import GHTorrent
+from .publicwww import PublicWWW
+from .githubapi import GitHubAPI
 from flask import Flask, request, Response
 from flask_cors import CORS
 
@@ -81,15 +83,15 @@ def run():
             read_config(parser, 'Database', 'port', 'GHDATA_DB_PORT', '3306'),
             read_config(parser, 'Database', 'name', 'GHDATA_DB_NAME', 'msr14')
         )
-        ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
+        ghtorrent = GHTorrent(dbstr=dbstr)
     except Exception as e:
         print("Failed to connect to database (" + str(e) + ")");
 
     host = read_config(parser, 'Server', 'host', 'GHDATA_HOST', '0.0.0.0')
     port = read_config(parser, 'Server', 'port', 'GHDATA_PORT', '5000')
 
-    publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
-    github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
+    publicwww = PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
+    github = GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
 
     if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
         debugmode = True

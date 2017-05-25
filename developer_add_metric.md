@@ -27,51 +27,40 @@ app.route('/{}/<owner>/<repo>/age'.format(GHDATA_API_VERSION))(flaskify_ghtorren
 #                             ^ what you want the endpoint to be                                       ^ your function  
 ```
 
-### Step 3. Add your endpoint to the GHData API Client
+### Step 3. Create/use an appropiate riot tag for the metric
 
-Once your route is avaliable as an endpoint, you'll need to add it to [ghdata-api-client.js](https://github.com/OSSHealth/ghdata/blob/master/ghdata/static/scripts/ghdata-api-client.js) to make it accessible from that JavaScript library:
+In [frontend/app/components](https://github.com/OSSHealth/ghdata/tree/dev/frontend/app/components) there exist a number of riot tags suited for different metrics. Each metric tag must be mounted by the `<healthreport>` tag, because the health report tag passes the repo/owner information to the metric tags.
+
+To create a new tag, create a file with the name of the tag. For instance, if you were creating a tag for the repo age, you might create a file called `repoage.tag` in [frontend/app/components](https://github.com/OSSHealth/ghdata/tree/dev/frontend/app/components).
+
+Then you would write the riot tag to display the metric. Currently, we are using [echarts](https://ecomfe.github.io/echarts-examples/public/index.html) to render charts. See [contributions.tag](https://github.com/OSSHealth/ghdata/tree/dev/frontend/app/components/contributions.tag) as an example. A chart is probably not the most appropiate way to display the age of a repo, so we'll just use a div.
+
+```jsx
+<repoage>
+<p class="repo-age">This repository is { repoAge } days old.</p>
+<script>
+    this.on('mount', () => {
+        this.opts.api.get('age').then((ageObject) => {
+            this.repoAge = ageObject['days_since_creation']
+        })
+    })
+</script>
+</repoage>
+```
+
+### Step 4. Add the tag to the page
+
+Add your tag to somewhere in [healthreport.tag](https://github.com/OSSHealth/ghdata/tree/dev/frontend/app/components/heathreport.tag)
+
+```jsx
+<repoage></repoage>
+```
+
+and mount it in the script
 
 ```js
-GHDataAPIClient.prototype.age = function (params) {
-  return this.get('age', params);
-};
+require('./repoage.tag');
+riot.mount('repoage', {api: api})
 ```
 
-### Step 4. Write the UI
-
-In [health-report.js](https://github.com/OSSHealth/ghdata/blob/master/ghdata/static/scripts/health-report.js) you'll now be able to call `this.api.age()` while in the buildReport function. [ghdata-api-client.js](https://github.com/OSSHealth/ghdata/blob/master/ghdata/static/scripts/ghdata-api-client.js) returns a Promise, so you'll need to write your code in context of the fufillment of that promise:
-
-```js
-this.api.age().then(function (age) {
-  console.log(age);
-})
-```
-
-If you are creating a metric that is a timeseries (like the ones that exist now), you'll need to add a `<div>` to the html:
-
-```html
-<div class="four columns" id="your-timeseries-name-over-time"></div>
-```
-
-Then write the new method in [health-report.js](https://github.com/OSSHealth/ghdata/blob/master/ghdata/static/scripts/health-report.js):
-
-```js
-this.api.yourMetricName().then(function (yourMetric) {
-MG.data_graphic({
-    title: "Stars/Week",
-    data: MG.convert.date(yourMetric, 'date', '%Y-%m-%dT%H:%M:%S.%LZ'),
-    chart_type: 'point',
-    least_squares: true,
-    full_width: true,
-    height: 300,
-    color_range: ['#aaa'],
-    x_accessor: 'date',
-    y_accessor: 'watchers',
-    target: '#your-timeseries-name-over-time'
-});
-```
-
-
-
-
-The metric should be fully integrated into GHData. To install your updated version of GHData, run `pip3 install --upgrade .` in the root of your repo.
+The metric should be fully integrated into GHData. To install your updated version of GHData, run `pip install --upgrade .` in the root of your repo.
