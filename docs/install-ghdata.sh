@@ -6,10 +6,11 @@ MYSQL_PACKAGE="mysql-server"
 NODE_PACKAGE="nodejs"
 CURL_PACKAGE="curl"
 UNZIP_PACKAGE="unzip"
-INSTALL_ANACONDA=0
-INSTALL_NODE_PPA=0
 PYTHON_DEV="python-dev"
 PYTHON_PACKAGE="python python-pip $PYTHON_DEV"
+INSTALL_ANACONDA=0
+HAS_ANACONDA=0
+INSTALL_NODE_PPA=0
 DEPENDENCY_INSTALL_COMMAND="$PACKAGE_MANAGER"
 SCRIPT_DEPENDENCY_INSTALL_COMMAND="$PACKAGE_MANAGER"
 
@@ -69,6 +70,7 @@ fi
 
 if hash conda 2>/dev/null; then
   echo "| Anaconda    |    found |"
+  HAS_ANACONDA=1
 else
   echo "| Anaconda    |  missing |"
   INSTALL_ANACONDA=1
@@ -125,6 +127,7 @@ then
       rm Miniconda3-latest-Linux-x86_64.sh
       echo "Anaconda installed to ~/.anaconda"
       conda install -c conda conda-env
+      HAS_ANACONDA=1
   else
     INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
     if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
@@ -229,4 +232,20 @@ cd frontend
 yarn install
 cd ../..
 
-printf "\nInstall finished!"
+printf "\nInstall finished!\n\n"
+if [[ "$HAS_ANACONDA" == "1" && "$INSTALL_ANACONDA" == "1" ]]
+then
+  echo "Anaconda will not be avalible without restarting your shell, or running 'source ~/.bashrc'"
+fi
+if [[ "$HAS_ANACONDA" == "1" ]]
+then
+  echo "You must activate the ghdata conda environment using 'source activate ghdata' before running ghdata."
+fi
+echo "To run ghdata, it must be run in the same directory as the ghdata.cfg file, or your settings must be provided as environment variables."
+echo "The  folder contains a ghdata.cfg file generated for you during installalation."
+echo "To run ghdata for development, cd into the project folder and run 'make dev-start' (requires GNU screen)"
+if yes_or_no "Would you like to start GHData for development?" ""
+then
+  cd ghdata-*
+  make dev-start
+fi
