@@ -81,7 +81,7 @@ if hash curl 2>/dev/null; then
   echo "| git         |    found |"
 else
   echo "| git         |  missing |"
-  SCRIPT_DEPENDENCY_INSTALL_COMMAND+=" $CURL_PACKAGE"
+  SCRIPT_DEPENDENCY_INSTALL_COMMAND+=" $GIT_PACKAGE"
 fi
 
 if hash curl 2>/dev/null; then
@@ -89,13 +89,6 @@ if hash curl 2>/dev/null; then
 else
   echo "| cURL        |  missing |"
   SCRIPT_DEPENDENCY_INSTALL_COMMAND+=" $CURL_PACKAGE"
-fi
-
-if hash unzip 2>/dev/null; then
-  echo "| unzip       |    found |"
-else
-  echo "| unzip       |  missing |"
-  SCRIPT_DEPENDENCY_INSTALL_COMMAND+=" $UNZIP_PACKAGE"
 fi
 
 echo "+-------------+----------+"
@@ -130,7 +123,7 @@ then
       chmod +x Miniconda3-latest-Linux-x86_64.sh
       ./Miniconda3-latest-Linux-x86_64.sh -b -p ~/.anaconda
       printf "# Added by GHData install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.bashrc
-      printf " Added by GHData install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.zshrc
+      printf "# Added by GHData install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.zshrc
       export PATH="$HOME/.anaconda/bin:$PATH"
       rm Miniconda3-latest-Linux-x86_64.sh
       echo "Anaconda installed to ~/.anaconda"
@@ -167,19 +160,16 @@ echo "All dependencies in place."
 #
 echo 
 echo "Downloading GHData..."
+git clone https://github.com/OSSHealth/ghdata
+cd ghdata
 read -p "Would you like to install [m]aster or [d]ev: " -n 1 -r
 DEVELOPER=0
-
 if [[ $REPLY =~ ^[Dd]$ ]]
 then
   DEVELOPER=1
-  curl -Lk https://github.com/OSSHealth/ghdata/archive/dev.zip > ghdata.zip
-else
-  curl -Lk https://github.com/OSSHealth/ghdata/archive/master.zip > ghdata.zip
+  git checkout dev
 fi
 
-unzip ghdata.zip
-cd ghdata-*
 if hash conda 2>/dev/null; then
   echo "Creating conda environment..."
   conda env create -f environment.yml
