@@ -17,6 +17,13 @@
       </div>
     </div>
 
+    <div class="row">
+      <div class="twelve columns">
+        <h2>Response to Issues</h2>
+        <issueshistogram-v2></issueshistogram-v2>
+      </div>
+    </div>
+
     <div class="spacer"></div>
 
     <div class="row">
@@ -40,8 +47,10 @@
   this.on('mount', function () {
     require('./contributions.tag');
     require('./issueshistogram.tag');
+    require('./issueshistogram-v2.tag')
     riot.mount('issueshistogram', {api: api})
     riot.mount('contributions', {api: api})
+    riot.mount('issueshistogram-v2', {api: api})
   })
 
 </script>
