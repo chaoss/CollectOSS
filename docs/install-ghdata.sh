@@ -4,6 +4,7 @@
 PACKAGE_MANAGER="sudo apt-get -y install"
 MYSQL_PACKAGE="mysql-server"
 NODE_PACKAGE="nodejs"
+GIT_PACKAGE="git"
 CURL_PACKAGE="curl"
 UNZIP_PACKAGE="unzip"
 PYTHON_DEV="python-dev"
@@ -77,6 +78,13 @@ else
 fi
 
 if hash curl 2>/dev/null; then
+  echo "| git         |    found |"
+else
+  echo "| git         |  missing |"
+  SCRIPT_DEPENDENCY_INSTALL_COMMAND+=" $CURL_PACKAGE"
+fi
+
+if hash curl 2>/dev/null; then
   echo "| cURL        |    found |"
 else
   echo "| cURL        |  missing |"
@@ -95,7 +103,7 @@ echo "+-------------+----------+"
 # Install dependencies for the installer to work
 if [[ "$PACKAGE_MANAGER" != "$SCRIPT_DEPENDENCY_INSTALL_COMMAND"  ]]
 then
-  echo "This installation requires curl and unzip to work."
+  echo "This installation requires some additional packages to continue."
   if yes_or_no_critical "$SCRIPT_DEPENDENCY_INSTALL_COMMAND" "Installation aborted."
   then
       $SCRIPT_DEPENDENCY_INSTALL_COMMAND

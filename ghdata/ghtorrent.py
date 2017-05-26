@@ -306,7 +306,8 @@ class GHTorrent(object):
         df['created_at'] = pd.to_datetime(df['created_at'])
         df['responded_at'] = pd.to_datetime(df['responded_at'])
         df['hours_between'] = np.floor((df['responded_at'] - df['created_at']) / np.timedelta64(1, 'h'))
-        df = df['hours_between'].value_counts().reset_index().rename(columns={'index': 'hours_between', 'hours_between': 'count'}).sort_by()
+        df = df['hours_between'].value_counts().sort_index().reset_index().rename(columns={'index': 'hours_between', 'hours_between': 'count'})
+        df = df[df['hours_between'] < 48]
         return df
 
     def pull_acceptance_rate(self, repoid):

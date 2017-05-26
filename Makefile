@@ -1,7 +1,7 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart download-upgrade upgrade
 
-PY2 := $(shell command -v python2 2> /dev/null)
-PY3 := $(shell command -v python3 2> /dev/null)
+PY2 := $(shell command -v pip2 2> /dev/null)
+PY3 := $(shell command -v pip3 2> /dev/null)
 NODE := $(shell command -v npm 2> /dev/null)
 CONDA := $(shell command -v conda 2> /dev/null)
 
@@ -39,6 +39,11 @@ endif
 ifdef PY3
 		pip3 install --upgrade .
 endif
+ifndef PY2
+ifndef PY3
+		pip install --upgrade .
+endif
+endif
 ifdef NODE
 		npm install -g apidoc brunch yarn
 		cd ghdata/static/ && yarn install
@@ -54,7 +59,11 @@ upgrade: download-upgrade install
 		@ echo "Upgraded."
 
 dev-start:
+ifdef CONDA
+		screen -d -S "ghdata-backend" -m bash -c "source activate ghdata && export GHDATA_DEBUG=1 && python -m ghdata.server"
+else
 		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && python -m ghdata.server"
+endif
 		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s -n"
 		@ printf '\nDevelopment servers started.\n\nBrunch server  |  Port: 3333      To see log: screen -r "ghdata-frontend"\nGHData         |  Port: 5000      To see log: screen -r "ghdata-backend"\n\n'
 dev-start-public:
