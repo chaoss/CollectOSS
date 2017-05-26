@@ -46,7 +46,7 @@ endif
 endif
 ifdef NODE
 		npm install -g apidoc brunch yarn
-		cd ghdata/static/ && yarn install
+		cd frontend/ && yarn install
 endif
 
 install-msr:
