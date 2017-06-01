@@ -36,7 +36,7 @@ class GHTorrent(object):
             GROUP BY YEARWEEK(created_at)""".format(table, repo_col)
 
 
-    def repoid(self, owner, repo):
+    def repoid(self, owner_or_repoid, repo=None):
         """
         Returns a repository's ID as it appears in the GHTorrent projects table
         github.com/[owner]/[project]
@@ -45,11 +45,14 @@ class GHTorrent(object):
         :param repo: The name of the repository
         :return: The repository's ID as it appears in the GHTorrent projects table
         """
-        reposql = s.sql.text('SELECT projects.id FROM projects INNER JOIN users ON projects.owner_id = users.id WHERE projects.name = :repo AND users.login = :owner')
         repoid = 0
-        result = self.db.execute(reposql, repo=repo, owner=owner)
-        for row in result:
-            repoid = row[0]
+        if repo is None:
+            repoid = owner_or_repoid
+        else:
+            reposql = s.sql.text('SELECT projects.id FROM projects INNER JOIN users ON projects.owner_id = users.id WHERE projects.name = :repo AND users.login = :repoowner')
+            result = self.db.execute(reposql, repo=repo, repoowner=owner_or_repoid)
+            for row in result:
+                repoid = row[0]
         return repoid
 
     def userid(self, username):
@@ -68,53 +71,58 @@ class GHTorrent(object):
 
 
     # Basic timeseries queries
-    def stargazers(self, repoid):
+    def stargazers(self, repoid_or_owner, repo=None):
         """
         Timeseries of when people starred a repo
 
         :param repoid: The id of the project in the projects table. Use repoid() to get this.
         :return: DataFrame with stargazers/day
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id'))
         return pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
 
-    def commits(self, repoid):
+    def commits(self, repoid_or_owner, repo=None):
         """
         Timeseries of all the commits on a repo
 
         :param repoid: The id of the project in the projects table. Use repoid() to get this.
         :return: DataFrame with commits/day
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         commitsSQL = s.sql.text(self.__single_table_count_by_date('commits'))
         return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
 
-    def forks(self, repoid):
+    def forks(self, repoid_or_owner, repo=None):
         """
         Timeseries of when a repo's forks were created
 
         :param repoid: The id of the project in the projects table. Use repoid() to get this.
         :return: DataFrame with forks/day
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from'))
         return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
-    def issues(self, repoid):
+    def issues(self, repoid_or_owner, repo=None):
         """
         Timeseries of when people starred a repo
 
         :param repoid: The id of the project in the projects table. Use repoid() to get this.
         :return: DataFrame with issues/day
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id'))
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
-    def issues_with_close(self, repoid, **args):
+    def issues_with_close(self, repoid_or_owner, repo=None):
         """
         How long on average each week it takes to close an issue
 
         :param repoid: The id of the project in the projects table. Use repoid() to get this.
         :return: DataFrame with issues/day
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         issuesSQL = s.sql.text("""
             SELECT issues.id as "id",
                    issues.created_at as "date",
@@ -129,13 +137,14 @@ class GHTorrent(object):
             WHERE issues.repo_id = :repoid""")
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
-    def pulls(self, repoid):
+    def pulls(self, repoid_or_owner, repo=None):
         """
         Timeseries of pull requests creation, also gives their associated activity
 
         :param repoid: The id of the project in the projects table. Use repoid() to get this.
         :return: DataFrame with pull requests by day
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         pullsSQL = s.sql.text("""
             SELECT date(pull_request_history.created_at) AS "date",
             (COUNT(pull_requests.id)) AS "pull_requests",
@@ -150,13 +159,14 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
 
-    def contributors(self, repoid):
+    def contributors(self, repoid_or_owner, repo=None):
         """
         All the contributors to a project and the counts of their contributions
 
         :param repoid: The id of the project in the projects table. Use repoid() to get this.
         :return: DataFrame with users id, users login, and their contributions by type
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         contributorsSQL = s.sql.text("""
             SELECT * FROM
 
@@ -206,7 +216,7 @@ class GHTorrent(object):
         return pd.read_sql(contributorsSQL, self.db, index_col=['user_id'], params={"repoid": str(repoid)})
 
 
-    def contributions(self, repoid, userid=None):
+    def contributions(self, repoid_or_owner, repo=None, userid=None):
         """
         Timeseries of all the contributions to a project, optionally limited to a specific user
 
@@ -214,6 +224,7 @@ class GHTorrent(object):
         :param userid: The id of user if you want to limit the contributions to a specific user.
         :return: DataFrame with all of the contributions seperated by day.
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         rawContributionsSQL = """
             SELECT  DATE(coms.created_at) as "date",
                     coms.count            as "commits",
@@ -255,7 +266,7 @@ class GHTorrent(object):
             parameterized = s.sql.text(rawContributionsSQL)
             return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
 
-    def committer_locations(self, repoid):
+    def committer_locations(self, repoid_or_owner, repo=None):
         """
         Return committers and their locations
 
@@ -264,6 +275,7 @@ class GHTorrent(object):
         :param repoid: The id of the project in the projects table.
         :return: DataFrame with users and locations sorted by commtis
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         rawContributionsSQL = s.sql.text("""
             SELECT users.login, users.location, COUNT(*) AS "commits"
             FROM commits
@@ -279,7 +291,7 @@ class GHTorrent(object):
         return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
 
 
-    def issue_response_time(self, repoid):
+    def issue_response_time(self, repoid_or_owner, repo=None):
         """
         How long it takes for issues to be responded to by people who have commits associate with the project
 
@@ -287,6 +299,7 @@ class GHTorrent(object):
         :return: DataFrame with the issues' id the date it was
                  opened, and the date it was first responded to
         """
+        repoid = self.repoid(repoid_or_owner, repo)
         issuesSQL = s.sql.text("""
             SELECT issues.created_at               AS "created_at",
                    MIN(issue_comments.created_at)  AS "responded_at"
@@ -298,7 +311,7 @@ class GHTorrent(object):
                 FROM users
                 JOIN commits
                 WHERE commits.author_id = users.id
-                AND commits.project_id = :repoid)
+                AND commits.project_id = :repoid_or_owner, repo=None)
             AND issues.repo_id = :repoid
             GROUP BY issues.id
         """)
@@ -310,16 +323,15 @@ class GHTorrent(object):
         df = df[df['hours_between'] < 48]
         return df
 
-    def pull_acceptance_rate(self, repoid):
+    def pull_acceptance_rate(self, repoid_or_owner, repo=None):
         """
         Timeseries of pull request acceptance rate (Number of pull requests merged on a date over Number of pull requests opened on a date)
 
         :param repoid: The id of the project in the projects table.
         :return: DataFrame with the pull acceptance rate and the dates
         """
-
+        repoid = self.repoid(repoid_or_owner, repo)
         pullAcceptanceSQL = s.sql.text("""
-
         SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
         FROM
             (SELECT COUNT(DISTINCT pull_request_id) AS num_approved, DATE(pull_request_history.created_at) AS accepted_on
@@ -339,7 +351,7 @@ class GHTorrent(object):
 
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
 
-    def classify_contributors(self, repoid):
+    def classify_contributors(self, repoid_or_owner, repo=None):
         """
         Classify everyone who has interacted with a repo into
           - user
@@ -347,12 +359,13 @@ class GHTorrent(object):
           - rejected_contributor
           - contributor
           - major_contributor
-          - maintainer
+          - maintaine
 
         :param repoid: The id of the project in the projects table.
         :return: DataFrame with the login and role of contributors
         """
-        contributors = self.contributors(repoid)
+        repoid = self.repoid(repoid_or_owner, repo)
+        contributors = self.contributors(repoid, repo=None)
         sums = contributors.sum()
 
         def classify(row):
