@@ -167,6 +167,7 @@ class GHTorrent(object):
         :return: DataFrame with users id, users login, and their contributions by type
         """
         repoid = self.repoid(repoid_or_owner, repo)
+        print(repoid)
         contributorsSQL = s.sql.text("""
             SELECT * FROM
 
@@ -311,7 +312,7 @@ class GHTorrent(object):
                 FROM users
                 JOIN commits
                 WHERE commits.author_id = users.id
-                AND commits.project_id = :repoid_or_owner, repo=None)
+                AND commits.project_id = :repoid)
             AND issues.repo_id = :repoid
             GROUP BY issues.id
         """)
@@ -359,7 +360,7 @@ class GHTorrent(object):
           - rejected_contributor
           - contributor
           - major_contributor
-          - maintaine
+          - maintainer
 
         :param repoid: The id of the project in the projects table.
         :return: DataFrame with the login and role of contributors

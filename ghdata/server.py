@@ -24,21 +24,6 @@ def serialize(data, orient='records'):
     else:
         return data
 
-
-def flaskify_ghtorrent(ghtorrent, func):
-    """
-    Simplifies API endpoints that just accept owner and repo,
-    serializes them and spits them out
-    """
-    def generated_function(owner, repo):
-        repoid = ghtorrent.repoid(owner=owner, repo=repo)
-        df = func(repoid=repoid)
-        return Response(response=serialize(df, orient=request.args.get('orient')),
-                        status=200,
-                        mimetype="application/json")
-    generated_function.__name__ = func.__name__
-    return generated_function
-
 def flaskify(func):
     """
     Simplifies API endpoints that just accept owner and repo,
@@ -140,7 +125,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/timeseries/commits'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.commits))
+        flaskify(ghtorrent, ghtorrent.commits))
 
     """
     @api {get} /:owner/:repo/forks Forks by Week
@@ -163,7 +148,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/timeseries/forks'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.forks))
+        flaskify(ghtorrent, ghtorrent.forks))
 
     """
     @api {get} /:owner/:repo/issues Issues by Week
@@ -186,7 +171,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/timeseries/issues'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.issues))
+        flaskify(ghtorrent, ghtorrent.issues))
 
     """
     @api {get} /:owner/:repo/issues/response_time Issue Response Time
@@ -209,7 +194,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/timeseries/issues/response_time'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.issue_response_time))
+        flaskify(ghtorrent, ghtorrent.issue_response_time))
 
     """
     @api {get} /:owner/:repo/pulls Pull Requests by Week
@@ -234,7 +219,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/timeseries/pulls'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.pulls))
+        flaskify(ghtorrent, ghtorrent.pulls))
 
     """
     @api {get} /:owner/:repo/stargazers Stargazers by Week
@@ -257,7 +242,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/timeseries/stargazers'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.stargazers))
+        flaskify(ghtorrent, ghtorrent.stargazers))
 
     """
     @api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
@@ -281,7 +266,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/pulls/acceptance_rate'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.pull_acceptance_rate))
+        flaskify(ghtorrent, ghtorrent.pull_acceptance_rate))
 
     # Contribution Trends
     """
@@ -317,7 +302,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/contributors'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.contributors))
+        flaskify(ghtorrent, ghtorrent.contributors))
 
     #######################
     # Contribution Trends #
@@ -393,7 +378,7 @@ def run():
                         ]
     """
     app.route('/{}/<owner>/<repo>/commits/locations'.format(GHDATA_API_VERSION))(
-        flaskify_ghtorrent(ghtorrent, ghtorrent.committer_locations))
+        flaskify(ghtorrent, ghtorrent.committer_locations))
 
     # Popularity
     """
