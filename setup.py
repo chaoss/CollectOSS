@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT
 Install ghdata package with pip.
 '''
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from codecs import open
 from os import path
 
@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ghdata',
-    version='0.2.2',
+    version='0.3.0',
     description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,
     url='https://github.com/OSSHealth/ghdata',
