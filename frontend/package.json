@@ -1,27 +1,26 @@
 {
-  "name": "your-app",
-  "description": "Description",
-  "author": "Your Name",
+  "name": "brunch-app",
+  "description": "Brunch.io application",
+  "private": true,
+  "author": "Brunch",
   "version": "0.0.1",
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
+  "repository": "",
   "scripts": {
     "start": "brunch watch --server",
-    "test": "brunch test"
+    "build": "brunch build --production"
   },
   "dependencies": {
-    "auto-reload-brunch": ">= 1.0 < 1.8",
-    "babel-brunch": "^6.1.1",
-    "babel-preset-es2015-riot": "^1.1.0",
-    "body-parser": "1.11.0",
-    "clean-css-brunch": ">= 1.0 < 1.8",
-    "css-brunch": ">= 1.0 < 1.8",
-    "echarts": "^3.5.4",
-    "express": "4.11.2",
-    "javascript-brunch": ">= 1.0 < 1.8",
-    "riot-brunch": "0.0.1",
-    "uglify-js-brunch": ">= 1.0 < 1.8"
+    "d3": "^4.9.1",
+    "jquery": "^3.2.1",
+    "metrics-graphics": "^2.11.0",
+    "stylus-brunch": "^2.10.0"
+  },
+  "devDependencies": {
+    "auto-reload-brunch": "^2",
+    "babel-brunch": "~6.0",
+    "babel-preset-latest": "^6",
+    "brunch": "^2",
+    "clean-css-brunch": "^2",
+    "uglify-js-brunch": "^2"
   }
 }

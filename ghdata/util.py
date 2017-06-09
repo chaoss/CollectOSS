@@ -9,14 +9,15 @@ def makeRelative(function):
       baseData = function(ownerRelativeTo, repoRelativeTo)
       comparableData = function(owner, repo)
       columns = list(baseData.columns)
-      list.remove('date')
+      print(columns)
+      columns.remove('date')
       relativeData = (
         pd
           .merge(baseData, comparableData, on='date', how='left')
           .dropna()
       )
       for col in columns:
-        relativeData[col + '_ratio'] = relativeData[col + '_x'] + relativeData[col + '_y']
+        relativeData[col + '_ratio'] = relativeData[col + '_y'] / relativeData[col + '_x']
       return relativeData
   generated_function.__name__ = function.__name__ + '_relative'
   return generated_function

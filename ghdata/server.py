@@ -207,7 +207,7 @@ def run():
                             }
                         ]
     """
-    addMetric(app, ghtorrent.issue_response_time, 'issue_response_time')
+    addMetric(app, ghtorrent.issue_response_time, 'issues/response_time')
 
     """
     @api {get} /:owner/:repo/pulls Pull Requests by Week

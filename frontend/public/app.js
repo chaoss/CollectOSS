@@ -148,493 +148,2136 @@ var __makeRelativeRequire = function(require, mappings, pref) {
     return require(name);
   }
 };
-require.register("components/contributions.tag", function(exports, require, module) {
-riot.tag('contributions', '<div class="echarts-container" style="width: 100%; height: 400px;"></div>', function(opts) {
+require.register("GHDataAPI.js", function(exports, require, module) {
+'use strict';
 
-  this.on('mount', () => {
-    var echarts = require('echarts')
-    var chart = echarts.init(this.root.querySelector('.echarts-container'))
-    chart.showLoading()
-
-    this.opts.api.get('contributions', {orient: 'split'}).then((contributions) => {
-
-      var data = [];
-
-      contributions.data.forEach((row) => {
-        for (var i = 1; i < row.length; i++) {
-          if (!row[i]) {
-            row[i] = 0
-          }
-          data.push([row[0], row[i], (i-1)])
-        }
-      })
-
-      console.log(data)
-
-      chart.hideLoading()
-      chart.setOption({
-          series: [{
-              type: 'themeRiver',
-              data: data
-          }]
-      })
-
-    })
-  })
-
-
-});
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
 
-require.register("components/githubform.tag", function(exports, require, module) {
-riot.tag('githubform', '<img src="images/logo.svg" alt="OSSHealth" class="logo"> <input type="text" placeholder="GitHub URL" ref="githubURL"> <button onclick="{ submit }">Analyze</button><br><br>', function(opts) {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-this.submit = function (e) {
-  var splitURL = this.root.querySelectorAll('input')[0].value.split('/')
-  var repo, owner
-  if (splitURL.length > 2) {
-    console.log('big')
-    repo = splitURL[3]
-    owner = splitURL[4]
-  } else if (splitURL.length === 2) {
-    console.log('lil')
-    repo = splitURL[0]
-    owner = splitURL[1]
-  } else {
-    let errorMessage = document.createElement('p')
-    errorMessage.style.color = '#f00'
-    errorMessage.innerHTML = 'Enter a valid URL'
-    this.root.appendChild(errorMessage)
-    return
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var $ = require('jquery');
+
+var GHDataAPI = function () {
+  function GHDataAPI(hostURL, version) {
+    _classCallCheck(this, GHDataAPI);
+
+    this._version = version || 'unstable';
+    this._host = hostURL || 'http://localhost:5000/';
   }
-  this.opts.onsubmit(owner, repo)
-}.bind(this);
 
+  _createClass(GHDataAPI, [{
+    key: 'Repo',
+    value: function Repo(owner, repoName) {
+      var _this = this;
+
+      if (repoName) {
+        var repo = { owner: owner, name: repoName };
+      } else if (owner) {
+        var splitURL = owner.split('/');
+        if (splitURL.length < 3) {
+          var repo = { owner: splitURL[0], name: splitURL[1] };
+        } else {
+          var repo = { owner: splitURL[3], name: splitURL[4] };
+        }
+      }
+
+      var Endpoint = function Endpoint(endpoint) {
+        var url = _this._host + _this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
+        return function (params, callback) {
+          return $.get(url, params, callback);
+        };
+      };
+
+      var Timeseries = function Timeseries(endpoint) {
+        var func = Endpoint('timeseries/' + endpoint);
+        func.relativeTo = function (baselineRepo, params, callback) {
+          var url = _this._host + _this._version + '/' + repo.owner + '/' + repo.name + '/timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name;
+          return $.get(url, params, callback);
+        };
+        return func;
+      };
+
+      repo.commits = Timeseries('commits');
+      repo.forks = Timeseries('forks');
+      repo.issues = Timeseries('issues');
+      repo.pulls = Timeseries('pulls');
+      repo.stars = Timeseries('stargazers');
+
+      repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate');
+      repo.issuesResponseTime = Endpoint('issues/response_time');
+      repo.contributors = Endpoint('contributors');
+      repo.contributions = Endpoint('contributions');
+      repo.committerLocations = Endpoint('committer_locations');
+      repo.linkingWebsites = Endpoint('linkingWebsites');
+      repo.busFactor = Endpoint('bus_factor');
+
+      return repo;
+    }
+  }]);
+
+  return GHDataAPI;
+}();
+
+exports.default = GHDataAPI;
 
 });
-});
 
-require.register("components/healthreport.tag", function(exports, require, module) {
-riot.tag('healthreport', '<div class="container"> <section> <div class="row"> <div class="nine columns"><h1 id="repo-label">{owner} / {repo}</h1></div> </div> </section> <section> <h2>Contributions</h2> <div class="row"> <div class="twelve columns"><contributions></contributions></div> </div> </section> </div>', function(opts) {
-
-  this.owner = this.opts.owner
-  this.repo = this.opts.repo
-
-  var ghdata = require('../lib/ghdata-api-client')
-  var api = new ghdata.GHDataAPIClient(undefined, this.owner, this.repo)
-  console.log(api)
-  console.log(api.get)
-
-  this.on('mount', function () {
-    require('./contributions.tag');
-    riot.mount('contributions', {api: api})
-  })
-
-
-});
-});
-
-require.register("components/report.tag", function(exports, require, module) {
-riot.tag('HealthReport', '<section> <div class="row"> <div class="nine columns"><h1 id="repo-label"> facebook / folly </h1></div> <div class="three columns"><div id="status" class="badge healthy">healthy</div></div> </div> </section> <section> <h2>Growth Indicators</h2> <div class="row trends"> <TimeseriesGraph path="commits"></div> <div class="four columns" id="commits-over-time"></div> <div class="four columns" id="stargazers-over-time"></div> <div class="four columns" id="forks-over-time"></div> </div>  <div class="row trends"> <div class="four columns" id="issues-over-time"></div> <div class="four columns" id="pulls-over-time"></div> </div> </section>', function(opts) {
-
-
-});
-});
-
-require.register("ghdata-api-client.js", function(exports, require, module) {
+require.register("GHDataCharts.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _metricsGraphics = require('metrics-graphics');
+
+var _metricsGraphics2 = _interopRequireDefault(_metricsGraphics);
+
+var _d = require('d3');
+
+var d3 = _interopRequireWildcard(_d);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var GHDataCharts = function () {
+  function GHDataCharts() {
+    _classCallCheck(this, GHDataCharts);
+  }
+
+  _createClass(GHDataCharts, null, [{
+    key: 'convertDates',
+    value: function convertDates(data) {
+      data = data.map(function (d) {
+        d.date = new Date(d.date);
+        return d;
+      });
+      return data;
+    }
+  }, {
+    key: 'ComparisonLineChart',
+    value: function ComparisonLineChart(selector, data, title, baseline) {
+      GHDataCharts.convertDates(data);
+      var keys = Object.keys(data[0]).filter(function (d) {
+        return (/ratio/.test(d)
+        );
+      });
+      console.log(keys);
+      return _metricsGraphics2.default.data_graphic({
+        title: title || 'Comparison',
+        data: data,
+        full_width: true,
+        height: 200,
+        baselines: [{ value: 1, label: baseline || 'Other Repo' }],
+        format: 'percentage',
+        x_accessor: 'date',
+        y_accessor: keys,
+        target: selector
+      });
+    }
+  }, {
+    key: 'LineChart',
+    value: function LineChart(selector, data, title) {
+      GHDataCharts.convertDates(data);
+      return _metricsGraphics2.default.data_graphic({
+        title: title || 'Activity',
+        data: data,
+        full_width: true,
+        height: 200,
+        x_accessor: 'date',
+        y_accessor: Object.keys(data[0]).slice(1),
+        target: selector
+      });
+    }
+  }, {
+    key: 'NoChart',
+    value: function NoChart(selector, title) {
+      return _metricsGraphics2.default.data_graphic({
+        title: "Missing Data",
+        error: 'Data unavaliable for ' + title,
+        chart_type: 'missing-data',
+        missing_text: title + ' could not be loaded',
+        target: '#missing-data',
+        full_width: true,
+        height: 200
+      });
+    }
+  }]);
+
+  return GHDataCharts;
+}();
+
+exports.default = GHDataCharts;
+
+});
+
+require.register("lib/kube/kube.js", function(exports, require, module) {
+'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-exports.default = GHDataAPIClient;
-/* SPDX-License-Identifier: MIT */
+/*
+	Kube. CSS & JS Framework
+	Version 6.5.2
+	Updated: February 2, 2017
 
-/**
- * Handles interaction with a GHData server.
- * @constructor
- */
-function GHDataAPIClient(apiUrl, owner, repo, apiVersion) {
-  this.owner = owner || '';
-  this.repo = repo || '';
-  this.url = apiUrl || 'http://' + document.location.hostname + ':5000/';
-  this.apiversion = apiVersion || 'unstable';
-}
+	http://imperavi.com/kube/
 
-/* Request Handling
- * Create a friendly wrapper around XMLHttpRequest
---------------------------------------------------------------*/
-
-/**
- * Wraps XMLHttpRequest with many goodies. Credit to SomeKittens on StackOverflow.
- * @param {Object} opts - Stores the url (opts.url), method (opts.method), headers (opts.headers) and query parameters (opt.params). All optional.
- * @returns {Promise} Resolves with XMLHttpResponse.response
- */
-GHDataAPIClient.prototype.request = function (opts) {
-  // Use GHData by default
-  opts.endpoint = opts.endpoint || '';
-  opts.url = opts.url || this.url + this.apiversion + '/' + this.owner + '/' + this.repo + '/' + opts.endpoint;
-  opts.method = opts.method || 'GET';
-  return new Promise(function (resolve, reject) {
-    var xhr = new XMLHttpRequest();
-    xhr.open(opts.method, opts.url);
-    xhr.onload = function () {
-      if (this.status >= 200 && this.status < 300) {
-        resolve(xhr.response);
-      } else {
-        reject({
-          status: this.status,
-          statusText: xhr.statusText
-        });
-      }
-    };
-    xhr.onerror = function () {
-      reject({
-        status: this.status,
-        statusText: xhr.statusText
-      });
-    };
-    if (opts.headers) {
-      Object.keys(opts.headers).forEach(function (key) {
-        xhr.setRequestHeader(key, opts.headers[key]);
-      });
-    }
-    var params = opts.params;
-    // We'll need to stringify if we've been given an object
-    // If we have a string, this is skipped.
-    if (params && (typeof params === 'undefined' ? 'undefined' : _typeof(params)) === 'object') {
-      params = Object.keys(params).map(function (key) {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
-      }).join('&');
-    }
-    xhr.send(params);
-  });
+	Copyright (c) 2009-2017, Imperavi LLC.
+	License: MIT
+*/
+if (typeof jQuery === 'undefined') {
+    throw new Error('Kube\'s requires jQuery');
 };
+;(function ($) {
+    var version = $.fn.jquery.split('.');if (version[0] == 1 && version[1] < 8) {
+        throw new Error('Kube\'s requires at least jQuery v1.8');
+    }
+})(jQuery);
 
+;(function () {
+    // Inherits
+    Function.prototype.inherits = function (parent) {
+        var F = function F() {};
+        F.prototype = parent.prototype;
+        var f = new F();
+
+        for (var prop in this.prototype) {
+            f[prop] = this.prototype[prop];
+        }this.prototype = f;
+        this.prototype.super = parent.prototype;
+    };
+
+    // Core Class
+    var Kube = function Kube(element, options) {
+        options = (typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : {};
+
+        this.$element = $(element);
+        this.opts = $.extend(true, this.defaults, $.fn[this.namespace].options, this.$element.data(), options);
+        this.$target = typeof this.opts.target === 'string' ? $(this.opts.target) : null;
+    };
+
+    // Core Functionality
+    Kube.prototype = {
+        getInstance: function getInstance() {
+            return this.$element.data('fn.' + this.namespace);
+        },
+        hasTarget: function hasTarget() {
+            return !(this.$target === null);
+        },
+        callback: function callback(type) {
+            var args = [].slice.call(arguments).splice(1);
+
+            // on element callback
+            if (this.$element) {
+                args = this._fireCallback($._data(this.$element[0], 'events'), type, this.namespace, args);
+            }
+
+            // on target callback
+            if (this.$target) {
+                args = this._fireCallback($._data(this.$target[0], 'events'), type, this.namespace, args);
+            }
+
+            // opts callback
+            if (this.opts && this.opts.callbacks && $.isFunction(this.opts.callbacks[type])) {
+                return this.opts.callbacks[type].apply(this, args);
+            }
+
+            return args;
+        },
+        _fireCallback: function _fireCallback(events, type, eventNamespace, args) {
+            if (events && typeof events[type] !== 'undefined') {
+                var len = events[type].length;
+                for (var i = 0; i < len; i++) {
+                    var namespace = events[type][i].namespace;
+                    if (namespace === eventNamespace) {
+                        var value = events[type][i].handler.apply(this, args);
+                    }
+                }
+            }
+
+            return typeof value === 'undefined' ? args : value;
+        }
+    };
+
+    // Scope
+    window.Kube = Kube;
+})();
 /**
- * Wraps the GET requests with the correct options for most GHData calls
- * @param {String} endpoint - Endpoint to send the request to
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with Object created from the JSON returned by GHData
+ * @library Kube Plugin
+ * @author Imperavi LLC
+ * @license MIT
  */
-GHDataAPIClient.prototype.get = function (endpoint, params) {
-  var self = this;
-  return new Promise(function (resolve, request) {
-    self.request({
-      method: 'GET',
-      endpoint: endpoint,
-      params: params
-    }).then(function (response) {
-      // Lets make this thing JSON
-      var result = JSON.parse(response);
-      resolve(result);
+(function (Kube) {
+    Kube.Plugin = {
+        create: function create(classname, pluginname) {
+            pluginname = typeof pluginname === 'undefined' ? classname.toLowerCase() : pluginname;
+
+            $.fn[pluginname] = function (method, options) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                var name = 'fn.' + pluginname;
+                var val = [];
+
+                this.each(function () {
+                    var $this = $(this),
+                        data = $this.data(name);
+                    options = (typeof method === 'undefined' ? 'undefined' : _typeof(method)) === 'object' ? method : options;
+
+                    if (!data) {
+                        // Initialization
+                        $this.data(name, {});
+                        $this.data(name, data = new Kube[classname](this, options));
+                    }
+
+                    // Call methods
+                    if (typeof method === 'string') {
+                        if ($.isFunction(data[method])) {
+                            var methodVal = data[method].apply(data, args);
+                            if (methodVal !== undefined) {
+                                val.push(methodVal);
+                            }
+                        } else {
+                            $.error('No such method "' + method + '" for ' + classname);
+                        }
+                    }
+                });
+
+                return val.length === 0 || val.length === 1 ? val.length === 0 ? this : val[0] : val;
+            };
+
+            $.fn[pluginname].options = {};
+
+            return this;
+        },
+        autoload: function autoload(pluginname) {
+            var arr = pluginname.split(',');
+            var len = arr.length;
+
+            for (var i = 0; i < len; i++) {
+                var name = arr[i].toLowerCase().split(',').map(function (s) {
+                    return s.trim();
+                }).join(',');
+                this.autoloadQueue.push(name);
+            }
+
+            return this;
+        },
+        autoloadQueue: [],
+        startAutoload: function startAutoload() {
+            if (!window.MutationObserver || this.autoloadQueue.length === 0) {
+                return;
+            }
+
+            var self = this;
+            var observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                    var newNodes = mutation.addedNodes;
+                    if (newNodes.length === 0 || newNodes.length === 1 && newNodes.nodeType === 3) {
+                        return;
+                    }
+
+                    self.startAutoloadOnce();
+                });
+            });
+
+            // pass in the target node, as well as the observer options
+            observer.observe(document, {
+                subtree: true,
+                childList: true
+            });
+        },
+        startAutoloadOnce: function startAutoloadOnce() {
+            var self = this;
+            var $nodes = $('[data-component]').not('[data-loaded]');
+            $nodes.each(function () {
+                var $el = $(this);
+                var pluginname = $el.data('component');
+
+                if (self.autoloadQueue.indexOf(pluginname) !== -1) {
+                    $el.attr('data-loaded', true);
+                    $el[pluginname]();
+                }
+            });
+        },
+        watch: function watch() {
+            Kube.Plugin.startAutoloadOnce();
+            Kube.Plugin.startAutoload();
+        }
+    };
+
+    $(window).on('load', function () {
+        Kube.Plugin.watch();
     });
-  });
-};
-
-/* Endpoints
- * Wrap all the API endpoints to make it as simple as possible
---------------------------------------------------------------*/
-
+})(Kube);
 /**
- * Commits timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
+ * @library Kube Animation
+ * @author Imperavi LLC
+ * @license MIT
  */
-GHDataAPIClient.prototype.commitsByWeek = function (params) {
-  return this.get('timeseries/commits', params);
-};
+(function (Kube) {
+    Kube.Animation = function (element, effect, callback) {
+        this.namespace = 'animation';
+        this.defaults = {};
 
-/**
- * Forks timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with forks timeeseries object
- */
-GHDataAPIClient.prototype.forksByWeek = function (params) {
-  return this.get('timeseries/forks', params);
-};
+        // Parent Constructor
+        Kube.apply(this, arguments);
 
-/**
- * Stargazers timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.stargazersByWeek = function (params) {
-  return this.get('timeseries/stargazers', params);
-};
+        // Initialization
+        this.effect = effect;
+        this.completeCallback = typeof callback === 'undefined' ? false : callback;
+        this.prefixes = ['', '-moz-', '-o-animation-', '-webkit-'];
+        this.queue = [];
 
-/**
- * Issues timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.issuesByWeek = function (params) {
-  return this.get('timeseries/issues', params);
-};
+        this.start();
+    };
 
-/**
- * Pull Requests timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.pullRequestsByWeek = function (params) {
-  return this.get('timeseries/pulls', params);
-};
+    Kube.Animation.prototype = {
+        start: function start() {
+            if (this.isSlideEffect()) this.setElementHeight();
 
-/**
- * Pull Requests timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.contributionsByWeek = function (params) {
-  return this.get('timeseries/contributions', params);
-};
+            this.addToQueue();
+            this.clean();
+            this.animate();
+        },
+        addToQueue: function addToQueue() {
+            this.queue.push(this.effect);
+        },
+        setElementHeight: function setElementHeight() {
+            this.$element.height(this.$element.height());
+        },
+        removeElementHeight: function removeElementHeight() {
+            this.$element.css('height', '');
+        },
+        isSlideEffect: function isSlideEffect() {
+            return this.effect === 'slideDown' || this.effect === 'slideUp';
+        },
+        isHideableEffect: function isHideableEffect() {
+            var effects = ['fadeOut', 'slideUp', 'flipOut', 'zoomOut', 'slideOutUp', 'slideOutRight', 'slideOutLeft'];
 
-/**
- * How quickly after issues are made they are commented on
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.issuesResponseTime = function (params) {
-  return this.get('timeseries/issues/response_time', params);
-};
+            return $.inArray(this.effect, effects) !== -1;
+        },
+        isToggleEffect: function isToggleEffect() {
+            return this.effect === 'show' || this.effect === 'hide';
+        },
+        storeHideClasses: function storeHideClasses() {
+            if (this.$element.hasClass('hide-sm')) this.$element.data('hide-sm-class', true);else if (this.$element.hasClass('hide-md')) this.$element.data('hide-md-class', true);
+        },
+        revertHideClasses: function revertHideClasses() {
+            if (this.$element.data('hide-sm-class')) this.$element.addClass('hide-sm').removeData('hide-sm-class');else if (this.$element.data('hide-md-class')) this.$element.addClass('hide-md').removeData('hide-md-class');else this.$element.addClass('hide');
+        },
+        removeHideClass: function removeHideClass() {
+            if (this.$element.data('hide-sm-class')) this.$element.removeClass('hide-sm');else if (this.$element.data('hide-md-class')) this.$element.removeClass('hide-md');else this.$element.removeClass('hide');
+        },
+        animate: function animate() {
+            this.storeHideClasses();
+            if (this.isToggleEffect()) {
+                return this.makeSimpleEffects();
+            }
 
-/**
- * Contributions timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.contributors = function (params) {
-  return this.get('timeseries/contributors', params);
-};
+            this.$element.addClass('kubeanimated');
+            this.$element.addClass(this.queue[0]);
+            this.removeHideClass();
 
+            var _callback = this.queue.length > 1 ? null : this.completeCallback;
+            this.complete('AnimationEnd', $.proxy(this.makeComplete, this), _callback);
+        },
+        makeSimpleEffects: function makeSimpleEffects() {
+            if (this.effect === 'show') this.removeHideClass();else if (this.effect === 'hide') this.revertHideClasses();
+
+            if (typeof this.completeCallback === 'function') this.completeCallback(this);
+        },
+        makeComplete: function makeComplete() {
+            if (this.$element.hasClass(this.queue[0])) {
+                this.clean();
+                this.queue.shift();
+
+                if (this.queue.length) this.animate();
+            }
+        },
+        complete: function complete(type, make, callback) {
+            var event = type.toLowerCase() + ' webkit' + type + ' o' + type + ' MS' + type;
+
+            this.$element.one(event, $.proxy(function () {
+                if (typeof make === 'function') make();
+                if (this.isHideableEffect()) this.revertHideClasses();
+                if (this.isSlideEffect()) this.removeElementHeight();
+                if (typeof callback === 'function') callback(this);
+
+                this.$element.off(event);
+            }, this));
+        },
+        clean: function clean() {
+            this.$element.removeClass('kubeanimated').removeClass(this.queue[0]);
+        }
+    };
+
+    // Inheritance
+    Kube.Animation.inherits(Kube);
+})(Kube);
+
+// Plugin
+(function ($) {
+    $.fn.animation = function (effect, callback) {
+        var name = 'fn.animation';
+
+        return this.each(function () {
+            var $this = $(this),
+                data = $this.data(name);
+
+            $this.data(name, {});
+            $this.data(name, data = new Kube.Animation(this, effect, callback));
+        });
+    };
+
+    $.fn.animation.options = {};
+})(jQuery);
 /**
- * Locations of the committers
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
+ * @library Kube Detect
+ * @author Imperavi LLC
+ * @license MIT
  */
-GHDataAPIClient.prototype.committerLocations = function (params) {
-  return this.get('commits/locations', params);
-};
+(function (Kube) {
+    Kube.Detect = function () {};
+
+    Kube.Detect.prototype = {
+        isMobile: function isMobile() {
+            return (/(iPhone|iPod|BlackBerry|Android)/.test(navigator.userAgent)
+            );
+        },
+        isDesktop: function isDesktop() {
+            return !/(iPhone|iPod|iPad|BlackBerry|Android)/.test(navigator.userAgent);
+        },
+        isMobileScreen: function isMobileScreen() {
+            return $(window).width() <= 768;
+        },
+        isTabletScreen: function isTabletScreen() {
+            return $(window).width() >= 768 && $(window).width() <= 1024;
+        },
+        isDesktopScreen: function isDesktopScreen() {
+            return $(window).width() > 1024;
+        }
+    };
+})(Kube);
+/**
+ * @library Kube FormData
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.FormData = function (app) {
+        this.opts = app.opts;
+    };
+
+    Kube.FormData.prototype = {
+        set: function set(data) {
+            this.data = data;
+        },
+        get: function get(formdata) {
+            this.formdata = formdata;
+
+            if (this.opts.appendForms) this.appendForms();
+            if (this.opts.appendFields) this.appendFields();
+
+            return this.data;
+        },
+        appendFields: function appendFields() {
+            var $fields = $(this.opts.appendFields);
+            if ($fields.length === 0) {
+                return;
+            }
+
+            var self = this;
+            var str = '';
+
+            if (this.formdata) {
+                $fields.each(function () {
+                    self.data.append($(this).attr('name'), $(this).val());
+                });
+            } else {
+                $fields.each(function () {
+                    str += '&' + $(this).attr('name') + '=' + $(this).val();
+                });
+
+                this.data = this.data === '' ? str.replace(/^&/, '') : this.data + str;
+            }
+        },
+        appendForms: function appendForms() {
+            var $forms = $(this.opts.appendForms);
+            if ($forms.length === 0) {
+                return;
+            }
+
+            if (this.formdata) {
+                var self = this;
+                var formsData = $(this.opts.appendForms).serializeArray();
+                $.each(formsData, function (i, s) {
+                    self.data.append(s.name, s.value);
+                });
+            } else {
+                var str = $forms.serialize();
+
+                this.data = this.data === '' ? str : this.data + '&' + str;
+            }
+        }
+    };
+})(Kube);
+/**
+ * @library Kube Response
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Response = function (app) {};
+
+    Kube.Response.prototype = {
+        parse: function parse(str) {
+            if (str === '') return false;
+
+            var obj = {};
+
+            try {
+                obj = JSON.parse(str);
+            } catch (e) {
+                return false;
+            }
+
+            if (obj[0] !== undefined) {
+                for (var item in obj) {
+                    this.parseItem(obj[item]);
+                }
+            } else {
+                this.parseItem(obj);
+            }
+
+            return obj;
+        },
+        parseItem: function parseItem(item) {
+            if (item.type === 'value') {
+                $.each(item.data, $.proxy(function (key, val) {
+                    val = val === null || val === false ? 0 : val;
+                    val = val === true ? 1 : val;
+
+                    $(key).val(val);
+                }, this));
+            } else if (item.type === 'html') {
+                $.each(item.data, $.proxy(function (key, val) {
+                    val = val === null || val === false ? '' : val;
+
+                    $(key).html(this.stripslashes(val));
+                }, this));
+            } else if (item.type === 'addClass') {
+                $.each(item.data, function (key, val) {
+                    $(key).addClass(val);
+                });
+            } else if (item.type === 'removeClass') {
+                $.each(item.data, function (key, val) {
+                    $(key).removeClass(val);
+                });
+            } else if (item.type === 'command') {
+                $.each(item.data, function (key, val) {
+                    $(val)[key]();
+                });
+            } else if (item.type === 'animation') {
+                $.each(item.data, function (key, data) {
+                    data.opts = typeof data.opts === 'undefined' ? {} : data.opts;
+
+                    $(key).animation(data.name, data.opts);
+                });
+            } else if (item.type === 'location') {
+                top.location.href = item.data;
+            } else if (item.type === 'notify') {
+                $.notify(item.data);
+            }
+
+            return item;
+        },
+        stripslashes: function stripslashes(str) {
+            return (str + '').replace(/\0/g, '0').replace(/\\([\\'"])/g, '$1');
+        }
+    };
+})(Kube);
+/**
+ * @library Kube Utils
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Utils = function () {};
+
+    Kube.Utils.prototype = {
+        disableBodyScroll: function disableBodyScroll() {
+            var $body = $('html');
+            var windowWidth = window.innerWidth;
+
+            if (!windowWidth) {
+                var documentElementRect = document.documentElement.getBoundingClientRect();
+                windowWidth = documentElementRect.right - Math.abs(documentElementRect.left);
+            }
+
+            var isOverflowing = document.body.clientWidth < windowWidth;
+            var scrollbarWidth = this.measureScrollbar();
+
+            $body.css('overflow', 'hidden');
+            if (isOverflowing) $body.css('padding-right', scrollbarWidth);
+        },
+        measureScrollbar: function measureScrollbar() {
+            var $body = $('body');
+            var scrollDiv = document.createElement('div');
+            scrollDiv.className = 'scrollbar-measure';
+
+            $body.append(scrollDiv);
+            var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+            $body[0].removeChild(scrollDiv);
+            return scrollbarWidth;
+        },
+        enableBodyScroll: function enableBodyScroll() {
+            $('html').css({ 'overflow': '', 'padding-right': '' });
+        }
+    };
+})(Kube);
+/**
+ * @library Kube Message
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Message = function (element, options) {
+        this.namespace = 'message';
+        this.defaults = {
+            closeSelector: '.close',
+            closeEvent: 'click',
+            animationOpen: 'fadeIn',
+            animationClose: 'fadeOut',
+            callbacks: ['open', 'opened', 'close', 'closed']
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Message.prototype = {
+        start: function start() {
+            this.$close = this.$element.find(this.opts.closeSelector);
+            this.$close.on(this.opts.closeEvent + '.' + this.namespace, $.proxy(this.close, this));
+            this.$element.addClass('open');
+        },
+        stop: function stop() {
+            this.$close.off('.' + this.namespace);
+            this.$element.removeClass('open');
+        },
+        open: function open(e) {
+            if (e) e.preventDefault();
+
+            if (!this.isOpened()) {
+                this.callback('open');
+                this.$element.animation(this.opts.animationOpen, $.proxy(this.onOpened, this));
+            }
+        },
+        isOpened: function isOpened() {
+            return this.$element.hasClass('open');
+        },
+        onOpened: function onOpened() {
+            this.callback('opened');
+            this.$element.addClass('open');
+        },
+        close: function close(e) {
+            if (e) e.preventDefault();
+
+            if (this.isOpened()) {
+                this.callback('close');
+                this.$element.animation(this.opts.animationClose, $.proxy(this.onClosed, this));
+            }
+        },
+        onClosed: function onClosed() {
+            this.callback('closed');
+            this.$element.removeClass('open');
+        }
+    };
+
+    // Inheritance
+    Kube.Message.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Message');
+    Kube.Plugin.autoload('Message');
+})(Kube);
+/**
+ * @library Kube Sticky
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Sticky = function (element, options) {
+        this.namespace = 'sticky';
+        this.defaults = {
+            classname: 'fixed',
+            offset: 0, // pixels
+            callbacks: ['fixed', 'unfixed']
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Sticky.prototype = {
+        start: function start() {
+            this.offsetTop = this.getOffsetTop();
+
+            this.load();
+            $(window).scroll($.proxy(this.load, this));
+        },
+        getOffsetTop: function getOffsetTop() {
+            return this.$element.offset().top;
+        },
+        load: function load() {
+            return this.isFix() ? this.fixed() : this.unfixed();
+        },
+        isFix: function isFix() {
+            return $(window).scrollTop() > this.offsetTop + this.opts.offset;
+        },
+        fixed: function fixed() {
+            this.$element.addClass(this.opts.classname).css('top', this.opts.offset + 'px');
+            this.callback('fixed');
+        },
+        unfixed: function unfixed() {
+            this.$element.removeClass(this.opts.classname).css('top', '');
+            this.callback('unfixed');
+        }
+    };
+
+    // Inheritance
+    Kube.Sticky.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Sticky');
+    Kube.Plugin.autoload('Sticky');
+})(Kube);
+/**
+ * @library Kube Toggleme
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Toggleme = function (element, options) {
+        this.namespace = 'toggleme';
+        this.defaults = {
+            toggleEvent: 'click',
+            target: null,
+            text: '',
+            animationOpen: 'slideDown',
+            animationClose: 'slideUp',
+            callbacks: ['open', 'opened', 'close', 'closed']
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Toggleme.prototype = {
+        start: function start() {
+            if (!this.hasTarget()) return;
+
+            this.$element.on(this.opts.toggleEvent + '.' + this.namespace, $.proxy(this.toggle, this));
+        },
+        stop: function stop() {
+            this.$element.off('.' + this.namespace);
+            this.revertText();
+        },
+        toggle: function toggle(e) {
+            if (this.isOpened()) this.close(e);else this.open(e);
+        },
+        open: function open(e) {
+            if (e) e.preventDefault();
+
+            if (!this.isOpened()) {
+                this.storeText();
+                this.callback('open');
+                this.$target.animation('slideDown', $.proxy(this.onOpened, this));
+
+                // changes the text of $element with a less delay to smooth
+                setTimeout($.proxy(this.replaceText, this), 100);
+            }
+        },
+        close: function close(e) {
+            if (e) e.preventDefault();
+
+            if (this.isOpened()) {
+                this.callback('close');
+                this.$target.animation('slideUp', $.proxy(this.onClosed, this));
+            }
+        },
+        isOpened: function isOpened() {
+            return this.$target.hasClass('open');
+        },
+        onOpened: function onOpened() {
+            this.$target.addClass('open');
+            this.callback('opened');
+        },
+        onClosed: function onClosed() {
+            this.$target.removeClass('open');
+            this.revertText();
+            this.callback('closed');
+        },
+        storeText: function storeText() {
+            this.$element.data('replacement-text', this.$element.html());
+        },
+        revertText: function revertText() {
+            var text = this.$element.data('replacement-text');
+            if (text) this.$element.html(text);
+
+            this.$element.removeData('replacement-text');
+        },
+        replaceText: function replaceText() {
+            if (this.opts.text !== '') {
+                this.$element.html(this.opts.text);
+            }
+        }
+    };
+
+    // Inheritance
+    Kube.Toggleme.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Toggleme');
+    Kube.Plugin.autoload('Toggleme');
+})(Kube);
+/**
+ * @library Kube Offcanvas
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Offcanvas = function (element, options) {
+        this.namespace = 'offcanvas';
+        this.defaults = {
+            target: null, // selector
+            push: true, // boolean
+            width: '250px', // string
+            direction: 'left', // string: left or right
+            toggleEvent: 'click',
+            clickOutside: true, // boolean
+            animationOpen: 'slideInLeft',
+            animationClose: 'slideOutLeft',
+            callbacks: ['open', 'opened', 'close', 'closed']
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Services
+        this.utils = new Kube.Utils();
+        this.detect = new Kube.Detect();
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Offcanvas.prototype = {
+        start: function start() {
+            if (!this.hasTarget()) return;
+
+            this.buildTargetWidth();
+            this.buildAnimationDirection();
+
+            this.$close = this.getCloseLink();
+            this.$element.on(this.opts.toggleEvent + '.' + this.namespace, $.proxy(this.toggle, this));
+            this.$target.addClass('offcanvas');
+        },
+        stop: function stop() {
+            this.closeAll();
+
+            this.$element.off('.' + this.namespace);
+            this.$close.off('.' + this.namespace);
+            $(document).off('.' + this.namespace);
+        },
+        toggle: function toggle(e) {
+            if (this.isOpened()) this.close(e);else this.open(e);
+        },
+        buildTargetWidth: function buildTargetWidth() {
+            this.opts.width = $(window).width() < parseInt(this.opts.width) ? '100%' : this.opts.width;
+        },
+        buildAnimationDirection: function buildAnimationDirection() {
+            if (this.opts.direction === 'right') {
+                this.opts.animationOpen = 'slideInRight';
+                this.opts.animationClose = 'slideOutRight';
+            }
+        },
+        getCloseLink: function getCloseLink() {
+            return this.$target.find('.close');
+        },
+        open: function open(e) {
+            if (e) e.preventDefault();
+
+            if (!this.isOpened()) {
+                this.closeAll();
+                this.callback('open');
+
+                this.$target.addClass('offcanvas-' + this.opts.direction);
+                this.$target.css('width', this.opts.width);
+
+                this.pushBody();
+
+                this.$target.animation(this.opts.animationOpen, $.proxy(this.onOpened, this));
+            }
+        },
+        closeAll: function closeAll() {
+            var $elms = $(document).find('.offcanvas');
+            if ($elms.length !== 0) {
+                $elms.each(function () {
+                    var $el = $(this);
+
+                    if ($el.hasClass('open')) {
+                        $el.css('width', '').animation('hide');
+                        $el.removeClass('open offcanvas-left offcanvas-right');
+                    }
+                });
+
+                $(document).off('.' + this.namespace);
+                $('body').css('left', '');
+            }
+        },
+        close: function close(e) {
+            if (e) {
+                var $el = $(e.target);
+                var isTag = $el[0].tagName === 'A' || $el[0].tagName === 'BUTTON';
+                if (isTag && $el.closest('.offcanvas').length !== 0 && !$el.hasClass('close')) {
+                    return;
+                }
+
+                e.preventDefault();
+            }
+
+            if (this.isOpened()) {
+                this.utils.enableBodyScroll();
+                this.callback('close');
+                this.pullBody();
+                this.$target.animation(this.opts.animationClose, $.proxy(this.onClosed, this));
+            }
+        },
+        isOpened: function isOpened() {
+            return this.$target.hasClass('open');
+        },
+        onOpened: function onOpened() {
+            if (this.opts.clickOutside) $(document).on('click.' + this.namespace, $.proxy(this.close, this));
+            if (this.detect.isMobileScreen()) $('html').addClass('no-scroll');
+
+            $(document).on('keyup.' + this.namespace, $.proxy(this.handleKeyboard, this));
+            this.$close.on('click.' + this.namespace, $.proxy(this.close, this));
+
+            this.utils.disableBodyScroll();
+            this.$target.addClass('open');
+            this.callback('opened');
+        },
+        onClosed: function onClosed() {
+            if (this.detect.isMobileScreen()) $('html').removeClass('no-scroll');
+
+            this.$target.css('width', '').removeClass('offcanvas-' + this.opts.direction);
+
+            this.$close.off('.' + this.namespace);
+            $(document).off('.' + this.namespace);
+
+            this.$target.removeClass('open');
+            this.callback('closed');
+        },
+        handleKeyboard: function handleKeyboard(e) {
+            if (e.which === 27) this.close();
+        },
+        pullBody: function pullBody() {
+            if (this.opts.push) {
+                $('body').animate({ left: 0 }, 350, function () {
+                    $(this).removeClass('offcanvas-push-body');
+                });
+            }
+        },
+        pushBody: function pushBody() {
+            if (this.opts.push) {
+                var properties = this.opts.direction === 'left' ? { 'left': this.opts.width } : { 'left': '-' + this.opts.width };
+                $('body').addClass('offcanvas-push-body').animate(properties, 200);
+            }
+        }
+    };
+
+    // Inheritance
+    Kube.Offcanvas.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Offcanvas');
+    Kube.Plugin.autoload('Offcanvas');
+})(Kube);
+/**
+ * @library Kube Collapse
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Collapse = function (element, options) {
+        this.namespace = 'collapse';
+        this.defaults = {
+            target: null,
+            toggle: true,
+            active: false, // string (hash = tab id selector)
+            toggleClass: 'collapse-toggle',
+            boxClass: 'collapse-box',
+            callbacks: ['open', 'opened', 'close', 'closed'],
+
+            // private
+            hashes: [],
+            currentHash: false,
+            currentItem: false
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Collapse.prototype = {
+        start: function start() {
+            // items
+            this.$items = this.getItems();
+            this.$items.each($.proxy(this.loadItems, this));
+
+            // boxes
+            this.$boxes = this.getBoxes();
+
+            // active
+            this.setActiveItem();
+        },
+        getItems: function getItems() {
+            return this.$element.find('.' + this.opts.toggleClass);
+        },
+        getBoxes: function getBoxes() {
+            return this.$element.find('.' + this.opts.boxClass);
+        },
+        loadItems: function loadItems(i, el) {
+            var item = this.getItem(el);
+
+            // set item identificator
+            item.$el.attr('rel', item.hash);
+
+            // active
+            if (!$(item.hash).hasClass('hide')) {
+                this.opts.currentItem = item;
+                this.opts.active = item.hash;
+
+                item.$el.addClass('active');
+            }
+
+            // event
+            item.$el.on('click.collapse', $.proxy(this.toggle, this));
+        },
+        setActiveItem: function setActiveItem() {
+            if (this.opts.active !== false) {
+                this.opts.currentItem = this.getItemBy(this.opts.active);
+                this.opts.active = this.opts.currentItem.hash;
+            }
+
+            if (this.opts.currentItem !== false) {
+                this.addActive(this.opts.currentItem);
+                this.opts.currentItem.$box.removeClass('hide');
+            }
+        },
+        addActive: function addActive(item) {
+            item.$box.removeClass('hide').addClass('open');
+            item.$el.addClass('active');
+
+            if (item.$caret !== false) item.$caret.removeClass('down').addClass('up');
+            if (item.$parent !== false) item.$parent.addClass('active');
+
+            this.opts.currentItem = item;
+        },
+        removeActive: function removeActive(item) {
+            item.$box.removeClass('open');
+            item.$el.removeClass('active');
+
+            if (item.$caret !== false) item.$caret.addClass('down').removeClass('up');
+            if (item.$parent !== false) item.$parent.removeClass('active');
+
+            this.opts.currentItem = false;
+        },
+        toggle: function toggle(e) {
+            if (e) e.preventDefault();
+
+            var target = $(e.target).closest('.' + this.opts.toggleClass).get(0) || e.target;
+            var item = this.getItem(target);
+
+            if (this.isOpened(item.hash)) this.close(item.hash);else this.open(e);
+        },
+        openAll: function openAll() {
+            this.$items.addClass('active');
+            this.$boxes.addClass('open').removeClass('hide');
+        },
+        open: function open(e, push) {
+            if (typeof e === 'undefined') return;
+            if ((typeof e === 'undefined' ? 'undefined' : _typeof(e)) === 'object') e.preventDefault();
+
+            var target = $(e.target).closest('.' + this.opts.toggleClass).get(0) || e.target;
+            var item = (typeof e === 'undefined' ? 'undefined' : _typeof(e)) === 'object' ? this.getItem(target) : this.getItemBy(e);
+
+            if (item.$box.hasClass('open')) {
+                return;
+            }
+
+            if (this.opts.toggle) this.closeAll();
+
+            this.callback('open', item);
+            this.addActive(item);
+
+            item.$box.animation('slideDown', $.proxy(this.onOpened, this));
+        },
+        onOpened: function onOpened() {
+            this.callback('opened', this.opts.currentItem);
+        },
+        closeAll: function closeAll() {
+            this.$items.removeClass('active').closest('li').removeClass('active');
+            this.$boxes.removeClass('open').addClass('hide');
+        },
+        close: function close(num) {
+            var item = this.getItemBy(num);
+
+            this.callback('close', item);
+
+            this.opts.currentItem = item;
+
+            item.$box.animation('slideUp', $.proxy(this.onClosed, this));
+        },
+        onClosed: function onClosed() {
+            var item = this.opts.currentItem;
+
+            this.removeActive(item);
+            this.callback('closed', item);
+        },
+        isOpened: function isOpened(hash) {
+            return $(hash).hasClass('open');
+        },
+        getItem: function getItem(element) {
+            var item = {};
+
+            item.$el = $(element);
+            item.hash = item.$el.attr('href');
+            item.$box = $(item.hash);
+
+            var $parent = item.$el.parent();
+            item.$parent = $parent[0].tagName === 'LI' ? $parent : false;
+
+            var $caret = item.$el.find('.caret');
+            item.$caret = $caret.length !== 0 ? $caret : false;
+
+            return item;
+        },
+        getItemBy: function getItemBy(num) {
+            var element = typeof num === 'number' ? this.$items.eq(num - 1) : this.$element.find('[rel="' + num + '"]');
+
+            return this.getItem(element);
+        }
+    };
+
+    // Inheritance
+    Kube.Collapse.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Collapse');
+    Kube.Plugin.autoload('Collapse');
+})(Kube);
+/**
+ * @library Kube Dropdown
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Dropdown = function (element, options) {
+        this.namespace = 'dropdown';
+        this.defaults = {
+            target: null,
+            toggleEvent: 'click',
+            height: false, // integer
+            width: false, // integer
+            animationOpen: 'slideDown',
+            animationClose: 'slideUp',
+            caretUp: false,
+            callbacks: ['open', 'opened', 'close', 'closed']
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Services
+        this.utils = new Kube.Utils();
+        this.detect = new Kube.Detect();
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Dropdown.prototype = {
+        start: function start() {
+            this.buildClose();
+            this.buildCaret();
+
+            if (this.detect.isMobile()) this.buildMobileAnimation();
+
+            this.$target.addClass('hide');
+            this.$element.on(this.opts.toggleEvent + '.' + this.namespace, $.proxy(this.toggle, this));
+        },
+        stop: function stop() {
+            this.$element.off('.' + this.namespace);
+            this.$target.removeClass('open').addClass('hide');
+            this.disableEvents();
+        },
+        buildMobileAnimation: function buildMobileAnimation() {
+            this.opts.animationOpen = 'fadeIn';
+            this.opts.animationClose = 'fadeOut';
+        },
+        buildClose: function buildClose() {
+            this.$close = this.$target.find('.close');
+        },
+        buildCaret: function buildCaret() {
+            this.$caret = this.getCaret();
+            this.buildCaretPosition();
+        },
+        buildCaretPosition: function buildCaretPosition() {
+            var height = this.$element.offset().top + this.$element.innerHeight() + this.$target.innerHeight();
+
+            if ($(document).height() > height) {
+                return;
+            }
+
+            this.opts.caretUp = true;
+            this.$caret.addClass('up');
+        },
+        getCaret: function getCaret() {
+            return this.$element.find('.caret');
+        },
+        toggleCaretOpen: function toggleCaretOpen() {
+            if (this.opts.caretUp) this.$caret.removeClass('up').addClass('down');else this.$caret.removeClass('down').addClass('up');
+        },
+        toggleCaretClose: function toggleCaretClose() {
+            if (this.opts.caretUp) this.$caret.removeClass('down').addClass('up');else this.$caret.removeClass('up').addClass('down');
+        },
+        toggle: function toggle(e) {
+            if (this.isOpened()) this.close(e);else this.open(e);
+        },
+        open: function open(e) {
+            if (e) e.preventDefault();
+
+            this.callback('open');
+            $('.dropdown').removeClass('open').addClass('hide');
+
+            if (this.opts.height) this.$target.css('min-height', this.opts.height + 'px');
+            if (this.opts.width) this.$target.width(this.opts.width);
+
+            this.setPosition();
+            this.toggleCaretOpen();
+
+            this.$target.animation(this.opts.animationOpen, $.proxy(this.onOpened, this));
+        },
+        close: function close(e) {
+            if (!this.isOpened()) {
+                return;
+            }
+
+            if (e) {
+                if (this.shouldNotBeClosed(e.target)) {
+                    return;
+                }
+
+                e.preventDefault();
+            }
+
+            this.utils.enableBodyScroll();
+            this.callback('close');
+            this.toggleCaretClose();
+
+            this.$target.animation(this.opts.animationClose, $.proxy(this.onClosed, this));
+        },
+        onClosed: function onClosed() {
+            this.$target.removeClass('open');
+            this.disableEvents();
+            this.callback('closed');
+        },
+        onOpened: function onOpened() {
+            this.$target.addClass('open');
+            this.enableEvents();
+            this.callback('opened');
+        },
+        isOpened: function isOpened() {
+            return this.$target.hasClass('open');
+        },
+        enableEvents: function enableEvents() {
+            if (this.detect.isDesktop()) {
+                this.$target.on('mouseover.' + this.namespace, $.proxy(this.utils.disableBodyScroll, this.utils)).on('mouseout.' + this.namespace, $.proxy(this.utils.enableBodyScroll, this.utils));
+            }
+
+            $(document).on('scroll.' + this.namespace, $.proxy(this.setPosition, this));
+            $(window).on('resize.' + this.namespace, $.proxy(this.setPosition, this));
+            $(document).on('click.' + this.namespace + ' touchstart.' + this.namespace, $.proxy(this.close, this));
+            $(document).on('keydown.' + this.namespace, $.proxy(this.handleKeyboard, this));
+            this.$target.find('[data-action="dropdown-close"]').on('click.' + this.namespace, $.proxy(this.close, this));
+        },
+        disableEvents: function disableEvents() {
+            this.$target.off('.' + this.namespace);
+            $(document).off('.' + this.namespace);
+            $(window).off('.' + this.namespace);
+        },
+        handleKeyboard: function handleKeyboard(e) {
+            if (e.which === 27) this.close(e);
+        },
+        shouldNotBeClosed: function shouldNotBeClosed(el) {
+            if ($(el).attr('data-action') === 'dropdown-close' || el === this.$close[0]) {
+                return false;
+            } else if ($(el).closest('.dropdown').length === 0) {
+                return false;
+            }
+
+            return true;
+        },
+        isNavigationFixed: function isNavigationFixed() {
+            return this.$element.closest('.fixed').length !== 0;
+        },
+        getPlacement: function getPlacement(height) {
+            return $(document).height() < height ? 'top' : 'bottom';
+        },
+        getOffset: function getOffset(position) {
+            return this.isNavigationFixed() ? this.$element.position() : this.$element.offset();
+        },
+        getPosition: function getPosition() {
+            return this.isNavigationFixed() ? 'fixed' : 'absolute';
+        },
+        setPosition: function setPosition() {
+            if (this.detect.isMobile()) {
+                this.$target.addClass('dropdown-mobile');
+                return;
+            }
+
+            var position = this.getPosition();
+            var coords = this.getOffset(position);
+            var height = this.$target.innerHeight();
+            var width = this.$target.innerWidth();
+            var placement = this.getPlacement(coords.top + height + this.$element.innerHeight());
+            var leftFix = $(window).width() < coords.left + width ? width - this.$element.innerWidth() : 0;
+            var top,
+                left = coords.left - leftFix;
+
+            if (placement === 'bottom') {
+                if (!this.isOpened()) this.$caret.removeClass('up').addClass('down');
+
+                this.opts.caretUp = false;
+                top = coords.top + this.$element.outerHeight() + 1;
+            } else {
+                this.opts.animationOpen = 'show';
+                this.opts.animationClose = 'hide';
+
+                if (!this.isOpened()) this.$caret.addClass('up').removeClass('down');
+
+                this.opts.caretUp = true;
+                top = coords.top - height - 1;
+            }
+
+            this.$target.css({ position: position, top: top + 'px', left: left + 'px' });
+        }
+    };
+
+    // Inheritance
+    Kube.Dropdown.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Dropdown');
+    Kube.Plugin.autoload('Dropdown');
+})(Kube);
+/**
+ * @library Kube Tabs
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function (Kube) {
+    Kube.Tabs = function (element, options) {
+        this.namespace = 'tabs';
+        this.defaults = {
+            equals: false,
+            active: false, // string (hash = tab id selector)
+            live: false, // class selector
+            hash: true, //boolean
+            callbacks: ['init', 'next', 'prev', 'open', 'opened', 'close', 'closed']
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Tabs.prototype = {
+        start: function start() {
+            if (this.opts.live !== false) this.buildLiveTabs();
+
+            this.tabsCollection = [];
+            this.hashesCollection = [];
+            this.currentHash = [];
+            this.currentItem = false;
+
+            // items
+            this.$items = this.getItems();
+            this.$items.each($.proxy(this.loadItems, this));
+
+            // tabs
+            this.$tabs = this.getTabs();
+
+            // location hash
+            this.currentHash = this.getLocationHash();
+
+            // close all
+            this.closeAll();
+
+            // active & height
+            this.setActiveItem();
+            this.setItemHeight();
+
+            // callback
+            this.callback('init');
+        },
+        getTabs: function getTabs() {
+            return $(this.tabsCollection).map(function () {
+                return this.toArray();
+            });
+        },
+        getItems: function getItems() {
+            return this.$element.find('a');
+        },
+        loadItems: function loadItems(i, el) {
+            var item = this.getItem(el);
+
+            // set item identificator
+            item.$el.attr('rel', item.hash);
+
+            // collect item
+            this.collectItem(item);
+
+            // active
+            if (item.$parent.hasClass('active')) {
+                this.currentItem = item;
+                this.opts.active = item.hash;
+            }
+
+            // event
+            item.$el.on('click.tabs', $.proxy(this.open, this));
+        },
+        collectItem: function collectItem(item) {
+            this.tabsCollection.push(item.$tab);
+            this.hashesCollection.push(item.hash);
+        },
+        buildLiveTabs: function buildLiveTabs() {
+            var $layers = $(this.opts.live);
+
+            if ($layers.length === 0) {
+                return;
+            }
+
+            this.$liveTabsList = $('<ul />');
+            $layers.each($.proxy(this.buildLiveItem, this));
+
+            this.$element.html('').append(this.$liveTabsList);
+        },
+        buildLiveItem: function buildLiveItem(i, tab) {
+            var $tab = $(tab);
+            var $li = $('<li />');
+            var $a = $('<a />');
+            var index = i + 1;
+
+            $tab.attr('id', this.getLiveItemId($tab, index));
+
+            var hash = '#' + $tab.attr('id');
+            var title = this.getLiveItemTitle($tab);
+
+            $a.attr('href', hash).attr('rel', hash).text(title);
+            $li.append($a);
+
+            this.$liveTabsList.append($li);
+        },
+        getLiveItemId: function getLiveItemId($tab, index) {
+            return typeof $tab.attr('id') === 'undefined' ? this.opts.live.replace('.', '') + index : $tab.attr('id');
+        },
+        getLiveItemTitle: function getLiveItemTitle($tab) {
+            return typeof $tab.attr('data-title') === 'undefined' ? $tab.attr('id') : $tab.attr('data-title');
+        },
+        setActiveItem: function setActiveItem() {
+            if (this.currentHash) {
+                this.currentItem = this.getItemBy(this.currentHash);
+                this.opts.active = this.currentHash;
+            } else if (this.opts.active === false) {
+                this.currentItem = this.getItem(this.$items.first());
+                this.opts.active = this.currentItem.hash;
+            }
+
+            this.addActive(this.currentItem);
+        },
+        addActive: function addActive(item) {
+            item.$parent.addClass('active');
+            item.$tab.removeClass('hide').addClass('open');
+
+            this.currentItem = item;
+        },
+        removeActive: function removeActive(item) {
+            item.$parent.removeClass('active');
+            item.$tab.addClass('hide').removeClass('open');
+
+            this.currentItem = false;
+        },
+        next: function next(e) {
+            if (e) e.preventDefault();
+
+            var item = this.getItem(this.fetchElement('next'));
+
+            this.open(item.hash);
+            this.callback('next', item);
+        },
+        prev: function prev(e) {
+            if (e) e.preventDefault();
+
+            var item = this.getItem(this.fetchElement('prev'));
+
+            this.open(item.hash);
+            this.callback('prev', item);
+        },
+        fetchElement: function fetchElement(type) {
+            var element;
+            if (this.currentItem !== false) {
+                // prev or next
+                element = this.currentItem.$parent[type]().find('a');
+
+                if (element.length === 0) {
+                    return;
+                }
+            } else {
+                // first
+                element = this.$items[0];
+            }
+
+            return element;
+        },
+        open: function open(e, push) {
+            if (typeof e === 'undefined') return;
+            if ((typeof e === 'undefined' ? 'undefined' : _typeof(e)) === 'object') e.preventDefault();
+
+            var item = (typeof e === 'undefined' ? 'undefined' : _typeof(e)) === 'object' ? this.getItem(e.target) : this.getItemBy(e);
+            this.closeAll();
+
+            this.callback('open', item);
+            this.addActive(item);
+
+            // push state (doesn't need to push at the start)
+            this.pushStateOpen(push, item);
+            this.callback('opened', item);
+        },
+        pushStateOpen: function pushStateOpen(push, item) {
+            if (push !== false && this.opts.hash !== false) {
+                history.pushState(false, false, item.hash);
+            }
+        },
+        close: function close(num) {
+            var item = this.getItemBy(num);
+
+            if (!item.$parent.hasClass('active')) {
+                return;
+            }
+
+            this.callback('close', item);
+            this.removeActive(item);
+            this.pushStateClose();
+            this.callback('closed', item);
+        },
+        pushStateClose: function pushStateClose() {
+            if (this.opts.hash !== false) {
+                history.pushState(false, false, ' ');
+            }
+        },
+        closeAll: function closeAll() {
+            this.$tabs.removeClass('open').addClass('hide');
+            this.$items.parent().removeClass('active');
+        },
+        getItem: function getItem(element) {
+            var item = {};
+
+            item.$el = $(element);
+            item.hash = item.$el.attr('href');
+            item.$parent = item.$el.parent();
+            item.$tab = $(item.hash);
+
+            return item;
+        },
+        getItemBy: function getItemBy(num) {
+            var element = typeof num === 'number' ? this.$items.eq(num - 1) : this.$element.find('[rel="' + num + '"]');
+
+            return this.getItem(element);
+        },
+        getLocationHash: function getLocationHash() {
+            if (this.opts.hash === false) {
+                return false;
+            }
+
+            return this.isHash() ? top.location.hash : false;
+        },
+        isHash: function isHash() {
+            return !(top.location.hash === '' || $.inArray(top.location.hash, this.hashesCollection) === -1);
+        },
+        setItemHeight: function setItemHeight() {
+            if (this.opts.equals) {
+                var minHeight = this.getItemMaxHeight() + 'px';
+                this.$tabs.css('min-height', minHeight);
+            }
+        },
+        getItemMaxHeight: function getItemMaxHeight() {
+            var max = 0;
+            this.$tabs.each(function () {
+                var h = $(this).height();
+                max = h > max ? h : max;
+            });
+
+            return max;
+        }
+    };
+
+    // Inheritance
+    Kube.Tabs.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Tabs');
+    Kube.Plugin.autoload('Tabs');
+})(Kube);
+/**
+ * @library Kube Modal
+ * @author Imperavi LLC
+ * @license MIT
+ */
+(function ($) {
+    $.modalcurrent = null;
+    $.modalwindow = function (options) {
+        var opts = $.extend({}, options, { show: true });
+        var $element = $('<span />');
+
+        $element.modal(opts);
+    };
+})(jQuery);
+
+(function (Kube) {
+    Kube.Modal = function (element, options) {
+        this.namespace = 'modal';
+        this.defaults = {
+            target: null,
+            show: false,
+            url: false,
+            header: false,
+            width: '600px', // string
+            height: false, // or string
+            maxHeight: false,
+            position: 'center', // top or center
+            overlay: true,
+            appendForms: false,
+            appendFields: false,
+            animationOpen: 'show',
+            animationClose: 'hide',
+            callbacks: ['open', 'opened', 'close', 'closed']
+        };
+
+        // Parent Constructor
+        Kube.apply(this, arguments);
+
+        // Services
+        this.utils = new Kube.Utils();
+        this.detect = new Kube.Detect();
+
+        // Initialization
+        this.start();
+    };
+
+    // Functionality
+    Kube.Modal.prototype = {
+        start: function start() {
+            if (!this.hasTarget()) {
+                return;
+            }
+
+            if (this.opts.show) this.load();else this.$element.on('click.' + this.namespace, $.proxy(this.load, this));
+        },
+        buildModal: function buildModal() {
+            this.$modal = this.$target.find('.modal');
+            this.$header = this.$target.find('.modal-header');
+            this.$close = this.$target.find('.close');
+            this.$body = this.$target.find('.modal-body');
+        },
+        buildOverlay: function buildOverlay() {
+            if (this.opts.overlay === false) {
+                return;
+            }
+
+            if ($('#modal-overlay').length !== 0) {
+                this.$overlay = $('#modal-overlay');
+            } else {
+                this.$overlay = $('<div id="modal-overlay">').addClass('hide');
+                $('body').prepend(this.$overlay);
+            }
+
+            this.$overlay.addClass('overlay');
+        },
+        buildHeader: function buildHeader() {
+            if (this.opts.header) this.$header.html(this.opts.header);
+        },
+        load: function load(e) {
+            this.buildModal();
+            this.buildOverlay();
+            this.buildHeader();
+
+            if (this.opts.url) this.buildContent();else this.open(e);
+        },
+        open: function open(e) {
+            if (e) e.preventDefault();
+
+            if (this.isOpened()) {
+                return;
+            }
+
+            if (this.detect.isMobile()) this.opts.width = '96%';
+            if (this.opts.overlay) this.$overlay.removeClass('hide');
+
+            this.$target.removeClass('hide');
+            this.$modal.removeClass('hide');
+
+            this.enableEvents();
+            this.findActions();
+
+            this.resize();
+            $(window).on('resize.' + this.namespace, $.proxy(this.resize, this));
+
+            if (this.detect.isDesktop()) this.utils.disableBodyScroll();
+
+            // enter
+            this.$modal.find('input[type=text],input[type=url],input[type=email]').on('keydown.' + this.namespace, $.proxy(this.handleEnter, this));
+
+            this.callback('open');
+            this.$modal.animation(this.opts.animationOpen, $.proxy(this.onOpened, this));
+        },
+        close: function close(e) {
+            if (!this.$modal || !this.isOpened()) {
+                return;
+            }
+
+            if (e) {
+                if (this.shouldNotBeClosed(e.target)) {
+                    return;
+                }
+
+                e.preventDefault();
+            }
+
+            this.callback('close');
+            this.disableEvents();
+
+            this.$modal.animation(this.opts.animationClose, $.proxy(this.onClosed, this));
+
+            if (this.opts.overlay) this.$overlay.animation(this.opts.animationClose);
+        },
+        onOpened: function onOpened() {
+            this.$modal.addClass('open');
+            this.callback('opened');
+
+            $.modalcurrent = this;
+        },
+        onClosed: function onClosed() {
+            this.callback('closed');
+
+            this.$target.addClass('hide');
+            this.$modal.removeClass('open');
+
+            if (this.detect.isDesktop()) this.utils.enableBodyScroll();
+
+            this.$body.css('height', '');
+            $.modalcurrent = null;
+        },
+        isOpened: function isOpened() {
+            return this.$modal.hasClass('open');
+        },
+        getData: function getData() {
+            var formdata = new Kube.FormData(this);
+            formdata.set('');
+
+            return formdata.get();
+        },
+        buildContent: function buildContent() {
+            $.ajax({
+                url: this.opts.url + '?' + new Date().getTime(),
+                cache: false,
+                type: 'post',
+                data: this.getData(),
+                success: $.proxy(function (data) {
+                    this.$body.html(data);
+                    this.open();
+                }, this)
+            });
+        },
+        buildWidth: function buildWidth() {
+            var width = this.opts.width;
+            var top = '2%';
+            var bottom = '2%';
+            var percent = width.match(/%$/);
+
+            if (parseInt(this.opts.width) > $(window).width() && !percent) {
+                width = '96%';
+            } else if (!percent) {
+                top = '16px';
+                bottom = '16px';
+            }
+
+            this.$modal.css({ 'width': width, 'margin-top': top, 'margin-bottom': bottom });
+        },
+        buildPosition: function buildPosition() {
+            if (this.opts.position !== 'center') {
+                return;
+            }
+
+            var windowHeight = $(window).height();
+            var height = this.$modal.outerHeight();
+            var top = windowHeight / 2 - height / 2 + 'px';
+
+            if (this.detect.isMobile()) top = '2%';else if (height > windowHeight) top = '16px';
+
+            this.$modal.css('margin-top', top);
+        },
+        buildHeight: function buildHeight() {
+            var windowHeight = $(window).height();
+
+            if (this.opts.maxHeight) {
+                var padding = parseInt(this.$body.css('padding-top')) + parseInt(this.$body.css('padding-bottom'));
+                var margin = parseInt(this.$modal.css('margin-top')) + parseInt(this.$modal.css('margin-bottom'));
+                var height = windowHeight - this.$header.innerHeight() - padding - margin;
+
+                this.$body.height(height);
+            } else if (this.opts.height !== false) {
+                this.$body.css('height', this.opts.height);
+            }
+
+            var modalHeight = this.$modal.outerHeight();
+            if (modalHeight > windowHeight) {
+                this.opts.animationOpen = 'show';
+                this.opts.animationClose = 'hide';
+            }
+        },
+        resize: function resize() {
+            this.buildWidth();
+            this.buildPosition();
+            this.buildHeight();
+        },
+        enableEvents: function enableEvents() {
+            this.$close.on('click.' + this.namespace, $.proxy(this.close, this));
+            $(document).on('keyup.' + this.namespace, $.proxy(this.handleEscape, this));
+            this.$target.on('click.' + this.namespace, $.proxy(this.close, this));
+        },
+        disableEvents: function disableEvents() {
+            this.$close.off('.' + this.namespace);
+            $(document).off('.' + this.namespace);
+            this.$target.off('.' + this.namespace);
+            $(window).off('.' + this.namespace);
+        },
+        findActions: function findActions() {
+            this.$body.find('[data-action="modal-close"]').on('mousedown.' + this.namespace, $.proxy(this.close, this));
+        },
+        setHeader: function setHeader(header) {
+            this.$header.html(header);
+        },
+        setContent: function setContent(content) {
+            this.$body.html(content);
+        },
+        setWidth: function setWidth(width) {
+            this.opts.width = width;
+            this.resize();
+        },
+        getModal: function getModal() {
+            return this.$modal;
+        },
+        getBody: function getBody() {
+            return this.$body;
+        },
+        getHeader: function getHeader() {
+            return this.$header;
+        },
+        handleEnter: function handleEnter(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                this.close(false);
+            }
+        },
+        handleEscape: function handleEscape(e) {
+            return e.which === 27 ? this.close(false) : true;
+        },
+        shouldNotBeClosed: function shouldNotBeClosed(el) {
+            if ($(el).attr('data-action') === 'modal-close' || el === this.$close[0]) {
+                return false;
+            } else if ($(el).closest('.modal').length === 0) {
+                return false;
+            }
+
+            return true;
+        }
+    };
+
+    // Inheritance
+    Kube.Modal.inherits(Kube);
+
+    // Plugin
+    Kube.Plugin.create('Modal');
+    Kube.Plugin.autoload('Modal');
+})(Kube);
 
 });
 
-require.register("index.js", function(exports, require, module) {
+require.register("ui.js", function(exports, require, module) {
 'use strict';
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.buildForm = buildForm;
-exports.start = start;
-require('riot');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function buildForm(owner, repo) {
-  require('./components/healthreport');
-  riot.mount('healthreport', { owner: owner, repo: repo });
-}
+var _GHDataCharts = require('./GHDataCharts');
 
-function start() {
-  require('./components/githubform');
-  riot.mount('githubform', { onsubmit: buildForm });
-  //riot.mount('report', {owner: owner, repo: repo});
-}
+var _GHDataCharts2 = _interopRequireDefault(_GHDataCharts);
 
-});
+var _GHDataAPI = require('./GHDataAPI');
 
-;require.register("lib/ghdata-api-client.js", function(exports, require, module) {
-'use strict';
+var _GHDataAPI2 = _interopRequireDefault(_GHDataAPI);
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-exports.GHDataAPIClient = GHDataAPIClient;
-/* SPDX-License-Identifier: MIT */
+var $ = require('jquery');
 
-/**
- * Handles interaction with a GHData server.
- * @constructor
- */
-function GHDataAPIClient(apiUrl, owner, repo, apiVersion) {
-  this.owner = owner || '';
-  this.repo = repo || '';
-  this.url = apiUrl || 'http://' + document.location.hostname + ':5000/';
-  this.apiversion = apiVersion || 'unstable';
-  return this;
-}
+var GHDataDashboard = function () {
+  function GHDataDashboard(state) {
+    _classCallCheck(this, GHDataDashboard);
 
-/* Request Handling
- * Create a friendly wrapper around XMLHttpRequest
---------------------------------------------------------------*/
+    this.state = state || {
+      repo: {},
+      comparedTo: {}
+    };
+    this.ghdata = new _GHDataAPI2.default();
+  }
 
-/**
- * Wraps XMLHttpRequest with many goodies. Credit to SomeKittens on StackOverflow.
- * @param {Object} opts - Stores the url (opts.url), method (opts.method), headers (opts.headers) and query parameters (opt.params). All optional.
- * @returns {Promise} Resolves with XMLHttpResponse.response
- */
-GHDataAPIClient.prototype.request = function (opts) {
-  // Use GHData by default
-  opts.endpoint = opts.endpoint || '';
-  opts.url = opts.url || this.url + this.apiversion + '/' + this.owner + '/' + this.repo + '/' + opts.endpoint;
-  opts.method = opts.method || 'GET';
-  return new Promise(function (resolve, reject) {
-    var xhr = new XMLHttpRequest();
-    xhr.open(opts.method, opts.url);
-    xhr.onload = function () {
-      if (this.status >= 200 && this.status < 300) {
-        resolve(xhr.response);
-      } else {
-        reject({
-          status: this.status,
-          statusText: xhr.statusText
-        });
+  _createClass(GHDataDashboard, [{
+    key: 'addCard',
+    value: function addCard(title, repo, className) {
+      var cardElement = document.createElement('section');
+      if (className) {
+        cardElement.className = className;
       }
-    };
-    xhr.onerror = function () {
-      reject({
-        status: this.status,
-        statusText: xhr.statusText
-      });
-    };
-    if (opts.headers) {
-      Object.keys(opts.headers).forEach(function (key) {
-        xhr.setRequestHeader(key, opts.headers[key]);
+      var titleElement = document.createElement('h1');
+      var repoElement = document.createElement('h2');
+      titleElement.innerHTML = title;
+      repoElement.innerHTML = repo;
+      $('#cards').append(cardElement);
+      $(cardElement).append(titleElement);
+      $(cardElement).append(repoElement);
+      return cardElement;
+    }
+  }, {
+    key: 'renderComparisonForm',
+    value: function renderComparisonForm() {
+      var self = this;
+      if (this.comparisonCard) {
+        this.comparisonCard.outerHTML = '';
+      }
+      this.comparisonCard = this.addCard(null, null, 'unmaterialized');
+      $(this.comparisonCard).append($('#comparison-form-template')[0].innerHTML);
+      $(this.comparisonCard).find('.search').on('keyup', function (e) {
+        if (e.keyCode === 13) {
+          self.renderComparisonRepo(null, self.ghdata.Repo(this.value));
+        }
       });
     }
-    var params = opts.params;
-    // We'll need to stringify if we've been given an object
-    // If we have a string, this is skipped.
-    if (params && (typeof params === 'undefined' ? 'undefined' : _typeof(params)) === 'object') {
-      params = Object.keys(params).map(function (key) {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
-      }).join('&');
+  }, {
+    key: 'renderBaseRepo',
+    value: function renderBaseRepo(repo) {
+      repo = repo || this.state.repo;
+      $('#main-repo-search').val(repo.owner + '/' + repo.name);
+      var activityCard = this.addCard('Activity', '<strong>' + repo.owner + '/' + repo.name + '</strong>');
+      activityCard.innerHTML += $('#base-template')[0].innerHTML;
+      $(activityCard).find('.linechart').each(function (index, element) {
+        var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
+        repo[element.dataset.source]().then(function (data) {
+          console.log(data);
+          _GHDataCharts2.default.LineChart(element, data, title);
+        }, function (error) {
+          _GHDataCharts2.default.NoChart(element, title);
+        });
+      });
+      this.renderComparisonForm();
     }
-    xhr.send(params);
+  }, {
+    key: 'renderComparisonRepo',
+    value: function renderComparisonRepo(compareRepo, baseRepo) {
+      compareRepo = compareRepo || this.state.repo;
+      var activityComparisonCard = this.addCard('Activity', '<strong>' + compareRepo.owner + '/' + compareRepo.name + '</strong> versus <strong>' + baseRepo.owner + '/' + baseRepo.name + '</strong>');
+      activityComparisonCard.innerHTML += $('#base-template')[0].innerHTML;
+      $(activityComparisonCard).find('.linechart').each(function (index, element) {
+        var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
+        compareRepo[element.dataset.source].relativeTo(baseRepo).then(function (data) {
+          console.log(data);
+          _GHDataCharts2.default.ComparisonLineChart(element, data, title, baseRepo.owner + '/' + baseRepo.name);
+        }, function (error) {
+          _GHDataCharts2.default.NoChart(element, title);
+        });
+      });
+      this.renderComparisonForm();
+    }
+  }, {
+    key: 'startSearch',
+    value: function startSearch(url) {
+      var $cards = $('#cards');
+      $cards.html('');
+      this.state.repo = this.ghdata.Repo(url);
+      this.renderBaseRepo();
+    }
+  }]);
+
+  return GHDataDashboard;
+}();
+
+$(document).ready(function () {
+
+  $('.reposearch').on('keyup', function (e) {
+    if (e.keyCode === 13) {
+      window.dashboard = new GHDataDashboard();
+      dashboard.startSearch(this.value);
+    }
   });
-};
-
-/**
- * Wraps the GET requests with the correct options for most GHData calls
- * @param {String} endpoint - Endpoint to send the request to
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with Object created from the JSON returned by GHData
- */
-GHDataAPIClient.prototype.get = function (endpoint, params) {
-  var self = this;
-  return new Promise(function (resolve, request) {
-    self.request({
-      method: 'GET',
-      endpoint: endpoint,
-      params: params
-    }).then(function (response) {
-      // Lets make this thing JSON
-      var result = JSON.parse(response);
-      resolve(result);
-    });
-  });
-};
-
-/* Endpoints
- * Wrap all the API endpoints to make it as simple as possible
---------------------------------------------------------------*/
-
-/**
- * Commits timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.commitsByWeek = function (params) {
-  return this.get('timeseries/commits', params);
-};
-
-/**
- * Forks timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with forks timeeseries object
- */
-GHDataAPIClient.prototype.forksByWeek = function (params) {
-  return this.get('timeseries/forks', params);
-};
-
-/**
- * Stargazers timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.stargazersByWeek = function (params) {
-  return this.get('timeseries/stargazers', params);
-};
-
-/**
- * Issues timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.issuesByWeek = function (params) {
-  return this.get('timeseries/issues', params);
-};
-
-/**
- * Pull Requests timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.pullRequestsByWeek = function (params) {
-  return this.get('timeseries/pulls', params);
-};
-
-/**
- * Pull Requests timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.contributionsByWeek = function (params) {
-  return this.get('timeseries/contributions', params);
-};
-
-/**
- * How quickly after issues are made they are commented on
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.issuesResponseTime = function (params) {
-  return this.get('timeseries/issues/response_time', params);
-};
-
-/**
- * Contributions timeseries
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.contributors = function (params) {
-  return this.get('timeseries/contributors', params);
-};
-
-/**
- * Locations of the committers
- * @param {Object} params - Query string params to pass to the API
- * @returns {Promise} Resolves with commits timeseries object
- */
-GHDataAPIClient.prototype.committerLocations = function (params) {
-  return this.get('commits/locations', params);
-};
-
-});
-
-require.register("posts.tag", function(exports, require, module) {
-riot.tag('posts', '<h1>work</h1>', function(opts) {
-  
 });
 
 });
 
-require.alias("brunch/node_modules/process/browser.js", "process");process = require('process');require.register("___globals___", function(exports, require, module) {
+require.alias("process/browser.js", "process");process = require('process');require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
 
