@@ -9,7 +9,7 @@
       - pull requests
       - issues
       - comments on all 3 (not currently shown)
- - **[Contribution Acceptance](https://wiki.linuxfoundation.org/oss-health-metrics/metrics/contribution-acceptance)**,
+ - {next in line} **[Contribution Acceptance](https://wiki.linuxfoundation.org/oss-health-metrics/metrics/contribution-acceptance)**,
     - code exists
     - on inclusion path
  - Contribution Age,
