@@ -19,6 +19,8 @@ export default class GHDataAPI {
       }
     }
 
+    repo.toString = () => { return repo.owner + '/' + repo.name }
+
     var Endpoint = (endpoint) => {
       var url = this._host + this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
       return function (params, callback) {

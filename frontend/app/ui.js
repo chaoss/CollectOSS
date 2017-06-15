@@ -1,19 +1,54 @@
 import GHDataCharts from './GHDataCharts'
 import GHDataAPI from './GHDataAPI'
-var $ = require('jquery')
+import queryString from 'query-string'
+window.$ = require('jquery')
 
 
 class GHDataDashboard {
 
-
   constructor(state) {
-    this.state = state || {
-      repo: {},
-      comparedTo: {}
+     this.EMPTY_STATE = {
+      comparedTo: []
     }
+    this.STARTING_HTML = $('#cards')[0].innerHTML
+    this.state = state || this.EMPTY_STATE
     this.ghdata = new GHDataAPI()
+    if (/repo/.test(location.search) && !state) {
+      console.log('State from URL')
+      this.setStateFromURL()
+    }
+    window.addEventListener('popstate', (e) =>  {
+      this.setStateFromURL()
+    })
   }
 
+
+  setStateFromURL() {
+    let parsed = queryString.parse(location.search, {arrayFormat: 'bracket'})
+    let state = {
+      comparedTo: []
+    }
+    state.repo = this.ghdata.Repo(parsed.repo.replace(' ', '/'))
+    if (parsed.comparedTo) {
+      parsed.comparedTo.forEach((repo) => {
+        state.comparedTo.push(this.ghdata.Repo(repo.replace(' ', '/')))
+      })
+    }
+    this.state = state 
+    this.render()
+  }
+
+
+  pushState(state, title) {
+    this.state = state || this.state
+    title = title || this.state.repo.owner + '/' + this.state.repo.name
+    let queryString = '?repo=' + this.state.repo.owner + '+' + this.state.repo.name
+    this.state.comparedTo.forEach((repo) => {
+      queryString += '&comparedTo[]=' + repo.owner + '+' + repo.name
+    })
+    history.pushState(null, title, queryString)
+    document.title = title
+  }
 
 
   addCard(title, repo, className) {
@@ -31,6 +66,7 @@ class GHDataDashboard {
     return cardElement
   }
 
+
   renderComparisonForm() {
     var self = this
     if (this.comparisonCard) {
@@ -40,10 +76,14 @@ class GHDataDashboard {
     $(this.comparisonCard).append($('#comparison-form-template')[0].innerHTML)
     $(this.comparisonCard).find('.search').on('keyup', function (e) {
       if (e.keyCode === 13) {
-        self.renderComparisonRepo(null, self.ghdata.Repo(this.value))
+        var comparedRepo = self.ghdata.Repo(this.value)
+        self.state.comparedTo.push(comparedRepo)
+        self.pushState()
+        self.renderComparisonRepo(null, comparedRepo)
       }
     })
   }
+
 
   renderBaseRepo(repo) {
     repo = repo || this.state.repo
@@ -80,24 +120,43 @@ class GHDataDashboard {
   }
 
 
-
-  startSearch(url) {
+  render(state) {
+    state = state || this.state
     var $cards = $('#cards')
     $cards.html('')
-    this.state.repo = this.ghdata.Repo(url)
     this.renderBaseRepo()
+    state.comparedTo.forEach((repo) => {
+      this.renderComparisonRepo(null, repo)
+    })
   }
 
 
+  startSearch(url) {
+    this.state = this.EMPTY_STATE
+    this.state.repo = this.ghdata.Repo(url)
+    this.pushState()
+    this.render()
+  }
+
+
+  reset() {
+    var self = this
+    $('#cards').html(this.STARTING_HTML).find('.reposearch').on('keyup', function (e) {
+      if (e.keyCode === 13) {
+        self.startSearch(this.value)
+      }
+    })
+  }
 
 }
 
 
 $(document).ready(function () {
 
+  window.dashboard = new GHDataDashboard()
+
   $('.reposearch').on('keyup', function (e) {
     if (e.keyCode === 13) {
-      window.dashboard = new GHDataDashboard()
       dashboard.startSearch(this.value)
     }
   })
