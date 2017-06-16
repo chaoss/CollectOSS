@@ -3,7 +3,7 @@ import datetime
 from dateutil.parser import parse
 import pandas as pd
 import github
-
+import json
 
 class GitHubAPI(object):
     """

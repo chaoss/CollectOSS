@@ -299,10 +299,7 @@ def run():
                             }
                         ]
     """
-    @app.route('/{}/<owner>/<repo>/timeseries/tags'.format(GHDATA_API_VERSION))
-    def tags(owner, repo):
-            return Response(response=github.tags(owner, repo).to_json(), status=200, mimetype="application/json")
-
+    addTimeseries(app, github.tags, 'tags')
 
     # Contribution Trends
     """
