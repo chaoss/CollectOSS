@@ -51,7 +51,7 @@ def addTimeseries(app, function, endpoint):
     """
     addMetric(app, function, 'timeseries/{}'.format(endpoint))
     app.route('/{}/<owner>/<repo>/timeseries/{}/relative_to/<ownerRelativeTo>/<repoRelativeTo>'.format(GHDATA_API_VERSION, endpoint))(flaskify(ghdata.util.makeRelative(function)))
-      
+
 
 
 def read_config(parser, section, name, environment_variable, default):
@@ -277,6 +277,32 @@ def run():
                         ]
     """
     addMetric(app, ghtorrent.pull_acceptance_rate, 'pulls/acceptance_rate')
+
+    """
+    @api {get} /:owner/:repo/timeseries/tags Tags release timeseries
+    @apiDescription Timeseries of tags
+    @apiName Tags
+    @apiGroup Timeseries
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "date": "2015-01-01T00:00:00.000Z",
+                                "release": 0.5
+                            },
+                            {
+                                "release": "2015-01-08T00:00:00.000Z",
+                                "rate": 0.5.1
+                            }
+                        ]
+    """
+    @app.route('/{}/<owner>/<repo>/timeseries/tags'.format(GHDATA_API_VERSION))
+    def tags(owner, repo):
+            return Response(response=github.tags(owner, repo).to_json(), status=200, mimetype="application/json")
+
 
     # Contribution Trends
     """

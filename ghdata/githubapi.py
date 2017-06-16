@@ -76,3 +76,21 @@ class GitHubAPI(object):
             if num >= threshold:
                 bus_factor = pd.Series(i, index=["Bus Factor"])
                 return bus_factor
+
+    def tags(self, owner, repo):
+        """
+        Returns dates and names of tags
+
+        :param owner: repo owner username
+        :param repo: repo name
+        """
+
+        tags = self.__api.get_repo((owner + "/" + repo)).get_tags()
+        tags_list = []
+
+        for i in tags:
+            commit = json.loads(json.dumps(i.commit.raw_data))
+            date = commit['commit']['author']['date']
+            tags_list.append({'date' : date, 'release' : i.name})
+
+        return pd.DataFrame(tags_list)
