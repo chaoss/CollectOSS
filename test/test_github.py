@@ -20,3 +20,6 @@ def test_bus_factor(github):
 
 def test_best_case_bus_factor(github):
     assert github.bus_factor("OSSHealth", "ghdata",start="1-1-17", end="5-12-17", best=True).isin(["9"]).any
+
+def test_tags(github):
+    assert github.tags("OSSHealth", "ghdata").isin(["v0.2"]).any
