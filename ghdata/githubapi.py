@@ -18,7 +18,7 @@ class GitHubAPI(object):
         self.GITUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
-    def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50, best=False):
+    def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
         """
         Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
 
@@ -28,7 +28,6 @@ class GitHubAPI(object):
         :param start: optional; start time for analysis
         :param end: optional; end time for analysis
         :param threshold: Default 50;
-        :param best: Default False; If true, sums from lowest to highestn
         """
 
         if start != None:
@@ -68,14 +67,23 @@ class GitHubAPI(object):
 
         df = df.groupby(['userid']).userid.count() / df.groupby(['userid']).userid.count().sum() * 100
 
-        df = df.sort_values(ascending=best)
-
         i = 0
+        j = 0
         for num in df.cumsum():
             i = i + 1
             if num >= threshold:
-                bus_factor = pd.Series(i, index=["Bus Factor"])
-                return bus_factor
+                worst = i
+                break
+
+        for num in df.sort_values(ascending=True).cumsum():
+            j = j + 1
+            if num >= threshold:
+                best = j
+                break
+
+        bus_factor = [{'worst': worst, 'best' : best}]
+
+        return pd.DataFrame(bus_factor)
 
     def tags(self, owner, repo):
         """
