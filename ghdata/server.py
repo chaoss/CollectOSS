@@ -447,11 +447,6 @@ def run():
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
-    @apiParam {String} filename: optional; file or directory for function to run on
-    @apiParam {String} start: optional; start time for analysis
-    @apiParam {String} end: optional; end time for analysis
-    @apiParam {String} threshold: Default 50;
-    @apiParam {String} best: Default False; If true, sums from lowest to highest
 
     @apiSuccessExample {json} Success-Response:
                         [
@@ -461,11 +456,7 @@ def run():
                             }
                         ]
     """
-    @app.route('/{}/<owner>/<repo>/bus_factor'.format(GHDATA_API_VERSION))
-    def bus_factor(owner,repo):
-        kwargs = request.args.to_dict()
-        return Response(response=github.bus_factor(owner, repo, **kwargs).to_json(), status=200, mimetype="application/json")
-
+    addMetric(app, github.bus_factor, 'bus_factor')
 
 
     if (debugmode):
