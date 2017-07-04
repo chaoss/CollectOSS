@@ -2526,9 +2526,9 @@ var _GHDataAPI = require('./GHDataAPI');
 
 var _GHDataAPI2 = _interopRequireDefault(_GHDataAPI);
 
-var _queryString = require('query-string');
+var _querystring = require('querystring');
 
-var _queryString2 = _interopRequireDefault(_queryString);
+var _querystring2 = _interopRequireDefault(_querystring);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2562,7 +2562,7 @@ var GHDataDashboard = function () {
     value: function setStateFromURL() {
       var _this2 = this;
 
-      var parsed = _queryString2.default.parse(location.search, { arrayFormat: 'bracket' });
+      var parsed = _querystring2.default.parse(location.search, { arrayFormat: 'bracket' });
       var state = {
         comparedTo: []
       };
@@ -2705,7 +2705,8 @@ $(document).ready(function () {
 
 });
 
-require.alias("process/browser.js", "process");process = require('process');require.register("___globals___", function(exports, require, module) {
+require.alias("process/browser.js", "process");
+require.alias("querystring-es3/index.js", "querystring");process = require('process');require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
 

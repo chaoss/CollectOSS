@@ -1,6 +1,6 @@
 import GHDataCharts from './GHDataCharts'
 import GHDataAPI from './GHDataAPI'
-import queryString from 'query-string'
+import queryString from 'querystring'
 window.$ = require('jquery')
 
 
@@ -34,7 +34,7 @@ class GHDataDashboard {
         state.comparedTo.push(this.ghdata.Repo(repo.replace(' ', '/')))
       })
     }
-    this.state = state 
+    this.state = state
     this.render()
   }
 
