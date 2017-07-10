@@ -43,6 +43,8 @@ export default class GHDataAPI {
     repo.issues  = Timeseries('issues')
     repo.pulls   = Timeseries('pulls')
     repo.stars   = Timeseries('stargazers')
+    repo.tags    = Timeseries('tags')
+
 
     repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate')
     repo.issuesResponseTime  = Endpoint('issues/response_time')
