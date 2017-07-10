@@ -39,6 +39,7 @@ export default class GHDataCharts {
       x_accessor: 'date',
       y_accessor: Object.keys(data[0]).slice(1),
       target: selector,
+      legend: Object.keys(data[0]).slice(1)
     })
   }
 
