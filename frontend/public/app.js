@@ -210,6 +210,7 @@ var GHDataAPI = function () {
       repo.issues = Timeseries('issues');
       repo.pulls = Timeseries('pulls');
       repo.stars = Timeseries('stargazers');
+      repo.tags = Timeseries('tags');
 
       repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate');
       repo.issuesResponseTime = Endpoint('issues/response_time');
@@ -299,7 +300,8 @@ var GHDataCharts = function () {
         height: 200,
         x_accessor: 'date',
         y_accessor: Object.keys(data[0]).slice(1),
-        target: selector
+        target: selector,
+        legend: Object.keys(data[0]).slice(1)
       });
     }
   }, {
@@ -2526,14 +2528,11 @@ var _GHDataAPI = require('./GHDataAPI');
 
 var _GHDataAPI2 = _interopRequireDefault(_GHDataAPI);
 
-var _querystring = require('querystring');
-
-var _querystring2 = _interopRequireDefault(_querystring);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var queryString = require('query-string');
 window.$ = require('jquery');
 
 var GHDataDashboard = function () {
@@ -2562,7 +2561,7 @@ var GHDataDashboard = function () {
     value: function setStateFromURL() {
       var _this2 = this;
 
-      var parsed = _querystring2.default.parse(location.search, { arrayFormat: 'bracket' });
+      var parsed = queryString.parse(location.search, { arrayFormat: 'bracket' });
       var state = {
         comparedTo: []
       };

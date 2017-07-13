@@ -1,6 +1,6 @@
 import GHDataCharts from './GHDataCharts'
 import GHDataAPI from './GHDataAPI'
-import queryString from 'querystring'
+const queryString = require('query-string');
 window.$ = require('jquery')
 
 
