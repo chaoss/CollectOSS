@@ -1,9 +1,9 @@
 
-import datetime
+import json
+import re
 from dateutil.parser import parse
 import pandas as pd
 import github
-import json
 
 class GitHubAPI(object):
     """
@@ -85,12 +85,13 @@ class GitHubAPI(object):
 
         return pd.DataFrame(bus_factor)
 
-    def tags(self, owner, repo):
+    def tags(self, owner, repo, raw=False):
         """
         Returns dates and names of tags
 
         :param owner: repo owner username
         :param repo: repo name
+        :param raw: Default False; Returns list of dicts
         """
 
         tags = self.__api.get_repo((owner + "/" + repo)).get_tags()
@@ -101,4 +102,27 @@ class GitHubAPI(object):
             date = commit['commit']['author']['date']
             tags_list.append({'date' : date, 'release' : i.name})
 
-        return pd.DataFrame(tags_list)
+        if raw:
+            return tags_list
+        else:
+            return pd.DataFrame(tags_list)
+
+    def major_tags(self, owner, repo):
+        """
+        Returns dates and names of major version (according to semver) tags. May return blank if no major versions
+
+        :param owner: repo owner username
+        :param repo: repo name
+        """
+        versions = self.tags(owner, repo, raw=True)
+
+        major_versions = []
+        pattern = re.compile("[0-9]+\.[0]+\.[0]+$")
+        for i in versions:
+            try:
+                if re.search(pattern, i["release"]) != None:
+                    major_versions.append(i)
+            except AttributeError:
+                pass
+
+        return pd.DataFrame(major_versions)
