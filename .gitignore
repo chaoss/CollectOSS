@@ -9,8 +9,6 @@
 *.pyc
 *.egg-info
 .vscode
-*.min
-*.map
 
 # Packages #
 ############
