@@ -294,12 +294,36 @@ def run():
                                 "release": 0.5
                             },
                             {
-                                "release": "2015-01-08T00:00:00.000Z",
-                                "rate": 0.5.1
+                                "date": "2015-01-08T00:00:00.000Z",
+                                "release": 0.5.1
                             }
                         ]
     """
     addTimeseries(app, github.tags, 'tags')
+
+    """
+    @api {get} /:owner/:repo/timeseries/tags/major Tags for major releases timeseries
+    @apiDescription Timeseries of Major release tags
+    @apiName Major Release Tags
+    @apiGroup Timeseries
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "date": "2015-01-01T00:00:00.000Z",
+                                "release": 1.0.0
+                            },
+                            {
+                                "release": "2015-01-08T00:00:00.000Z",
+                                "rate": 2.0.0
+                            }
+                        ]
+    """
+    addTimeseries(app, github.major_tags, 'tags/major')
+
 
     # Contribution Trends
     """
