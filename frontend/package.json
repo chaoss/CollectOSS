@@ -13,6 +13,7 @@
     "d3": "^4.9.1",
     "jquery": "^3.2.1",
     "metrics-graphics": "^2.11.0",
+    "query-string": "^4.3.4",
     "stylus-brunch": "^2.10.0"
   },
   "devDependencies": {
