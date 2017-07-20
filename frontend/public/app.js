@@ -211,13 +211,15 @@ var GHDataAPI = function () {
       repo.pulls = Timeseries('pulls');
       repo.stars = Timeseries('stargazers');
       repo.tags = Timeseries('tags');
+      repo.uniqueCommitters = Timeseries('unique_committers');
 
       repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate');
       repo.issuesResponseTime = Endpoint('issues/response_time');
       repo.contributors = Endpoint('contributors');
       repo.contributions = Endpoint('contributions');
       repo.committerLocations = Endpoint('committer_locations');
-      repo.linkingWebsites = Endpoint('linkingWebsites');
+      repo.communityAge = Endpoint('community_age');
+      repo.linkingWebsites = Endpoint('linking_websites');
       repo.busFactor = Endpoint('bus_factor');
 
       return repo;
@@ -302,6 +304,31 @@ var GHDataCharts = function () {
         y_accessor: Object.keys(data[0]).slice(1),
         target: selector,
         legend: Object.keys(data[0]).slice(1)
+      });
+    }
+  }, {
+    key: 'Timeline',
+    value: function Timeline(selector, data, title) {
+      var dataCleaned = [];
+      var legend = [];
+      for (var event in data) {
+        if (data.hasOwnProperty(event)) {
+          dataCleaned.push([{
+            date: new Date(data[event]),
+            value: 10
+          }]);
+          legend.push(event);
+        }
+      }
+      console.log(dataCleaned);
+      return _metricsGraphics2.default.data_graphic({
+        title: title || 'Timeline',
+        data: dataCleaned,
+        full_width: true,
+        height: 200,
+        x_accessor: 'date',
+        legend: legend,
+        target: selector
       });
     }
   }, {
@@ -2627,15 +2654,26 @@ var GHDataDashboard = function () {
       $('#main-repo-search').val(repo.owner + '/' + repo.name);
       var activityCard = this.addCard('Activity', '<strong>' + repo.owner + '/' + repo.name + '</strong>');
       activityCard.innerHTML += $('#base-template')[0].innerHTML;
+
       $(activityCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         repo[element.dataset.source]().then(function (data) {
-          console.log(data);
           _GHDataCharts2.default.LineChart(element, data, title);
         }, function (error) {
           _GHDataCharts2.default.NoChart(element, title);
         });
       });
+
+      $(activityCard).find('.timeline').each(function (index, element) {
+        var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
+        repo[element.dataset.source]().then(function (data) {
+          console.log(data);
+          _GHDataCharts2.default.Timeline(element, data, title);
+        }, function (error) {
+          _GHDataCharts2.default.NoChart(element, title);
+        });
+      });
+
       this.renderComparisonForm();
     }
   }, {
@@ -2704,8 +2742,7 @@ $(document).ready(function () {
 
 });
 
-require.alias("process/browser.js", "process");
-require.alias("querystring-es3/index.js", "querystring");process = require('process');require.register("___globals___", function(exports, require, module) {
+require.alias("process/browser.js", "process");process = require('process');require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
 

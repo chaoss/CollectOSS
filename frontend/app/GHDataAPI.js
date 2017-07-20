@@ -44,14 +44,15 @@ export default class GHDataAPI {
     repo.pulls   = Timeseries('pulls')
     repo.stars   = Timeseries('stargazers')
     repo.tags    = Timeseries('tags')
-
+    repo.uniqueCommitters = Timeseries('unique_committers')
 
     repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate')
     repo.issuesResponseTime  = Endpoint('issues/response_time')
     repo.contributors        = Endpoint('contributors')
     repo.contributions       = Endpoint('contributions')
     repo.committerLocations  = Endpoint('committer_locations')
-    repo.linkingWebsites     = Endpoint('linkingWebsites')
+    repo.communityAge        = Endpoint('community_age')
+    repo.linkingWebsites     = Endpoint('linking_websites')
     repo.busFactor           = Endpoint('bus_factor')
 
     return repo

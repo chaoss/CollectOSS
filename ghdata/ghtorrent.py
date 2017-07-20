@@ -387,3 +387,55 @@ class GHTorrent(object):
 
         roles = contributors.apply(classify, axis=1)
         return roles
+
+    def community_age(self, owner, repo=None):
+        """
+        Information helpful to determining a community's age
+
+        For now, returns the date of the first of each type of action (fork, pull request, etc.)
+        """
+
+        repoid = self.repoid(owner, repo)
+        communityAgeSQL = s.sql.text("""
+        SELECT DATE(proj.created_at) AS "project",
+               DATE(commits.created_at) AS "commit", 
+               DATE(frk.created_at) AS "fork",
+               DATE(iss.created_at) AS "issue",
+               DATE(pr.created_at) AS "pull_request"
+
+        FROM commits
+
+        LEFT JOIN (SELECT forked_from_id AS "repo_id", created_at AS "created_at" FROM forks WHERE forks.forked_from_id = :repoid ORDER BY created_at DESC LIMIT 1) AS frk
+        ON frk.repo_id = commits.project_id
+
+        LEFT JOIN (SELECT repo_id AS "repo_id", created_at AS "created_at" FROM issues WHERE issues.repo_id = :repoid ORDER BY created_at DESC LIMIT 1) AS iss
+        ON iss.repo_id = commits.project_id
+
+        LEFT JOIN (SELECT pull_request_history.created_at AS "created_at", pull_requests.base_repo_id AS "repo_id" FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged' ORDER BY pull_request_history.created_at DESC LIMIT 1) AS pr
+        ON pr.repo_id = commits.project_id
+
+        LEFT JOIN (SELECT projects.id AS "repo_id", created_at AS "created_at" FROM projects WHERE projects.id = :repoid) AS proj
+        ON proj.repo_id = commits.project_id
+
+        WHERE commits.project_id = :repoid
+        ORDER BY commits.created_at DESC
+        LIMIT 1
+        """)
+
+        return pd.read_sql(communityAgeSQL, self.db, params={"repoid": str(repoid)})
+
+    def unique_committers(self, owner, repo=None):
+        repoid = self.repoid(owner, repo)
+        uniqueCommittersSQL = s.sql.text("""
+        SELECT unique_committers.created_at AS "date", MAX(@number_of_committers:=@number_of_committers+1) total_unique_committers
+        FROM (
+            SELECT author_id, MIN(DATE(created_at)) created_at 
+            FROM commits 
+            WHERE project_id = :repoid
+            GROUP BY author_id 
+            ORDER BY created_at ASC) AS unique_committers, 
+        (SELECT @number_of_committers:= 0) AS number_of_committers
+        GROUP BY DATE(unique_committers.created_at)
+        """)
+        return pd.read_sql(uniqueCommittersSQL, self.db, params={"repoid": str(repoid)})
+

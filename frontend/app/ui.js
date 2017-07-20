@@ -90,15 +90,26 @@ class GHDataDashboard {
     $('#main-repo-search').val(repo.owner + '/' + repo.name)
     var activityCard = this.addCard('Activity', '<strong>' + repo.owner + '/' + repo.name + '</strong>')
     activityCard.innerHTML += $('#base-template')[0].innerHTML
+
     $(activityCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       repo[element.dataset.source]().then((data) => {
-        console.log(data)
         GHDataCharts.LineChart(element, data, title)
       }, (error) => {
         GHDataCharts.NoChart(element, title)
       })
     })
+
+    $(activityCard).find('.timeline').each((index, element) => {
+      let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
+      repo[element.dataset.source]().then((data) => {
+        console.log(data)
+        GHDataCharts.Timeline(element, data, title)
+      }, (error) => {
+        GHDataCharts.NoChart(element, title)
+      })
+    })
+
     this.renderComparisonForm()
   }
 

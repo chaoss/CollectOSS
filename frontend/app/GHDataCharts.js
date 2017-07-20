@@ -43,6 +43,30 @@ export default class GHDataCharts {
     })
   }
 
+  static Timeline (selector, data, title) {
+    var dataCleaned = []
+    var legend = []
+    for (var event in data) {
+      if (data.hasOwnProperty(event)) {
+        dataCleaned.push([{
+          date: new Date(data[event]),
+          value: 10
+        }])
+        legend.push(event)
+      }
+    }
+    console.log(dataCleaned)
+    return MG.data_graphic({
+      title: title || 'Timeline',
+      data: dataCleaned,
+      full_width: true,
+      height: 200,
+      x_accessor: 'date',
+      legend: legend,
+      target: selector
+    })
+  }
+
   static NoChart (selector, title) {
     return MG.data_graphic({
       title: "Missing Data",
