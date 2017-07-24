@@ -166,7 +166,7 @@ var GHDataAPI = function () {
     _classCallCheck(this, GHDataAPI);
 
     this._version = version || 'unstable';
-    this._host = hostURL || 'http://localhost:5000/';
+    this._host = hostURL || 'http://' + window.location.hostname + ':5000/';
   }
 
   _createClass(GHDataAPI, [{
@@ -294,17 +294,38 @@ var GHDataCharts = function () {
   }, {
     key: 'LineChart',
     value: function LineChart(selector, data, title) {
-      GHDataCharts.convertDates(data);
-      return _metricsGraphics2.default.data_graphic({
+      var data_graphic_config = {
         title: title || 'Activity',
         data: data,
         full_width: true,
         height: 200,
         x_accessor: 'date',
         y_accessor: Object.keys(data[0]).slice(1),
-        target: selector,
-        legend: Object.keys(data[0]).slice(1)
-      });
+        target: selector
+      };
+
+      if (Object.keys(data[0]).slice(1).length > 1) {
+        var legend = document.createElement('div');
+        legend.style.position = 'relative';
+        legend.style.margin = '0';
+        legend.style.padding = '0';
+        legend.style.height = '0';
+        legend.style.top = '32px';
+        legend.style.left = '50%';
+        legend.style.fontSize = '14px';
+        legend.style.fontWeight = 'bold';
+        legend.style.opacity = '0.4';
+        $(selector).append(legend);
+        data_graphic_config.legend = Object.keys(data[0]).slice(1), data_graphic_config.legend_target = legend;
+        $(selector).hover(function () {
+          legend.style.display = 'none';
+        }, function () {
+          legend.style.display = 'block';
+        });
+      }
+
+      GHDataCharts.convertDates(data);
+      return _metricsGraphics2.default.data_graphic(data_graphic_config);
     }
   }, {
     key: 'Timeline',

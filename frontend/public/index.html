@@ -36,21 +36,28 @@
   <div id="base-template" class="hidden"/>
     <div class="row">
       <div class="col col-6">
-        <div class="linechart" data-source="commits"></div>
+        <div class="linechart" data-source="commits" data-title="Commits / Week"></div>
       </div>
       <div class="col col-6">
-        <div class="linechart" data-source="forks"></div>
+        <div class="linechart" data-source="forks" data-title="Forks / Week"></div>
       </div>
     </div>
     <div class="row">
       <div class="col col-6">
-        <div class="linechart" data-source="pulls" data-title="Pull Requests"></div>
+        <div class="linechart" data-source="pulls" data-title="Pull Requests / Week"></div>
       </div>
       <div class="col col-6">
-        <div class="linechart" data-source="issues"></div>
+        <div class="linechart" data-source="issues" data-title="Issues / Week"></div>
       </div>
     </div>
-        <div class="linechart" data-source="uniqueCommitters"></div>
+    <div class="row">
+      <div class="col col-6">
+        <div class="linechart" data-source="stars" data-title="Stars / Week"></div>
+      </div>
+      <div class="col col-6">
+        <div class="linechart" data-source="uniqueCommitters" data-title="Unique Committers"></div>
+      </div>
+    </div>
   </div>
 
   <div id="comparison-form-template"/>
