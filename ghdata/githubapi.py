@@ -4,6 +4,7 @@ import re
 from dateutil.parser import parse
 import pandas as pd
 import github
+import requests
 
 class GitHubAPI(object):
     """
@@ -15,7 +16,7 @@ class GitHubAPI(object):
 
         :param api_key: GitHub API key
         """
-        self.GITUB_API_KEY = api_key
+        self.GITHUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
     def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
@@ -94,18 +95,48 @@ class GitHubAPI(object):
         :param raw: Default False; Returns list of dicts
         """
 
-        tags = self.__api.get_repo((owner + "/" + repo)).get_tags()
+        cursor = "null"
         tags_list = []
+        url = "https://api.github.com/graphql"
 
-        for i in tags:
-            commit = json.loads(json.dumps(i.commit.raw_data))
-            date = commit['commit']['author']['date']
-            tags_list.append({'date' : date, 'release' : i.name})
-
-        if raw:
-            return tags_list
-        else:
-            return pd.DataFrame(tags_list)
+        while True:
+            query = {"query" :
+                     """
+                    query {
+                      repository(owner: "%s", name: "%s") {
+                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
+                          edges {
+                            cursor
+                            tag: node {
+                              name
+                              target {
+                                ... on Tag {
+                                  tagger {
+                                    date
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+            """ % (owner, repo, cursor)
+            }
+            r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
+            raw = r.text
+            data = json.loads(json.loads(json.dumps(raw)))
+            tags = data['data']['repository']['tags']['edges']
+            for i in tags:
+                try:
+                    tags_list.append({'date' : i['tag']['target']['tagger']['date'], 'release' : i['tag']['name']})
+                except KeyError:
+                    pass
+            if data['data']['repository']['tags']['edges'] == []:
+                break
+            else:
+                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
+        return pd.DataFrame(tags_list)
 
     def major_tags(self, owner, repo):
         """
@@ -114,11 +145,51 @@ class GitHubAPI(object):
         :param owner: repo owner username
         :param repo: repo name
         """
-        versions = self.tags(owner, repo, raw=True)
+        cursor = "null"
+        tags_list = []
+        url = "https://api.github.com/graphql"
+
+        while True:
+            query = {"query" :
+                     """
+                    query {
+                      repository(owner: "%s", name: "%s") {
+                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
+                          edges {
+                            cursor
+                            tag: node {
+                              name
+                              target {
+                                ... on Tag {
+                                  tagger {
+                                    date
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+            """ % (owner, repo, cursor)
+            }
+            r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
+            raw = r.text
+            data = json.loads(json.loads(json.dumps(raw)))
+            tags = data['data']['repository']['tags']['edges']
+            for i in tags:
+                try:
+                    tags_list.append({'date' : i['tag']['target']['tagger']['date'], 'release' : i['tag']['name']})
+                except KeyError:
+                    pass
+            if data['data']['repository']['tags']['edges'] == []:
+                break
+            else:
+                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
 
         major_versions = []
         pattern = re.compile("[0-9]+\.[0]+\.[0]+$")
-        for i in versions:
+        for i in tags_list:
             try:
                 if re.search(pattern, i["release"]) != None:
                     major_versions.append(i)
