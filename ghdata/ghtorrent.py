@@ -36,7 +36,7 @@ class GHTorrent(object):
                 SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY date(created_at), {2}""".format(table, repo_col)
+                GROUP BY date(created_at), {2}""".format(table, repo_col, user_col)
 
         else:
             return """
