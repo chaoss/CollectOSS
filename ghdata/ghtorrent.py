@@ -20,20 +20,30 @@ class GHTorrent(object):
         except Exception as e:
             print("Could not connect to database.\nError: " + str(e))
 
-    def __single_table_count_by_date(self, table, repo_col='project_id'):
+    def __single_table_count_by_date(self, table, repo_col='project_id', user_col='author_id', raw=False):
         """
         Generates query string to count occurances of rows per date for a given table.
         External input must never be sent to this function, it is for internal use only.
 
         :param table: The table in GHTorrent to generate the string for
         :param repo_col: The column in that table with the project ids
+        :param user_col: The column in that table with the user ids
+        :param raw: Default false; Returns data grouped by user and date
         :return: Query string
         """
-        return """
-            SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
-            FROM {0}
-            WHERE {1} = :repoid
-            GROUP BY YEARWEEK(created_at)""".format(table, repo_col)
+        if raw:
+            return """
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
+                FROM {0}
+                WHERE {1} = :repoid
+                GROUP BY date(created_at), {2}""".format(table, repo_col)
+
+        else:
+            return """
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
+                FROM {0}
+                WHERE {1} = :repoid
+                GROUP BY YEARWEEK(created_at)""".format(table, repo_col)
 
 
     def repoid(self, owner_or_repoid, repo=None):
@@ -71,7 +81,7 @@ class GHTorrent(object):
 
 
     # Basic timeseries queries
-    def stargazers(self, owner, repo=None):
+    def stargazers(self, owner, repo=None, raw=False):
         """
         Timeseries of when people starred a repo
 
@@ -79,10 +89,10 @@ class GHTorrent(object):
         :return: DataFrame with stargazers/day
         """
         repoid = self.repoid(owner, repo)
-        stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id'))
+        stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id', 'user_id', raw=False))
         return pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
 
-    def commits(self, owner, repo=None):
+    def commits(self, owner, repo=None, raw=False):
         """
         Timeseries of all the commits on a repo
 
@@ -90,10 +100,10 @@ class GHTorrent(object):
         :return: DataFrame with commits/day
         """
         repoid = self.repoid(owner, repo)
-        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits'))
+        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', raw=raw))
         return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
 
-    def forks(self, owner, repo=None):
+    def forks(self, owner, repo=None, raw=False):
         """
         Timeseries of when a repo's forks were created
 
@@ -101,10 +111,10 @@ class GHTorrent(object):
         :return: DataFrame with forks/day
         """
         repoid = self.repoid(owner, repo)
-        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from'))
+        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', raw=raw))
         return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
-    def issues(self, owner, repo=None):
+    def issues(self, owner, repo=None, raw=False):
         """
         Timeseries of when people starred a repo
 
@@ -112,7 +122,7 @@ class GHTorrent(object):
         :return: DataFrame with issues/day
         """
         repoid = self.repoid(owner, repo)
-        issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id'))
+        issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id', 'reporter_id', raw=raw))
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
     def issues_with_close(self, owner, repo=None):
@@ -398,7 +408,7 @@ class GHTorrent(object):
         repoid = self.repoid(owner, repo)
         communityAgeSQL = s.sql.text("""
         SELECT DATE(proj.created_at) AS "project",
-               DATE(commits.created_at) AS "commit", 
+               DATE(commits.created_at) AS "commit",
                DATE(frk.created_at) AS "fork",
                DATE(iss.created_at) AS "issue",
                DATE(pr.created_at) AS "pull_request"
@@ -429,13 +439,12 @@ class GHTorrent(object):
         uniqueCommittersSQL = s.sql.text("""
         SELECT unique_committers.created_at AS "date", MAX(@number_of_committers:=@number_of_committers+1) total_unique_committers
         FROM (
-            SELECT author_id, MIN(DATE(created_at)) created_at 
-            FROM commits 
+            SELECT author_id, MIN(DATE(created_at)) created_at
+            FROM commits
             WHERE project_id = :repoid
-            GROUP BY author_id 
-            ORDER BY created_at ASC) AS unique_committers, 
+            GROUP BY author_id
+            ORDER BY created_at ASC) AS unique_committers,
         (SELECT @number_of_committers:= 0) AS number_of_committers
         GROUP BY DATE(unique_committers.created_at)
         """)
         return pd.read_sql(uniqueCommittersSQL, self.db, params={"repoid": str(repoid)})
-
