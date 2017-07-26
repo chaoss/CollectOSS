@@ -271,6 +271,36 @@ var GHDataCharts = function () {
       return data;
     }
   }, {
+    key: 'rollingAverage',
+    value: function rollingAverage(data, windowSizeInHours) {
+      var halfWindow = windowSizeInHours * 60 * 60 * 1000 / 2;
+      var keys = Object.keys(data[0]);
+      var rolling = data.map(function (elem) {
+        var after = new Date(elem.date).getTime() - halfWindow;
+        var before = new Date(elem.date).getTime() + halfWindow;
+        var average = {};
+        data.forEach(function (toAverage) {
+          var testDate = new Date(toAverage.date).getTime();
+          if (testDate >= after && testDate <= before) {
+            keys.forEach(function (prop) {
+              if (!isNaN(toAverage[prop] / 2.0) && average[prop]) {
+                average[prop] = (toAverage[prop] + average[prop]) / 2.0;
+              } else if (!isNaN(toAverage[prop] / 2.0)) {
+                average[prop] = toAverage[prop];
+              }
+            });
+          }
+        });
+        for (var prop in average) {
+          if (average.hasOwnProperty(prop)) {
+            elem[prop + '_average'] = average[prop];
+          }
+        }
+        return elem;
+      });
+      return rolling;
+    }
+  }, {
     key: 'ComparisonLineChart',
     value: function ComparisonLineChart(selector, data, title, baseline) {
       GHDataCharts.convertDates(data);
@@ -293,28 +323,35 @@ var GHDataCharts = function () {
     }
   }, {
     key: 'LineChart',
-    value: function LineChart(selector, data, title) {
+    value: function LineChart(selector, data, title, rollingAverage) {
       var data_graphic_config = {
         title: title || 'Activity',
         data: data,
         full_width: true,
         height: 200,
         x_accessor: 'date',
-        y_accessor: Object.keys(data[0]).slice(1),
         target: selector
       };
 
-      if (Object.keys(data[0]).slice(1).length > 1) {
+      if (rollingAverage) {
+        data_graphic_config.data = GHDataCharts.rollingAverage(data, 180 * 24);
+        console.log(data_graphic_config.data);
+        data_graphic_config.colors = ['#CCC', '#FF3647'];
+      }
+
+      data_graphic_config.y_accessor = Object.keys(data_graphic_config.data[0]).slice(1);
+
+      if (Object.keys(data_graphic_config.data[0]).slice(1).length > 1) {
         var legend = document.createElement('div');
         legend.style.position = 'relative';
         legend.style.margin = '0';
         legend.style.padding = '0';
         legend.style.height = '0';
-        legend.style.top = '32px';
-        legend.style.left = '50%';
+        legend.style.top = '31px';
+        legend.style.left = '55px';
         legend.style.fontSize = '14px';
         legend.style.fontWeight = 'bold';
-        legend.style.opacity = '0.4';
+        legend.style.opacity = '0.8';
         $(selector).append(legend);
         data_graphic_config.legend = Object.keys(data[0]).slice(1), data_graphic_config.legend_target = legend;
         $(selector).hover(function () {
@@ -2679,7 +2716,7 @@ var GHDataDashboard = function () {
       $(activityCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         repo[element.dataset.source]().then(function (data) {
-          _GHDataCharts2.default.LineChart(element, data, title);
+          _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined');
         }, function (error) {
           _GHDataCharts2.default.NoChart(element, title);
         });

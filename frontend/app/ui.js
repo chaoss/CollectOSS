@@ -94,7 +94,7 @@ class GHDataDashboard {
     $(activityCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       repo[element.dataset.source]().then((data) => {
-        GHDataCharts.LineChart(element, data, title)
+        GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined')
       }, (error) => {
         GHDataCharts.NoChart(element, title)
       })
