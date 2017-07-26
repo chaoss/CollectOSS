@@ -334,7 +334,7 @@ var GHDataCharts = function () {
       };
 
       if (rollingAverage) {
-        data_graphic_config.data = GHDataCharts.rollingAverage(data, 365 * 24);
+        data_graphic_config.data = GHDataCharts.rollingAverage(data, 180 * 24);
         console.log(data_graphic_config.data);
         data_graphic_config.colors = ['#CCC', '#FF3647'];
       }
@@ -348,10 +348,10 @@ var GHDataCharts = function () {
         legend.style.padding = '0';
         legend.style.height = '0';
         legend.style.top = '31px';
-        legend.style.left = '0';
+        legend.style.left = '55px';
         legend.style.fontSize = '14px';
         legend.style.fontWeight = 'bold';
-        legend.style.opacity = '0.4';
+        legend.style.opacity = '0.8';
         $(selector).append(legend);
         data_graphic_config.legend = Object.keys(data[0]).slice(1), data_graphic_config.legend_target = legend;
         $(selector).hover(function () {
