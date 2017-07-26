@@ -20,7 +20,7 @@ class GHTorrent(object):
         except Exception as e:
             print("Could not connect to database.\nError: " + str(e))
 
-    def __single_table_count_by_date(self, table, repo_col='project_id', user_col='author_id', raw=False):
+    def __single_table_count_by_date(self, table, repo_col='project_id', user_col='author_id', group_by="week"):
         """
         Generates query string to count occurances of rows per date for a given table.
         External input must never be sent to this function, it is for internal use only.
@@ -28,22 +28,44 @@ class GHTorrent(object):
         :param table: The table in GHTorrent to generate the string for
         :param repo_col: The column in that table with the project ids
         :param user_col: The column in that table with the user ids
-        :param raw: Default false; Returns data grouped by user and date
+        :param group_by: Default week; Options raw, day, week, month, year; Selects period of time to be grouped by
         :return: Query string
         """
-        if raw:
+        if group_by == "raw":
+            return """
+                SELECT date(created_at) AS "date", {2} AS "user_id"
+                FROM {0}
+                WHERE {1} = :repoid
+                """.format(table, repo_col, user_col)
+
+        if group_by == "day":
             return """
                 SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY date(created_at), {2}""".format(table, repo_col, user_col)
+                GROUP BY DAYOFYEAR(created_at), {2}""".format(table, repo_col, user_col)
 
-        else:
+        if group_by == "week":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY YEARWEEK(created_at)""".format(table, repo_col)
+                GROUP BY YEARWEEK(created_at), {2}""".format(table, repo_col, user_col)
+
+        if group_by == "month":
+            return """
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
+                FROM {0}
+                WHERE {1} = :repoid
+                GROUP BY MONTH(created_at), {2}""".format(table, repo_col, user_col)
+
+        if group_by == "year":
+            return """
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
+                FROM {0}
+                WHERE {1} = :repoid
+                GROUP BY YEAR(created_at), {2}""".format(table, repo_col, user_col)
+
 
 
     def repoid(self, owner_or_repoid, repo=None):
@@ -81,7 +103,7 @@ class GHTorrent(object):
 
 
     # Basic timeseries queries
-    def stargazers(self, owner, repo=None, raw=False):
+    def stargazers(self, owner, repo=None, group_by="week"):
         """
         Timeseries of when people starred a repo
 
@@ -89,10 +111,10 @@ class GHTorrent(object):
         :return: DataFrame with stargazers/day
         """
         repoid = self.repoid(owner, repo)
-        stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id', 'user_id', raw=False))
+        stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id', 'user_id', group_by=group_by))
         return pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
 
-    def commits(self, owner, repo=None, raw=False):
+    def commits(self, owner, repo=None, group_by="week"):
         """
         Timeseries of all the commits on a repo
 
@@ -100,10 +122,10 @@ class GHTorrent(object):
         :return: DataFrame with commits/day
         """
         repoid = self.repoid(owner, repo)
-        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', raw=raw))
+        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
         return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
 
-    def forks(self, owner, repo=None, raw=False):
+    def forks(self, owner, repo=None, group_by="week"):
         """
         Timeseries of when a repo's forks were created
 
@@ -111,10 +133,10 @@ class GHTorrent(object):
         :return: DataFrame with forks/day
         """
         repoid = self.repoid(owner, repo)
-        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', raw=raw))
+        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
         return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
-    def issues(self, owner, repo=None, raw=False):
+    def issues(self, owner, repo=None, group_by="week"):
         """
         Timeseries of when people starred a repo
 
@@ -122,7 +144,7 @@ class GHTorrent(object):
         :return: DataFrame with issues/day
         """
         repoid = self.repoid(owner, repo)
-        issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id', 'reporter_id', raw=raw))
+        issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id', 'reporter_id', group_by=group_by))
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
     def issues_with_close(self, owner, repo=None):
