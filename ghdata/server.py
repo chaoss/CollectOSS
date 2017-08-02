@@ -93,6 +93,7 @@ def run():
 
     publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
     github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
+    downloads = ghdata.Downloads(github)
 
     if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
         debugmode = True
@@ -318,12 +319,36 @@ def run():
                                 "release": 1.0.0
                             },
                             {
-                                "release": "2015-01-08T00:00:00.000Z",
-                                "rate": 2.0.0
+                                "date": "2015-01-08T00:00:00.000Z",
+                                "release": 2.0.0
                             }
                         ]
     """
     addTimeseries(app, github.major_tags, 'tags/major')
+
+    """
+    @api {get} /:owner/:repo/timeseries/downloads Number of downloads
+    @apiDescription Timeseries of downloads from package manager
+    @apiName Downloads
+    @apiGroup Timeseries
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "date": "2015-01-01T00:00:00.000Z",
+                                "downlads": 235
+                            },
+                            {
+                                "date": "2015-01-08T00:00:00.000Z",
+                                "dowloads": 327
+                            }
+                        ]
+    """
+    addTimeseries(app, downloads.downloads, 'downloads')
+
 
 
     # Contribution Trends
