@@ -30,8 +30,8 @@ def flaskify(func):
     serializes them and spits them out
     """
     def generated_function(*args, **kwargs):
-        params = request.args.to_dict()
-        df = func(*args, **kwargs, **params)
+        kwargs.update(request.args.to_dict())
+        df = func(*args, **kwargs)
         return Response(response=serialize(df, orient=request.args.get('orient')),
                         status=200,
                         mimetype="application/json")
