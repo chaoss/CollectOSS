@@ -40,31 +40,31 @@ class GHTorrent(object):
 
         if group_by == "day":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY DAYOFYEAR(created_at), {2}""".format(table, repo_col, user_col)
+                GROUP BY DATE(created_at)""".format(table, repo_col)
 
         if group_by == "week":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY YEARWEEK(created_at), {2}""".format(table, repo_col, user_col)
+                GROUP BY YEARWEEK(created_at)""".format(table, repo_col)
 
         if group_by == "month":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY MONTH(created_at), {2}""".format(table, repo_col, user_col)
+                GROUP BY MONTH(created_at), YEAR(created_at)""".format(table, repo_col)
 
         if group_by == "year":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}", {2} AS "user_id"
+                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY YEAR(created_at), {2}""".format(table, repo_col, user_col)
+                GROUP BY YEAR(created_at)""".format(table, repo_col)
 
 
 
@@ -107,18 +107,22 @@ class GHTorrent(object):
         """
         Timeseries of when people starred a repo
 
-        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with stargazers/day
         """
         repoid = self.repoid(owner, repo)
         stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id', 'user_id', group_by=group_by))
-        return pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
+        df = pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
+        df.drop(df.index[:1], inplace=True)
+        return df
 
     def commits(self, owner, repo=None, group_by="week"):
         """
         Timeseries of all the commits on a repo
 
-        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with commits/day
         """
         repoid = self.repoid(owner, repo)
@@ -129,7 +133,8 @@ class GHTorrent(object):
         """
         Timeseries of when a repo's forks were created
 
-        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with forks/day
         """
         repoid = self.repoid(owner, repo)
@@ -140,7 +145,8 @@ class GHTorrent(object):
         """
         Timeseries of when people starred a repo
 
-        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with issues/day
         """
         repoid = self.repoid(owner, repo)
@@ -151,7 +157,8 @@ class GHTorrent(object):
         """
         How long on average each week it takes to close an issue
 
-        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with issues/day
         """
         repoid = self.repoid(owner, repo)
@@ -173,7 +180,8 @@ class GHTorrent(object):
         """
         Timeseries of pull requests creation, also gives their associated activity
 
-        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with pull requests by day
         """
         repoid = self.repoid(owner, repo)
@@ -195,7 +203,8 @@ class GHTorrent(object):
         """
         All the contributors to a project and the counts of their contributions
 
-        :param repoid: The id of the project in the projects table. Use repoid() to get this.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with users id, users login, and their contributions by type
         """
         repoid = self.repoid(owner, repo)
@@ -253,7 +262,8 @@ class GHTorrent(object):
         """
         Timeseries of all the contributions to a project, optionally limited to a specific user
 
-        :param repoid: The id of the project in the projects table.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :param userid: The id of user if you want to limit the contributions to a specific user.
         :return: DataFrame with all of the contributions seperated by day.
         """
@@ -305,7 +315,8 @@ class GHTorrent(object):
 
         @todo: Group by country code instead of users, needs the new schema
 
-        :param repoid: The id of the project in the projects table.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with users and locations sorted by commtis
         """
         repoid = self.repoid(owner, repo)
@@ -328,7 +339,8 @@ class GHTorrent(object):
         """
         How long it takes for issues to be responded to by people who have commits associate with the project
 
-        :param repoid: The id of the project in the projects table.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with the issues' id the date it was
                  opened, and the date it was first responded to
         """
@@ -360,7 +372,8 @@ class GHTorrent(object):
         """
         Timeseries of pull request acceptance rate (Number of pull requests merged on a date over Number of pull requests opened on a date)
 
-        :param repoid: The id of the project in the projects table.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with the pull acceptance rate and the dates
         """
         repoid = self.repoid(owner, repo)
@@ -394,7 +407,8 @@ class GHTorrent(object):
           - major_contributor
           - maintainer
 
-        :param repoid: The id of the project in the projects table.
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
         :return: DataFrame with the login and role of contributors
         """
         repoid = self.repoid(owner, repo)
