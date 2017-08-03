@@ -69,17 +69,17 @@ class GitHubAPI(object):
         df = df.groupby(['userid']).userid.count() / df.groupby(['userid']).userid.count().sum() * 100
 
         i = 0
-        j = 0
         for num in df.cumsum():
             i = i + 1
             if num >= threshold:
                 worst = i
                 break
 
+        i = 0
         for num in df.sort_values(ascending=True).cumsum():
-            j = j + 1
+            i = i + 1
             if num >= threshold:
-                best = j
+                best = i
                 break
 
         bus_factor = [{'worst': worst, 'best' : best}]

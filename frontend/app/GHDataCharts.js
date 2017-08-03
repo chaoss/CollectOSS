@@ -13,15 +13,15 @@ export default class GHDataCharts {
   }
 
   static rollingAverage(data, windowSizeInHours) {
-    let halfWindow = (windowSizeInHours * 60 * 60 * 1000) / 2
+    let windowMiliseconds = (windowSizeInHours * 60 * 60 * 1000)
     let keys = Object.keys(data[0])
     let rolling = data.map((elem) => {
-      let after = new Date(elem.date).getTime() - halfWindow
-      let before = new Date(elem.date).getTime() + halfWindow
+      let after = new Date(elem.date).getTime() - windowMiliseconds
+      let before = new Date(elem.date).getTime()
       let average = {}
       data.forEach((toAverage) => {
         let testDate = new Date(toAverage.date).getTime()
-        if (testDate >= after && testDate <= before) {
+        if (testDate <= before && testDate >= after) {
           keys.forEach((prop) => {
             if (!isNaN(toAverage[prop] / 2.0) && average[prop]) {
               average[prop] = (toAverage[prop] + average[prop]) / 2.0
@@ -69,7 +69,7 @@ export default class GHDataCharts {
     }
 
     if (rollingAverage) {
-      data_graphic_config.data = GHDataCharts.rollingAverage(data, 180 * 24)
+      data_graphic_config.data = GHDataCharts.rollingAverage(data, 365 * 24)
       console.log(data_graphic_config.data)
       data_graphic_config.colors = ['#CCC', '#FF3647']
     }
@@ -124,6 +124,8 @@ export default class GHDataCharts {
       target: selector
     })
   }
+
+
 
   static NoChart (selector, title) {
     return MG.data_graphic({
