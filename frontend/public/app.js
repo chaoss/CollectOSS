@@ -273,15 +273,15 @@ var GHDataCharts = function () {
   }, {
     key: 'rollingAverage',
     value: function rollingAverage(data, windowSizeInHours) {
-      var halfWindow = windowSizeInHours * 60 * 60 * 1000 / 2;
+      var windowMiliseconds = windowSizeInHours * 60 * 60 * 1000;
       var keys = Object.keys(data[0]);
       var rolling = data.map(function (elem) {
-        var after = new Date(elem.date).getTime() - halfWindow;
-        var before = new Date(elem.date).getTime() + halfWindow;
+        var after = new Date(elem.date).getTime() - windowMiliseconds;
+        var before = new Date(elem.date).getTime();
         var average = {};
         data.forEach(function (toAverage) {
           var testDate = new Date(toAverage.date).getTime();
-          if (testDate >= after && testDate <= before) {
+          if (testDate <= before && testDate >= after) {
             keys.forEach(function (prop) {
               if (!isNaN(toAverage[prop] / 2.0) && average[prop]) {
                 average[prop] = (toAverage[prop] + average[prop]) / 2.0;
@@ -334,7 +334,7 @@ var GHDataCharts = function () {
       };
 
       if (rollingAverage) {
-        data_graphic_config.data = GHDataCharts.rollingAverage(data, 180 * 24);
+        data_graphic_config.data = GHDataCharts.rollingAverage(data, 365 * 24);
         console.log(data_graphic_config.data);
         data_graphic_config.colors = ['#CCC', '#FF3647'];
       }
