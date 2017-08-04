@@ -53,4 +53,10 @@ class Downloads(object):
         df = pd.DataFrame(raw["downloads"])
         df.rename(columns= {"day" : "date"}, inplace=True)
 
-        return df.loc[~df.apply(lambda row: (row==0).any(), axis=1)]
+        for i, row in df.iterrows():
+            if row["downloads"] != 0:
+                break
+            else:
+                df.drop(i, inplace=True)
+
+        return df
