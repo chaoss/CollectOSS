@@ -11,6 +11,7 @@ sys.path.append('..')
 import ghdata
 from flask import Flask, request, Response
 from flask_cors import CORS
+import json
 
 GHDATA_API_VERSION = 'unstable'
 
@@ -19,10 +20,17 @@ def serialize(data, orient='records'):
     if (orient is None):
         orient = 'records'
 
+    result = ''
+
     if hasattr(data, 'to_json'):
-        return data.to_json(orient=orient, date_format='iso', date_unit='ms')
+        result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
     else:
-        return data
+        try:
+            result = json.dumps(data)
+        except:
+            result = data
+
+    return result
 
 def flaskify(func):
     """
@@ -93,6 +101,7 @@ def run():
 
     publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
     github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
+    librariesio = ghdata.LibrariesIO(api_key=read_config(parser, 'LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'))
     downloads = ghdata.Downloads(github)
 
     if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
@@ -484,6 +493,54 @@ def run():
                         ]
     """
     addMetric(app, ghtorrent.community_age, 'community_age')
+
+    """
+    @api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
+    @apiName Stargazers
+    @apiGroup Diversity
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "login": "bonnie",
+                                "location": "Rowena, TX",
+                                "commits": 12
+                            },
+                            {
+                                "login":"clyde",
+                                "location":"Ellis County, TX",
+                                "commits": 12
+                            }
+                        ]
+    """
+    addMetric(app, librariesio.dependencies, 'dependencies')
+
+    """
+    @api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
+    @apiName Stargazers
+    @apiGroup Diversity
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "login": "bonnie",
+                                "location": "Rowena, TX",
+                                "commits": 12
+                            },
+                            {
+                                "login":"clyde",
+                                "location":"Ellis County, TX",
+                                "commits": 12
+                            }
+                        ]
+    """
+    addMetric(app, librariesio.dependents, 'dependents')
 
     """
     @api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
