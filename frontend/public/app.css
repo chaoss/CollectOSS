@@ -2590,12 +2590,27 @@ section h2 {
   color: #7d7d7d;
   margin-bottom: 50px;
 }
+section small {
+  display: block;
+  width: 100%;
+  margin-top: 30px;
+  padding-right: 20px;
+  text-align: right;
+  color: #aaa;
+}
+section small a {
+  color: #aaf;
+  text-decoration: none;
+}
 section.unmaterialized {
   box-shadow: 0 0 0 0;
   background: #f0f0f0;
   padding: 24px 24px 48px 24px;
   border-right: 1px solid #dedede;
   border-bottom: 1px solid #dedede;
+}
+.hidden {
+  display: none !important;
 }
 @media print {
   body {

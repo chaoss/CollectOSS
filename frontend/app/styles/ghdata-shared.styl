@@ -35,12 +35,27 @@ section h2
   color: foreground - 50%
   margin-bottom: 50px
 
+section small
+  display: block
+  width: 100%
+  margin-top: 30px
+  padding-right: 20px
+  text-align: right
+  color: #aaa
+
+section small a
+  color: #aaf
+  text-decoration: none
+
 section.unmaterialized
   box-shadow: 0 0 0 0
   background: (foreground - 4%)
   padding: 24px 24px 48px 24px
   border-right: 1px solid (background - 5%)
   border-bottom: 1px solid (background - 5%)
+
+.hidden
+  display: none !important
 
 @media print
   body

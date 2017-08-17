@@ -66,6 +66,22 @@ class GHDataDashboard {
     return cardElement
   }
 
+  renderGraphs(element, repo) {
+    $(element).find('.linechart').each((index, element) => {
+      let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
+      console.log(element.dataset.source)
+      repo[element.dataset.source]().then((data) => {
+        if (data && data.length) {
+          GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined')
+        } else {
+          GHDataCharts.NoChart(element, title)
+        }
+      }, (error) => {
+        GHDataCharts.NoChart(element, title)
+      })
+    })
+  }
+
 
   renderComparisonForm() {
     var self = this
@@ -88,26 +104,23 @@ class GHDataDashboard {
   renderBaseRepo(repo) {
     repo = repo || this.state.repo
     $('#main-repo-search').val(repo.owner + '/' + repo.name)
+
     var activityCard = this.addCard('Activity', '<strong>' + repo.owner + '/' + repo.name + '</strong>')
     activityCard.innerHTML += $('#base-template')[0].innerHTML
+    this.renderGraphs(activityCard, repo)
 
-    $(activityCard).find('.linechart').each((index, element) => {
-      let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
-      repo[element.dataset.source]().then((data) => {
-        GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined')
-      }, (error) => {
-        GHDataCharts.NoChart(element, title)
-      })
+    var ecosystemCard = this.addCard('Ecosystem', '<strong>' + repo.owner + '/' + repo.name + '</strong>')
+    ecosystemCard.innerHTML += $('#ecosystem-template')[0].innerHTML
+    this.renderGraphs(ecosystemCard, repo)
+    repo.dependents().then((dependents) => {
+      for (var i = 0; i < dependents.length && i < 10; i++) {
+        $(ecosystemCard).find('#dependents').append(dependents[i].name + '<br>')
+      }
     })
-
-    $(activityCard).find('.timeline').each((index, element) => {
-      let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
-      repo[element.dataset.source]().then((data) => {
-        console.log(data)
-        GHDataCharts.Timeline(element, data, title)
-      }, (error) => {
-        GHDataCharts.NoChart(element, title)
-      })
+    repo.dependencies().then((dependencies) => {
+      for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
+        $(ecosystemCard).find('#dependencies').append(dependencies.dependencies[i].name + '<br>')
+      }
     })
 
     this.renderComparisonForm()
@@ -120,9 +133,15 @@ class GHDataDashboard {
     activityComparisonCard.innerHTML += $('#base-template')[0].innerHTML
     $(activityComparisonCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
-      compareRepo[element.dataset.source].relativeTo(baseRepo).then((data) => {
-        console.log(data)
-        GHDataCharts.ComparisonLineChart(element, data, title, baseRepo.owner + '/' + baseRepo.name)
+      compareRepo[element.dataset.source]().then((compare) => {
+        let compareData = GHDataCharts.convertToPercentages(compare)
+        baseRepo[element.dataset.source]().then((base) => {
+          let baseData = GHDataCharts.convertToPercentages(base)
+          let combinedData = GHDataCharts.combine(baseData, compareData)
+          GHDataCharts.LineChart(element, combinedData, title, baseRepo.owner + '/' + baseRepo.name)
+        }, (error) => {
+          GHDataCharts.NoChart(element, title)
+        })
       }, (error) => {
         GHDataCharts.NoChart(element, title)
       })

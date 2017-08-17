@@ -167,6 +167,7 @@ var GHDataAPI = function () {
 
     this._version = version || 'unstable';
     this._host = hostURL || 'http://' + window.location.hostname + ':5000/';
+    this.__cache = {};
   }
 
   _createClass(GHDataAPI, [{
@@ -190,17 +191,36 @@ var GHDataAPI = function () {
       };
 
       var Endpoint = function Endpoint(endpoint) {
+        var self = _this;
         var url = _this._host + _this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
         return function (params, callback) {
-          return $.get(url, params, callback);
+          if (self.__cache[btoa(url)]) {
+            if (self.__cache[btoa(url)].created_at > Date.now() - 1000 * 60) {
+              return new Promise(function (resolve, reject) {
+                resolve(JSON.parse(self.__cache[btoa(url)].data));
+              });
+            }
+          }
+          return $.get(url, params, callback).then(function (data) {
+            self.__cache[btoa(url)] = {
+              created_at: Date.now(),
+              data: JSON.stringify(data)
+            };
+            if (typeof callback === 'function') {
+              callback(data);
+            }
+            return new Promise(function (resolve, reject) {
+              resolve(data);
+            });
+          });
         };
       };
 
       var Timeseries = function Timeseries(endpoint) {
         var func = Endpoint('timeseries/' + endpoint);
         func.relativeTo = function (baselineRepo, params, callback) {
-          var url = _this._host + _this._version + '/' + repo.owner + '/' + repo.name + '/timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name;
-          return $.get(url, params, callback);
+          var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name;
+          return Endpoint(url)();
         };
         return func;
       };
@@ -211,6 +231,7 @@ var GHDataAPI = function () {
       repo.pulls = Timeseries('pulls');
       repo.stars = Timeseries('stargazers');
       repo.tags = Timeseries('tags');
+      repo.downloads = Timeseries('downloads');
       repo.uniqueCommitters = Timeseries('unique_committers');
 
       repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate');
@@ -221,6 +242,8 @@ var GHDataAPI = function () {
       repo.communityAge = Endpoint('community_age');
       repo.linkingWebsites = Endpoint('linking_websites');
       repo.busFactor = Endpoint('bus_factor');
+      repo.dependents = Endpoint('dependents');
+      repo.dependencies = Endpoint('dependencies');
 
       return repo;
     }
@@ -264,10 +287,19 @@ var GHDataCharts = function () {
   _createClass(GHDataCharts, null, [{
     key: 'convertDates',
     value: function convertDates(data) {
-      data = data.map(function (d) {
-        d.date = new Date(d.date);
-        return d;
-      });
+      if (Array.isArray(data[0])) {
+        data.map(function (datum) {
+          return GHDataCharts.convertDates(datum);
+        });
+      } else {
+        var EARLIEST = new Date('01-01-2005');
+        data = data.map(function (d) {
+          d.date = new Date(d.date);
+          return d;
+        }).filter(function (d) {
+          return d.date > EARLIEST;
+        });
+      }
       return data;
     }
   }, {
@@ -299,6 +331,31 @@ var GHDataCharts = function () {
         return elem;
       });
       return rolling;
+    }
+  }, {
+    key: 'convertToPercentages',
+    value: function convertToPercentages(data) {
+      if (data && data[0]) {
+        var keys = Object.keys(data[0]);
+      } else {
+        return [];
+      }
+      if (keys[1] !== 'date' && !isNaN(data[0][keys[1]] / 2.0)) {
+        var baseline = (data[0][keys[1]] + data[1][keys[1]]) / 2;
+        if (isNaN(baseline)) {
+          baseline = 1;
+        }
+        data = data.map(function (datum) {
+          datum['value'] = datum[keys[1]] / baseline;
+          return datum;
+        });
+      }
+      return data;
+    }
+  }, {
+    key: 'combine',
+    value: function combine() {
+      return Array.from(arguments);
     }
   }, {
     key: 'ComparisonLineChart',
@@ -339,7 +396,13 @@ var GHDataCharts = function () {
         data_graphic_config.colors = ['#CCC', '#FF3647'];
       }
 
-      data_graphic_config.y_accessor = Object.keys(data_graphic_config.data[0]).slice(1);
+      if (Array.isArray(data[0])) {
+        data_graphic_config.legend = ['compared', 'base'];
+        data_graphic_config.colors = ['#FF3647', '#CCC'];
+      } else {
+        data_graphic_config.y_accessor = Object.keys(data[0]).slice(1);
+        data_graphic_config.legend = data_graphic_config.y_accessor;
+      }
 
       if (Object.keys(data_graphic_config.data[0]).slice(1).length > 1) {
         var legend = document.createElement('div');
@@ -353,7 +416,7 @@ var GHDataCharts = function () {
         legend.style.fontWeight = 'bold';
         legend.style.opacity = '0.8';
         $(selector).append(legend);
-        data_graphic_config.legend = Object.keys(data[0]).slice(1), data_graphic_config.legend_target = legend;
+        data_graphic_config.legend_target = legend;
         $(selector).hover(function () {
           legend.style.display = 'none';
         }, function () {
@@ -2688,6 +2751,23 @@ var GHDataDashboard = function () {
       return cardElement;
     }
   }, {
+    key: 'renderGraphs',
+    value: function renderGraphs(element, repo) {
+      $(element).find('.linechart').each(function (index, element) {
+        var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
+        console.log(element.dataset.source);
+        repo[element.dataset.source]().then(function (data) {
+          if (data && data.length) {
+            _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined');
+          } else {
+            _GHDataCharts2.default.NoChart(element, title);
+          }
+        }, function (error) {
+          _GHDataCharts2.default.NoChart(element, title);
+        });
+      });
+    }
+  }, {
     key: 'renderComparisonForm',
     value: function renderComparisonForm() {
       var self = this;
@@ -2710,26 +2790,23 @@ var GHDataDashboard = function () {
     value: function renderBaseRepo(repo) {
       repo = repo || this.state.repo;
       $('#main-repo-search').val(repo.owner + '/' + repo.name);
+
       var activityCard = this.addCard('Activity', '<strong>' + repo.owner + '/' + repo.name + '</strong>');
       activityCard.innerHTML += $('#base-template')[0].innerHTML;
+      this.renderGraphs(activityCard, repo);
 
-      $(activityCard).find('.linechart').each(function (index, element) {
-        var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
-        repo[element.dataset.source]().then(function (data) {
-          _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined');
-        }, function (error) {
-          _GHDataCharts2.default.NoChart(element, title);
-        });
+      var ecosystemCard = this.addCard('Ecosystem', '<strong>' + repo.owner + '/' + repo.name + '</strong>');
+      ecosystemCard.innerHTML += $('#ecosystem-template')[0].innerHTML;
+      this.renderGraphs(ecosystemCard, repo);
+      repo.dependents().then(function (dependents) {
+        for (var i = 0; i < dependents.length && i < 10; i++) {
+          $(ecosystemCard).find('#dependents').append(dependents[i].name + '<br>');
+        }
       });
-
-      $(activityCard).find('.timeline').each(function (index, element) {
-        var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
-        repo[element.dataset.source]().then(function (data) {
-          console.log(data);
-          _GHDataCharts2.default.Timeline(element, data, title);
-        }, function (error) {
-          _GHDataCharts2.default.NoChart(element, title);
-        });
+      repo.dependencies().then(function (dependencies) {
+        for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
+          $(ecosystemCard).find('#dependencies').append(dependencies.dependencies[i].name + '<br>');
+        }
       });
 
       this.renderComparisonForm();
@@ -2742,9 +2819,15 @@ var GHDataDashboard = function () {
       activityComparisonCard.innerHTML += $('#base-template')[0].innerHTML;
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
-        compareRepo[element.dataset.source].relativeTo(baseRepo).then(function (data) {
-          console.log(data);
-          _GHDataCharts2.default.ComparisonLineChart(element, data, title, baseRepo.owner + '/' + baseRepo.name);
+        compareRepo[element.dataset.source]().then(function (compare) {
+          var compareData = _GHDataCharts2.default.convertToPercentages(compare);
+          baseRepo[element.dataset.source]().then(function (base) {
+            var baseData = _GHDataCharts2.default.convertToPercentages(base);
+            var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
+            _GHDataCharts2.default.LineChart(element, combinedData, title, baseRepo.owner + '/' + baseRepo.name);
+          }, function (error) {
+            _GHDataCharts2.default.NoChart(element, title);
+          });
         }, function (error) {
           _GHDataCharts2.default.NoChart(element, title);
         });

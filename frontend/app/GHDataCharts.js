@@ -5,10 +5,19 @@ import * as d3 from 'd3'
 export default class GHDataCharts {
 
   static convertDates (data) {
-    data = data.map((d) => {
-      d.date = new Date(d.date)
-      return d
-    })
+    if (Array.isArray(data[0])) {
+      data.map((datum) => {
+        return GHDataCharts.convertDates(datum)
+      })
+    } else {
+      const EARLIEST = new Date('01-01-2005')
+      data = data.map((d) => {
+        d.date = new Date(d.date)
+        return d
+      }).filter((d) => {
+        return d.date > EARLIEST
+      })
+    }
     return data
   }
 
@@ -39,6 +48,29 @@ export default class GHDataCharts {
       return elem
     })
     return rolling
+  }
+
+  static convertToPercentages(data) {
+    if (data && data[0]) {
+      var keys = Object.keys(data[0])
+    } else {
+      return []
+    }
+    if (keys[1] !== 'date' && !isNaN(data[0][keys[1]] / 2.0)) {
+      let baseline = (data[0][keys[1]] + data[1][keys[1]]) / 2
+      if (isNaN(baseline)) {
+        baseline = 1
+      }
+      data = data.map((datum) => {
+        datum['value'] = datum[keys[1]] / baseline
+        return datum
+      })
+    }
+    return data
+  }
+
+  static combine() {
+    return Array.from(arguments)
   }
 
   static ComparisonLineChart (selector, data, title, baseline) {
@@ -74,7 +106,14 @@ export default class GHDataCharts {
       data_graphic_config.colors = ['#CCC', '#FF3647']
     }
 
-    data_graphic_config.y_accessor = Object.keys(data_graphic_config.data[0]).slice(1)
+    if (Array.isArray(data[0])) {
+      data_graphic_config.legend = ['compared', 'base']
+      data_graphic_config.colors = ['#FF3647', '#CCC']
+    } else {
+      data_graphic_config.y_accessor = Object.keys(data[0]).slice(1)
+      data_graphic_config.legend = data_graphic_config.y_accessor
+    }
+
 
     if (Object.keys(data_graphic_config.data[0]).slice(1).length > 1) {
     var legend = document.createElement('div')
@@ -88,7 +127,6 @@ export default class GHDataCharts {
       legend.style.fontWeight = 'bold'
       legend.style.opacity = '0.8'
       $(selector).append(legend)
-      data_graphic_config.legend = Object.keys(data[0]).slice(1),
       data_graphic_config.legend_target = legend
       $(selector).hover(() => {
         legend.style.display = 'none'
