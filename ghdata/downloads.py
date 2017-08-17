@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import requests
 import datetime
+import base64
 
 class Downloads(object):
     """Class for retrieveing download information using APIs and web scrapers"""
@@ -12,7 +13,7 @@ class Downloads(object):
     def downloads(self, owner, repo):
         """
         Detects package file and calls correct function for download statistics
-        TODO: Read package file contents and get package name
+
         :param owner: repo owner username
         :param repo: repo name
         """
@@ -20,9 +21,11 @@ class Downloads(object):
 
         for file in root_dir:
             if file.name == "Gemfile":
-                return self.ruby_downloads(repo)
+                return self.ruby_downloads(repo, contents)
             if file.name == "package.json":
-                return self.npm_downloads(repo)
+                contents = base64.b64decode(file.content)
+                contents = contents.decode('utf-8')
+                return self.npm_downloads(repo, contents)
 
     def ruby_downloads(self, repo):
         """
@@ -40,14 +43,17 @@ class Downloads(object):
 
         return df
 
-    def npm_downloads(self, repo):
+    def npm_downloads(self, repo, contents):
         """
         Returns daily downloads for ruby gems from bestgems.org API
 
         :param repo: repo name
+        :param contents: contents of package.json
         """
+        contents = json.loads(json.loads(json.dumps(contents)))
+        name = contents["name"]
         dates = []
-        r = requests.get("https://api.npmjs.org/downloads/range/0:%s/%s" % (datetime.datetime.today().strftime('%Y-%m-%d'), repo))
+        r = requests.get("https://api.npmjs.org/downloads/range/0:%s/%s" % (datetime.datetime.today().strftime('%Y-%m-%d'), name))
         raw = r.text
         raw = json.loads(json.loads(json.dumps(raw)))
         df = pd.DataFrame(raw["downloads"])
