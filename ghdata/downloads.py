@@ -21,7 +21,7 @@ class Downloads(object):
 
         for file in root_dir:
             if file.name == "Gemfile":
-                return self.ruby_downloads(repo, contents)
+                return self.ruby_downloads(repo)
             if file.name == "package.json":
                 contents = base64.b64decode(file.content)
                 contents = contents.decode('utf-8')
