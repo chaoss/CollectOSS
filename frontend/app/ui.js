@@ -85,7 +85,7 @@ class GHDataDashboard {
 
   renderComparisonForm() {
     var self = this
-    if (this.comparisonCard) {
+    if (this.comparisonCard && this.comparisonCard.parentElement) {
       this.comparisonCard.outerHTML = ''
     }
     this.comparisonCard = this.addCard(null, null, 'unmaterialized')
