@@ -315,7 +315,7 @@ var GHDataCharts = function () {
           var testDate = new Date(toAverage.date).getTime();
           if (testDate <= before && testDate >= after) {
             keys.forEach(function (prop) {
-              if (!isNaN(toAverage[prop] / 2.0) && average[prop]) {
+              if (!isNaN(toAverage[prop] / 2.0) && average[prop] && prop !== 'date') {
                 average[prop] = (toAverage[prop] + average[prop]) / 2.0;
               } else if (!isNaN(toAverage[prop] / 2.0)) {
                 average[prop] = toAverage[prop];
@@ -324,7 +324,7 @@ var GHDataCharts = function () {
           }
         });
         for (var prop in average) {
-          if (average.hasOwnProperty(prop)) {
+          if (average.hasOwnProperty(prop) && prop !== 'date') {
             elem[prop + '_average'] = average[prop];
           }
         }
