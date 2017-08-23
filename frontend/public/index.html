@@ -34,25 +34,28 @@
   </div>
 
   <div id="base-template" class="hidden"/>
+
     <div class="row">
-      <div class="col col-6">
+      <div class="col col-12">
         <div class="linechart" data-source="commits" data-rolling data-title="Commits / Week"></div>
       </div>
-      <div class="col col-6">
+    </div>
+
+    <div class="row">
+      <div class="col col-12">
         <div class="linechart" data-source="forks" data-rolling data-title="Forks / Week"></div>
       </div>
     </div>
+
     <div class="row">
-      <div class="col col-6">
-        <div class="linechart" data-source="pulls" data-title="Pull Requests / Week"></div>
-      </div>
-      <div class="col col-6">
+      <div class="col col-12">
         <div class="linechart" data-source="issues" data-rolling data-title="Issues / Week"></div>
       </div>
     </div>
+
     <div class="row">
       <div class="col col-6">
-        <div class="linechart" data-source="stars" data-rolling data-title="Stars / Week"></div>
+        <div class="linechart" data-source="pulls" data-title="Pull Requests / Week"></div>
       </div>
       <div class="col col-6">
         <div class="linechart" data-source="uniqueCommitters" data-title="Unique Committers"></div>
@@ -64,6 +67,11 @@
   <div id="ecosystem-template" class="hidden">
     <div class="row">
       <div class="col col-12"><div class="linechart" data-source="downloads" data-title="Downloads / Day"></div></div>
+    </div>
+    <div class="row">
+      <div class="col col-12">
+        <div class="linechart" data-source="stars" data-rolling data-title="Stars / Week"></div>
+      </div>
     </div>
     <div class="row">
       <div class="col col-6">
