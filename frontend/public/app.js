@@ -304,20 +304,25 @@ var GHDataCharts = function () {
     }
   }, {
     key: 'rollingAverage',
-    value: function rollingAverage(data, windowSizeInHours) {
-      var windowMiliseconds = windowSizeInHours * 60 * 60 * 1000;
+    value: function rollingAverage(data, windowSizeInDays) {
+      var windowMiliseconds = windowSizeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60 /*seconds*/ * 1000 /*miliseconds*/;
       var keys = Object.keys(data[0]);
       var rolling = data.map(function (elem) {
         var after = new Date(elem.date).getTime() - windowMiliseconds;
         var before = new Date(elem.date).getTime();
         var average = {};
+        var count = 0;
         data.forEach(function (toAverage) {
           var testDate = new Date(toAverage.date).getTime();
           if (testDate <= before && testDate >= after) {
+            count++;
             keys.forEach(function (prop) {
               if (!isNaN(toAverage[prop] / 2.0) && average[prop] && prop !== 'date') {
-                average[prop] = (toAverage[prop] + average[prop]) / 2.0;
-              } else if (!isNaN(toAverage[prop] / 2.0)) {
+                if (!average[prop]) {
+                  average[prop] = 0;
+                }
+                average[prop] += toAverage[prop];
+              } else if (!isNaN(toAverage[prop] / 2.0) || prop === 'date') {
                 average[prop] = toAverage[prop];
               }
             });
@@ -325,6 +330,7 @@ var GHDataCharts = function () {
         });
         for (var prop in average) {
           if (average.hasOwnProperty(prop) && prop !== 'date') {
+            average[prop] = average[prop] / count;
             elem[prop + '_average'] = average[prop];
           }
         }
@@ -391,7 +397,7 @@ var GHDataCharts = function () {
       };
 
       if (rollingAverage) {
-        data_graphic_config.data = GHDataCharts.rollingAverage(data, 365 * 24);
+        data_graphic_config.data = GHDataCharts.rollingAverage(data, 180);
         console.log(data_graphic_config.data);
         data_graphic_config.colors = ['#CCC', '#FF3647'];
       }
