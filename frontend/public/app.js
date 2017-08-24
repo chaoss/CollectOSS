@@ -288,7 +288,7 @@ var GHDataCharts = function () {
     key: 'convertDates',
     value: function convertDates(data) {
       if (Array.isArray(data[0])) {
-        data.map(function (datum) {
+        data = data.map(function (datum) {
           return GHDataCharts.convertDates(datum);
         });
       } else {
@@ -303,11 +303,28 @@ var GHDataCharts = function () {
       return data;
     }
   }, {
+    key: 'convertKey',
+    value: function convertKey(data, key) {
+      if (Array.isArray(data[0])) {
+        data = data.map(function (datum) {
+          return GHDataCharts.convertKey(datum, key);
+        });
+      } else {
+        var EARLIEST = new Date('01-01-2005');
+        data = data.map(function (d) {
+          d.value = d[key];
+          return d;
+        });
+      }
+      return data;
+    }
+  }, {
     key: 'rollingAverage',
     value: function rollingAverage(data, windowSizeInDays) {
       var windowMiliseconds = windowSizeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60 /*seconds*/ * 1000 /*miliseconds*/;
       var keys = Object.keys(data[0]);
-      var rolling = data.map(function (elem) {
+      var rolling = [];
+      data.forEach(function (elem) {
         var after = new Date(elem.date).getTime() - windowMiliseconds;
         var before = new Date(elem.date).getTime();
         var average = {};
@@ -331,10 +348,9 @@ var GHDataCharts = function () {
         for (var prop in average) {
           if (average.hasOwnProperty(prop) && prop !== 'date') {
             average[prop] = average[prop] / count;
-            elem[prop + '_average'] = average[prop];
           }
         }
-        return elem;
+        rolling.push(average);
       });
       return rolling;
     }
@@ -396,15 +412,22 @@ var GHDataCharts = function () {
         target: selector
       };
 
+      GHDataCharts.convertDates(data);
+
       if (rollingAverage) {
-        data_graphic_config.data = GHDataCharts.rollingAverage(data, 180);
+        data_graphic_config.legend = [title.toLowerCase(), '6 month average'];
+        console.log(data);
+        var rolling = GHDataCharts.rollingAverage(data, 180);
+        data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1]);
         console.log(data_graphic_config.data);
         data_graphic_config.colors = ['#CCC', '#FF3647'];
+        data_graphic_config.y_accessor = 'value';
       }
 
-      if (Array.isArray(data[0])) {
-        data_graphic_config.legend = ['compared', 'base'];
-        data_graphic_config.colors = ['#FF3647', '#CCC'];
+      if (Array.isArray(data_graphic_config.data[0])) {
+        data_graphic_config.legend = data_graphic_config.legend || ['compared', 'base'];
+        data_graphic_config.colors = data_graphic_config.colors || ['#FF3647', '#999'];
+        data_graphic_config.y_accessor = data_graphic_config.y_accessor || Object.keys(data_graphic_config.data[0][0]).slice(1);
       } else {
         data_graphic_config.y_accessor = Object.keys(data[0]).slice(1);
         data_graphic_config.legend = data_graphic_config.y_accessor;
@@ -430,7 +453,6 @@ var GHDataCharts = function () {
         });
       }
 
-      GHDataCharts.convertDates(data);
       return _metricsGraphics2.default.data_graphic(data_graphic_config);
     }
   }, {
@@ -2826,11 +2848,11 @@ var GHDataDashboard = function () {
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         compareRepo[element.dataset.source]().then(function (compare) {
-          var compareData = _GHDataCharts2.default.convertToPercentages(compare);
+          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(compare), 180);
           baseRepo[element.dataset.source]().then(function (base) {
-            var baseData = _GHDataCharts2.default.convertToPercentages(base);
+            var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(base), 180);
             var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
-            _GHDataCharts2.default.LineChart(element, combinedData, title, baseRepo.owner + '/' + baseRepo.name);
+            _GHDataCharts2.default.LineChart(element, combinedData, title, false);
           }, function (error) {
             _GHDataCharts2.default.NoChart(element, title);
           });
