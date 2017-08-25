@@ -1,6 +1,8 @@
+window.$ = require('jquery')
+window.jQuery = window.$ 
+
 import MG from 'metrics-graphics'
 import * as d3 from 'd3'
-
 
 export default class GHDataCharts {
 
@@ -113,7 +115,7 @@ export default class GHDataCharts {
 
   static LineChart (selector, data, title, rollingAverage) {
     let data_graphic_config = {
-      title: title || 'Activity',
+      title:  title || 'Activity',
       data: data,
       full_width: true,
       height: 200,
@@ -163,7 +165,7 @@ export default class GHDataCharts {
       })
     }
     
-    return MG.data_graphic(data_graphic_config)
+    let chart = MG.data_graphic(data_graphic_config)
   }
 
   static Timeline (selector, data, title) {

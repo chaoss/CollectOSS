@@ -279,6 +279,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+window.$ = require('jquery');
+window.jQuery = window.$;
+
 var GHDataCharts = function () {
   function GHDataCharts() {
     _classCallCheck(this, GHDataCharts);
@@ -453,7 +456,7 @@ var GHDataCharts = function () {
         });
       }
 
-      return _metricsGraphics2.default.data_graphic(data_graphic_config);
+      var chart = _metricsGraphics2.default.data_graphic(data_graphic_config);
     }
   }, {
     key: 'Timeline',
@@ -2709,7 +2712,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var queryString = require('query-string');
-window.$ = require('jquery');
 
 var GHDataDashboard = function () {
   function GHDataDashboard(state) {
@@ -2786,6 +2788,9 @@ var GHDataDashboard = function () {
         console.log(element.dataset.source);
         repo[element.dataset.source]().then(function (data) {
           if (data && data.length) {
+            $(element).find('cite').each(function (i, e) {
+              $(e).show();
+            });
             _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined');
           } else {
             _GHDataCharts2.default.NoChart(element, title);

@@ -2609,8 +2609,23 @@ section.unmaterialized {
   border-right: 1px solid #dedede;
   border-bottom: 1px solid #dedede;
 }
-.hidden {
-  display: none !important;
+cite.metric {
+  display: none;
+  width: 100%;
+  height: 0;
+  float: right;
+  text-align: center;
+  font-size: 12px;
+  color: #ccc;
+  font-style: normal;
+  padding-left: 50px;
+  margin: 200px 0px -185px 0;
+}
+cite.metric a {
+  color: #aaa;
+}
+.linechart {
+  margin-bottom: 30px;
 }
 @media print {
   body {
@@ -2627,6 +2642,11 @@ section.unmaterialized {
 }
 #comparison-form-template {
   display: none;
+}
+.hidden,
+.hidden > *,
+.hidden > small {
+  display: none !important;
 }
 
 

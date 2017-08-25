@@ -1,8 +1,6 @@
 import GHDataCharts from './GHDataCharts'
 import GHDataAPI from './GHDataAPI'
 const queryString = require('query-string');
-window.$ = require('jquery')
-
 
 class GHDataDashboard {
 
@@ -72,6 +70,7 @@ class GHDataDashboard {
       console.log(element.dataset.source)
       repo[element.dataset.source]().then((data) => {
         if (data && data.length) {
+          $(element).find('cite').each( (i, e) => { $(e).show() } )
           GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined')
         } else {
           GHDataCharts.NoChart(element, title)
