@@ -279,6 +279,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+window.$ = require('jquery');
+window.jQuery = window.$;
+
 var GHDataCharts = function () {
   function GHDataCharts() {
     _classCallCheck(this, GHDataCharts);
@@ -288,7 +291,7 @@ var GHDataCharts = function () {
     key: 'convertDates',
     value: function convertDates(data) {
       if (Array.isArray(data[0])) {
-        data.map(function (datum) {
+        data = data.map(function (datum) {
           return GHDataCharts.convertDates(datum);
         });
       } else {
@@ -303,21 +306,43 @@ var GHDataCharts = function () {
       return data;
     }
   }, {
+    key: 'convertKey',
+    value: function convertKey(data, key) {
+      if (Array.isArray(data[0])) {
+        data = data.map(function (datum) {
+          return GHDataCharts.convertKey(datum, key);
+        });
+      } else {
+        var EARLIEST = new Date('01-01-2005');
+        data = data.map(function (d) {
+          d.value = d[key];
+          return d;
+        });
+      }
+      return data;
+    }
+  }, {
     key: 'rollingAverage',
-    value: function rollingAverage(data, windowSizeInHours) {
-      var windowMiliseconds = windowSizeInHours * 60 * 60 * 1000;
+    value: function rollingAverage(data, windowSizeInDays) {
+      var windowMiliseconds = windowSizeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60 /*seconds*/ * 1000 /*miliseconds*/;
       var keys = Object.keys(data[0]);
-      var rolling = data.map(function (elem) {
+      var rolling = [];
+      data.forEach(function (elem) {
         var after = new Date(elem.date).getTime() - windowMiliseconds;
         var before = new Date(elem.date).getTime();
         var average = {};
+        var count = 0;
         data.forEach(function (toAverage) {
           var testDate = new Date(toAverage.date).getTime();
           if (testDate <= before && testDate >= after) {
+            count++;
             keys.forEach(function (prop) {
               if (!isNaN(toAverage[prop] / 2.0) && average[prop] && prop !== 'date') {
-                average[prop] = (toAverage[prop] + average[prop]) / 2.0;
-              } else if (!isNaN(toAverage[prop] / 2.0)) {
+                if (!average[prop]) {
+                  average[prop] = 0;
+                }
+                average[prop] += toAverage[prop];
+              } else if (!isNaN(toAverage[prop] / 2.0) || prop === 'date') {
                 average[prop] = toAverage[prop];
               }
             });
@@ -325,10 +350,10 @@ var GHDataCharts = function () {
         });
         for (var prop in average) {
           if (average.hasOwnProperty(prop) && prop !== 'date') {
-            elem[prop + '_average'] = average[prop];
+            average[prop] = average[prop] / count;
           }
         }
-        return elem;
+        rolling.push(average);
       });
       return rolling;
     }
@@ -390,15 +415,22 @@ var GHDataCharts = function () {
         target: selector
       };
 
+      GHDataCharts.convertDates(data);
+
       if (rollingAverage) {
-        data_graphic_config.data = GHDataCharts.rollingAverage(data, 365 * 24);
+        data_graphic_config.legend = [title.toLowerCase(), '6 month average'];
+        console.log(data);
+        var rolling = GHDataCharts.rollingAverage(data, 180);
+        data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1]);
         console.log(data_graphic_config.data);
         data_graphic_config.colors = ['#CCC', '#FF3647'];
+        data_graphic_config.y_accessor = 'value';
       }
 
-      if (Array.isArray(data[0])) {
-        data_graphic_config.legend = ['compared', 'base'];
-        data_graphic_config.colors = ['#FF3647', '#CCC'];
+      if (Array.isArray(data_graphic_config.data[0])) {
+        data_graphic_config.legend = data_graphic_config.legend || ['compared', 'base'];
+        data_graphic_config.colors = data_graphic_config.colors || ['#FF3647', '#999'];
+        data_graphic_config.y_accessor = data_graphic_config.y_accessor || Object.keys(data_graphic_config.data[0][0]).slice(1);
       } else {
         data_graphic_config.y_accessor = Object.keys(data[0]).slice(1);
         data_graphic_config.legend = data_graphic_config.y_accessor;
@@ -424,8 +456,7 @@ var GHDataCharts = function () {
         });
       }
 
-      GHDataCharts.convertDates(data);
-      return _metricsGraphics2.default.data_graphic(data_graphic_config);
+      var chart = _metricsGraphics2.default.data_graphic(data_graphic_config);
     }
   }, {
     key: 'Timeline',
@@ -2681,7 +2712,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var queryString = require('query-string');
-window.$ = require('jquery');
 
 var GHDataDashboard = function () {
   function GHDataDashboard(state) {
@@ -2758,6 +2788,9 @@ var GHDataDashboard = function () {
         console.log(element.dataset.source);
         repo[element.dataset.source]().then(function (data) {
           if (data && data.length) {
+            $(element).find('cite').each(function (i, e) {
+              $(e).show();
+            });
             _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined');
           } else {
             _GHDataCharts2.default.NoChart(element, title);
@@ -2820,11 +2853,11 @@ var GHDataDashboard = function () {
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         compareRepo[element.dataset.source]().then(function (compare) {
-          var compareData = _GHDataCharts2.default.convertToPercentages(compare);
+          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(compare), 180);
           baseRepo[element.dataset.source]().then(function (base) {
-            var baseData = _GHDataCharts2.default.convertToPercentages(base);
+            var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(base), 180);
             var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
-            _GHDataCharts2.default.LineChart(element, combinedData, title, baseRepo.owner + '/' + baseRepo.name);
+            _GHDataCharts2.default.LineChart(element, combinedData, title, false);
           }, function (error) {
             _GHDataCharts2.default.NoChart(element, title);
           });

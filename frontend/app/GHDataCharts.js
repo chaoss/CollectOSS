@@ -1,12 +1,14 @@
+window.$ = require('jquery')
+window.jQuery = window.$ 
+
 import MG from 'metrics-graphics'
 import * as d3 from 'd3'
-
 
 export default class GHDataCharts {
 
   static convertDates (data) {
     if (Array.isArray(data[0])) {
-      data.map((datum) => {
+      data = data.map((datum) => {
         return GHDataCharts.convertDates(datum)
       })
     } else {
@@ -21,20 +23,41 @@ export default class GHDataCharts {
     return data
   }
 
-  static rollingAverage(data, windowSizeInHours) {
-    let windowMiliseconds = (windowSizeInHours * 60 * 60 * 1000)
+  static convertKey (data, key) {
+    if (Array.isArray(data[0])) {
+      data = data.map((datum) => {
+        return GHDataCharts.convertKey(datum, key)
+      })
+    } else {
+      const EARLIEST = new Date('01-01-2005')
+      data = data.map((d) => {
+        d.value = d[key];
+        return d;
+      })
+    }
+    return data
+  }
+
+  static rollingAverage(data, windowSizeInDays) {
+    let windowMiliseconds = (windowSizeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60 /*seconds*/ * 1000 /*miliseconds*/)
     let keys = Object.keys(data[0])
-    let rolling = data.map((elem) => {
+    let rolling = [];
+    data.forEach((elem) => {
       let after = new Date(elem.date).getTime() - windowMiliseconds
       let before = new Date(elem.date).getTime()
       let average = {}
+      let count = 0;
       data.forEach((toAverage) => {
         let testDate = new Date(toAverage.date).getTime()
         if (testDate <= before && testDate >= after) {
+          count++;
           keys.forEach((prop) => {
             if (!isNaN(toAverage[prop] / 2.0) && average[prop] && prop !== 'date') {
-              average[prop] = (toAverage[prop] + average[prop]) / 2.0
-            } else if (!isNaN(toAverage[prop] / 2.0)) {
+              if (!average[prop]) {
+                average[prop] = 0;
+              }
+              average[prop] += toAverage[prop]
+            } else if (!isNaN(toAverage[prop] / 2.0) || prop === 'date') {
               average[prop] = toAverage[prop]
             }
           })
@@ -42,10 +65,10 @@ export default class GHDataCharts {
       })
       for (var prop in average) {
         if (average.hasOwnProperty(prop) && prop !== 'date') {
-          elem[prop + '_average'] = average[prop]
+          average[prop] = average[prop] / count;
         }
       }
-      return elem
+      rolling.push(average);
     })
     return rolling
   }
@@ -92,7 +115,7 @@ export default class GHDataCharts {
 
   static LineChart (selector, data, title, rollingAverage) {
     let data_graphic_config = {
-      title: title || 'Activity',
+      title:  title || 'Activity',
       data: data,
       full_width: true,
       height: 200,
@@ -100,15 +123,22 @@ export default class GHDataCharts {
       target: selector
     }
 
+    GHDataCharts.convertDates(data)
+
     if (rollingAverage) {
-      data_graphic_config.data = GHDataCharts.rollingAverage(data, 365 * 24)
+      data_graphic_config.legend = [title.toLowerCase(), '6 month average']
+      console.log(data)
+      let rolling = GHDataCharts.rollingAverage(data, 180)
+      data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1])
       console.log(data_graphic_config.data)
       data_graphic_config.colors = ['#CCC', '#FF3647']
+      data_graphic_config.y_accessor = 'value';
     }
 
-    if (Array.isArray(data[0])) {
-      data_graphic_config.legend = ['compared', 'base']
-      data_graphic_config.colors = ['#FF3647', '#CCC']
+    if (Array.isArray(data_graphic_config.data[0])) {
+      data_graphic_config.legend = data_graphic_config.legend || ['compared', 'base']
+      data_graphic_config.colors = data_graphic_config.colors || ['#FF3647', '#999']
+      data_graphic_config.y_accessor = data_graphic_config.y_accessor || Object.keys(data_graphic_config.data[0][0]).slice(1)
     } else {
       data_graphic_config.y_accessor = Object.keys(data[0]).slice(1)
       data_graphic_config.legend = data_graphic_config.y_accessor
@@ -134,9 +164,8 @@ export default class GHDataCharts {
         legend.style.display = 'block'
       })
     }
-
-    GHDataCharts.convertDates(data)
-    return MG.data_graphic(data_graphic_config)
+    
+    let chart = MG.data_graphic(data_graphic_config)
   }
 
   static Timeline (selector, data, title) {

@@ -1,8 +1,6 @@
 import GHDataCharts from './GHDataCharts'
 import GHDataAPI from './GHDataAPI'
 const queryString = require('query-string');
-window.$ = require('jquery')
-
 
 class GHDataDashboard {
 
@@ -72,6 +70,7 @@ class GHDataDashboard {
       console.log(element.dataset.source)
       repo[element.dataset.source]().then((data) => {
         if (data && data.length) {
+          $(element).find('cite').each( (i, e) => { $(e).show() } )
           GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined')
         } else {
           GHDataCharts.NoChart(element, title)
@@ -134,11 +133,11 @@ class GHDataDashboard {
     $(activityComparisonCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       compareRepo[element.dataset.source]().then((compare) => {
-        let compareData = GHDataCharts.convertToPercentages(compare)
+        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(compare), 180)
         baseRepo[element.dataset.source]().then((base) => {
-          let baseData = GHDataCharts.convertToPercentages(base)
+          let baseData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(base), 180)
           let combinedData = GHDataCharts.combine(baseData, compareData)
-          GHDataCharts.LineChart(element, combinedData, title, baseRepo.owner + '/' + baseRepo.name)
+          GHDataCharts.LineChart(element, combinedData, title, false)
         }, (error) => {
           GHDataCharts.NoChart(element, title)
         })
