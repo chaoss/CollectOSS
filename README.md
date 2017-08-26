@@ -17,21 +17,23 @@ Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHeal
 
 
 
-Installation with Docker
+Installation with Docker (easy to get up and running)
 ------------------------
   1. Clone the repo
   2. `docker-compose build`
   3. `docker-compose up`
 
 
-Installation without Docker
+
+Installation without Docker (recommended for developers)
 ---------------------------
 ### Dependencies
 - Python 3.4.x/Python 2.7.x and `pip`
 - Static web server such as nginx or Apache
 - MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
-- [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
+  - Our Development team has a public read only database you can request access to
+  - If you want to install your own copy of the MSR14 dataset [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
 
 After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a user for GHData. GHData only needs `SELECT` privileges.
 
@@ -61,15 +63,15 @@ Developer Installation
    ## Python Installs on UBUNUTU
    sudo apt-get install python-pip
    sudo apt-get install python3-pip
-   
+
    ## For Development you need NodeJS
    sudo apt-get install nodejs
 ```
 
 First, clone the repo and checkout the dev branch:
- 
+
 ```bash
-git clone https://github.com/OSSHealth/ghdata/ && cd ghdata && git checkout dev 
+git clone https://github.com/OSSHealth/ghdata/ && cd ghdata && git checkout dev
 ```
 
 Install the Python and Node developer dependencies:
@@ -83,7 +85,7 @@ You're good to go.
 
 In one shell, you'll want to run `ghdata`, in another run `cd frontend/ && brunch watch -s`.
 
-If you have GNU Screen installed. this can be done automatically using `make dev-start`. 
+If you have GNU Screen installed. this can be done automatically using `make dev-start`.
 
 The screen sessions can be killed with `make dev-stop`
 
@@ -94,4 +96,3 @@ Copyright © 2017 University of Nebraska at Omaha and the University of Missouri
 GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file LICENSE for more details.
 
 (This work has been funded through the Alfred P. Sloan Foundation)
-
