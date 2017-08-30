@@ -39,7 +39,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords='ghtorrent github api data science',
-    install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent'],
+    install_requires=['beautifulsoup4', 'flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
