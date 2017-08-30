@@ -279,6 +279,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+window.$ = require('jquery');
+window.jQuery = window.$;
+
 var GHDataCharts = function () {
   function GHDataCharts() {
     _classCallCheck(this, GHDataCharts);
@@ -402,7 +405,7 @@ var GHDataCharts = function () {
     }
   }, {
     key: 'LineChart',
-    value: function LineChart(selector, data, title, rollingAverage) {
+    value: function LineChart(selector, data, title, rollingAverage, period) {
       var data_graphic_config = {
         title: title || 'Activity',
         data: data,
@@ -413,11 +416,11 @@ var GHDataCharts = function () {
       };
 
       GHDataCharts.convertDates(data);
-
       if (rollingAverage) {
-        data_graphic_config.legend = [title.toLowerCase(), '6 month average'];
+        period = period || 180;
+        data_graphic_config.legend = [title.toLowerCase(), period + ' day average'];
         console.log(data);
-        var rolling = GHDataCharts.rollingAverage(data, 180);
+        var rolling = GHDataCharts.rollingAverage(data, period);
         data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1]);
         console.log(data_graphic_config.data);
         data_graphic_config.colors = ['#CCC', '#FF3647'];
@@ -453,7 +456,7 @@ var GHDataCharts = function () {
         });
       }
 
-      return _metricsGraphics2.default.data_graphic(data_graphic_config);
+      var chart = _metricsGraphics2.default.data_graphic(data_graphic_config);
     }
   }, {
     key: 'Timeline',
@@ -2709,7 +2712,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var queryString = require('query-string');
-window.$ = require('jquery');
 
 var GHDataDashboard = function () {
   function GHDataDashboard(state) {
@@ -2718,7 +2720,10 @@ var GHDataDashboard = function () {
     _classCallCheck(this, GHDataDashboard);
 
     this.EMPTY_STATE = {
-      comparedTo: []
+      comparedTo: [],
+      trailingAverage: 180,
+      startDate: new Date('1 January 2005'),
+      endDate: new Date()
     };
     this.STARTING_HTML = $('#cards')[0].innerHTML;
     this.state = state || this.EMPTY_STATE;
@@ -2781,12 +2786,17 @@ var GHDataDashboard = function () {
   }, {
     key: 'renderGraphs',
     value: function renderGraphs(element, repo) {
+      var _this3 = this;
+
       $(element).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         console.log(element.dataset.source);
         repo[element.dataset.source]().then(function (data) {
           if (data && data.length) {
-            _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined');
+            $(element).find('cite').each(function (i, e) {
+              $(e).show();
+            });
+            _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', _this3.state.trailingAverage);
           } else {
             _GHDataCharts2.default.NoChart(element, title);
           }
@@ -2796,26 +2806,10 @@ var GHDataDashboard = function () {
       });
     }
   }, {
-    key: 'renderComparisonForm',
-    value: function renderComparisonForm() {
-      var self = this;
-      if (this.comparisonCard && this.comparisonCard.parentElement) {
-        this.comparisonCard.outerHTML = '';
-      }
-      this.comparisonCard = this.addCard(null, null, 'unmaterialized');
-      $(this.comparisonCard).append($('#comparison-form-template')[0].innerHTML);
-      $(this.comparisonCard).find('.search').on('keyup', function (e) {
-        if (e.keyCode === 13) {
-          var comparedRepo = self.ghdata.Repo(this.value);
-          self.state.comparedTo.push(comparedRepo);
-          self.pushState();
-          self.renderComparisonRepo(null, comparedRepo);
-        }
-      });
-    }
-  }, {
     key: 'renderBaseRepo',
     value: function renderBaseRepo(repo) {
+      $('#control-container').removeClass('hidden');
+
       repo = repo || this.state.repo;
       $('#main-repo-search').val(repo.owner + '/' + repo.name);
 
@@ -2840,19 +2834,39 @@ var GHDataDashboard = function () {
       this.renderComparisonForm();
     }
   }, {
+    key: 'renderComparisonForm',
+    value: function renderComparisonForm() {
+      var self = this;
+      if (this.comparisonCard && this.comparisonCard.parentElement) {
+        this.comparisonCard.outerHTML = '';
+      }
+      this.comparisonCard = this.addCard(null, null, 'unmaterialized');
+      $(this.comparisonCard).append($('#comparison-form-template')[0].innerHTML);
+      $(this.comparisonCard).find('.search').on('keyup', function (e) {
+        if (e.keyCode === 13) {
+          var comparedRepo = self.ghdata.Repo(this.value);
+          self.state.comparedTo.push(comparedRepo);
+          self.pushState();
+          self.renderComparisonRepo(null, comparedRepo);
+        }
+      });
+    }
+  }, {
     key: 'renderComparisonRepo',
     value: function renderComparisonRepo(compareRepo, baseRepo) {
+      var _this4 = this;
+
       compareRepo = compareRepo || this.state.repo;
       var activityComparisonCard = this.addCard('Activity', '<strong>' + compareRepo.owner + '/' + compareRepo.name + '</strong> versus <strong>' + baseRepo.owner + '/' + baseRepo.name + '</strong>');
       activityComparisonCard.innerHTML += $('#base-template')[0].innerHTML;
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         compareRepo[element.dataset.source]().then(function (compare) {
-          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(compare), 180);
+          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(compare), _this4.state.trailingAverage);
           baseRepo[element.dataset.source]().then(function (base) {
-            var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(base), 180);
+            var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(base), _this4.state.trailingAverage);
             var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
-            _GHDataCharts2.default.LineChart(element, combinedData, title, false);
+            _GHDataCharts2.default.LineChart(element, combinedData, title, _this4.state.trailingAverage);
           }, function (error) {
             _GHDataCharts2.default.NoChart(element, title);
           });
@@ -2865,14 +2879,14 @@ var GHDataDashboard = function () {
   }, {
     key: 'render',
     value: function render(state) {
-      var _this3 = this;
+      var _this5 = this;
 
       state = state || this.state;
       var $cards = $('#cards');
       $cards.html('');
       this.renderBaseRepo();
       state.comparedTo.forEach(function (repo) {
-        _this3.renderComparisonRepo(null, repo);
+        _this5.renderComparisonRepo(null, repo);
       });
     }
   }, {
@@ -2900,12 +2914,31 @@ var GHDataDashboard = function () {
 
 $(document).ready(function () {
 
+  var self = this;
+
   window.dashboard = new GHDataDashboard();
 
   $('.reposearch').on('keyup', function (e) {
     if (e.keyCode === 13) {
       dashboard.startSearch(this.value);
     }
+  });
+
+  var controls = $('#control-container');
+  $(window).scroll(function () {
+    if ($(window).scrollTop() >= 219) {
+      controls.addClass("fixed");
+    } else {
+      controls.removeClass("fixed");
+    }
+  });
+
+  $('#averagetimespan').change(function (e) {
+    dashboard.state.trailingAverage = this.value;
+  });
+
+  $('#renderbutton').click(function (e) {
+    dashboard.render();
   });
 });
 

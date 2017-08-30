@@ -1,14 +1,15 @@
 import GHDataCharts from './GHDataCharts'
 import GHDataAPI from './GHDataAPI'
 const queryString = require('query-string');
-window.$ = require('jquery')
-
 
 class GHDataDashboard {
 
   constructor(state) {
      this.EMPTY_STATE = {
-      comparedTo: []
+      comparedTo: [],
+      trailingAverage: 180,
+      startDate: new Date('1 January 2005'),
+      endDate: new Date()
     }
     this.STARTING_HTML = $('#cards')[0].innerHTML
     this.state = state || this.EMPTY_STATE
@@ -72,7 +73,8 @@ class GHDataDashboard {
       console.log(element.dataset.source)
       repo[element.dataset.source]().then((data) => {
         if (data && data.length) {
-          GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined')
+          $(element).find('cite').each( (i, e) => { $(e).show() } )
+          GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', this.state.trailingAverage)
         } else {
           GHDataCharts.NoChart(element, title)
         }
@@ -83,25 +85,9 @@ class GHDataDashboard {
   }
 
 
-  renderComparisonForm() {
-    var self = this
-    if (this.comparisonCard && this.comparisonCard.parentElement) {
-      this.comparisonCard.outerHTML = ''
-    }
-    this.comparisonCard = this.addCard(null, null, 'unmaterialized')
-    $(this.comparisonCard).append($('#comparison-form-template')[0].innerHTML)
-    $(this.comparisonCard).find('.search').on('keyup', function (e) {
-      if (e.keyCode === 13) {
-        var comparedRepo = self.ghdata.Repo(this.value)
-        self.state.comparedTo.push(comparedRepo)
-        self.pushState()
-        self.renderComparisonRepo(null, comparedRepo)
-      }
-    })
-  }
-
-
   renderBaseRepo(repo) {
+    $('#control-container').removeClass('hidden')
+
     repo = repo || this.state.repo
     $('#main-repo-search').val(repo.owner + '/' + repo.name)
 
@@ -127,6 +113,25 @@ class GHDataDashboard {
   }
 
 
+  renderComparisonForm() {
+    var self = this
+    if (this.comparisonCard && this.comparisonCard.parentElement) {
+      this.comparisonCard.outerHTML = ''
+    }
+    this.comparisonCard = this.addCard(null, null, 'unmaterialized')
+    $(this.comparisonCard).append($('#comparison-form-template')[0].innerHTML)
+    $(this.comparisonCard).find('.search').on('keyup', function (e) {
+      if (e.keyCode === 13) {
+        var comparedRepo = self.ghdata.Repo(this.value)
+        self.state.comparedTo.push(comparedRepo)
+        self.pushState()
+        self.renderComparisonRepo(null, comparedRepo)
+      }
+    })
+  }
+
+
+
   renderComparisonRepo(compareRepo, baseRepo) {
     compareRepo = compareRepo || this.state.repo
     var activityComparisonCard = this.addCard('Activity', '<strong>' + compareRepo.owner + '/' + compareRepo.name + '</strong> versus <strong>' + baseRepo.owner + '/' + baseRepo.name + '</strong>')
@@ -134,11 +139,11 @@ class GHDataDashboard {
     $(activityComparisonCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       compareRepo[element.dataset.source]().then((compare) => {
-        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(compare), 180)
+        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(compare), this.state.trailingAverage)
         baseRepo[element.dataset.source]().then((base) => {
-          let baseData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(base), 180)
+          let baseData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(base), this.state.trailingAverage)
           let combinedData = GHDataCharts.combine(baseData, compareData)
-          GHDataCharts.LineChart(element, combinedData, title, false)
+          GHDataCharts.LineChart(element, combinedData, title, this.state.trailingAverage)
         }, (error) => {
           GHDataCharts.NoChart(element, title)
         })
@@ -183,12 +188,32 @@ class GHDataDashboard {
 
 $(document).ready(function () {
 
+  var self = this;
+
   window.dashboard = new GHDataDashboard()
 
   $('.reposearch').on('keyup', function (e) {
     if (e.keyCode === 13) {
       dashboard.startSearch(this.value)
     }
+  })
+
+  var controls = $('#control-container')
+  $(window).scroll(() => {    
+   if ($(window).scrollTop() >= 219) {
+      controls.addClass("fixed")
+    } else {
+      controls.removeClass("fixed")
+    }
+  });
+
+
+  $('#averagetimespan').change(function (e) {
+    dashboard.state.trailingAverage = this.value
+  })
+
+  $('#renderbutton').click(function (e) {
+    dashboard.render()
   })
 
 })

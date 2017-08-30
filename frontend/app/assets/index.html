@@ -14,10 +14,10 @@
   <header class="hide-print">
     <div class="content">
       <div class="row">
-        <div class="col col-5">
-          <img src="img/logo.png" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
+        <div class="col col-4">
+          <img src="img/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
         </div>
-        <div class="col col-6 push-right">
+        <div class="col col-5 push-right">
           <div class="form-item">
               <input type="text" class="search reposearch" id="main-repo-search" placeholder="GitHub URL">
           </div>
@@ -33,40 +33,81 @@
     </section>
   </div>
 
+  <div id="control-container" class="hidden content fixed-container"/>
+    <div class="row" id="controls">
+      <div class="col col-12">
+        <div class="form">
+
+        <h4>Base Repository</h4>
+
+        <div class="form-item">
+        <label>Start Date <input type="date" id="startdate"/></label>
+        </div>
+        <div class="form-item">
+        <label>End Date <input type="date" id="enddate"/></label>
+        </div>
+        <div class="form-item">
+          <label>Trailing Average</label>
+          <div class="append">
+            <input type="number" min="2" id="averagetimespan" value="180"><span>days</span>
+          </div>
+        </div>
+
+        <h4>Comparisons</h4>
+
+        <div class="form-item form-checkboxes">
+            <label class="checkbox"><input name="comparebaseline" checked type="radio"> Baseline is project</label>
+            <label class="checkbox"><input name="comparebaseline" type="radio"> Baseline is 0%</label>
+        </div>
+
+        <button class="button w100" id="renderbutton">Render</button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="base-template" class="hidden"/>
 
     <div class="row">
       <div class="col col-12">
-        <div class="linechart" data-source="commits" data-rolling data-title="Commits / Week"></div>
+        <div class="linechart" data-source="commits" data-rolling data-title="Commits / Week">
+        <cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a></cite>
+        </div>
       </div>
     </div>
 
     <div class="row">
       <div class="col col-12">
-        <div class="linechart" data-source="forks" data-rolling data-title="Forks / Week"></div>
+        <div class="linechart" data-source="forks" data-rolling data-title="Forks / Week"><cite class="metric">Metrics: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a>, <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/forks">Forks</a></cite></div>
       </div>
     </div>
 
     <div class="row">
       <div class="col col-12">
-        <div class="linechart" data-source="issues" data-rolling data-title="Issues / Week"></div>
+        <div class="linechart" data-source="issues" data-rolling data-title="Issues / Week"><cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a></cite></div>
       </div>
     </div>
 
     <div class="row">
       <div class="col col-6">
-        <div class="linechart" data-source="pulls" data-title="Pull Requests / Week"></div>
+        <div class="linechart" data-source="pulls" data-title="Pull Requests / Week"><cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a></cite></div>
       </div>
       <div class="col col-6">
-        <div class="linechart" data-source="uniqueCommitters" data-title="Unique Committers"></div>
+        <div class="linechart" data-source="uniqueCommitters" data-title="Unique Committers">
+          <cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/contributors">Contributors</a>
+        </div>
       </div>
     </div>
+
     <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> and the <a href="https://developer.github.com/">GitHub API</a></small>
   </div>
 
   <div id="ecosystem-template" class="hidden">
     <div class="row">
-      <div class="col col-12"><div class="linechart" data-source="downloads" data-title="Downloads / Day"></div></div>
+      <div class="col col-12"><div class="linechart" data-source="downloads" data-title="Downloads / Day">
+        <cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics" target="_blank">Downloads</a></cite>
+      </div></div>
     </div>
     <div class="row">
       <div class="col col-12">

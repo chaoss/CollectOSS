@@ -1,6 +1,8 @@
+window.$ = require('jquery')
+window.jQuery = window.$ 
+
 import MG from 'metrics-graphics'
 import * as d3 from 'd3'
-
 
 export default class GHDataCharts {
 
@@ -111,9 +113,9 @@ export default class GHDataCharts {
     })
   }
 
-  static LineChart (selector, data, title, rollingAverage) {
+  static LineChart (selector, data, title, rollingAverage, period) {
     let data_graphic_config = {
-      title: title || 'Activity',
+      title:  title || 'Activity',
       data: data,
       full_width: true,
       height: 200,
@@ -121,12 +123,14 @@ export default class GHDataCharts {
       target: selector
     }
 
-    GHDataCharts.convertDates(data)
 
+
+    GHDataCharts.convertDates(data)
     if (rollingAverage) {
-      data_graphic_config.legend = [title.toLowerCase(), '6 month average']
+      period = period || 180
+      data_graphic_config.legend = [title.toLowerCase(), period + ' day average']
       console.log(data)
-      let rolling = GHDataCharts.rollingAverage(data, 180)
+      let rolling = GHDataCharts.rollingAverage(data, period)
       data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1])
       console.log(data_graphic_config.data)
       data_graphic_config.colors = ['#CCC', '#FF3647']
@@ -163,7 +167,7 @@ export default class GHDataCharts {
       })
     }
     
-    return MG.data_graphic(data_graphic_config)
+    let chart = MG.data_graphic(data_graphic_config)
   }
 
   static Timeline (selector, data, title) {

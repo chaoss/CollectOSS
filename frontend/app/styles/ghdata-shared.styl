@@ -14,11 +14,16 @@ header
 
 header .search
   margin-top: 48px
-
+  
+#logo
+  display:block
+  margin: 0 auto
+  max-width: 400px
+  
 .content
   margin: auto
   width: 95%
-  max-width: 960px
+  max-width: 1080px
 
 section#landing h1
   font-size: 25px
@@ -54,8 +59,62 @@ section.unmaterialized
   border-right: 1px solid (background - 5%)
   border-bottom: 1px solid (background - 5%)
 
-.hidden
-  display: none !important
+#controls
+  padding: 36px
+  background: (foreground - 4%)
+  border-right: 1px solid (background - 5%)
+  border-bottom: 1px solid (background - 5%)
+
+.fixed
+  position: relative
+
+@media (min-width: 1230px)
+  #cards
+    position: relative
+    z-index: 9
+  
+  section
+    z-index: 10
+    width: calc(100% - 345px);
+    float: right;
+  
+  #landing
+    width:100%
+    
+  .fixed-container
+    z-index: 0
+    position: absolute
+    top: 245px
+    left: calc(50% - (540px))
+  
+  .fixed
+    position: fixed !important
+    top: 25px
+    
+  #controls
+    width: 325px
+    float: left
+
+cite.metric
+  display:none;
+  width:100%
+  height: 0
+  float:right
+  text-align: center;
+  font-size: 12px
+  color: #ccc
+  font-style: normal
+  padding-left: 50px
+  margin: 200px 0px -185px 0
+
+cite.metric a
+  color: #aaa
+
+.linechart
+  margin-bottom: 30px
+
+.mg-line-legend
+  display: none
 
 @media print
   body
@@ -70,3 +129,6 @@ section.unmaterialized
 
 #comparison-form-template
   display: none
+
+.hidden, .hidden > *, .hidden > small
+  display: none !important 
