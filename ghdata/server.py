@@ -564,6 +564,31 @@ def run():
                             }
                         ]
     """
+    addMetric(app, librariesio.dependency_stats, 'dependency_stats')
+
+
+    """
+    @api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
+    @apiName Stargazers
+    @apiGroup Diversity
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "login": "bonnie",
+                                "location": "Rowena, TX",
+                                "commits": 12
+                            },
+                            {
+                                "login":"clyde",
+                                "location":"Ellis County, TX",
+                                "commits": 12
+                            }
+                        ]
+    """
     addTimeseries(app, ghtorrent.unique_committers, 'unique_committers')
 
     # Popularity

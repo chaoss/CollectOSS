@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import numpy as np
+from bs4 import BeautifulSoup
 
 class LibrariesIO(object):
     """Handles interaction with https://libraries.io/api to get dependency data"""
@@ -45,3 +46,53 @@ class LibrariesIO(object):
             dependentsRequest = requests.get(dependentsUrl, params={"api_key": self.API_KEY})
             print(dependentsRequest.text)
             return dependentsRequest
+
+    def dependency_stats(self, owner, repo):
+        """
+        Finds the number of dependencies, dependant projects, and dependent repos by scrapping it off of the libraries.io website
+
+        :param owner: GitHub username of the owner of the repo
+        :param repo: Repository name
+        :return: Dict that contains the results 
+        """
+        projectsUrl = "https://libraries.io/api/github/{owner}/{repo}/projects".format(owner=owner, repo=repo)
+        projectsRequest = requests.get(projectsUrl, params={"api_key": self.API_KEY})
+        json = projectsRequest.json()
+
+        if projectsRequest.status_code == 400:
+            print('You need to set the LibrariesIO API key in ghdata.cfg or the environment variable GHDATA_LIBRARIESIO_API_KEY')
+
+        if projectsRequest.status_code != 200:
+            return projectsRequest.json()
+        else:
+            platform = projectsRequest.json()[0]['platform']
+            print(platform)
+            url = "https://libraries.io/api/{platform}/{repo}/".format(platform=platform, repo=repo)
+
+            resp = requests.get(url)
+            print(resp.status_code)
+            soup = BeautifulSoup(resp.text, "html.parser")
+
+            infotable = soup.body.div.next_sibling.next_sibling.div.div.next_sibling.next_sibling.dl.next_sibling.next_sibling.next_sibling.next_sibling
+
+            data =[]
+            for child in infotable.children:
+                if child.string == '\n':
+                    pass
+                if child.string == None:
+                    if child.a != None:
+                        data.append(child.a.string)
+                else:
+                    data.append(child.string)
+                    
+            data_new = []
+            for item in data:
+                data_new.append(item.strip('\n'))
+            data_new = list(filter(None, data_new))
+
+            data_new = dict(zip(*[iter(data_new)]*2))
+
+            final_data = {'Dependencies' : data_new['Dependencies'], 'Dependent projects' : data_new['Dependent projects'], 'Dependent repositories' : data_new['Dependent repositories']}
+
+            return final_data
+
