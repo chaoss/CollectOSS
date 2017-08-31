@@ -289,18 +289,20 @@ var GHDataCharts = function () {
 
   _createClass(GHDataCharts, null, [{
     key: 'convertDates',
-    value: function convertDates(data) {
+    value: function convertDates(data, earliest, latest) {
+      earliest = earliest || new Date('01-01-2005');
+      latest = latest || new Date();
       if (Array.isArray(data[0])) {
         data = data.map(function (datum) {
           return GHDataCharts.convertDates(datum);
         });
       } else {
-        var EARLIEST = new Date('01-01-2005');
+
         data = data.map(function (d) {
           d.date = new Date(d.date);
           return d;
         }).filter(function (d) {
-          return d.date > EARLIEST;
+          return earliest < d.date && d.date < latest;
         });
       }
       return data;
@@ -384,8 +386,8 @@ var GHDataCharts = function () {
     }
   }, {
     key: 'ComparisonLineChart',
-    value: function ComparisonLineChart(selector, data, title, baseline) {
-      GHDataCharts.convertDates(data);
+    value: function ComparisonLineChart(selector, data, title, baseline, earliest, latest) {
+      data = GHDataCharts.convertDates(data, earliest, latest);
       var keys = Object.keys(data[0]).filter(function (d) {
         return (/ratio/.test(d)
         );
@@ -405,7 +407,7 @@ var GHDataCharts = function () {
     }
   }, {
     key: 'LineChart',
-    value: function LineChart(selector, data, title, rollingAverage, period) {
+    value: function LineChart(selector, data, title, rollingAverage, period, earliest, latest) {
       var data_graphic_config = {
         title: title || 'Activity',
         data: data,
@@ -415,14 +417,12 @@ var GHDataCharts = function () {
         target: selector
       };
 
-      GHDataCharts.convertDates(data);
+      data = GHDataCharts.convertDates(data, earliest, latest);
       if (rollingAverage) {
         period = period || 180;
         data_graphic_config.legend = [title.toLowerCase(), period + ' day average'];
-        console.log(data);
         var rolling = GHDataCharts.rollingAverage(data, period);
         data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1]);
-        console.log(data_graphic_config.data);
         data_graphic_config.colors = ['#CCC', '#FF3647'];
         data_graphic_config.y_accessor = 'value';
       }
@@ -2731,7 +2731,7 @@ var GHDataDashboard = function () {
     if (/repo/.test(location.search) && !state) {
       console.log('State from URL');
       this.setStateFromURL();
-    }
+    }2;
     window.addEventListener('popstate', function (e) {
       _this.setStateFromURL();
     });
@@ -2796,7 +2796,7 @@ var GHDataDashboard = function () {
             $(element).find('cite').each(function (i, e) {
               $(e).show();
             });
-            _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', _this3.state.trailingAverage);
+            _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', _this3.state.trailingAverage, _this3.state.earliest, _this3.state.latest);
           } else {
             _GHDataCharts2.default.NoChart(element, title);
           }
@@ -2854,19 +2854,18 @@ var GHDataDashboard = function () {
   }, {
     key: 'renderComparisonRepo',
     value: function renderComparisonRepo(compareRepo, baseRepo) {
-      var _this4 = this;
-
       compareRepo = compareRepo || this.state.repo;
       var activityComparisonCard = this.addCard('Activity', '<strong>' + compareRepo.owner + '/' + compareRepo.name + '</strong> versus <strong>' + baseRepo.owner + '/' + baseRepo.name + '</strong>');
       activityComparisonCard.innerHTML += $('#base-template')[0].innerHTML;
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         compareRepo[element.dataset.source]().then(function (compare) {
-          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(compare), _this4.state.trailingAverage);
+          var compareData = _GHDataCharts2.default.convertToPercentages(compare);
           baseRepo[element.dataset.source]().then(function (base) {
-            var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertToPercentages(base), _this4.state.trailingAverage);
+            var baseData = _GHDataCharts2.default.convertToPercentages(base);
             var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
-            _GHDataCharts2.default.LineChart(element, combinedData, title, _this4.state.trailingAverage);
+            console.log(combinedData);
+            _GHDataCharts2.default.LineChart(element, combinedData, title);
           }, function (error) {
             _GHDataCharts2.default.NoChart(element, title);
           });
@@ -2879,14 +2878,14 @@ var GHDataDashboard = function () {
   }, {
     key: 'render',
     value: function render(state) {
-      var _this5 = this;
+      var _this4 = this;
 
       state = state || this.state;
       var $cards = $('#cards');
       $cards.html('');
       this.renderBaseRepo();
       state.comparedTo.forEach(function (repo) {
-        _this5.renderComparisonRepo(null, repo);
+        _this4.renderComparisonRepo(null, repo);
       });
     }
   }, {
@@ -2935,6 +2934,16 @@ $(document).ready(function () {
 
   $('#averagetimespan').change(function (e) {
     dashboard.state.trailingAverage = this.value;
+  });
+
+  $('#startdate').change(function (e) {
+    dashboard.state.earliest = new Date(this.value);
+    console.log("New earliest date", dashboard.state.earliest);
+  });
+
+  $('#enddat').change(function (e) {
+    dashboard.state.latest = new Date(this.value);
+    console.log("New latest date", dashboard.state.earliest);
   });
 
   $('#renderbutton').click(function (e) {

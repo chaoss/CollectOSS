@@ -6,18 +6,20 @@ import * as d3 from 'd3'
 
 export default class GHDataCharts {
 
-  static convertDates (data) {
+  static convertDates (data, earliest, latest) {
+    earliest = earliest || new Date('01-01-2005')
+    latest = latest || new Date()
     if (Array.isArray(data[0])) {
       data = data.map((datum) => {
         return GHDataCharts.convertDates(datum)
       })
     } else {
-      const EARLIEST = new Date('01-01-2005')
+      
       data = data.map((d) => {
         d.date = new Date(d.date)
         return d
       }).filter((d) => {
-        return d.date > EARLIEST
+        return earliest < d.date && d.date < latest
       })
     }
     return data
@@ -96,8 +98,8 @@ export default class GHDataCharts {
     return Array.from(arguments)
   }
 
-  static ComparisonLineChart (selector, data, title, baseline) {
-    GHDataCharts.convertDates(data)
+  static ComparisonLineChart (selector, data, title, baseline, earliest, latest) {
+    data = GHDataCharts.convertDates(data, earliest, latest)
     let keys = Object.keys(data[0]).filter((d) => { return /ratio/.test(d) })
     console.log(keys)
     return MG.data_graphic({
@@ -113,7 +115,7 @@ export default class GHDataCharts {
     })
   }
 
-  static LineChart (selector, data, title, rollingAverage, period) {
+  static LineChart (selector, data, title, rollingAverage, period, earliest, latest) {
     let data_graphic_config = {
       title:  title || 'Activity',
       data: data,
@@ -123,16 +125,12 @@ export default class GHDataCharts {
       target: selector
     }
 
-
-
-    GHDataCharts.convertDates(data)
+    data = GHDataCharts.convertDates(data, earliest, latest)
     if (rollingAverage) {
       period = period || 180
       data_graphic_config.legend = [title.toLowerCase(), period + ' day average']
-      console.log(data)
       let rolling = GHDataCharts.rollingAverage(data, period)
       data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1])
-      console.log(data_graphic_config.data)
       data_graphic_config.colors = ['#CCC', '#FF3647']
       data_graphic_config.y_accessor = 'value';
     }

@@ -2619,12 +2619,14 @@ section.unmaterialized {
   background: #f0f0f0;
   border-right: 1px solid #dedede;
   border-bottom: 1px solid #dedede;
+  margin-bottom: 20px;
 }
 .fixed {
   position: relative;
 }
 @media (min-width: 1230px) {
   #cards {
+    padding-bottom: 100px;
     position: relative;
     z-index: 9;
   }

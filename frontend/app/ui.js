@@ -17,7 +17,7 @@ class GHDataDashboard {
     if (/repo/.test(location.search) && !state) {
       console.log('State from URL')
       this.setStateFromURL()
-    }
+    }2
     window.addEventListener('popstate', (e) =>  {
       this.setStateFromURL()
     })
@@ -74,7 +74,7 @@ class GHDataDashboard {
       repo[element.dataset.source]().then((data) => {
         if (data && data.length) {
           $(element).find('cite').each( (i, e) => { $(e).show() } )
-          GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', this.state.trailingAverage)
+          GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', this.state.trailingAverage, this.state.earliest, this.state.latest)
         } else {
           GHDataCharts.NoChart(element, title)
         }
@@ -139,11 +139,12 @@ class GHDataDashboard {
     $(activityComparisonCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       compareRepo[element.dataset.source]().then((compare) => {
-        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(compare), this.state.trailingAverage)
+        let compareData = GHDataCharts.convertToPercentages(compare)
         baseRepo[element.dataset.source]().then((base) => {
-          let baseData = GHDataCharts.rollingAverage(GHDataCharts.convertToPercentages(base), this.state.trailingAverage)
+          let baseData = GHDataCharts.convertToPercentages(base)
           let combinedData = GHDataCharts.combine(baseData, compareData)
-          GHDataCharts.LineChart(element, combinedData, title, this.state.trailingAverage)
+          console.log(combinedData)
+          GHDataCharts.LineChart(element, combinedData, title)
         }, (error) => {
           GHDataCharts.NoChart(element, title)
         })
@@ -210,6 +211,16 @@ $(document).ready(function () {
 
   $('#averagetimespan').change(function (e) {
     dashboard.state.trailingAverage = this.value
+  })
+
+  $('#startdate').change(function (e) {
+    dashboard.state.earliest = new Date(this.value)
+    console.log("New earliest date", dashboard.state.earliest)
+  })
+
+  $('#enddat').change(function (e) {
+    dashboard.state.latest = new Date(this.value)
+    console.log("New latest date", dashboard.state.earliest)
   })
 
   $('#renderbutton').click(function (e) {
