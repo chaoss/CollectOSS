@@ -139,12 +139,14 @@ class GHDataDashboard {
     $(activityComparisonCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       compareRepo[element.dataset.source]().then((compare) => {
-        let compareData = GHDataCharts.convertToPercentages(compare)
+        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertDates(GHDataCharts.convertToPercentages(compare), this.state.earliest, this.state.latest), this.state.trailingAverage)
         baseRepo[element.dataset.source]().then((base) => {
-          let baseData = GHDataCharts.convertToPercentages(base)
+          let baseDatesData = GHDataCharts.convertDates(GHDataCharts.convertToPercentages(base), this.state.earliest, this.state.latest)
+          console.log("BDD", baseDatesData)
+          let baseData = GHDataCharts.rollingAverage(baseDatesData, this.state.trailingAverage)
           let combinedData = GHDataCharts.combine(baseData, compareData)
           console.log(combinedData)
-          GHDataCharts.LineChart(element, combinedData, title)
+          GHDataCharts.LineChart(element, combinedData, title, null, null, null, true)
         }, (error) => {
           GHDataCharts.NoChart(element, title)
         })
@@ -218,7 +220,7 @@ $(document).ready(function () {
     console.log("New earliest date", dashboard.state.earliest)
   })
 
-  $('#enddat').change(function (e) {
+  $('#enddate').change(function (e) {
     dashboard.state.latest = new Date(this.value)
     console.log("New latest date", dashboard.state.earliest)
   })

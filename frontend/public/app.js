@@ -407,7 +407,7 @@ var GHDataCharts = function () {
     }
   }, {
     key: 'LineChart',
-    value: function LineChart(selector, data, title, rollingAverage, period, earliest, latest) {
+    value: function LineChart(selector, data, title, rollingAverage, period, earliest, latest, isPercentage) {
       var data_graphic_config = {
         title: title || 'Activity',
         data: data,
@@ -418,6 +418,7 @@ var GHDataCharts = function () {
       };
 
       data = GHDataCharts.convertDates(data, earliest, latest);
+
       if (rollingAverage) {
         period = period || 180;
         data_graphic_config.legend = [title.toLowerCase(), period + ' day average'];
@@ -430,7 +431,7 @@ var GHDataCharts = function () {
       if (Array.isArray(data_graphic_config.data[0])) {
         data_graphic_config.legend = data_graphic_config.legend || ['compared', 'base'];
         data_graphic_config.colors = data_graphic_config.colors || ['#FF3647', '#999'];
-        data_graphic_config.y_accessor = data_graphic_config.y_accessor || Object.keys(data_graphic_config.data[0][0]).slice(1);
+        data_graphic_config.y_accessor = data_graphic_config.y_accessor || 'value';
       } else {
         data_graphic_config.y_accessor = Object.keys(data[0]).slice(1);
         data_graphic_config.legend = data_graphic_config.y_accessor;
@@ -2854,18 +2855,22 @@ var GHDataDashboard = function () {
   }, {
     key: 'renderComparisonRepo',
     value: function renderComparisonRepo(compareRepo, baseRepo) {
+      var _this4 = this;
+
       compareRepo = compareRepo || this.state.repo;
       var activityComparisonCard = this.addCard('Activity', '<strong>' + compareRepo.owner + '/' + compareRepo.name + '</strong> versus <strong>' + baseRepo.owner + '/' + baseRepo.name + '</strong>');
       activityComparisonCard.innerHTML += $('#base-template')[0].innerHTML;
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         compareRepo[element.dataset.source]().then(function (compare) {
-          var compareData = _GHDataCharts2.default.convertToPercentages(compare);
+          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(compare), _this4.state.earliest, _this4.state.latest), _this4.state.trailingAverage);
           baseRepo[element.dataset.source]().then(function (base) {
-            var baseData = _GHDataCharts2.default.convertToPercentages(base);
+            var baseDatesData = _GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(base), _this4.state.earliest, _this4.state.latest);
+            console.log("BDD", baseDatesData);
+            var baseData = _GHDataCharts2.default.rollingAverage(baseDatesData, _this4.state.trailingAverage);
             var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
             console.log(combinedData);
-            _GHDataCharts2.default.LineChart(element, combinedData, title);
+            _GHDataCharts2.default.LineChart(element, combinedData, title, null, null, null, true);
           }, function (error) {
             _GHDataCharts2.default.NoChart(element, title);
           });
@@ -2878,14 +2883,14 @@ var GHDataDashboard = function () {
   }, {
     key: 'render',
     value: function render(state) {
-      var _this4 = this;
+      var _this5 = this;
 
       state = state || this.state;
       var $cards = $('#cards');
       $cards.html('');
       this.renderBaseRepo();
       state.comparedTo.forEach(function (repo) {
-        _this4.renderComparisonRepo(null, repo);
+        _this5.renderComparisonRepo(null, repo);
       });
     }
   }, {
@@ -2941,7 +2946,7 @@ $(document).ready(function () {
     console.log("New earliest date", dashboard.state.earliest);
   });
 
-  $('#enddat').change(function (e) {
+  $('#enddate').change(function (e) {
     dashboard.state.latest = new Date(this.value);
     console.log("New latest date", dashboard.state.earliest);
   });

@@ -115,7 +115,7 @@ export default class GHDataCharts {
     })
   }
 
-  static LineChart (selector, data, title, rollingAverage, period, earliest, latest) {
+  static LineChart (selector, data, title, rollingAverage, period, earliest, latest, isPercentage) {
     let data_graphic_config = {
       title:  title || 'Activity',
       data: data,
@@ -126,6 +126,7 @@ export default class GHDataCharts {
     }
 
     data = GHDataCharts.convertDates(data, earliest, latest)
+
     if (rollingAverage) {
       period = period || 180
       data_graphic_config.legend = [title.toLowerCase(), period + ' day average']
@@ -138,7 +139,7 @@ export default class GHDataCharts {
     if (Array.isArray(data_graphic_config.data[0])) {
       data_graphic_config.legend = data_graphic_config.legend || ['compared', 'base']
       data_graphic_config.colors = data_graphic_config.colors || ['#FF3647', '#999']
-      data_graphic_config.y_accessor = data_graphic_config.y_accessor || Object.keys(data_graphic_config.data[0][0]).slice(1)
+      data_graphic_config.y_accessor = data_graphic_config.y_accessor || 'value'
     } else {
       data_graphic_config.y_accessor = Object.keys(data[0]).slice(1)
       data_graphic_config.legend = data_graphic_config.y_accessor

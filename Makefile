@@ -13,6 +13,7 @@ default:
 	@ echo "    install-msr      Installs MSR14 dataset"
 	@ echo "    upgrade          Pulls newest version and installs"
 	@ echo "    test             Run pytest unit tests"
+	@ echo "    serve            Runs using gunicorn"
 	@ echo "    dev-start        Starts GHData and Brunch screen sessions"
 	@ echo "    dev-stop         Kills GHData and Brunch screen sessions"
 	@ echo "    python-docs      Generates new Sphinx documentation"
@@ -76,6 +77,13 @@ dev-stop:
 		screen -S "ghdata-frontend" -X kill
 
 dev-restart: dev-stop dev-start
+
+serve:
+ifdef CONDA
+		source activate ghdata && gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
+else
+		gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
+endif
 
 python-docs:
 		cd docs/python   \
