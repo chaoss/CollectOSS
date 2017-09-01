@@ -76,6 +76,7 @@ def read_config(parser, section, name, environment_variable, default):
         return default
 
 
+
 app = Flask(__name__)
 CORS(app)
 # Try to open the config file and parse it
@@ -99,7 +100,7 @@ port = read_config(parser, 'Server', 'port', 'GHDATA_PORT', '5000')
 
 publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
 github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
-librariesio = ghdata.LibrariesIO(api_key=read_config(parser, 'LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'))
+librariesio = ghdata.LibrariesIO(api_key=read_config(parser, 'LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
 downloads = ghdata.Downloads(github)
 
 if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
