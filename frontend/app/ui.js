@@ -74,7 +74,16 @@ class GHDataDashboard {
       repo[element.dataset.source]().then((data) => {
         if (data && data.length) {
           $(element).find('cite').each( (i, e) => { $(e).show() } )
-          GHDataCharts.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', this.state.trailingAverage, this.state.earliest, this.state.latest)
+
+          let config = {
+            title: title, 
+            rollingAverage: typeof element.dataset.rolling !== 'undefined', 
+            period: this.state.trailingAverage, 
+            earliest: this.state.earliest, 
+            latest: this.state.latest
+          }
+
+          GHDataCharts.LineChart(element, data, config)
         } else {
           GHDataCharts.NoChart(element, title)
         }
@@ -139,14 +148,21 @@ class GHDataDashboard {
     $(activityComparisonCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       compareRepo[element.dataset.source]().then((compare) => {
-        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertDates(GHDataCharts.convertToPercentages(compare), this.state.earliest, this.state.latest), this.state.trailingAverage)
+        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertDates(GHDataCharts.convertToPercentages(compare, Object.keys(compare[0])[1]), this.state.earliest, this.state.latest), undefined, this.state.trailingAverage)
         baseRepo[element.dataset.source]().then((base) => {
-          let baseDatesData = GHDataCharts.convertDates(GHDataCharts.convertToPercentages(base), this.state.earliest, this.state.latest)
-          console.log("BDD", baseDatesData)
-          let baseData = GHDataCharts.rollingAverage(baseDatesData, this.state.trailingAverage)
+          let baseDatesData = GHDataCharts.convertDates(GHDataCharts.convertToPercentages(base, Object.keys(base[0])[1]), this.state.earliest, this.state.latest)
+          let baseData = GHDataCharts.rollingAverage(baseDatesData, undefined, this.state.trailingAverage)
           let combinedData = GHDataCharts.combine(baseData, compareData)
-          console.log(combinedData)
-          GHDataCharts.LineChart(element, combinedData, title, null, null, null, true)
+
+          let config = {
+            title: title,
+            earleist: this.state.earliest,
+            latest: this.state.latest,
+            legend: [baseRepo.toString(), compareRepo.toString()],
+            percentage: true
+          }
+
+          GHDataCharts.LineChart(element, combinedData, config)
         }, (error) => {
           GHDataCharts.NoChart(element, title)
         })

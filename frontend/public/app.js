@@ -324,59 +324,63 @@ var GHDataCharts = function () {
       return data;
     }
   }, {
+    key: 'averageArray',
+    value: function averageArray(ary) {
+      ary.push(0);
+      return ary.reduce(function (a, e) {
+        return a + e;
+      }) / (ary.length - 1);
+    }
+  }, {
     key: 'rollingAverage',
-    value: function rollingAverage(data, windowSizeInDays) {
-      var windowMiliseconds = windowSizeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60 /*seconds*/ * 1000 /*miliseconds*/;
-      var keys = Object.keys(data[0]);
+    value: function rollingAverage(data, key, windowSizeInDays) {
+      key = key || 'value';
+      windowSizeInDays = windowSizeInDays || 180;
       var rolling = [];
-      data.forEach(function (elem) {
-        var after = new Date(elem.date).getTime() - windowMiliseconds;
-        var before = new Date(elem.date).getTime();
-        var average = {};
-        var count = 0;
-        data.forEach(function (toAverage) {
-          var testDate = new Date(toAverage.date).getTime();
-          if (testDate <= before && testDate >= after) {
-            count++;
-            keys.forEach(function (prop) {
-              if (!isNaN(toAverage[prop] / 2.0) && average[prop] && prop !== 'date') {
-                if (!average[prop]) {
-                  average[prop] = 0;
-                }
-                average[prop] += toAverage[prop];
-              } else if (!isNaN(toAverage[prop] / 2.0) || prop === 'date') {
-                average[prop] = toAverage[prop];
+      var averageWindow = [];
+      var i = 0;
+      var lastFound = -1;
+
+      var after = new Date();
+      var before = new Date();
+
+      for (var date = new Date(data[0].date); date <= data[data.length - 1].date; date.setDate(date.getDate() + 1)) {
+
+        after.setDate(date.getDate() - windowSizeInDays);
+
+        if (averageWindow.length < windowSizeInDays) {
+          for (; i < data.length && averageWindow.length <= windowSizeInDays; i++) {
+            if (lastFound > -1) {
+              for (var iter = new Date(data[lastFound].date); iter <= data[i].date; iter.setDate(iter.getDate() + 1)) {
+                averageWindow.push((data[i][key] + data[lastFound][key]) / 2);
               }
-            });
-          }
-        });
-        for (var prop in average) {
-          if (average.hasOwnProperty(prop) && prop !== 'date') {
-            average[prop] = average[prop] / count;
+            }
+            lastFound = i;
           }
         }
+
+        var average = { date: new Date(date) };
+        average[key] = GHDataCharts.averageArray(averageWindow.slice(0, windowSizeInDays));
+        averageWindow.shift();
         rolling.push(average);
-      });
+      }
       return rolling;
     }
   }, {
     key: 'convertToPercentages',
-    value: function convertToPercentages(data) {
-      if (data && data[0]) {
-        var keys = Object.keys(data[0]);
-      } else {
+    value: function convertToPercentages(data, key, baseline) {
+      console.log(data);
+      if (!data) {
         return [];
       }
-      if (keys[1] !== 'date' && !isNaN(data[0][keys[1]] / 2.0)) {
-        var baseline = (data[0][keys[1]] + data[1][keys[1]]) / 2;
-        if (isNaN(baseline)) {
-          baseline = 1;
-        }
-        data = data.map(function (datum) {
-          datum['value'] = datum[keys[1]] / baseline;
-          return datum;
-        });
-      }
+      baseline = baseline || GHDataCharts.averageArray(data.map(function (e) {
+        return e[key];
+      }));
+      console.log(baseline);
+      data = data.map(function (datum) {
+        datum['value'] = datum[key] / baseline;
+        return datum;
+      });
       return data;
     }
   }, {
@@ -407,24 +411,37 @@ var GHDataCharts = function () {
     }
   }, {
     key: 'LineChart',
-    value: function LineChart(selector, data, title, rollingAverage, period, earliest, latest, isPercentage) {
+    value: function LineChart(selector, data, config) {
+
+      config.title = config.title || 'Activity';
+      config.rollingAverage = config.rollingAverage == true;
+      config.period = config.period || 180;
+      config.earliest = config.earliest || new Date('01-01-2005');
+      config.latest = config.latest || new Date();
+      config.percentage = config.percentage == true;
+
       var data_graphic_config = {
-        title: title || 'Activity',
+        title: config.title,
         data: data,
         full_width: true,
         height: 200,
         x_accessor: 'date',
+        legend: config.legend,
+        colors: config.colors,
         target: selector
       };
 
-      data = GHDataCharts.convertDates(data, earliest, latest);
+      if (config.percentage) {
+        data_graphic_config.format = 'percentage';
+      }
 
-      if (rollingAverage) {
-        period = period || 180;
-        data_graphic_config.legend = [title.toLowerCase(), period + ' day average'];
-        var rolling = GHDataCharts.rollingAverage(data, period);
+      data = GHDataCharts.convertDates(data, config.earliest, config.latest);
+
+      if (config.rollingAverage) {
+        data_graphic_config.legend = data_graphic_config.legend || [config.title.toLowerCase(), config.period + ' day average'];
+        var rolling = GHDataCharts.rollingAverage(data, Object.keys(data[0])[1], config.period);
         data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1]);
-        data_graphic_config.colors = ['#CCC', '#FF3647'];
+        data_graphic_config.colors = data_graphic_config.colors || ['#CCC', '#FF3647'];
         data_graphic_config.y_accessor = 'value';
       }
 
@@ -2797,7 +2814,16 @@ var GHDataDashboard = function () {
             $(element).find('cite').each(function (i, e) {
               $(e).show();
             });
-            _GHDataCharts2.default.LineChart(element, data, title, typeof element.dataset.rolling !== 'undefined', _this3.state.trailingAverage, _this3.state.earliest, _this3.state.latest);
+
+            var config = {
+              title: title,
+              rollingAverage: typeof element.dataset.rolling !== 'undefined',
+              period: _this3.state.trailingAverage,
+              earliest: _this3.state.earliest,
+              latest: _this3.state.latest
+            };
+
+            _GHDataCharts2.default.LineChart(element, data, config);
           } else {
             _GHDataCharts2.default.NoChart(element, title);
           }
@@ -2863,14 +2889,21 @@ var GHDataDashboard = function () {
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         compareRepo[element.dataset.source]().then(function (compare) {
-          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(compare), _this4.state.earliest, _this4.state.latest), _this4.state.trailingAverage);
+          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(compare, Object.keys(compare[0])[1]), _this4.state.earliest, _this4.state.latest), undefined, _this4.state.trailingAverage);
           baseRepo[element.dataset.source]().then(function (base) {
-            var baseDatesData = _GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(base), _this4.state.earliest, _this4.state.latest);
-            console.log("BDD", baseDatesData);
-            var baseData = _GHDataCharts2.default.rollingAverage(baseDatesData, _this4.state.trailingAverage);
+            var baseDatesData = _GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(base, Object.keys(base[0])[1]), _this4.state.earliest, _this4.state.latest);
+            var baseData = _GHDataCharts2.default.rollingAverage(baseDatesData, undefined, _this4.state.trailingAverage);
             var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
-            console.log(combinedData);
-            _GHDataCharts2.default.LineChart(element, combinedData, title, null, null, null, true);
+
+            var config = {
+              title: title,
+              earleist: _this4.state.earliest,
+              latest: _this4.state.latest,
+              legend: [baseRepo.toString(), compareRepo.toString()],
+              percentage: true
+            };
+
+            _GHDataCharts2.default.LineChart(element, combinedData, config);
           }, function (error) {
             _GHDataCharts2.default.NoChart(element, title);
           });

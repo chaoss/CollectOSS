@@ -40,57 +40,56 @@ export default class GHDataCharts {
     return data
   }
 
-  static rollingAverage(data, windowSizeInDays) {
-    let windowMiliseconds = (windowSizeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60 /*seconds*/ * 1000 /*miliseconds*/)
-    let keys = Object.keys(data[0])
+  static averageArray(ary) {
+    ary.push(0)
+    return ary.reduce((a, e) => {return a + e}) / (ary.length - 1);
+  }
+
+  static rollingAverage(data, key, windowSizeInDays) {
+    key = key || 'value'
+    windowSizeInDays = windowSizeInDays || 180
     let rolling = [];
-    data.forEach((elem) => {
-      let after = new Date(elem.date).getTime() - windowMiliseconds
-      let before = new Date(elem.date).getTime()
-      let average = {}
-      let count = 0;
-      data.forEach((toAverage) => {
-        let testDate = new Date(toAverage.date).getTime()
-        if (testDate <= before && testDate >= after) {
-          count++;
-          keys.forEach((prop) => {
-            if (!isNaN(toAverage[prop] / 2.0) && average[prop] && prop !== 'date') {
-              if (!average[prop]) {
-                average[prop] = 0;
-              }
-              average[prop] += toAverage[prop]
-            } else if (!isNaN(toAverage[prop] / 2.0) || prop === 'date') {
-              average[prop] = toAverage[prop]
+    let averageWindow = [];
+    let i = 0;
+    let lastFound = -1;
+
+    let after = new Date()
+    let before = new Date()
+
+    for (let date = new Date(data[0].date); date <= data[data.length - 1].date; date.setDate(date.getDate() + 1)) {
+      
+      after.setDate(date.getDate() - windowSizeInDays)
+
+      if (averageWindow.length < windowSizeInDays) {
+        for (; i < data.length && averageWindow.length <= windowSizeInDays; i++) {
+          if (lastFound > -1) {
+            for (let iter = new Date(data[lastFound].date); iter <= data[i].date; iter.setDate(iter.getDate() + 1)) {
+              averageWindow.push( (data[i][key] + data[lastFound][key]) / 2 )
             }
-          })
-        }
-      })
-      for (var prop in average) {
-        if (average.hasOwnProperty(prop) && prop !== 'date') {
-          average[prop] = average[prop] / count;
+          }
+          lastFound = i
         }
       }
+
+      let average = {date: new Date(date)}
+      average[key] = GHDataCharts.averageArray(averageWindow.slice(0, windowSizeInDays));
+      averageWindow.shift()
       rolling.push(average);
-    })
+    }
     return rolling
   }
 
-  static convertToPercentages(data) {
-    if (data && data[0]) {
-      var keys = Object.keys(data[0])
-    } else {
+  static convertToPercentages(data, key, baseline) {
+    console.log(data)
+    if (!data) {
       return []
     }
-    if (keys[1] !== 'date' && !isNaN(data[0][keys[1]] / 2.0)) {
-      let baseline = (data[0][keys[1]] + data[1][keys[1]]) / 2
-      if (isNaN(baseline)) {
-        baseline = 1
-      }
-      data = data.map((datum) => {
-        datum['value'] = datum[keys[1]] / baseline
-        return datum
-      })
-    }
+    baseline = baseline || GHDataCharts.averageArray( data.map((e) => {return e[key]}) )
+    console.log(baseline)
+    data = data.map((datum) => {
+      datum['value'] = (datum[key] / baseline)
+      return datum
+    })
     return data
   }
 
@@ -115,24 +114,38 @@ export default class GHDataCharts {
     })
   }
 
-  static LineChart (selector, data, title, rollingAverage, period, earliest, latest, isPercentage) {
+  static LineChart (selector, data, config) {
+
+    config.title = config.title || 'Activity'
+    config.rollingAverage = (config.rollingAverage == true)
+    config.period = config.period || 180
+    config.earliest = config.earliest || new Date('01-01-2005')
+    config.latest = config.latest || new Date()
+    config.percentage = (config.percentage == true)
+
+
     let data_graphic_config = {
-      title:  title || 'Activity',
+      title:  config.title,
       data: data,
       full_width: true,
       height: 200,
       x_accessor: 'date',
+      legend: config.legend,
+      colors: config.colors,
       target: selector
     }
 
-    data = GHDataCharts.convertDates(data, earliest, latest)
+    if (config.percentage) {
+      data_graphic_config.format = 'percentage';
+    }
 
-    if (rollingAverage) {
-      period = period || 180
-      data_graphic_config.legend = [title.toLowerCase(), period + ' day average']
-      let rolling = GHDataCharts.rollingAverage(data, period)
+    data = GHDataCharts.convertDates(data, config.earliest, config.latest)
+
+    if (config.rollingAverage) {
+      data_graphic_config.legend = data_graphic_config.legend || [config.title.toLowerCase(), config.period + ' day average']
+      let rolling = GHDataCharts.rollingAverage(data, Object.keys(data[0])[1], config.period)
       data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1])
-      data_graphic_config.colors = ['#CCC', '#FF3647']
+      data_graphic_config.colors = data_graphic_config.colors ||['#CCC', '#FF3647']
       data_graphic_config.y_accessor = 'value';
     }
 
