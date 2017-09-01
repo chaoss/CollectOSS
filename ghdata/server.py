@@ -101,7 +101,7 @@ def run():
 
     publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
     github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
-    librariesio = ghdata.LibrariesIO(api_key=read_config(parser, 'LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'))
+    librariesio = ghdata.LibrariesIO(api_key=read_config(parser, 'LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
     downloads = ghdata.Downloads(github)
 
     if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
