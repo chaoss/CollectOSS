@@ -6,10 +6,13 @@ class GHDataDashboard {
 
   constructor(state) {
      this.EMPTY_STATE = {
-      comparedTo: [],
-      trailingAverage: 180,
-      startDate: new Date('1 January 2005'),
-      endDate: new Date()
+      "repo": undefined,
+      "comparedTo": [],
+      "trailingAverage": 180,
+      "startDate": new Date("1 January 2005"),
+      "endDate": new Date(),
+      "compare": "each",
+      "byDate": false,
     }
     this.STARTING_HTML = $('#cards')[0].innerHTML
     this.state = state || this.EMPTY_STATE
@@ -26,9 +29,7 @@ class GHDataDashboard {
 
   setStateFromURL() {
     let parsed = queryString.parse(location.search, {arrayFormat: 'bracket'})
-    let state = {
-      comparedTo: []
-    }
+    let state = this.EMPTY_STATE
     state.repo = this.ghdata.Repo(parsed.repo.replace(' ', '/'))
     if (parsed.comparedTo) {
       parsed.comparedTo.forEach((repo) => {
@@ -148,21 +149,48 @@ class GHDataDashboard {
     $(activityComparisonCard).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
       compareRepo[element.dataset.source]().then((compare) => {
-        let compareData = GHDataCharts.rollingAverage(GHDataCharts.convertDates(GHDataCharts.convertToPercentages(compare, Object.keys(compare[0])[1]), this.state.earliest, this.state.latest), undefined, this.state.trailingAverage)
         baseRepo[element.dataset.source]().then((base) => {
-          let baseDatesData = GHDataCharts.convertDates(GHDataCharts.convertToPercentages(base, Object.keys(base[0])[1]), this.state.earliest, this.state.latest)
-          let baseData = GHDataCharts.rollingAverage(baseDatesData, undefined, this.state.trailingAverage)
-          let combinedData = GHDataCharts.combine(baseData, compareData)
+          
+          if (this.state.compare == 'each') {
+            let compareData = GHDataCharts.rollingAverage(
+              GHDataCharts.convertDates(
+                GHDataCharts.convertToPercentages(
+                  compare, 
+                  Object.keys(compare[0])[1]
+                ), this.state.earliest, this.state.latest
+              ), undefined, this.state.trailingAverage)
 
-          let config = {
-            title: title,
-            earleist: this.state.earliest,
-            latest: this.state.latest,
-            legend: [baseRepo.toString(), compareRepo.toString()],
-            percentage: true
+            let baseData = GHDataCharts.rollingAverage(
+              GHDataCharts.convertDates(
+                GHDataCharts.convertToPercentages(
+                  base, 
+                  Object.keys(base[0])[1]
+                ), this.state.earliest, this.state.latest
+              ), undefined, this.state.trailingAverage)    
+
+            let combinedData = GHDataCharts.combine(baseData, compareData)
+            
+            let config = {
+              title: title,
+              earleist: this.state.earliest,
+              latest: this.state.latest,
+              legend: [baseRepo.toString(), compareRepo.toString()],
+              percentage: true
+            }
+
+            GHDataCharts.LineChart(element, combinedData, config)
+          } else if (this.state.compare = 'compared') {
+            GHDataCharts.ComparisonLineChart(element, base, compare, {
+              title: title,
+              period: this.state.trailingAverage,
+              byDate: this.state.byDate,
+              earliest: this.state.earliest,
+              latest: this.state.latest,
+              baseline: baseRepo.toString(),
+              legend: [compareRepo.toString()]
+            })
           }
 
-          GHDataCharts.LineChart(element, combinedData, config)
         }, (error) => {
           GHDataCharts.NoChart(element, title)
         })
@@ -182,6 +210,7 @@ class GHDataDashboard {
     state.comparedTo.forEach((repo) => {
       this.renderComparisonRepo(null, repo)
     })
+    $('.baseproject').text(this.state.repo.toString())
   }
 
 
@@ -226,7 +255,6 @@ $(document).ready(function () {
     }
   });
 
-
   $('#averagetimespan').change(function (e) {
     dashboard.state.trailingAverage = this.value
   })
@@ -239,6 +267,10 @@ $(document).ready(function () {
   $('#enddate').change(function (e) {
     dashboard.state.latest = new Date(this.value)
     console.log("New latest date", dashboard.state.earliest)
+  })
+
+  $('input[name=comparebaseline]').click(function (e) {
+    dashboard.state.compare = this.value
   })
 
   $('#renderbutton').click(function (e) {

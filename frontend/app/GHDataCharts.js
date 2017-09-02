@@ -93,23 +93,110 @@ export default class GHDataCharts {
     return data
   }
 
+  static makeRelative(baseData, compareData, config) {
+
+    config.byDate = (config.byDate != undefined)
+    config.earliest = config.earliest || new Date('01-01-2005')
+    config.latest = config.latest || new Date()
+    config.period = config.period || 180
+
+    let iter = {
+      base: 0,
+      compare: 0
+    }
+    let data = {}
+
+    data['base'] = GHDataCharts.rollingAverage(
+                     GHDataCharts.convertDates(
+                       GHDataCharts.convertKey(
+                         baseData, 
+                         Object.keys(baseData[0])[1]
+                     ), config.earliest, config.latest
+                   ), undefined, config.period) 
+
+    data['compare'] = GHDataCharts.rollingAverage(
+                        GHDataCharts.convertDates(
+                          GHDataCharts.convertKey(
+                            compareData, 
+                            Object.keys(compareData[0])[1]
+                        ), config.earliest, config.latest
+                      ), undefined, config.period) 
+
+    let smaller = (data['base'][0].date < data['compare'][0].date) ? 'base' : 'compare'
+    let larger  = (data['base'][0].date < data['compare'][0].date) ? 'compare' : 'base'
+    let result  = []
+
+    if (config.byDate) {
+      for (; iter[smaller] < data[smaller].length; iter[smaller]++) {
+        if (data['base'].date == data['compare'].date) {
+          break
+        }
+      }
+    }
+
+    while (iter['base'] < data['base'].length && iter['compare'] < data['compare'].length) {
+      let toPush = {
+        value: data['compare'][iter.compare].value / data['base'][iter.base].value,
+      }
+      if (config.byDate) {
+        toPush.date = data['base'][iter.base].date
+      } else {
+        toPush.x = iter.base
+      }
+      result.push(toPush)
+      iter['base']++
+      iter['compare']++
+    }
+
+    return result
+  }
+
   static combine() {
     return Array.from(arguments)
   }
 
-  static ComparisonLineChart (selector, data, title, baseline, earliest, latest) {
-    data = GHDataCharts.convertDates(data, earliest, latest)
-    let keys = Object.keys(data[0]).filter((d) => { return /ratio/.test(d) })
-    console.log(keys)
+  static ComparisonLineChart (selector, baseData, compareData, config) {
+
+    config.title = config.title || 'Comparison'
+    config.byDate = (config.byDate != undefined)
+    config.earliest = config.earliest || new Date('01-01-2005')
+    config.latest = config.latest || new Date()
+    config.baseline = config.baseline || 'Compared Repo'
+    config.legend = config.legend || 'Base Repo'
+
+    let data = GHDataCharts.makeRelative(baseData, compareData, config)
+
+    var legend = document.createElement('div')
+    
+    legend.style.position = 'relative'
+    legend.style.margin = '0'
+    legend.style.padding = '0'
+    legend.style.height = '0'
+    legend.style.top = '31px'
+    legend.style.left = '55px'
+    legend.style.fontSize = '14px'
+    legend.style.fontWeight = 'bold'
+    legend.style.opacity = '0.8'
+
+    $(selector).append(legend)
+    $(selector).hover(() => {
+      legend.style.display = 'none'
+    }, () => {
+      legend.style.display = 'block'
+    })
+
     return MG.data_graphic({
-      title: title || 'Comparison',
+      title: config.title,
       data: data,
       full_width: true,
       height: 200,
-      baselines: [{value: 1, label: baseline || 'Other Repo'}],
+      colors: ['#FF3647'],
+      area: false,
+      baselines: [{value: 1, label: config.baseline}],
       format: 'percentage',
-      x_accessor: 'date',
-      y_accessor: keys,
+      x_accessor: config.byDate ? 'date' : 'x',
+      legend: config.legend,
+      legend_target: legend,
       target: selector
     })
   }

@@ -384,28 +384,101 @@ var GHDataCharts = function () {
       return data;
     }
   }, {
+    key: 'makeRelative',
+    value: function makeRelative(baseData, compareData, config) {
+
+      config.byDate = config.byDate != undefined;
+      config.earliest = config.earliest || new Date('01-01-2005');
+      config.latest = config.latest || new Date();
+      config.period = config.period || 180;
+
+      var iter = {
+        base: 0,
+        compare: 0
+      };
+      var data = {};
+
+      data['base'] = GHDataCharts.rollingAverage(GHDataCharts.convertDates(GHDataCharts.convertKey(baseData, Object.keys(baseData[0])[1]), config.earliest, config.latest), undefined, config.period);
+
+      data['compare'] = GHDataCharts.rollingAverage(GHDataCharts.convertDates(GHDataCharts.convertKey(compareData, Object.keys(compareData[0])[1]), config.earliest, config.latest), undefined, config.period);
+
+      var smaller = data['base'][0].date < data['compare'][0].date ? 'base' : 'compare';
+      var larger = data['base'][0].date < data['compare'][0].date ? 'compare' : 'base';
+      var result = [];
+
+      if (config.byDate) {
+        for (; iter[smaller] < data[smaller].length; iter[smaller]++) {
+          if (data['base'].date == data['compare'].date) {
+            break;
+          }
+        }
+      }
+
+      while (iter['base'] < data['base'].length && iter['compare'] < data['compare'].length) {
+        var toPush = {
+          value: data['compare'][iter.compare].value / data['base'][iter.base].value
+        };
+        if (config.byDate) {
+          toPush.date = data['base'][iter.base].date;
+        } else {
+          toPush.x = iter.base;
+        }
+        result.push(toPush);
+        iter['base']++;
+        iter['compare']++;
+      }
+
+      return result;
+    }
+  }, {
     key: 'combine',
     value: function combine() {
       return Array.from(arguments);
     }
   }, {
     key: 'ComparisonLineChart',
-    value: function ComparisonLineChart(selector, data, title, baseline, earliest, latest) {
-      data = GHDataCharts.convertDates(data, earliest, latest);
-      var keys = Object.keys(data[0]).filter(function (d) {
-        return (/ratio/.test(d)
-        );
+    value: function ComparisonLineChart(selector, baseData, compareData, config) {
+
+      config.title = config.title || 'Comparison';
+      config.byDate = config.byDate != undefined;
+      config.earliest = config.earliest || new Date('01-01-2005');
+      config.latest = config.latest || new Date();
+      config.baseline = config.baseline || 'Compared Repo';
+      config.legend = config.legend || 'Base Repo';
+
+      var data = GHDataCharts.makeRelative(baseData, compareData, config);
+
+      var legend = document.createElement('div');
+
+      legend.style.position = 'relative';
+      legend.style.margin = '0';
+      legend.style.padding = '0';
+      legend.style.height = '0';
+      legend.style.top = '31px';
+      legend.style.left = '55px';
+      legend.style.fontSize = '14px';
+      legend.style.fontWeight = 'bold';
+      legend.style.opacity = '0.8';
+
+      $(selector).append(legend);
+      $(selector).hover(function () {
+        legend.style.display = 'none';
+      }, function () {
+        legend.style.display = 'block';
       });
-      console.log(keys);
+
       return _metricsGraphics2.default.data_graphic({
-        title: title || 'Comparison',
+        title: config.title,
         data: data,
         full_width: true,
         height: 200,
-        baselines: [{ value: 1, label: baseline || 'Other Repo' }],
+        colors: ['#FF3647'],
+        area: false,
+        baselines: [{ value: 1, label: config.baseline }],
         format: 'percentage',
-        x_accessor: 'date',
-        y_accessor: keys,
+        x_accessor: config.byDate ? 'date' : 'x',
+        legend: config.legend,
+        legend_target: legend,
         target: selector
       });
     }
@@ -2738,10 +2811,13 @@ var GHDataDashboard = function () {
     _classCallCheck(this, GHDataDashboard);
 
     this.EMPTY_STATE = {
-      comparedTo: [],
-      trailingAverage: 180,
-      startDate: new Date('1 January 2005'),
-      endDate: new Date()
+      "repo": undefined,
+      "comparedTo": [],
+      "trailingAverage": 180,
+      "startDate": new Date("1 January 2005"),
+      "endDate": new Date(),
+      "compare": "each",
+      "byDate": false
     };
     this.STARTING_HTML = $('#cards')[0].innerHTML;
     this.state = state || this.EMPTY_STATE;
@@ -2761,9 +2837,7 @@ var GHDataDashboard = function () {
       var _this2 = this;
 
       var parsed = queryString.parse(location.search, { arrayFormat: 'bracket' });
-      var state = {
-        comparedTo: []
-      };
+      var state = this.EMPTY_STATE;
       state.repo = this.ghdata.Repo(parsed.repo.replace(' ', '/'));
       if (parsed.comparedTo) {
         parsed.comparedTo.forEach(function (repo) {
@@ -2889,21 +2963,35 @@ var GHDataDashboard = function () {
       $(activityComparisonCard).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
         compareRepo[element.dataset.source]().then(function (compare) {
-          var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(compare, Object.keys(compare[0])[1]), _this4.state.earliest, _this4.state.latest), undefined, _this4.state.trailingAverage);
           baseRepo[element.dataset.source]().then(function (base) {
-            var baseDatesData = _GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(base, Object.keys(base[0])[1]), _this4.state.earliest, _this4.state.latest);
-            var baseData = _GHDataCharts2.default.rollingAverage(baseDatesData, undefined, _this4.state.trailingAverage);
-            var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
 
-            var config = {
-              title: title,
-              earleist: _this4.state.earliest,
-              latest: _this4.state.latest,
-              legend: [baseRepo.toString(), compareRepo.toString()],
-              percentage: true
-            };
+            if (_this4.state.compare == 'each') {
+              var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(compare, Object.keys(compare[0])[1]), _this4.state.earliest, _this4.state.latest), undefined, _this4.state.trailingAverage);
 
-            _GHDataCharts2.default.LineChart(element, combinedData, config);
+              var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(base, Object.keys(base[0])[1]), _this4.state.earliest, _this4.state.latest), undefined, _this4.state.trailingAverage);
+
+              var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
+
+              var config = {
+                title: title,
+                earleist: _this4.state.earliest,
+                latest: _this4.state.latest,
+                legend: [baseRepo.toString(), compareRepo.toString()],
+                percentage: true
+              };
+
+              _GHDataCharts2.default.LineChart(element, combinedData, config);
+            } else if (_this4.state.compare = 'compared') {
+              _GHDataCharts2.default.ComparisonLineChart(element, base, compare, {
+                title: title,
+                period: _this4.state.trailingAverage,
+                byDate: _this4.state.byDate,
+                earliest: _this4.state.earliest,
+                latest: _this4.state.latest,
+                baseline: baseRepo.toString(),
+                legend: [compareRepo.toString()]
+              });
+            }
           }, function (error) {
             _GHDataCharts2.default.NoChart(element, title);
           });
@@ -2925,6 +3013,7 @@ var GHDataDashboard = function () {
       state.comparedTo.forEach(function (repo) {
         _this5.renderComparisonRepo(null, repo);
       });
+      $('.baseproject').text(this.state.repo.toString());
     }
   }, {
     key: 'startSearch',
@@ -2982,6 +3071,10 @@ $(document).ready(function () {
   $('#enddate').change(function (e) {
     dashboard.state.latest = new Date(this.value);
     console.log("New latest date", dashboard.state.earliest);
+  });
+
+  $('input[name=comparebaseline]').click(function (e) {
+    dashboard.state.compare = this.value;
   });
 
   $('#renderbutton').click(function (e) {
