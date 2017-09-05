@@ -17,6 +17,7 @@ class GHDataDashboard {
     this.STARTING_HTML = $('#cards')[0].innerHTML
     this.state = state || this.EMPTY_STATE
     this.ghdata = new GHDataAPI()
+    this.charts = GHDataCharts
     if (/repo/.test(location.search) && !state) {
       console.log('State from URL')
       this.setStateFromURL()
@@ -152,33 +153,23 @@ class GHDataDashboard {
         baseRepo[element.dataset.source]().then((base) => {
           
           if (this.state.compare == 'each') {
-            let compareData = GHDataCharts.rollingAverage(
-              GHDataCharts.convertDates(
-                GHDataCharts.convertToPercentages(
-                  compare, 
-                  Object.keys(compare[0])[1]
-                ), this.state.earliest, this.state.latest
-              ), undefined, this.state.trailingAverage)
-
-            let baseData = GHDataCharts.rollingAverage(
-              GHDataCharts.convertDates(
-                GHDataCharts.convertToPercentages(
-                  base, 
-                  Object.keys(base[0])[1]
-                ), this.state.earliest, this.state.latest
-              ), undefined, this.state.trailingAverage)    
-
-            let combinedData = GHDataCharts.combine(baseData, compareData)
+            let key = Object.keys(compare[0])[1]
+            let compareData = GHDataCharts.rollingAverage(GHDataCharts.zscores(compare, key), 'value', this.state.trailingAverage)
+            let baseData = GHDataCharts.rollingAverage(GHDataCharts.zscores(base, key), 'value', this.state.trailingAverage)
             
             let config = {
               title: title,
               earleist: this.state.earliest,
               latest: this.state.latest,
               legend: [baseRepo.toString(), compareRepo.toString()],
-              percentage: true
+              yax_unit: 'σ',
+              percentage: false
             }
 
+            let combinedData = GHDataCharts.combine(baseData, compareData)
+
             GHDataCharts.LineChart(element, combinedData, config)
+
           } else if (this.state.compare = 'compared') {
             GHDataCharts.ComparisonLineChart(element, base, compare, {
               title: title,

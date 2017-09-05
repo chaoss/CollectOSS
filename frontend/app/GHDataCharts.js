@@ -41,8 +41,29 @@ export default class GHDataCharts {
   }
 
   static averageArray(ary) {
-    ary.push(0)
-    return ary.reduce((a, e) => {return a + e}) / (ary.length - 1);
+    return ary.reduce((a, e) => {return a + e}, 0) / (ary.length);
+  }
+
+  static standardDeviation(ary, key, mean) {
+    let flat = ary.map((e) => {return e[key]})
+    mean = mean || GHDataCharts.averageArray(flat)
+    console.log(flat, mean)
+    let distances = flat.map((e) => {
+      return (e - mean) * (e - mean)
+    })
+    return Math.sqrt(GHDataCharts.averageArray(distances))
+  }
+
+  static describe(ary, key) {
+    let flat = ary.map((e) => {return e[key]})
+    let mean = GHDataCharts.averageArray(flat)
+    let stddev = GHDataCharts.standardDeviation(ary, key, mean)
+    let variance = stddev * stddev
+    return {
+      'mean': mean,
+      'stddev': stddev,
+      'variance': variance
+    }
   }
 
   static rollingAverage(data, key, windowSizeInDays) {
@@ -151,6 +172,21 @@ export default class GHDataCharts {
     return result
   }
 
+  static zscores(data, key) {
+    key = key || 'value'
+    let stats = GHDataCharts.describe(data, key)
+    console.log(stats)
+    return data.map((e) => {
+      let newObj = {}
+      if (e.date) {
+        newObj.date = new Date(e.date)
+      }
+      let zscore = ((e[key] - stats['mean']) / stats['stddev'])
+      newObj.value = zscore
+      return newObj
+    })
+  }
+
   static combine() {
     return Array.from(arguments)
   }
@@ -163,8 +199,16 @@ export default class GHDataCharts {
     config.latest = config.latest || new Date()
     config.baseline = config.baseline || 'Compared Repo'
     config.legend = config.legend || 'Base Repo'
+    config.full_width = true
+    config.height = 200
+    config.colors = ['#FF3647']
+    config.area = false
+    config.baselines = [{value: 1, label: config.baseline}]
+    config.format = 'percentage'
+    config.x_accessor = config.byDate ? 'date' : 'x'
+    config.target = selector
 
-    let data = GHDataCharts.makeRelative(baseData, compareData, config)
+    config.data = GHDataCharts.makeRelative(baseData, compareData, config)
 
     var legend = document.createElement('div')
     
@@ -185,68 +229,49 @@ export default class GHDataCharts {
       legend.style.display = 'block'
     })
 
-    return MG.data_graphic({
-      title: config.title,
-      data: data,
-      full_width: true,
-      height: 200,
-      colors: ['#FF3647'],
-      area: false,
-      baselines: [{value: 1, label: config.baseline}],
-      format: 'percentage',
-      x_accessor: config.byDate ? 'date' : 'x',
-      legend: config.legend,
-      legend_target: legend,
-      target: selector
-    })
+    config.legend = config.legend
+    config.legend_target = legend
+
+    return MG.data_graphic(config)
   }
 
   static LineChart (selector, data, config) {
 
     config.title = config.title || 'Activity'
-    config.rollingAverage = (config.rollingAverage == true)
     config.period = config.period || 180
     config.earliest = config.earliest || new Date('01-01-2005')
     config.latest = config.latest || new Date()
-    config.percentage = (config.percentage == true)
-
-
-    let data_graphic_config = {
-      title:  config.title,
-      data: data,
-      full_width: true,
-      height: 200,
-      x_accessor: 'date',
-      legend: config.legend,
-      colors: config.colors,
-      target: selector
-    }
+    config.data = data,
+    config.full_width = true,
+    config.height = 200,
+    config.x_accessor = 'date',
+    config.target = selector
 
     if (config.percentage) {
-      data_graphic_config.format = 'percentage';
+      config.format = 'percentage';
     }
 
     data = GHDataCharts.convertDates(data, config.earliest, config.latest)
 
     if (config.rollingAverage) {
-      data_graphic_config.legend = data_graphic_config.legend || [config.title.toLowerCase(), config.period + ' day average']
+      config.legend = config.legend || [config.title.toLowerCase(), config.period + ' day average']
       let rolling = GHDataCharts.rollingAverage(data, Object.keys(data[0])[1], config.period)
-      data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1])
-      data_graphic_config.colors = data_graphic_config.colors ||['#CCC', '#FF3647']
-      data_graphic_config.y_accessor = 'value';
+      config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1])
+      config.colors = config.colors ||['#CCC', '#FF3647']
+      config.y_accessor = 'value';
     }
 
-    if (Array.isArray(data_graphic_config.data[0])) {
-      data_graphic_config.legend = data_graphic_config.legend || ['compared', 'base']
-      data_graphic_config.colors = data_graphic_config.colors || ['#FF3647', '#999']
-      data_graphic_config.y_accessor = data_graphic_config.y_accessor || 'value'
+    if (Array.isArray(config.data[0])) {
+      config.legend = config.legend || ['compared', 'base']
+      config.colors = config.colors || ['#FF3647', '#999']
+      config.y_accessor = config.y_accessor || 'value'
     } else {
-      data_graphic_config.y_accessor = Object.keys(data[0]).slice(1)
-      data_graphic_config.legend = data_graphic_config.y_accessor
+      config.y_accessor = Object.keys(data[0]).slice(1)
+      config.legend = config.y_accessor
     }
 
 
-    if (Object.keys(data_graphic_config.data[0]).slice(1).length > 1) {
+    if (Object.keys(config.data[0]).slice(1).length > 1) {
     var legend = document.createElement('div')
       legend.style.position = 'relative'
       legend.style.margin = '0'
@@ -258,7 +283,7 @@ export default class GHDataCharts {
       legend.style.fontWeight = 'bold'
       legend.style.opacity = '0.8'
       $(selector).append(legend)
-      data_graphic_config.legend_target = legend
+      config.legend_target = legend
       $(selector).hover(() => {
         legend.style.display = 'none'
       }, () => {
@@ -266,7 +291,7 @@ export default class GHDataCharts {
       })
     }
     
-    let chart = MG.data_graphic(data_graphic_config)
+    let chart = MG.data_graphic(config)
   }
 
   static Timeline (selector, data, title) {

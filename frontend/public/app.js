@@ -326,10 +326,37 @@ var GHDataCharts = function () {
   }, {
     key: 'averageArray',
     value: function averageArray(ary) {
-      ary.push(0);
       return ary.reduce(function (a, e) {
         return a + e;
-      }) / (ary.length - 1);
+      }, 0) / ary.length;
+    }
+  }, {
+    key: 'standardDeviation',
+    value: function standardDeviation(ary, key, mean) {
+      var flat = ary.map(function (e) {
+        return e[key];
+      });
+      mean = mean || GHDataCharts.averageArray(flat);
+      console.log(flat, mean);
+      var distances = flat.map(function (e) {
+        return (e - mean) * (e - mean);
+      });
+      return Math.sqrt(GHDataCharts.averageArray(distances));
+    }
+  }, {
+    key: 'describe',
+    value: function describe(ary, key) {
+      var flat = ary.map(function (e) {
+        return e[key];
+      });
+      var mean = GHDataCharts.averageArray(flat);
+      var stddev = GHDataCharts.standardDeviation(ary, key, mean);
+      var variance = stddev * stddev;
+      return {
+        'mean': mean,
+        'stddev': stddev,
+        'variance': variance
+      };
     }
   }, {
     key: 'rollingAverage',
@@ -431,6 +458,22 @@ var GHDataCharts = function () {
       return result;
     }
   }, {
+    key: 'zscores',
+    value: function zscores(data, key) {
+      key = key || 'value';
+      var stats = GHDataCharts.describe(data, key);
+      console.log(stats);
+      return data.map(function (e) {
+        var newObj = {};
+        if (e.date) {
+          newObj.date = new Date(e.date);
+        }
+        var zscore = (e[key] - stats['mean']) / stats['stddev'];
+        newObj.value = zscore;
+        return newObj;
+      });
+    }
+  }, {
     key: 'combine',
     value: function combine() {
       return Array.from(arguments);
@@ -445,8 +488,16 @@ var GHDataCharts = function () {
       config.latest = config.latest || new Date();
       config.baseline = config.baseline || 'Compared Repo';
       config.legend = config.legend || 'Base Repo';
+      config.full_width = true;
+      config.height = 200;
+      config.colors = ['#FF3647'];
+      config.area = false;
+      config.baselines = [{ value: 1, label: config.baseline }];
+      config.format = 'percentage';
+      config.x_accessor = config.byDate ? 'date' : 'x';
+      config.target = selector;
 
-      var data = GHDataCharts.makeRelative(baseData, compareData, config);
+      config.data = GHDataCharts.makeRelative(baseData, compareData, config);
 
       var legend = document.createElement('div');
 
@@ -467,67 +518,45 @@ var GHDataCharts = function () {
         legend.style.display = 'block';
       });
 
-      return _metricsGraphics2.default.data_graphic({
-        title: config.title,
-        data: data,
-        full_width: true,
-        height: 200,
-        colors: ['#FF3647'],
-        area: false,
-        baselines: [{ value: 1, label: config.baseline }],
-        format: 'percentage',
-        x_accessor: config.byDate ? 'date' : 'x',
-        legend: config.legend,
-        legend_target: legend,
-        target: selector
-      });
+      config.legend = config.legend;
+      config.legend_target = legend;
+
+      return _metricsGraphics2.default.data_graphic(config);
     }
   }, {
     key: 'LineChart',
     value: function LineChart(selector, data, config) {
 
       config.title = config.title || 'Activity';
-      config.rollingAverage = config.rollingAverage == true;
       config.period = config.period || 180;
       config.earliest = config.earliest || new Date('01-01-2005');
       config.latest = config.latest || new Date();
-      config.percentage = config.percentage == true;
-
-      var data_graphic_config = {
-        title: config.title,
-        data: data,
-        full_width: true,
-        height: 200,
-        x_accessor: 'date',
-        legend: config.legend,
-        colors: config.colors,
-        target: selector
-      };
+      config.data = data, config.full_width = true, config.height = 200, config.x_accessor = 'date', config.target = selector;
 
       if (config.percentage) {
-        data_graphic_config.format = 'percentage';
+        config.format = 'percentage';
       }
 
       data = GHDataCharts.convertDates(data, config.earliest, config.latest);
 
       if (config.rollingAverage) {
-        data_graphic_config.legend = data_graphic_config.legend || [config.title.toLowerCase(), config.period + ' day average'];
+        config.legend = config.legend || [config.title.toLowerCase(), config.period + ' day average'];
         var rolling = GHDataCharts.rollingAverage(data, Object.keys(data[0])[1], config.period);
-        data_graphic_config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1]);
-        data_graphic_config.colors = data_graphic_config.colors || ['#CCC', '#FF3647'];
-        data_graphic_config.y_accessor = 'value';
+        config.data = GHDataCharts.convertKey(GHDataCharts.combine(data, rolling), Object.keys(data[0])[1]);
+        config.colors = config.colors || ['#CCC', '#FF3647'];
+        config.y_accessor = 'value';
       }
 
-      if (Array.isArray(data_graphic_config.data[0])) {
-        data_graphic_config.legend = data_graphic_config.legend || ['compared', 'base'];
-        data_graphic_config.colors = data_graphic_config.colors || ['#FF3647', '#999'];
-        data_graphic_config.y_accessor = data_graphic_config.y_accessor || 'value';
+      if (Array.isArray(config.data[0])) {
+        config.legend = config.legend || ['compared', 'base'];
+        config.colors = config.colors || ['#FF3647', '#999'];
+        config.y_accessor = config.y_accessor || 'value';
       } else {
-        data_graphic_config.y_accessor = Object.keys(data[0]).slice(1);
-        data_graphic_config.legend = data_graphic_config.y_accessor;
+        config.y_accessor = Object.keys(data[0]).slice(1);
+        config.legend = config.y_accessor;
       }
 
-      if (Object.keys(data_graphic_config.data[0]).slice(1).length > 1) {
+      if (Object.keys(config.data[0]).slice(1).length > 1) {
         var legend = document.createElement('div');
         legend.style.position = 'relative';
         legend.style.margin = '0';
@@ -539,7 +568,7 @@ var GHDataCharts = function () {
         legend.style.fontWeight = 'bold';
         legend.style.opacity = '0.8';
         $(selector).append(legend);
-        data_graphic_config.legend_target = legend;
+        config.legend_target = legend;
         $(selector).hover(function () {
           legend.style.display = 'none';
         }, function () {
@@ -547,7 +576,7 @@ var GHDataCharts = function () {
         });
       }
 
-      var chart = _metricsGraphics2.default.data_graphic(data_graphic_config);
+      var chart = _metricsGraphics2.default.data_graphic(config);
     }
   }, {
     key: 'Timeline',
@@ -2822,6 +2851,7 @@ var GHDataDashboard = function () {
     this.STARTING_HTML = $('#cards')[0].innerHTML;
     this.state = state || this.EMPTY_STATE;
     this.ghdata = new _GHDataAPI2.default();
+    this.charts = _GHDataCharts2.default;
     if (/repo/.test(location.search) && !state) {
       console.log('State from URL');
       this.setStateFromURL();
@@ -2966,19 +2996,20 @@ var GHDataDashboard = function () {
           baseRepo[element.dataset.source]().then(function (base) {
 
             if (_this4.state.compare == 'each') {
-              var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(compare, Object.keys(compare[0])[1]), _this4.state.earliest, _this4.state.latest), undefined, _this4.state.trailingAverage);
-
-              var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.convertDates(_GHDataCharts2.default.convertToPercentages(base, Object.keys(base[0])[1]), _this4.state.earliest, _this4.state.latest), undefined, _this4.state.trailingAverage);
-
-              var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
+              var key = Object.keys(compare[0])[1];
+              var compareData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.zscores(compare, key), 'value', _this4.state.trailingAverage);
+              var baseData = _GHDataCharts2.default.rollingAverage(_GHDataCharts2.default.zscores(base, key), 'value', _this4.state.trailingAverage);
 
               var config = {
                 title: title,
                 earleist: _this4.state.earliest,
                 latest: _this4.state.latest,
                 legend: [baseRepo.toString(), compareRepo.toString()],
-                percentage: true
+                yax_unit: 'σ',
+                percentage: false
               };
+
+              var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
 
               _GHDataCharts2.default.LineChart(element, combinedData, config);
             } else if (_this4.state.compare = 'compared') {
