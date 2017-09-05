@@ -100,7 +100,7 @@ class LibrariesIO(object):
 
         data_new = dict(zip(*[iter(data_new)]*2))
 
-        final_data = {'Dependencies' : data_new['Dependencies'], 'Dependent projects' : data_new['Dependent projects'], 'Dependent repositories' : data_new['Dependent repositories']}
+        final_data = {'dependencies' : data_new['Dependencies'], 'dependent_projects' : data_new['Dependent projects'], 'dependent_repositories' : data_new['Dependent repositories']}
 
         return final_data
 
