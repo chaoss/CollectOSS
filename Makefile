@@ -1,27 +1,89 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart download-upgrade upgrade
+
+PY2 := $(shell command -v pip2 2> /dev/null)
+PY3 := $(shell command -v pip3 2> /dev/null)
+NODE := $(shell command -v npm 2> /dev/null)
+CONDA := $(shell command -v conda 2> /dev/null)
 
 default:
-	@ printf "Please type a valid command.\n\
-	\n\
-	\e[1minstall \e[0m     Installs ghdata using pip\n\
-	\e[1minstall-dev \e[0m Installs ghdata's developer dependencies (requires npm and pip)\n\
-	\e[1mtest \e[0m        Run unit tests\n\
-	\e[1mrun-debug \e[0m   Runs GHData in development mode\n\
-	\e[1mpython-docs \e[0m Generates new Sphinx documentation\n\
-	\e[1mapi-docs \e[0m    Generates new apidocjs documentation\n\
-	\e[1mdocs \e[0m        Generates all documentation\n\
-	\e[1mupdate-deps \e[0m Generates updated requirements.txt\n"
+	@ echo "Commands:"
+	@ echo
+	@ echo "    install          Installs ghdata using pip"
+	@ echo "    install-dev      Installs ghdata's developer dependencies (requires npm and pip)"
+	@ echo "    install-msr      Installs MSR14 dataset"
+	@ echo "    upgrade          Pulls newest version and installs"
+	@ echo "    test             Run pytest unit tests"
+	@ echo "    serve            Runs using gunicorn"
+	@ echo "    dev-start        Starts GHData and Brunch screen sessions"
+	@ echo "    dev-stop         Kills GHData and Brunch screen sessions"
+	@ echo "    python-docs      Generates new Sphinx documentation"
+	@ echo "    api-docs         Generates new apidocjs documentation"
+	@ echo "    docs             Generates all documentation"
+	@ echo "    build            Builds documentation and frontend"
+	@ echo "    update-deps      Generates updated requirements.txt and environment.yml"
+	@ echo
 
-install:
-		sudo pip2 install --upgrade . && pip3 install --upgrade .
+conda:
+ifdef CONDA
+		@ echo "Detected Anaconda, updating environment..."
+		@ if ! source activate ghdata; then conda env create -f environment.yml && source activate ghdata; else conda env update -f environment.yml && source activate ghdata; fi
+endif
 
-install-dev: install
-		npm install -g apidoc
+install: conda
+		pip install --upgrade .
 
-run-debug:
-		export FLASK_APP=ghdata.server &&\
-		export FLASK_DEBUG=1 &&\
-		flask run --host 0.0.0.0
+install-dev: conda
+		pip install pipreqs || (echo "Install failed. Trying again with sudo..." && sudo pip install pipreqs)
+ifdef PY2
+	  pip2 install --upgrade .
+endif
+ifdef PY3
+		pip3 install --upgrade .
+endif
+ifndef PY2
+ifndef PY3
+		pip install --upgrade .
+endif
+endif
+ifdef NODE
+		npm install -g apidoc brunch yarn
+		cd frontend/ && yarn install
+endif
+
+install-msr:
+		@ ./docs/install-msr.sh
+
+download-upgrade:
+		git pull
+
+upgrade: download-upgrade install
+		@ echo "Upgraded."
+
+dev-start:
+ifdef CONDA
+		screen -d -S "ghdata-backend" -m bash -c "source activate ghdata && export GHDATA_DEBUG=1 && python -m ghdata.server"
+else
+		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && python -m ghdata.server"
+endif
+		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s -n"
+		@ printf '\nDevelopment servers started.\n\nBrunch server  |  Port: 3333      To see log: screen -r "ghdata-frontend"\nGHData         |  Port: 5000      To see log: screen -r "ghdata-backend"\n\n'
+dev-start-public:
+		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && export GHDATA_HOST='0.0.0.0' && python -m ghdata.server"
+		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s -n"
+		@ printf '\nDevelopment servers started. If ports 5000 and 3333 are open on your firewall, these will be avalible network-wide\n\nBrunch server  |  Port: 3333      To see log: screen -r "ghdata-frontend"\nGHData         |  Port: 5000      To see log: screen -r "ghdata-backend"\n\n'
+
+dev-stop:
+		screen -S "ghdata-backend" -X kill
+		screen -S "ghdata-frontend" -X kill
+
+dev-restart: dev-stop dev-start
+
+serve:
+ifdef CONDA
+		source activate ghdata && gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
+else
+		gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
+endif
 
 python-docs:
 		cd docs/python   \
@@ -29,9 +91,12 @@ python-docs:
 		&& make html
 
 api-docs:
-		apidoc -i ghdata/ -o docs/api/
+		apidoc --debug -f "\.py" -i ghdata/ -o docs/api/
 
 docs: api-docs python-docs
+
+build: docs
+		cd ghdata/static/ && brunch build
 
 check-test-env:
 ifndef DB_TEST_URL
@@ -49,9 +114,20 @@ ifndef PUBLIC_WWW_TEST_API_KEY
 endif
 
 test: check-test-env
+ifdef PY2
 		python2 -m pytest
+else
+		@ echo "Python 2 not installed, skipping..."
+endif
+ifdef PY3
 		python3 -m pytest
+else
+		@ echo "Python 3 not installed, skipping..."
+endif
 
 update-deps:
 		@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
 		pipreqs ./
+ifdef CONDA
+		conda env export > environment.yml
+endif

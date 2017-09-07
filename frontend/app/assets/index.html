@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Brunch</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/vendor.js"></script>
+  <script src="/app.js"></script>
+  <script>require('ui');</script>
+</head>
+<body>
+
+  <header class="hide-print">
+    <div class="content">
+      <div class="row">
+        <div class="col col-4">
+          <img src="img/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
+        </div>
+        <div class="col col-5 push-right">
+          <div class="form-item">
+              <input type="text" class="search reposearch" id="main-repo-search" placeholder="GitHub URL">
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="cards" class="content">
+    <section id="landing" class="unmaterialized">
+      <h1>Enter a GitHub URL to get started</h1>
+      <input type="text" class="search reposearch" placeholder="GitHub URL"/>
+    </section>
+  </div>
+
+  <div id="control-container" class="hidden content fixed-container"/>
+    <div class="row" id="controls">
+      <div class="col col-12">
+        <div class="form">
+
+        <h4>Base Repository</h4>
+
+        <div class="form-item">
+        <label>Start Date <input type="date" id="startdate"/></label>
+        </div>
+        <div class="form-item">
+        <label>End Date <input type="date" id="enddate"/></label>
+        </div>
+        <div class="form-item">
+          <label>Trailing Average</label>
+          <div class="append">
+            <input type="number" min="2" id="averagetimespan" value="180"><span>days</span>
+          </div>
+        </div>
+
+        <h4>Comparisons</h4>
+
+        <div class="form-item form-checkboxes">
+            <label class="checkbox"><input name="comparebaseline" value="each" checked type="radio">Z-score trailing average</label>
+            <label class="checkbox"><input name="comparebaseline" value="compared" type="radio">100% is the compared project</label>
+        </div>
+
+        <button class="button w100" id="renderbutton">Render</button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="base-template" class="hidden"/>
+
+    <div class="row">
+      <div class="col col-12">
+        <div class="linechart" data-source="commits" data-rolling data-title="Commits / Week">
+        <cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a></cite>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col col-12">
+        <div class="linechart" data-source="forks" data-rolling data-title="Forks / Week"><cite class="metric">Metrics: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a>, <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/forks">Forks</a></cite></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col col-12">
+        <div class="linechart" data-source="issues" data-rolling data-title="Issues / Week"><cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a></cite></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col col-6">
+        <div class="linechart" data-source="pulls" data-title="Pull Requests / Week"><cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/community-activity" target="_blank">Community Activty</a></cite></div>
+      </div>
+      <div class="col col-6">
+        <div class="linechart" data-source="uniqueCommitters" data-title="Unique Committers">
+          <cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics/contributors">Contributors</a>
+        </div>
+      </div>
+    </div>
+
+    <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> and the <a href="https://developer.github.com/">GitHub API</a></small>
+  </div>
+
+  <div id="ecosystem-template" class="hidden">
+    <div class="row">
+      <div class="col col-12"><div class="linechart" data-source="downloads" data-title="Downloads / Day">
+        <cite class="metric">Metric: <a href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics" target="_blank">Downloads</a></cite>
+      </div></div>
+    </div>
+    <div class="row">
+      <div class="col col-12">
+        <div class="linechart" data-source="stars" data-rolling data-title="Stars / Week"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col col-6">
+        <h3>Top Dependents</h3>
+        <div class="deps" id="dependents"></div>
+      </div>
+        <div class="col col-6">
+        <h3>Top Dependencies</h3>
+        <div class="deps" id="dependencies"></div>
+      </div>
+    </div>
+    <small>Data provided by <a href="https://libraries.io/">libraries.io</a></small>
+  </div>
+
+  <div id="comparison-form-template"/>
+    <div class="form-item">
+      <label>Compare to a Repository</label>
+      <input type="text" class="search" name="search" placeholder="GitHub URL">
+    </div>
+  </div>
+
+</body>
+</html>

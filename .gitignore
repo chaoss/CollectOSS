@@ -48,3 +48,8 @@ Thumbs.db
 ###############
 __pycache__
 _pycache_
+
+
+# Node #
+########
+*node_modules/

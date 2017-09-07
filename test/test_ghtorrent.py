@@ -1,6 +1,5 @@
 import os
 import pytest
-import pandas
 
 @pytest.fixture
 def ghtorrent():
@@ -47,7 +46,7 @@ def test_committer_locations(ghtorrent):
     assert ghtorrent.committer_locations(ghtorrent.repoid('mavam', 'stat-cookbook')).isin(["Berkeley, CA"]).any
 
 def test_issue_response_time(ghtorrent):
-    assert ghtorrent.issue_response_time(ghtorrent.repoid('hadley', 'devtools')).isin(["2013-09-16 17:00:54"]).any
+    assert ghtorrent.issue_response_time(ghtorrent.repoid('hadley', 'devtools')).isin([1]).any
 
 def test_pull_acceptance_rate(ghtorrent):
     assert ghtorrent.pull_acceptance_rate(ghtorrent.repoid('akka', 'akka')).isin([0.5]).any

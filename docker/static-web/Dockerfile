@@ -1,3 +1,3 @@
 FROM kyma/docker-nginx
-COPY ./ghdata/static /var/www
+COPY ./frontend/public /var/www
 CMD 'nginx'
