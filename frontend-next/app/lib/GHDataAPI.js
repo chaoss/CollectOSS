@@ -57,16 +57,17 @@ export default class GHDataAPI {
       return func
     }
 
-    repo.commits             = Timeseries('commits')
-    repo.forks               = Timeseries('forks')
-    repo.issues              = Timeseries('issues')
-    repo.pulls               = Timeseries('pulls')
-    repo.stars               = Timeseries('stargazers')
-    repo.tags                = Timeseries('tags')
-    repo.downloads           = Timeseries('downloads')
-    repo.uniqueCommitters    = Timeseries('unique_committers')
-    repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate')
+    repo.commits          = Timeseries('commits')
+    repo.forks            = Timeseries('forks')
+    repo.issues           = Timeseries('issues')
+    repo.pulls            = Timeseries('pulls')
+    repo.stars            = Timeseries('stargazers')
+    repo.tags             = Timeseries('tags')
+    repo.downloads        = Timeseries('downloads')
+    repo.uniqueCommitters = Timeseries('unique_committers')
 
+
+    repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate')
     repo.issuesResponseTime  = Endpoint('issues/response_time')
     repo.contributors        = Endpoint('contributors')
     repo.contributions       = Endpoint('contributions')
@@ -76,7 +77,6 @@ export default class GHDataAPI {
     repo.busFactor           = Endpoint('bus_factor')
     repo.dependents          = Endpoint('dependents')
     repo.dependencies        = Endpoint('dependencies')
-    repo.dependencyStats     = Endpoint('dependency_stats')
 
     return repo
 

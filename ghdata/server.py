@@ -286,7 +286,7 @@ addTimeseries(app, ghtorrent.stargazers, 'stargazers')
                         }
                     ]
 """
-addMetric(app, ghtorrent.pull_acceptance_rate, 'pulls/acceptance_rate')
+addTimeseries(app, ghtorrent.pull_acceptance_rate, 'pulls/acceptance_rate')
 
 """
 @api {get} /:owner/:repo/timeseries/tags Tags release timeseries

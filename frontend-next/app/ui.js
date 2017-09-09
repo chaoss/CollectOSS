@@ -109,7 +109,6 @@ class GHDataDashboard {
     var ecosystemCard = this.addCard('Ecosystem', '<strong>' + repo.owner + '/' + repo.name + '</strong>')
     ecosystemCard.innerHTML += $('#ecosystem-template')[0].innerHTML
     this.renderGraphs(ecosystemCard, repo)
-    
     repo.dependents().then((dependents) => {
       for (var i = 0; i < dependents.length && i < 10; i++) {
         $(ecosystemCard).find('#dependents').append(dependents[i].name + '<br>')
@@ -119,10 +118,6 @@ class GHDataDashboard {
       for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
         $(ecosystemCard).find('#dependencies').append(dependencies.dependencies[i].name + '<br>')
       }
-    })
-    repo.dependencyStats().then((depstats) => {
-      $(ecosystemCard).find('.total-dependents').text(depstats['dependent_repositories'])
-      $(ecosystemCard).find('.total-dependencies').text(depstats['dependencies'])
     })
 
     this.renderComparisonForm()
@@ -164,9 +159,10 @@ class GHDataDashboard {
             
             let config = {
               title: title,
-              earliest: this.state.earliest,
+              earleist: this.state.earliest,
               latest: this.state.latest,
               legend: [baseRepo.toString(), compareRepo.toString()],
+              yax_unit: 'σ',
               percentage: false
             }
 

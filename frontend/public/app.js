@@ -233,8 +233,8 @@ var GHDataAPI = function () {
       repo.tags = Timeseries('tags');
       repo.downloads = Timeseries('downloads');
       repo.uniqueCommitters = Timeseries('unique_committers');
+      repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate');
 
-      repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate');
       repo.issuesResponseTime = Endpoint('issues/response_time');
       repo.contributors = Endpoint('contributors');
       repo.contributions = Endpoint('contributions');
@@ -244,6 +244,7 @@ var GHDataAPI = function () {
       repo.busFactor = Endpoint('bus_factor');
       repo.dependents = Endpoint('dependents');
       repo.dependencies = Endpoint('dependencies');
+      repo.dependencyStats = Endpoint('dependency_stats');
 
       return repo;
     }
@@ -2951,6 +2952,7 @@ var GHDataDashboard = function () {
       var ecosystemCard = this.addCard('Ecosystem', '<strong>' + repo.owner + '/' + repo.name + '</strong>');
       ecosystemCard.innerHTML += $('#ecosystem-template')[0].innerHTML;
       this.renderGraphs(ecosystemCard, repo);
+
       repo.dependents().then(function (dependents) {
         for (var i = 0; i < dependents.length && i < 10; i++) {
           $(ecosystemCard).find('#dependents').append(dependents[i].name + '<br>');
@@ -2960,6 +2962,10 @@ var GHDataDashboard = function () {
         for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
           $(ecosystemCard).find('#dependencies').append(dependencies.dependencies[i].name + '<br>');
         }
+      });
+      repo.dependencyStats().then(function (depstats) {
+        $(ecosystemCard).find('.total-dependents').text(depstats['dependent_repositories']);
+        $(ecosystemCard).find('.total-dependencies').text(depstats['dependencies']);
       });
 
       this.renderComparisonForm();
@@ -3002,10 +3008,9 @@ var GHDataDashboard = function () {
 
               var config = {
                 title: title,
-                earleist: _this4.state.earliest,
+                earliest: _this4.state.earliest,
                 latest: _this4.state.latest,
                 legend: [baseRepo.toString(), compareRepo.toString()],
-                yax_unit: 'σ',
                 percentage: false
               };
 
