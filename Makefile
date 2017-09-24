@@ -6,6 +6,14 @@ PY3 := $(shell command -v pip3 2> /dev/null)
 NODE := $(shell command -v npm 2> /dev/null)
 CONDA := $(shell command -v conda 2> /dev/null)
 
+CONDAUPDATE=""
+CONDAACTIVATE=""
+ifdef CONDA
+		@ echo "Detected Anaconda, updating environment..."
+		CONDAUPDATE="if ! source activate ghdata; then conda env create -n=ghdata -f=environment.yml && source activate ghdata; else conda env update -n=ghdata -f=environment.yml && source activate ghdata; fi;"
+		CONDAACTIVATE="source activate ghdata;"
+endif
+
 default:
 	@ echo "Commands:"
 	@ echo
@@ -25,25 +33,22 @@ default:
 	@ echo
 
 conda:
-ifdef CONDA
-		@ echo "Detected Anaconda, updating environment..."
-		@ if ! source activate ghdata; then conda env create -f environment.yml && source activate ghdata; else conda env update -f environment.yml && source activate ghdata; fi
-endif
+
 
 install: conda
-		pip install --upgrade .
+		$(CONDAUPDATE) pip install --upgrade .
 
 install-dev: conda
-		pip install pipreqs || (echo "Install failed. Trying again with sudo..." && sudo pip install pipreqs)
+		$(CONDAUPDATE) pip install pipreqs || (echo "Install failed. Trying again with sudo..." && sudo pip install pipreqs)
 ifdef PY2
 	  pip2 install --upgrade .
 endif
 ifdef PY3
-		pip3 install --upgrade .
+		$(CONDAACTIVATE) pip3 install --upgrade .
 endif
 ifndef PY2
 ifndef PY3
-		pip install --upgrade .
+		 $(CONDAACTIVATE) pip install --upgrade .
 endif
 endif
 ifdef NODE
