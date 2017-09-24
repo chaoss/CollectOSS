@@ -9,9 +9,8 @@ CONDA := $(shell command -v conda 2> /dev/null)
 CONDAUPDATE=""
 CONDAACTIVATE=""
 ifdef CONDA
-		@ echo "Detected Anaconda, updating environment..."
-		CONDAUPDATE="if ! source activate ghdata; then conda env create -n=ghdata -f=environment.yml && source activate ghdata; else conda env update -n=ghdata -f=environment.yml && source activate ghdata; fi;"
-		CONDAACTIVATE="source activate ghdata;"
+		CONDAUPDATE=if ! source activate ghdata; then conda env create -n=ghdata -f=environment.yml && source activate ghdata; else conda env update -n=ghdata -f=environment.yml && source activate ghdata; fi;
+		CONDAACTIVATE=source activate ghdata;
 endif
 
 default:
