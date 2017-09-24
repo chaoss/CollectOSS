@@ -1,5 +1,6 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart download-upgrade upgrade
 
+SHELL=/bin/bash
 PY2 := $(shell command -v pip2 2> /dev/null)
 PY3 := $(shell command -v pip3 2> /dev/null)
 NODE := $(shell command -v npm 2> /dev/null)
