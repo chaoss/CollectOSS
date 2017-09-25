@@ -484,3 +484,9 @@ class GHTorrent(object):
         GROUP BY DATE(unique_committers.created_at)
         """)
         return pd.read_sql(uniqueCommittersSQL, self.db, params={"repoid": str(repoid)})
+
+    def ghtorrent_range(self):
+        ghtorrentRangeSQL = s.sql.text("""
+        SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date" FROM commits
+        """)
+        return pd.read_sql(ghtorrentRangeSQL, self.db)
