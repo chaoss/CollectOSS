@@ -309,26 +309,26 @@ class GHTorrent(object):
             parameterized = s.sql.text(rawContributionsSQL)
             return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
 
-    def committer_locations(self, owner, repo=None):
+    def committer_locations(self, owner, repo):
         """
         Return committers and their locations
 
         @todo: Group by country code instead of users, needs the new schema
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :param repo: The name of the repo.
         :return: DataFrame with users and locations sorted by commtis
         """
         repoid = self.repoid(owner, repo)
         rawContributionsSQL = s.sql.text("""
-            SELECT users.login, users.location, COUNT(*) AS "commits"
+            SELECT users.login, users.location, users.long, users.lat, users.country_code, COUNT(*) AS "commits"
             FROM commits
             JOIN project_commits
             ON commits.id = project_commits.commit_id
             JOIN users
             ON users.id = commits.author_id
             WHERE project_commits.project_id = :repoid
-            AND LENGTH(users.location) > 1
+            AND users.country_code IS NOT NULL
             GROUP BY users.id
             ORDER BY commits DESC
         """)
