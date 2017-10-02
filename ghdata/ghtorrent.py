@@ -487,6 +487,7 @@ class GHTorrent(object):
 
     def ghtorrent_range(self):
         ghtorrentRangeSQL = s.sql.text("""
-        SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date" FROM commits
+        SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date" 
+        FROM commits
         """)
         return pd.read_sql(ghtorrentRangeSQL, self.db)

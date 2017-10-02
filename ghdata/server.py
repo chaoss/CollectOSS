@@ -132,12 +132,13 @@ def api_root():
 # @todo: Link to LF Metrics
 
 """
-@api {get} /:owner/:repo/commits Commits by Week
-@apiName CommitsByWeek
+@api {get} /:owner/:repo/commits/group_by=:group_by Commits
+@apiName Commits
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
+@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
 
 @apiSuccessExample {json} Success-Response:
                     [
@@ -154,9 +155,10 @@ def api_root():
 addTimeseries(app, ghtorrent.commits, 'commits')
 
 """
-@api {get} /:owner/:repo/forks Forks by Week
-@apiName ForksByWeek
+@api {get} /:owner/:repo/forks/group_by=:group_by Forks
+@apiName Forks
 @apiGroup Timeseries
+@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -176,9 +178,10 @@ addTimeseries(app, ghtorrent.commits, 'commits')
 addTimeseries(app, ghtorrent.forks, 'forks')
 
 """
-@api {get} /:owner/:repo/issues Issues by Week
-@apiName IssuesByWeek
+@api {get} /:owner/:repo/issues/group_by=:group_by Issues
+@apiName Issues
 @apiGroup Timeseries
+@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -244,12 +247,13 @@ addMetric(app, ghtorrent.issue_response_time, 'issues/response_time')
 addTimeseries(app, ghtorrent.pulls, 'pulls')
 
 """
-@api {get} /:owner/:repo/stargazers Stargazers by Week
-@apiName StargazersByWeek
+@api {get} /:owner/:repo/stargazers/group_by=:group_by Stargazers
+@apiName Stargazers
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
+@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
 
 @apiSuccessExample {json} Success-Response:
                     [
@@ -268,7 +272,7 @@ addTimeseries(app, ghtorrent.stargazers, 'stargazers')
 """
 @api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
 @apiDescription For each week, the rate is calculated as (pull requests merged that week) / (pull requests opened that week)
-@apiName Stargazers
+@apiName PullRequestAcceptanceRate
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -445,7 +449,7 @@ def contributions(owner, repo):
 
 """
 @api {get} /:owner/:repo/committer_locations Commits and Location by User
-@apiName Stargazers
+@apiName CommiterLocations
 @apiGroup Diversity
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -471,8 +475,8 @@ addMetric(app, ghtorrent.committer_locations, 'committer_locations')
 
 """
 @api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
-@apiName Stargazers
-@apiGroup Diversity
+@apiName CommunityAge
+@apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -494,33 +498,71 @@ addMetric(app, ghtorrent.committer_locations, 'committer_locations')
 addMetric(app, ghtorrent.community_age, 'community_age')
 
 """
-@api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
-@apiName Stargazers
-@apiGroup Diversity
+@api {get} /:owner/:repo/dependencies List of dependencies from libraries.io
+@apiName Dependencies
+@apiGroup Ecosystem
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
 @apiSuccessExample {json} Success-Response:
                     [
-                        {
-                            "login": "bonnie",
-                            "location": "Rowena, TX",
-                            "commits": 12
-                        },
-                        {
-                            "login":"clyde",
-                            "location":"Ellis County, TX",
-                            "commits": 12
-                        }
-                    ]
+                        {   "full_name": "rails/rails"
+                            "description": "Ruby on Rails", 
+                            "fork": false, "created_at": "2008-04-11T02:19:47.000Z", 
+                            "updated_at": "2017-09-20T20:16:47.181Z", 
+                            "pushed_at": "2017-09-20T19:39:08.000Z", 
+                            "homepage": "http://rubyonrails.org", 
+                            "size": 155199, "stargazers_count": 36993, 
+                            "language": "Ruby", "has_issues": true, 
+                            "has_wiki": false, 
+                            "has_pages": false, 
+                            "forks_count": 15130, 
+                            "mirror_url": null, 
+                            "open_issues_count": 1157, 
+                            "default_branch": "master", 
+                            "subscribers_count": 2452,
+                            "uuid": "8514", "source_name": null, 
+                            "license": "MIT", "private": false, 
+                            "contributions_count": 2616, 
+                            "has_readme": "README.md", 
+                            "has_changelog": null, 
+                            "has_contributing": "CONTRIBUTING.md", 
+                            "has_license": "MIT-LICENSE", 
+                            "has_coc": "CODE_OF_CONDUCT.md", 
+                            "has_threat_model": null, 
+                            "has_audit": null, 
+                            "status": null, 
+                            "last_synced_at": "2017-09-20T20:16:47.153Z", 
+                            "rank": 28, "host_type": "GitHub", 
+                            "host_domain": null, 
+                            "name": null, 
+                            "scm": "git", 
+                            "fork_policy": null,
+                             "github_id": "8514", 
+                             "pull_requests_enabled": null, 
+                             "logo_url": null, 
+                             "github_contributions_count": 2616, 
+                             "keywords": ["activejob", "activerecord", "html", "mvc", "rails", "ruby"], 
+                             "dependencies": [
+                                                {   "project_name": "websocket-driver", 
+                                                    "name": "websocket-driver", 
+                                                    "platform": "rubygems", 
+                                                    "requirements": "~> 0.6.1", 
+                                                    "latest_stable": "0.7.0", 
+                                                    "latest": "0.7.0", 
+                                                    "deprecated": false, "outdated": true, 
+                                                    "filepath": "actioncable/actioncable.gemspec", "
+                                                    kind": "runtime"
+                                                }
+                                             ]                     
 """
 addMetric(app, librariesio.dependencies, 'dependencies')
 
 """
-@api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
-@apiName Stargazers
-@apiGroup Diversity
+@api {get} /:owner/:repo/dependents List of dependants from libraries.io
+@apiName Dependents
+@apiGroup Ecosystem
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -542,9 +584,9 @@ addMetric(app, librariesio.dependencies, 'dependencies')
 addMetric(app, librariesio.dependents, 'dependents')
 
 """
-@api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
-@apiName Stargazers
-@apiGroup Diversity
+@api {get} /:owner/:repo/dependency_stats List of libraries.io stats
+@apiName DependencyStats
+@apiGroup Ecosystem
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -552,14 +594,9 @@ addMetric(app, librariesio.dependents, 'dependents')
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "login": "bonnie",
-                            "location": "Rowena, TX",
-                            "commits": 12
-                        },
-                        {
-                            "login":"clyde",
-                            "location":"Ellis County, TX",
-                            "commits": 12
+                            "dependencies": "10", 
+                            "dependent_projects": "10.6K", 
+                            "dependent_repositories": "392K"
                         }
                     ]
 """
@@ -567,25 +604,21 @@ addMetric(app, librariesio.dependency_stats, 'dependency_stats')
 
 
 """
-@api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
-@apiName Stargazers
-@apiGroup Diversity
+@api {get} /:owner/:repo/unique_committers Count of new committers weekly
+@apiName UniqueCommiters
+@apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
 @apiSuccessExample {json} Success-Response:
                     [
-                        {
-                            "login": "bonnie",
-                            "location": "Rowena, TX",
-                            "commits": 12
+                        {   "date":"2009-02-16T00:00:00.000Z",
+                            "total_unique_committers":1.0
                         },
-                        {
-                            "login":"clyde",
-                            "location":"Ellis County, TX",
-                            "commits": 12
-                        }
+                        {   "date":"2009-07-12T00:00:00.000Z",
+                            "total_unique_committers":2.0
+                        },
                     ]
 """
 addTimeseries(app, ghtorrent.unique_committers, 'unique_committers')
@@ -615,12 +648,10 @@ addTimeseries(app, ghtorrent.unique_committers, 'unique_committers')
 addMetric(app, publicwww.linking_websites, 'linking_websites')
 
 """
-@api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
-@apiName Stargazers
-@apiGroup Diversity
+@api {get} /ghtorrent_range Range of dates covered by GHTorrent
+@apiName GhtorrentRange
+@apiGroup Misc
 
-@apiParam {String} owner Username of the owner of the GitHub repository
-@apiParam {String} repo Name of the GitHub repository
 
 @apiSuccessExample {json} Success-Response:
                     [
@@ -660,8 +691,8 @@ def ghtorrent_range():
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo": "ghdata",
-                            "bus_factor": "2"
+                            "min_date": "2009-02-16T00:00:00.000Z",
+                            "max_date": "2017-02-16T00:00:00.000Z"
                         }
                     ]
 """
