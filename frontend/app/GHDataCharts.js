@@ -9,17 +9,27 @@ export default class GHDataCharts {
   static convertDates (data, earliest, latest) {
     earliest = earliest || new Date('01-01-2005')
     latest = latest || new Date()
+    data.unshift({})
     if (Array.isArray(data[0])) {
       data = data.map((datum) => {
         return GHDataCharts.convertDates(datum)
       })
     } else {
-      
+      // Add 0 to beginning of data
+      //if (new Date(data[0].date) > earliest) {
+        var zero = {date: earliest}
+        for (var prop in data[1]) {
+          if (data[1].hasOwnProperty(prop) && prop !== 'date') {
+            zero[prop] = 0;
+          }
+        }
+        data.unshift(zero);
+      //}
       data = data.map((d) => {
         d.date = new Date(d.date)
         return d
       }).filter((d) => {
-        return earliest < d.date && d.date < latest
+        return earliest <= d.date && d.date <= latest
       })
     }
     return data
@@ -47,7 +57,6 @@ export default class GHDataCharts {
   static standardDeviation(ary, key, mean) {
     let flat = ary.map((e) => {return e[key]})
     mean = mean || GHDataCharts.averageArray(flat)
-    console.log(flat, mean)
     let distances = flat.map((e) => {
       return (e - mean) * (e - mean)
     })
@@ -101,12 +110,10 @@ export default class GHDataCharts {
   }
 
   static convertToPercentages(data, key, baseline) {
-    console.log(data)
     if (!data) {
       return []
     }
     baseline = baseline || GHDataCharts.averageArray( data.map((e) => {return e[key]}) )
-    console.log(baseline)
     data = data.map((datum) => {
       datum['value'] = (datum[key] / baseline)
       return datum
@@ -175,7 +182,6 @@ export default class GHDataCharts {
   static zscores(data, key) {
     key = key || 'value'
     let stats = GHDataCharts.describe(data, key)
-    console.log(stats)
     return data.map((e) => {
       let newObj = {}
       if (e.date) {
@@ -272,7 +278,7 @@ export default class GHDataCharts {
 
 
     if (Object.keys(config.data[0]).slice(1).length > 1) {
-    var legend = document.createElement('div')
+      var legend = document.createElement('div')
       legend.style.position = 'relative'
       legend.style.margin = '0'
       legend.style.padding = '0'
@@ -291,6 +297,7 @@ export default class GHDataCharts {
       })
     }
     
+    $(selector).css({"background-image": "none"})
     let chart = MG.data_graphic(config)
   }
 
@@ -306,7 +313,6 @@ export default class GHDataCharts {
         legend.push(event)
       }
     }
-    console.log(dataCleaned)
     return MG.data_graphic({
       title: title || 'Timeline',
       data: dataCleaned,
@@ -321,12 +327,12 @@ export default class GHDataCharts {
 
 
   static NoChart (selector, title) {
+    $(selector).css({"background-image": "none"})
     return MG.data_graphic({
-      title: "Missing Data",
       error: 'Data unavaliable for ' + title,
       chart_type: 'missing-data',
-      missing_text: title + ' could not be loaded',
-      target: '#missing-data',
+      missing_text: '⚠ Data Missing for ' + title,
+      target: selector,
       full_width: true,
       height: 200
     })

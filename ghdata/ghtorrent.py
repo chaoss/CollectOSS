@@ -208,7 +208,6 @@ class GHTorrent(object):
         :return: DataFrame with users id, users login, and their contributions by type
         """
         repoid = self.repoid(owner, repo)
-        print(repoid)
         contributorsSQL = s.sql.text("""
             SELECT * FROM
 

@@ -40,13 +40,10 @@ class LibrariesIO(object):
         if projectsRequest.status_code != 200:
             return projectsRequest.json()
         else:
-            print(projectsRequest.text)
             project = projectsRequest.json()[0]['name']
             platform = projectsRequest.json()[0]['platform']
             dependentsUrl = "https://libraries.io/api/{platform}/{repo}/dependents".format(platform=platform, repo=repo)
-            print(dependentsUrl)
             dependentsRequest = requests.get(dependentsUrl, params={"api_key": self.API_KEY})
-            print(dependentsRequest.text)
             return dependentsRequest
 
     def dependency_stats(self, owner, repo):

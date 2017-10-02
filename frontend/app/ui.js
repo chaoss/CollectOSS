@@ -18,13 +18,18 @@ class GHDataDashboard {
     this.state = state || this.EMPTY_STATE
     this.ghdata = new GHDataAPI()
     this.charts = GHDataCharts
+    this.ghdata.ghtorrentRange().then((range) => {
+      this.ghtorrentVersion = range[0]['max_date']
+      $('.ghtorrent-version').text(this.ghtorrentVersion)
+      this.state.endDate = new Date(this.ghtorrentVersion);
+    })
     if (/repo/.test(location.search) && !state) {
-      console.log('State from URL')
       this.setStateFromURL()
     }2
     window.addEventListener('popstate', (e) =>  {
       this.setStateFromURL()
     })
+    this.ghtorrentVersion = 'unknown'
   }
 
 
@@ -72,7 +77,6 @@ class GHDataDashboard {
   renderGraphs(element, repo) {
     $(element).find('.linechart').each((index, element) => {
       let title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1)
-      console.log(element.dataset.source)
       repo[element.dataset.source]().then((data) => {
         if (data && data.length) {
           $(element).find('cite').each( (i, e) => { $(e).show() } )
@@ -86,10 +90,11 @@ class GHDataDashboard {
           }
 
           GHDataCharts.LineChart(element, data, config)
-        } else {
-          GHDataCharts.NoChart(element, title)
         }
       }, (error) => {
+        if (element.dataset.source == 'commits') {
+          $('#cards').html('<section style="text-align:center"> <h1>⚠</h1><strong>The repo ' + this.state.repo.toString() + ' does not exist in GHTorrent</strong></section>')
+        }
         GHDataCharts.NoChart(element, title)
       })
     })
@@ -111,11 +116,13 @@ class GHDataDashboard {
     this.renderGraphs(ecosystemCard, repo)
     
     repo.dependents().then((dependents) => {
+      $(ecosystemCard).find('#dependents').html('')
       for (var i = 0; i < dependents.length && i < 10; i++) {
         $(ecosystemCard).find('#dependents').append(dependents[i].name + '<br>')
       }
     })
     repo.dependencies().then((dependencies) => {
+      $(ecosystemCard).find('#dependents').html('')
       for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
         $(ecosystemCard).find('#dependencies').append(dependencies.dependencies[i].name + '<br>')
       }
@@ -206,6 +213,7 @@ class GHDataDashboard {
       this.renderComparisonRepo(null, repo)
     })
     $('.baseproject').text(this.state.repo.toString())
+    $('.ghtorrent-version').text(this.ghtorrentVersion)
   }
 
 

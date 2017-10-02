@@ -687,8 +687,6 @@ addMetric(app, github.bus_factor, 'bus_factor')
 if (debugmode):
     app.debug = True
 
-    
-
 def run():
     app.run(host=host, port=int(port), debug=debugmode)
 

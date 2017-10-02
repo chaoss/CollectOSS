@@ -9,7 +9,6 @@ def makeRelative(function):
       baseData = function(ownerRelativeTo, repoRelativeTo)
       comparableData = function(owner, repo)
       columns = list(baseData.columns)
-      print(columns)
       columns.remove('date')
       relativeData = (
         pd

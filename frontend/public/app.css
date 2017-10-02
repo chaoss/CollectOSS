@@ -2669,6 +2669,9 @@ cite.metric a {
   color: #aaa;
 }
 .linechart {
+  background: url("img/loader.gif") 55% 50% no-repeat;
+  height: 200px;
+  wifth: 100%;
   margin-bottom: 30px;
 }
 .mg-line-legend {

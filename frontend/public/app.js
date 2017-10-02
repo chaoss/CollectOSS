@@ -162,15 +162,71 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 
 var GHDataAPI = function () {
-  function GHDataAPI(hostURL, version) {
+  function GHDataAPI(hostURL, version, onStart, onUpdate, onDone) {
     _classCallCheck(this, GHDataAPI);
 
     this._version = version || 'unstable';
     this._host = hostURL || 'http://' + window.location.hostname + ':5000/';
     this.__cache = {};
+    this.__loading = [];
+    this.__onStart = onStart || function () {
+      console.log('Starting job...');
+    };
+    this.__onUpdate = onUpdate || function (a) {
+      console.log('Loading ' + a[0]);
+    };
+    this.__onDone = onDone || function () {
+      console.log('Finished job.');
+    };
+    this.ghtorrentRange = this.__Endpoint(this._host + this._version + '/ghtorrent_range');
   }
 
   _createClass(GHDataAPI, [{
+    key: '__Endpoint',
+    value: function __Endpoint(url) {
+      var self = this;
+      return function (params, callback) {
+        if (!self.__loading.length) {
+          self.__onStart();
+        }
+        self.__loading.push(url);
+        if (self.__cache[btoa(url)]) {
+          if (self.__cache[btoa(url)].created_at > Date.now() - 1000 * 60) {
+            return new Promise(function (resolve, reject) {
+              resolve(JSON.parse(self.__cache[btoa(url)].data));
+            });
+          }
+        }
+        return new Promise(function (resolve, reject) {
+          $.get(url, params, function (data, req) {
+            self.__onUpdate(self.__loading);
+            self.__loading.splice(self.__loading.indexOf(url), 1);
+            if (!self.__loading.length) {
+              self.__onDone();
+            }
+            self.__cache[btoa(url)] = {
+              created_at: Date.now(),
+              data: JSON.stringify(data)
+            };
+            if (typeof callback === 'function') {
+              callback(data);
+            }
+            if (data.length) {
+              resolve(data);
+            } else {
+              reject(req);
+            }
+          }).fail(function (req) {
+            self.__loading.splice(self.__loading.indexOf(url), 1);
+            if (!self.__loading.length) {
+              self.__onDone();
+            }
+            reject(req);
+          });
+        });
+      };
+    }
+  }, {
     key: 'Repo',
     value: function Repo(owner, repoName) {
       var _this = this;
@@ -186,41 +242,15 @@ var GHDataAPI = function () {
         }
       }
 
-      repo.toString = function () {
-        return repo.owner + '/' + repo.name;
-      };
-
-      var Endpoint = function Endpoint(endpoint) {
-        var self = _this;
-        var url = _this._host + _this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
-        return function (params, callback) {
-          if (self.__cache[btoa(url)]) {
-            if (self.__cache[btoa(url)].created_at > Date.now() - 1000 * 60) {
-              return new Promise(function (resolve, reject) {
-                resolve(JSON.parse(self.__cache[btoa(url)].data));
-              });
-            }
-          }
-          return $.get(url, params, callback).then(function (data) {
-            self.__cache[btoa(url)] = {
-              created_at: Date.now(),
-              data: JSON.stringify(data)
-            };
-            if (typeof callback === 'function') {
-              callback(data);
-            }
-            return new Promise(function (resolve, reject) {
-              resolve(data);
-            });
-          });
-        };
+      var RepoEndpoint = function RepoEndpoint(endpoint) {
+        return _this.__Endpoint(_this._host + _this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint);
       };
 
       var Timeseries = function Timeseries(endpoint) {
-        var func = Endpoint('timeseries/' + endpoint);
+        var func = RepoEndpoint('timeseries/' + endpoint);
         func.relativeTo = function (baselineRepo, params, callback) {
           var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name;
-          return Endpoint(url)();
+          return RepoEndpoint(url)();
         };
         return func;
       };
@@ -235,16 +265,20 @@ var GHDataAPI = function () {
       repo.uniqueCommitters = Timeseries('unique_committers');
       repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate');
 
-      repo.issuesResponseTime = Endpoint('issues/response_time');
-      repo.contributors = Endpoint('contributors');
-      repo.contributions = Endpoint('contributions');
-      repo.committerLocations = Endpoint('committer_locations');
-      repo.communityAge = Endpoint('community_age');
-      repo.linkingWebsites = Endpoint('linking_websites');
-      repo.busFactor = Endpoint('bus_factor');
-      repo.dependents = Endpoint('dependents');
-      repo.dependencies = Endpoint('dependencies');
-      repo.dependencyStats = Endpoint('dependency_stats');
+      repo.issuesResponseTime = RepoEndpoint('issues/response_time');
+      repo.contributors = RepoEndpoint('contributors');
+      repo.contributions = RepoEndpoint('contributions');
+      repo.committerLocations = RepoEndpoint('committer_locations');
+      repo.communityAge = RepoEndpoint('community_age');
+      repo.linkingWebsites = RepoEndpoint('linking_websites');
+      repo.busFactor = RepoEndpoint('bus_factor');
+      repo.dependents = RepoEndpoint('dependents');
+      repo.dependencies = RepoEndpoint('dependencies');
+      repo.dependencyStats = RepoEndpoint('dependency_stats');
+
+      repo.toString = function () {
+        return repo.owner + '/' + repo.name;
+      };
 
       return repo;
     }
@@ -293,17 +327,27 @@ var GHDataCharts = function () {
     value: function convertDates(data, earliest, latest) {
       earliest = earliest || new Date('01-01-2005');
       latest = latest || new Date();
+      data.unshift({});
       if (Array.isArray(data[0])) {
         data = data.map(function (datum) {
           return GHDataCharts.convertDates(datum);
         });
       } else {
-
+        // Add 0 to beginning of data
+        //if (new Date(data[0].date) > earliest) {
+        var zero = { date: earliest };
+        for (var prop in data[1]) {
+          if (data[1].hasOwnProperty(prop) && prop !== 'date') {
+            zero[prop] = 0;
+          }
+        }
+        data.unshift(zero);
+        //}
         data = data.map(function (d) {
           d.date = new Date(d.date);
           return d;
         }).filter(function (d) {
-          return earliest < d.date && d.date < latest;
+          return earliest <= d.date && d.date <= latest;
         });
       }
       return data;
@@ -338,7 +382,6 @@ var GHDataCharts = function () {
         return e[key];
       });
       mean = mean || GHDataCharts.averageArray(flat);
-      console.log(flat, mean);
       var distances = flat.map(function (e) {
         return (e - mean) * (e - mean);
       });
@@ -397,14 +440,12 @@ var GHDataCharts = function () {
   }, {
     key: 'convertToPercentages',
     value: function convertToPercentages(data, key, baseline) {
-      console.log(data);
       if (!data) {
         return [];
       }
       baseline = baseline || GHDataCharts.averageArray(data.map(function (e) {
         return e[key];
       }));
-      console.log(baseline);
       data = data.map(function (datum) {
         datum['value'] = datum[key] / baseline;
         return datum;
@@ -463,7 +504,6 @@ var GHDataCharts = function () {
     value: function zscores(data, key) {
       key = key || 'value';
       var stats = GHDataCharts.describe(data, key);
-      console.log(stats);
       return data.map(function (e) {
         var newObj = {};
         if (e.date) {
@@ -577,6 +617,7 @@ var GHDataCharts = function () {
         });
       }
 
+      $(selector).css({ "background-image": "none" });
       var chart = _metricsGraphics2.default.data_graphic(config);
     }
   }, {
@@ -593,7 +634,6 @@ var GHDataCharts = function () {
           legend.push(event);
         }
       }
-      console.log(dataCleaned);
       return _metricsGraphics2.default.data_graphic({
         title: title || 'Timeline',
         data: dataCleaned,
@@ -607,12 +647,12 @@ var GHDataCharts = function () {
   }, {
     key: 'NoChart',
     value: function NoChart(selector, title) {
+      $(selector).css({ "background-image": "none" });
       return _metricsGraphics2.default.data_graphic({
-        title: "Missing Data",
         error: 'Data unavaliable for ' + title,
         chart_type: 'missing-data',
-        missing_text: title + ' could not be loaded',
-        target: '#missing-data',
+        missing_text: '⚠ Data Missing for ' + title,
+        target: selector,
         full_width: true,
         height: 200
       });
@@ -2853,13 +2893,18 @@ var GHDataDashboard = function () {
     this.state = state || this.EMPTY_STATE;
     this.ghdata = new _GHDataAPI2.default();
     this.charts = _GHDataCharts2.default;
+    this.ghdata.ghtorrentRange().then(function (range) {
+      _this.ghtorrentVersion = range[0]['max_date'];
+      $('.ghtorrent-version').text(_this.ghtorrentVersion);
+      _this.state.endDate = new Date(_this.ghtorrentVersion);
+    });
     if (/repo/.test(location.search) && !state) {
-      console.log('State from URL');
       this.setStateFromURL();
     }2;
     window.addEventListener('popstate', function (e) {
       _this.setStateFromURL();
     });
+    this.ghtorrentVersion = 'unknown';
   }
 
   _createClass(GHDataDashboard, [{
@@ -2913,7 +2958,6 @@ var GHDataDashboard = function () {
 
       $(element).find('.linechart').each(function (index, element) {
         var title = element.dataset.title || element.dataset.source[0].toUpperCase() + element.dataset.source.slice(1);
-        console.log(element.dataset.source);
         repo[element.dataset.source]().then(function (data) {
           if (data && data.length) {
             $(element).find('cite').each(function (i, e) {
@@ -2929,10 +2973,11 @@ var GHDataDashboard = function () {
             };
 
             _GHDataCharts2.default.LineChart(element, data, config);
-          } else {
-            _GHDataCharts2.default.NoChart(element, title);
           }
         }, function (error) {
+          if (element.dataset.source == 'commits') {
+            $('#cards').html('<section style="text-align:center"> <h1>⚠</h1><strong>The repo ' + _this3.state.repo.toString() + ' does not exist in GHTorrent</strong></section>');
+          }
           _GHDataCharts2.default.NoChart(element, title);
         });
       });
@@ -2954,11 +2999,13 @@ var GHDataDashboard = function () {
       this.renderGraphs(ecosystemCard, repo);
 
       repo.dependents().then(function (dependents) {
+        $(ecosystemCard).find('#dependents').html('');
         for (var i = 0; i < dependents.length && i < 10; i++) {
           $(ecosystemCard).find('#dependents').append(dependents[i].name + '<br>');
         }
       });
       repo.dependencies().then(function (dependencies) {
+        $(ecosystemCard).find('#dependents').html('');
         for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
           $(ecosystemCard).find('#dependencies').append(dependencies.dependencies[i].name + '<br>');
         }
@@ -3050,6 +3097,7 @@ var GHDataDashboard = function () {
         _this5.renderComparisonRepo(null, repo);
       });
       $('.baseproject').text(this.state.repo.toString());
+      $('.ghtorrent-version').text(this.ghtorrentVersion);
     }
   }, {
     key: 'startSearch',
