@@ -651,21 +651,6 @@ addMetric(app, publicwww.linking_websites, 'linking_websites')
 @api {get} /ghtorrent_range Range of dates covered by GHTorrent
 @apiName GhtorrentRange
 @apiGroup Misc
-
-
-@apiSuccessExample {json} Success-Response:
-                    [
-                        {
-                            "login": "bonnie",
-                            "location": "Rowena, TX",
-                            "commits": 12
-                        },
-                        {
-                            "login":"clyde",
-                            "location":"Ellis County, TX",
-                            "commits": 12
-                        }
-                    ]
 """
 @app.route('/{}/ghtorrent_range'.format(GHDATA_API_VERSION))
 
