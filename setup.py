@@ -17,6 +17,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='ghdata',
     version='0.4.0',
+    include_package_data = True,
     description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,
     url='https://github.com/OSSHealth/ghdata',
@@ -39,7 +40,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords='ghtorrent github api data science',
-    install_requires=['beautifulsoup4', 'flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent', 'gunicorn'],
+    install_requires=['ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent', 'gunicorn'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],

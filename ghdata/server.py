@@ -1,6 +1,8 @@
 #SPDX-License-Identifier: MIT
 import os
 import sys
+import ipdb
+import traceback
 if (sys.version_info > (3, 0)):
     import configparser as configparser
 else:
@@ -62,53 +64,47 @@ def addTimeseries(app, function, endpoint):
     app.route('/{}/<owner>/<repo>/timeseries/{}/relative_to/<ownerRelativeTo>/<repoRelativeTo>'.format(GHDATA_API_VERSION, endpoint))(flaskify(ghdata.util.makeRelative(function)))
 
 
-
-def read_config(parser, section, name, environment_variable, default):
-    try:
-        value = os.getenv(environment_variable, parser.get(section, name))
-        return value
-    except:
-        if not parser.has_section(section):
-            parser.add_section(section)
-        parser.set(section, name, default)
-        with open('ghdata.cfg', 'w') as configfile:
-            parser.write(configfile)
-        return default
-
-
-
 app = Flask(__name__)
-CORS(app)
-# Try to open the config file and parse it
+CORS(app)# Try to open the config file and parse it
 parser = configparser.RawConfigParser()
 parser.read('ghdata.cfg')
 
-try:
-    dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-        read_config(parser, 'Database', 'user', 'GHDATA_DB_USER', 'root'),
-        read_config(parser, 'Database', 'pass', 'GHDATA_DB_PASS', 'password'),
-        read_config(parser, 'Database', 'host', 'GHDATA_DB_HOST', '127.0.0.1'),
-        read_config(parser, 'Database', 'port', 'GHDATA_DB_PORT', '3306'),
-        read_config(parser, 'Database', 'name', 'GHDATA_DB_NAME', 'msr14')
-    )
-    ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
-except Exception as e:
-    print("Failed to connect to database (" + str(e) + ")");
+def read_config(section, name, environment_variable, default):
+    try:
+        value = os.getenv(environment_variable, parser.get(section, name))
+        return value
+    except Exception as e:
+        print(e)
+        if not parser.has_section(section):
+            parser.add_section(section)
+        if not parser.get(section, name):
+            print('[' + section + '] -> ' + name + ' is missing. Adding to config...')
+            parser.set(section, name, default)
+            with open('ghdata.cfg', 'w') as configfile:
+                parser.write(configfile)
+            return default
 
-host = read_config(parser, 'Server', 'host', 'GHDATA_HOST', '0.0.0.0')
-port = read_config(parser, 'Server', 'port', 'GHDATA_PORT', '5000')
+host = read_config('Server', 'host', 'GHDATA_HOST', '0.0.0.0')
+port = read_config('Server', 'port', 'GHDATA_PORT', '5000')
 
-publicwww = ghdata.PublicWWW(api_key=read_config(parser, 'PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
-github = ghdata.GitHubAPI(api_key=read_config(parser, 'GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
-librariesio = ghdata.LibrariesIO(api_key=read_config(parser, 'LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
+publicwww = ghdata.PublicWWW(api_key=read_config('PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
+github = ghdata.GitHubAPI(api_key=read_config('GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
+librariesio = ghdata.LibrariesIO(api_key=read_config('LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
 downloads = ghdata.Downloads(github)
 
-if (read_config(parser, 'Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
+if (read_config('Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
     debugmode = True
 else:
     debugmode = False
 
-
+dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
+    read_config('Database', 'user', 'GHDATA_DB_USER', 'root'),
+    read_config('Database', 'pass', 'GHDATA_DB_PASS', 'password'),
+    read_config('Database', 'host', 'GHDATA_DB_HOST', '127.0.0.1'),
+    read_config('Database', 'port', 'GHDATA_DB_PORT', '3306'),
+    read_config('Database', 'name', 'GHDATA_DB_NAME', 'msr14')
+)
+ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
 
 """
 @api {get} / API Status
@@ -690,5 +686,17 @@ if (debugmode):
 def run():
     app.run(host=host, port=int(port), debug=debugmode)
 
+if read_config('Development', 'interactive', 'GHDATA_INTERACTIVE', '0') == '1':
+    ipdb.set_trace()
+
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except Exception as e:
+        print(e)
+        type, value, tb = sys.exc_info()
+        traceback.print_exc()
+        if (debugmode):
+            ipdb.post_mortem(tb)
+        exit(1)
+        

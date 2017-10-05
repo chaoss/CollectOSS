@@ -1,3 +1,4 @@
+from .localcsv import LocalCSV
 import json
 import re
 from dateutil.parser import parse
@@ -196,3 +197,15 @@ class GitHubAPI(object):
                 pass
 
         return pd.DataFrame(major_versions)
+
+
+    def contributors_gender(self, owner, repo=None):
+        contributors = self.__api.get_repo((owner + "/" + repo)).get_contributors()
+        names = pd.DataFrame(columns=['name'])
+        i = 0
+        for contributor in contributors:
+            if contributor.name is not None:
+                names.loc[i] = [contributor.name.split()[0]]
+                i += 1
+        genderized = names.merge(LocalCSV.name_gender, how='inner', on=['name'])
+        return genderized

@@ -211,7 +211,7 @@ var GHDataAPI = function () {
             if (typeof callback === 'function') {
               callback(data);
             }
-            if (data.length) {
+            if (data && data.length) {
               resolve(data);
             } else {
               reject(req);

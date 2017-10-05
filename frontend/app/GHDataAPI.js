@@ -40,7 +40,7 @@ export default class GHDataAPI {
           if (typeof callback === 'function') {
             callback(data)
           }
-          if (data.length) {
+          if (data && data.length) {
             resolve(data)
           } else {
             reject(req)
@@ -111,7 +111,5 @@ export default class GHDataAPI {
     return repo
 
   }
-
-
 
 }

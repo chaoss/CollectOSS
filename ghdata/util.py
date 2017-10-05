@@ -1,5 +1,6 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
+import os
 
 def makeRelative(function):
   """
@@ -20,3 +21,7 @@ def makeRelative(function):
       return relativeData
   generated_function.__name__ = function.__name__ + '_relative'
   return generated_function
+
+_ROOT = os.path.abspath(os.path.dirname(__file__))
+def get_data_path(path):
+    return os.path.join(_ROOT, 'data', path)
