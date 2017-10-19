@@ -1,6 +1,6 @@
 # ghdata Context from the Ground Up  
 ## What is ghdata?
-Our project is focused on building **human centered open source software health metrics** defined by collaborations with the Linux Foundation's CHAOSS Project and other open source stakeholders. ghdata is software focused on making sense of data using Four key **human centered data science** strategies:
+Our project is focused on building **human centered open source software health metrics** defined by collaborations with the Linux Foundation's [CHAOSS Project](http://chaoss.community) and other open source stakeholders. ghdata is software focused on making sense of data using Four key **human centered data science** strategies:
 1. Enable comparisons. People navigate complex unknowns analogically. Let folks see how their project compares with others they are familiar with.
  	- This is not ranking
 	- If you start thinking about "metrics" like "rankings", you are probably going to create suboptimal metrics.
@@ -27,4 +27,4 @@ Our core team has a long standing interest in social computing, software enginee
 	http://ghtorrent.org/relational.html
 	http://ghtorrent.org/files/schema.pdf
 
-  There are limits to ghtorrent as a data source and we are exploring strategies for incorporating higher trust data in our prototyping activities. 
+  There are limits to ghtorrent as a data source and we are exploring strategies for incorporating higher trust data in our prototyping activities. Some of these concerns are introduced and discussed in this thread on the CHAOSS mailing list. https://lists.linuxfoundation.org/pipermail/oss-health-metrics/2017-September/000112.html 
