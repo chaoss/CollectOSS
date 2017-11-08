@@ -79,7 +79,9 @@ Install the Python and Node developer dependencies:
 make install-dev
 ```
 
+For futher instructions on how to add to GHData, here is a guide to adding an endpoint [Dev Guide Part 1](docs/dev-guide-pt1.md)
 
+Frontend development guide coming soon!
 
 You're good to go.
 
