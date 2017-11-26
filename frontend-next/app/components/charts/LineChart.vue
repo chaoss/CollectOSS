@@ -40,15 +40,14 @@ export default {
   /*+-------------------+--------------------------------+-----------------------+
     | Parameter         | Source                         | Default               |
     +-------------------+--------------------------------+-----------------------+*/
-      config.period     = this.period                   || 180
       config.earliest   = this.earliest                 || new Date('01-01-2005')
       config.latest     = this.latest                   || new Date()
       config.title      = this.title                    || "Activity"
       config.full_width = true
       config.height     = 200
       config.x_accessor = 'date'
-      config.target     = this.$refs.chart
       config.format     = this.percentage ? 'percentage' : undefined;
+      config.compare    = this.compare 
   /*+-------------------+--------------------------------+------------------------+*/
 
       if (this.repo) {
@@ -63,50 +62,55 @@ export default {
             config.data = []
           }
           if (this.comparedTo) {
-            if (this.compare === "percentage") {
-              config.baselines = [{value: 1, label: config.baseline}]
-              return GHDataRepos[this.repo][this.source].relativeTo(GHDataRepos[this.comparedTo])
-            } else {
-              console.log(this.comparedTo)
-              return GHDataRepos[this.comparedTo][this.source]()
-            } 
+            return GHDataRepos[this.comparedTo][this.source]()
           }
           return new Promise((resolve, reject) => { resolve() });
         }).then((compareData) => {
-          console.log(compareData)
-          if (compareData && compareData.length) {
-            // If there is comparedData, render a comparison chart
-            config.data = GHDataStats.makeRelative(config.data, compareData, config)
-          } else {
-            // Otherwise, render a normal timeseries chart
-            let keys = Object.keys(config.data[0]).splice(1)
-            if (!this.disableRollingAverage) {
-              config.legend = config.legend || [config.title.toLowerCase(), config.period + ' day average']
-              let rolling = GHDataStats.rollingAverage(config.data, keys[0], config.period)
-              config.data = GHDataStats.convertKey(GHDataStats.combine(config.data, rolling), keys[0])
-              config.colors = config.colors ||['#CCC', '#FF3647']
-              config.y_accessor = 'value';
-            }
-            if (Array.isArray(config.data[0])) {
-              config.legend = config.legend || ['compared', 'base']
+          let keys = Object.keys(config.data[0]).splice(1)
+          if (config.data && compareData && compareData.length) {
+            // If there is comparedData, do the necesarry computations for
+            // the comparision 
+            if (config.compare == 'each') {
+              let key = Object.keys(compareData[0])[1]
+              let compare = GHDataStats.rollingAverage(GHDataStats.zscores(compareData, key), 'value', this.period)
+              let base = GHDataStats.rollingAverage(GHDataStats.zscores(config.data, key), 'value', this.period)
+              config.data = [base, compare]
+              config.legend = [window.GHDataRepos[this.repo].toString(), window.GHDataRepos[this.comparedTo].toString()]
               config.colors = config.colors || ['#FF3647', '#999']
-              config.y_accessor = config.y_accessor || 'value'
             } else {
-              config.y_accessor = keys
-              config.legend = config.y_accessor
-            }
-
-            if (keys.length > 1) {
-              config.legend_target = this.$refs.legend
-              $(this.$refs.chart).hover(() => {
-                this.$refs.legend.style.display = 'none'
-              }, () => {
-                this.$refs.legend.style.display = 'block'
+              console.log('rendering percentage')
+              config.format = 'percentage'
+              config.baselines = [{value: 1, label: config.baseline}]
+              config.data = GHDataStats.makeRelative(config.data, compareData, {
+                earliest: config.earliest,
+                latest: config.latest,
+                byDate: config.byDate,
+                period: this.period
               })
             }
-            this.$refs.chart.className = 'linechart intro'
-            MG.data_graphic(config)
+          } else {
+            // Otherwise, render a normal timeseries chart
+            if (!this.disableRollingAverage) {
+              config.legend = config.legend || [config.title.toLowerCase(), this.period + ' day average']
+              let rolling = GHDataStats.rollingAverage(config.data, keys[0], this.period)
+              config.data = GHDataStats.convertKey(GHDataStats.combine(config.data, rolling), keys[0])
+              config.colors = config.colors ||['#CCC', '#FF3647']
+              config.y_accessor = 'value'
+            }
           }
+
+          if (keys.length > 1) {
+            config.legend_target = this.$refs.legend
+            $(this.$refs.chart).hover(() => {
+              this.$refs.legend.style.display = 'none'
+            }, () => {
+              this.$refs.legend.style.display = 'block'
+            })
+          }
+
+          this.$refs.chart.className = 'linechart intro'
+          config.target = this.$refs.chart
+          MG.data_graphic(config)
         }) // end then()
         return '<div class="loader">' + this.title + '...</div>' 
       } // end if (this.$store.repo)   

@@ -41,7 +41,6 @@ export default class GHDataStats {
   static standardDeviation(ary, key, mean) {
     let flat = ary.map((e) => {return e[key]})
     mean = mean || GHDataStats.averageArray(flat)
-    console.log(flat, mean)
     let distances = flat.map((e) => {
       return (e - mean) * (e - mean)
     })
@@ -95,12 +94,10 @@ export default class GHDataStats {
   }
 
   static convertToPercentages(data, key, baseline) {
-    console.log(data)
     if (!data) {
       return []
     }
     baseline = baseline || GHDataStats.averageArray( data.map((e) => {return e[key]}) )
-    console.log(baseline)
     data = data.map((datum) => {
       datum['value'] = (datum[key] / baseline)
       return datum
@@ -169,7 +166,6 @@ export default class GHDataStats {
   static zscores(data, key) {
     key = key || 'value'
     let stats = GHDataStats.describe(data, key)
-    console.log(stats)
     return data.map((e) => {
       let newObj = {}
       if (e.date) {

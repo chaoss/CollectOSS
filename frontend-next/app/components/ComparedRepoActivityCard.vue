@@ -73,6 +73,11 @@ module.exports = {
   props: ['comparedTo'],
   components: {
     LineChart
+  },
+  computed: {
+    repo () {
+      return this.$store.state.repo
+    }
   }
 }
 
