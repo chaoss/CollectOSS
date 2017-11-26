@@ -7,6 +7,7 @@ body
   padding-bottom: 216px
 
 header
+  width: 100%
   min-height: 216px
   padding: 48px
   margin-bottom: 24px
@@ -30,7 +31,8 @@ section#landing h1
 
 section
   padding: 36px
-  margin: 0 auto 24px auto
+  float: right
+  margin: 0 0 24px 0
   background: foreground
   box-shadow: full-shadow
 
@@ -98,10 +100,10 @@ section.unmaterialized
     float: left
 
 cite.metric
-  display:none;
+  display: none;
   width:100%
   height: 0
-  float:right
+  float: right
   text-align: center;
   font-size: 12px
   color: #ccc
@@ -113,13 +115,61 @@ cite.metric a
   color: #aaa
 
 .linechart
+  height: 210px
   margin-bottom: 30px
 
 .mg-line-legend
   display: none
 
+.legend 
+  position: relative
+  margin: 0
+  padding: 0
+  height: 0
+  top: 31px
+  left: 55px
+  fontSize: 14px
+  fontWeight: bold
+  opacity: 0.8
+
 .mg-baselines
   opacity: 0.5
+
+.loader
+  width: 100%
+  text-align: center
+  line-height: 10
+  animation: outro 1s, loader 1.5s infinite
+
+@keyframes outro
+  0%
+    opacity: 1
+    filter: grayscale(0%)
+  100%
+    opacity: 0.2
+    filter: grayscale(100%) 
+    
+@keyframes loader
+  0%
+    opacity: 0.2
+    filter: grayscale(100%)
+  50%
+    opacity: 0.4
+    filter: grayscale(50%)
+  100%
+    opacity: 0.2
+    filter: grayscale(100%)
+
+.intro
+  animation: intro 2s
+    
+@keyframes intro
+  0%
+    opacity: 0.2
+    filter: grayscale(100%)
+  100%
+    opacity: 1
+    filter: grayscale(0%)
 
 @media print
   body
@@ -131,9 +181,6 @@ cite.metric a
 
   section.unmaterialized
     display: none
-
-#comparison-form-template
-  display: none
 
 .hidden, .hidden > *, .hidden > small
   display: none !important 

@@ -77,6 +77,7 @@ export default class GHDataAPI {
     repo.busFactor           = Endpoint('bus_factor')
     repo.dependents          = Endpoint('dependents')
     repo.dependencies        = Endpoint('dependencies')
+    repo.dependencyStats     = Endpoint('dependency_stats')
 
     return repo
 

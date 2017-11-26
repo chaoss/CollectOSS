@@ -562,6 +562,8 @@ var GHDataCharts = function () {
       config.legend = config.legend;
       config.legend_target = legend;
 
+      $(selector).css({ "background-image": "none" });
+
       return _metricsGraphics2.default.data_graphic(config);
     }
   }, {
@@ -3061,9 +3063,7 @@ var GHDataDashboard = function () {
                 percentage: false
               };
 
-              var combinedData = _GHDataCharts2.default.combine(baseData, compareData);
-
-              _GHDataCharts2.default.LineChart(element, combinedData, config);
+              _GHDataCharts2.default.LineChart(element, [baseData, compareData], config);
             } else if (_this4.state.compare = 'compared') {
               _GHDataCharts2.default.ComparisonLineChart(element, base, compare, {
                 title: title,

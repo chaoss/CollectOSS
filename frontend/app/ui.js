@@ -177,9 +177,7 @@ class GHDataDashboard {
               percentage: false
             }
 
-            let combinedData = GHDataCharts.combine(baseData, compareData)
-
-            GHDataCharts.LineChart(element, combinedData, config)
+            GHDataCharts.LineChart(element, [baseData, compareData], config)
 
           } else if (this.state.compare = 'compared') {
             GHDataCharts.ComparisonLineChart(element, base, compare, {

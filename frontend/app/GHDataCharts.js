@@ -238,6 +238,8 @@ export default class GHDataCharts {
     config.legend = config.legend
     config.legend_target = legend
 
+    $(selector).css({"background-image": "none"})
+
     return MG.data_graphic(config)
   }
 

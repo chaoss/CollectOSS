@@ -91,6 +91,7 @@ publicwww = ghdata.PublicWWW(api_key=read_config('PublicWWW', 'APIKey', 'GHDATA_
 github = ghdata.GitHubAPI(api_key=read_config('GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
 librariesio = ghdata.LibrariesIO(api_key=read_config('LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
 downloads = ghdata.Downloads(github)
+localcsv = ghdata.LocalCSV()
 
 if (read_config('Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
     debugmode = True
