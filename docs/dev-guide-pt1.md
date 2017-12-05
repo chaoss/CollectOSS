@@ -63,10 +63,6 @@ def test_data_source(chaoss):
 
 Make sure every function you write has a test.
 
-##### Using the Python Debugger
-
-The server in GHData has a built-in IPython debugger to 
-
 ## Creating an endpoint for a function
 
 If you created a new data source, make sure you create an instance of your class, loading any configuration you need with the `read_config` function.
@@ -82,3 +78,16 @@ for a function `foo()` in `ghdata/bar.py`
 addTimeseries(app, bar.foo, 'foo')
 ```
 If the metric is not a timeseries metric, replace `AddTimeseries()` with `AddMetric()`
+
+## Using the Python Debugger
+
+The server in GHData has a built-in IPython debugger to make testing your functions easier during development.
+
+After you have added an instance of your class to server.py, you can test it by running:
+
+```bash
+export GHDATA_INTERACTIVE=1
+ghdata
+````
+
+GHData will load configuration and create instances of all the classes, but will drop down to IPDB shell instead of running the Flask server.
