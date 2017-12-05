@@ -16,7 +16,7 @@ GHData uses Vue.js, MetricsGraphics, Kube for its frontend. The frontend is stor
 
 ### Adding an endpoint
 
-In `frontend/app/GHDataAPI.js`, add an attribute to the repo class that holds a time series object at the end of the file like this 
+In `frontend/app/GHDataAPI.js`, add an attribute to the repo class that holds a times eries object at the end of the file like this 
 ```javascript
 repo.<endpointName> = Timeseries('endpoint_name')
 ```

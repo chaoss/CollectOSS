@@ -8,7 +8,7 @@ GHData uses the Flask framework for its backend, which is stored in the director
 
 ### Should I create a new .py file?
 
-If your python function uses a new data source, create a new python file. If you use an already implemented data source, create your new functions under that file.
+If your python function uses a new data source, create a new Python file. If you use an already implemented data source, create your new functions under that file.
 
 #### Adding a new .py file
 
@@ -41,13 +41,35 @@ and add `mizzou` as such:
 install_requires=['beautifulsoup4', 'flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent', 'gunicorn', 'mizzou'],
 ```
 
-#### Testing a function
-Coming soon!
+#### Adding tests
+
+GHData uses pytest for tests. Tests are in the `test` directory. If you created a new file for your data source, you will also need to create a new file to test it. You can use pytest fixtures and environment variables to pass data to tests.
+
+```python
+@pytest.fixture
+def chaoss():
+    import ghdata
+    chaossServer = os.getenv("CHAOSS_TEST_URL")
+    assert chaossServer is not None and len(chaossServer) > 8
+    return ghdata.Chaoss(chaossServer)
+```
+
+Now any test that tests functions in the Chaoss class will be able to access an instance of the class
+
+```python
+def test_data_source(chaoss):
+    assert chaoss.data_source('argument').isin(['expected_value']).any
+```
+
+Make sure every function you write has a test.
 
 ##### Using the Python Debugger
-Coming soon!
+
+The server in GHData has a built-in IPython debugger to 
 
 ## Creating an endpoint for a function
+
+If you created a new data source, make sure you create an instance of your class, loading any configuration you need with the `read_config` function.
 
 To create an endpoint for a function, in `ghdata/server.py`, call  `AddMetric()` or `AddTimeseries()`  as such
 
