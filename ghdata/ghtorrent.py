@@ -308,7 +308,7 @@ class GHTorrent(object):
             parameterized = s.sql.text(rawContributionsSQL)
             return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
 
-    def committer_locations(self, owner, repo):
+    def committer_locations(self, owner, repo=None):
         """
         Return committers and their locations
 
