@@ -690,7 +690,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-7c1c00fd", __vue__options__)
   } else {
-    hotAPI.reload("data-v-7c1c00fd", __vue__options__)
+    hotAPI.rerender("data-v-7c1c00fd", __vue__options__)
   }
 })()}
 });
@@ -796,7 +796,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-323615bb", __vue__options__)
   } else {
-    hotAPI.reload("data-v-323615bb", __vue__options__)
+    hotAPI.rerender("data-v-323615bb", __vue__options__)
   }
 })()}
 });
@@ -839,14 +839,29 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 module.exports = {
   methods: {
     onStartDateChange: function onStartDateChange(e) {
-      this.$store.commit('setDates', {
-        startDate: e.target.value
-      });
+      var _this = this;
+
+      if (this.startDateTimeout) {
+        clearTimeout(this.startDateTimeout);
+      }
+      this.startDateTimeout = setTimeout(function () {
+        _this.$store.commit('setDates', {
+          startDate: e.target.value
+        });
+      }, 500);
     },
     onEndDateChange: function onEndDateChange(e) {
-      this.$store.commit('setDates', {
-        endDate: e.target.value
-      });
+      var _this2 = this;
+
+      if (this.endDateTimeout) {
+        clearTimeout(this.endDateTimeout);
+        delete this.endDateTimeout;
+      }
+      this.endDateTimeout = setTimeout(function () {
+        _this2.$store.commit('setDates', {
+          endDate: e.target.value
+        });
+      }, 500);
     },
     onTrailingAverageChange: function onTrailingAverageChange(e) {
       this.$store.commit('setDates', {
@@ -873,7 +888,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0df51156", __vue__options__)
   } else {
-    hotAPI.reload("data-v-0df51156", __vue__options__)
+    hotAPI.rerender("data-v-0df51156", __vue__options__)
   }
 })()}
 });
@@ -1022,7 +1037,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 console.log(d3);
 
 exports.default = {
-  props: ['source', 'citeURL', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage'],
   computed: {
     repo: function repo() {
       return this.$store.state.baseRepo;
@@ -1123,7 +1138,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{ref:"chart",staticClass:"linechart"},[_c('div',{ref:"legend",staticClass:"legend"}),_vm._v(" "),_c('span',{ref:"chartStatus",domProps:{"innerHTML":_vm._s(_vm.chart)}})]),_vm._v(" "),_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeURL,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])]),_vm._v(" "),_c('div',{ref:"chart",staticClass:"linechart"},[_c('div',{ref:"legend",staticClass:"legend"}),_vm._v(" "),_c('span',{ref:"chartStatus",domProps:{"innerHTML":_vm._s(_vm.chart)}})])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1132,7 +1147,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4035d73d", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4035d73d", __vue__options__)
+    hotAPI.rerender("data-v-4035d73d", __vue__options__)
   }
 })()}
 });

@@ -29,14 +29,25 @@
 module.exports = {
   methods: {
     onStartDateChange (e) {
-      this.$store.commit('setDates', {
-        startDate: e.target.value
-      })
+      if (this.startDateTimeout) {
+        clearTimeout(this.startDateTimeout)
+      }
+      this.startDateTimeout = setTimeout(() => {
+        this.$store.commit('setDates', {
+          startDate: e.target.value
+        })
+      }, 500);
     },
     onEndDateChange (e) {
-      this.$store.commit('setDates', {
-        endDate: e.target.value
-      })
+      if (this.endDateTimeout) {
+        clearTimeout(this.endDateTimeout)
+        delete this.endDateTimeout
+      }
+      this.endDateTimeout = setTimeout(() => {
+        this.$store.commit('setDates', {
+          endDate: e.target.value
+        })
+      }, 500);
     },
     onTrailingAverageChange (e) {
       this.$store.commit('setDates', {

@@ -1,10 +1,10 @@
 <template>
   <div>
+    <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite>
     <div ref="chart" class="linechart">
       <div ref="legend" class="legend"></div>
       <span ref="chartStatus" v-html="chart"></span>
     </div>
-    <cite class="metric">Metric: <a v-bind:href="citeURL" target="_blank">{{ citeText }}</a></cite></div>
   </div>
 </template>
 
@@ -18,7 +18,7 @@ import MG from '../../include/metricsgraphics';
 console.log(d3)
 
 export default {
-  props: ['source', 'citeURL', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage'],
   computed: {
     repo() {
       return this.$store.state.baseRepo
