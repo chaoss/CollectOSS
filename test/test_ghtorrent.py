@@ -9,10 +9,10 @@ def ghtorrent():
     return ghdata.GHTorrent(dbstr)
 
 def test_repoid(ghtorrent):
-    assert ghtorrent.repoid('rails', 'rails') == 78852
+    assert ghtorrent.repoid('rails', 'rails') >= 1000
 
 def test_userid(ghtorrent):
-    assert ghtorrent.userid('howderek') == 417486
+    assert ghtorrent.userid('howderek') >= 1000
 
 """
 Pandas testing format

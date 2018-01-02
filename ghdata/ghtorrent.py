@@ -320,14 +320,13 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         rawContributionsSQL = s.sql.text("""
-            SELECT users.login, users.location, users.long, users.lat, users.country_code, COUNT(*) AS "commits"
+            SELECT users.login, users.location, COUNT(*) AS "commits"
             FROM commits
             JOIN project_commits
             ON commits.id = project_commits.commit_id
             JOIN users
             ON users.id = commits.author_id
             WHERE project_commits.project_id = :repoid
-            AND users.country_code IS NOT NULL
             GROUP BY users.id
             ORDER BY commits DESC
         """)

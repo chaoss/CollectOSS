@@ -119,16 +119,7 @@ ifndef PUBLIC_WWW_TEST_API_KEY
 endif
 
 test: check-test-env
-ifdef PY2
-		python2 -m pytest
-else
-		@ echo "Python 2 not installed, skipping..."
-endif
-ifdef PY3
-		python3 -m pytest
-else
-		@ echo "Python 3 not installed, skipping..."
-endif
+		python -m pytest
 
 update-deps:
 		@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
