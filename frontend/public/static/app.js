@@ -274,7 +274,7 @@ var GHDataAPI = function () {
     _classCallCheck(this, GHDataAPI);
 
     this._version = version || 'unstable';
-    this._host = hostURL || 'http://' + window.location.host + '/api/';
+    this._host = hostURL || 'http://' + window.location.hostname + ':5000/';
     this.__cache = {};
   }
 
@@ -1089,7 +1089,6 @@ exports.default = {
         }).then(function (compareData) {
           var keys = Object.keys(config.data[0]).splice(1);
           if (config.data && compareData && compareData.length) {
-            compareData = _GHDataStats2.default.convertDates(compareData, _this.earliest, _this.latest);
             if (config.compare == 'each') {
               var key = Object.keys(compareData[0])[1];
               var compare = _GHDataStats2.default.rollingAverage(_GHDataStats2.default.zscores(compareData, key), 'value', _this.period);
@@ -1098,6 +1097,7 @@ exports.default = {
               config.legend = [window.GHDataRepos[_this.repo].toString(), window.GHDataRepos[_this.comparedTo].toString()];
               config.colors = config.colors || ['#FF3647', '#999'];
             } else {
+              console.log('rendering percentage');
               config.format = 'percentage';
               config.baselines = [{ value: 1, label: config.baseline }];
               config.data = _GHDataStats2.default.makeRelative(config.data, compareData, {

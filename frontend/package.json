@@ -16,6 +16,7 @@
     "babel-preset-latest": "^6.24.1",
     "brunch": "^2.10.12",
     "clean-css-brunch": "^2.10.0",
+    "express-http-proxy": "^1.1.0",
     "stylus-brunch": "^2.10.0",
     "uglify-js-brunch": "^2.10.0",
     "vue-brunch": "^2.0.1"

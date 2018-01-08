@@ -69,7 +69,8 @@ export default {
           let keys = Object.keys(config.data[0]).splice(1)
           if (config.data && compareData && compareData.length) {
             // If there is comparedData, do the necesarry computations for
-            // the comparision 
+            // the comparision
+            compareData = GHDataStats.convertDates(compareData, this.earliest, this.latest)
             if (config.compare == 'each') {
               let key = Object.keys(compareData[0])[1]
               let compare = GHDataStats.rollingAverage(GHDataStats.zscores(compareData, key), 'value', this.period)
@@ -78,7 +79,6 @@ export default {
               config.legend = [window.GHDataRepos[this.repo].toString(), window.GHDataRepos[this.comparedTo].toString()]
               config.colors = config.colors || ['#FF3647', '#999']
             } else {
-              console.log('rendering percentage')
               config.format = 'percentage'
               config.baselines = [{value: 1, label: config.baseline}]
               config.data = GHDataStats.makeRelative(config.data, compareData, {

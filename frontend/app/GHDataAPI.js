@@ -3,7 +3,7 @@ var $ = require('jquery')
 export default class GHDataAPI {
   constructor(hostURL, version) {
     this._version  = version || 'unstable'
-    this._host     = hostURL || 'http://' + window.location.hostname + ':5000/'
+    this._host     = hostURL || 'http://' + window.location.host + '/api/'
     this.__cache   = {}
   }
 

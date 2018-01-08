@@ -15,7 +15,8 @@ from flask import Flask, request, Response
 from flask_cors import CORS
 import json
 
-GHDATA_API_VERSION = 'unstable'
+GHDATA_CONFIG_FILE = os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg')
+GHDATA_API_VERSION = 'api/unstable'
 
 def serialize(data, orient='records'):
 
@@ -67,7 +68,7 @@ def addTimeseries(app, function, endpoint):
 app = Flask(__name__)
 CORS(app)# Try to open the config file and parse it
 parser = configparser.RawConfigParser()
-parser.read('ghdata.cfg')
+parser.read(GHDATA_CONFIG_FILE)
 
 def read_config(section, name, environment_variable, default):
     try:
@@ -77,12 +78,11 @@ def read_config(section, name, environment_variable, default):
         print(e)
         if not parser.has_section(section):
             parser.add_section(section)
-        if not parser.get(section, name):
-            print('[' + section + '] -> ' + name + ' is missing. Adding to config...')
-            parser.set(section, name, default)
-            with open('ghdata.cfg', 'w') as configfile:
-                parser.write(configfile)
-            return default
+        print('[' + section + '] -> ' + name + ' is missing. Adding to config...')
+        parser.set(section, name, default)
+        with open(GHDATA_CONFIG_FILE, 'w') as configfile:
+            parser.write(configfile)
+        return default
 
 host = read_config('Server', 'host', 'GHDATA_HOST', '0.0.0.0')
 port = read_config('Server', 'port', 'GHDATA_PORT', '5000')
