@@ -15,8 +15,14 @@ from flask import Flask, request, Response
 from flask_cors import CORS
 import json
 
-GHDATA_CONFIG_FILE = os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg')
 GHDATA_API_VERSION = 'api/unstable'
+# Location to load configuration from
+GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'r+')
+# Options to export the loaded configuration as environment variables for Docker
+GHDATA_ENV_EXPORT = os.getenv('GHDATA_ENV_EXPORT', '0') == '1'
+if GHDATA_ENV_EXPORT:
+    GHDATA_ENV_EXPORT_FILE = open(os.getenv('GHDATA_ENV_EXPORT_FILE', 'lastrun.cfg.sh'), 'w+')
+
 
 def serialize(data, orient='records'):
 
@@ -68,21 +74,25 @@ def addTimeseries(app, function, endpoint):
 app = Flask(__name__)
 CORS(app)# Try to open the config file and parse it
 parser = configparser.RawConfigParser()
-parser.read(GHDATA_CONFIG_FILE)
+parser.readfp(GHDATA_CONFIG_FILE)
+
+if GHDATA_ENV_EXPORT:
+    GHDATA_ENV_EXPORT_FILE.write('#!/bin/bash\n')
 
 def read_config(section, name, environment_variable, default):
+    value = default
     try:
         value = os.getenv(environment_variable, parser.get(section, name))
-        return value
     except Exception as e:
-        print(e)
         if not parser.has_section(section):
             parser.add_section(section)
         print('[' + section + '] -> ' + name + ' is missing. Adding to config...')
         parser.set(section, name, default)
-        with open(GHDATA_CONFIG_FILE, 'w') as configfile:
-            parser.write(configfile)
-        return default
+        parser.write(GHDATA_CONFIG_FILE)
+        value = default
+    if GHDATA_ENV_EXPORT:
+        GHDATA_ENV_EXPORT_FILE.write('export ' + environment_variable + '="' + value + '"\n')
+    return value
 
 host = read_config('Server', 'host', 'GHDATA_HOST', '0.0.0.0')
 port = read_config('Server', 'port', 'GHDATA_PORT', '5000')
@@ -681,14 +691,21 @@ def ghtorrent_range():
 addMetric(app, github.bus_factor, 'bus_factor')
 
 
+
+
 if (debugmode):
     app.debug = True
+
+if read_config('Development', 'interactive', 'GHDATA_INTERACTIVE', '0') == '1':
+    ipdb.set_trace()
 
 def run():
     app.run(host=host, port=int(port), debug=debugmode)
 
-if read_config('Development', 'interactive', 'GHDATA_INTERACTIVE', '0') == '1':
-    ipdb.set_trace()
+# Close files
+GHDATA_CONFIG_FILE.close()
+if GHDATA_ENV_EXPORT:
+    GHDATA_ENV_EXPORT_FILE.close()
 
 if __name__ == "__main__":
     try:
@@ -700,4 +717,7 @@ if __name__ == "__main__":
         if (debugmode):
             ipdb.post_mortem(tb)
         exit(1)
+
+
+
         

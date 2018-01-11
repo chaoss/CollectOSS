@@ -19,9 +19,42 @@ Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHeal
 
 Installation with Docker (easy to get up and running)
 ------------------------
-  1. Clone the repo
-  2. `docker-compose build`
-  3. `docker-compose up`
+Before we begin, make sure you have everything you need installed: [Git](https://git-scm.com/downloads), [Docker](https://www.docker.com/community-edition), [Docker Compose](https://docs.docker.com/compose/install/), and a MySQL server with [GHTorrent](https://github.com/gousiosg/github-mirror/tree/master/sql) loaded.
+
+Now, to install:
+
+	1.  Clone the repo and enter its directory:
+
+      ```bash
+      git clone https://github.com/OSSHealth/ghdata
+      cd ghdata
+      ```
+
+
+  2.  Configure the following environment variables:
+
+      ```bash
+      # Most likely required
+      GHDATA_DB_USER
+      GHDATA_DB_PASS
+      GHDATA_DB_HOST
+      GHDATA_DB_PORT
+      GHDATA_DB_NAME
+
+      # Optional
+      GHDATA_HOST
+      GHDATA_PORT
+      GHDATA_PUBLIC_WWW_API_KEY
+      GHDATA_GITHUB_API_KEY
+      GHDATA_LIBRARIESIO_API_KEY
+      GHDATA_DEBUG
+      ```
+
+      docker-compose will automatically pass the relevant environment variables to the container.
+
+
+  3.  Build the container with `docker-compose build`
+  4.  Launch the container with `docker-compose up`
 
 
 
