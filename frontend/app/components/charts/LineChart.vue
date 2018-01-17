@@ -2,6 +2,7 @@
   <div>
     <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite>
     <div ref="chart" class="linechart">
+      <div ref="chartholder"></div>
       <div ref="legend" class="legend"></div>
       <span ref="chartStatus" v-html="chart"></span>
     </div>
@@ -112,7 +113,9 @@ export default {
           }
 
           this.$refs.chart.className = 'linechart intro'
-          config.target = this.$refs.chart
+          config.target = document.createElement('div');
+          this.$refs.chartholder.innerHTML = '';
+          this.$refs.chartholder.appendChild(config.target)
           console.log('finalized config that will be sent', config)
           MG.data_graphic(config)
         }) // end then()
