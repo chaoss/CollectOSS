@@ -17,7 +17,14 @@ import json
 
 GHDATA_API_VERSION = 'api/unstable'
 # Location to load configuration from
-GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'w+')
+CONFIG_BAD = False
+
+try:
+    GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'r+')
+except:
+    print('Couldn\'t open config file, attempting to create.')
+    GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'w+')
+    CONFIG_BAD = True
 # Options to export the loaded configuration as environment variables for Docker
 GHDATA_ENV_EXPORT = os.getenv('GHDATA_ENV_EXPORT', '0') == '1'
 if GHDATA_ENV_EXPORT:
@@ -80,13 +87,15 @@ if GHDATA_ENV_EXPORT:
     GHDATA_ENV_EXPORT_FILE.write('#!/bin/bash\n')
 
 def read_config(section, name, environment_variable, default):
+    global CONFIG_BAD
     value = default
     try:
         value = os.getenv(environment_variable, parser.get(section, name))
     except Exception as e:
         if not parser.has_section(section):
             parser.add_section(section)
-        print('[' + section + '] -> ' + name + ' is missing. Adding to config...')
+        CONFIG_BAD = True
+        print('[' + section + ']->' + name + ' is missing. Your config will be regenerated with it included after execution.')
         parser.set(section, name, default)
         value = default
     if GHDATA_ENV_EXPORT:
@@ -698,14 +707,23 @@ if (debugmode):
 if read_config('Development', 'interactive', 'GHDATA_INTERACTIVE', '0') == '1':
     ipdb.set_trace()
 
-def run():
-    app.run(host=host, port=int(port), debug=debugmode)
-
 # Close files and save config
-parser.write(GHDATA_CONFIG_FILE)
+if (CONFIG_BAD):
+    print('Regenerating config...')
+    GHDATA_CONFIG_FILE.seek(0)
+    parser.write(GHDATA_CONFIG_FILE)
+
 GHDATA_CONFIG_FILE.close()
 if GHDATA_ENV_EXPORT:
     GHDATA_ENV_EXPORT_FILE.close()
+
+
+
+
+
+
+def run():
+    app.run(host=host, port=int(port), debug=debugmode)
 
 if __name__ == "__main__":
     try:
