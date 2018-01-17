@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ghdata',
-    version='0.4.0',
+    version='0.4.1',
     include_package_data = True,
     description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,

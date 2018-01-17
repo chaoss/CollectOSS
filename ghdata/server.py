@@ -17,7 +17,7 @@ import json
 
 GHDATA_API_VERSION = 'api/unstable'
 # Location to load configuration from
-GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'r+')
+GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'w+')
 # Options to export the loaded configuration as environment variables for Docker
 GHDATA_ENV_EXPORT = os.getenv('GHDATA_ENV_EXPORT', '0') == '1'
 if GHDATA_ENV_EXPORT:
@@ -88,7 +88,6 @@ def read_config(section, name, environment_variable, default):
             parser.add_section(section)
         print('[' + section + '] -> ' + name + ' is missing. Adding to config...')
         parser.set(section, name, default)
-        parser.write(GHDATA_CONFIG_FILE)
         value = default
     if GHDATA_ENV_EXPORT:
         GHDATA_ENV_EXPORT_FILE.write('export ' + environment_variable + '="' + value + '"\n')
@@ -702,7 +701,8 @@ if read_config('Development', 'interactive', 'GHDATA_INTERACTIVE', '0') == '1':
 def run():
     app.run(host=host, port=int(port), debug=debugmode)
 
-# Close files
+# Close files and save config
+parser.write(GHDATA_CONFIG_FILE)
 GHDATA_CONFIG_FILE.close()
 if GHDATA_ENV_EXPORT:
     GHDATA_ENV_EXPORT_FILE.close()
