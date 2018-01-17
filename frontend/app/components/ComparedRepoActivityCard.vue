@@ -40,17 +40,6 @@
 
       <div class="row">
         <div class="col col-12">
-          <line-chart source="pullsAcceptanceRate"
-                      title="Pull Requests Created to Closed Ratio / Week" 
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                      cite-text="Community Activty"
-                      v-bind:compared-to="comparedTo">
-          </line-chart>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col col-12">
           <line-chart source="uniqueCommitters" 
                       title="Unique Committers" 
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"

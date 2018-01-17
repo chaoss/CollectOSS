@@ -545,6 +545,7 @@ var GHDataStats = function () {
         iter['compare']++;
       }
 
+      console.log('relative', result);
       return result;
     }
   }, {
@@ -681,7 +682,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{class:{ hidden: !this.repo },attrs:{"id":"base-template"}}),_vm._v(" "),_c('h1',[_vm._v("Activity Comparison")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.comparedTo)+" compared to "+_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"timeseries/forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Requests Created to Closed Ratio / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"uniqueCommitters","title":"Unique Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_vm._m(0,false,false)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{class:{ hidden: !this.repo },attrs:{"id":"base-template"}}),_vm._v(" "),_c('h1',[_vm._v("Activity Comparison")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.comparedTo)+" compared to "+_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"timeseries/forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"uniqueCommitters","title":"Unique Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_vm._m(0,false,false)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1037,7 +1038,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 console.log(d3);
 
 exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage', 'alwaysByDate'],
   computed: {
     repo: function repo() {
       return this.$store.state.baseRepo;
@@ -1067,6 +1068,7 @@ exports.default = {
       config.x_accessor = 'date';
       config.format = this.percentage ? 'percentage' : undefined;
       config.compare = this.compare;
+      config.byDate = true;
 
 
       if (this.repo) {
@@ -1089,8 +1091,8 @@ exports.default = {
         }).then(function (compareData) {
           var keys = Object.keys(config.data[0]).splice(1);
           if (config.data && compareData && compareData.length) {
-            compareData = _GHDataStats2.default.convertDates(compareData, _this.earliest, _this.latest);
             if (config.compare == 'each') {
+              compareData = _GHDataStats2.default.convertDates(compareData, _this.earliest, _this.latest);
               var key = Object.keys(compareData[0])[1];
               var compare = _GHDataStats2.default.rollingAverage(_GHDataStats2.default.zscores(compareData, key), 'value', _this.period);
               var base = _GHDataStats2.default.rollingAverage(_GHDataStats2.default.zscores(config.data, key), 'value', _this.period);
@@ -1106,6 +1108,7 @@ exports.default = {
                 byDate: config.byDate,
                 period: _this.period
               });
+              config.x_accessor = config.byDate ? 'date' : 'x';
             }
           } else {
             if (!_this.disableRollingAverage) {
@@ -1128,6 +1131,7 @@ exports.default = {
 
           _this.$refs.chart.className = 'linechart intro';
           config.target = _this.$refs.chart;
+          console.log('finalized config that will be sent', config);
           _metricsgraphics2.default.data_graphic(config);
         });
         return '<div class="loader">' + this.title + '...</div>';
@@ -1147,7 +1151,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4035d73d", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4035d73d", __vue__options__)
+    hotAPI.rerender("data-v-4035d73d", __vue__options__)
   }
 })()}
 });
@@ -10365,359 +10369,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 });
 
-require.register("include/mg_line_brushing.js", function(exports, require, module) {
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.default = AddBrushingCapability;
-
-var _d = require('d3');
-
-var d3 = _interopRequireWildcard(_d);
-
-var _jquery = require('jquery');
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function AddBrushingCapability(MG) {
-
-    /*
-    The MIT License (MIT)
-     Copyright (c) 2015 Dan de Havilland
-     Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-     The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-    */
-
-    MG.line_brushing = {
-        set_brush_as_base: function set_brush_as_base(target) {
-            var svg = d3.select(target).select('svg'),
-                current,
-                history = brushHistory[target];
-
-            svg.classed('mg-brushed', false);
-
-            if (history) {
-                history.brushed = false;
-
-                current = history.current;
-                history.original = current;
-
-                args.min_x = current.min_x;
-                args.max_x = current.max_x;
-                args.min_y = current.min_y;
-                args.max_y = current.max_y;
-
-                history.steps = [];
-            }
-        },
-
-        zoom_in: function zoom_in(target, options) {},
-
-        zoom_out: function zoom_out(target, options) {}
-    };
-
-    /* helpers */
-    function get_brush_interval(args) {
-        var resolution = args.brushing_interval,
-            interval;
-
-        if (!resolution) {
-            if (args.time_series) {
-                resolution = d3.timeDay;
-            } else {
-                resolution = 1;
-            }
-        }
-
-        // work with N as integer
-        if (typeof resolution === 'number') {
-            interval = {
-                round: function round(val) {
-                    return resolution * Math.round(val / resolution);
-                },
-                offset: function offset(val, count) {
-                    return val + resolution * count;
-                }
-            };
-        }
-        // work with d3.time.[interval]
-        else if (typeof resolution.round === 'function' && typeof resolution.offset === 'function') {
-                interval = resolution;
-            } else {
-                console.warn('The `brushing_interval` provided is invalid. It must be either a number or expose both `round` and `offset` methods');
-            }
-
-        return interval;
-    }
-
-    function is_within_bounds(datum, args) {
-        var x = +datum[args.x_accessor],
-            y = +datum[args.y_accessor];
-
-        return x >= (+args.processed.min_x || x) && x <= (+args.processed.max_x || x) && y >= (+args.processed.min_y || y) && y <= (+args.processed.max_y || y);
-    }
-
-    /**
-      Brushing for line charts
-       1. hooks
-    */
-
-    var brushHistory = {},
-        args;
-
-    MG.add_hook('global.defaults', function (args) {
-        // enable brushing unless it's explicitly disabled
-        args.brushing = args.brushing !== false;
-        if (args.brushing) {
-            args.brushing_history = args.brushing_history !== false;
-            args.aggregate_rollover = true;
-        }
-    });
-
-    function brushing() {
-        var chartContext = this;
-
-        args = this.args;
-
-        if (args.brushing === false) {
-            return this;
-        }
-
-        if (!brushHistory[args.target] || !brushHistory[args.target].brushed) {
-            brushHistory[args.target] = {
-                brushed: false,
-                steps: [],
-                original: {
-                    min_x: +args.processed.min_x,
-                    max_x: +args.processed.max_x,
-                    min_y: +args.processed.min_y,
-                    max_y: +args.processed.max_y
-                }
-            };
-        }
-
-        var isDragging = false,
-            mouseDown = false,
-            originX,
-            svg = d3.select(args.target).select('svg'),
-            body = d3.select('body'),
-            rollover = svg.select('.mg-rollover-rect, .mg-voronoi'),
-            brushingGroup,
-            extentRect;
-
-        rollover.classed('mg-brush-container', true);
-
-        brushingGroup = rollover.insert('g', '*').classed('mg-brush', true);
-
-        extentRect = brushingGroup.append('rect').attr('opacity', 0).attr('y', args.top).attr('height', args.height - args.bottom - args.top - args.buffer).classed('mg-extent', true);
-
-        // mousedown, start area selection
-        svg.on('mousedown', function () {
-            mouseDown = true;
-            isDragging = false;
-            originX = d3.mouse(this)[0];
-            svg.classed('mg-brushed', false);
-            svg.classed('mg-brushing-in-progress', true);
-            extentRect.attr({
-                x: d3.mouse(this)[0],
-                opacity: 0,
-                width: 0
-            });
-        });
-
-        // mousemove / drag, expand area selection
-        svg.on('mousemove', function () {
-            if (mouseDown) {
-                isDragging = true;
-                rollover.classed('mg-brushing', true);
-
-                var mouseX = d3.mouse(this)[0],
-                    newX = Math.min(originX, mouseX),
-                    width = Math.max(originX, mouseX) - newX;
-
-                extentRect.attr('x', newX).attr('width', width).attr('opacity', 1);
-            }
-        });
-
-        // mouseup, finish area selection
-        svg.on('mouseup', function () {
-            mouseDown = false;
-            svg.classed('mg-brushing-in-progress', false);
-
-            var xScale = args.scales.X,
-                yScale = args.scales.Y,
-                flatData = [].concat.apply([], args.data),
-                boundedData,
-                yBounds,
-                xBounds,
-                extentX0 = +extentRect.attr('x'),
-                extentX1 = extentX0 + +extentRect.attr('width'),
-                interval = get_brush_interval(args),
-                offset = 0,
-                mapDtoX = function mapDtoX(d) {
-                return +d[args.x_accessor];
-            },
-                mapDtoY = function mapDtoY(d) {
-                return +d[args.y_accessor];
-            };
-
-            // if we're zooming in: calculate the domain for x and y axes based on the selected rect
-            if (isDragging) {
-                isDragging = false;
-
-                if (brushHistory[args.target].brushed) {
-                    brushHistory[args.target].steps.push({
-                        max_x: args.brushed_max_x || args.processed.max_x,
-                        min_x: args.brushed_min_x || args.processed.min_x,
-                        max_y: args.brushed_max_y || args.processed.max_y,
-                        min_y: args.brushed_min_y || args.processed.min_y
-                    });
-                }
-
-                brushHistory[args.target].brushed = true;
-
-                boundedData = [];
-                // is there at least one data point in the chosen selection? if not, increase the range until there is.
-                var iterations = 0;
-                while (boundedData.length === 0 && iterations <= flatData.length) {
-
-                    var xValX0 = xScale.invert(extentX0);
-                    var xValX1 = xScale.invert(extentX1);
-                    xValX0 = xValX0 instanceof Date ? xValX0 : interval.round(xValX0);
-                    xValX1 = xValX1 instanceof Date ? xValX1 : interval.round(xValX1);
-
-                    args.brushed_min_x = xValX0;
-                    args.brushed_max_x = Math.max(interval.offset(args.min_x, 1), xValX1);
-
-                    boundedData = flatData.filter(function (d) {
-                        var val = d[args.x_accessor];
-                        return val >= args.brushed_min_x && val <= args.brushed_max_x;
-                    });
-
-                    iterations++;
-                }
-
-                xBounds = d3.extent(boundedData, mapDtoX);
-                args.brushed_min_x = +xBounds[0];
-                args.brushed_max_x = +xBounds[1];
-                xScale.domain(xBounds);
-
-                yBounds = d3.extent(boundedData, mapDtoY);
-                // add 10% padding on the y axis for better display
-                // @TODO: make this an option
-                args.brushed_min_y = yBounds[0] * 0.9;
-                args.brushed_max_y = yBounds[1] * 1.1;
-                yScale.domain(yBounds);
-            }
-            // zooming out on click, maintaining the step history
-            else if (args.brushing_history) {
-                    if (brushHistory[args.target].brushed) {
-                        var previousBrush = brushHistory[args.target].steps.pop();
-                        if (previousBrush) {
-                            args.brushed_max_x = previousBrush.max_x;
-                            args.brushed_min_x = previousBrush.min_x;
-                            args.brushed_max_y = previousBrush.max_y;
-                            args.brushed_min_y = previousBrush.min_y;
-
-                            xBounds = [args.brushed_min_x, args.brushed_max_x];
-                            yBounds = [args.brushed_min_y, args.brushed_max_y];
-                            xScale.domain(xBounds);
-                            yScale.domain(yBounds);
-                        } else {
-                            brushHistory[args.target].brushed = false;
-
-                            delete args.brushed_max_x;
-                            delete args.brushed_min_x;
-                            delete args.brushed_max_y;
-                            delete args.brushed_min_y;
-
-                            xBounds = [brushHistory[args.target].original.min_x, brushHistory[args.target].original.max_x];
-
-                            yBounds = [brushHistory[args.target].original.min_y, brushHistory[args.target].original.max_y];
-                        }
-                    }
-                }
-
-            // has anything changed?
-            if (xBounds && yBounds) {
-                if (xBounds[0] < xBounds[1]) {
-                    // trigger the brushing callback
-
-                    var step = {
-                        min_x: xBounds[0],
-                        max_x: xBounds[1],
-                        min_y: yBounds[0],
-                        max_y: yBounds[1]
-                    };
-
-                    brushHistory[args.target].current = step;
-
-                    if (args.after_brushing) {
-                        args.after_brushing.apply(this, [step]);
-                    }
-                }
-
-                // redraw the chart
-                if (!args.brushing_manual_redraw) {
-                    MG.data_graphic(args);
-                }
-            }
-        });
-
-        return this;
-    }
-
-    MG.add_hook('line.after_init', function (lineChart) {
-        brushing.apply(lineChart);
-    });
-
-    function processXAxis(args, min_x, max_x) {
-        if (args.brushing) {
-            args.processed.min_x = args.brushed_min_x ? Math.max(args.brushed_min_x, min_x) : min_x;
-            args.processed.max_x = args.brushed_max_x ? Math.min(args.brushed_max_x, max_x) : max_x;
-        }
-    }
-
-    MG.add_hook('x_axis.process_min_max', processXAxis);
-
-    function processYAxis(args) {
-        if (args.brushing && (args.brushed_min_y || args.brushed_max_y)) {
-            args.processed.min_y = args.brushed_min_y;
-            args.processed.max_y = args.brushed_max_y;
-        }
-    }
-
-    MG.add_hook('y_axis.process_min_max', processYAxis);
-
-    function afterRollover(args) {
-        if (args.brushing_history && brushHistory[args.target] && brushHistory[args.target].brushed) {
-            var svg = d3.select(args.target).select('svg');
-            svg.classed('mg-brushed', true);
-        }
-    }
-
-    MG.add_hook('line.after_rollover', afterRollover);
-
-    return;
-}
-});
-
-;require.alias("buffer/index.js", "buffer");
+require.alias("buffer/index.js", "buffer");
 require.alias("events/events.js", "events");
 require.alias("stream-http/index.js", "http");
 require.alias("https-browserify/index.js", "https");

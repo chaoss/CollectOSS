@@ -23,38 +23,38 @@ Before we begin, make sure you have everything you need installed: [Git](https:/
 
 Now, to install:
 
-	1.  Clone the repo and enter its directory:
+1.  Clone the repo and enter its directory:
 
-      ```bash
-      git clone https://github.com/OSSHealth/ghdata
-      cd ghdata
+    ```bash
+    git clone https://github.com/OSSHealth/ghdata
+    cd ghdata
       ```
 
 
-  2.  Configure the following environment variables:
+2.  Configure the following environment variables:
 
-      ```bash
-      # Most likely required
-      GHDATA_DB_USER
-      GHDATA_DB_PASS
-      GHDATA_DB_HOST
-      GHDATA_DB_PORT
-      GHDATA_DB_NAME
+    ```bash
+    # Most likely required
+    GHDATA_DB_USER
+    GHDATA_DB_PASS
+    GHDATA_DB_HOST
+    GHDATA_DB_PORT
+    GHDATA_DB_NAME
 
-      # Optional
-      GHDATA_HOST
-      GHDATA_PORT
-      GHDATA_PUBLIC_WWW_API_KEY
-      GHDATA_GITHUB_API_KEY
-      GHDATA_LIBRARIESIO_API_KEY
-      GHDATA_DEBUG
-      ```
+    # Optional
+    GHDATA_HOST
+    GHDATA_PORT
+    GHDATA_PUBLIC_WWW_API_KEY
+    GHDATA_GITHUB_API_KEY
+    GHDATA_LIBRARIESIO_API_KEY
+    GHDATA_DEBUG
+    ```
 
-      docker-compose will automatically pass the relevant environment variables to the container.
+    docker-compose will automatically pass the relevant environment variables to the container.
 
 
-  3.  Build the container with `docker-compose build`
-  4.  Launch the container with `docker-compose up`
+3.  Build the container with `docker-compose build`
+4.  Launch the container with `docker-compose up`
 
 
 

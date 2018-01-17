@@ -160,6 +160,7 @@ export default class GHDataStats {
       iter['compare']++
     }
 
+    console.log('relative', result)
     return result
   }
 

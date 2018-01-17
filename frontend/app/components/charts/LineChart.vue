@@ -18,7 +18,8 @@ import MG from '../../include/metricsgraphics';
 console.log(d3)
 
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 
+          'comparedTo', 'disableRollingAverage', 'alwaysByDate'],
   computed: {
     repo() {
       return this.$store.state.baseRepo
@@ -47,7 +48,8 @@ export default {
       config.height     = 200
       config.x_accessor = 'date'
       config.format     = this.percentage ? 'percentage' : undefined;
-      config.compare    = this.compare 
+      config.compare    = this.compare
+      config.byDate     = true
   /*+-------------------+--------------------------------+------------------------+*/
 
       if (this.repo) {
@@ -70,8 +72,8 @@ export default {
           if (config.data && compareData && compareData.length) {
             // If there is comparedData, do the necesarry computations for
             // the comparision
-            compareData = GHDataStats.convertDates(compareData, this.earliest, this.latest)
             if (config.compare == 'each') {
+              compareData = GHDataStats.convertDates(compareData, this.earliest, this.latest)
               let key = Object.keys(compareData[0])[1]
               let compare = GHDataStats.rollingAverage(GHDataStats.zscores(compareData, key), 'value', this.period)
               let base = GHDataStats.rollingAverage(GHDataStats.zscores(config.data, key), 'value', this.period)
@@ -87,6 +89,7 @@ export default {
                 byDate: config.byDate,
                 period: this.period
               })
+              config.x_accessor = (config.byDate) ? 'date' : 'x';
             }
           } else {
             // Otherwise, render a normal timeseries chart
@@ -110,6 +113,7 @@ export default {
 
           this.$refs.chart.className = 'linechart intro'
           config.target = this.$refs.chart
+          console.log('finalized config that will be sent', config)
           MG.data_graphic(config)
         }) // end then()
         return '<div class="loader">' + this.title + '...</div>' 
