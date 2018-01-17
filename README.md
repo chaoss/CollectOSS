@@ -19,16 +19,50 @@ Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHeal
 
 Installation with Docker (easy to get up and running)
 ------------------------
-  1. Clone the repo
-  2. `docker-compose build`
-  3. `docker-compose up`
+Before we begin, make sure you have everything you need installed: [Git](https://git-scm.com/downloads), [Docker](https://www.docker.com/community-edition), [Docker Compose](https://docs.docker.com/compose/install/), and a MySQL server with [GHTorrent](https://github.com/gousiosg/github-mirror/tree/master/sql) loaded.
+
+Now, to install:
+
+1.  Clone the repo and enter its directory:
+
+    ```bash
+    git clone https://github.com/OSSHealth/ghdata
+    cd ghdata
+      ```
+
+
+2.  Configure the following environment variables:
+
+    ```bash
+    # Most likely required
+    GHDATA_DB_USER
+    GHDATA_DB_PASS
+    GHDATA_DB_HOST
+    GHDATA_DB_PORT
+    GHDATA_DB_NAME
+
+    # Optional
+    GHDATA_HOST
+    GHDATA_PORT
+    GHDATA_PUBLIC_WWW_API_KEY
+    GHDATA_GITHUB_API_KEY
+    GHDATA_LIBRARIESIO_API_KEY
+    GHDATA_DEBUG
+    ```
+
+    docker-compose will automatically pass the relevant environment variables to the container.
+
+
+3.  Build the container with `docker-compose build`
+4.  Launch the container with `docker-compose up`
 
 
 
 Installation without Docker (recommended for developers)
 ---------------------------
 ### Dependencies
-- Python 3.4.x and `pip`
+- Python 3.4.x/Python 2.7.x and `pip`
+- Static web server such as nginx or Apache
 - MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
   - Our Development team has a public read only database you can request access to
@@ -41,14 +75,54 @@ Once the database is set up, clone GHData
 git clone https://github.com/OSSHealth/ghdata/
 cd ghdata && pip install -U .
 ```
+Copy the files in [ghdata repo]/frontend/public to your webserver:
 
 Run `ghdata` to create the configuration file (ghdata.cfg). Edit the file to reflect your database credentials.
 
-Move ./ghdata/ghdata/static/ to a static host on the same domain. If you would like GHData to serve the files itself, set the "developer" flag to 1 in ghdata.cfg. *`ghdata` must be run in the base of the repo if it is serving the static files*
-
-Run `ghdata` to start the backend.
+Run `ghdata` to start the backend. Visit your front
 
 
+Developer Installation
+----------------------
+
+### Dependencies
+- Python 3.4.x and Python 2.7.x with `pip2` and `pip3`
+- MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
+  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
+- NodeJS 7.x or newer
+
+#### Ubuntu
+```
+   ## Python Installs on UBUNUTU
+   sudo apt-get install python-pip
+   sudo apt-get install python3-pip
+
+   ## For Development you need NodeJS
+   sudo apt-get install nodejs
+```
+
+First, clone the repo and checkout the dev branch:
+
+```bash
+git clone https://github.com/OSSHealth/ghdata/ && cd ghdata && git checkout dev
+```
+
+Install the Python and Node developer dependencies:
+```bash
+make install-dev
+```
+
+For futher instructions on how to add to GHData, here are guides to adding an endpoint to the full stack. [Dev Guide Part 1](docs/dev-guide-pt1.md) [Dev Guide Part 2](docs/dev-guide-pt2.md)
+
+Frontend development guide coming soon!
+
+You're good to go.
+
+In one shell, you'll want to run `ghdata`, in another run `cd frontend/ && brunch watch -s`.
+
+If you have GNU Screen installed. this can be done automatically using `make dev-start`.
+
+The screen sessions can be killed with `make dev-stop`
 
 License and Copyright
 ---------------------
@@ -57,4 +131,3 @@ Copyright © 2017 University of Nebraska at Omaha and the University of Missouri
 GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file LICENSE for more details.
 
 (This work has been funded through the Alfred P. Sloan Foundation)
-

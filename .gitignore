@@ -31,6 +31,7 @@
 *.ini
 *.cfg
 *.cfg.old
+*.cfg.sh
 
 # OS generated files #
 ######################
@@ -48,3 +49,8 @@ Thumbs.db
 ###############
 __pycache__
 _pycache_
+
+
+# Node #
+########
+*node_modules/

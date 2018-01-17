@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT
 Install ghdata package with pip.
 '''
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from codecs import open
 from os import path
 
@@ -16,7 +16,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ghdata',
-    version='0.2.2',
+    version='0.4.0',
+    include_package_data = True,
     description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,
     url='https://github.com/OSSHealth/ghdata',
@@ -39,7 +40,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords='ghtorrent github api data science',
-    install_requires=['flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent'],
+    install_requires=['ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors', 'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'pyevent', 'gunicorn'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],

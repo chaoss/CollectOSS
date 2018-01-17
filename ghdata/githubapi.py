@@ -1,9 +1,10 @@
-
-import datetime
+from .localcsv import LocalCSV
+import json
+import re
 from dateutil.parser import parse
 import pandas as pd
 import github
-
+import requests
 
 class GitHubAPI(object):
     """
@@ -15,78 +16,21 @@ class GitHubAPI(object):
 
         :param api_key: GitHub API key
         """
-        self.GITUB_API_KEY = api_key
+        self.GITHUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
-    def contributions_by_file(self, owner, repo, filename=None, start=None, end=None, ascending=False):
+    def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
         """
-        Gets number of addtions and deletions in each file by user
-
-        Currently ignores changes from local users unattributed to Github users
+        Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
 
         :param owner: repo owner username
         :param repo: repo name
         :param filename: optional; file or directory for function to run on
         :param start: optional; start time for analysis
         :param end: optional; end time for analysis
-        :param ascending: Default False; returns dataframe in ascending order
+        :param threshold: Default 50;
         """
-        if start != None:
-            start = parse(start)
-        else:
-            start = github.GithubObject.NotSet
 
-        if end != None:
-            end = parse(end)
-        else:
-            end = github.GithubObject.NotSet
-
-        commits = self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
-
-        if filename != None:
-            self.__api.get_repo((owner + "/" + repo)).get_contents(filename)
-
-        df = []
-
-        for commit in commits:
-            for file in commit.files:
-                if filename != None:
-                    try:
-                        if file.changes != 0 and file.filename == filename:
-                            df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
-                    except AttributeError:
-                        pass
-                else:
-                    try:
-                        if file.changes != 0:
-                            df.append({'user': commit.author.login, 'file': file.filename, 'number of additions': file.additions, 'number of deletions': file.deletions, 'total': file.changes})
-                    except AttributeError:
-                        pass
-
-        df = pd.DataFrame(df)
-
-        df = df.groupby(["file", "user"]).sum()
-
-        df = df.sort_values(ascending=ascending)
-
-        return df
-
-    def contributions_by_percentage(self, owner, repo, filename=None, start=None, end=None, ascending=False):
-        """
-        Calculates percentage of commits in repo by user
-
-        Puts it in dataframe with columns:
-        user    percentage of commits
-
-        Currently ignores changes from local users unattributed to Github user
-
-        :param owner: repo owner username
-        :param repo: repo name
-        :param filename: optional; file or directory for function to run on
-        :param start: optional; start time for analysis
-        :param end: optional; end time for analysis
-        :param ascending: Default False; returns dataframe in ascending order
-        """
         if start != None:
             start = parse(start)
         else:
@@ -109,43 +53,159 @@ class GitHubAPI(object):
                 for file in commit.files:
                     if file.filename == filename:
                         try:
-                            df.append({'user': commit.author.login})
+                            df.append({'userid': commit.author.id})
                         except AttributeError:
                             pass
                         break
         else:
             for commit in commits:
                 try:
-                    df.append({'user': commit.author.login})
+                    df.append({'userid': commit.author.id})
                 except AttributeError:
                     pass
 
         df = pd.DataFrame(df)
 
-        df = df.groupby(['user']).user.count() / df.groupby(['user']).user.count().sum() * 100
-
-        df = df.sort_values(ascending=ascending)
-
-        return df
-
-    def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50, best=False):
-        """
-        Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
-
-        :param owner: repo owner username
-        :param repo: repo name
-        :param filename: optional; file or directory for function to run on
-        :param start: optional; start time for analysis
-        :param end: optional; end time for analysis
-        :param threshold: Default 50;
-        :param best: Default False; If true, sums from lowest to highestn
-        """
-
-        df = self.contributions_by_percentage(owner, repo, filename, start, end, best)
+        df = df.groupby(['userid']).userid.count() / df.groupby(['userid']).userid.count().sum() * 100
 
         i = 0
         for num in df.cumsum():
             i = i + 1
             if num >= threshold:
-                bus_factor = pd.Series(i, index=["Bus Factor"])
-                return bus_factor
+                worst = i
+                break
+
+        i = 0
+        for num in df.sort_values(ascending=True).cumsum():
+            i = i + 1
+            if num >= threshold:
+                best = i
+                break
+
+        bus_factor = [{'worst': worst, 'best' : best}]
+
+        return pd.DataFrame(bus_factor)
+
+    def tags(self, owner, repo, raw=False):
+        """
+        Returns dates and names of tags
+
+        :param owner: repo owner username
+        :param repo: repo name
+        :param raw: Default False; Returns list of dicts
+        """
+
+        cursor = "null"
+        tags_list = []
+        url = "https://api.github.com/graphql"
+
+        while True:
+            query = {"query" :
+                     """
+                    query {
+                      repository(owner: "%s", name: "%s") {
+                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
+                          edges {
+                            cursor
+                            tag: node {
+                              name
+                              target {
+                                ... on Tag {
+                                  tagger {
+                                    date
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+            """ % (owner, repo, cursor)
+            }
+            r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
+            raw = r.text
+            data = json.loads(json.loads(json.dumps(raw)))
+            tags = data['data']['repository']['tags']['edges']
+            for i in tags:
+                try:
+                    tags_list.append({'date' : i['tag']['target']['tagger']['date'], 'release' : i['tag']['name']})
+                except KeyError:
+                    pass
+            if data['data']['repository']['tags']['edges'] == []:
+                break
+            else:
+                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
+        return pd.DataFrame(tags_list)
+
+    def major_tags(self, owner, repo):
+        """
+        Returns dates and names of major version (according to semver) tags. May return blank if no major versions
+
+        :param owner: repo owner username
+        :param repo: repo name
+        """
+        cursor = "null"
+        tags_list = []
+        url = "https://api.github.com/graphql"
+
+        while True:
+            query = {"query" :
+                     """
+                    query {
+                      repository(owner: "%s", name: "%s") {
+                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
+                          edges {
+                            cursor
+                            tag: node {
+                              name
+                              target {
+                                ... on Tag {
+                                  tagger {
+                                    date
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+            """ % (owner, repo, cursor)
+            }
+            r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
+            raw = r.text
+            data = json.loads(json.loads(json.dumps(raw)))
+            tags = data['data']['repository']['tags']['edges']
+            for i in tags:
+                try:
+                    tags_list.append({'date' : i['tag']['target']['tagger']['date'], 'release' : i['tag']['name']})
+                except KeyError:
+                    pass
+            if data['data']['repository']['tags']['edges'] == []:
+                break
+            else:
+                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
+
+        major_versions = []
+        pattern = re.compile("[0-9]+\.[0]+\.[0]+$")
+        for i in tags_list:
+            try:
+                if re.search(pattern, i["release"]) != None:
+                    major_versions.append(i)
+            except AttributeError:
+                pass
+
+        return pd.DataFrame(major_versions)
+
+
+    def contributors_gender(self, owner, repo=None):
+        contributors = self.__api.get_repo((owner + "/" + repo)).get_contributors()
+        names = pd.DataFrame(columns=['name'])
+        i = 0
+        for contributor in contributors:
+            if contributor.name is not None:
+                names.loc[i] = [contributor.name.split()[0]]
+                i += 1
+        genderized = names.merge(LocalCSV.name_gender, how='inner', on=['name'])
+        return genderized
