@@ -112,7 +112,11 @@ Install the Python and Node developer dependencies:
 make install-dev
 ```
 
-For futher instructions on how to add to GHData, here are guides to adding an endpoint to the full stack. [Dev Guide Part 1](docs/dev-guide-pt1.md) [Dev Guide Part 2](docs/dev-guide-pt2.md)
+For futher instructions on how to add to GHData, here are guides to adding an endpoint to the full stack. 
+
+[Dev Guide Part 1](docs/dev-guide-pt1.md) 
+
+[Dev Guide Part 2](docs/dev-guide-pt2.md)
 
 Frontend development guide coming soon!
 
