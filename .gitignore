@@ -28,7 +28,6 @@
 *.log
 *.sql
 *.sqlite
-*.ini
 *.cfg
 *.cfg.old
 *.cfg.sh
