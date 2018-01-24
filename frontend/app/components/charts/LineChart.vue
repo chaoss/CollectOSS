@@ -1,6 +1,6 @@
 <template>
   <div>
-    <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite>
+    <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a><button class="button small" v-on:click="downloadSVG">&#11015; SVG</button><button class="button small" v-on:click="downloadPNG">&#11015; PNG</button></cite>
     <div ref="chart" class="linechart">
       <div ref="chartholder"></div>
       <div ref="legend" class="legend"></div>
@@ -15,6 +15,7 @@ import * as d3 from 'd3'
 import GHDataStats from 'GHDataStats'
 import { mapState } from 'vuex'
 import MG from '../../include/metricsgraphics';
+import SvgSaver from '../../include/svgsaver';
 
 console.log(d3)
 
@@ -122,7 +123,20 @@ export default {
         return '<div class="loader">' + this.title + '...</div>' 
       } // end if (this.$store.repo)   
     } // end chart()
-  } // end computed
+  }, // end computed
+  methods: {
+    downloadSVG (e) {
+      var svgsaver = new SvgSaver();                      // creates a new instance
+      var svg = $(this.$refs.chartholder).find("svg")[0];    // find the SVG element
+      svgsaver.asSvg(svg);                                // save as SVG
+    },
+    downloadPNG (e) {
+      var svgsaver = new SvgSaver();                      // creates a new instance
+      var svg = $(this.$refs.chartholder).find("svg")[0];    // find the SVG element
+      svgsaver.asPng(svg);                                // save as SVG
+    }
+  }//end methods
 } // end export default {}
+
 
 </script>
