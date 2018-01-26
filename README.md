@@ -132,6 +132,6 @@ License and Copyright
 ---------------------
 Copyright © 2017 University of Nebraska at Omaha and the University of Missouri
 
-GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file LICENSE for more details.
+GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file [LICENSE](LICENSE) for more details.
 
 (This work has been funded through the Alfred P. Sloan Foundation)
