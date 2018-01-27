@@ -1,6 +1,6 @@
 <template>
   <div>
-    <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a><button class="button small" v-on:click="downloadSVG">&#11015; SVG</button><button class="button small" v-on:click="downloadPNG">&#11015; PNG</button></cite>
+    <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a><button class="button small outline download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button small outline download" v-on:click="downloadPNG">&#11015; PNG</button></cite>
     <div ref="chart" class="linechart">
       <div ref="chartholder"></div>
       <div ref="legend" class="legend"></div>

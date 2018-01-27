@@ -2698,6 +2698,10 @@ cite.metric a {
   line-height: 10;
   animation: outro 1s, loader 1.5s infinite;
 }
+.button.download {
+  margin: 20px 0px 20px 5px;
+  padding: 5px 10px 5px 10px;
+}
 .intro {
   animation: intro 2s;
 }
