@@ -2,8 +2,8 @@
   <div>
     <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a><button class="button small outline download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button small outline download" v-on:click="downloadPNG">&#11015; PNG</button></cite>
     <div ref="chart" class="linechart">
-      <div ref="chartholder"></div>
       <div ref="legend" class="legend"></div>
+      <div ref="chartholder"></div>
       <span ref="chartStatus" v-html="chart"></span>
     </div>
   </div>
@@ -11,13 +11,8 @@
 
 
 <script>
-import * as d3 from 'd3'
 import GHDataStats from 'GHDataStats'
 import { mapState } from 'vuex'
-import MG from '../../include/metricsgraphics';
-import SvgSaver from '../../include/svgsaver';
-
-console.log(d3)
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 
@@ -52,6 +47,7 @@ export default {
       config.format     = this.percentage ? 'percentage' : undefined;
       config.compare    = this.compare
       config.byDate     = true
+      config.time_series = true
   /*+-------------------+--------------------------------+------------------------+*/
 
       if (this.repo) {
@@ -101,22 +97,20 @@ export default {
               config.data = GHDataStats.convertKey(GHDataStats.combine(config.data, rolling), keys[0])
               config.colors = config.colors ||['#CCC', '#FF3647']
               config.y_accessor = 'value'
+
             }
           }
+          config.y_mouseover = '%d';
 
-          if (keys.length > 1) {
-            config.legend_target = this.$refs.legend
-            $(this.$refs.chart).hover(() => {
-              this.$refs.legend.style.display = 'none'
-            }, () => {
-              this.$refs.legend.style.display = 'block'
-            })
-          }
+          config.legend_target = this.$refs.legend
 
           this.$refs.chart.className = 'linechart intro'
           config.target = document.createElement('div');
           this.$refs.chartholder.innerHTML = '';
           this.$refs.chartholder.appendChild(config.target)
+
+          // Setup hovers
+
           console.log('finalized config that will be sent', config)
           MG.data_graphic(config)
         }) // end then()

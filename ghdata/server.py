@@ -105,11 +105,11 @@ def read_config(section, name, environment_variable, default):
 host = read_config('Server', 'host', 'GHDATA_HOST', '0.0.0.0')
 port = read_config('Server', 'port', 'GHDATA_PORT', '5000')
 
-publicwww = ghdata.PublicWWW(api_key=read_config('PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
-github = ghdata.GitHubAPI(api_key=read_config('GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
-librariesio = ghdata.LibrariesIO(api_key=read_config('LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
-downloads = ghdata.Downloads(github)
-localcsv = ghdata.LocalCSV()
+publicwww   = ghdata.PublicWWW    (api_key=read_config('PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
+github      = ghdata.GitHubAPI    (api_key=read_config('GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
+librariesio = ghdata.LibrariesIO  (api_key=read_config('LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
+downloads   = ghdata.Downloads    (github)
+localcsv    = ghdata.LocalCSV     ()
 
 if (read_config('Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
     debugmode = True

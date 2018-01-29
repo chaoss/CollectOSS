@@ -9,6 +9,7 @@ export default function GHData () {
   window.GHDataRepos  = {}
   window.GHDataStats  = require('GHDataStats').default
   window.$            = window.jQuery
+  window.d3           = require('d3')
 
   let GHDataApp = require('./components/GHDataApp')
 
