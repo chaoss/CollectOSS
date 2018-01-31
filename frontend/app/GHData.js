@@ -10,6 +10,7 @@ export default function GHData () {
   window.GHDataStats  = require('GHDataStats').default
   window.$            = window.jQuery
   window.d3           = require('d3')
+  window.SvgSaver     = require('svgsaver')
 
   let GHDataApp = require('./components/GHDataApp')
 

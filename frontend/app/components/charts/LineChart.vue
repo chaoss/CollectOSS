@@ -1,10 +1,13 @@
 <template>
   <div>
-    <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a><button class="button small outline download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button small outline download" v-on:click="downloadPNG">&#11015; PNG</button></cite>
     <div ref="chart" class="linechart">
       <div ref="legend" class="legend"></div>
       <div ref="chartholder"></div>
       <span ref="chartStatus" v-html="chart"></span>
+    </div>
+    <div class="row below-chart">
+      <div class="col col-6"><cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite></div>
+      <div class="col col-6"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button></div>
     </div>
   </div>
 </template>
@@ -108,6 +111,12 @@ export default {
           config.target = document.createElement('div');
           this.$refs.chartholder.innerHTML = '';
           this.$refs.chartholder.appendChild(config.target)
+
+          $(config.target).hover((onEnterEvent) => {
+            $(this.$refs.legend).hide()
+          }, (onLeaveEvent) => {
+            $(this.$refs.legend).show()
+          })
 
           // Setup hovers
 
