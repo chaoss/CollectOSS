@@ -9,18 +9,18 @@
             <div class="col col-6">
               <div class="form-item">
                 <select id="start-month" @change=onStartDateChange>
-                  <option value="January">January</option>
-                  <option value="February">February</option>
-                  <option value="March">March</option>
-                  <option value="April">April</option>
-                  <option value="May">May</option>
-                  <option value="June">June</option>
-                  <option value="July">July</option>
-                  <option value="August">August</option>
-                  <option value="September">September</option>
-                  <option value="October">October</option>
-                  <option value="November">November</option>
-                  <option value="December">December</option>
+                  <option value="01">January</option>
+                  <option value="02">February</option>
+                  <option value="03">March</option>
+                  <option value="04">April</option>
+                  <option value="05">May</option>
+                  <option value="06">June</option>
+                  <option value="07">July</option>
+                  <option value="08">August</option>
+                  <option value="09">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
                 </select>
                 <div class="desc">Month</div>
               </div>
@@ -55,18 +55,18 @@
             <div class="col col-6">
               <div class="form-item">
                 <select id="end-month" @change=onEndDateChange>
-                  <option value="January">January</option>
-                  <option value="February">February</option>
-                  <option value="March">March</option>
-                  <option value="April">April</option>
-                  <option value="May">May</option>
-                  <option value="June">June</option>
-                  <option value="July">July</option>
-                  <option value="August">August</option>
-                  <option value="September">September</option>
-                  <option value="October">October</option>
-                  <option value="November">November</option>
-                  <option value="December">December</option>
+                  <option value="01" selected="{selected == Dat}">January</option>
+                  <option value="02">February</option>
+                  <option value="03">March</option>
+                  <option value="04">April</option>
+                  <option value="05">May</option>
+                  <option value="06">June</option>
+                  <option value="07">July</option>
+                  <option value="08">August</option>
+                  <option value="09">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
                 </select>
                 <div class="desc">Month</div>
               </div>
@@ -87,7 +87,7 @@
                   <option value="2015">2015</option>
                   <option value="2016">2016</option>
                   <option value="2017">2017</option>
-                  <option value="2018" selected="selected">2018</option>
+                  <option value="2018">2018</option>
                 </select>
                 <div class="desc">Year</div>
               </div>
@@ -115,7 +115,7 @@
   module.exports = {
     methods: {
       onStartDateChange (e) {
-        var date = Date.parse((document.getElementById("start-month").value + " " + document.getElementById("start-year").value))
+        var date = Date.parse((document.getElementById("start-month").value + "/01/" + document.getElementById("start-year").value))
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
         }
@@ -126,7 +126,7 @@
         }, 500);
       },
       onEndDateChange (e) {
-        var date = Date.parse((document.getElementById("end-month").value + " " + document.getElementById("end-year").value))
+        var date = Date.parse((document.getElementById("end-month").value + "/01/" + document.getElementById("end-year").value))
         if (this.endDateTimeout) {
           clearTimeout(this.endDateTimeout)
           delete this.endDateTimeout
