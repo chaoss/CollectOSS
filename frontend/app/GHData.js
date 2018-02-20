@@ -22,7 +22,7 @@ export default function GHData () {
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date("1 January 2005"),
-      endDate: new Date(),
+      endDate: new Date(),  
       compare: "each",
       byDate: false,
     },

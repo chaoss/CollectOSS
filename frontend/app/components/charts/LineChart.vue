@@ -7,7 +7,7 @@
     </div>
     <div class="row below-chart">
       <div class="col col-6"><cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite></div>
-      <div class="col col-6"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button></div>
+      <div class="col col-6"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button><a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
   </div>
 </template>
@@ -53,11 +53,15 @@ export default {
       config.time_series = true
   /*+-------------------+--------------------------------+------------------------+*/
 
+      this.__download_data = {}
+      this.__download_file = config.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
+
       if (this.repo) {
         if (this.$refs.chart) {
           this.$refs.chart.className = 'linechart loader'
         }
         window.GHDataRepos[this.repo][this.source]().then((baseData) => {
+          this.__download_data.base = baseData;
           this.$refs.chartStatus.innerHTML = ''
           if (baseData && baseData.length) {
             config.data = GHDataStats.convertDates(baseData, this.earliest, this.latest)
@@ -69,6 +73,9 @@ export default {
           }
           return new Promise((resolve, reject) => { resolve() });
         }).then((compareData) => {
+          this.__download_data.compare = compareData;
+          this.$refs.downloadJSON.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.__download_data))
+          this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
           let keys = Object.keys(config.data[0]).splice(1)
           if (config.data && compareData && compareData.length) {
             // If there is comparedData, do the necesarry computations for
@@ -129,14 +136,17 @@ export default {
   }, // end computed
   methods: {
     downloadSVG (e) {
-      var svgsaver = new SvgSaver();                      // creates a new instance
-      var svg = $(this.$refs.chartholder).find("svg")[0];    // find the SVG element
-      svgsaver.asSvg(svg);                                // save as SVG
+      var svgsaver = new SvgSaver()
+      var svg = $(this.$refs.chartholder).find("svg")[0]
+      svgsaver.asSvg(svg, this.__download_file + '.svg')
     },
     downloadPNG (e) {
-      var svgsaver = new SvgSaver();                      // creates a new instance
-      var svg = $(this.$refs.chartholder).find("svg")[0];    // find the SVG element
-      svgsaver.asPng(svg);                                // save as SVG
+      var svgsaver = new SvgSaver();
+      var svg = $(this.$refs.chartholder).find("svg")[0]
+      svgsaver.asPng(svg, this.__download_file + '.png')
+    },
+    downloadSVG (e) {
+
     }
   }//end methods
 } // end export default {}

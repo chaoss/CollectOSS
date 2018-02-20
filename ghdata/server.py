@@ -11,7 +11,7 @@ else:
 sys.path.append('..')
 
 import ghdata
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 import json
 
@@ -105,11 +105,11 @@ def read_config(section, name, environment_variable, default):
 host = read_config('Server', 'host', 'GHDATA_HOST', '0.0.0.0')
 port = read_config('Server', 'port', 'GHDATA_PORT', '5000')
 
-publicwww   = ghdata.PublicWWW    (api_key=read_config('PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
-github      = ghdata.GitHubAPI    (api_key=read_config('GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
-librariesio = ghdata.LibrariesIO  (api_key=read_config('LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
-downloads   = ghdata.Downloads    (github)
-localcsv    = ghdata.LocalCSV     ()
+publicwww = ghdata.PublicWWW(api_key=read_config('PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
+github = ghdata.GitHubAPI(api_key=read_config('GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
+librariesio = ghdata.LibrariesIO(api_key=read_config('LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
+downloads = ghdata.Downloads(github)
+localcsv = ghdata.LocalCSV()
 
 if (read_config('Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
     debugmode = True
@@ -699,6 +699,88 @@ def ghtorrent_range():
 addMetric(app, github.bus_factor, 'bus_factor')
 
 
+
+
+#######################
+#   Batch Requests    #
+#######################
+
+"""
+@api {get} /:owner/:repo/bus_factor Bus Factor
+@apiDescription Returns an integer that is the number of develpers that have a summed percentage of contributions higher than the threshold
+@apiName GitHub
+@apiGroup Users
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "min_date": "2009-02-16T00:00:00.000Z",
+                            "max_date": "2017-02-16T00:00:00.000Z"
+                        }
+                    ]
+"""
+@app.route('/{}/batch'.format(GHDATA_API_VERSION), methods=['GET', 'POST'])
+def batch():
+    """
+    Execute multiple requests, submitted as a batch.
+
+    :statuscode 207: Multi status
+    """
+    if request.method == 'GET':
+        """this will return sensible defaults in the future"""
+        return make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}', 501)
+
+    try:
+        requests = json.loads(request.data)
+    except ValueError as e:
+        abort(400)
+
+    responses = []
+
+    for index, req in enumerate(requests):
+        method = req['method']
+        path = req['path']
+        body = req.get('body', None)
+
+        with app.app_context():
+            with app.test_request_context(path, 
+                                          method=method, 
+                                          data=body):
+                try:
+                    # Can modify flask.g here without affecting 
+                    # flask.g of the root request for the batch
+
+                    # Pre process Request
+                    rv = app.preprocess_request()
+
+                    if rv is None:
+                        # Main Dispatch
+                        rv = app.dispatch_request()
+
+                except Exception as e:
+                    rv = app.handle_user_exception(e)
+
+                response = app.make_response(rv)
+
+                # Post process Request
+                response = app.process_response(response)
+
+        # Response is a Flask response object.
+        # _read_response(response) reads response.response 
+        # and returns a string. If your endpoints return JSON object,
+        # this string would be the response as a JSON string.
+        responses.append({
+            "path": path,
+            "status": response.status_code,
+            "response": str(response.get_data(), 'utf-8')
+        })
+
+    return Response(response=json.dumps(responses),
+                    status=207,
+                    mimetype="application/json")
 
 
 if (debugmode):

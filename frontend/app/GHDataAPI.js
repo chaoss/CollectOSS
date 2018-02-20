@@ -1,10 +1,33 @@
 var $ = require('jquery')
 
 export default class GHDataAPI {
-  constructor(hostURL, version) {
-    this._version  = version || 'unstable'
-    this._host     = hostURL || 'http://' + window.location.host + '/api/'
-    this.__cache   = {}
+  constructor(hostURL, version, autobatch) {
+    this._version     = version || 'unstable'
+    this._host        = hostURL || 'http://' + window.location.host + '/api/'
+    this.__cache      = {}
+    this.__timeout    = null
+    this.__pending    = {}
+
+    this.autobatch    = (typeof autobatch !== 'undefined') ? autobatch : true;
+    this.openRequests = 0
+  }
+
+  __autobatcher(url, params, fireTimeout) {
+    if (this.__timeout !== null && !fireTimeout) {
+      this.__timeout = setTimeout(() => {
+        __autobatch(undefined, undefined, true);
+      })
+    }
+    return new Promise((resolve, reject) => {
+      if (fireTimeout) {
+        let batchURL = this._host + this._version + '/batch';
+        let requestArray = [];
+        Object.keys(this.__pending).forEach((key) => {
+          requestArray.push({})
+        })
+        $.post(batchURL)
+      }
+    });
   }
 
   Repo(owner, repoName) {
@@ -23,6 +46,7 @@ export default class GHDataAPI {
     repo.toString = () => { return repo.owner + '/' + repo.name }
 
     var Endpoint = (endpoint) => {
+      this.openRequests++;
       var self = this;
       var url = this._host + this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
       return function (params, callback) {
@@ -33,7 +57,11 @@ export default class GHDataAPI {
             })
           }
         }
-        return $.get(url, params, callback).then((data) => {
+        if (this.autobatch) {
+          return this.__autobatcher(url, params);
+        }
+        return $.get(url, params).then((data) => {
+          this.openRequests--;
           self.__cache[btoa(url)] = {
             created_at: Date.now(),
             data: JSON.stringify(data)

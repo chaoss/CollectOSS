@@ -272,18 +272,44 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $ = require('jquery');
 
 var GHDataAPI = function () {
-  function GHDataAPI(hostURL, version) {
+  function GHDataAPI(hostURL, version, autobatch) {
     _classCallCheck(this, GHDataAPI);
 
     this._version = version || 'unstable';
     this._host = hostURL || 'http://' + window.location.host + '/api/';
     this.__cache = {};
+    this.__timeout = null;
+    this.__pending = {};
+
+    this.autobatch = typeof autobatch !== 'undefined' ? autobatch : true;
+    this.openRequests = 0;
   }
 
   _createClass(GHDataAPI, [{
+    key: '__autobatcher',
+    value: function __autobatcher(url, params, fireTimeout) {
+      var _this = this;
+
+      if (this.__timeout !== null && !fireTimeout) {
+        this.__timeout = setTimeout(function () {
+          __autobatch(undefined, undefined, true);
+        });
+      }
+      return new Promise(function (resolve, reject) {
+        if (fireTimeout) {
+          var batchURL = _this._host + _this._version + '/batch';
+          var requestArray = [];
+          Object.keys(_this.__pending).forEach(function (key) {
+            requestArray.push({});
+          });
+          $.post(batchURL);
+        }
+      });
+    }
+  }, {
     key: 'Repo',
     value: function Repo(owner, repoName) {
-      var _this = this;
+      var _this2 = this;
 
       if (repoName) {
         var repo = { owner: owner, name: repoName };
@@ -301,9 +327,12 @@ var GHDataAPI = function () {
       };
 
       var Endpoint = function Endpoint(endpoint) {
-        var self = _this;
-        var url = _this._host + _this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
+        _this2.openRequests++;
+        var self = _this2;
+        var url = _this2._host + _this2._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
         return function (params, callback) {
+          var _this3 = this;
+
           if (self.__cache[btoa(url)]) {
             if (self.__cache[btoa(url)].created_at > Date.now() - 1000 * 60) {
               return new Promise(function (resolve, reject) {
@@ -311,7 +340,11 @@ var GHDataAPI = function () {
               });
             }
           }
-          return $.get(url, params, callback).then(function (data) {
+          if (this.autobatch) {
+            return this.__autobatcher(url, params);
+          }
+          return $.get(url, params).then(function (data) {
+            _this3.openRequests--;
             self.__cache[btoa(url)] = {
               created_at: Date.now(),
               data: JSON.stringify(data)
@@ -884,7 +917,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('h4',[_vm._v("Base Repository")]),_vm._v(" "),_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"start-month"},on:{"change":_vm.onStartDateChange}},[_c('option',{attrs:{"value":"01"}},[_vm._v("January")]),_vm._v(" "),_c('option',{attrs:{"value":"02"}},[_vm._v("February")]),_vm._v(" "),_c('option',{attrs:{"value":"03"}},[_vm._v("March")]),_vm._v(" "),_c('option',{attrs:{"value":"04"}},[_vm._v("April")]),_vm._v(" "),_c('option',{attrs:{"value":"05"}},[_vm._v("May")]),_vm._v(" "),_c('option',{attrs:{"value":"06"}},[_vm._v("June")]),_vm._v(" "),_c('option',{attrs:{"value":"07"}},[_vm._v("July")]),_vm._v(" "),_c('option',{attrs:{"value":"08"}},[_vm._v("August")]),_vm._v(" "),_c('option',{attrs:{"value":"09"}},[_vm._v("September")]),_vm._v(" "),_c('option',{attrs:{"value":"10"}},[_vm._v("October")]),_vm._v(" "),_c('option',{attrs:{"value":"11"}},[_vm._v("November")]),_vm._v(" "),_c('option',{attrs:{"value":"12"}},[_vm._v("December")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"start-year"},on:{"change":_vm.onStartDateChange}},[_c('option',{attrs:{"value":"2005"}},[_vm._v("2005")]),_vm._v(" "),_c('option',{attrs:{"value":"2006"}},[_vm._v("2006")]),_vm._v(" "),_c('option',{attrs:{"value":"2007"}},[_vm._v("2007")]),_vm._v(" "),_c('option',{attrs:{"value":"2008"}},[_vm._v("2008")]),_vm._v(" "),_c('option',{attrs:{"value":"2009"}},[_vm._v("2009")]),_vm._v(" "),_c('option',{attrs:{"value":"2010"}},[_vm._v("2010")]),_vm._v(" "),_c('option',{attrs:{"value":"2011"}},[_vm._v("2011")]),_vm._v(" "),_c('option',{attrs:{"value":"2012"}},[_vm._v("2012")]),_vm._v(" "),_c('option',{attrs:{"value":"2013"}},[_vm._v("2013")]),_vm._v(" "),_c('option',{attrs:{"value":"2014"}},[_vm._v("2014")]),_vm._v(" "),_c('option',{attrs:{"value":"2015"}},[_vm._v("2015")]),_vm._v(" "),_c('option',{attrs:{"value":"2016"}},[_vm._v("2016")]),_vm._v(" "),_c('option',{attrs:{"value":"2017"}},[_vm._v("2017")]),_vm._v(" "),_c('option',{attrs:{"value":"2018"}},[_vm._v("2018")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])]),_vm._v(" "),_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"end-month"},on:{"change":_vm.onEndDateChange}},[_c('option',{attrs:{"value":"01"}},[_vm._v("January")]),_vm._v(" "),_c('option',{attrs:{"value":"02"}},[_vm._v("February")]),_vm._v(" "),_c('option',{attrs:{"value":"03"}},[_vm._v("March")]),_vm._v(" "),_c('option',{attrs:{"value":"04"}},[_vm._v("April")]),_vm._v(" "),_c('option',{attrs:{"value":"05"}},[_vm._v("May")]),_vm._v(" "),_c('option',{attrs:{"value":"06"}},[_vm._v("June")]),_vm._v(" "),_c('option',{attrs:{"value":"07"}},[_vm._v("July")]),_vm._v(" "),_c('option',{attrs:{"value":"08"}},[_vm._v("August")]),_vm._v(" "),_c('option',{attrs:{"value":"09"}},[_vm._v("September")]),_vm._v(" "),_c('option',{attrs:{"value":"10"}},[_vm._v("October")]),_vm._v(" "),_c('option',{attrs:{"value":"11"}},[_vm._v("November")]),_vm._v(" "),_c('option',{attrs:{"value":"12"}},[_vm._v("December")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"end-year"},on:{"change":_vm.onEndDateChange}},[_c('option',{attrs:{"value":"2005"}},[_vm._v("2005")]),_vm._v(" "),_c('option',{attrs:{"value":"2006"}},[_vm._v("2006")]),_vm._v(" "),_c('option',{attrs:{"value":"2007"}},[_vm._v("2007")]),_vm._v(" "),_c('option',{attrs:{"value":"2008"}},[_vm._v("2008")]),_vm._v(" "),_c('option',{attrs:{"value":"2009"}},[_vm._v("2009")]),_vm._v(" "),_c('option',{attrs:{"value":"2010"}},[_vm._v("2010")]),_vm._v(" "),_c('option',{attrs:{"value":"2011"}},[_vm._v("2011")]),_vm._v(" "),_c('option',{attrs:{"value":"2012"}},[_vm._v("2012")]),_vm._v(" "),_c('option',{attrs:{"value":"2013"}},[_vm._v("2013")]),_vm._v(" "),_c('option',{attrs:{"value":"2014"}},[_vm._v("2014")]),_vm._v(" "),_c('option',{attrs:{"value":"2015"}},[_vm._v("2015")]),_vm._v(" "),_c('option',{attrs:{"value":"2016"}},[_vm._v("2016")]),_vm._v(" "),_c('option',{attrs:{"value":"2017"}},[_vm._v("2017")]),_vm._v(" "),_c('option',{attrs:{"value":"2018"}},[_vm._v("2018")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])]),_vm._v(" "),_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Trailing Average")]),_vm._v(" "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("days")])])]),_vm._v(" "),_c('h4',[_vm._v("Comparisons")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score trailing average")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("100% is the compared project")])])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('h4',[_vm._v("Base Repository")]),_vm._v(" "),_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"start-month"},on:{"change":_vm.onStartDateChange}},[_c('option',{attrs:{"value":"01"}},[_vm._v("January")]),_vm._v(" "),_c('option',{attrs:{"value":"02"}},[_vm._v("February")]),_vm._v(" "),_c('option',{attrs:{"value":"03"}},[_vm._v("March")]),_vm._v(" "),_c('option',{attrs:{"value":"04"}},[_vm._v("April")]),_vm._v(" "),_c('option',{attrs:{"value":"05"}},[_vm._v("May")]),_vm._v(" "),_c('option',{attrs:{"value":"06"}},[_vm._v("June")]),_vm._v(" "),_c('option',{attrs:{"value":"07"}},[_vm._v("July")]),_vm._v(" "),_c('option',{attrs:{"value":"08"}},[_vm._v("August")]),_vm._v(" "),_c('option',{attrs:{"value":"09"}},[_vm._v("September")]),_vm._v(" "),_c('option',{attrs:{"value":"10"}},[_vm._v("October")]),_vm._v(" "),_c('option',{attrs:{"value":"11"}},[_vm._v("November")]),_vm._v(" "),_c('option',{attrs:{"value":"12"}},[_vm._v("December")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"start-year"},on:{"change":_vm.onStartDateChange}},[_c('option',{attrs:{"value":"2005","selected":""}},[_vm._v("2005")]),_vm._v(" "),_c('option',{attrs:{"value":"2006"}},[_vm._v("2006")]),_vm._v(" "),_c('option',{attrs:{"value":"2007"}},[_vm._v("2007")]),_vm._v(" "),_c('option',{attrs:{"value":"2008"}},[_vm._v("2008")]),_vm._v(" "),_c('option',{attrs:{"value":"2009"}},[_vm._v("2009")]),_vm._v(" "),_c('option',{attrs:{"value":"2010"}},[_vm._v("2010")]),_vm._v(" "),_c('option',{attrs:{"value":"2011"}},[_vm._v("2011")]),_vm._v(" "),_c('option',{attrs:{"value":"2012"}},[_vm._v("2012")]),_vm._v(" "),_c('option',{attrs:{"value":"2013"}},[_vm._v("2013")]),_vm._v(" "),_c('option',{attrs:{"value":"2014"}},[_vm._v("2014")]),_vm._v(" "),_c('option',{attrs:{"value":"2015"}},[_vm._v("2015")]),_vm._v(" "),_c('option',{attrs:{"value":"2016"}},[_vm._v("2016")]),_vm._v(" "),_c('option',{attrs:{"value":"2017"}},[_vm._v("2017")]),_vm._v(" "),_c('option',{attrs:{"value":"2018"}},[_vm._v("2018")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])]),_vm._v(" "),_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"end-month"},on:{"change":_vm.onEndDateChange}},[_c('option',{attrs:{"value":"01","selected":"{selected == Dat}"}},[_vm._v("January")]),_vm._v(" "),_c('option',{attrs:{"value":"02"}},[_vm._v("February")]),_vm._v(" "),_c('option',{attrs:{"value":"03"}},[_vm._v("March")]),_vm._v(" "),_c('option',{attrs:{"value":"04"}},[_vm._v("April")]),_vm._v(" "),_c('option',{attrs:{"value":"05"}},[_vm._v("May")]),_vm._v(" "),_c('option',{attrs:{"value":"06"}},[_vm._v("June")]),_vm._v(" "),_c('option',{attrs:{"value":"07"}},[_vm._v("July")]),_vm._v(" "),_c('option',{attrs:{"value":"08"}},[_vm._v("August")]),_vm._v(" "),_c('option',{attrs:{"value":"09"}},[_vm._v("September")]),_vm._v(" "),_c('option',{attrs:{"value":"10"}},[_vm._v("October")]),_vm._v(" "),_c('option',{attrs:{"value":"11"}},[_vm._v("November")]),_vm._v(" "),_c('option',{attrs:{"value":"12"}},[_vm._v("December")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('select',{attrs:{"id":"end-year"},on:{"change":_vm.onEndDateChange}},[_c('option',{attrs:{"value":"2005"}},[_vm._v("2005")]),_vm._v(" "),_c('option',{attrs:{"value":"2006"}},[_vm._v("2006")]),_vm._v(" "),_c('option',{attrs:{"value":"2007"}},[_vm._v("2007")]),_vm._v(" "),_c('option',{attrs:{"value":"2008"}},[_vm._v("2008")]),_vm._v(" "),_c('option',{attrs:{"value":"2009"}},[_vm._v("2009")]),_vm._v(" "),_c('option',{attrs:{"value":"2010"}},[_vm._v("2010")]),_vm._v(" "),_c('option',{attrs:{"value":"2011"}},[_vm._v("2011")]),_vm._v(" "),_c('option',{attrs:{"value":"2012"}},[_vm._v("2012")]),_vm._v(" "),_c('option',{attrs:{"value":"2013"}},[_vm._v("2013")]),_vm._v(" "),_c('option',{attrs:{"value":"2014"}},[_vm._v("2014")]),_vm._v(" "),_c('option',{attrs:{"value":"2015"}},[_vm._v("2015")]),_vm._v(" "),_c('option',{attrs:{"value":"2016"}},[_vm._v("2016")]),_vm._v(" "),_c('option',{attrs:{"value":"2017"}},[_vm._v("2017")]),_vm._v(" "),_c('option',{attrs:{"value":"2018"}},[_vm._v("2018")])]),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])]),_vm._v(" "),_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Trailing Average")]),_vm._v(" "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("days")])])]),_vm._v(" "),_c('h4',[_vm._v("Comparisons")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score trailing average")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("100% is the compared project")])])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -893,7 +926,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0df51156", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-0df51156", __vue__options__)
+    hotAPI.reload("data-v-0df51156", __vue__options__)
   }
 })()}
 });
@@ -1029,6 +1062,8 @@ var _vuex = require('vuex');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 exports.default = {
   props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage', 'alwaysByDate'],
   computed: {
@@ -1064,11 +1099,15 @@ exports.default = {
       config.time_series = true;
 
 
+      this.__download_data = {};
+      this.__download_file = config.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+
       if (this.repo) {
         if (this.$refs.chart) {
           this.$refs.chart.className = 'linechart loader';
         }
         window.GHDataRepos[this.repo][this.source]().then(function (baseData) {
+          _this.__download_data.base = baseData;
           _this.$refs.chartStatus.innerHTML = '';
           if (baseData && baseData.length) {
             config.data = _GHDataStats2.default.convertDates(baseData, _this.earliest, _this.latest);
@@ -1082,6 +1121,9 @@ exports.default = {
             resolve();
           });
         }).then(function (compareData) {
+          _this.__download_data.compare = compareData;
+          _this.$refs.downloadJSON.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(_this.__download_data));
+          _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
           var keys = Object.keys(config.data[0]).splice(1);
           if (config.data && compareData && compareData.length) {
             if (config.compare == 'each') {
@@ -1134,23 +1176,23 @@ exports.default = {
       }
     }
   },
-  methods: {
+  methods: _defineProperty({
     downloadSVG: function downloadSVG(e) {
       var svgsaver = new SvgSaver();
       var svg = $(this.$refs.chartholder).find("svg")[0];
-      svgsaver.asSvg(svg);
+      svgsaver.asSvg(svg, this.__download_file + '.svg');
     },
     downloadPNG: function downloadPNG(e) {
       var svgsaver = new SvgSaver();
       var svg = $(this.$refs.chartholder).find("svg")[0];
-      svgsaver.asPng(svg);
+      svgsaver.asPng(svg, this.__download_file + '.png');
     }
-  } };
+  }, 'downloadSVG', function downloadSVG(e) {}) };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{ref:"chart",staticClass:"linechart"},[_c('div',{ref:"legend",staticClass:"legend"}),_vm._v(" "),_c('div',{ref:"chartholder"}),_vm._v(" "),_c('span',{ref:"chartStatus",domProps:{"innerHTML":_vm._s(_vm.chart)}})]),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-6"},[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{ref:"chart",staticClass:"linechart"},[_c('div',{ref:"legend",staticClass:"legend"}),_vm._v(" "),_c('div',{ref:"chartholder"}),_vm._v(" "),_c('span',{ref:"chartStatus",domProps:{"innerHTML":_vm._s(_vm.chart)}})]),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-6"},[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)

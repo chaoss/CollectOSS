@@ -28,7 +28,7 @@
             <div class="col col-6">
               <div class="form-item">
                 <select id="start-year" @change=onStartDateChange>
-                  <option value="2005">2005</option>
+                  <option value="2005" selected="">2005</option>
                   <option value="2006">2006</option>
                   <option value="2007">2007</option>
                   <option value="2008">2008</option>
