@@ -9,18 +9,7 @@
             <div class="col col-6">
               <div class="form-item">
                 <select id="start-month" @change=onStartDateChange>
-                  <option value="01">January</option>
-                  <option value="02">February</option>
-                  <option value="03">March</option>
-                  <option value="04">April</option>
-                  <option value="05">May</option>
-                  <option value="06">June</option>
-                  <option value="07">July</option>
-                  <option value="08">August</option>
-                  <option value="09">September</option>
-                  <option value="10">October</option>
-                  <option value="11">November</option>
-                  <option value="12">December</option>
+                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == 0">{{ month.name }}</option>
                 </select>
                 <div class="desc">Month</div>
               </div>
@@ -28,20 +17,7 @@
             <div class="col col-6">
               <div class="form-item">
                 <select id="start-year" @change=onStartDateChange>
-                  <option value="2005" selected="">2005</option>
-                  <option value="2006">2006</option>
-                  <option value="2007">2007</option>
-                  <option value="2008">2008</option>
-                  <option value="2009">2009</option>
-                  <option value="2010">2010</option>
-                  <option value="2011">2011</option>
-                  <option value="2012">2012</option>
-                  <option value="2013">2013</option>
-                  <option value="2014">2014</option>
-                  <option value="2015">2015</option>
-                  <option value="2016">2016</option>
-                  <option value="2017">2017</option>
-                  <option value="2018">2018</option>
+                  <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2005">{{ year }}</option>
                 </select>
                 <div class="desc">Year</div>
               </div>
@@ -55,18 +31,7 @@
             <div class="col col-6">
               <div class="form-item">
                 <select id="end-month" @change=onEndDateChange>
-                  <option value="01" selected="{selected == Dat}">January</option>
-                  <option value="02">February</option>
-                  <option value="03">March</option>
-                  <option value="04">April</option>
-                  <option value="05">May</option>
-                  <option value="06">June</option>
-                  <option value="07">July</option>
-                  <option value="08">August</option>
-                  <option value="09">September</option>
-                  <option value="10">October</option>
-                  <option value="11">November</option>
-                  <option value="12">December</option>
+                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
                 </select>
                 <div class="desc">Month</div>
               </div>
@@ -74,20 +39,7 @@
             <div class="col col-6">
               <div class="form-item">
                 <select id="end-year" @change=onEndDateChange>
-                  <option value="2005">2005</option>
-                  <option value="2006">2006</option>
-                  <option value="2007">2007</option>
-                  <option value="2008">2008</option>
-                  <option value="2009">2009</option>
-                  <option value="2010">2010</option>
-                  <option value="2011">2011</option>
-                  <option value="2012">2012</option>
-                  <option value="2013">2013</option>
-                  <option value="2014">2014</option>
-                  <option value="2015">2015</option>
-                  <option value="2016">2016</option>
-                  <option value="2017">2017</option>
-                  <option value="2018">2018</option>
+                  <option v-for="year in years" v-bind:value="year" v-bind:selected="year == thisYear">{{ year }}</option>
                 </select>
                 <div class="desc">Year</div>
               </div>
@@ -146,6 +98,31 @@
         this.$store.commit('setCompare', {
           compare: e.target.value
         })
+      }
+    },
+    computed: {
+      months() { return [
+        { name: 'January', value: 0 },
+        { name: 'February', value: 1 },
+        { name: 'March', value: 2 },
+        { name: 'April', value: 3 },
+        { name: 'May', value: 4 },
+        { name: 'June', value: 5 },
+        { name: 'July', value: 6 },
+        { name: 'August', value: 7 },
+        { name: 'September', value: 8 },
+        { name: 'October', value: 9 },
+        { name: 'November', value: 10 },
+        { name: 'December', value: 11 }
+      ] },
+      thisMonth() { return (new Date()).getMonth() },
+      thisYear() { return (new Date()).getUTCFullYear() },
+      years() {
+        let yearArray = [];
+        for (let i = 2005; i <= (new Date()).getUTCFullYear(); i++) {
+          yearArray.push(i)
+        }
+        return yearArray;
       }
     }
   }
