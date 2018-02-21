@@ -170,6 +170,26 @@ def api_root():
 addTimeseries(app, ghtorrent.commits, 'commits')
 
 """
+@api {get} /:owner/:repo/commits/comments count of commit comments weekly
+@apiName CommitComments
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {   "date":"2009-02-16T00:00:00.000Z",
+                            "comments":1.0
+                        },
+                        {   "date":"2009-07-12T00:00:00.000Z",
+                            "comments":2.0
+                        },
+
+"""
+addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
+
+"""
 @api {get} /:owner/:repo/forks/group_by=:group_by Forks
 @apiName Forks
 @apiGroup Timeseries
@@ -215,6 +235,28 @@ addTimeseries(app, ghtorrent.forks, 'forks')
 """
 addTimeseries(app, ghtorrent.issues, 'issues')
 
+addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
+
+"""
+@api {get} /:owner/:repo/issue_comments count of new comments weekly
+@apiName uniqueCommenters
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {   "date":"2009-02-16T00:00:00.000Z",
+                            "total_unique_comments":1.0
+                        },
+                        {   "date":"2009-07-12T00:00:00.000Z",
+                            "total_unique_comments":2.0
+                        },
+
+"""
+addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
+
 """
 @api {get} /:owner/:repo/issues/response_time Issue Response Time
 @apiName IssueResponseTime
@@ -235,7 +277,7 @@ addTimeseries(app, ghtorrent.issues, 'issues')
                         }
                     ]
 """
-addMetric(app, ghtorrent.issue_response_time, 'issues/response_time')
+addTimeseries(app, ghtorrent.issue_response_time, 'issues/response_time')
 
 """
 @api {get} /:owner/:repo/pulls Pull Requests by Week
@@ -262,27 +304,24 @@ addMetric(app, ghtorrent.issue_response_time, 'issues/response_time')
 addTimeseries(app, ghtorrent.pulls, 'pulls')
 
 """
-@api {get} /:owner/:repo/stargazers/group_by=:group_by Stargazers
-@apiName Stargazers
+@api {get} /:owner/:repo/pull_request_comments count of new pull request comments weekly
+@apiName PullRequestComments
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
-@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
 
 @apiSuccessExample {json} Success-Response:
                     [
-                        {
-                            "date": "2015-01-01T00:00:00.000Z",
-                            "watchers": 133
+                        {   "date":"2009-02-16T00:00:00.000Z",
+                            "comments":1.0
                         },
-                        {
-                            "date": "2015-01-08T00:00:00.000Z",
-                            "watchers": 54
-                        }
-                    ]
+                        {   "date":"2009-07-12T00:00:00.000Z",
+                            "comments":2.0
+                        },
+
 """
-addTimeseries(app, ghtorrent.stargazers, 'stargazers')
+addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
 
 """
 @api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
@@ -306,6 +345,31 @@ addTimeseries(app, ghtorrent.stargazers, 'stargazers')
                     ]
 """
 addTimeseries(app, ghtorrent.pull_acceptance_rate, 'pulls/acceptance_rate')
+
+"""
+@api {get} /:owner/:repo/stargazers/group_by=:group_by Stargazers
+@apiName Stargazers
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z",
+                            "watchers": 133
+                        },
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "watchers": 54
+                        }
+                    ]
+"""
+addTimeseries(app, ghtorrent.stargazers, 'stargazers')
+
+addMetric(app, ghtorrent.watchers, 'watchers')
 
 """
 @api {get} /:owner/:repo/timeseries/tags Tags release timeseries
@@ -619,7 +683,7 @@ addMetric(app, librariesio.dependency_stats, 'dependency_stats')
 
 
 """
-@api {get} /:owner/:repo/unique_committers Count of new committers weekly
+@api {get} /:owner/:repo/total_committers count of new committers weekly
 @apiName UniqueCommiters
 @apiGroup Timeseries
 
@@ -629,14 +693,15 @@ addMetric(app, librariesio.dependency_stats, 'dependency_stats')
 @apiSuccessExample {json} Success-Response:
                     [
                         {   "date":"2009-02-16T00:00:00.000Z",
-                            "total_unique_committers":1.0
+                            "total_total_committers":1.0
                         },
                         {   "date":"2009-07-12T00:00:00.000Z",
-                            "total_unique_committers":2.0
+                            "total_total_committers":2.0
                         },
                     ]
 """
-addTimeseries(app, ghtorrent.unique_committers, 'unique_committers')
+addTimeseries(app, ghtorrent.total_committers, 'total_committers')
+
 
 # Popularity
 """

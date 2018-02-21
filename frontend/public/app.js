@@ -375,10 +375,14 @@ var GHDataAPI = function () {
       repo.stars = Timeseries('stargazers');
       repo.tags = Timeseries('tags');
       repo.downloads = Timeseries('downloads');
-      repo.uniqueCommitters = Timeseries('unique_committers');
+      repo.totalCommitters = Timeseries('total_committers');
+      repo.issueComments = Timeseries('issue/comments');
+      repo.commitComments = Timeseries('commits/comments');
+      repo.pullReqComments = Timeseries('pulls/comments');
+      repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate');
+      repo.issuesClosed = Timeseries('issues/closed');
+      repo.issuesResponseTime = Timeseries('issues/response_time');
 
-      repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate');
-      repo.issuesResponseTime = Endpoint('issues/response_time');
       repo.contributors = Endpoint('contributors');
       repo.contributions = Endpoint('contributions');
       repo.committerLocations = Endpoint('committer_locations');
@@ -388,6 +392,7 @@ var GHDataAPI = function () {
       repo.dependents = Endpoint('dependents');
       repo.dependencies = Endpoint('dependencies');
       repo.dependencyStats = Endpoint('dependency_stats');
+      repo.watchers = Endpoint('watchers');
 
       return repo;
     }
@@ -635,7 +640,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Activity")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls Requests / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"uniqueCommitters","title":"Unique Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Activity")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls Requests / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -944,7 +949,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0df51156", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-0df51156", __vue__options__)
+    hotAPI.reload("data-v-0df51156", __vue__options__)
   }
 })()}
 });
@@ -1167,11 +1172,16 @@ exports.default = {
             if (!_this.disableRollingAverage) {
               config.legend = config.legend || [config.title.toLowerCase(), _this.period + ' day average'];
               var rolling = _GHDataStats2.default.rollingAverage(config.data, keys[0], _this.period);
-              config.data = _GHDataStats2.default.convertKey(_GHDataStats2.default.combine(config.data, rolling), keys[0]);
+              config.data = _GHDataStats2.default.combine(config.data, rolling);
+              config.colors = config.colors || ['#CCC', '#FF3647'];
+              config.y_accessor = 'value';
+            } else {
+              config.legend = config.legend || [config.title.toLowerCase()];
               config.colors = config.colors || ['#CCC', '#FF3647'];
               config.y_accessor = 'value';
             }
           }
+          config.data = _GHDataStats2.default.convertKey(config.data, keys[0]);
           config.y_mouseover = '%d';
 
           config.legend_target = _this.$refs.legend;

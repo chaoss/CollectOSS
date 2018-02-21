@@ -104,12 +104,16 @@ export default {
             if (!this.disableRollingAverage) {
               config.legend = config.legend || [config.title.toLowerCase(), this.period + ' day average']
               let rolling = GHDataStats.rollingAverage(config.data, keys[0], this.period)
-              config.data = GHDataStats.convertKey(GHDataStats.combine(config.data, rolling), keys[0])
+              config.data = GHDataStats.combine(config.data, rolling)
               config.colors = config.colors ||['#CCC', '#FF3647']
               config.y_accessor = 'value'
-
+            } else {
+              config.legend = config.legend || [config.title.toLowerCase()]
+              config.colors = config.colors ||['#CCC', '#FF3647']
+              config.y_accessor = 'value'
             }
           }
+          config.data = GHDataStats.convertKey(config.data, keys[0])
           config.y_mouseover = '%d';
 
           config.legend_target = this.$refs.legend

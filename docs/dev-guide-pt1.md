@@ -27,6 +27,8 @@ from .choass import Chaoss
 
 In GHData there are metrics and timeseries metrics. For all metrics, the function should return a Dataframe that can be serialized into json. For timeseries metrics, the Dataframe needs to have a column named `date` that holds timestamps.
 
+Once you have implemented your function in the corresponding data source file, make sure to `pip install -e . ` once again to reload your changes.
+
 #### Adding dependencies
 
 If you need to add a dependency to GHData for your function, simply add the import statment to the file as usual, then in `setup.py` add the dependency to the `install_requires` list. For example, if my new function uses a package called `mizzou`, I would find the `install_requires` list:
@@ -79,6 +81,8 @@ addTimeseries(app, bar.foo, 'foo')
 ```
 If the metric is not a timeseries metric, replace `AddTimeseries()` with `AddMetric()`
 
+```bash
+
 ## Using the Python Debugger
 
 The server in GHData has a built-in IPython debugger to make testing your functions easier during development.
@@ -91,3 +95,5 @@ ghdata
 ````
 
 GHData will load configuration and create instances of all the classes, but will drop down to IPDB shell instead of running the Flask server.
+
+To disable the IPDB shell, simply export ```bash export GHDATA_INTERACTIVE=0``` and run `ghdata`.

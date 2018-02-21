@@ -85,18 +85,22 @@ export default class GHDataAPI {
       return func
     }
 
-    repo.commits          = Timeseries('commits')
-    repo.forks            = Timeseries('forks')
-    repo.issues           = Timeseries('issues')
-    repo.pulls            = Timeseries('pulls')
-    repo.stars            = Timeseries('stargazers')
-    repo.tags             = Timeseries('tags')
-    repo.downloads        = Timeseries('downloads')
-    repo.uniqueCommitters = Timeseries('unique_committers')
+    repo.commits             = Timeseries('commits')
+    repo.forks               = Timeseries('forks')
+    repo.issues              = Timeseries('issues')
+    repo.pulls               = Timeseries('pulls')
+    repo.stars               = Timeseries('stargazers')
+    repo.tags                = Timeseries('tags')
+    repo.downloads           = Timeseries('downloads')
+    repo.totalCommitters    = Timeseries('total_committers')
+    repo.issueComments       = Timeseries('issue/comments')
+    repo.commitComments      = Timeseries('commits/comments')
+    repo.pullReqComments     = Timeseries('pulls/comments')
+    repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate')
+    repo.issuesClosed        = Timeseries('issues/closed')
+    repo.issuesResponseTime  = Timeseries('issues/response_time')
 
 
-    repo.pullsAcceptanceRate = Endpoint('pulls/acceptance_rate')
-    repo.issuesResponseTime  = Endpoint('issues/response_time')
     repo.contributors        = Endpoint('contributors')
     repo.contributions       = Endpoint('contributions')
     repo.committerLocations  = Endpoint('committer_locations')
@@ -106,6 +110,7 @@ export default class GHDataAPI {
     repo.dependents          = Endpoint('dependents')
     repo.dependencies        = Endpoint('dependencies')
     repo.dependencyStats     = Endpoint('dependency_stats')
+    repo.watchers            = Endpoint('watchers')
 
     return repo
 

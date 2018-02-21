@@ -43,6 +43,7 @@ ehthumbs.db
 Thumbs.db
 *.cache
 *.pyc
+*.swp
 
 # Python junk #
 ###############

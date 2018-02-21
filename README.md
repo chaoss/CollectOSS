@@ -112,13 +112,73 @@ Install the Python and Node developer dependencies:
 make install-dev
 ```
 
-For futher instructions on how to add to GHData, here are guides to adding an endpoint to the full stack. [Dev Guide Part 1](docs/dev-guide-pt1.md) [Dev Guide Part 2](docs/dev-guide-pt2.md)
+Detailed instructions can be found at [here](docs/development/developerstartup.md)
+
+#### OSX
+
+It is recommended that you use [Anaconda](https://anaconda.org/) to setup a virtual environment for development. Make sure you have configured your shell's `$PATH` variable to point to your Anaconda installation.
+
+Make sure you have NodeJS; if you have Homebrew, run `brew install nvm`.
+
+First, clone the repo and checkout the dev branch:
+
+```bash
+git clone https://github.com/OSSHealth/ghdata/ && cd ghdata && git checkout dev
+```
+
+Activate virtualenv:
+```bash
+source activate ghdata
+```
+
+Install the Python and Node developer dependencies:
+```bash
+make install-dev
+```
+
+Create your config file:
+```bash
+ghdata
+```
+
+Stop the backend (CTRL-C) and then edit `ghdata.cfg` to reflect your API keys and database credentials.
+
+The following should be config suitable for development:
+```
+[Server]
+      host = 0.0.0.0
+      port = 5000
+
+      [Database]
+      host = opendata.missouri.edu
+      port = 3306
+      user = msr
+      pass = ghtorrent
+      name = msr
+
+      [PublicWWW]
+      apikey = 0
+
+      [Development]
+      developer = 1
+```
+
+Install GHData:
+```bash
+pip install -e .
+```
+
+For futher instructions on how to add to GHData, here are guides to adding an endpoint to the full stack. 
+
+[Dev Guide Part 1](docs/dev-guide-pt1.md) 
+
+[Dev Guide Part 2](docs/dev-guide-pt2.md)
 
 Frontend development guide coming soon!
 
 You're good to go.
 
-In one shell, you'll want to run `ghdata`, in another run `cd frontend/ && brunch watch -s`.
+In one shell, you'll want to run the `ghdata` to run the backend on port 5000, and in another run `cd frontend/ && brunch watch -s` to view the frontend on port 3333.
 
 If you have GNU Screen installed. this can be done automatically using `make dev-start`.
 
@@ -128,6 +188,6 @@ License and Copyright
 ---------------------
 Copyright © 2017 University of Nebraska at Omaha and the University of Missouri
 
-GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file LICENSE for more details.
+GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file [LICENSE](LICENSE) for more details.
 
 (This work has been funded through the Alfred P. Sloan Foundation)
