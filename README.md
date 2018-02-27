@@ -31,7 +31,7 @@ Now, to install:
       ```
 
 
-2.  Configure the following environment variables:
+2.  Set the following variables in your environment:
 
     ```bash
     # Most likely required
@@ -50,7 +50,7 @@ Now, to install:
     GHDATA_DEBUG
     ```
 
-    docker-compose will automatically pass the relevant environment variables to the container.
+    docker-compose will automatically pass the relevant variables from the local environment to the container.
 
 
 3.  Build the container with `docker-compose build`
