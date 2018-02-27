@@ -16,6 +16,7 @@
 <script>
 import GHDataStats from 'GHDataStats'
 import { mapState } from 'vuex'
+import EmptyChart from './EmptyChart'
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 
@@ -134,6 +135,18 @@ export default {
           console.log('finalized config that will be sent', config)
           MG.data_graphic(config)
         }) // end then()
+        .catch((reject) => {
+          console.log("Caught reject")
+          MG.data_graphic({
+            error: config.title + 'is missing data',
+            chart_type: 'missing-data',
+            missing_text: config.title + ' is missing data',
+            target: this.$refs.chart,
+            full_width: true,
+            height: 200
+          });
+          this.$refs.chart.className = 'linechart'
+        })
         return '<div class="loader">' + this.title + '...</div>' 
       } // end if (this.$store.repo)   
     } // end chart()

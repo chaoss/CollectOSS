@@ -70,7 +70,8 @@ export default class GHDataAPI {
             callback(data)
           }
           return new Promise((resolve, reject) => {
-            resolve(data)
+            if (typeof(data) == undefined) { reject() }
+            else { resolve(data) }
           })
         })
       }

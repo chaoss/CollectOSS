@@ -265,6 +265,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -353,7 +355,11 @@ var GHDataAPI = function () {
               callback(data);
             }
             return new Promise(function (resolve, reject) {
-              resolve(data);
+              if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) == undefined) {
+                reject();
+              } else {
+                resolve(data);
+              }
             });
           });
         };
@@ -1026,11 +1032,11 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
-var _metricsGraphics = require('metrics-graphics');
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var _metricsGraphics2 = _interopRequireDefault(_metricsGraphics);
-
-var _GHDataStats = require('../GHDataStats');
+var _GHDataStats = require('../../GHDataStats');
 
 var _GHDataStats2 = _interopRequireDefault(_GHDataStats);
 
@@ -1042,15 +1048,21 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-_metricsGraphics2.default.data_graphic({
-  title: "Missing Data",
-  error: 'Data unavaliable for ' + title,
-  chart_type: 'missing-data',
-  missing_text: title + ' could not be loaded',
-  target: undefined.$refs.chart,
-  full_width: true,
-  height: 200
-});
+exports.default = {
+  computed: {
+    chart: function chart() {
+      MG.data_graphic({
+        title: "Missing Data",
+        error: 'Data unavaliable',
+        chart_type: 'missing-data',
+        missing_text: 'Data could not be loaded',
+        target: this.$refs.chart,
+        full_width: true,
+        height: 200
+      });
+    }
+  }
+};
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
@@ -1082,6 +1094,10 @@ var _GHDataStats = require('GHDataStats');
 var _GHDataStats2 = _interopRequireDefault(_GHDataStats);
 
 var _vuex = require('vuex');
+
+var _EmptyChart = require('./EmptyChart');
+
+var _EmptyChart2 = _interopRequireDefault(_EmptyChart);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1199,6 +1215,17 @@ exports.default = {
 
           console.log('finalized config that will be sent', config);
           MG.data_graphic(config);
+        }).catch(function (reject) {
+          console.log("Caught reject");
+          MG.data_graphic({
+            error: config.title + 'is missing data',
+            chart_type: 'missing-data',
+            missing_text: config.title + ' is missing data',
+            target: _this.$refs.chart,
+            full_width: true,
+            height: 200
+          });
+          _this.$refs.chart.className = 'linechart';
         });
         return '<div class="loader">' + this.title + '...</div>';
       }
