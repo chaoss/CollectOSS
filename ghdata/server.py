@@ -147,13 +147,13 @@ def api_root():
 # @todo: Link to LF Metrics
 
 """
-@api {get} /:owner/:repo/commits/group_by=:group_by Commits
+@api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Commits
 @apiName Commits
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
-@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
+@apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
 
 @apiSuccessExample {json} Success-Response:
                     [
@@ -170,7 +170,7 @@ def api_root():
 addTimeseries(app, ghtorrent.commits, 'commits')
 
 """
-@api {get} /:owner/:repo/commits/comments count of commit comments weekly
+@api {get} /:owner/:repo/timeseries/commits/comments count of commit comments weekly
 @apiName CommitComments
 @apiGroup Timeseries
 
@@ -190,10 +190,10 @@ addTimeseries(app, ghtorrent.commits, 'commits')
 addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
 
 """
-@api {get} /:owner/:repo/forks/group_by=:group_by Forks
+@api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
 @apiName Forks
 @apiGroup Timeseries
-@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
+@apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -213,10 +213,10 @@ addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
 addTimeseries(app, ghtorrent.forks, 'forks')
 
 """
-@api {get} /:owner/:repo/issues/group_by=:group_by Issues
+@api {get} /:owner/:repo/timeseries/issues?group_by=:group_by Issues
 @apiName Issues
 @apiGroup Timeseries
-@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
+@apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -238,7 +238,7 @@ addTimeseries(app, ghtorrent.issues, 'issues')
 addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 
 """
-@api {get} /:owner/:repo/issue_comments count of new comments weekly
+@api {get} /:owner/:repo/timeseries/issue_comments count of new comments weekly
 @apiName uniqueCommenters
 @apiGroup Timeseries
 
@@ -258,7 +258,7 @@ addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
 
 """
-@api {get} /:owner/:repo/issues/response_time Issue Response Time
+@api {get} /:owner/:repo/timeseries/issues/response_time Issue Response Time
 @apiName IssueResponseTime
 @apiGroup Timeseries
 
@@ -280,7 +280,7 @@ addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
 addTimeseries(app, ghtorrent.issue_response_time, 'issues/response_time')
 
 """
-@api {get} /:owner/:repo/pulls Pull Requests by Week
+@api {get} /:owner/:repo/timeseries/pulls Pull Requests by Week
 @apiName PullRequestsByWeek
 @apiGroup Timeseries
 
@@ -304,7 +304,7 @@ addTimeseries(app, ghtorrent.issue_response_time, 'issues/response_time')
 addTimeseries(app, ghtorrent.pulls, 'pulls')
 
 """
-@api {get} /:owner/:repo/pull_request_comments count of new pull request comments weekly
+@api {get} /:owner/:repo/timeseries/pull_request_comments count of new pull request comments weekly
 @apiName PullRequestComments
 @apiGroup Timeseries
 
@@ -324,7 +324,7 @@ addTimeseries(app, ghtorrent.pulls, 'pulls')
 addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
 
 """
-@api {get} /:owner/:repo/pulls/acceptance_rate Pull Request Acceptance Rate by Week
+@api {get} /:owner/:repo/timeseries/pulls/acceptance_rate Pull Request Acceptance Rate by Week
 @apiDescription For each week, the rate is calculated as (pull requests merged that week) / (pull requests opened that week)
 @apiName PullRequestAcceptanceRate
 @apiGroup Timeseries
@@ -347,13 +347,13 @@ addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
 addTimeseries(app, ghtorrent.pull_acceptance_rate, 'pulls/acceptance_rate')
 
 """
-@api {get} /:owner/:repo/stargazers/group_by=:group_by Stargazers
+@api {get} /:owner/:repo/timeseries/stargazers?group_by=:group_by Stargazers
 @apiName Stargazers
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
-@apiParam {String} group_by (Default to Week) Allows for reseults to be grouped by day, week, month, or year
+@apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
 
 @apiSuccessExample {json} Success-Response:
                     [
@@ -482,7 +482,7 @@ addMetric(app, ghtorrent.contributors, 'contributors')
 #######################
 
 """
-@api {get} /:owner/:repo/contributions Contributions by Week
+@api {get} /:owner/:repo/timeseries/contributions Contributions by Week
 @apiName ContributionsByWeek
 @apiGroup Timeseries
 
@@ -528,7 +528,7 @@ def contributions(owner, repo):
 
 """
 @api {get} /:owner/:repo/committer_locations Commits and Location by User
-@apiName CommiterLocations
+@apiName CommitterLocations
 @apiGroup Diversity
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -553,7 +553,7 @@ addMetric(app, ghtorrent.committer_locations, 'committer_locations')
 
 
 """
-@api {get} /:owner/:repo/community_age Timeline of events to determine the age of a community
+@api {get} /:owner/:repo/timeseries/community_age Timeline of events to determine the age of a community
 @apiName CommunityAge
 @apiGroup Timeseries
 
@@ -683,8 +683,8 @@ addMetric(app, librariesio.dependency_stats, 'dependency_stats')
 
 
 """
-@api {get} /:owner/:repo/total_committers count of new committers weekly
-@apiName UniqueCommiters
+@api {get} /:owner/:repo/timeseries/total_committers count of new committers weekly
+@apiName UniqueCommitters
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -746,7 +746,7 @@ def ghtorrent_range():
 
 """
 @api {get} /:owner/:repo/bus_factor Bus Factor
-@apiDescription Returns an integer that is the number of develpers that have a summed percentage of contributions higher than the threshold
+@apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
 @apiName GitHub
 @apiGroup Users
 
@@ -772,7 +772,7 @@ addMetric(app, github.bus_factor, 'bus_factor')
 
 """
 @api {get} /:owner/:repo/bus_factor Bus Factor
-@apiDescription Returns an integer that is the number of develpers that have a summed percentage of contributions higher than the threshold
+@apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
 @apiName GitHub
 @apiGroup Users
 
