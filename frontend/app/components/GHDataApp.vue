@@ -2,7 +2,7 @@
   <div>
     <ghdata-header></ghdata-header>
     <div class="content">
-      <sidebar-controls></sidebar-controls>
+      <main-controls></main-controls>
       <ghdata-cards></ghdata-cards>
     </div>
   </div>
@@ -11,13 +11,13 @@
 <script>
 
 import GHDataHeader from './GHDataHeader.vue'
-import SidebarControls from './SidebarControls.vue'
+import MainControls from './MainControls.vue'
 import GHDataCards from './GHDataCards.vue'
 
 module.exports = {
   components: {
     'ghdata-header': GHDataHeader,
-    SidebarControls,
+    MainControls,
     'ghdata-cards': GHDataCards
   }
 }

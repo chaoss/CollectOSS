@@ -2585,6 +2585,7 @@ section#landing h1 {
   font-size: 25px;
 }
 section {
+  width: 100%;
   padding: 36px;
   float: right;
   margin: 0 0 24px 0;
@@ -2628,14 +2629,13 @@ section.unmaterialized {
 }
 @media (min-width: 1230px) {
   #cards {
+    width: 100%;
     padding-bottom: 100px;
     position: relative;
     z-index: 9;
   }
   section {
     z-index: 10;
-    width: calc(100% - 345px);
-    float: right;
   }
   #landing {
     width: 100%;
@@ -2649,10 +2649,6 @@ section.unmaterialized {
   .fixed {
     position: fixed !important;
     top: 25px;
-  }
-  #controls {
-    width: 325px;
-    float: left;
   }
 }
 .below-chart {
@@ -2739,6 +2735,12 @@ cite.metric a {
 .hidden > *,
 .hidden > small {
   display: none !important;
+}
+.invis,
+.invis > *,
+.invis > small {
+  z-index: -1;
+  opacity: 0 !important;
 }
 @-moz-keyframes outro {
   0% {

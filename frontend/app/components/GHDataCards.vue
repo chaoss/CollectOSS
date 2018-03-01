@@ -1,5 +1,5 @@
 <template>
-  <div ref="cards" class="content">
+  <div ref="cards">
     <section :class="{ hidden: baseRepo, unmaterialized: true }">
       <h3>Enter a GitHub URL to get started</h3>
       <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>

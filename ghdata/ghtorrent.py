@@ -86,7 +86,7 @@ class GHTorrent(object):
                 WHERE {1}.{3} = {0}.{2}
                 AND {0}.{4} = :repoid
                 GROUP BY YEARWEEK({1}.created_at)""".format(parent_table, sub_table, parent_id, sub_id, project_id)
-
+    
 
     def repoid(self, owner_or_repoid, repo=None):
         """

@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <div ref="holder">
     <div ref="chart" class="linechart">
-      <div ref="legend" class="legend"></div>
+      <div ref="legend" class="legend hideme invis"></div>
       <div ref="chartholder"></div>
-      <span ref="chartStatus" v-html="chart"></span>
+      <span ref="chartStatus" class="showme" v-html="chart"></span>
     </div>
-    <div class="row below-chart">
+    <div class="row below-chart hideme invis">
       <div class="col col-6"><cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite></div>
       <div class="col col-6"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button><a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
@@ -57,11 +57,24 @@ export default {
       this.__download_data = {}
       this.__download_file = config.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
 
+      var renderChart = () => {
+        $(this.$refs.holder).find('.showme').removeClass('invis')
+        this.$refs.chartholder.innerHTML = '';
+        this.$refs.chartholder.appendChild(config.target)
+        this.$refs.chart.className = 'linechart'
+        MG.data_graphic(config)
+      }
+
       if (this.repo) {
         if (this.$refs.chart) {
           this.$refs.chart.className = 'linechart loader'
+          $(this.$refs.holder).find('.hideme').addClass('invis')
+          $(this.$refs.holder).find('.showme').removeClass('invis')
         }
-        window.GHDataRepos[this.repo][this.source]().then((baseData) => {
+        // Create element to hold the chart
+        config.target = document.createElement('div');
+        window.GHDataRepos[this.repo][this.source]().
+        then((baseData) => {
           this.__download_data.base = baseData;
           this.$refs.chartStatus.innerHTML = ''
           if (baseData && baseData.length) {
@@ -70,10 +83,11 @@ export default {
             config.data = []
           }
           if (this.comparedTo) {
-            return GHDataRepos[this.comparedTo][this.source]()
+            return window.GHDataRepos[this.comparedTo][this.source]()
           }
           return new Promise((resolve, reject) => { resolve() });
-        }).then((compareData) => {
+        })
+        .then((compareData) => {
           this.__download_data.compare = compareData;
           this.$refs.downloadJSON.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.__download_data))
           this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
@@ -87,6 +101,7 @@ export default {
               let compare = GHDataStats.rollingAverage(GHDataStats.zscores(compareData, key), 'value', this.period)
               let base = GHDataStats.rollingAverage(GHDataStats.zscores(config.data, key), 'value', this.period)
               config.data = [base, compare]
+              console.log(key, compareData, config.data)
               config.legend = [window.GHDataRepos[this.repo].toString(), window.GHDataRepos[this.comparedTo].toString()]
               config.colors = config.colors || ['#FF3647', '#999']
             } else {
@@ -113,39 +128,33 @@ export default {
               config.colors = config.colors ||['#CCC', '#FF3647']
               config.y_accessor = 'value'
             }
+            config.data = GHDataStats.convertKey(config.data, keys[0])
           }
-          config.data = GHDataStats.convertKey(config.data, keys[0])
+          
           config.y_mouseover = '%d';
 
           config.legend_target = this.$refs.legend
 
           this.$refs.chart.className = 'linechart intro'
-          config.target = document.createElement('div');
-          this.$refs.chartholder.innerHTML = '';
-          this.$refs.chartholder.appendChild(config.target)
+          $(this.$refs.holder).find('.hideme').removeClass('invis')
 
           $(config.target).hover((onEnterEvent) => {
             $(this.$refs.legend).hide()
           }, (onLeaveEvent) => {
             $(this.$refs.legend).show()
           })
-
-          // Setup hovers
-
-          console.log('finalized config that will be sent', config)
-          MG.data_graphic(config)
+          renderChart();
         }) // end then()
         .catch((reject) => {
-          console.log("Caught reject")
-          MG.data_graphic({
+          config = {
             error: config.title + 'is missing data',
             chart_type: 'missing-data',
             missing_text: config.title + ' is missing data',
-            target: this.$refs.chart,
+            target: config.target,
             full_width: true,
             height: 200
-          });
-          this.$refs.chart.className = 'linechart'
+          };
+          renderChart();
         })
         return '<div class="loader">' + this.title + '...</div>' 
       } // end if (this.$store.repo)   

@@ -2,20 +2,6 @@
   <div>
     <div class="row">
       <div class="col col-6">
-        <h3>Total Dependents</h3>
-        <div class="deps" ref="totaldependents">
-          Loading...
-        </div>
-      </div>
-      <div class="col col-6">
-        <h3>Total Dependencies</h3>
-        <div class="deps" ref="totaldependencies">
-          Loading...
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col col-6">
         <h3>Top Dependents</h3>
         <div class="deps" ref="dependents">
           Loading...
@@ -56,10 +42,6 @@
             for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
               this.$refs['dependents'].innerHTML += dependencies.dependencies[i].name + '<br>'
             }
-          })
-          window.GHDataRepos[this.repo].dependencyStats().then((depstats) => {
-            this.$refs['totaldependents'].innerHTML   = depstats['dependent_repositories']
-            this.$refs['totaldependencies'].innerHTML = depstats['dependencies']
           })
         }
       }
