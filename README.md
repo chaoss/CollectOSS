@@ -31,7 +31,7 @@ Now, to install:
       ```
 
 
-2.  Configure the following environment variables:
+2.  Set the following variables in your environment:
 
     ```bash
     # Most likely required
@@ -50,7 +50,7 @@ Now, to install:
     GHDATA_DEBUG
     ```
 
-    docker-compose will automatically pass the relevant environment variables to the container.
+    docker-compose will automatically pass the relevant variables from the local environment to the container.
 
 
 3.  Build the container with `docker-compose build`
@@ -112,62 +112,6 @@ Install the Python and Node developer dependencies:
 make install-dev
 ```
 
-Detailed instructions can be found at [here](docs/development/developerstartup.md)
-
-#### OSX
-
-It is recommended that you use [Anaconda](https://anaconda.org/) to setup a virtual environment for development. Make sure you have configured your shell's `$PATH` variable to point to your Anaconda installation.
-
-Make sure you have NodeJS; if you have Homebrew, run `brew install nvm`.
-
-First, clone the repo and checkout the dev branch:
-
-```bash
-git clone https://github.com/OSSHealth/ghdata/ && cd ghdata && git checkout dev
-```
-
-Activate virtualenv:
-```bash
-source activate ghdata
-```
-
-Install the Python and Node developer dependencies:
-```bash
-make install-dev
-```
-
-Create your config file:
-```bash
-ghdata
-```
-
-Stop the backend (CTRL-C) and then edit `ghdata.cfg` to reflect your API keys and database credentials.
-
-The following should be config suitable for development:
-```
-[Server]
-      host = 0.0.0.0
-      port = 5000
-
-      [Database]
-      host = opendata.missouri.edu
-      port = 3306
-      user = msr
-      pass = ghtorrent
-      name = msr
-
-      [PublicWWW]
-      apikey = 0
-
-      [Development]
-      developer = 1
-```
-
-Install GHData:
-```bash
-pip install -e .
-```
-
 For futher instructions on how to add to GHData, here are guides to adding an endpoint to the full stack. 
 
 [Dev Guide Part 1](docs/dev-guide-pt1.md) 
@@ -176,11 +120,7 @@ For futher instructions on how to add to GHData, here are guides to adding an en
 
 Frontend development guide coming soon!
 
-You're good to go.
-
-In one shell, you'll want to run the `ghdata` to run the backend on port 5000, and in another run `cd frontend/ && brunch watch -s` to view the frontend on port 3333.
-
-If you have GNU Screen installed. this can be done automatically using `make dev-start`.
+You're good to go. You can start a single instance of the API by running `ghdata`. Run `make dev-start` to start both the Brunch server and Gunicorn server for full-stack development.
 
 The screen sessions can be killed with `make dev-stop`
 
