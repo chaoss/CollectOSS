@@ -1,10 +1,12 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart download-upgrade upgrade
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade
 
 SHELL=/bin/bash
 PY2 := $(shell command -v pip2 2> /dev/null)
 PY3 := $(shell command -v pip3 2> /dev/null)
 NODE := $(shell command -v npm 2> /dev/null)
 CONDA := $(shell command -v conda 2> /dev/null)
+
+SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
 
 CONDAUPDATE=""
 CONDAACTIVATE=""
@@ -22,8 +24,9 @@ default:
 	@ echo "    upgrade          Pulls newest version and installs"
 	@ echo "    test             Run pytest unit tests"
 	@ echo "    serve            Runs using gunicorn"
-	@ echo "    dev-start        Starts GHData and Brunch screen sessions"
-	@ echo "    dev-stop         Kills GHData and Brunch screen sessions"
+	@ echo "    dev-start        Runs 'make serve' and 'brunch w -s' in the background"
+	@ echo "    dev-stop         Stops the backgrounded commands"
+	@ echo "    dev-restart      Runs dev-stop then dev-restart"
 	@ echo "    python-docs      Generates new Sphinx documentation"
 	@ echo "    api-docs         Generates new apidocjs documentation"
 	@ echo "    docs             Generates all documentation"
@@ -64,28 +67,43 @@ download-upgrade:
 upgrade: download-upgrade install
 		@ echo "Upgraded."
 
-dev-start:
+ugh:
+
+dev-start: dev-stop
 ifdef CONDA
-		screen -d -S "ghdata-backend" -m bash -c "source activate ghdata && export GHDATA_DEBUG=1 && python -m ghdata.server"
+		@ bash -c '(cd frontend; brunch w -s --production >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
+		@ bash -c '(source activate ghdata; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 else
-		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && python -m ghdata.server"
+		@ bash -c '(cd frontend; brunch w -s --production >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
+		@ bash -c '($(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 endif
-		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s -n"
-		@ printf '\nDevelopment servers started.\n\nBrunch server  |  Port: 3333      To see log: screen -r "ghdata-frontend"\nGHData         |  Port: 5000      To see log: screen -r "ghdata-backend"\n\n'
-dev-start-public:
-		screen -d -S "ghdata-backend" -m bash -c "export GHDATA_DEBUG=1 && export GHDATA_HOST='0.0.0.0' && python -m ghdata.server"
-		screen -d -S "ghdata-frontend" -m bash -c "cd frontend && brunch watch -s -n"
-		@ printf '\nDevelopment servers started. If ports 5000 and 3333 are open on your firewall, these will be avalible network-wide\n\nBrunch server  |  Port: 3333      To see log: screen -r "ghdata-frontend"\nGHData         |  Port: 5000      To see log: screen -r "ghdata-backend"\n\n'
+		@ echo "Server     Description       Log                   Monitoring                   PID                        "
+		@ echo "------------------------------------------------------------------------------------------                 "
+		@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
+		@ echo "Backend    GHData/Gunicorn   logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
+		@ echo
+		@ echo "Monitor both:  make monitor  "
+		@ echo "Stop servers:  make dev-stop "
 
 dev-stop:
-		screen -S "ghdata-backend" -X kill
-		screen -S "ghdata-frontend" -X kill
+		@ if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sent SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;
+		@ if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sent SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;
+		@ echo
+
+monitor-frontend:
+		@ less +F logs/frontend.log
+
+monitor-backend:
+		@ less +F logs/backend.log
+
+monitor:
+		@ tail -f logs/frontend.log -f logs/backend.log
 
 dev-restart: dev-stop dev-start
 
 serve:
 ifdef CONDA
-		source activate ghdata && gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
+		bash -c "$(SERVECOMMAND)"
 else
 		gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
 endif

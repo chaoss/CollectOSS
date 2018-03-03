@@ -13,7 +13,7 @@ class GHTorrent(object):
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
         """
         self.DB_STR = dbstr
-        self.db = s.create_engine(dbstr, pool_recycle=3600)
+        self.db = s.create_engine(dbstr, poolclass=s.pool.NullPool)
         try:
             self.userid('howderek')
         except Exception as e:
