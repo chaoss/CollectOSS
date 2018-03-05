@@ -46,6 +46,9 @@ export default {
           "size": {
             "field": "total", 
             "type": "quantitative",
+            "legend": {
+              "title": "total of all contributions",
+            },
             "scale": {
               "type": "sqrt"
             }
@@ -53,6 +56,9 @@ export default {
           "color": {
             "field": "issue_comments",
             "type": "quantitative",
+            "legend": {
+              "title": "comments on issues",
+            },
             "scale": {
               "scheme": "spectral"
             }

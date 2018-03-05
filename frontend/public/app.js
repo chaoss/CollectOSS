@@ -665,7 +665,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-7655e5a2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-7655e5a2", __vue__options__)
+    hotAPI.reload("data-v-7655e5a2", __vue__options__)
   }
 })()}
 });
@@ -1011,6 +1011,9 @@ exports.default = {
           "size": {
             "field": "total",
             "type": "quantitative",
+            "legend": {
+              "title": "total of all contributions"
+            },
             "scale": {
               "type": "sqrt"
             }
@@ -1018,6 +1021,9 @@ exports.default = {
           "color": {
             "field": "issue_comments",
             "type": "quantitative",
+            "legend": {
+              "title": "comments on issues"
+            },
             "scale": {
               "scheme": "spectral"
             }
