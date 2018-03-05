@@ -1,3 +1,4 @@
+import VueVega from 'vue-vega'
 const queryString = require('query-string')
 
 export default function GHData () {
@@ -9,12 +10,15 @@ export default function GHData () {
   window.GHDataRepos  = {}
   window.GHDataStats  = require('GHDataStats').default
   window.$            = window.jQuery
+  window._            = require('lodash')
   window.d3           = require('d3')
   window.SvgSaver     = require('svgsaver')
 
   let GHDataApp = require('./components/GHDataApp')
 
   Vue.use(Vuex)
+  Vue.use(VueVega)
+  Vue.config.productionTip = false
 
   window.ghdata = new Vuex.Store({
     state: {

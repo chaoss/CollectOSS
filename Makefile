@@ -24,13 +24,14 @@ default:
 	@ echo "    upgrade          Pulls newest version and installs"
 	@ echo "    test             Run pytest unit tests"
 	@ echo "    serve            Runs using gunicorn"
+	@ echo "    dev              Starts the full stack and monitors the logs"
 	@ echo "    dev-start        Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop         Stops the backgrounded commands"
 	@ echo "    dev-restart      Runs dev-stop then dev-restart"
 	@ echo "    python-docs      Generates new Sphinx documentation"
 	@ echo "    api-docs         Generates new apidocjs documentation"
 	@ echo "    docs             Generates all documentation"
-	@ echo "    build            Builds documentation and frontend"
+	@ echo "    build            Builds documentation and frontend - use before pushing"
 	@ echo "    update-deps      Generates updated requirements.txt and environment.yml"
 	@ echo
 
@@ -41,16 +42,16 @@ install: conda
 		$(CONDAUPDATE) pip install --upgrade .
 
 install-dev: conda
-		$(CONDAUPDATE) pip install pipreqs || (echo "Install failed. Trying again with sudo..." && sudo pip install pipreqs)
+		$(CONDAUPDATE) pip install pipreqs sphinx
 ifdef PY2
-	  pip2 install --upgrade .
+	  pip2 install --upgrade -e .
 endif
 ifdef PY3
-		$(CONDAACTIVATE) pip3 install --upgrade .
+		$(CONDAACTIVATE) pip3 install --upgrade -e .
 endif
 ifndef PY2
 ifndef PY3
-		 $(CONDAACTIVATE) pip install --upgrade .
+		 $(CONDAACTIVATE) pip install --upgrade -e .
 endif
 endif
 ifdef NODE
@@ -68,13 +69,14 @@ upgrade: download-upgrade install
 		@ echo "Upgraded."
 
 ugh:
+		
 
 dev-start: dev-stop
 ifdef CONDA
-		@ bash -c '(cd frontend; brunch w -s --production >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
+		@ bash -c '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
 		@ bash -c '(source activate ghdata; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 else
-		@ bash -c '(cd frontend; brunch w -s --production >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
+		@ bash -c '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
 		@ bash -c '($(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 endif
 		@ echo "Server     Description       Log                   Monitoring                   PID                        "
@@ -83,12 +85,18 @@ endif
 		@ echo "Backend    GHData/Gunicorn   logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
 		@ echo
 		@ echo "Monitor both:  make monitor  "
+		@ echo "Restart and monitor: make dev"
+		@ echo "Restart servers:  make dev-start "
 		@ echo "Stop servers:  make dev-stop "
 
 dev-stop:
-		@ if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sent SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;
-		@ if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sent SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;
+		@ if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;
+		@ if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;
 		@ echo
+
+dev: dev-restart monitor
+	@ read -p "Would you like to restart and continue monitoring? [y/n]: " -n 1 -r; \
+		echo; if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) dev; fi;
 
 monitor-frontend:
 		@ less +F logs/frontend.log
@@ -97,7 +105,7 @@ monitor-backend:
 		@ less +F logs/backend.log
 
 monitor:
-		@ tail -f logs/frontend.log -f logs/backend.log
+		@ tail -f logs/frontend.log -f logs/backend.log 2>/dev/null
 
 dev-restart: dev-stop dev-start
 
@@ -119,7 +127,7 @@ api-docs:
 docs: api-docs python-docs
 
 build: docs
-		cd ghdata/static/ && brunch build
+		cd ghdata/static/ && brunch build --production
 
 check-test-env:
 ifndef DB_TEST_URL

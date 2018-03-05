@@ -81,11 +81,11 @@ class GHTorrent(object):
         :return: Query string
         """
         return """
-        SELECT date({1}.created_at) AS "date", COUNT(*) AS counter
-                FROM {1}, {0}
-                WHERE {1}.{3} = {0}.{2}
-                AND {0}.{4} = :repoid
-                GROUP BY YEARWEEK({1}.created_at)""".format(parent_table, sub_table, parent_id, sub_id, project_id)
+            SELECT date({1}.created_at) AS "date", COUNT(*) AS counter
+            FROM {1}, {0}
+            WHERE {1}.{3} = {0}.{2}
+            AND {0}.{4} = :repoid
+            GROUP BY YEARWEEK({1}.created_at)""".format(parent_table, sub_table, parent_id, sub_id, project_id)
     
 
     def repoid(self, owner_or_repoid, repo=None):
@@ -332,52 +332,23 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         contributorsSQL = s.sql.text("""
-            SELECT * FROM
-
-               (
-               SELECT   users.id        as "user_id",
-                        users.login     as "login",
-                        users.location  as "location",
-                        com.count       as "commits",
-                        pulls.count     as "pull_requests",
-                        iss.count       as "issues",
-                        comcoms.count   as "commit_comments",
-                        pullscoms.count as "pull_request_comments",
-                        isscoms.count   as "issue_comments",
-                        com.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as "total"
-
-               FROM users
-
-               LEFT JOIN (SELECT committer_id AS id, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid GROUP BY commits.committer_id) AS com
-               ON com.id = users.id
-
-               LEFT JOIN (SELECT pull_request_history.actor_id AS id, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged' GROUP BY pull_request_history.actor_id) AS pulls
-               ON pulls.id = users.id
-
-               LEFT JOIN (SELECT reporter_id AS id, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid GROUP BY issues.reporter_id) AS iss
-               ON iss.id = users.id
-
-               LEFT JOIN (SELECT commit_comments.user_id AS id, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid GROUP BY commit_comments.user_id) AS comcoms
-               ON comcoms.id = users.id
-
-               LEFT JOIN (SELECT pull_request_comments.user_id AS id, COUNT(*) AS count FROM pull_request_comments JOIN pull_requests ON pull_request_comments.pull_request_id = pull_requests.id WHERE pull_requests.base_repo_id = :repoid GROUP BY pull_request_comments.user_id) AS pullscoms
-               ON pullscoms.id = users.id
-
-               LEFT JOIN (SELECT issue_comments.user_id AS id, COUNT(*) AS count FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid GROUP BY issue_comments.user_id) AS isscoms
-               ON isscoms.id = users.id
-
-               GROUP BY users.id
-               ORDER BY com.count DESC
-               ) user_activity
-
-            WHERE commits IS NOT NULL
-            OR    pull_requests IS NOT NULL
-            OR    issues IS NOT NULL
-            OR    commit_comments IS NOT NULL
-            OR    pull_request_comments IS NOT NULL
-            OR    issue_comments IS NOT NULL;
+            SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues, SUM(commit_comments) AS commit_comments, SUM(issue_comments) AS issue_comments,
+                  SUM(a.commits + a.issues + a.commit_comments + a.issue_comments) AS total
+            FROM
+            (
+               (SELECT committer_id AS id, COUNT(*) AS commits, 0 AS issues, 0 AS commit_comments, 0 AS issue_comments FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid GROUP BY commits.committer_id)
+               UNION ALL
+               (SELECT reporter_id AS id, 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments FROM issues WHERE issues.repo_id = :repoid GROUP BY issues.reporter_id)
+               UNION ALL
+               (SELECT commit_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, COUNT(*) AS commit_comments, 0 AS issue_comments FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid GROUP BY commit_comments.user_id)
+               UNION ALL
+               (SELECT issue_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, 0 AS issue_comments, COUNT(*) AS issue_comments FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid GROUP BY issue_comments.user_id)
+            ) a
+            WHERE id IS NOT NULL
+            GROUP BY id
+            ORDER BY total DESC;
         """)
-        return pd.read_sql(contributorsSQL, self.db, index_col=['user_id'], params={"repoid": str(repoid)})
+        return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
 
     def contributions(self, owner, repo=None, userid=None):

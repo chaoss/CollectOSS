@@ -14,3 +14,7 @@ exports.plugins = {
     presets: ['latest']
   }
 };
+
+exports.npm = {
+  aliases: {'vue': 'vue/dist/vue.common.js'}
+}

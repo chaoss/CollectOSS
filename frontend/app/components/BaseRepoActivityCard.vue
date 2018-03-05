@@ -3,6 +3,7 @@
     <h1>Activity</h1>
     <h2>{{ $store.state.baseRepo }}</h2>
     <div class="row">
+
       <div class="col col-6">
         <line-chart source="commits"
                     title="Commits / Week" 
@@ -83,6 +84,21 @@
                     disableRollingAverage=1>
         </line-chart>
       </div>
+
+
+      <div class="col col-12">
+        <bubble-chart source="contributions"
+                      title="Contributior Overview"
+                      size="total"
+                      color-red="issues"
+                      color-green="commit_comments"
+                      color-blue="issue_comments"
+                      color-lightness="commits"
+                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                      cite-text="Community Activty">
+        </bubble-chart>
+      </div>
+
     </div>
     
     <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> <span class="ghtorrent-version"></span> and the <a href="https://developer.github.com/">GitHub API</a></small>
@@ -92,10 +108,12 @@
 <script>
 
 import LineChart from './charts/LineChart'
+import BubbleChart from './charts/BubbleChart'
 
 module.exports = {
   components: {
-    LineChart
+    LineChart,
+    BubbleChart
   }
 };
 

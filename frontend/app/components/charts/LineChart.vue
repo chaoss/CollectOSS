@@ -170,9 +170,6 @@ export default {
       var svgsaver = new SvgSaver();
       var svg = $(this.$refs.chartholder).find("svg")[0]
       svgsaver.asPng(svg, this.__download_file + '.png')
-    },
-    downloadSVG (e) {
-
     }
   }//end methods
 } // end export default {}
