@@ -26,6 +26,7 @@
 # Logs and databases #
 ######################
 *.log
+*.pid
 *.sql
 *.sqlite
 *.cfg

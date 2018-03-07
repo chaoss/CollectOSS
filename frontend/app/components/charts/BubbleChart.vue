@@ -1,7 +1,7 @@
 <template>
   <div ref="holder">
     <div class="bubblechart hidefirst invis">
-      <vega-lite :spec="spec" :data="values"></vega-lite>
+      <vega-interactive :spec="spec" :data="values"></vega-interactive>
       <p> {{ chart }} </p>
     </div>
   </div>
@@ -11,6 +11,96 @@
 <script>
 import { mapState } from 'vuex'
 
+let spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+  "spec": {
+    "hconcat": [{
+      "title": "Code Engagement",
+      "width": 375,
+      "height": 300,
+      "mark": "circle",
+      "selection": {
+        "paintbrush": {
+          "type": "single",
+          "on": "mouseover",
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "commit_comments", 
+          "type": "quantitative",
+        },
+        "y": {
+          "field": "commits", 
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "color": {
+          "condition": {
+            "selection": "paintbrush",
+            "value": "#FF3647"
+          },
+          "value": "grey"
+        },
+        "size": {
+          "field": "total", 
+          "type": "quantitative",
+          "legend": {
+            "title": "all contributions",
+          },
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+      }
+    }, {
+      "title": "Community Engagement",
+      "width": 375,
+      "height": 300,
+      "mark": "circle",
+      "encoding": {
+        "x": {
+          "field": "issue_comments", 
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt",
+            "bandPaddingInner": 3
+          },
+          "axis": {
+            "tickCount": 10
+          }
+        },
+        "y": {
+          "field": "issues", 
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "size": {
+          "field": "total", 
+          "type": "quantitative",
+          "legend": {
+            "title": "all contributions",
+          },
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "color": {
+          "condition": {
+            "selection": "paintbrush",
+            "value": "#FF3647"
+          },
+          "value": "grey"
+        },
+      }
+    }]
+  }
+};
+
 export default {
   props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
   data() {
@@ -18,53 +108,15 @@ export default {
       values: []
     }
   },
+  components: {
+    'vega-interactive': VueVega.mapVegaLiteSpec(spec)
+  },
   computed: {
     repo() {
       return this.$store.state.baseRepo
     },
     spec() {
-      return {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "title": "Contributors",
-        "data": { "values": [] },
-        "width": (this.$el) ? this.$el.offestWidth : 800,
-        "height": 400,
-        "autosize": "fit",
-        "mark": "circle",
-        "encoding": {
-          "x": {
-            "field": "issues", 
-            "type": "nominal",
-          },
-          "y": {
-            "field": "commits", 
-            "type": "quantitative",
-            "scale": {
-              "type": "sqrt"
-            }
-          },
-          "size": {
-            "field": "total", 
-            "type": "quantitative",
-            "legend": {
-              "title": "total of all contributions",
-            },
-            "scale": {
-              "type": "sqrt"
-            }
-          },
-          "color": {
-            "field": "issue_comments",
-            "type": "quantitative",
-            "legend": {
-              "title": "comments on issues",
-            },
-            "scale": {
-              "scheme": "spectral"
-            }
-          }
-        }
-      }
+      return 
     },
     chart() {
       $(this.$el).find('.showme').addClass('invis')

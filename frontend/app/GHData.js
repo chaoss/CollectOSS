@@ -12,6 +12,7 @@ export default function GHData () {
   window.$            = window.jQuery
   window._            = require('lodash')
   window.d3           = require('d3')
+  window.VueVega      = VueVega
   window.SvgSaver     = require('svgsaver')
 
   let GHDataApp = require('./components/GHDataApp')

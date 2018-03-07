@@ -180,6 +180,7 @@ function GHData() {
   window.$ = window.jQuery;
   window._ = require('lodash');
   window.d3 = require('d3');
+  window.VueVega = _vueVega2.default;
   window.SvgSaver = require('svgsaver');
 
   var GHDataApp = require('./components/GHDataApp');
@@ -665,7 +666,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-7655e5a2", __vue__options__)
   } else {
-    hotAPI.reload("data-v-7655e5a2", __vue__options__)
+    hotAPI.rerender("data-v-7655e5a2", __vue__options__)
   }
 })()}
 });
@@ -967,13 +968,103 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/charts/BubbleChart.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _vuex = require('vuex');
+var _vuex = require("vuex");
+
+var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+  "spec": {
+    "hconcat": [{
+      "title": "Code Engagement",
+      "width": 375,
+      "height": 300,
+      "mark": "circle",
+      "selection": {
+        "paintbrush": {
+          "type": "single",
+          "on": "mouseover"
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "commit_comments",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "commits",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "color": {
+          "condition": {
+            "selection": "paintbrush",
+            "value": "#FF3647"
+          },
+          "value": "grey"
+        },
+        "size": {
+          "field": "total",
+          "type": "quantitative",
+          "legend": {
+            "title": "all contributions"
+          },
+          "scale": {
+            "type": "sqrt"
+          }
+        }
+      }
+    }, {
+      "title": "Community Engagement",
+      "width": 375,
+      "height": 300,
+      "mark": "circle",
+      "encoding": {
+        "x": {
+          "field": "issue_comments",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt",
+            "bandPaddingInner": 3
+          },
+          "axis": {
+            "tickCount": 10
+          }
+        },
+        "y": {
+          "field": "issues",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "size": {
+          "field": "total",
+          "type": "quantitative",
+          "legend": {
+            "title": "all contributions"
+          },
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "color": {
+          "condition": {
+            "selection": "paintbrush",
+            "value": "#FF3647"
+          },
+          "value": "grey"
+        }
+      }
+    }]
+  }
+};
 
 exports.default = {
   props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
@@ -983,53 +1074,15 @@ exports.default = {
     };
   },
 
+  components: {
+    'vega-interactive': VueVega.mapVegaLiteSpec(spec)
+  },
   computed: {
     repo: function repo() {
       return this.$store.state.baseRepo;
     },
     spec: function spec() {
-      return {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "title": "Contributors",
-        "data": { "values": [] },
-        "width": this.$el ? this.$el.offestWidth : 800,
-        "height": 400,
-        "autosize": "fit",
-        "mark": "circle",
-        "encoding": {
-          "x": {
-            "field": "issues",
-            "type": "nominal"
-          },
-          "y": {
-            "field": "commits",
-            "type": "quantitative",
-            "scale": {
-              "type": "sqrt"
-            }
-          },
-          "size": {
-            "field": "total",
-            "type": "quantitative",
-            "legend": {
-              "title": "total of all contributions"
-            },
-            "scale": {
-              "type": "sqrt"
-            }
-          },
-          "color": {
-            "field": "issue_comments",
-            "type": "quantitative",
-            "legend": {
-              "title": "comments on issues"
-            },
-            "scale": {
-              "scheme": "spectral"
-            }
-          }
-        }
-      };
+      return;
     },
     chart: function chart() {
       var _this = this;
@@ -1051,7 +1104,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"bubblechart hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"bubblechart hidefirst invis"},[_c('vega-interactive',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
