@@ -666,7 +666,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-7655e5a2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-7655e5a2", __vue__options__)
+    hotAPI.reload("data-v-7655e5a2", __vue__options__)
   }
 })()}
 });
@@ -717,12 +717,17 @@ var _LineChart = require('./charts/LineChart');
 
 var _LineChart2 = _interopRequireDefault(_LineChart);
 
+var _BubbleChart = require('./charts/BubbleChart');
+
+var _BubbleChart2 = _interopRequireDefault(_BubbleChart);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
   props: ['comparedTo'],
   components: {
-    LineChart: _LineChart2.default
+    LineChart: _LineChart2.default,
+    BubbleChart: _BubbleChart2.default
   },
   computed: {
     repo: function repo() {
@@ -734,7 +739,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{class:{ hidden: !this.repo },attrs:{"id":"base-template"}}),_vm._v(" "),_c('h1',[_vm._v("Activity Comparison")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.comparedTo)+" compared to "+_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls Requests / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{class:{ hidden: !this.repo },attrs:{"id":"base-template"}}),_vm._v(" "),_c('h1',[_vm._v("Activity Comparison")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.comparedTo)+" compared to "+_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls Requests / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1","compared-to":_vm.comparedTo}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributions","title":"Contributior Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","compared-to":_vm.comparedTo}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1005,7 +1010,9 @@ var spec = {
         "color": {
           "condition": {
             "selection": "paintbrush",
-            "value": "#FF3647"
+            "field": "repo",
+            "type": "nominal",
+            "scale": { "range": ['#FF3647', '#4736FF'] }
           },
           "value": "grey"
         },
@@ -1025,6 +1032,12 @@ var spec = {
       "width": 375,
       "height": 300,
       "mark": "circle",
+      "selection": {
+        "paintbrush": {
+          "type": "single",
+          "on": "mouseover"
+        }
+      },
       "encoding": {
         "x": {
           "field": "issue_comments",
@@ -1057,7 +1070,9 @@ var spec = {
         "color": {
           "condition": {
             "selection": "paintbrush",
-            "value": "#FF3647"
+            "field": "repo",
+            "type": "nominal",
+            "scale": { "range": ['#FF3647', '#4736FF'] }
           },
           "value": "grey"
         }
@@ -1067,7 +1082,7 @@ var spec = {
 };
 
 exports.default = {
-  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'comparedTo'],
   data: function data() {
     return {
       values: []
@@ -1079,22 +1094,40 @@ exports.default = {
   },
   computed: {
     repo: function repo() {
+      console.log('chart', this.$refs.vega);
       return this.$store.state.baseRepo;
-    },
-    spec: function spec() {
-      return;
     },
     chart: function chart() {
       var _this = this;
 
       $(this.$el).find('.showme').addClass('invis');
       $(this.$el).find('.bubblechart').addClass('loader');
-      console.log('called chart()', this.repo);
+      var shared = {};
       if (this.repo) {
         window.GHDataRepos[this.repo].contributors().then(function (data) {
+          shared.baseData = data.map(function (e) {
+            e.repo = _this.repo.toString();return e;
+          });
+          shared.baseData = data;
+          if (_this.comparedTo) {
+            return window.GHDataRepos[_this.comparedTo].contributors();
+          } else {
+            return new Promise(function (resolve, reject) {
+              resolve();
+            });
+          }
+        }).then(function (compareData) {
+          if (compareData) {
+            compareData = compareData.map(function (e) {
+              e.repo = _this.comparedTo;return e;
+            });
+            _this.values = _.concat(shared.baseData, compareData);
+          } else {
+            _this.values = shared.baseData;
+          }
+          console.log('final chart', _this.$refs.vega);
           $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
           $(_this.$el).find('.bubblechart').removeClass('loader');
-          _this.values = data;
         });
       }
     }
@@ -1104,7 +1137,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"bubblechart hidefirst invis"},[_c('vega-interactive',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"bubblechart hidefirst invis"},[_c('vega-interactive',{ref:"vega",attrs:{"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1335,7 +1368,6 @@ exports.default = {
               var compare = _GHDataStats2.default.rollingAverage(_GHDataStats2.default.zscores(compareData, key), 'value', _this.period);
               var base = _GHDataStats2.default.rollingAverage(_GHDataStats2.default.zscores(config.data, key), 'value', _this.period);
               config.data = [base, compare];
-              console.log(key, compareData, config.data);
               config.legend = [window.GHDataRepos[_this.repo].toString(), window.GHDataRepos[_this.comparedTo].toString()];
               config.colors = config.colors || ['#FF3647', '#999'];
             } else {

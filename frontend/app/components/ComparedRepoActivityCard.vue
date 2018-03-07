@@ -98,6 +98,16 @@
         </line-chart>
       </div>
 
+      <div class="col col-12">
+        <bubble-chart source="contributions"
+                      title="Contributior Overview"
+                      size="total"
+                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                      cite-text="Community Activty"
+                      v-bind:compared-to="comparedTo">
+        </bubble-chart>
+      </div>
+
       </div>
       
       <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> <span class="ghtorrent-version"></span> and the <a href="https://developer.github.com/">GitHub API</a></small>
@@ -108,11 +118,13 @@
 <script>
 
 import LineChart from './charts/LineChart'
+import BubbleChart from './charts/BubbleChart'
 
 module.exports = {
   props: ['comparedTo'],
   components: {
-    LineChart
+    LineChart,
+    BubbleChart
   },
   computed: {
     repo () {

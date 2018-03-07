@@ -1,7 +1,7 @@
 <template>
   <div ref="holder">
     <div class="bubblechart hidefirst invis">
-      <vega-interactive :spec="spec" :data="values"></vega-interactive>
+      <vega-interactive ref="vega" :data="values"></vega-interactive>
       <p> {{ chart }} </p>
     </div>
   </div>
@@ -40,7 +40,9 @@ let spec = {
         "color": {
           "condition": {
             "selection": "paintbrush",
-            "value": "#FF3647"
+            "field": "repo",
+            "type": "nominal",
+            "scale": { "range": ['#FF3647', '#4736FF'] }
           },
           "value": "grey"
         },
@@ -60,6 +62,12 @@ let spec = {
       "width": 375,
       "height": 300,
       "mark": "circle",
+      "selection": {
+        "paintbrush": {
+          "type": "single",
+          "on": "mouseover",
+        }
+      },
       "encoding": {
         "x": {
           "field": "issue_comments", 
@@ -92,7 +100,9 @@ let spec = {
         "color": {
           "condition": {
             "selection": "paintbrush",
-            "value": "#FF3647"
+            "field": "repo",
+            "type": "nominal",
+            "scale": { "range": ['#FF3647', '#4736FF'] }
           },
           "value": "grey"
         },
@@ -102,7 +112,7 @@ let spec = {
 };
 
 export default {
-  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'comparedTo'],
   data() {
     return {
       values: []
@@ -113,20 +123,32 @@ export default {
   },
   computed: {
     repo() {
+      console.log('chart', this.$refs.vega)
       return this.$store.state.baseRepo
-    },
-    spec() {
-      return 
     },
     chart() {
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.bubblechart').addClass('loader')
-      console.log('called chart()', this.repo)
+      let shared = {};
       if (this.repo) {
-        window.GHDataRepos[this.repo].contributors().then((data) => {
+        window.GHDataRepos[this.repo].contributors().then((data) => { 
+          shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e }) 
+          shared.baseData = data;   
+          if (this.comparedTo) {
+            return window.GHDataRepos[this.comparedTo].contributors();
+          } else {
+            return new Promise((resolve, reject) => { resolve() });
+          }
+        }).then((compareData) => {
+          if (compareData) {
+            compareData = compareData.map((e) => { e.repo = this.comparedTo; return e })
+            this.values = _.concat(shared.baseData, compareData)
+          } else {
+            this.values = shared.baseData;
+          }
+          console.log('final chart', this.$refs.vega)
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.bubblechart').removeClass('loader')
-          this.values = data;
         })
       }
     }

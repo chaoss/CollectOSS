@@ -101,7 +101,6 @@ export default {
               let compare = GHDataStats.rollingAverage(GHDataStats.zscores(compareData, key), 'value', this.period)
               let base = GHDataStats.rollingAverage(GHDataStats.zscores(config.data, key), 'value', this.period)
               config.data = [base, compare]
-              console.log(key, compareData, config.data)
               config.legend = [window.GHDataRepos[this.repo].toString(), window.GHDataRepos[this.comparedTo].toString()]
               config.colors = config.colors || ['#FF3647', '#999']
             } else {
