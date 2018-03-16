@@ -93,13 +93,14 @@ export default class GHDataAPI {
     repo.stars               = Timeseries('stargazers')
     repo.tags                = Timeseries('tags')
     repo.downloads           = Timeseries('downloads')
-    repo.totalCommitters    = Timeseries('total_committers')
+    repo.totalCommitters     = Timeseries('total_committers')
     repo.issueComments       = Timeseries('issue/comments')
     repo.commitComments      = Timeseries('commits/comments')
     repo.pullReqComments     = Timeseries('pulls/comments')
     repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate')
     repo.issuesClosed        = Timeseries('issues/closed')
     repo.issuesResponseTime  = Timeseries('issues/response_time')
+    repo.issueActivity       = Timeseries('issues/activity')
 
 
     repo.contributors        = Endpoint('contributors')
@@ -112,6 +113,9 @@ export default class GHDataAPI {
     repo.dependencies        = Endpoint('dependencies')
     repo.dependencyStats     = Endpoint('dependency_stats')
     repo.watchers            = Endpoint('watchers')
+
+    //testing
+    
 
     return repo
 

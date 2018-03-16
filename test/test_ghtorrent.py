@@ -35,6 +35,9 @@ def test_issues(ghtorrent):
 
 def test_issues_with_close(ghtorrent):
     assert ghtorrent.issues_with_close(ghtorrent.repoid('TrinityCore', 'TrinityCore')).isin(["2012-01-08"]).any
+#TODO: frontend/node_modules/npm/node_modules/node-gyp/gyp/pylib/gyp/__init__.py syntax error; "make test does not work"
+def test_issue_activity(ghtorrent):
+    assert ghtorrent.issue_activity(ghtorrent.repoid('bitcoin', 'bitcoin')).isin(["2010-12-20T00:00:00.000Z"]).any
 
 def test_contributors(ghtorrent):
     assert ghtorrent.contributors(ghtorrent.repoid('TTimo', 'doom3.gpl')).isin(["sergiocampama"]).any

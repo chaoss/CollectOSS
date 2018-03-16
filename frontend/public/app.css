@@ -2702,6 +2702,11 @@ cite.metric a {
 .bubblechart * {
   overflow: visible !important;
 }
+.stackedbarchart * {
+  overflow: visible !important;
+  width: 100%;
+  margin-bottom: 30px;
+}
 .bubblechart svg {
   width: 100%;
 }
