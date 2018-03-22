@@ -29,6 +29,8 @@ export default function GHData () {
       startDate: new Date("1 January 2005"),
       endDate: new Date(),  
       compare: "each",
+      showBelowAverage: false,
+      rawWeekly: false,
       byDate: false,
     },
     mutations: {
@@ -62,12 +64,20 @@ export default function GHData () {
         if (payload.endDate) {
           state.endDate = new Date(payload.endDate)
         }
-        if (payload.trailingAverage) {
-          state.trailingAverage = parseInt(payload.trailingAverage, 10)
-        }
       },
       setCompare (state, payload) {
         state.compare = payload.compare
+      },
+      setVizOptions (state, payload) {
+        if (payload.trailingAverage) {
+          state.trailingAverage = parseInt(payload.trailingAverage, 10)
+        }
+        if (typeof payload.rawWeekly !== 'undefined') {
+          state.rawWeekly = payload.rawWeekly
+        }
+        if (typeof payload.showBelowAverage !== 'undefined') {
+          state.showBelowAverage = payload.showBelowAverage
+        }
       },
       reset (state) {
         state = {

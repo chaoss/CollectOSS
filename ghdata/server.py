@@ -372,6 +372,29 @@ addTimeseries(app, ghtorrent.stargazers, 'stargazers')
 addMetric(app, ghtorrent.watchers, 'watchers')
 
 """
+@api {get} /:owner/:repo/timeseries/community_engagement
+@apiName Community Engagement
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+@apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-01-01T00:00:00.000Z",
+                            "watchers": 133
+                        },
+                        {
+                            "date": "2015-01-08T00:00:00.000Z",
+                            "watchers": 54
+                        }
+                    ]
+"""
+addTimeseries(app, ghtorrent.community_engagement, 'community_engagement')
+
+"""
 @api {get} /:owner/:repo/timeseries/tags Tags release timeseries
 @apiDescription Timeseries of tags
 @apiName Tags

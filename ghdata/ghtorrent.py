@@ -543,6 +543,77 @@ class GHTorrent(object):
             """)
         return pd.read_sql(watchersSQL, self.db, params={"repoid": str(repoid)})
 
+    def community_engagement(self, owner, repo):
+        repoid = self.repoid(owner, repo)
+        issuesFullSQL = s.sql.text("""
+        SELECT DATE(date) as "date", 
+               SUM(issues_opened) AS "issues_opened",
+               SUM(issues_closed) AS "issues_closed",
+               SUM(pull_requests_opened) AS "pull_requests_opened",
+               SUM(pull_requests_merged) AS "pull_requests_merged",
+               SUM(pull_requests_closed) AS "pull_requests_closed"
+
+        FROM (
+
+            SELECT issue_events.created_at as "date", 
+                   issue_events.action = "closed" AND issues.pull_request = 0  AS issues_closed,
+                   0 AS pull_requests_closed,
+                   0 AS pull_requests_merged,
+                   issue_events.action = "reopened" AND issues.pull_request = 0 AS issues_opened,
+                   0 AS pull_requests_opened
+            FROM issues
+            LEFT JOIN issue_events
+            ON issue_events.issue_id = issues.id
+            LEFT JOIN pull_request_history
+            ON pull_request_history.pull_request_id = issues.pull_request_id
+            WHERE issues.repo_id = :repoid
+
+            UNION ALL
+
+            SELECT pull_request_history.created_at as "date", 
+                   0 AS issues_closed,
+                   pull_request_history.action = "closed" AND issues.pull_request = 1  AS pull_requests_closed,
+                   pull_request_history.action = "merged" AND issues.pull_request = 1   AS pull_requests_merged,
+                   0 AS issues_opened,
+                   pull_request_history.action = "reopened" AND issues.pull_request = 1 AS pull_requests_opened
+            FROM issues
+            LEFT JOIN pull_request_history
+            ON pull_request_history.pull_request_id = issues.pull_request_id
+            WHERE issues.repo_id = :repoid
+
+            UNION ALL
+
+            SELECT issues.created_at as "date",
+                   0 AS issues_closed,
+                   0 AS pull_requests_closed,
+                   0 AS pull_requests_merged,
+                   issues.pull_request = 0 AS issues_opened,
+                   issues.pull_request AS pull_requests_opened
+                   
+            FROM issues
+            WHERE issues.repo_id = :repoid
+
+        ) summary
+
+        GROUP BY YEARWEEK(date)
+        """)
+        counts = pd.read_sql(issuesFullSQL, self.db, params={"repoid": str(repoid)})
+        # counts.drop(0, inplace=True)
+        counts['issues_opened_total'] = counts.issues_opened.cumsum()
+        counts['issues_closed_total'] = counts.issues_closed.cumsum()
+        counts['issues_closed_rate_this_window'] = counts.issues_closed / counts.issues_opened
+        counts['issues_closed_rate_total'] = counts.issues_closed_total / counts.issues_opened_total
+        counts['issues_delta'] = counts.issues_opened - counts.issues_closed
+        counts['issues_open'] = counts['issues_delta'].cumsum()
+        counts['pull_requests_opened_total'] = counts.pull_requests_opened.cumsum()
+        counts['pull_requests_closed_total'] = counts.pull_requests_closed.cumsum()
+        counts['pull_requests_closed_rate_this_window'] = counts.pull_requests_closed / counts.pull_requests_opened
+        counts['pull_requests_closed_rate_total'] = counts.pull_requests_closed_total / counts.pull_requests_opened_total
+        counts['pull_requests_delta'] = counts.pull_requests_opened - counts.pull_requests_closed
+        counts['pull_requests_open'] = counts['pull_requests_delta'].cumsum()
+        return counts
+
+
     def ghtorrent_range(self):
         ghtorrentRangeSQL = s.sql.text("""
         SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date" 

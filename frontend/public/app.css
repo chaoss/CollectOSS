@@ -2651,6 +2651,12 @@ section.unmaterialized {
     top: 25px;
   }
 }
+.warn {
+  color: #f00;
+}
+.warn:before {
+  content: ' ⚠ ';
+}
 .below-chart {
   position: relative;
   z-index: 2;

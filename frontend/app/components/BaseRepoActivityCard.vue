@@ -90,10 +90,6 @@
         <bubble-chart source="contributions"
                       title="Contributior Overview"
                       size="total"
-                      color-red="issues"
-                      color-green="commit_comments"
-                      color-blue="issue_comments"
-                      color-lightness="commits"
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                       cite-text="Community Activty">
         </bubble-chart>

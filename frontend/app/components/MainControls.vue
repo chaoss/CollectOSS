@@ -5,10 +5,10 @@
       
 
       <div class="row gutters">
-        <div class="col col-9">
-          <h4>Base Repository</h4>
+        <div class="col col-7">
+          <h4>Configuration</h4>
             <div class="row gutters">
-              <div class="col col-4">
+              <div class="col col-6">
                 <div class="form-item">
                   <label>Start Date
                     <div class="row gutters">
@@ -32,7 +32,7 @@
                   </label>
                 </div>
             </div>
-            <div class="col col-4">
+            <div class="col col-6">
               <div class="form-item">
                 <label>End Date
                   <div class="row gutters">
@@ -56,25 +56,33 @@
                 </label>
               </div>
             </div>
-            <div class="col col-4">
-              <div class="form-item">
-                <label>Trailing Average
-                  <div class="append">
-                    <input type="number" min="2" id="averagetimespan" value="180" @change="onTrailingAverageChange"><span>days</span>
-                  </div>
-                </label>
-              </div>
-            </div>
           </div>
+          <br>
+          <h5>Comparison Options</h5>
+            <label>Type
+            <div class="form-item form-checkboxes">
+              <label class="checkbox"><input name="comparebaseline" value="each" checked type="radio" @change="onCompareChange">Z-score</label><br>
+              <label class="checkbox"><input name="comparebaseline" value="percentage" type="radio" @change="onCompareChange">Baseline is compared</label>
+            </div>
+            </label>
       </div>
-      <div class="col col-3">
-        <h4>Comparisons</h4>
-        <label>Type
+      <div class="col col-5">
+        <h4>Rendering</h4>
+        <label>Line Charts
+        <div class="append">
+          <input type="number" min="2" id="averagetimespan" value="180" @change="onTrailingAverageChange"><span>day average</span>
+        </div>
         <div class="form-item form-checkboxes">
-          <label class="checkbox"><input name="comparebaseline" value="each" checked type="radio" @change="onCompareChange">Z-score</label><br>
-          <label class="checkbox"><input name="comparebaseline" value="percentage" type="radio" @change="onCompareChange">Baseline is compared</label>
+          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Show raw weekly values<sup class="warn"></sup></label><br>
         </div>
         </label>
+        <br>
+        <label>Bubble Charts
+          <div class="form-item form-checkboxes">
+            <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
+          </div>
+        </label>
+        <small class="warn"> - These options affect performance</small>
       </div>
 
       </div>
@@ -106,13 +114,23 @@
         }
         this.endDateTimeout = setTimeout(() => {
           this.$store.commit('setDates', {
-          endDate: date
+            endDate: date
           })
         }, 500);
       },
       onTrailingAverageChange (e) {
-        this.$store.commit('setDates', {
+        this.$store.commit('setVizOptions', {
           trailingAverage: e.target.value
+        })
+      },
+      onRawWeeklyChange (e) {
+        this.$store.commit('setVizOptions', {
+          rawWeekly: e.target.checked
+        })
+      },
+      onShowBelowAverageChange (e) {
+        this.$store.commit('setVizOptions', {
+          showBelowAverage: e.target.checked
         })
       },
       onCompareChange (e) {
