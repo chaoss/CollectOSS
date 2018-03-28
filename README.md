@@ -126,7 +126,7 @@ The screen sessions can be killed with `make dev-stop`
 
 License and Copyright
 ---------------------
-Copyright © 2017 University of Nebraska at Omaha and the University of Missouri
+Copyright © 2018 University of Nebraska at Omaha, University of Missouri and CHAOSS Project at the Linux Foundation
 
 GHData is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the file [LICENSE](LICENSE) for more details.
 
