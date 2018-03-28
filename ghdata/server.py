@@ -235,6 +235,10 @@ addTimeseries(app, ghtorrent.forks, 'forks')
 """
 addTimeseries(app, ghtorrent.issues, 'issues')
 
+#TODO: documentation
+addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
+
+#TODO: documentation
 addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 
 """
