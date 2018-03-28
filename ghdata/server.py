@@ -18,6 +18,11 @@ import json
 GHDATA_API_VERSION = 'api/unstable'
 # Location to load configuration from
 CONFIG_BAD = False
+'''
+make a try and accept condition
+if its open the GH_DATA_ONFIG_FILE and then its open in read mode
+and if the file does't open the it print Couldn\'t open config file, attempting to create.
+'''
 
 try:
     GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'r+')
