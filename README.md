@@ -13,6 +13,8 @@ GHData is under heavy development; expect frequent backwards-incompatible change
 
 Roadmap
 -------
+This project is a software prototype implementation of CHAOSS Metrics. The process for defining new metrics is located here: https://github.com/chaoss/metrics 
+
 Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHealth/ghdata/wiki/Release-Schedule).
 
 
