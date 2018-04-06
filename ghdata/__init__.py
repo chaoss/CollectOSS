@@ -1,4 +1,5 @@
 from .ghtorrent import GHTorrent
+from .ghtorrentplus import GHTorrentPlus
 from .publicwww import PublicWWW
 from .githubapi import GitHubAPI
 from .librariesio import LibrariesIO

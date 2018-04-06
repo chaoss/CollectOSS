@@ -130,6 +130,16 @@ dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
 )
 ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
 
+
+dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
+    read_config('GHTorrentPlus', 'user', 'GHDATA_GHTORRENT_PLUS_USER', 'root'),
+    read_config('GHTorrentPlus', 'pass', 'GHDATA_GHTORRENT_PLUS_PASS', 'password'),
+    read_config('GHTorrentPlus', 'host', 'GHDATA_GHTORRENT_PLUS_HOST', '127.0.0.1'),
+    read_config('GHTorrentPlus', 'port', 'GHDATA_GHTORRENT_PLUS_PORT', '3306'),
+    read_config('GHTorrentPlus', 'name', 'GHDATA_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
+)
+ghtorrentplus = ghdata.GHTorrentPlus(dbstr=dbstr, ghtorrent=ghtorrent)
+
 """
 @api {get} / API Status
 @apiName Status
@@ -245,6 +255,9 @@ addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
 
 #TODO: documentation
 addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
+
+#TODO: documentation
+addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
 
 """
 @api {get} /:owner/:repo/timeseries/issue_comments count of new comments weekly
