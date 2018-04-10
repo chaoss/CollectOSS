@@ -38,6 +38,14 @@ export default class GHDataStats {
     return ary.reduce((a, e) => {return a + e}, 0) / (ary.length);
   }
 
+  static aboveAverage(data, key) {
+    let flat = data.map((e) => {return e[key]})
+    let mean = GHDataStats.averageArray(flat)
+    return data.filter((e) => {
+      return e[key] > mean
+    })
+  }
+
   static standardDeviation(ary, key, mean) {
     let flat = ary.map((e) => {return e[key]})
     mean = mean || GHDataStats.averageArray(flat)

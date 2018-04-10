@@ -45,13 +45,11 @@ export default {
     chart() {
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.stackedbarchart').addClass('loader')
-      console.log('called chart()', this.repo)
       if (this.repo) {
         window.GHDataRepos[this.repo].issueActivity().then((data) => {
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.stackedbarchart').removeClass('loader')
           this.values = data
-          console.log(this.values)
         })
       }
     }

@@ -495,6 +495,17 @@ var GHDataStats = function () {
       }, 0) / ary.length;
     }
   }, {
+    key: 'aboveAverage',
+    value: function aboveAverage(data, key) {
+      var flat = data.map(function (e) {
+        return e[key];
+      });
+      var mean = GHDataStats.averageArray(flat);
+      return data.filter(function (e) {
+        return e[key] > mean;
+      });
+    }
+  }, {
     key: 'standardDeviation',
     value: function standardDeviation(ary, key, mean) {
       var flat = ary.map(function (e) {
@@ -1002,13 +1013,19 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/charts/BubbleChart.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _vuex = require("vuex");
+var _vuex = require('vuex');
+
+var _GHDataStats = require('GHDataStats');
+
+var _GHDataStats2 = _interopRequireDefault(_GHDataStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var spec = {
   "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -1123,12 +1140,16 @@ exports.default = {
   },
   computed: {
     repo: function repo() {
-      console.log('chart', this.$refs.vega);
       return this.$store.state.baseRepo;
+    },
+    showBelowAverage: function showBelowAverage() {
+      return this.$store.state.showBelowAverage;
     },
     chart: function chart() {
       var _this = this;
 
+      var removeBelowAverageContributors = !this.showBelowAverage;
+      console.log(removeBelowAverageContributors);
       $(this.$el).find('.showme').addClass('invis');
       $(this.$el).find('.bubblechart').addClass('loader');
       var shared = {};
@@ -1137,7 +1158,11 @@ exports.default = {
           shared.baseData = data.map(function (e) {
             e.repo = _this.repo.toString();return e;
           });
-          shared.baseData = data;
+          console.log('rawr-before', shared.baseData);
+          if (removeBelowAverageContributors) {
+            shared.baseData = _GHDataStats2.default.aboveAverage(shared.baseData, 'total');
+            console.log('rawr', shared.baseData);
+          }
           if (_this.comparedTo) {
             return window.GHDataRepos[_this.comparedTo].contributors();
           } else {
@@ -1150,11 +1175,14 @@ exports.default = {
             compareData = compareData.map(function (e) {
               e.repo = _this.comparedTo;return e;
             });
+            if (removeBelowAverageContributors) {
+              compareData = _GHDataStats2.default.aboveAverage(compareData, 'total');
+              console.log('rawr', compareData);
+            }
             _this.values = _.concat(shared.baseData, compareData);
           } else {
             _this.values = shared.baseData;
           }
-          console.log('final chart', _this.$refs.vega);
           $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
           $(_this.$el).find('.bubblechart').removeClass('loader');
         });
@@ -1210,17 +1238,31 @@ exports.default = {
       var _this = this;
 
       if (this.repo) {
+
+        this.$refs['dependents'].innerHTML = 'Loading...';
         window.GHDataRepos[this.repo].dependents().then(function (dependents) {
+          if (!dependents || !dependents.length) {
+            _this.$refs['dependents'].innerHTML = 'No dependents found.';
+          }
           _this.$refs['dependents'].innerHTML = '';
           for (var i = 0; i < dependents.length && i < 10; i++) {
             _this.$refs['dependents'].innerHTML += dependents[i].name + '<br>';
           }
+        }, function () {
+          _this.$refs['dependents'].innerHTML = 'No data.';
         });
+
+        this.$refs['dependencies'].innerHTML = '';
         window.GHDataRepos[this.repo].dependencies().then(function (dependencies) {
+          if (!dependencies || !dependencies.length) {
+            _this.$refs['dependencies'].innerHTML = 'No dependencies found.';
+          }
           _this.$refs['dependencies'].innerHTML = '';
           for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
-            _this.$refs['dependents'].innerHTML += dependencies.dependencies[i].name + '<br>';
+            _this.$refs['dependencies'].innerHTML += dependencies.dependencies[i].name + '<br>';
           }
+        }, function () {
+          _this.$refs['dependencies'].innerHTML = 'No data.';
         });
       }
     }
@@ -1230,7 +1272,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h3',[_vm._v("Top Dependents")]),_vm._v(" "),_c('div',{ref:"dependents",staticClass:"deps"},[_vm._v("\n        Loading...\n      ")])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('h3',[_vm._v("Top Dependencies")]),_vm._v(" "),_c('div',{ref:"dependencies",staticClass:"deps",domProps:{"innerHTML":_vm._s(_vm.dependencies)}},[_vm._v("\n        Loading...\n      ")])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h3',[_vm._v("Top Dependents")]),_vm._v(" "),_c('div',{ref:"dependents",staticClass:"deps"},[_vm._v("\n        Loading...\n      ")])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('h3',[_vm._v("Top Dependencies")]),_vm._v(" "),_c('div',{ref:"dependencies",staticClass:"deps"},[_vm._v("\n        Loading...\n      ")])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1335,6 +1377,9 @@ exports.default = {
     compare: function compare() {
       return this.$store.state.compare;
     },
+    rawWeekly: function rawWeekly() {
+      return this.$store.state.rawWeekly;
+    },
     chart: function chart() {
       var _this = this;
 
@@ -1350,6 +1395,7 @@ exports.default = {
       config.compare = this.compare;
       config.byDate = true;
       config.time_series = true;
+      config.area = this.rawWeekly;
 
 
       this.__download_data = {};
@@ -1414,12 +1460,16 @@ exports.default = {
             if (!_this.disableRollingAverage) {
               config.legend = config.legend || [config.title.toLowerCase(), _this.period + ' day average'];
               var rolling = _GHDataStats2.default.rollingAverage(config.data, keys[0], _this.period);
-              config.data = _GHDataStats2.default.combine(config.data, rolling);
-              config.colors = config.colors || ['#CCC', '#FF3647'];
+              if (_this.rawWeekly) {
+                config.data = _GHDataStats2.default.combine(rolling, config.data);
+              } else {
+                config.data = rolling;
+              }
+              config.colors = config.colors || ['#FF3647', '#CCC'];
               config.y_accessor = 'value';
             } else {
               config.legend = config.legend || [config.title.toLowerCase()];
-              config.colors = config.colors || ['#CCC', '#FF3647'];
+              config.colors = config.colors || ['#FF3647', '#CCC'];
               config.y_accessor = 'value';
             }
             config.data = _GHDataStats2.default.convertKey(config.data, keys[0]);
@@ -1530,13 +1580,11 @@ exports.default = {
 
       $(this.$el).find('.showme').addClass('invis');
       $(this.$el).find('.stackedbarchart').addClass('loader');
-      console.log('called chart()', this.repo);
       if (this.repo) {
         window.GHDataRepos[this.repo].issueActivity().then(function (data) {
           $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
           $(_this.$el).find('.stackedbarchart').removeClass('loader');
           _this.values = data;
-          console.log(_this.values);
         });
       }
     }
