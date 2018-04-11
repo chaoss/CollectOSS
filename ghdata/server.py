@@ -250,13 +250,64 @@ addTimeseries(app, ghtorrent.forks, 'forks')
 """
 addTimeseries(app, ghtorrent.issues, 'issues')
 
-#TODO: documentation
+"""
+@api {get} /:owner/:repo/timeseries/issues/activity
+@apiName Issues
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                          "date": "2010-12-23T00:00:00.000Z",
+                          "count": 0.0,
+                          "action": "closed"
+                        },
+                        {
+                          "date": "2010-12-23T00:00:00.000Z",
+                          "count": 2.0,
+                          "action": "opened"
+                        },
+                        {
+                          "date": "2010-12-23T00:00:00.000Z",
+                          "count": 8.0,
+                          "action": "reopened"
+                        },
+                        {
+                          "date": "2010-12-23T00:00:00.000Z",
+                          "count": 12.0,
+                          "action": "open"
+                        }
+                    ]
+"""
 addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
 
-#TODO: documentation
+
+"""
+@api {get} /:owner/:repo/timeseries/issues/closed
+@apiName Issues
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                [
+                    {
+                      "date": "2011-03-19T00:00:00.000Z",
+                      "issues_closed": 3
+                    },
+                    {
+                      "date": "2011-03-20T00:00:00.000Z",
+                      "issues_closed": 0
+                    }
+                ]
+"""
 addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 
-#TODO: documentation
+#TODO documentation
 addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
 
 """
@@ -275,7 +326,7 @@ addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
                         {   "date":"2009-07-12T00:00:00.000Z",
                             "total_unique_comments":2.0
                         },
-
+                    ]
 """
 addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
 
@@ -391,6 +442,21 @@ addTimeseries(app, ghtorrent.pull_acceptance_rate, 'pulls/acceptance_rate')
 """
 addTimeseries(app, ghtorrent.stargazers, 'stargazers')
 
+"""
+@api {get} /:owner/:repo/watchers
+@apiName Community Engagement
+@apiGroup Users
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                      {
+                        "watchers": 40349
+                      }
+                    ]
+"""
 addMetric(app, ghtorrent.watchers, 'watchers')
 
 """
@@ -400,18 +466,49 @@ addMetric(app, ghtorrent.watchers, 'watchers')
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
-@apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
 
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-01-01T00:00:00.000Z",
-                            "watchers": 133
-                        },
+                          "date": "2009-04-01T00:00:00.000Z",
+                          "issues_opened": 1.0,
+                          "issues_closed": 0.0,
+                          "pull_requests_opened": 0.0,
+                          "pull_requests_merged": 0.0,
+                          "pull_requests_closed": 0.0,
+                          "issues_opened_total": 2.0,
+                          "issues_closed_total": 0.0,
+                          "issues_closed_rate_this_window": 0.0,
+                          "issues_closed_rate_total": 0.0,
+                          "issues_delta": 1.0,
+                          "issues_open": 2.0,
+                          "pull_requests_opened_total": 0.0,
+                          "pull_requests_closed_total": 0.0,
+                          "pull_requests_closed_rate_this_window": null,
+                          "pull_requests_closed_rate_total": null,
+                          "pull_requests_delta": 0.0,
+                          "pull_requests_open": 0.0
+                        },                       
                         {
-                            "date": "2015-01-08T00:00:00.000Z",
-                            "watchers": 54
-                        }
+                          "date": "2009-04-16T00:00:00.000Z",
+                          "issues_opened": 2.0,
+                          "issues_closed": 1.0,
+                          "pull_requests_opened": 1.0,
+                          "pull_requests_merged": 1.0,
+                          "pull_requests_closed": 1.0,
+                          "issues_opened_total": 3.0,
+                          "issues_closed_total": 5.0,
+                          "issues_closed_rate_this_window": 4.0,
+                          "issues_closed_rate_total": 6.0,
+                          "issues_delta": 1.0,
+                          "issues_open": 2.0,
+                          "pull_requests_opened_total": 3.0,
+                          "pull_requests_closed_total": 5.0,
+                          "pull_requests_closed_rate_this_window": null,
+                          "pull_requests_closed_rate_total": null,
+                          "pull_requests_delta": 2.0,
+                          "pull_requests_open": 1.0
+                        }                       
                     ]
 """
 addTimeseries(app, ghtorrent.community_engagement, 'community_engagement')
@@ -801,8 +898,8 @@ def ghtorrent_range():
 @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "min_date": "2009-02-16T00:00:00.000Z",
-                            "max_date": "2017-02-16T00:00:00.000Z"
+                            "best": "5",
+                            "worst": "1"
                         }
                     ]
 """
@@ -816,22 +913,14 @@ addMetric(app, github.bus_factor, 'bus_factor')
 #######################
 
 """
-@api {get} /:owner/:repo/bus_factor Bus Factor
-@apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
-@apiName GitHub
-@apiGroup Users
+@api {post} /batch Bus Factor
+@apiDescription Returns results of batch requests
+@apiName Batch
+@apiGroup Batch
 
-@apiParam {String} owner Username of the owner of the GitHub repository
-@apiParam {String} repo Name of the GitHub repository
-
-@apiSuccessExample {json} Success-Response:
-                    [
-                        {
-                            "min_date": "2009-02-16T00:00:00.000Z",
-                            "max_date": "2017-02-16T00:00:00.000Z"
-                        }
-                    ]
+POST JSON of api requests
 """
+#TODO: documentation
 @app.route('/{}/batch'.format(GHDATA_API_VERSION), methods=['GET', 'POST'])
 def batch():
     """
