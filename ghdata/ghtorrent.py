@@ -256,6 +256,40 @@ class GHTorrent(object):
         """) 
         return pd.read_sql(issueResponseTimeSQL, self.db, params={"repoid": str(repoid)})
 
+    def issue_activity(self, owner, repo=None):
+        repoid = self.repoid(owner, repo)
+        issueActivity = s.sql.text("""
+            SELECT Date(issues.created_at) as 'date', COUNT(issues.id) as 'issues_opened', SUM(CASE WHEN issue_events.action = 'closed' THEN 1 ELSE 0 END) as 'issues_closed', SUM(CASE WHEN issue_events.action = 'reopened' THEN 1 ELSE 0 END) as 'issues_reopened'
+                FROM issues
+                JOIN issue_events ON issues.id = issue_events.issue_id
+                WHERE issues.repo_id = :repoid
+                GROUP BY YEARWEEK(issues.created_at)
+            """) 
+        df = pd.read_sql(issueActivity, self.db, params={"repoid": str(repoid)})
+        df = df.assign(issues_open = 0)
+        globalIssuesOpened = 0
+        df["issues_open"] = df["issues_opened"] - df["issues_closed"] + df["issues_reopened"] 
+        dates = []
+        issueActivityCount = []
+        issuesAction = []
+        for index, row in df.iterrows():
+            for x in range(0, 4):
+                dates = np.append(dates, row["date"])
+            issueActivityCount = np.append(issueActivityCount, row["issues_closed"])
+            issuesAction = np.append(issuesAction, "closed")
+            issueActivityCount = np.append(issueActivityCount, row["issues_opened"])
+            issuesAction = np.append(issuesAction, "opened")
+            issueActivityCount = np.append(issueActivityCount, row["issues_reopened"])
+            issuesAction = np.append(issuesAction, "reopened")
+            issueActivityCount = np.append(issueActivityCount, row["issues_open"])
+            issuesAction = np.append(issuesAction, "open")
+
+        df1 = pd.DataFrame(data=dates, columns=["date"])
+        df2 = pd.DataFrame(data=issueActivityCount, columns=["count"])
+        df3 = pd.DataFrame(data=issuesAction, columns=["action"])
+        df4 = df1.join(df2).join(df3)
+        return df4
+
     #Pull request metrics
     def pulls(self, owner, repo=None):
         """
@@ -268,9 +302,7 @@ class GHTorrent(object):
         repoid = self.repoid(owner, repo)
         pullsSQL = s.sql.text("""
             SELECT date(pull_request_history.created_at) AS "date",
-            (COUNT(pull_requests.id)) AS "pull_requests",
-            (SELECT COUNT(*) FROM pull_request_comments
-            WHERE pull_request_comments.pull_request_id = pull_request_history.pull_request_id) AS "comments"
+            COUNT(pull_requests.id) AS "pull_requests"
             FROM pull_request_history
             INNER JOIN pull_requests
             ON pull_request_history.pull_request_id = pull_requests.id

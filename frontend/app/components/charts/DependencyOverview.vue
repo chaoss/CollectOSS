@@ -9,7 +9,7 @@
       </div>
       <div class="col col-6">
         <h3>Top Dependencies</h3>
-        <div class="deps" ref="dependencies" v-html="dependencies">
+        <div class="deps" ref="dependencies">
           Loading...
         </div>
       </div>
@@ -31,18 +31,33 @@
       },
       dependencies() {
         if (this.repo) {
+
+          this.$refs['dependents'].innerHTML = 'Loading...'
           window.GHDataRepos[this.repo].dependents().then((dependents) => {
+            if (!dependents || !dependents.length) {
+              this.$refs['dependents'].innerHTML = 'No dependents found.'
+            } 
             this.$refs['dependents'].innerHTML = ''
             for (var i = 0; i < dependents.length && i < 10; i++) {
               this.$refs['dependents'].innerHTML += dependents[i].name + '<br>'
             }
+          }, () => {
+            this.$refs['dependents'].innerHTML = 'No data.'
           })
+
+          this.$refs['dependencies'].innerHTML = ''
           window.GHDataRepos[this.repo].dependencies().then((dependencies) => {
+            if (!dependencies || !dependencies.length) {
+              this.$refs['dependencies'].innerHTML = 'No dependencies found.'
+            } 
             this.$refs['dependencies'].innerHTML = ''
             for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
-              this.$refs['dependents'].innerHTML += dependencies.dependencies[i].name + '<br>'
+              this.$refs['dependencies'].innerHTML += dependencies.dependencies[i].name + '<br>'
             }
+          }, () => {
+            this.$refs['dependencies'].innerHTML = 'No data.'
           })
+
         }
       }
     }

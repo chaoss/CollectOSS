@@ -61,14 +61,6 @@
       </div>
 
       <div class="col col-6">
-        <line-chart source="pulls" 
-                    title="Pulls Requests / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors">
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
         <line-chart source="issuesClosed" 
                     title="Issues Closed / Week" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
@@ -76,7 +68,7 @@
         </line-chart>
       </div>
 
-      <div class="col col-6">
+      <div class="col col-12">
         <line-chart source="totalCommitters" 
                     title="Total Committers" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
@@ -85,7 +77,6 @@
         </line-chart>
       </div>
 
-
       <div class="col col-12">
         <bubble-chart source="contributions"
                       title="Contributior Overview"
@@ -93,6 +84,15 @@
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                       cite-text="Community Activty">
         </bubble-chart>
+      </div>
+ 
+      <div class="col col-12">
+        <stacked-bar-chart source="issueActivity" 
+                    title="Stacked Bar Chart" 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                    cite-text="Contributors"
+                    disableRollingAverage=1>
+        </stacked-bar-chart>
       </div>
 
     </div>
@@ -105,11 +105,13 @@
 
 import LineChart from './charts/LineChart'
 import BubbleChart from './charts/BubbleChart'
+import StackedBarChart from './charts/StackedBarChart'
 
 module.exports = {
   components: {
     LineChart,
-    BubbleChart
+    BubbleChart,
+    StackedBarChart
   }
 };
 

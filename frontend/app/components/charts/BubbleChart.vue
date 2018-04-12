@@ -10,6 +10,7 @@
 
 <script>
 import { mapState } from 'vuex'
+import GHDataStats from 'GHDataStats'
 
 let spec = {
   "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -123,17 +124,26 @@ export default {
   },
   computed: {
     repo() {
-      console.log('chart', this.$refs.vega)
       return this.$store.state.baseRepo
     },
+    showBelowAverage() {
+      return this.$store.state.showBelowAverage
+    },
     chart() {
+      // so that this will get re-rendered consistently
+      let removeBelowAverageContributors = !this.showBelowAverage
+      console.log(removeBelowAverageContributors)
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.bubblechart').addClass('loader')
       let shared = {};
       if (this.repo) {
         window.GHDataRepos[this.repo].contributors().then((data) => { 
           shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e }) 
-          shared.baseData = data;   
+          console.log('rawr-before', shared.baseData)
+          if (removeBelowAverageContributors) {
+            shared.baseData = GHDataStats.aboveAverage(shared.baseData, 'total')
+            console.log('rawr', shared.baseData)
+          }
           if (this.comparedTo) {
             return window.GHDataRepos[this.comparedTo].contributors();
           } else {
@@ -142,11 +152,14 @@ export default {
         }).then((compareData) => {
           if (compareData) {
             compareData = compareData.map((e) => { e.repo = this.comparedTo; return e })
+            if (removeBelowAverageContributors) {
+              compareData = GHDataStats.aboveAverage(compareData, 'total')
+              console.log('rawr', compareData)
+            }
             this.values = _.concat(shared.baseData, compareData)
           } else {
             this.values = shared.baseData;
           }
-          console.log('final chart', this.$refs.vega)
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.bubblechart').removeClass('loader')
         })

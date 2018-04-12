@@ -50,6 +50,11 @@ Now, to install:
     GHDATA_GITHUB_API_KEY
     GHDATA_LIBRARIESIO_API_KEY
     GHDATA_DEBUG
+    GHDATA_GHTORRENT_PLUS_USER
+    GHDATA_GHTORRENT_PLUS_PASS
+    GHDATA_GHTORRENT_PLUS_HOST
+    GHDATA_GHTORRENT_PLUS_PORT
+    GHDATA_GHTORRENT_PLUS_NAME
     ```
 
     docker-compose will automatically pass the relevant variables from the local environment to the container.
@@ -65,10 +70,11 @@ Installation without Docker (recommended for developers)
 ### Dependencies
 - Python 3.4.x/Python 2.7.x and `pip`
 - Static web server such as nginx or Apache
-- MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
+- a MySQL 5.x database or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
   - Our Development team has a public read only database you can request access to
   - If you want to install your own copy of the MSR14 dataset [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
+- a MySQL 5.x database with write access
 
 After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a user for GHData. GHData only needs `SELECT` privileges.
 
