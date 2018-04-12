@@ -14,16 +14,16 @@
                     <div class="row gutters">
                       <div class="col col-7">
                         <div class="form-item">
-                          <select id="start-month" @change=onStartDateChange>
-                            <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == 0">{{ month.name }}</option>
+                          <select ref="startMonth" @change=onStartDateChange>
+                            <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
                           </select>
                           <div class="desc">Month</div>
                         </div>
                       </div>
                       <div class="col col-5">
                         <div class="form-item">
-                          <select id="start-year" @change=onStartDateChange>
-                            <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2005">{{ year }}</option>
+                          <select ref="startYear" @change=onStartDateChange>
+                            <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2010">{{ year }}</option>
                           </select>
                           <div class="desc">Year</div>
                         </div>
@@ -38,7 +38,7 @@
                   <div class="row gutters">
                     <div class="col col-7">
                       <div class="form-item">
-                        <select id="end-month" @change=onEndDateChange>
+                        <select ref="endMonth" @change=onEndDateChange>
                           <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
                         </select>
                         <div class="desc">Month</div>
@@ -46,7 +46,7 @@
                     </div>
                     <div class="col col-5">
                       <div class="form-item">
-                        <select id="end-year" @change=onEndDateChange>
+                        <select ref="endYear" @change=onEndDateChange>
                           <option v-for="year in years" v-bind:value="year" v-bind:selected="year == thisYear">{{ year }}</option>
                         </select>
                         <div class="desc">Year</div>
@@ -96,23 +96,29 @@
   module.exports = {
     methods: {
       onStartDateChange (e) {
-        var date = Date.parse((document.getElementById("start-month").value + "/01/" + document.getElementById("start-year").value))
+        console.log(e)
+        var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
+        console.log('date', date)
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
+          delete this.startDateTimeout
         }
         this.startDateTimeout = setTimeout(() => {
+          console.log(date)
           this.$store.commit('setDates', {
             startDate: date
           })
         }, 500);
       },
       onEndDateChange (e) {
-        var date = Date.parse((document.getElementById("end-month").value + "/01/" + document.getElementById("end-year").value))
+        var date = Date.parse((this.$refs.endMonth.value + "/01/" + this.$refs.endYear.value))
+        console.log('date', date)
         if (this.endDateTimeout) {
           clearTimeout(this.endDateTimeout)
           delete this.endDateTimeout
         }
         this.endDateTimeout = setTimeout(() => {
+          console.log(date)
           this.$store.commit('setDates', {
             endDate: date
           })

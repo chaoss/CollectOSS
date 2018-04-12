@@ -302,9 +302,7 @@ class GHTorrent(object):
         repoid = self.repoid(owner, repo)
         pullsSQL = s.sql.text("""
             SELECT date(pull_request_history.created_at) AS "date",
-            (COUNT(pull_requests.id)) AS "pull_requests",
-            (SELECT COUNT(*) FROM pull_request_comments
-            WHERE pull_request_comments.pull_request_id = pull_request_history.pull_request_id) AS "comments"
+            COUNT(pull_requests.id) AS "pull_requests"
             FROM pull_request_history
             INNER JOIN pull_requests
             ON pull_request_history.pull_request_id = pull_requests.id

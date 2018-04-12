@@ -61,14 +61,6 @@
       </div>
 
       <div class="col col-6">
-        <line-chart source="pulls" 
-                    title="Pulls Requests / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors">
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
         <line-chart source="issuesClosed" 
                     title="Issues Closed / Week" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
@@ -76,7 +68,7 @@
         </line-chart>
       </div>
 
-      <div class="col col-6">
+      <div class="col col-12">
         <line-chart source="totalCommitters" 
                     title="Total Committers" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
@@ -95,12 +87,12 @@
       </div>
  
       <div class="col col-12">
-        <StackedBarChart source="issueActivity" 
+        <stacked-bar-chart source="issueActivity" 
                     title="Stacked Bar Chart" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Contributors"
                     disableRollingAverage=1>
-        </StackedBarChart>
+        </stacked-bar-chart>
       </div>
 
     </div>
