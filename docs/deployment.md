@@ -25,21 +25,21 @@ Before we can begin, we'll need to install the following:
 
 
 
-## Step 2 - Create ghdata user
-You'll want to create a user for the ghdata API server
+## Step 2 - Create augur user
+You'll want to create a user for the augur API server
 
 On Ubuntu:
 ```bash
-useradd ghdata
+useradd augur
 ```
 
 
 
 ## Step 3 (optional) - Install Anaconda
 
-It is recommended to install [Anaconda](https://www.anaconda.com/download/) to use GHData. If Anaconda is not used, it is recommended to use GHData in a virtual environment. 
+It is recommended to install [Anaconda](https://www.anaconda.com/download/) to use Augur. If Anaconda is not used, it is recommended to use Augur in a virtual environment. 
 
-First, login as your ghdata user (`su ghdata` if you are root)
+First, login as your augur user (`su augur` if you are root)
 
 Then, to install Anaconda:
 ```bash
@@ -58,13 +58,13 @@ Make sure to replace `$HOME/anaconda/bin` with the location you installed anacon
 
 
 
-## Step 4 - Install GHData
+## Step 4 - Install Augur
 
-First, login as your ghdata user (`su ghdata` if you are root) and download the repo:
+First, login as your augur user (`su augur` if you are root) and download the repo:
 ```bash
-git clone https://github.com/OSSHealth/ghdata
-cd ghdata
+git clone https://github.com/OSSHealth/augur
+cd augur
 ```
 
-Then, install GHData using `make install`. If you want to help develop GHData, also run `make dev-install`.
+Then, install Augur using `make install`. If you want to help develop Augur, also run `make dev-install`.
 

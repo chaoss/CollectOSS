@@ -1,19 +1,19 @@
  version: '3'
  services:
 
-   ghdata:
+   augur:
      build: .
-     image: osshealth/ghdata
+     image: osshealth/augur
      restart: always
      volumes:
-       - .:/ghdata
+       - .:/augur
      ports:
        - "80:80"
      environment:
-       GHDATA_DB_USER:
-       GHDATA_DB_PASS:
-       GHDATA_DB_PORT:
-       GHDATA_DB_HOST:
-       GHDATA_DB_NAME:
-       GHDATA_GITHUB_API_KEY:
-       GHDATA_PUBLIC_WWW_API_KEY:
+       AUGUR_DB_USER:
+       AUGUR_DB_PASS:
+       AUGUR_DB_PORT:
+       AUGUR_DB_HOST:
+       AUGUR_DB_NAME:
+       AUGUR_GITHUB_API_KEY:
+       AUGUR_PUBLIC_WWW_API_KEY:

@@ -1,7 +1,7 @@
 '''
 SPDX-License-Identifier: MIT
 
-Install ghdata package with pip.
+Install augur package with pip.
 '''
 
 from setuptools import setup
@@ -15,16 +15,16 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='ghdata',
+    name='augur',
     version='0.4.1',
     include_package_data = True,
     description='Library/Server for data related to the health and sustainability of GitHub projects',
     long_description=long_description,
-    url='https://github.com/OSSHealth/ghdata',
+    url='https://github.com/OSSHealth/augur',
     author='Derek Howard',
     author_email='derek@howderek.com',
-	packages=['ghdata'],
-	package_dir={'ghdata': 'ghdata'},
+	packages=['augur'],
+	package_dir={'augur': 'augur'},
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -47,7 +47,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'ghdata=ghdata.server:run',
+            'augur=augur.server:run',
         ],
     },
 )

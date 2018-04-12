@@ -14,7 +14,7 @@
 
 
 <script>
-import GHDataStats from 'GHDataStats'
+import AugurStats from 'AugurStats'
 import { mapState } from 'vuex'
 import EmptyChart from './EmptyChart'
 
@@ -77,17 +77,17 @@ export default {
         }
         // Create element to hold the chart
         config.target = document.createElement('div');
-        window.GHDataRepos[this.repo][this.source]().
+        window.AugurRepos[this.repo][this.source]().
         then((baseData) => {
           this.__download_data.base = baseData;
           this.$refs.chartStatus.innerHTML = ''
           if (baseData && baseData.length) {
-            config.data = GHDataStats.convertDates(baseData, this.earliest, this.latest)
+            config.data = AugurStats.convertDates(baseData, this.earliest, this.latest)
           } else {
             config.data = []
           }
           if (this.comparedTo) {
-            return window.GHDataRepos[this.comparedTo][this.source]()
+            return window.AugurRepos[this.comparedTo][this.source]()
           }
           return new Promise((resolve, reject) => { resolve() });
         })
@@ -100,17 +100,17 @@ export default {
             // If there is comparedData, do the necesarry computations for
             // the comparision
             if (config.compare == 'each') {
-              compareData = GHDataStats.convertDates(compareData, this.earliest, this.latest)
+              compareData = AugurStats.convertDates(compareData, this.earliest, this.latest)
               let key = Object.keys(compareData[0])[1]
-              let compare = GHDataStats.rollingAverage(GHDataStats.zscores(compareData, key), 'value', this.period)
-              let base = GHDataStats.rollingAverage(GHDataStats.zscores(config.data, key), 'value', this.period)
+              let compare = AugurStats.rollingAverage(AugurStats.zscores(compareData, key), 'value', this.period)
+              let base = AugurStats.rollingAverage(AugurStats.zscores(config.data, key), 'value', this.period)
               config.data = [base, compare]
-              config.legend = [window.GHDataRepos[this.repo].toString(), window.GHDataRepos[this.comparedTo].toString()]
+              config.legend = [window.AugurRepos[this.repo].toString(), window.AugurRepos[this.comparedTo].toString()]
               config.colors = config.colors || ['#FF3647', '#999']
             } else {
               config.format = 'percentage'
               config.baselines = [{value: 1, label: config.baseline}]
-              config.data = GHDataStats.makeRelative(config.data, compareData, {
+              config.data = AugurStats.makeRelative(config.data, compareData, {
                 earliest: config.earliest,
                 latest: config.latest,
                 byDate: config.byDate,
@@ -122,9 +122,9 @@ export default {
             // Otherwise, render a normal timeseries chart
             if (!this.disableRollingAverage) {
               config.legend = config.legend || [config.title.toLowerCase(), this.period + ' day average']
-              let rolling = GHDataStats.rollingAverage(config.data, keys[0], this.period)
+              let rolling = AugurStats.rollingAverage(config.data, keys[0], this.period)
               if (this.rawWeekly) {
-                config.data = GHDataStats.combine(rolling, config.data)
+                config.data = AugurStats.combine(rolling, config.data)
               } else {
                 config.data = rolling
               }
@@ -135,7 +135,7 @@ export default {
               config.colors = config.colors || ['#FF3647', '#CCC']
               config.y_accessor = 'value'
             }
-            config.data = GHDataStats.convertKey(config.data, keys[0])
+            config.data = AugurStats.convertKey(config.data, keys[0])
           }
           
           config.y_mouseover = '%d';

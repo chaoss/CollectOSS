@@ -4,7 +4,7 @@ We love pull requests from everyone.
 
 Fork, then clone the repo:
 
-    git clone git@github.com:your-username/ghdata.git
+    git clone git@github.com:your-username/augur.git
 
 Make your change and push to your fork. Then, [submit a pull request][pr].
 

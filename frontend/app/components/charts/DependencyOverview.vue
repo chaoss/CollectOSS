@@ -20,7 +20,7 @@
 
 <script>
 
-  import GHDataStats from '../../GHDataStats'
+  import AugurStats from '../../AugurStats'
   import * as d3 from 'd3'
 
   export default {
@@ -33,7 +33,7 @@
         if (this.repo) {
 
           this.$refs['dependents'].innerHTML = 'Loading...'
-          window.GHDataRepos[this.repo].dependents().then((dependents) => {
+          window.AugurRepos[this.repo].dependents().then((dependents) => {
             if (!dependents || !dependents.length) {
               this.$refs['dependents'].innerHTML = 'No dependents found.'
             } 
@@ -46,7 +46,7 @@
           })
 
           this.$refs['dependencies'].innerHTML = ''
-          window.GHDataRepos[this.repo].dependencies().then((dependencies) => {
+          window.AugurRepos[this.repo].dependencies().then((dependencies) => {
             if (!dependencies || !dependencies.length) {
               this.$refs['dependencies'].innerHTML = 'No dependencies found.'
             } 

@@ -6,20 +6,20 @@ PY3 := $(shell command -v pip3 2> /dev/null)
 NODE := $(shell command -v npm 2> /dev/null)
 CONDA := $(shell command -v conda 2> /dev/null)
 
-SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
+SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
 
 CONDAUPDATE=""
 CONDAACTIVATE=""
 ifdef CONDA
-		CONDAUPDATE=if ! source activate ghdata; then conda env create -n=ghdata -f=environment.yml && source activate ghdata; else conda env update -n=ghdata -f=environment.yml && source activate ghdata; fi;
-		CONDAACTIVATE=source activate ghdata;
+		CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && source activate augur; fi;
+		CONDAACTIVATE=source activate augur;
 endif
 
 default:
 	@ echo "Commands:"
 	@ echo
-	@ echo "    install          Installs ghdata using pip"
-	@ echo "    install-dev      Installs ghdata's developer dependencies (requires npm and pip)"
+	@ echo "    install          Installs augur using pip"
+	@ echo "    install-dev      Installs augur's developer dependencies (requires npm and pip)"
 	@ echo "    install-msr      Installs MSR14 dataset"
 	@ echo "    upgrade          Pulls newest version and installs"
 	@ echo "    test             Run pytest unit tests"
@@ -74,7 +74,7 @@ ugh:
 dev-start: dev-stop
 ifdef CONDA
 		@ bash -c '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
-		@ bash -c '(source activate ghdata; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
+		@ bash -c '(source activate augur; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 else
 		@ bash -c '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
 		@ bash -c '($(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
@@ -82,7 +82,7 @@ endif
 		@ echo "Server     Description       Log                   Monitoring                   PID                        "
 		@ echo "------------------------------------------------------------------------------------------                 "
 		@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
-		@ echo "Backend    GHData/Gunicorn   logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
+		@ echo "Backend    Augur/Gunicorn   logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
 		@ echo
 		@ echo "Monitor both:  make monitor  "
 		@ echo "Restart and monitor: make dev"
@@ -113,7 +113,7 @@ serve:
 ifdef CONDA
 		bash -c "$(SERVECOMMAND)"
 else
-		gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
+		gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
 endif
 
 python-docs:
@@ -122,12 +122,12 @@ python-docs:
 		&& make html
 
 api-docs:
-		apidoc --debug -f "\.py" -i ghdata/ -o docs/api/
+		apidoc --debug -f "\.py" -i augur/ -o docs/api/
 
 docs: api-docs python-docs
 
 build: docs
-		cd ghdata/static/ && brunch build --production
+		cd augur/static/ && brunch build --production
 
 check-test-env:
 ifndef DB_TEST_URL

@@ -1,27 +1,27 @@
 import VueVega from 'vue-vega'
 const queryString = require('query-string')
 
-export default function GHData () {
+export default function Augur () {
   window.jQuery       = require('jquery')
   window.Vue          = require('vue')
   window.Vuex         = require('vuex')
-  let GHDataAPI       = require('GHDataAPI').default
-  window.GHDataAPI    = new GHDataAPI()
-  window.GHDataRepos  = {}
-  window.GHDataStats  = require('GHDataStats').default
+  let AugurAPI       = require('AugurAPI').default
+  window.AugurAPI    = new AugurAPI()
+  window.AugurRepos  = {}
+  window.AugurStats  = require('AugurStats').default
   window.$            = window.jQuery
   window._            = require('lodash')
   window.d3           = require('d3')
   window.VueVega      = VueVega
   window.SvgSaver     = require('svgsaver')
 
-  let GHDataApp = require('./components/GHDataApp')
+  let AugurApp = require('./components/AugurApp')
 
   Vue.use(Vuex)
   Vue.use(VueVega)
   Vue.config.productionTip = false
 
-  window.ghdata = new Vuex.Store({
+  window.augur = new Vuex.Store({
     state: {
       baseRepo: null,
       comparedRepos: [],
@@ -35,25 +35,25 @@ export default function GHData () {
     },
     mutations: {
       setBaseRepo (state, payload)  {
-        let repo = window.GHDataAPI.Repo(payload.url)
-        if (!window.GHDataRepos[repo.toString()]) {
-          window.GHDataRepos[repo.toString()] = repo
+        let repo = window.AugurAPI.Repo(payload.url)
+        if (!window.AugurRepos[repo.toString()]) {
+          window.AugurRepos[repo.toString()] = repo
         }
         state.baseRepo = repo.toString()
         if (!payload.keepCompared) {
           state.comparedRepos = []
         }
-        let title = repo.owner + '/' + repo.name + '- GHData' 
+        let title = repo.owner + '/' + repo.name + '- Augur' 
         let queryString = '?repo=' + repo.owner + '+' + repo.name
         window.history.pushState(null, title, queryString)
       },
       addComparedRepo (state, payload) {
-        let repo = window.GHDataAPI.Repo(payload.url)
-        if (!window.GHDataRepos[repo.toString()]) {
-          window.GHDataRepos[repo.toString()] = repo
+        let repo = window.AugurAPI.Repo(payload.url)
+        if (!window.AugurRepos[repo.toString()]) {
+          window.AugurRepos[repo.toString()] = repo
         }
         state.comparedRepos.push(repo.toString())
-        let title = 'GHData' 
+        let title = 'Augur' 
         let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         window.history.pushState(null, title, queryString)
       },
@@ -89,22 +89,22 @@ export default function GHData () {
           compare: "each",
           byDate: false,
         }
-        window.history.pushState(null, 'GHData', '/')
+        window.history.pushState(null, 'Augur', '/')
       } // end reset
     } // end mutations
   })
 
-  GHDataApp.store = window.ghdata
-  window.GHDataApp = new Vue(GHDataApp).$mount('#app')
+  AugurApp.store = window.augur
+  window.AugurApp = new Vue(AugurApp).$mount('#app')
 
   // Load state from query string
   let parsed = queryString.parse(location.search, { arrayFormat: 'bracket' })
   if (parsed.repo) {
-    window.GHDataApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') })
+    window.AugurApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') })
   }
   if (parsed.comparedTo) {
     parsed.comparedTo.forEach((repo) => {
-      window.GHDataApp.$store.commit('addComparedRepo', { url: repo.replace(' ', '/') })
+      window.AugurApp.$store.commit('addComparedRepo', { url: repo.replace(' ', '/') })
     })
   }
 

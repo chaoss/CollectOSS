@@ -9,11 +9,11 @@
 #You will need a MySQL server with the MSR14 datasource or other GHTorrent database with the same schema.
 #Edit the line in this code that says db = sqlalchemy.create_engine to match your username:password@hostname:port/database.
 
-#This file is hardcoded to download the ghdata repository.
+#This file is hardcoded to download the augur repository.
 #Since it is a preliminary example, each time it runs, 
-#it deletes the local ghdata repo and re-downloads it (though this might not be a good option for the future).
-#Because of this: if you have a folder named ghdata whose contents you do not want deleted, 
-#do not place this file in the same folder as your ghdata folder.
+#it deletes the local augur repo and re-downloads it (though this might not be a good option for the future).
+#Because of this: if you have a folder named augur whose contents you do not want deleted, 
+#do not place this file in the same folder as your augur folder.
 
 #to run this, type "python pythonBlameHistoryTree.py" into the command prompt
 #You will see some output about running on 127.0.0.1:5000 in the command prompt
@@ -24,7 +24,7 @@
 
 #the output shows the commit number and date, the total lines of code and other files (for example, the readme)
 #and the percentage written by each organization.
-#expected output for ghdata should show only the spdx-tools organization (Matt is a member)
+#expected output for augur should show only the spdx-tools organization (Matt is a member)
 #Number of lines corresponds to the lines written by Matt.
 
 #You can see that earlier commits are lower on the page, and chronologically later ones appear higher up.
@@ -62,9 +62,9 @@ app = Flask(__name__)
 
 @app.route("/")
 def pythonBlameHistory():
-    #path is the hardcoded folder for the last download of ghdata
-    repo_path = './ghdata'
-    #We must remove the old ghdata if we want to download a new copy.
+    #path is the hardcoded folder for the last download of augur
+    repo_path = './augur'
+    #We must remove the old augur if we want to download a new copy.
     #In order to delete it, we must first change the permissions
     #To be writable for all files and directories.
     #Based on this: http://stackoverflow.com/questions/2853723/whats-the-python-way-for-recursively-setting-file-permissions
@@ -76,7 +76,7 @@ def pythonBlameHistory():
                 os.chmod(os.path.join(root, file), stat.S_IWRITE)
         os.chmod(repo_path, stat.S_IWRITE)
     
-        #delete the old ghdata
+        #delete the old augur
         shutil.rmtree(repo_path)
     
     #connect to the database username:password@hostname:port/databasename
@@ -84,9 +84,9 @@ def pythonBlameHistory():
     schema = sqlalchemy.MetaData()
     schema.reflect(bind=db)
     
-    #Get the ghdata repository from GitHub
-    repo = Repo.init('ghdata')
-    origin = repo.create_remote('origin','https://github.com/OSSHealth/ghdata.git')
+    #Get the augur repository from GitHub
+    repo = Repo.init('augur')
+    origin = repo.create_remote('origin','https://github.com/OSSHealth/augur.git')
     origin.fetch()
     origin.pull(origin.refs[0].remote_head)
     
@@ -123,7 +123,7 @@ def pythonBlameHistory():
         #You cannot use the os library file/directory loop for this part.
         #(as was used above to change file permissions)
         #That is because some files do not exist in every commit.
-        #You must loop through the commit tree, not the ghdata directory.
+        #You must loop through the commit tree, not the augur directory.
         for file_in_repo in history_commit.tree.traverse():
             #For each file, we want to clear out the total lines and organization totals per file.
             #That's because we're starting over with a new file.

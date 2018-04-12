@@ -107,7 +107,7 @@ fi
 if [[ "$INSTALL_NODE_PPA" == "1" ]]
 then
   echo "Node is missing or out of date."
-  if yes_or_no "Add NodeSource PPA (requires root priviledges)?" "NodeSource PPA skipped. Distribution node versions may not be compatible with GHData development."
+  if yes_or_no "Add NodeSource PPA (requires root priviledges)?" "NodeSource PPA skipped. Distribution node versions may not be compatible with Augur development."
   then
     curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
   fi
@@ -116,14 +116,14 @@ fi
 # Install Anaconda
 if [[ "$INSTALL_ANACONDA" == "1"  ]]
 then
-  printf "It is highly recommended to install Anaconda. GHData uses many packages included with Anaconda as well as Conda virtual environments.\nNot installing Anaconda may require sudo pip, which can potentially break system Python."
+  printf "It is highly recommended to install Anaconda. Augur uses many packages included with Anaconda as well as Conda virtual environments.\nNot installing Anaconda may require sudo pip, which can potentially break system Python."
   if yes_or_no "Install Miniconda (34MB)?" "Anaconda not installed. Installation will use global Python environment."
   then
       curl -LOk https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
       chmod +x Miniconda3-latest-Linux-x86_64.sh
       ./Miniconda3-latest-Linux-x86_64.sh -b -p ~/.anaconda
-      printf "# Added by GHData install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.bashrc
-      printf "# Added by GHData install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.zshrc
+      printf "# Added by Augur install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.bashrc
+      printf "# Added by Augur install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.zshrc
       export PATH="$HOME/.anaconda/bin:$PATH"
       rm Miniconda3-latest-Linux-x86_64.sh
       echo "Anaconda installed to ~/.anaconda"
@@ -156,12 +156,12 @@ echo "All dependencies in place."
 
 
 #
-# GHData
+# Augur
 #
 echo 
-echo "Downloading GHData..."
-git clone https://github.com/OSSHealth/ghdata
-cd ghdata
+echo "Downloading Augur..."
+git clone https://github.com/OSSHealth/augur
+cd augur
 read -p "Would you like to install [m]aster or [d]ev: " -n 1 -r
 DEVELOPER=0
 if [[ $REPLY =~ ^[Dd]$ ]]
@@ -173,14 +173,14 @@ fi
 if hash conda 2>/dev/null; then
   echo "Creating conda environment..."
   conda env create -f environment.yml
-  source activate ghdata
+  source activate augur
 fi
 
 pip install --upgrade .
 
 if [[ $? != 0 ]]
 then
-  echo "Pip failed to install GHData. Some systems require root priviledges."
+  echo "Pip failed to install Augur. Some systems require root priviledges."
   yes_or_no_critical "Try again with sudo?" "Installation failed."
   sudo pip install --upgrade .
   if [[ $? != 0 ]]
@@ -190,7 +190,7 @@ then
   fi
 fi
 
-echo "GHData Python application installed."
+echo "Augur Python application installed."
 
 
 
@@ -200,7 +200,7 @@ echo "GHData Python application installed."
 #
 echo "Now we're going to set up the database. We'll need MySQL root credentials to proceed."
 
-if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, ghdata and a default ghdata.cfg file will be created. Edit that file with the correct database settings.\nOr, run:\n\n curl -sOL https://raw.githubusercontent.com/OSSHealth/ghdata/dev/docs/install-msr.sh\nchmod +x install-msr.sh\n./install-msr.sh\n"
+if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, augur and a default augur.cfg file will be created. Edit that file with the correct database settings.\nOr, run:\n\n curl -sOL https://raw.githubusercontent.com/OSSHealth/augur/dev/docs/install-msr.sh\nchmod +x install-msr.sh\n./install-msr.sh\n"
 then
   ./docs/install-msr.sh
 fi
@@ -216,7 +216,7 @@ npm install --global yarn apidoc brunch
 if [[ $? != 0 ]]
 then
   echo "NPM failed to install the packages. Some systems require root priviledges."
-  yes_or_no_critical "Try again with sudo?" "GHData installed, but node install failed.\napidoc and brunch are required for development."
+  yes_or_no_critical "Try again with sudo?" "Augur installed, but node install failed.\napidoc and brunch are required for development."
   sudo npm install --global yarn apidoc brunch
   if [[ $? != 0 ]]
   then
@@ -225,7 +225,7 @@ then
   fi
 fi
 
-echo "Installing GHData frontend node dependencies..."
+echo "Installing Augur frontend node dependencies..."
 cd frontend
 yarn install
 cd ../..
@@ -237,13 +237,13 @@ then
 fi
 if [[ "$HAS_ANACONDA" == "1" ]]
 then
-  echo "You must activate the ghdata conda environment using 'source activate ghdata' before running ghdata."
+  echo "You must activate the augur conda environment using 'source activate augur' before running augur."
 fi
-echo "To run ghdata, it must be run in the same directory as the ghdata.cfg file, or your settings must be provided as environment variables."
-echo "The  folder contains a ghdata.cfg file generated for you during installalation."
-echo "To run ghdata for development, cd into the project folder and run 'make dev-start' (requires GNU screen)"
-if yes_or_no "Would you like to start GHData for development?" ""
+echo "To run augur, it must be run in the same directory as the augur.cfg file, or your settings must be provided as environment variables."
+echo "The  folder contains a augur.cfg file generated for you during installalation."
+echo "To run augur for development, cd into the project folder and run 'make dev-start' (requires GNU screen)"
+if yes_or_no "Would you like to start Augur for development?" ""
 then
-  cd ghdata-*
+  cd augur-*
   make dev-start
 fi

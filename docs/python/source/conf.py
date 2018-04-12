@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# GHData documentation build configuration file, created by
+# Augur documentation build configuration file, created by
 # sphinx-quickstart on Tue Oct 24 12:27:08 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -54,9 +54,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'GHData'
-copyright = '2017, GHData Contributors'
-author = 'GHData Contributors'
+project = 'Augur'
+copyright = '2017, Augur Contributors'
+author = 'Augur Contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -110,7 +110,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'GHDatadoc'
+htmlhelp_basename = 'Augurdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -137,8 +137,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'GHData.tex', 'GHData Documentation',
-     'GHData Contributors', 'manual'),
+    (master_doc, 'Augur.tex', 'Augur Documentation',
+     'Augur Contributors', 'manual'),
 ]
 
 
@@ -147,7 +147,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'ghdata', 'GHData Documentation',
+    (master_doc, 'augur', 'Augur Documentation',
      [author], 1)
 ]
 
@@ -158,8 +158,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'GHData', 'GHData Documentation',
-     author, 'GHData', 'One line description of project.',
+    (master_doc, 'Augur', 'Augur Documentation',
+     author, 'Augur', 'One line description of project.',
      'Miscellaneous'),
 ]
 

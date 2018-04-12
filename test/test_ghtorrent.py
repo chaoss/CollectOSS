@@ -3,10 +3,10 @@ import pytest
 
 @pytest.fixture
 def ghtorrent():
-    import ghdata
+    import augur
     dbstr = os.getenv("DB_TEST_URL")
     assert dbstr is not None and len(dbstr) > 8
-    return ghdata.GHTorrent(dbstr)
+    return augur.GHTorrent(dbstr)
 
 def test_repoid(ghtorrent):
     assert ghtorrent.repoid('rails', 'rails') >= 1000

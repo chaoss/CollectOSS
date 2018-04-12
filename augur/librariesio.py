@@ -35,7 +35,7 @@ class LibrariesIO(object):
         json = projectsRequest.json()
 
         if projectsRequest.status_code == 400:
-            print('You need to set the LibrariesIO API key in ghdata.cfg or the environment variable GHDATA_LIBRARIESIO_API_KEY')
+            print('You need to set the LibrariesIO API key in augur.cfg or the environment variable AUGUR_LIBRARIESIO_API_KEY')
 
         if projectsRequest.status_code != 200:
             return projectsRequest.json()

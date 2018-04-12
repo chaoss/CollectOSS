@@ -46,7 +46,7 @@ export default {
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.stackedbarchart').addClass('loader')
       if (this.repo) {
-        window.GHDataRepos[this.repo].issueActivity().then((data) => {
+        window.AugurRepos[this.repo].issueActivity().then((data) => {
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.stackedbarchart').removeClass('loader')
           this.values = data

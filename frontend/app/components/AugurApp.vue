@@ -1,24 +1,24 @@
 <template>
   <div>
-    <ghdata-header></ghdata-header>
+    <augur-header></augur-header>
     <div class="content">
       <main-controls></main-controls>
-      <ghdata-cards></ghdata-cards>
+      <augur-cards></augur-cards>
     </div>
   </div>
 </template>
 
 <script>
 
-import GHDataHeader from './GHDataHeader.vue'
+import AugurHeader from './AugurHeader.vue'
 import MainControls from './MainControls.vue'
-import GHDataCards from './GHDataCards.vue'
+import AugurCards from './AugurCards.vue'
 
 module.exports = {
   components: {
-    'ghdata-header': GHDataHeader,
+    'augur-header': AugurHeader,
     MainControls,
-    'ghdata-cards': GHDataCards
+    'augur-cards': AugurCards
   }
 }
 

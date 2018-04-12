@@ -10,7 +10,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import GHDataStats from 'GHDataStats'
+import AugurStats from 'AugurStats'
 
 let spec = {
   "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -137,15 +137,15 @@ export default {
       $(this.$el).find('.bubblechart').addClass('loader')
       let shared = {};
       if (this.repo) {
-        window.GHDataRepos[this.repo].contributors().then((data) => { 
+        window.AugurRepos[this.repo].contributors().then((data) => { 
           shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e }) 
           console.log('rawr-before', shared.baseData)
           if (removeBelowAverageContributors) {
-            shared.baseData = GHDataStats.aboveAverage(shared.baseData, 'total')
+            shared.baseData = AugurStats.aboveAverage(shared.baseData, 'total')
             console.log('rawr', shared.baseData)
           }
           if (this.comparedTo) {
-            return window.GHDataRepos[this.comparedTo].contributors();
+            return window.AugurRepos[this.comparedTo].contributors();
           } else {
             return new Promise((resolve, reject) => { resolve() });
           }
@@ -153,7 +153,7 @@ export default {
           if (compareData) {
             compareData = compareData.map((e) => { e.repo = this.comparedTo; return e })
             if (removeBelowAverageContributors) {
-              compareData = GHDataStats.aboveAverage(compareData, 'total')
+              compareData = AugurStats.aboveAverage(compareData, 'total')
               console.log('rawr', compareData)
             }
             this.values = _.concat(shared.baseData, compareData)

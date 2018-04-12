@@ -1,4 +1,4 @@
-To test ghdata, set up your environment for testing:
+To test augur, set up your environment for testing:
 
 `
 export DB_TEST_URL=mysql+pymysql://<username>:<pass>@<host>:<post>/<database>

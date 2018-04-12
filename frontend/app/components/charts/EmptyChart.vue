@@ -5,7 +5,7 @@
 
 <script>
 
-  import GHDataStats from '../../GHDataStats'
+  import AugurStats from '../../AugurStats'
   import * as d3 from 'd3'
 
   export default {

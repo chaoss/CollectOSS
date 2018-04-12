@@ -1,6 +1,6 @@
-# ghdata Context from the Ground Up  
-## What is ghdata?
-Our project is focused on building **human centered open source software health metrics** defined by collaborations with the Linux Foundation's [CHAOSS Project](http://chaoss.community) and other open source stakeholders. ghdata is software focused on making sense of data using Four key **human centered data science** strategies:
+# augur Context from the Ground Up  
+## What is augur?
+Our project is focused on building **human centered open source software health metrics** defined by collaborations with the Linux Foundation's [CHAOSS Project](http://chaoss.community) and other open source stakeholders. augur is software focused on making sense of data using Four key **human centered data science** strategies:
 1. Enable comparisons. People navigate complex unknowns analogically. Let folks see how their project compares with others they are familiar with.
  	- This is not ranking
 	- If you start thinking about "metrics" like "rankings", you are probably going to create suboptimal metrics.
@@ -13,8 +13,8 @@ Our project is focused on building **human centered open source software health 
 Our core team has a long standing interest in social computing, software engineering measurement and the ethical instrumentation of online human behavior.
 
 ## Here are some more detailed links:
-- Example Website (running on a development grade web server, be gentle): http://ghdata.sociallycompute.io
-- Source Code Repository: http://github.com/OSSHealth/ghdata
+- Example Website (running on a development grade web server, be gentle): http://augur.sociallycompute.io
+- Source Code Repository: http://github.com/OSSHealth/augur
 - List of Metrics: https://github.com/chaoss/metrics/blob/master/activity-metrics-list.md
 	Here are some examples:
 	1. https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-response-rate.md

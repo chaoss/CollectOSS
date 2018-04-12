@@ -32,7 +32,7 @@ else
 fi
 rm msr14-mysql.gz
 
-cat > ghdata.cfg <<ENDCONFIG
+cat > augur.cfg <<ENDCONFIG
 [Database]
 host = $DBHOST
 port = 3306
@@ -40,5 +40,5 @@ user = msr
 pass = msr
 name = msr
 ENDCONFIG
-echo "ghdata.cfg was generated. New database user 'msr' with password 'msr' was created."
+echo "augur.cfg was generated. New database user 'msr' with password 'msr' was created."
 echo "Database installed."

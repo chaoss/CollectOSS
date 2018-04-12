@@ -1,11 +1,11 @@
-export default class GHDataStats {
+export default class AugurStats {
 
   static convertDates (data, earliest, latest) {
     earliest = earliest || new Date('01-01-2005')
     latest = latest || new Date()
     if (Array.isArray(data[0])) {
       data = data.map((datum) => {
-        return GHDataStats.convertDates(datum)
+        return AugurStats.convertDates(datum)
       })
     } else {
       
@@ -22,7 +22,7 @@ export default class GHDataStats {
   static convertKey (data, key) {
     if (Array.isArray(data[0])) {
       data = data.map((datum) => {
-        return GHDataStats.convertKey(datum, key)
+        return AugurStats.convertKey(datum, key)
       })
     } else {
       const EARLIEST = new Date('01-01-2005')
@@ -40,7 +40,7 @@ export default class GHDataStats {
 
   static aboveAverage(data, key) {
     let flat = data.map((e) => {return e[key]})
-    let mean = GHDataStats.averageArray(flat)
+    let mean = AugurStats.averageArray(flat)
     return data.filter((e) => {
       return e[key] > mean
     })
@@ -48,17 +48,17 @@ export default class GHDataStats {
 
   static standardDeviation(ary, key, mean) {
     let flat = ary.map((e) => {return e[key]})
-    mean = mean || GHDataStats.averageArray(flat)
+    mean = mean || AugurStats.averageArray(flat)
     let distances = flat.map((e) => {
       return (e - mean) * (e - mean)
     })
-    return Math.sqrt(GHDataStats.averageArray(distances))
+    return Math.sqrt(AugurStats.averageArray(distances))
   }
 
   static describe(ary, key) {
     let flat = ary.map((e) => {return e[key]})
-    let mean = GHDataStats.averageArray(flat)
-    let stddev = GHDataStats.standardDeviation(ary, key, mean)
+    let mean = AugurStats.averageArray(flat)
+    let stddev = AugurStats.standardDeviation(ary, key, mean)
     let variance = stddev * stddev
     return {
       'mean': mean,
@@ -94,7 +94,7 @@ export default class GHDataStats {
       }
 
       let average = {date: new Date(date)}
-      average[key] = GHDataStats.averageArray(averageWindow.slice(0, windowSizeInDays));
+      average[key] = AugurStats.averageArray(averageWindow.slice(0, windowSizeInDays));
       averageWindow.shift()
       rolling.push(average);
     }
@@ -105,7 +105,7 @@ export default class GHDataStats {
     if (!data) {
       return []
     }
-    baseline = baseline || GHDataStats.averageArray( data.map((e) => {return e[key]}) )
+    baseline = baseline || AugurStats.averageArray( data.map((e) => {return e[key]}) )
     data = data.map((datum) => {
       datum['value'] = (datum[key] / baseline)
       return datum
@@ -126,17 +126,17 @@ export default class GHDataStats {
     }
     let data = {}
 
-    data['base'] = GHDataStats.rollingAverage(
-                     GHDataStats.convertDates(
-                       GHDataStats.convertKey(
+    data['base'] = AugurStats.rollingAverage(
+                     AugurStats.convertDates(
+                       AugurStats.convertKey(
                          baseData, 
                          Object.keys(baseData[0])[1]
                      ), config.earliest, config.latest
                    ), undefined, config.period) 
 
-    data['compare'] = GHDataStats.rollingAverage(
-                        GHDataStats.convertDates(
-                          GHDataStats.convertKey(
+    data['compare'] = AugurStats.rollingAverage(
+                        AugurStats.convertDates(
+                          AugurStats.convertKey(
                             compareData, 
                             Object.keys(compareData[0])[1]
                         ), config.earliest, config.latest
@@ -174,7 +174,7 @@ export default class GHDataStats {
 
   static zscores(data, key) {
     key = key || 'value'
-    let stats = GHDataStats.describe(data, key)
+    let stats = AugurStats.describe(data, key)
     return data.map((e) => {
       let newObj = {}
       if (e.date) {

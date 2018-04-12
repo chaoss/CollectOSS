@@ -1,6 +1,6 @@
 var $ = require('jquery')
 
-export default class GHDataAPI {
+export default class AugurAPI {
   constructor(hostURL, version, autobatch) {
     this._version     = version || 'unstable'
     this._host        = hostURL || 'http://' + window.location.host + '/api/'

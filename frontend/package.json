@@ -1,7 +1,7 @@
 {
-  "name": "ghdata-frontend",
+  "name": "augur-frontend",
   "version": "0.0.1",
-  "description": "Vue Frontend to the GHData open source metrics platfrom",
+  "description": "Vue Frontend to the Augur open source metrics platfrom",
   "main": "index.js",
   "author": "Derek Howard et al.",
   "license": "MIT",

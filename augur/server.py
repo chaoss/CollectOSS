@@ -10,12 +10,12 @@ else:
 
 sys.path.append('..')
 
-import ghdata
-from flask import Flask, request, Response, jsonify
+import augur
+from flask import Flask, request, Response
 from flask_cors import CORS
 import json
 
-GHDATA_API_VERSION = 'api/unstable'
+AUGUR_API_VERSION = 'api/unstable'
 # Location to load configuration from
 CONFIG_BAD = False
 '''
@@ -25,15 +25,15 @@ and if the file does't open the it print Couldn\'t open config file, attempting 
 '''
 
 try:
-    GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'r+')
+    AUGUR_CONFIG_FILE = open(os.getenv('AUGUR_CONFIG_FILE', 'augur.cfg'), 'r+')
 except:
     print('Couldn\'t open config file, attempting to create.')
-    GHDATA_CONFIG_FILE = open(os.getenv('GHDATA_CONFIG_FILE', 'ghdata.cfg'), 'w+')
+    AUGUR_CONFIG_FILE = open(os.getenv('AUGUR_CONFIG_FILE', 'augur.cfg'), 'w+')
     CONFIG_BAD = True
 # Options to export the loaded configuration as environment variables for Docker
-GHDATA_ENV_EXPORT = os.getenv('GHDATA_ENV_EXPORT', '0') == '1'
-if GHDATA_ENV_EXPORT:
-    GHDATA_ENV_EXPORT_FILE = open(os.getenv('GHDATA_ENV_EXPORT_FILE', 'lastrun.cfg.sh'), 'w+')
+AUGUR_ENV_EXPORT = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
+if AUGUR_ENV_EXPORT:
+    AUGUR_ENV_EXPORT_FILE = open(os.getenv('AUGUR_ENV_EXPORT_FILE', 'lastrun.cfg.sh'), 'w+')
 
 
 def serialize(data, orient='records'):
@@ -69,7 +69,7 @@ def flaskify(func):
 
 def addMetric(app, function, endpoint):
     """Simplifies adding routes that only accept owner/repo"""
-    app.route('/{}/<owner>/<repo>/{}'.format(GHDATA_API_VERSION, endpoint))(flaskify(function))
+    app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
 
 def addTimeseries(app, function, endpoint):
     """
@@ -80,16 +80,16 @@ def addTimeseries(app, function, endpoint):
     :param endpoint:  GET endpoint to generate
     """
     addMetric(app, function, 'timeseries/{}'.format(endpoint))
-    app.route('/{}/<owner>/<repo>/timeseries/{}/relative_to/<ownerRelativeTo>/<repoRelativeTo>'.format(GHDATA_API_VERSION, endpoint))(flaskify(ghdata.util.makeRelative(function)))
+    app.route('/{}/<owner>/<repo>/timeseries/{}/relative_to/<ownerRelativeTo>/<repoRelativeTo>'.format(AUGUR_API_VERSION, endpoint))(flaskify(augur.util.makeRelative(function)))
 
 
 app = Flask(__name__)
 CORS(app)# Try to open the config file and parse it
 parser = configparser.RawConfigParser()
-parser.readfp(GHDATA_CONFIG_FILE)
+parser.readfp(AUGUR_CONFIG_FILE)
 
-if GHDATA_ENV_EXPORT:
-    GHDATA_ENV_EXPORT_FILE.write('#!/bin/bash\n')
+if AUGUR_ENV_EXPORT:
+    AUGUR_ENV_EXPORT_FILE.write('#!/bin/bash\n')
 
 def read_config(section, name, environment_variable, default):
     global CONFIG_BAD
@@ -103,49 +103,49 @@ def read_config(section, name, environment_variable, default):
         print('[' + section + ']->' + name + ' is missing. Your config will be regenerated with it included after execution.')
         parser.set(section, name, default)
         value = default
-    if GHDATA_ENV_EXPORT:
-        GHDATA_ENV_EXPORT_FILE.write('export ' + environment_variable + '="' + value + '"\n')
+    if AUGUR_ENV_EXPORT:
+        AUGUR_ENV_EXPORT_FILE.write('export ' + environment_variable + '="' + value + '"\n')
     return value
 
-host = read_config('Server', 'host', 'GHDATA_HOST', '0.0.0.0')
-port = read_config('Server', 'port', 'GHDATA_PORT', '5000')
+host = read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
+port = read_config('Server', 'port', 'AUGUR_PORT', '5000')
 
-publicwww = ghdata.PublicWWW(api_key=read_config('PublicWWW', 'APIKey', 'GHDATA_PUBLIC_WWW_API_KEY', 'None'))
-github = ghdata.GitHubAPI(api_key=read_config('GitHub', 'APIKey', 'GHDATA_GITHUB_API_KEY', 'None'))
-librariesio = ghdata.LibrariesIO(api_key=read_config('LibrariesIO', 'APIKey', 'GHDATA_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
-downloads = ghdata.Downloads(github)
-localcsv = ghdata.LocalCSV()
+publicwww = augur.PublicWWW(api_key=read_config('PublicWWW', 'APIKey', 'AUGUR_PUBLIC_WWW_API_KEY', 'None'))
+github = augur.GitHubAPI(api_key=read_config('GitHub', 'APIKey', 'AUGUR_GITHUB_API_KEY', 'None'))
+librariesio = augur.LibrariesIO(api_key=read_config('LibrariesIO', 'APIKey', 'AUGUR_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
+downloads = augur.Downloads(github)
+localcsv = augur.LocalCSV()
 
-if (read_config('Development', 'developer', 'GHDATA_DEBUG', '0') == '1'):
+if (read_config('Development', 'developer', 'AUGUR_DEBUG', '0') == '1'):
     debugmode = True
 else:
     debugmode = False
 
 dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-    read_config('Database', 'user', 'GHDATA_DB_USER', 'root'),
-    read_config('Database', 'pass', 'GHDATA_DB_PASS', 'password'),
-    read_config('Database', 'host', 'GHDATA_DB_HOST', '127.0.0.1'),
-    read_config('Database', 'port', 'GHDATA_DB_PORT', '3306'),
-    read_config('Database', 'name', 'GHDATA_DB_NAME', 'msr14')
+    read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
+    read_config('Database', 'pass', 'AUGUR_DB_PASS', 'password'),
+    read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+    read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
+    read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
 )
-ghtorrent = ghdata.GHTorrent(dbstr=dbstr)
+ghtorrent = augur.GHTorrent(dbstr=dbstr)
 
 
 dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-    read_config('GHTorrentPlus', 'user', 'GHDATA_GHTORRENT_PLUS_USER', 'root'),
-    read_config('GHTorrentPlus', 'pass', 'GHDATA_GHTORRENT_PLUS_PASS', 'password'),
-    read_config('GHTorrentPlus', 'host', 'GHDATA_GHTORRENT_PLUS_HOST', '127.0.0.1'),
-    read_config('GHTorrentPlus', 'port', 'GHDATA_GHTORRENT_PLUS_PORT', '3306'),
-    read_config('GHTorrentPlus', 'name', 'GHDATA_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
+    read_config('GHTorrentPlus', 'user', 'AUGUR_GHTORRENT_PLUS_USER', 'root'),
+    read_config('GHTorrentPlus', 'pass', 'AUGUR_GHTORRENT_PLUS_PASS', 'password'),
+    read_config('GHTorrentPlus', 'host', 'AUGUR_GHTORRENT_PLUS_HOST', '127.0.0.1'),
+    read_config('GHTorrentPlus', 'port', 'AUGUR_GHTORRENT_PLUS_PORT', '3306'),
+    read_config('GHTorrentPlus', 'name', 'AUGUR_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
 )
-ghtorrentplus = ghdata.GHTorrentPlus(dbstr=dbstr, ghtorrent=ghtorrent)
+ghtorrentplus = augur.GHTorrentPlus(dbstr=dbstr, ghtorrent=ghtorrent)
 
 """
 @api {get} / API Status
 @apiName Status
 @apiGroup Misc
 """
-@app.route('/{}/'.format(GHDATA_API_VERSION))
+@app.route('/{}/'.format(AUGUR_API_VERSION))
 def api_root():
     """API status"""
     # @todo: When we support multiple data sources this should keep track of their status
@@ -654,7 +654,7 @@ addMetric(app, ghtorrent.contributors, 'contributors')
                         }
                     ]
 """
-@app.route('/{}/<owner>/<repo>/contributions'.format(GHDATA_API_VERSION))
+@app.route('/{}/<owner>/<repo>/contributions'.format(AUGUR_API_VERSION))
 def contributions(owner, repo):
     repoid = ghtorrent.repoid(owner=owner, repo=repo)
     user = request.args.get('user')
@@ -874,7 +874,7 @@ addMetric(app, publicwww.linking_websites, 'linking_websites')
 @apiName GhtorrentRange
 @apiGroup Misc
 """
-@app.route('/{}/ghtorrent_range'.format(GHDATA_API_VERSION))
+@app.route('/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
 
 def ghtorrent_range():
     ghtorrent_range = serialize(ghtorrent.ghtorrent_range())
@@ -921,7 +921,7 @@ addMetric(app, github.bus_factor, 'bus_factor')
 POST JSON of api requests
 """
 #TODO: documentation
-@app.route('/{}/batch'.format(GHDATA_API_VERSION), methods=['GET', 'POST'])
+@app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
 def batch():
     """
     Execute multiple requests, submitted as a batch.
@@ -985,18 +985,18 @@ def batch():
 if (debugmode):
     app.debug = True
 
-if read_config('Development', 'interactive', 'GHDATA_INTERACTIVE', '0') == '1':
+if read_config('Development', 'interactive', 'AUGUR_INTERACTIVE', '0') == '1':
     ipdb.set_trace()
 
 # Close files and save config
 if (CONFIG_BAD):
     print('Regenerating config...')
-    GHDATA_CONFIG_FILE.seek(0)
-    parser.write(GHDATA_CONFIG_FILE)
+    AUGUR_CONFIG_FILE.seek(0)
+    parser.write(AUGUR_CONFIG_FILE)
 
-GHDATA_CONFIG_FILE.close()
-if GHDATA_ENV_EXPORT:
-    GHDATA_ENV_EXPORT_FILE.close()
+AUGUR_CONFIG_FILE.close()
+if AUGUR_ENV_EXPORT:
+    AUGUR_ENV_EXPORT_FILE.close()
 
 
 

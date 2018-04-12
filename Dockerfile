@@ -7,7 +7,7 @@ ENV STATIC_INDEX 1
 COPY ./docker/uwsgi.ini /app/uwsgi.ini
 COPY ./frontend/public /app/static
 
-RUN mkdir /ghdata
-WORKDIR /ghdata
-ADD . /ghdata
+RUN mkdir /augur
+WORKDIR /augur
+ADD . /augur
 RUN pip install --upgrade .

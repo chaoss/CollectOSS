@@ -11,15 +11,15 @@
      If you are downloading the official version:
 
      ```bash
-      git clone https://github.com/OSSHealth/ghdata && cd ghdata
+      git clone https://github.com/OSSHealth/augur && cd augur
       ```
 
      If you are working on your own fork, set the upstream remote:
 
      ```bash
-     git clone https://[yourrepo]/ ghdata # The repo must be named ghdata to serve local files
+     git clone https://[yourrepo]/ augur # The repo must be named augur to serve local files
      git remote remove upstream
-     git remote add upstream git://github.com/OSSHealth/ghdata
+     git remote add upstream git://github.com/OSSHealth/augur
      ```
 
      You can then `git fetch` and `git merge upstream/master` to get upstream changes.
@@ -39,22 +39,22 @@
     
      ```bash
      cd 
-     mv [yourrepo] ghdata
-     cd ghdata
+     mv [yourrepo] augur
+     cd augur
      ```
      For example: 
      
      ```bash
      cd
-     mv ghdata-team39-sprint1 ghdata
-     cd ghdata
+     mv augur-team39-sprint1 augur
+     cd augur
      ```
   
   3. Create a configuration file. The following command will create
-     a file ghdata.cfg suitable for development:
+     a file augur.cfg suitable for development:
 
       ```bash
-      cat > ghdata.cfg <<SOFTDEV-CONFIG
+      cat > augur.cfg <<SOFTDEV-CONFIG
       [Server]
       host = 0.0.0.0
       port = 5000
@@ -74,7 +74,7 @@
       SOFTDEV-CONFIG
       ```
 
-  4. Install GHData
+  4. Install Augur
 
       ```bash
       sudo pip3 install --upgrade .
@@ -83,9 +83,9 @@
   4. Run:
 
       ```bash
-      ghdata
+      augur
       ```
       or, if you want to run it in the background:
       ```
-      ~/ghdata$ nohup ghdata >ghdata.log 2>ghdata.err &
+      ~/augur$ nohup augur >augur.log 2>augur.err &
       ```

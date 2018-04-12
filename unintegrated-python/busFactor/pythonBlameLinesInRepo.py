@@ -9,9 +9,9 @@ app = Flask(__name__)
 
 @app.route("/")
 def pythonBlameHistory():
-    #path is the hardcoded folder for the last download of ghdata
-    repo_path = './ghdata'
-    #We must remove the old ghdata if we want to download a new copy.
+    #path is the hardcoded folder for the last download of augur
+    repo_path = './augur'
+    #We must remove the old augur if we want to download a new copy.
     #In order to delete it, we must first change the permissions
     #To be writable for all files and directories.
     #Based on this: http://stackoverflow.com/questions/2853723/whats-the-python-way-for-recursively-setting-file-permissions
@@ -23,12 +23,12 @@ def pythonBlameHistory():
                 os.chmod(os.path.join(root, file), stat.S_IWRITE)
         os.chmod(repo_path, stat.S_IWRITE)
     
-        #delete the old ghdata
+        #delete the old augur
         shutil.rmtree(repo_path)
     
-    #Get the ghdata repository from GitHub
-    repo = Repo.init('ghdata')
-    origin = repo.create_remote('origin','https://github.com/OSSHealth/ghdata.git')
+    #Get the augur repository from GitHub
+    repo = Repo.init('augur')
+    origin = repo.create_remote('origin','https://github.com/OSSHealth/augur.git')
     origin.fetch()
     origin.pull(origin.refs[0].remote_head)
     
@@ -46,7 +46,7 @@ def pythonBlameHistory():
     #You cannot use the os library file/directory loop for this part.
     #(as was used above to change file permissions)
     #That is because some files do not exist in every commit.
-    #You must loop through the commit tree, not the ghdata directory.
+    #You must loop through the commit tree, not the augur directory.
     for file_in_repo in repo.head.commit.tree.traverse():
         #For each file, we want to clear out the total lines and organization totals per file.
         #That's because we're starting over with a new file.

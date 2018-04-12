@@ -13,7 +13,7 @@
       1. You have a repo on GitHub and
       2. You have a fresh EC2 instance
     - Run this:
-      - bash <(curl -Ls https://www.dropbox.com/s/ttogu0p0kdo59c1/software-engineering-ghdata.sh?dl=1)
+      - bash <(curl -Ls https://www.dropbox.com/s/ttogu0p0kdo59c1/software-engineering-augur.sh?dl=1)
 
   - To step through it on your own, and inspect the shell script first, then you can follow this process
     - login to you server
@@ -22,7 +22,7 @@
       1. You have a repo on GitHub and
       2. You have a fresh EC2 instance
     - Run this:
-      - curl -L https://www.dropbox.com/s/ttogu0p0kdo59c1/software-engineering-ghdata.sh?dl=1 > install.sh
+      - curl -L https://www.dropbox.com/s/ttogu0p0kdo59c1/software-engineering-augur.sh?dl=1 > install.sh
       - Then you can inspect the shell script
       - chmod +x install.sh
       - run the shell script: ./install.sh
@@ -35,7 +35,7 @@
 2. Test2: http://ec2-34-201-11-60.compute-1.amazonaws.com:5000/?owner=facebook&repo=folly  
 
 ### Instructions for installation
-1. https://github.com/OSSHealth/ghdata/blob/master/devloperstartup.md
+1. https://github.com/OSSHealth/augur/blob/master/devloperstartup.md
 
 ### Another project using the same style of developer environment
 1. https://github.com/webpack/docs/wiki/hot-module-replacement-with-webpack

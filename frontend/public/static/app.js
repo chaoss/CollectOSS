@@ -153,30 +153,30 @@ var __makeRelativeRequire = function(require, mappings, pref) {
     return require(name);
   }
 };
-require.register("GHData.js", function(exports, require, module) {
+require.register("Augur.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = GHData;
+exports.default = Augur;
 var queryString = require('query-string');
 
-function GHData() {
+function Augur() {
   window.jQuery = require('jquery');
   window.Vue = require('vue');
   window.Vuex = require('vuex');
-  var GHDataAPI = require('GHDataAPI').default;
-  window.GHDataAPI = new GHDataAPI();
-  window.GHDataRepos = {};
-  window.GHDataStats = require('GHDataStats').default;
+  var AugurAPI = require('AugurAPI').default;
+  window.AugurAPI = new AugurAPI();
+  window.AugurRepos = {};
+  window.AugurStats = require('AugurStats').default;
   window.$ = window.jQuery;
 
-  var GHDataApp = require('./components/GHDataApp');
+  var AugurApp = require('./components/AugurApp');
 
   Vue.use(Vuex);
 
-  window.ghdata = new Vuex.Store({
+  window.augur = new Vuex.Store({
     state: {
       baseRepo: null,
       comparedRepos: [],
@@ -188,25 +188,25 @@ function GHData() {
     },
     mutations: {
       setBaseRepo: function setBaseRepo(state, payload) {
-        var repo = window.GHDataAPI.Repo(payload.url);
-        if (!window.GHDataRepos[repo.toString()]) {
-          window.GHDataRepos[repo.toString()] = repo;
+        var repo = window.AugurAPI.Repo(payload.url);
+        if (!window.AugurRepos[repo.toString()]) {
+          window.AugurRepos[repo.toString()] = repo;
         }
         state.baseRepo = repo.toString();
         if (!payload.keepCompared) {
           state.comparedRepos = [];
         }
-        var title = repo.owner + '/' + repo.name + '- GHData';
+        var title = repo.owner + '/' + repo.name + '- Augur';
         var queryString = '?repo=' + repo.owner + '+' + repo.name;
         window.history.pushState(null, title, queryString);
       },
       addComparedRepo: function addComparedRepo(state, payload) {
-        var repo = window.GHDataAPI.Repo(payload.url);
-        if (!window.GHDataRepos[repo.toString()]) {
-          window.GHDataRepos[repo.toString()] = repo;
+        var repo = window.AugurAPI.Repo(payload.url);
+        if (!window.AugurRepos[repo.toString()]) {
+          window.AugurRepos[repo.toString()] = repo;
         }
         state.comparedRepos.push(repo.toString());
-        var title = 'GHData';
+        var title = 'Augur';
         var queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
         window.history.pushState(null, title, queryString);
       },
@@ -234,29 +234,29 @@ function GHData() {
           compare: "each",
           byDate: false
         };
-        window.history.pushState(null, 'GHData', '/');
+        window.history.pushState(null, 'Augur', '/');
       } // end reset
 
     } // end mutations
   });
 
-  GHDataApp.store = window.ghdata;
-  window.GHDataApp = new Vue(GHDataApp).$mount('#app');
+  AugurApp.store = window.augur;
+  window.AugurApp = new Vue(AugurApp).$mount('#app');
 
   // Load state from query string
   var parsed = queryString.parse(location.search, { arrayFormat: 'bracket' });
   if (parsed.repo) {
-    window.GHDataApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') });
+    window.AugurApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') });
   }
   if (parsed.comparedTo) {
     parsed.comparedTo.forEach(function (repo) {
-      window.GHDataApp.$store.commit('addComparedRepo', { url: repo.replace(' ', '/') });
+      window.AugurApp.$store.commit('addComparedRepo', { url: repo.replace(' ', '/') });
     });
   }
 }
 });
 
-;require.register("GHDataAPI.js", function(exports, require, module) {
+;require.register("AugurAPI.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -269,16 +269,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $ = require('jquery');
 
-var GHDataAPI = function () {
-  function GHDataAPI(hostURL, version) {
-    _classCallCheck(this, GHDataAPI);
+var AugurAPI = function () {
+  function AugurAPI(hostURL, version) {
+    _classCallCheck(this, AugurAPI);
 
     this._version = version || 'unstable';
     this._host = hostURL || 'http://' + window.location.hostname + ':5000/';
     this.__cache = {};
   }
 
-  _createClass(GHDataAPI, [{
+  _createClass(AugurAPI, [{
     key: 'Repo',
     value: function Repo(owner, repoName) {
       var _this = this;
@@ -358,13 +358,13 @@ var GHDataAPI = function () {
     }
   }]);
 
-  return GHDataAPI;
+  return AugurAPI;
 }();
 
-exports.default = GHDataAPI;
+exports.default = AugurAPI;
 });
 
-;require.register("GHDataStats.js", function(exports, require, module) {
+;require.register("AugurStats.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -375,19 +375,19 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var GHDataStats = function () {
-  function GHDataStats() {
-    _classCallCheck(this, GHDataStats);
+var AugurStats = function () {
+  function AugurStats() {
+    _classCallCheck(this, AugurStats);
   }
 
-  _createClass(GHDataStats, null, [{
+  _createClass(AugurStats, null, [{
     key: 'convertDates',
     value: function convertDates(data, earliest, latest) {
       earliest = earliest || new Date('01-01-2005');
       latest = latest || new Date();
       if (Array.isArray(data[0])) {
         data = data.map(function (datum) {
-          return GHDataStats.convertDates(datum);
+          return AugurStats.convertDates(datum);
         });
       } else {
 
@@ -405,7 +405,7 @@ var GHDataStats = function () {
     value: function convertKey(data, key) {
       if (Array.isArray(data[0])) {
         data = data.map(function (datum) {
-          return GHDataStats.convertKey(datum, key);
+          return AugurStats.convertKey(datum, key);
         });
       } else {
         var EARLIEST = new Date('01-01-2005');
@@ -429,11 +429,11 @@ var GHDataStats = function () {
       var flat = ary.map(function (e) {
         return e[key];
       });
-      mean = mean || GHDataStats.averageArray(flat);
+      mean = mean || AugurStats.averageArray(flat);
       var distances = flat.map(function (e) {
         return (e - mean) * (e - mean);
       });
-      return Math.sqrt(GHDataStats.averageArray(distances));
+      return Math.sqrt(AugurStats.averageArray(distances));
     }
   }, {
     key: 'describe',
@@ -441,8 +441,8 @@ var GHDataStats = function () {
       var flat = ary.map(function (e) {
         return e[key];
       });
-      var mean = GHDataStats.averageArray(flat);
-      var stddev = GHDataStats.standardDeviation(ary, key, mean);
+      var mean = AugurStats.averageArray(flat);
+      var stddev = AugurStats.standardDeviation(ary, key, mean);
       var variance = stddev * stddev;
       return {
         'mean': mean,
@@ -479,7 +479,7 @@ var GHDataStats = function () {
         }
 
         var average = { date: new Date(date) };
-        average[key] = GHDataStats.averageArray(averageWindow.slice(0, windowSizeInDays));
+        average[key] = AugurStats.averageArray(averageWindow.slice(0, windowSizeInDays));
         averageWindow.shift();
         rolling.push(average);
       }
@@ -491,7 +491,7 @@ var GHDataStats = function () {
       if (!data) {
         return [];
       }
-      baseline = baseline || GHDataStats.averageArray(data.map(function (e) {
+      baseline = baseline || AugurStats.averageArray(data.map(function (e) {
         return e[key];
       }));
       data = data.map(function (datum) {
@@ -515,9 +515,9 @@ var GHDataStats = function () {
       };
       var data = {};
 
-      data['base'] = GHDataStats.rollingAverage(GHDataStats.convertDates(GHDataStats.convertKey(baseData, Object.keys(baseData[0])[1]), config.earliest, config.latest), undefined, config.period);
+      data['base'] = AugurStats.rollingAverage(AugurStats.convertDates(AugurStats.convertKey(baseData, Object.keys(baseData[0])[1]), config.earliest, config.latest), undefined, config.period);
 
-      data['compare'] = GHDataStats.rollingAverage(GHDataStats.convertDates(GHDataStats.convertKey(compareData, Object.keys(compareData[0])[1]), config.earliest, config.latest), undefined, config.period);
+      data['compare'] = AugurStats.rollingAverage(AugurStats.convertDates(AugurStats.convertKey(compareData, Object.keys(compareData[0])[1]), config.earliest, config.latest), undefined, config.period);
 
       var smaller = data['base'][0].date < data['compare'][0].date ? 'base' : 'compare';
       var larger = data['base'][0].date < data['compare'][0].date ? 'compare' : 'base';
@@ -551,7 +551,7 @@ var GHDataStats = function () {
     key: 'zscores',
     value: function zscores(data, key) {
       key = key || 'value';
-      var stats = GHDataStats.describe(data, key);
+      var stats = AugurStats.describe(data, key);
       return data.map(function (e) {
         var newObj = {};
         if (e.date) {
@@ -569,10 +569,10 @@ var GHDataStats = function () {
     }
   }]);
 
-  return GHDataStats;
+  return AugurStats;
 }();
 
-exports.default = GHDataStats;
+exports.default = AugurStats;
 });
 
 ;require.register("components/BaseRepoActivityCard.vue", function(exports, require, module) {
@@ -695,36 +695,36 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-;require.register("components/GHDataApp.vue", function(exports, require, module) {
+;require.register("components/AugurApp.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
 
-var _GHDataHeader = require('./GHDataHeader.vue');
+var _AugurHeader = require('./AugurHeader.vue');
 
-var _GHDataHeader2 = _interopRequireDefault(_GHDataHeader);
+var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
 
 var _SidebarControls = require('./SidebarControls.vue');
 
 var _SidebarControls2 = _interopRequireDefault(_SidebarControls);
 
-var _GHDataCards = require('./GHDataCards.vue');
+var _AugurCards = require('./AugurCards.vue');
 
-var _GHDataCards2 = _interopRequireDefault(_GHDataCards);
+var _AugurCards2 = _interopRequireDefault(_AugurCards);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
   components: {
-    'ghdata-header': _GHDataHeader2.default,
+    'augur-header': _AugurHeader2.default,
     SidebarControls: _SidebarControls2.default,
-    'ghdata-cards': _GHDataCards2.default
+    'augur-cards': _AugurCards2.default
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('ghdata-header'),_vm._v(" "),_c('div',{staticClass:"content"},[_c('sidebar-controls'),_vm._v(" "),_c('ghdata-cards')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('augur-header'),_vm._v(" "),_c('div',{staticClass:"content"},[_c('sidebar-controls'),_vm._v(" "),_c('augur-cards')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -738,7 +738,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-;require.register("components/GHDataCards.vue", function(exports, require, module) {
+;require.register("components/AugurCards.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
 
@@ -801,7 +801,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-;require.register("components/GHDataHeader.vue", function(exports, require, module) {
+;require.register("components/AugurHeader.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
 
@@ -901,9 +901,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _GHDataStats = require('../../GHDataStats');
+var _AugurStats = require('../../AugurStats');
 
-var _GHDataStats2 = _interopRequireDefault(_GHDataStats);
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
 
 var _d = require('d3');
 
@@ -923,19 +923,19 @@ exports.default = {
       var _this = this;
 
       if (this.repo) {
-        window.GHDataRepos[this.repo].dependents().then(function (dependents) {
+        window.AugurRepos[this.repo].dependents().then(function (dependents) {
           _this.$refs['dependents'].innerHTML = '';
           for (var i = 0; i < dependents.length && i < 10; i++) {
             _this.$refs['dependents'].innerHTML += dependents[i].name + '<br>';
           }
         });
-        window.GHDataRepos[this.repo].dependencies().then(function (dependencies) {
+        window.AugurRepos[this.repo].dependencies().then(function (dependencies) {
           _this.$refs['dependencies'].innerHTML = '';
           for (var i = 0; i < dependencies.dependencies.length && i < 10; i++) {
             _this.$refs['dependents'].innerHTML += dependencies.dependencies[i].name + '<br>';
           }
         });
-        window.GHDataRepos[this.repo].dependencyStats().then(function (depstats) {
+        window.AugurRepos[this.repo].dependencyStats().then(function (depstats) {
           _this.$refs['totaldependents'].innerHTML = depstats['dependent_repositories'];
           _this.$refs['totaldependencies'].innerHTML = depstats['dependencies'];
         });
@@ -969,9 +969,9 @@ var _metricsGraphics = require('metrics-graphics');
 
 var _metricsGraphics2 = _interopRequireDefault(_metricsGraphics);
 
-var _GHDataStats = require('../GHDataStats');
+var _AugurStats = require('../AugurStats');
 
-var _GHDataStats2 = _interopRequireDefault(_GHDataStats);
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
 
 var _d = require('d3');
 
@@ -1020,9 +1020,9 @@ var _d = require('d3');
 
 var d3 = _interopRequireWildcard(_d);
 
-var _GHDataStats = require('GHDataStats');
+var _AugurStats = require('AugurStats');
 
-var _GHDataStats2 = _interopRequireDefault(_GHDataStats);
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
 
 var _vuex = require('vuex');
 
@@ -1073,15 +1073,15 @@ exports.default = {
         if (this.$refs.chart) {
           this.$refs.chart.className = 'linechart loader';
         }
-        window.GHDataRepos[this.repo][this.source]().then(function (baseData) {
+        window.AugurRepos[this.repo][this.source]().then(function (baseData) {
           _this.$refs.chartStatus.innerHTML = '';
           if (baseData && baseData.length) {
-            config.data = _GHDataStats2.default.convertDates(baseData, _this.earliest, _this.latest);
+            config.data = _AugurStats2.default.convertDates(baseData, _this.earliest, _this.latest);
           } else {
             config.data = [];
           }
           if (_this.comparedTo) {
-            return GHDataRepos[_this.comparedTo][_this.source]();
+            return AugurRepos[_this.comparedTo][_this.source]();
           }
           return new Promise(function (resolve, reject) {
             resolve();
@@ -1091,16 +1091,16 @@ exports.default = {
           if (config.data && compareData && compareData.length) {
             if (config.compare == 'each') {
               var key = Object.keys(compareData[0])[1];
-              var compare = _GHDataStats2.default.rollingAverage(_GHDataStats2.default.zscores(compareData, key), 'value', _this.period);
-              var base = _GHDataStats2.default.rollingAverage(_GHDataStats2.default.zscores(config.data, key), 'value', _this.period);
+              var compare = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(compareData, key), 'value', _this.period);
+              var base = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(config.data, key), 'value', _this.period);
               config.data = [base, compare];
-              config.legend = [window.GHDataRepos[_this.repo].toString(), window.GHDataRepos[_this.comparedTo].toString()];
+              config.legend = [window.AugurRepos[_this.repo].toString(), window.AugurRepos[_this.comparedTo].toString()];
               config.colors = config.colors || ['#FF3647', '#999'];
             } else {
               console.log('rendering percentage');
               config.format = 'percentage';
               config.baselines = [{ value: 1, label: config.baseline }];
-              config.data = _GHDataStats2.default.makeRelative(config.data, compareData, {
+              config.data = _AugurStats2.default.makeRelative(config.data, compareData, {
                 earliest: config.earliest,
                 latest: config.latest,
                 byDate: config.byDate,
@@ -1110,8 +1110,8 @@ exports.default = {
           } else {
             if (!_this.disableRollingAverage) {
               config.legend = config.legend || [config.title.toLowerCase(), _this.period + ' day average'];
-              var rolling = _GHDataStats2.default.rollingAverage(config.data, keys[0], _this.period);
-              config.data = _GHDataStats2.default.convertKey(_GHDataStats2.default.combine(config.data, rolling), keys[0]);
+              var rolling = _AugurStats2.default.rollingAverage(config.data, keys[0], _this.period);
+              config.data = _AugurStats2.default.convertKey(_AugurStats2.default.combine(config.data, rolling), keys[0]);
               config.colors = config.colors || ['#CCC', '#FF3647'];
               config.y_accessor = 'value';
             }
