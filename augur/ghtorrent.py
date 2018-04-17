@@ -554,17 +554,18 @@ class GHTorrent(object):
     def total_committers(self, owner, repo=None):
         repoid = self.repoid(owner, repo)
         totalCommittersSQL = s.sql.text("""
-        SELECT total_committers.created_at AS "date", MAX(@number_of_committers:=@number_of_committers+1) total_total_committers
+        SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_total_committers
         FROM (
             SELECT author_id, MIN(DATE(created_at)) created_at
             FROM commits
             WHERE project_id = :repoid
             GROUP BY author_id
-            ORDER BY created_at ASC) AS total_committers,
-        (SELECT @number_of_committers:= 0) AS number_of_committers
-        GROUP BY DATE(total_committers.created_at)
+            ORDER BY created_at ASC) AS total_committers
+        GROUP BY YEARWEEK(total_committers.created_at)
         """)
-        return pd.read_sql(totalCommittersSQL, self.db, params={"repoid": str(repoid)})
+        df = pd.read_sql(totalCommittersSQL, self.db, params={"repoid": str(repoid)})
+        df['total_total_committers'] = df['total_total_committers'].cumsum()
+        return df
 
     def watchers(self, owner, repo=None):
         repoid = self.repoid(owner, repo)
