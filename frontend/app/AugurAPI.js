@@ -102,6 +102,9 @@ export default class AugurAPI {
     repo.issuesResponseTime  = Timeseries('issues/response_time')
     repo.issueActivity       = Timeseries('issues/activity')
 
+    //testing
+    repo.linesChanged        = Timeseries('lines_changed')
+
 
     repo.contributors        = Endpoint('contributors')
     repo.contributions       = Endpoint('contributions')
@@ -113,9 +116,6 @@ export default class AugurAPI {
     repo.dependencies        = Endpoint('dependencies')
     repo.dependencyStats     = Endpoint('dependency_stats')
     repo.watchers            = Endpoint('watchers')
-
-    //testing
-    
 
     return repo
 

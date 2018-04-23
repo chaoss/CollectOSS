@@ -559,6 +559,9 @@ addTimeseries(app, github.tags, 'tags')
 """
 addTimeseries(app, github.major_tags, 'tags/major')
 
+#TODO: Documentation
+addTimeseries(app, github.lines_changed, 'lines_changed')
+
 """
 @api {get} /:owner/:repo/timeseries/downloads Number of downloads
 @apiDescription Timeseries of downloads from package manager

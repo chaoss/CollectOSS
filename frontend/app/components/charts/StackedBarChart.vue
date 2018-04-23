@@ -21,6 +21,7 @@ export default {
   computed: {
     repo() {
       return this.$store.state.baseRepo
+      //TODO: add in functionality for date rate change (convertDates in AugurStats.js)
     },
     spec() {
       return {

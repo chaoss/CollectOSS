@@ -4,6 +4,8 @@ import re
 from dateutil.parser import parse
 import pandas as pd
 import github
+import numpy as np
+import datetime
 import requests
 
 class GitHubAPI(object):
@@ -209,3 +211,21 @@ class GitHubAPI(object):
                 i += 1
         genderized = names.merge(LocalCSV.name_gender, how='inner', on=['name'])
         return genderized
+
+    def lines_changed(self, owner, repo=None):
+        url = "https://api.github.com/repos/{}/{}/stats/code_frequency".format(owner, repo)
+        json = requests.get(url).json()
+        dates = []
+        totals = []
+        for i in range(0, len(json)):
+            dates = np.append(dates, datetime.datetime.utcfromtimestamp(json[i][0]).strftime('%Y-%m-%dT%H:%M:%SZ'))
+            totals = np.append(totals, json[i][1] - json[i][2])
+        df1 = pd.DataFrame(data=dates, columns=["dates"])
+        df2 = pd.DataFrame(data=totals, columns=["lines_changed"])
+        df = df1.join(df2)
+        return df
+
+
+
+
+
