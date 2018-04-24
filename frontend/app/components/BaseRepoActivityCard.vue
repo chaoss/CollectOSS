@@ -79,7 +79,7 @@
 
       <div class="col col-12">
         <line-chart source="linesChanged" 
-                    title="Lines Changed" 
+                    title="Lines Changed / Week" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Contributors"
                     disableRollingAverage=1>

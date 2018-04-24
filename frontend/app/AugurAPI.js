@@ -101,10 +101,7 @@ export default class AugurAPI {
     repo.issuesClosed        = Timeseries('issues/closed')
     repo.issuesResponseTime  = Timeseries('issues/response_time')
     repo.issueActivity       = Timeseries('issues/activity')
-
-    //testing
     repo.linesChanged        = Timeseries('lines_changed')
-
 
     repo.contributors        = Endpoint('contributors')
     repo.contributions       = Endpoint('contributions')

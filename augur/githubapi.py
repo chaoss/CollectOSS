@@ -214,13 +214,14 @@ class GitHubAPI(object):
 
     def lines_changed(self, owner, repo=None):
         url = "https://api.github.com/repos/{}/{}/stats/code_frequency".format(owner, repo)
-        json = requests.get(url).json()
+        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
         dates = []
         totals = []
         for i in range(0, len(json)):
-            dates = np.append(dates, datetime.datetime.utcfromtimestamp(json[i][0]).strftime('%Y-%m-%dT%H:%M:%SZ'))
-            totals = np.append(totals, json[i][1] - json[i][2])
-        df1 = pd.DataFrame(data=dates, columns=["dates"])
+            dates = np.append(dates, datetime.datetime.utcfromtimestamp(json[i][0]).strftime('%Y-%m-%dT%H:%M:%SZ')) 
+            totals = np.append(totals, json[i][1] + json[i][2])
+            # totals = np.append(totals, json[i][1] + abs(json[i][2]))
+        df1 = pd.DataFrame(data=dates, columns=["date"])
         df2 = pd.DataFrame(data=totals, columns=["lines_changed"])
         df = df1.join(df2)
         return df

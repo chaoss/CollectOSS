@@ -908,9 +908,6 @@ def ghtorrent_range():
 """
 addMetric(app, github.bus_factor, 'bus_factor')
 
-
-
-
 #######################
 #   Batch Requests    #
 #######################

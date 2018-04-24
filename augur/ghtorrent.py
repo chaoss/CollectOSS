@@ -353,7 +353,6 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
 
-
     def contributors(self, owner, repo=None):
         """
         All the contributors to a project and the counts of their contributions
@@ -464,9 +463,6 @@ class GHTorrent(object):
         """)
         return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
 
-
-
-
     def classify_contributors(self, owner, repo=None):
         """
         Classify everyone who has interacted with a repo into
@@ -499,7 +495,7 @@ class GHTorrent(object):
             if (ratio['commits'] > 0.02 or ratio['pull_request_comments'] > 0.15):
                 role = 'maintainer'
 
-            return pd.Series({'login': row['login'], 'role': role})
+            return pd.Series({'user': row['user'], 'role': role})
 
         roles = contributors.apply(classify, axis=1)
         return roles
