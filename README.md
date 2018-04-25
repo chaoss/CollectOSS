@@ -137,7 +137,8 @@ If you check the logs/frontend.log and find that "brunch" was not found:
 ```
 
 If the logs look good but the webpage at localhost:3333 is empty, it could be that Yarn installed the wrong version of some libraries. In that case ... 
-```cd frontend 
+```
+cd frontend 
 	npm install
 ```
 
