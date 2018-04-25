@@ -130,14 +130,16 @@ The screen sessions can be killed with `make dev-stop`
 
 *MAC OSX High Sierra (and Possibly older OSX Versions) Errata:
 If you check the logs/frontend.log and find that "brunch" was not found: 
-
-` brew install npm
+```
+  brew install npm
   npm install -g brunch
-  brew install yarn `
+  brew install yarn
+```
 
 If the logs look good but the webpage at localhost:3333 is empty, it could be that Yarn installed the wrong version of some libraries. In that case ... 
-`cd frontend 
-	> npm install`
+```cd frontend 
+	npm install
+```
 
 
 
