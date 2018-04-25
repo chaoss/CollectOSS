@@ -1,4 +1,4 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend install-ubuntu-dependencies
 
 PY2 := $(shell command -v pip2 2> /dev/null)
 PY3 := $(shell command -v pip3 2> /dev/null)
@@ -53,7 +53,7 @@ endif
 endif
 ifdef NODE
 		npm install -g apidoc brunch
-		cd frontend/ && yarn install
+		cd frontend/ && npm install
 endif
 
 install-msr:
@@ -65,8 +65,7 @@ download-upgrade:
 upgrade: download-upgrade install
 		@ echo "Upgraded."
 
-ugh:
-		
+
 
 dev-start: dev-stop
 ifdef CONDA
@@ -153,3 +152,20 @@ update-deps:
 ifdef CONDA
 		conda env export > environment.yml
 endif
+
+
+install-ubuntu-dependencies:
+	@ echo "Downloading NodeSource Installer..."
+	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+	@ echo "Installing Node and MariaDB..."
+	sudo apt-get install nodejs mariadb-server
+	@ echo "Downloading Anaconda Installer..."
+	curl https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh | bash -e
+
+install-os-x-dependencies:
+	@ echo "Downloading dependencies..."
+	brew install node mariadb wget
+	@ echo "Downloading Anaconda installer to ~/Downloads..."
+	cd ~/Downloads && wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
+	cd ~/Downloads && open Anaconda3-5.1.0-MacOSX-x86_64.pkg
+

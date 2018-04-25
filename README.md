@@ -18,7 +18,7 @@ Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHeal
 
 
 Installation with Docker (easy to get up and running)
-------------------------
+-----------------------------------------------------
 Before we begin, make sure you have everything you need installed: [Git](https://git-scm.com/downloads), [Docker](https://www.docker.com/community-edition), [Docker Compose](https://docs.docker.com/compose/install/), and a MySQL server with [GHTorrent](https://github.com/gousiosg/github-mirror/tree/master/sql) loaded.
 
 Now, to install:
@@ -63,58 +63,80 @@ Now, to install:
 
 
 
-Installation without Docker (recommended for developers)
----------------------------
+Local Installation (For Development)
+-----------------------------------------------------
+
 ### Dependencies
-- [Anaconda](https://www.anaconda.com/download/) (3.x version)
-- a MySQL 5.x database or later with the [GHTorrent database](http://ghtorrent.org/)
+- [Anaconda](https://www.anaconda.com/download/)
+- [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
-  - Our Development team has a public read only database you can request access to
-  - If you want to install your own copy of the MSR14 dataset [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
-- a MySQL 5.x database with write access
+- [NodeJS](http://nodejs.org) or newer and `npm`
 
-After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a user for Augur. Augur only needs `SELECT` privileges.
 
-Once the database is set up, clone Augur
+#### Dependency Installation for Ubuntu
+
+```bash
+# Install NodeSource
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+
+# Install NodeJS and MariaDB 
+sudo apt-get install -y nodejs
+
+# Install Anaconda
+curl https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh > Anaconda.sh
+chmod +x Anaconda.sh
+
+# You must agree to Anaconda's license terms to proceed
+./Anaconda.sh -b
+rm Anaconda.sh
+```
+
+
+#### Dependency Installation for OS X
+
+```bash
+# Install Homebrew
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+# Install node and mariadb
+brew install wget node mariadb
+
+# Install Anaconda
+cd ~/Downloads
+wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
+open Anaconda3-5.1.0-MacOSX-x86_64.pkg
+```
+
+
+### Installation
+
+Clone the repo and install the libraries and tools needed by Augur
+
 ```bash
 git clone https://github.com/OSSHealth/augur/
-cd augur && make install-dev
-```
-
-Run `augur` to create the configuration file (augur.cfg). Edit the file to reflect your database credentials.
-
-Run `make dev` to start Augur's backend and frontend build server.
-
-
-Developer Installation
-----------------------
-
-### Dependencies
-- Python 3.4.x and Python 2.7.x with `pip2` and `pip3`
-- MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
-  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
-- NodeJS 7.x or newer
-
-#### Ubuntu
-```
-   ## Python Installs on UBUNUTU
-   sudo apt-get install python-pip
-   sudo apt-get install python3-pip
-
-   ## For Development you need NodeJS
-   sudo apt-get install nodejs
-```
-
-First, clone the repo and checkout the dev branch:
-
-```bash
-git clone https://github.com/OSSHealth/augur/ && cd augur && git checkout dev
-```
-
-Install the Python and Node developer dependencies:
-```bash
+cd augur
+# Install the Python and Node tools and libraries needed
 make install-dev
 ```
+
+Make sure you have a database user that has select access to the database where you installed [GHTorrent](http://ghtorrent.org/) and all priviledges on another database for Augur.
+
+```sql
+CREATE USER 'augur'@'localhost' IDENTIFIED BY 'password';
+GRANT SELECT ON ghtorrent.* TO 'augur'@'localhost';
+
+CREATE DATABASE augur;
+GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
+```
+
+Run `augur` to create an `augur.cfg` file. Edit this file with the the required information. In addition to your database information, you will need a [GitHub](https://developer.github.com/v3/) API Key, [PublicWWW](https://publicwww.com/) API Key, and [LibrariesIO](https://libraries.io/) API Key.
+
+You're ready to rock! To start both the frontend and backend, run:
+ ```bash
+ make dev
+ ```
+ 
+After making your changes, run `make build` to update the docs and frontend before adding them to your staging area.
 
 For futher instructions on how to add to Augur, here are guides to adding an endpoint to the full stack. 
 
@@ -123,10 +145,6 @@ For futher instructions on how to add to Augur, here are guides to adding an end
 [Dev Guide Part 2](docs/dev-guide-pt2.md)
 
 Frontend development guide coming soon!
-
-You're good to go. You can start a single instance of the API by running `augur`. Run `make dev-start` to start both the Brunch server and Gunicorn server for full-stack development.
-
-The screen sessions can be killed with `make dev-stop`
 
 License and Copyright
 ---------------------

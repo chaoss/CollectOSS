@@ -55,3 +55,4 @@ augur/bin
 # Node #
 ########
 *node_modules/
+yarn.lock
