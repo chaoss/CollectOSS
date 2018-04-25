@@ -146,6 +146,21 @@ For futher instructions on how to add to Augur, here are guides to adding an end
 
 Frontend development guide coming soon!
 
+macOS High Sierra (and possibly older OS X Versions) Errata:
+If you check the logs/frontend.log and find that "brunch" was not found: 
+```bash
+brew install npm
+npm install -g brunch
+brew install yarn
+```
+
+If the logs look good but the webpage at localhost:3333 is empty, it could be that Yarn installed the wrong version of some libraries. In that case:
+
+```bash
+cd frontend 
+npm install
+```
+
 License and Copyright
 ---------------------
 Copyright © 2018 University of Nebraska at Omaha, University of Missouri and CHAOSS Project at the Linux Foundation
