@@ -1,120 +1,186 @@
 var $ = require('jquery')
 
 export default class AugurAPI {
-  constructor(hostURL, version, autobatch) {
-    this._version     = version || 'unstable'
-    this._host        = hostURL || 'http://' + window.location.host + '/api/'
-    this.__cache      = {}
-    this.__timeout    = null
-    this.__pending    = {}
+  constructor (hostURL, version, autobatch) {
+    this._version = version || '/api/unstable'
+    this._host = hostURL || 'http://' + window.location.host
+    this.__cache = {}
+    this.__timeout = null
+    this.__pending = {}
 
-    this.autobatch    = (typeof autobatch !== 'undefined') ? autobatch : true;
+    this.autobatch = (typeof autobatch !== 'undefined') ? autobatch : true
     this.openRequests = 0
   }
 
-  __autobatcher(url, params, fireTimeout) {
-    if (this.__timeout !== null && !fireTimeout) {
-      this.__timeout = setTimeout(() => {
-        __autobatch(undefined, undefined, true);
-      })
-    }
-    return new Promise((resolve, reject) => {
-      if (fireTimeout) {
-        let batchURL = this._host + this._version + '/batch';
-        let requestArray = [];
-        Object.keys(this.__pending).forEach((key) => {
-          requestArray.push({})
+  // __autobatcher (url, params, fireTimeout) {
+  //   if (this.__timeout !== null && !fireTimeout) {
+  //     this.__timeout = setTimeout(() => {
+  //       __autobatch(undefined, undefined, true)
+  //     })
+  //   }
+  //   return new Promise((resolve, reject) => {
+  //     if (fireTimeout) {
+  //       let batchURL = this._host + this._version + '/batch'
+  //       let requestArray = []
+  //       Object.keys(this.__pending).forEach((key) => {
+  //         requestArray.push({})
+  //       })
+  //       $.post(batchURL)
+  //     }
+  //   })
+  // }
+
+  batch (endpoints) {
+    let str = '[{"method": "GET", "path": "' + endpoints.join('"},{"method": "GET", "path": "') + '"}]'
+    this.openRequests++
+    let url = '' + this._host + this._version + '/batch'
+
+    // Check cached
+    if (this.__cache[window.btoa(url + endpoints.join(','))]) {
+      if (this.__cache[window.btoa(url + endpoints.join(','))].created_at > Date.now() - 1000 * 60) {
+        return new Promise((resolve, reject) => {
+          resolve(this.__cache[window.btoa(url + endpoints.join(','))].data)
         })
-        $.post(batchURL)
       }
-    });
+    }
+
+    return $.ajax(url, {
+      type: 'post',
+      data: str,
+      dataType: 'json',
+      contentType: 'application/json'
+    }).then((data) => {
+      this.openRequests--
+      // Save to cache
+      this.__cache[window.btoa(url + endpoints.join(','))] = {
+        created_at: Date.now(),
+        data: data
+      }
+      return new Promise((resolve, reject) => {
+        if (typeof (data) === 'undefined') {
+          reject(new Error('data-undefined'))
+        } else {
+          resolve(data)
+        }
+      })
+    })
   }
 
-  Repo(owner, repoName) {
-
+  Repo (owner, repoName) {
+    var repo
     if (repoName) {
-      var repo = {owner: owner, name: repoName}
+      repo = {owner: owner, name: repoName}
     } else if (owner) {
       let splitURL = owner.split('/')
       if (splitURL.length < 3) {
-        var repo = {owner: splitURL[0], name: splitURL[1]}
+        repo = {owner: splitURL[0], name: splitURL[1]}
       } else {
-        var repo = {owner: splitURL[3], name: splitURL[4]}
+        repo = {owner: splitURL[3], name: splitURL[4]}
       }
     }
 
     repo.toString = () => { return repo.owner + '/' + repo.name }
 
-    var Endpoint = (endpoint) => {
-      this.openRequests++;
-      var self = this;
-      var url = this._host + this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
-      return function (params, callback) {
-        if (self.__cache[btoa(url)]) {
-          if (self.__cache[btoa(url)].created_at > Date.now() - 1000 * 60) {
+    repo.__endpointMap = {}
+    repo.__reverseEndpointMap = {}
+
+    var Endpoint = (r, name, endpoint) => {
+      this.openRequests++
+      var self = this
+      var fullEndpoint = this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint
+      var url = this._host + fullEndpoint
+      r.__endpointMap[name] = fullEndpoint
+      r.__reverseEndpointMap[fullEndpoint] = name
+      r[name] = function (params, callback) {
+        if (self.__cache[window.btoa(url)]) {
+          if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
             return new Promise((resolve, reject) => {
-              resolve(JSON.parse(self.__cache[btoa(url)].data))
+              resolve(self.__cache[window.btoa(url)].data)
             })
           }
         }
         if (this.autobatch) {
-          return this.__autobatcher(url, params);
+          return this.__autobatcher(url, params)
         }
         return $.get(url, params).then((data) => {
-          this.openRequests--;
-          self.__cache[btoa(url)] = {
+          this.openRequests--
+          self.__cache[window.btoa(url)] = {
             created_at: Date.now(),
-            data: JSON.stringify(data)
+            data: data
           }
           if (typeof callback === 'function') {
             callback(data)
           }
           return new Promise((resolve, reject) => {
-            if (typeof(data) == undefined) { reject() }
-            else { resolve(data) }
+            if (typeof (data) === 'undefined') {
+              reject(new Error('data-undefined'))
+            } else {
+              resolve(data)
+            }
           })
         })
       }
+      return r[name]
     }
 
-    var Timeseries = (endpoint) => {
-      let func = Endpoint('timeseries/' + endpoint)
+    var Timeseries = (r, jsName, endpoint) => {
+      let func = Endpoint(r, jsName, 'timeseries/' + endpoint)
       func.relativeTo = (baselineRepo, params, callback) => {
-        var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name;
+        var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name
         return Endpoint(url)()
       }
       return func
     }
 
-    repo.commits             = Timeseries('commits')
-    repo.forks               = Timeseries('forks')
-    repo.issues              = Timeseries('issues')
-    repo.pulls               = Timeseries('pulls')
-    repo.stars               = Timeseries('stargazers')
-    repo.tags                = Timeseries('tags')
-    repo.downloads           = Timeseries('downloads')
-    repo.totalCommitters     = Timeseries('total_committers')
-    repo.issueComments       = Timeseries('issue/comments')
-    repo.commitComments      = Timeseries('commits/comments')
-    repo.pullReqComments     = Timeseries('pulls/comments')
-    repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate')
-    repo.issuesClosed        = Timeseries('issues/closed')
-    repo.issuesResponseTime  = Timeseries('issues/response_time')
-    repo.issueActivity       = Timeseries('issues/activity')
-    repo.linesChanged        = Timeseries('lines_changed')
+    repo.batch = (jsNameArray) => {
+      return this.batch(jsNameArray.map((e) => { return repo.__endpointMap[e] })).then((data) => {
+        return new Promise((resolve, reject) => {
+          if (Array.isArray(data)) {
+            let mapped = {}
+            data.forEach(response => {
+              if (response.status === 200) {
+                mapped[repo.__reverseEndpointMap[response.path]] = JSON.parse(response.response)
+              } else {
+                mapped[repo.__reverseEndpointMap[response.path]] = null
+              }
+            })
+            resolve(mapped)
+          } else {
+            reject(new Error('data-not-array'))
+          }
+        })
+      })
+    }
 
-    repo.contributors        = Endpoint('contributors')
-    repo.contributions       = Endpoint('contributions')
-    repo.committerLocations  = Endpoint('committer_locations')
-    repo.communityAge        = Endpoint('community_age')
-    repo.linkingWebsites     = Endpoint('linking_websites')
-    repo.busFactor           = Endpoint('bus_factor')
-    repo.dependents          = Endpoint('dependents')
-    repo.dependencies        = Endpoint('dependencies')
-    repo.dependencyStats     = Endpoint('dependency_stats')
-    repo.watchers            = Endpoint('watchers')
+    Timeseries(repo, 'commits', 'commits')
+    Timeseries(repo, 'forks', 'forks')
+    Timeseries(repo, 'issues', 'issues')
+    Timeseries(repo, 'pulls', 'pulls')
+    Timeseries(repo, 'stars', 'stargazers')
+    Timeseries(repo, 'tags', 'tags')
+    Timeseries(repo, 'downloads', 'downloads')
+    Timeseries(repo, 'totalCommitters', 'total_committers')
+    Timeseries(repo, 'issueComments', 'issue/comments')
+    Timeseries(repo, 'commitComments', 'commits/comments')
+    Timeseries(repo, 'pullReqComments', 'pulls/comments')
+    Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate')
+    Timeseries(repo, 'issuesClosed', 'issues/closed')
+    Timeseries(repo, 'issuesResponseTime', 'issues/response_time')
+    Timeseries(repo, 'issueActivity', 'issues/activity')
+    Timeseries(repo, 'communityEngagement', 'community_engagement')
+    Timeseries(repo, 'linesChanged', 'lines_changed')
+
+    Endpoint(repo, 'contributors', 'contributors')
+    Endpoint(repo, 'contributions', 'contributions')
+    Endpoint(repo, 'committerLocations', 'committer_locations')
+    Endpoint(repo, 'communityAge', 'community_age')
+    Endpoint(repo, 'linkingWebsites', 'linking_websites')
+    Endpoint(repo, 'busFactor', 'bus_factor')
+    Endpoint(repo, 'dependents', 'dependents')
+    Endpoint(repo, 'dependencies', 'dependencies')
+    Endpoint(repo, 'dependencyStats', 'dependency_stats')
+    Endpoint(repo, 'watchers', 'watchers')
 
     return repo
-
   }
 }

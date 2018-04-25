@@ -1,8 +1,10 @@
 <template>
   <section>
-    <h1>Activity</h1>
+    <h1>Growth, Maturity, and Decline</h1>
     <h2>{{ $store.state.baseRepo }}</h2>
     <div class="row">
+
+
 
       <div class="col col-6">
         <line-chart source="commits"
@@ -21,28 +23,34 @@
       </div>
 
       <div class="col col-6">
-        <line-chart source="issues"
-                    title="Issues / Week" 
+        <line-chart source="communityEngagement"
+                    title="Open Issues" 
+                    inner-key="issues_open"
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                    cite-text="Community Activty"
+                    disable-rolling-average=1>
+        </line-chart>
+      </div>
+
+      <div class="col col-6">
+        <line-chart source="communityEngagement"
+                    title="Closed Issues" 
+                    inner-key="issues_closed"
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                    cite-text="Community Activty"
+                    disable-rolling-average=1>
+        </line-chart>
+      </div>
+
+            <div class="col col-6">
+        <line-chart source="communityEngagement"
+                    title="Issues Open / Week"
+                    inner-key="issues_opened"
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty">
         </line-chart>
       </div>
 
-      <div class="col col-6">
-        <line-chart source="issueComments" 
-                    title="Issue Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"> 
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="commitComments" 
-                    title="Commit Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"> 
-        </line-chart>
-      </div>
 
       <div class="col col-6">
         <line-chart source="pullReqComments" 
@@ -79,29 +87,11 @@
 
       <div class="col col-6">
         <line-chart source="linesChanged" 
-                    title="Lines Changed / Week" 
+                    title="Lines Changed" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Contributors"
                     disableRollingAverage=1>
         </line-chart>
-      </div>
-
-      <div class="col col-12">
-        <bubble-chart source="contributions"
-                      title="Contributior Overview"
-                      size="total"
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                      cite-text="Community Activty">
-        </bubble-chart>
-      </div>
- 
-      <div class="col col-12">
-        <stacked-bar-chart source="issueActivity" 
-                    title="Stacked Bar Chart" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"
-                    disableRollingAverage=1>
-        </stacked-bar-chart>
       </div>
 
     </div>

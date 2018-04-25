@@ -1,20 +1,34 @@
 <template>
-  <div ref="cards">
+  <div>
+
+    <nav class="tabs">
+      <ul>
+        <li :class="{ active: (currentTab == 'gmd') }"><a href="#" @click="changeTab" data-value="gmd">Growth, Maturity, and Decline</a></li>
+        <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
+      </ul>
+    </nav>
+
     <section :class="{ hidden: baseRepo, unmaterialized: true }">
       <h3>Enter a GitHub URL to get started</h3>
       <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
     </section>
-    <div v-bind:class="{ hidden: !baseRepo }">
-      <base-repo-activity-card></base-repo-activity-card>
-      <base-repo-ecosystem-card></base-repo-ecosystem-card>
+
+    <div ref="cards">
+      <div v-if="(baseRepo && (currentTab == 'gmd'))">
+        <growth-maturity-decline-card></growth-maturity-decline-card>
+      </div>
+      <div v-if="(baseRepo && (currentTab == 'activity'))" id="activity">
+        <base-repo-activity-card></base-repo-activity-card>
+        <base-repo-ecosystem-card></base-repo-ecosystem-card>
+        <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+          <compared-repo-activity-card :comparedTo="repo"></compared-repo-activity-card>
+        </div>
+      </div>
+      <section :class="{ hidden: !baseRepo, unmaterialized: true }">
+        <h3>Compare repository</h3>
+        <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
+      </section>
     </div>
-    <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
-      <compared-repo-activity-card :comparedTo="repo"></compared-repo-activity-card>
-    </div>
-    <section :class="{ hidden: !baseRepo, unmaterialized: true }">
-      <h3>Compare repository</h3>
-      <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
-    </section>
   </div>
 </template>
 
@@ -22,12 +36,19 @@
 import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
+import GrowthMaturityDeclineCard from './GrowthMaturityDeclineCard'
 
 module.exports = {
   components: {
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
-    ComparedRepoActivityCard
+    ComparedRepoActivityCard,
+    GrowthMaturityDeclineCard
+  },
+  data() {
+    return {
+      currentTab: 'gmd'
+    }
   },
   computed: {
     baseRepo() {
@@ -47,6 +68,10 @@ module.exports = {
       this.$store.commit('addComparedRepo', {
         url: e.target.value
       })
+    },
+    changeTab (e) {
+      this.currentTab = e.target.dataset['value']
+      e.preventDefault();
     }
   }
 }

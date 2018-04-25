@@ -66,8 +66,7 @@ Now, to install:
 Installation without Docker (recommended for developers)
 ---------------------------
 ### Dependencies
-- Python 3.4.x/Python 2.7.x and `pip`
-- Static web server such as nginx or Apache
+- [Anaconda](https://www.anaconda.com/download/) (3.x version)
 - a MySQL 5.x database or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
   - Our Development team has a public read only database you can request access to
@@ -79,13 +78,12 @@ After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a us
 Once the database is set up, clone Augur
 ```bash
 git clone https://github.com/OSSHealth/augur/
-cd augur && pip install -U .
+cd augur && make install-dev
 ```
-Copy the files in [augur repo]/frontend/public to your webserver:
 
 Run `augur` to create the configuration file (augur.cfg). Edit the file to reflect your database credentials.
 
-Run `augur` to start the backend. Visit your front
+Run `make dev` to start Augur's backend and frontend build server.
 
 
 Developer Installation

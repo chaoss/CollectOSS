@@ -1,6 +1,5 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend
 
-SHELL=/bin/bash
 PY2 := $(shell command -v pip2 2> /dev/null)
 PY3 := $(shell command -v pip3 2> /dev/null)
 NODE := $(shell command -v npm 2> /dev/null)
@@ -31,6 +30,7 @@ default:
 	@ echo "    python-docs      Generates new Sphinx documentation"
 	@ echo "    api-docs         Generates new apidocjs documentation"
 	@ echo "    docs             Generates all documentation"
+	@ echo "    frontend         Builds frontend with Brunch"
 	@ echo "    build            Builds documentation and frontend - use before pushing"
 	@ echo "    update-deps      Generates updated requirements.txt and environment.yml"
 	@ echo
@@ -43,9 +43,6 @@ install: conda
 
 install-dev: conda
 		$(CONDAUPDATE) pip install pipreqs sphinx
-ifdef PY2
-	  pip2 install --upgrade -e .
-endif
 ifdef PY3
 		$(CONDAACTIVATE) pip3 install --upgrade -e .
 endif
@@ -55,7 +52,7 @@ ifndef PY3
 endif
 endif
 ifdef NODE
-		npm install -g apidoc brunch yarn
+		npm install -g apidoc brunch
 		cd frontend/ && yarn install
 endif
 
@@ -82,7 +79,7 @@ endif
 		@ echo "Server     Description       Log                   Monitoring                   PID                        "
 		@ echo "------------------------------------------------------------------------------------------                 "
 		@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
-		@ echo "Backend    Augur/Gunicorn   logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
+		@ echo "Backend    Augur/Gunicorn    logs/backend.log      make monitor-frontend        $$( cat logs/backend.pid  ) "
 		@ echo
 		@ echo "Monitor both:  make monitor  "
 		@ echo "Restart and monitor: make dev"
@@ -116,6 +113,9 @@ else
 		gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
 endif
 
+frontend:
+		bash -c 'cd frontend; brunch build'
+
 python-docs:
 		cd docs/python   \
 		&& rm -rf _build \
@@ -126,7 +126,7 @@ api-docs:
 
 docs: api-docs python-docs
 
-build: docs
+build: frontend docs
 		cd augur/static/ && brunch build --production
 
 check-test-env:

@@ -139,10 +139,8 @@ export default {
       if (this.repo) {
         window.AugurRepos[this.repo].contributors().then((data) => { 
           shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e }) 
-          console.log('rawr-before', shared.baseData)
           if (removeBelowAverageContributors) {
             shared.baseData = AugurStats.aboveAverage(shared.baseData, 'total')
-            console.log('rawr', shared.baseData)
           }
           if (this.comparedTo) {
             return window.AugurRepos[this.comparedTo].contributors();
@@ -154,7 +152,6 @@ export default {
             compareData = compareData.map((e) => { e.repo = this.comparedTo; return e })
             if (removeBelowAverageContributors) {
               compareData = AugurStats.aboveAverage(compareData, 'total')
-              console.log('rawr', compareData)
             }
             this.values = _.concat(shared.baseData, compareData)
           } else {

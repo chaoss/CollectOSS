@@ -20,7 +20,7 @@ import EmptyChart from './EmptyChart'
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 
-          'comparedTo', 'disableRollingAverage', 'alwaysByDate'],
+          'comparedTo', 'disableRollingAverage', 'alwaysByDate', 'innerKey'],
   computed: {
     repo() {
       return this.$store.state.baseRepo
@@ -96,12 +96,14 @@ export default {
           this.$refs.downloadJSON.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.__download_data))
           this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
           let keys = Object.keys(config.data[0]).splice(1)
+          let key = this.innerKey || keys[0]
+          console.log('key', key)
           if (config.data && compareData && compareData.length) {
             // If there is comparedData, do the necesarry computations for
             // the comparision
             if (config.compare == 'each') {
               compareData = AugurStats.convertDates(compareData, this.earliest, this.latest)
-              let key = Object.keys(compareData[0])[1]
+
               let compare = AugurStats.rollingAverage(AugurStats.zscores(compareData, key), 'value', this.period)
               let base = AugurStats.rollingAverage(AugurStats.zscores(config.data, key), 'value', this.period)
               config.data = [base, compare]
@@ -122,7 +124,7 @@ export default {
             // Otherwise, render a normal timeseries chart
             if (!this.disableRollingAverage) {
               config.legend = config.legend || [config.title.toLowerCase(), this.period + ' day average']
-              let rolling = AugurStats.rollingAverage(config.data, keys[0], this.period)
+              let rolling = AugurStats.rollingAverage(config.data, key, this.period)
               if (this.rawWeekly) {
                 config.data = AugurStats.combine(rolling, config.data)
               } else {
@@ -135,7 +137,7 @@ export default {
               config.colors = config.colors || ['#FF3647', '#CCC']
               config.y_accessor = 'value'
             }
-            config.data = AugurStats.convertKey(config.data, keys[0])
+            config.data = AugurStats.convertKey(config.data, key)
           }
           
           config.y_mouseover = '%d';
