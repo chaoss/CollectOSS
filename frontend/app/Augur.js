@@ -2,39 +2,39 @@ import VueVega from 'vue-vega'
 const queryString = require('query-string')
 
 export default function Augur () {
-  window.jQuery       = require('jquery')
-  window.Vue          = require('vue')
-  window.Vuex         = require('vuex')
-  let AugurAPI       = require('AugurAPI').default
-  window.AugurAPI    = new AugurAPI()
-  window.AugurRepos  = {}
-  window.AugurStats  = require('AugurStats').default
-  window.$            = window.jQuery
-  window._            = require('lodash')
-  window.d3           = require('d3')
-  window.VueVega      = VueVega
-  window.SvgSaver     = require('svgsaver')
+  window.jQuery = require('jquery')
+  window.Vue = require('vue')
+  window.Vuex = require('vuex')
+  let AugurAPI = require('AugurAPI').default
+  window.AugurAPI = new AugurAPI()
+  window.AugurRepos = {}
+  window.AugurStats = require('AugurStats').default
+  window.$ = window.jQuery
+  window._ = require('lodash')
+  window.d3 = require('d3')
+  window.VueVega = VueVega
+  window.SvgSaver = require('svgsaver')
 
   let AugurApp = require('./components/AugurApp')
 
-  Vue.use(Vuex)
-  Vue.use(VueVega)
-  Vue.config.productionTip = false
+  window.Vue.use(window.Vuex)
+  window.Vue.use(window.VueVega)
+  window.Vue.config.productionTip = false
 
-  window.augur = new Vuex.Store({
+  window.augur = new window.Vuex.Store({
     state: {
       baseRepo: null,
       comparedRepos: [],
       trailingAverage: 180,
-      startDate: new Date("1 January 2005"),
-      endDate: new Date(),  
-      compare: "each",
+      startDate: new Date('1 January 2005'),
+      endDate: new Date(),
+      compare: 'each',
       showBelowAverage: false,
       rawWeekly: false,
-      byDate: false,
+      byDate: false
     },
     mutations: {
-      setBaseRepo (state, payload)  {
+      setBaseRepo (state, payload) {
         let repo = window.AugurAPI.Repo(payload.url)
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
@@ -43,7 +43,7 @@ export default function Augur () {
         if (!payload.keepCompared) {
           state.comparedRepos = []
         }
-        let title = repo.owner + '/' + repo.name + '- Augur' 
+        let title = repo.owner + '/' + repo.name + '- Augur'
         let queryString = '?repo=' + repo.owner + '+' + repo.name
         window.history.pushState(null, title, queryString)
       },
@@ -53,7 +53,7 @@ export default function Augur () {
           window.AugurRepos[repo.toString()] = repo
         }
         state.comparedRepos.push(repo.toString())
-        let title = 'Augur' 
+        let title = 'Augur'
         let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         window.history.pushState(null, title, queryString)
       },
@@ -84,10 +84,10 @@ export default function Augur () {
           baseRepo: null,
           comparedRepos: [],
           trailingAverage: 180,
-          startDate: new Date("1 January 2005"),
+          startDate: new Date('1 January 2005'),
           endDate: new Date(),
-          compare: "each",
-          byDate: false,
+          compare: 'each',
+          byDate: false
         }
         window.history.pushState(null, 'Augur', '/')
       } // end reset
@@ -95,10 +95,10 @@ export default function Augur () {
   })
 
   AugurApp.store = window.augur
-  window.AugurApp = new Vue(AugurApp).$mount('#app')
+  window.AugurApp = new window.Vue(AugurApp).$mount('#app')
 
   // Load state from query string
-  let parsed = queryString.parse(location.search, { arrayFormat: 'bracket' })
+  let parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' })
   if (parsed.repo) {
     window.AugurApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') })
   }
@@ -107,5 +107,4 @@ export default function Augur () {
       window.AugurApp.$store.commit('addComparedRepo', { url: repo.replace(' ', '/') })
     })
   }
-
 }

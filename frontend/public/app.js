@@ -185,18 +185,18 @@ function Augur() {
 
   var AugurApp = require('./components/AugurApp');
 
-  Vue.use(Vuex);
-  Vue.use(_vueVega2.default);
-  Vue.config.productionTip = false;
+  window.Vue.use(window.Vuex);
+  window.Vue.use(window.VueVega);
+  window.Vue.config.productionTip = false;
 
-  window.augur = new Vuex.Store({
+  window.augur = new window.Vuex.Store({
     state: {
       baseRepo: null,
       comparedRepos: [],
       trailingAverage: 180,
-      startDate: new Date("1 January 2005"),
+      startDate: new Date('1 January 2005'),
       endDate: new Date(),
-      compare: "each",
+      compare: 'each',
       showBelowAverage: false,
       rawWeekly: false,
       byDate: false
@@ -252,9 +252,9 @@ function Augur() {
           baseRepo: null,
           comparedRepos: [],
           trailingAverage: 180,
-          startDate: new Date("1 January 2005"),
+          startDate: new Date('1 January 2005'),
           endDate: new Date(),
-          compare: "each",
+          compare: 'each',
           byDate: false
         };
         window.history.pushState(null, 'Augur', '/');
@@ -264,10 +264,10 @@ function Augur() {
   });
 
   AugurApp.store = window.augur;
-  window.AugurApp = new Vue(AugurApp).$mount('#app');
+  window.AugurApp = new window.Vue(AugurApp).$mount('#app');
 
   // Load state from query string
-  var parsed = queryString.parse(location.search, { arrayFormat: 'bracket' });
+  var parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' });
   if (parsed.repo) {
     window.AugurApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') });
   }
@@ -524,7 +524,6 @@ var AugurStats = function () {
           return AugurStats.convertDates(datum);
         });
       } else {
-
         data = data.map(function (d) {
           d.date = new Date(d.date);
           return d;
@@ -542,7 +541,6 @@ var AugurStats = function () {
           return AugurStats.convertKey(datum, key);
         });
       } else {
-        var EARLIEST = new Date('01-01-2005');
         data = data.map(function (d) {
           d.value = d[key];
           return d;
@@ -609,7 +607,6 @@ var AugurStats = function () {
       var before = new Date();
 
       for (var date = new Date(data[0].date); date <= data[data.length - 1].date; date.setDate(date.getDate() + 1)) {
-
         after.setDate(date.getDate() - windowSizeInDays);
 
         if (averageWindow.length < windowSizeInDays) {
@@ -648,7 +645,6 @@ var AugurStats = function () {
   }, {
     key: 'makeRelative',
     value: function makeRelative(baseData, compareData, config) {
-
       config.byDate = config.byDate != undefined;
       config.earliest = config.earliest || new Date('01-01-2005');
       config.latest = config.latest || new Date();
@@ -664,17 +660,7 @@ var AugurStats = function () {
 
       data['compare'] = AugurStats.rollingAverage(AugurStats.convertDates(AugurStats.convertKey(compareData, Object.keys(compareData[0])[1]), config.earliest, config.latest), undefined, config.period);
 
-      var smaller = data['base'][0].date < data['compare'][0].date ? 'base' : 'compare';
-      var larger = data['base'][0].date < data['compare'][0].date ? 'compare' : 'base';
       var result = [];
-
-      if (config.byDate) {
-        for (; iter[smaller] < data[smaller].length; iter[smaller]++) {
-          if (data['base'].date == data['compare'].date) {
-            break;
-          }
-        }
-      }
 
       while (iter['base'] < data['base'].length && iter['compare'] < data['compare'].length) {
         var toPush = {
@@ -759,7 +745,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4cb2e45e", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4cb2e45e", __vue__options__)
+    hotAPI.rerender("data-v-4cb2e45e", __vue__options__)
   }
 })()}
 });
@@ -837,7 +823,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.reload("data-v-78eb2940", __vue__options__)
+    hotAPI.rerender("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1654,7 +1640,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4035d73d", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4035d73d", __vue__options__)
+    hotAPI.rerender("data-v-4035d73d", __vue__options__)
   }
 })()}
 });
