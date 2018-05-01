@@ -51,6 +51,7 @@ Thumbs.db
 __pycache__
 _pycache_
 augur/bin
+.pytest_cache
 
 # Node #
 ########

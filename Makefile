@@ -1,7 +1,5 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend install-ubuntu-dependencies
 
-SHELL=bash -l
-
 SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
 CONDAUPDATE=if ! conda activate augur; then conda env create -n=augur -f=environment.yml && conda activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
 CONDAACTIVATE=conda activate augur;
@@ -25,20 +23,12 @@ default:
 	@ echo "    frontend         Builds frontend with Brunch"
 	@ echo "    build            Builds documentation and frontend - use before pushing"
 	@ echo "    update-deps      Generates updated requirements.txt and environment.yml"
-	@ echo
-	@ echo "Dependencies:"
-	@ echo "    NPM              $(NODE)"
-	@ echo "    Anaconda         $(CONDA)"
 
-conda:
+install:
+		bash -lc '$(CONDAUPDATE) pip install --upgrade .'
 
-
-install: conda
-		( $(CONDAUPDATE) pip install --upgrade . )
-
-install-dev: conda
-		( $(CONDAUPDATE) pip install pipreqs sphinx )
-		( npm install -g apidoc brunch; cd frontend/ && npm install )
+install-dev:
+		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; cd frontend/ && npm install'
 
 install-msr:
 		@ ./docs/install-msr.sh
@@ -48,8 +38,6 @@ download-upgrade:
 
 upgrade: download-upgrade install
 		@ echo "Upgraded."
-
-
 
 dev-start: dev-stop
 ifdef CONDA
@@ -128,7 +116,7 @@ ifndef PUBLIC_WWW_TEST_API_KEY
 endif
 
 test: check-test-env
-		python -m pytest
+		python -m pytest ./test
 
 update-deps:
 		@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
