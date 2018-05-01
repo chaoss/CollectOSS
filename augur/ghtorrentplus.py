@@ -60,4 +60,7 @@ class GHTorrentPlus(object):
         rs = pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)}, index_col='closed')
         rs['average_minutes_to_close_as_of_close'] = rs.rolling(len(rs), 1).mean()['minutes_to_close']
         rs['average_minutes_to_close_past_30_days'] = rs.rolling('30D').mean()['minutes_to_close']
+        mean = rs['minutes_to_close'].mean()
+        std = rs['minutes_to_close'].std(ddof=0)
+        rs['z-score'] = (rs['minutes_to_close'] - mean)/std
         return rs
