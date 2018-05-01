@@ -307,7 +307,38 @@ addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
 """
 addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 
-#TODO documentation
+"""
+@api {get} /:owner/:repo/issue_close_time 
+@apiName Issues
+@apiGroup Users
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                []
+                    {
+                      "id": 136603,
+                      "repo_id": 1334,
+                      "opened": "2010-09-08 19:09:56",
+                      "pull_request": 1,
+                      "minutes_to_close": 1264.0,
+                      "average_minutes_to_close_as_of_close": 1264.0,
+                      "average_minutes_to_close_past_30_days": 1264.0,
+                      "z-score": -0.3152279792
+                    },
+                    {
+                      "id": 136602,
+                      "repo_id": 1334,
+                      "opened": "2010-09-09 04:33:23",
+                      "pull_request": 1,
+                      "minutes_to_close": 701.0,
+                      "average_minutes_to_close_as_of_close": 982.5,
+                      "average_minutes_to_close_past_30_days": 982.5,
+                      "z-score": -0.3184596776
+                    }
+                ]
+"""
 addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
 
 """
