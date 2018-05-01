@@ -8,8 +8,8 @@ CONDA := $(shell command -v conda 2> /dev/null)
 
 SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 ghdata.server:app
 
-CONDAUPDATE=""
-CONDAACTIVATE=""
+CONDAUPDATE=
+CONDAACTIVATE=
 ifdef CONDA
 		CONDAUPDATE=if ! source activate ghdata; then conda env create -n=ghdata -f=environment.yml && source activate ghdata; else conda env update -n=ghdata -f=environment.yml && source activate ghdata; fi;
 		CONDAACTIVATE=source activate ghdata;
