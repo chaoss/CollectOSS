@@ -160,19 +160,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = Augur;
-
-var _vueVega = require('vue-vega');
-
-var _vueVega2 = _interopRequireDefault(_vueVega);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 var queryString = require('query-string');
 
 function Augur() {
   window.jQuery = require('jquery');
   window.Vue = require('vue');
   window.Vuex = require('vuex');
+  window.VueVega = require('vue-vega').default;
   var AugurAPI = require('AugurAPI').default;
   window.AugurAPI = new AugurAPI();
   window.AugurRepos = {};
@@ -180,8 +174,12 @@ function Augur() {
   window.$ = window.jQuery;
   window._ = require('lodash');
   window.d3 = require('d3');
-  window.VueVega = _vueVega2.default;
   window.SvgSaver = require('svgsaver');
+
+  window.AUGUR_CHART_STYLE = {
+    brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
+    dullColors: ['#CCCCCC', '#CCE7F2', '#D4F0B0', '#D8C3E3']
+  };
 
   var AugurApp = require('./components/AugurApp');
 
@@ -291,6 +289,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var $ = require('jquery');
+var _ = require('lodash');
 
 var AugurAPI = function () {
   function AugurAPI(hostURL, version, autobatch) {
@@ -364,6 +363,34 @@ var AugurAPI = function () {
       });
     }
   }, {
+    key: 'batchMapped',
+    value: function batchMapped(repos, fields) {
+      var endpoints = [];
+      var reverseMap = {};
+      var processedData = {};
+      repos.forEach(function (repo) {
+        Array.prototype.push.apply(endpoints, repo.batch(fields, true));
+        _.assign(reverseMap, repo.__reverseEndpointMap);
+        processedData[repo.toString()] = {};
+      });
+      return this.batch(endpoints).then(function (data) {
+        return new Promise(function (resolve, reject) {
+          if (Array.isArray(data)) {
+            data.forEach(function (response) {
+              if (response.status === 200) {
+                processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response);
+              } else {
+                processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null;
+              }
+            });
+            resolve(processedData);
+          } else {
+            reject(new Error('data-not-array'));
+          }
+        });
+      });
+    }
+  }, {
     key: 'Repo',
     value: function Repo(owner, repoName) {
       var _this2 = this;
@@ -393,7 +420,7 @@ var AugurAPI = function () {
         var fullEndpoint = _this2._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
         var url = _this2._host + fullEndpoint;
         r.__endpointMap[name] = fullEndpoint;
-        r.__reverseEndpointMap[fullEndpoint] = name;
+        r.__reverseEndpointMap[fullEndpoint] = { name: name, owner: repo.toString() };
         r[name] = function (params, callback) {
           var _this3 = this;
 
@@ -437,18 +464,22 @@ var AugurAPI = function () {
         return func;
       };
 
-      repo.batch = function (jsNameArray) {
-        return _this2.batch(jsNameArray.map(function (e) {
+      repo.batch = function (jsNameArray, noExecute) {
+        var routes = jsNameArray.map(function (e) {
           return repo.__endpointMap[e];
-        })).then(function (data) {
+        });
+        if (noExecute) {
+          return routes;
+        }
+        return _this2.batch(routes).then(function (data) {
           return new Promise(function (resolve, reject) {
             if (Array.isArray(data)) {
               var mapped = {};
               data.forEach(function (response) {
                 if (response.status === 200) {
-                  mapped[repo.__reverseEndpointMap[response.path]] = JSON.parse(response.response);
+                  mapped[repo.__reverseEndpointMap[response.path].name] = JSON.parse(response.response);
                 } else {
-                  mapped[repo.__reverseEndpointMap[response.path]] = null;
+                  mapped[repo.__reverseEndpointMap[response.path].name] = null;
                 }
               });
               resolve(mapped);
@@ -541,12 +572,13 @@ var AugurStats = function () {
           return AugurStats.convertKey(datum, key);
         });
       } else {
-        data = data.map(function (d) {
-          d.value = d[key];
-          return d;
+        return data.map(function (d) {
+          return {
+            date: d.date,
+            value: d[key]
+          };
         });
       }
-      return data;
     }
   }, {
     key: 'averageArray',
@@ -644,11 +676,12 @@ var AugurStats = function () {
     }
   }, {
     key: 'makeRelative',
-    value: function makeRelative(baseData, compareData, config) {
+    value: function makeRelative(baseData, compareData, key, config) {
       config.byDate = config.byDate != undefined;
       config.earliest = config.earliest || new Date('01-01-2005');
       config.latest = config.latest || new Date();
       config.period = config.period || 180;
+      key = key || Object.keys(baseData[0])[1];
 
       var iter = {
         base: 0,
@@ -656,9 +689,9 @@ var AugurStats = function () {
       };
       var data = {};
 
-      data['base'] = AugurStats.rollingAverage(AugurStats.convertDates(AugurStats.convertKey(baseData, Object.keys(baseData[0])[1]), config.earliest, config.latest), undefined, config.period);
+      data['base'] = AugurStats.rollingAverage(AugurStats.convertDates(AugurStats.convertKey(baseData, key), config.earliest, config.latest), undefined, config.period);
 
-      data['compare'] = AugurStats.rollingAverage(AugurStats.convertDates(AugurStats.convertKey(compareData, Object.keys(compareData[0])[1]), config.earliest, config.latest), undefined, config.period);
+      data['compare'] = AugurStats.rollingAverage(AugurStats.convertDates(AugurStats.convertKey(compareData, key), config.earliest, config.latest), undefined, config.period);
 
       var result = [];
 
@@ -745,7 +778,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4cb2e45e", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4cb2e45e", __vue__options__)
+    hotAPI.reload("data-v-4cb2e45e", __vue__options__)
   }
 })()}
 });
@@ -823,7 +856,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-78eb2940", __vue__options__)
+    hotAPI.reload("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1013,7 +1046,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement","title":"Open Issues","inner-key":"issues_open","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement","title":"Closed Issues","inner-key":"issues_closed","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement","title":"Issues Open / Week","inner-key":"issues_opened","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"linesChanged","title":"Lines Changed","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Open Issues","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open+issues_closed_total","title":"Closed Issues","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_opened","title":"Issues Open / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"linesChanged","title":"Lines Changed","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1249,7 +1282,7 @@ exports.default = {
   },
 
   components: {
-    'vega-interactive': VueVega.mapVegaLiteSpec(spec)
+    'vega-interactive': window.VueVega.mapVegaLiteSpec(spec)
   },
   computed: {
     repo: function repo() {
@@ -1461,16 +1494,22 @@ var _AugurStats = require('AugurStats');
 
 var _AugurStats2 = _interopRequireDefault(_AugurStats);
 
-var _vuex = require('vuex');
-
-var _EmptyChart = require('./EmptyChart');
-
-var _EmptyChart2 = _interopRequireDefault(_EmptyChart);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
   props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage', 'alwaysByDate', 'innerKey'],
+  data: function data() {
+    return {
+      mgConfig: {
+        time_series: true,
+        full_width: true,
+        height: 200,
+        y_mouseover: '%d'
+      },
+      graphData: {}
+    };
+  },
+
   computed: {
     repo: function repo() {
       return this.$store.state.baseRepo;
@@ -1493,138 +1532,165 @@ exports.default = {
     chart: function chart() {
       var _this = this;
 
-      var config = {};
-
-      config.earliest = this.earliest || new Date('01-01-2005');
-      config.latest = this.latest || new Date();
-      config.title = this.title || "Activity";
-      config.full_width = true;
-      config.height = 200;
-      config.x_accessor = 'date';
-      config.format = this.percentage ? 'percentage' : undefined;
-      config.compare = this.compare;
-      config.byDate = true;
-      config.time_series = true;
-      config.area = this.rawWeekly;
-
+      this.mgConfig.title = this.title || 'Activity';
+      this.mgConfig.x_accessor = 'date';
+      this.mgConfig.format = this.percentage ? 'percentage' : undefined;
+      this.mgConfig.compare = this.compare;
+      this.mgConfig.byDate = true;
+      this.mgConfig.area = this.rawWeekly;
+      this.mgConfig.y_accessor = 'value';
+      this.mgConfig.legend_target = this.$refs.legend;
+      this.mgConfig.colors = [];
+      this.mgConfig.legend = [];
+      this.mgConfig.baselines = [];
 
       this.__download_data = {};
-      this.__download_file = config.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+      this.__download_file = this.mgConfig.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
 
-      var renderChart = function renderChart() {
-        $(_this.$refs.holder).find('.showme').removeClass('invis');
-        _this.$refs.chartholder.innerHTML = '';
-        _this.$refs.chartholder.appendChild(config.target);
-        _this.$refs.chart.className = 'linechart';
-        MG.data_graphic(config);
-      };
+      if (this.$refs.chart) {
+        this.$refs.chart.className = 'linechart loader';
+        window.$(this.$refs.holder).find('.hideme').addClass('invis');
+        window.$(this.$refs.holder).find('.showme').removeClass('invis');
+      }
+      this.mgConfig.target = document.createElement('div');
 
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      console.log('endp, f', endpoints, fields);
+
+      var repos = [];
       if (this.repo) {
-        if (this.$refs.chart) {
-          this.$refs.chart.className = 'linechart loader';
-          $(this.$refs.holder).find('.hideme').addClass('invis');
-          $(this.$refs.holder).find('.showme').removeClass('invis');
+        repos.push(window.AugurRepos[this.repo]);
+      }
+      if (this.comparedTo) {
+        repos.push(window.AugurRepos[this.comparedTo]);
+      }
+
+      window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+        _this.__download_data = data;
+        _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
+        _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
+
+        var defaultProcess = function defaultProcess(obj, key, field, count) {
+          var d = _AugurStats2.default.convertKey(obj[key], field);
+          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+          return d;
+        };
+
+        var normalized = [];
+        var buildLines = function buildLines(obj, onCreateData) {
+          if (!obj) {
+            return;
+          }
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count);
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach(function (field) {
+                  onCreateData(obj, key, field, count);
+                  count++;
+                });
+              } else {
+                var field = Object.keys(obj[key][0]).splice(1);
+                onCreateData(obj, key, field, count);
+                count++;
+              }
+            }
+          }
+        };
+        if (!_this.comparedTo) {
+          buildLines(data[_this.repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+            if (!_this.disableRollingAverage) {
+              normalized.push(rolling);
+              _this.mgConfig.legend.push(field);
+              _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+            }
+            if (_this.rawWeekly || _this.disableRollingAverage) {
+              normalized.push(d);
+              _this.mgConfig.legend.push(field);
+              _this.mgConfig.colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
+            }
+          });
+        } else if (_this.compare === 'each' && _this.comparedTo) {
+          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
+            normalized.push(rolling);
+            _this.mgConfig.legend.push(_this.comparedTo + ' ' + field);
+            _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          });
+          buildLines(data[_this.repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
+            normalized.push(rolling);
+            _this.mgConfig.legend.push(_this.repo + ' ' + field);
+            _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
+          });
+        } else if (_this.comparedTo) {
+          _this.mgConfig.baselines = [{ value: 1, label: _this.repo }];
+          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+            normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
+              earliest: _this.earliest,
+              latest: _this.latest,
+              byDate: true,
+              period: _this.period
+            }));
+            _this.mgConfig.legend.push(_this.comparedTo + ' ' + field);
+            _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          });
         }
 
-        config.target = document.createElement('div');
-        window.AugurRepos[this.repo][this.source]().then(function (baseData) {
-          _this.__download_data.base = baseData;
-          _this.$refs.chartStatus.innerHTML = '';
-          if (baseData && baseData.length) {
-            config.data = _AugurStats2.default.convertDates(baseData, _this.earliest, _this.latest);
-          } else {
-            config.data = [];
-          }
-          if (_this.comparedTo) {
-            return window.AugurRepos[_this.comparedTo][_this.source]();
-          }
-          return new Promise(function (resolve, reject) {
-            resolve();
-          });
-        }).then(function (compareData) {
-          _this.__download_data.compare = compareData;
-          _this.$refs.downloadJSON.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(_this.__download_data));
-          _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
-          var keys = Object.keys(config.data[0]).splice(1);
-          var key = _this.innerKey || keys[0];
-          console.log('key', key);
-          if (config.data && compareData && compareData.length) {
-            if (config.compare == 'each') {
-              compareData = _AugurStats2.default.convertDates(compareData, _this.earliest, _this.latest);
+        _this.mgConfig.data = normalized;
+        _this.mgConfig.legend_target = _this.$refs.legend;
+        _this.renderChart();
+      });
 
-              var compare = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(compareData, key), 'value', _this.period);
-              var base = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(config.data, key), 'value', _this.period);
-              config.data = [base, compare];
-              config.legend = [window.AugurRepos[_this.repo].toString(), window.AugurRepos[_this.comparedTo].toString()];
-              config.colors = config.colors || ['#FF3647', '#999'];
-            } else {
-              config.format = 'percentage';
-              config.baselines = [{ value: 1, label: config.baseline }];
-              config.data = _AugurStats2.default.makeRelative(config.data, compareData, {
-                earliest: config.earliest,
-                latest: config.latest,
-                byDate: config.byDate,
-                period: _this.period
-              });
-              config.x_accessor = config.byDate ? 'date' : 'x';
-            }
-          } else {
-            if (!_this.disableRollingAverage) {
-              config.legend = config.legend || [config.title.toLowerCase(), _this.period + ' day average'];
-              var rolling = _AugurStats2.default.rollingAverage(config.data, key, _this.period);
-              if (_this.rawWeekly) {
-                config.data = _AugurStats2.default.combine(rolling, config.data);
-              } else {
-                config.data = rolling;
-              }
-              config.colors = config.colors || ['#FF3647', '#CCC'];
-              config.y_accessor = 'value';
-            } else {
-              config.legend = config.legend || [config.title.toLowerCase()];
-              config.colors = config.colors || ['#FF3647', '#CCC'];
-              config.y_accessor = 'value';
-            }
-            config.data = _AugurStats2.default.convertKey(config.data, key);
-          }
-
-          config.y_mouseover = '%d';
-
-          config.legend_target = _this.$refs.legend;
-
-          _this.$refs.chart.className = 'linechart intro';
-          $(_this.$refs.holder).find('.hideme').removeClass('invis');
-
-          $(config.target).hover(function (onEnterEvent) {
-            $(_this.$refs.legend).hide();
-          }, function (onLeaveEvent) {
-            $(_this.$refs.legend).show();
-          });
-          renderChart();
-        }).catch(function (reject) {
-          config = {
-            error: config.title + 'is missing data',
-            chart_type: 'missing-data',
-            missing_text: config.title + ' is missing data',
-            target: config.target,
-            full_width: true,
-            height: 200
-          };
-          renderChart();
-        });
-        return '<div class="loader">' + this.title + '...</div>';
-      }
+      return '<div class="loader deleteme">' + this.title + '...</div>';
     }
   },
   methods: {
     downloadSVG: function downloadSVG(e) {
-      var svgsaver = new SvgSaver();
-      var svg = $(this.$refs.chartholder).find("svg")[0];
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
       svgsaver.asSvg(svg, this.__download_file + '.svg');
     },
     downloadPNG: function downloadPNG(e) {
-      var svgsaver = new SvgSaver();
-      var svg = $(this.$refs.chartholder).find("svg")[0];
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
       svgsaver.asPng(svg, this.__download_file + '.png');
+    },
+    renderChart: function renderChart() {
+      var _this2 = this;
+
+      this.$refs.chart.className = 'linechart intro';
+      window.$(this.$refs.holder).find('.hideme').removeClass('invis');
+      window.$(this.$refs.holder).find('.showme').removeClass('invis');
+      window.$(this.$refs.holder).find('.deleteme').remove();
+      window.$(this.mgConfig.target).hover(function (onEnterEvent) {
+        window.$(_this2.$refs.legend).hide();
+      }, function (onLeaveEvent) {
+        window.$(_this2.$refs.legend).show();
+      });
+      this.$refs.chartholder.innerHTML = '';
+      this.$refs.chartholder.appendChild(this.mgConfig.target);
+      this.mgConfig.target.className = 'deleteme';
+      window.MG.data_graphic(this.mgConfig);
     }
   } };
 })()
@@ -1640,7 +1706,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4035d73d", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4035d73d", __vue__options__)
+    hotAPI.reload("data-v-4035d73d", __vue__options__)
   }
 })()}
 });
@@ -1731,6 +1797,191 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.reload("data-v-6c07ac85", __vue__options__)
   }
 })()}
+});
+
+;require.register("components/standard.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage', 'alwaysByDate', 'innerKey'],
+  data: function data() {
+    return {
+      data: []
+    };
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    period: function period() {
+      return this.$store.state.trailingAverage;
+    },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
+    compare: function compare() {
+      return this.$store.state.compare;
+    },
+    rawWeekly: function rawWeekly() {
+      return this.$store.state.rawWeekly;
+    },
+    chart: function chart() {
+      var _this = this;
+
+      var config = {};
+
+      config.earliest = this.earliest || new Date('01-01-2005');
+      config.latest = this.latest || new Date();
+      config.title = this.title || 'Activity';
+      config.full_width = true;
+      config.height = 200;
+      config.x_accessor = 'date';
+      config.format = this.percentage ? 'percentage' : undefined;
+      config.compare = this.compare;
+      config.byDate = true;
+      config.time_series = true;
+      config.area = this.rawWeekly;
+
+      this.__download_data = {};
+      this.__download_file = config.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+
+      var renderChart = function renderChart() {
+        window.$(_this.$refs.holder).find('.showme').removeClass('invis');
+        _this.$refs.chartholder.innerHTML = '';
+        _this.$refs.chartholder.appendChild(config.target);
+        _this.$refs.chart.className = 'linechart';
+        window.MG.data_graphic(config);
+      };
+
+      if (this.repo) {
+        if (this.$refs.chart) {
+          this.$refs.chart.className = 'linechart loader';
+          window.$(this.$refs.holder).find('.hideme').addClass('invis');
+          window.$(this.$refs.holder).find('.showme').removeClass('invis');
+        }
+        // Create element to hold the chart
+        config.target = document.createElement('div');
+        window.AugurRepos[this.repo][this.source]().then(function (baseData) {
+          _this.__download_data.base = baseData;
+          _this.$refs.chartStatus.innerHTML = '';
+          if (baseData && baseData.length) {
+            config.data = _AugurStats2.default.convertDates(baseData, _this.earliest, _this.latest);
+          } else {
+            config.data = [];
+          }
+          if (_this.comparedTo) {
+            return window.AugurRepos[_this.comparedTo][_this.source]();
+          }
+          return new Promise(function (resolve, reject) {
+            resolve();
+          });
+        }).then(function (compareData) {
+          _this.__download_data.compare = compareData;
+          _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
+          _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
+          var keys = Object.keys(config.data[0]).splice(1);
+          var key = _this.innerKey || keys[0];
+          if (config.data && compareData && compareData.length) {
+            // If there is comparedData, do the necesarry computations for
+            // the comparision
+            if (config.compare === 'each') {
+              compareData = _AugurStats2.default.convertDates(compareData, _this.earliest, _this.latest);
+
+              var compare = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(compareData, key), 'value', _this.period);
+              var base = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(config.data, key), 'value', _this.period);
+              config.data = [base, compare];
+              config.legend = [window.AugurRepos[_this.repo].toString(), window.AugurRepos[_this.comparedTo].toString()];
+              config.colors = config.colors || ['#FF3647', '#999'];
+            } else {
+              config.format = 'percentage';
+              config.baselines = [{ value: 1, label: config.baseline }];
+              config.data = _AugurStats2.default.makeRelative(config.data, compareData, {
+                earliest: config.earliest,
+                latest: config.latest,
+                byDate: config.byDate,
+                period: _this.period
+              });
+              config.x_accessor = config.byDate ? 'date' : 'x';
+            }
+          } else {
+            // Otherwise, render a normal timeseries chart
+            if (!_this.disableRollingAverage) {
+              config.legend = config.legend || [config.title.toLowerCase(), _this.period + ' day average'];
+              var rolling = _AugurStats2.default.rollingAverage(config.data, key, _this.period);
+              if (_this.rawWeekly) {
+                config.data = _AugurStats2.default.combine(rolling, config.data);
+              } else {
+                config.data = rolling;
+              }
+              config.colors = config.colors || ['#FF3647', '#CCC'];
+              config.y_accessor = 'value';
+            } else {
+              config.legend = config.legend || [config.title.toLowerCase()];
+              config.colors = config.colors || ['#FF3647', '#CCC'];
+              config.y_accessor = 'value';
+            }
+            config.data = _AugurStats2.default.convertKey(config.data, key);
+          }
+
+          config.y_mouseover = '%d';
+
+          config.legend_target = _this.$refs.legend;
+
+          _this.$refs.chart.className = 'linechart intro';
+          window.$(_this.$refs.holder).find('.hideme').removeClass('invis');
+
+          window.$(config.target).hover(function (onEnterEvent) {
+            window.$(_this.$refs.legend).hide();
+          }, function (onLeaveEvent) {
+            window.$(_this.$refs.legend).show();
+          });
+          renderChart();
+        }) // end then()
+        .catch(function (reject) {
+          config = {
+            error: config.title + 'is missing data',
+            chart_type: 'missing-data',
+            missing_text: config.title + ' is missing data',
+            target: config.target,
+            full_width: true,
+            height: 200
+          };
+          renderChart();
+        });
+        return '<div class="loader">' + this.title + '...</div>';
+      } // end if (this.$store.repo)
+    } // end chart()
+
+  }, // end computed
+  methods: {
+    downloadSVG: function downloadSVG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      svgsaver.asSvg(svg, this.__download_file + '.svg');
+    },
+    downloadPNG: function downloadPNG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      svgsaver.asPng(svg, this.__download_file + '.png');
+    }
+  } // end methods
+  // end export default {}
+
+};
 });
 
 ;require.register("include/kube/kube.js", function(exports, require, module) {

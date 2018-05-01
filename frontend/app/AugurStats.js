@@ -23,12 +23,13 @@ export default class AugurStats {
         return AugurStats.convertKey(datum, key)
       })
     } else {
-      data = data.map((d) => {
-        d.value = d[key]
-        return d
+      return data.map((d) => {
+        return {
+          date: d.date,
+          value: d[key]
+        }
       })
     }
-    return data
   }
 
   static averageArray (ary) {
@@ -109,11 +110,12 @@ export default class AugurStats {
     return data
   }
 
-  static makeRelative (baseData, compareData, config) {
+  static makeRelative (baseData, compareData, key, config) {
     config.byDate = (config.byDate != undefined)
     config.earliest = config.earliest || new Date('01-01-2005')
     config.latest = config.latest || new Date()
     config.period = config.period || 180
+    key = key || Object.keys(baseData[0])[1]
 
     let iter = {
       base: 0,
@@ -125,7 +127,7 @@ export default class AugurStats {
       AugurStats.convertDates(
         AugurStats.convertKey(
           baseData,
-          Object.keys(baseData[0])[1]
+          key
         ), config.earliest, config.latest
       ), undefined, config.period)
 
@@ -133,7 +135,7 @@ export default class AugurStats {
       AugurStats.convertDates(
         AugurStats.convertKey(
           compareData,
-          Object.keys(compareData[0])[1]
+          key
         ), config.earliest, config.latest
       ), undefined, config.period)
 

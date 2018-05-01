@@ -1,4 +1,5 @@
 var $ = require('jquery')
+var _ = require('lodash')
 
 export default class AugurAPI {
   constructor (hostURL, version, autobatch) {
@@ -66,6 +67,33 @@ export default class AugurAPI {
     })
   }
 
+  batchMapped (repos, fields) {
+    let endpoints = []
+    let reverseMap = {}
+    let processedData = {}
+    repos.forEach((repo) => {
+      Array.prototype.push.apply(endpoints, repo.batch(fields, true))
+      _.assign(reverseMap, repo.__reverseEndpointMap)
+      processedData[repo.toString()] = {}
+    })
+    return this.batch(endpoints).then((data) => {
+      return new Promise((resolve, reject) => {
+        if (Array.isArray(data)) {
+          data.forEach(response => {
+            if (response.status === 200) {
+              processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
+            } else {
+              processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null
+            }
+          })
+          resolve(processedData)
+        } else {
+          reject(new Error('data-not-array'))
+        }
+      })
+    })
+  }
+
   Repo (owner, repoName) {
     var repo
     if (repoName) {
@@ -90,7 +118,7 @@ export default class AugurAPI {
       var fullEndpoint = this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint
       var url = this._host + fullEndpoint
       r.__endpointMap[name] = fullEndpoint
-      r.__reverseEndpointMap[fullEndpoint] = name
+      r.__reverseEndpointMap[fullEndpoint] = { name: name, owner: repo.toString() }
       r[name] = function (params, callback) {
         if (self.__cache[window.btoa(url)]) {
           if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
@@ -132,16 +160,20 @@ export default class AugurAPI {
       return func
     }
 
-    repo.batch = (jsNameArray) => {
-      return this.batch(jsNameArray.map((e) => { return repo.__endpointMap[e] })).then((data) => {
+    repo.batch = (jsNameArray, noExecute) => {
+      var routes = jsNameArray.map((e) => { return repo.__endpointMap[e] })
+      if (noExecute) {
+        return routes
+      }
+      return this.batch(routes).then((data) => {
         return new Promise((resolve, reject) => {
           if (Array.isArray(data)) {
             let mapped = {}
             data.forEach(response => {
               if (response.status === 200) {
-                mapped[repo.__reverseEndpointMap[response.path]] = JSON.parse(response.response)
+                mapped[repo.__reverseEndpointMap[response.path].name] = JSON.parse(response.response)
               } else {
-                mapped[repo.__reverseEndpointMap[response.path]] = null
+                mapped[repo.__reverseEndpointMap[response.path].name] = null
               }
             })
             resolve(mapped)

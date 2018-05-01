@@ -23,9 +23,8 @@
       </div>
 
       <div class="col col-6">
-        <line-chart source="communityEngagement"
+        <line-chart source="communityEngagement:issues_open"
                     title="Open Issues" 
-                    inner-key="issues_open"
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty"
                     disable-rolling-average=1>
@@ -33,9 +32,8 @@
       </div>
 
       <div class="col col-6">
-        <line-chart source="communityEngagement"
+        <line-chart source="communityEngagement:issues_open+issues_closed_total"
                     title="Closed Issues" 
-                    inner-key="issues_closed"
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty"
                     disable-rolling-average=1>
@@ -43,9 +41,8 @@
       </div>
 
             <div class="col col-6">
-        <line-chart source="communityEngagement"
+        <line-chart source="communityEngagement:issues_opened"
                     title="Issues Open / Week"
-                    inner-key="issues_opened"
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty">
         </line-chart>
@@ -93,7 +90,6 @@
                     disableRollingAverage=1>
         </line-chart>
       </div>
-
     </div>
     
     <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> <span class="ghtorrent-version"></span> and the <a href="https://developer.github.com/">GitHub API</a></small>
