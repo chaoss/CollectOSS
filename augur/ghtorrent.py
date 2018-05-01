@@ -652,7 +652,7 @@ class GHTorrent(object):
                 FROM issues
                 LEFT JOIN issue_comments
                 ON issues.id = issue_comments.issue_id
-                WHERE issues.pull_request = 0 AND issues.repo_id = 1334
+                WHERE issues.pull_request = 0 AND issues.repo_id = :repoid
                 GROUP BY id
                 
                 UNION ALL
@@ -661,7 +661,7 @@ class GHTorrent(object):
                 FROM issues
                 LEFT JOIN pull_request_comments
                 ON issues.pull_request_id = pull_request_comments.pull_request_id
-                WHERE issues.pull_request = 1 AND issues.repo_id = 1334
+                WHERE issues.pull_request = 1 AND issues.repo_id = :repoid
                 GROUP BY id
              ) a
             """)
