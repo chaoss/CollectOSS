@@ -643,6 +643,32 @@ class GHTorrent(object):
         return counts
 
 
+    def issue_comment_time(self, owner, repo):
+        repoid = self.repoid(owner, repo)
+        issueCommentsSQL = s.sql.text("""
+            SELECT *, TIMESTAMPDIFF(MINUTE, opened, first_commented) AS minutes_to_comment FROM ( 
+                
+                SELECT issues.id AS id, issues.created_at AS opened, MIN(issue_comments.created_at) AS first_commented, 0 AS pull_request
+                FROM issues
+                LEFT JOIN issue_comments
+                ON issues.id = issue_comments.issue_id
+                WHERE issues.pull_request = 0 AND issues.repo_id = 1334
+                GROUP BY id
+                
+                UNION ALL
+                
+                SELECT issues.id AS id, issues.created_at AS opened, MIN(pull_request_comments.created_at) AS first_commented, 1 AS pull_request
+                FROM issues
+                LEFT JOIN pull_request_comments
+                ON issues.pull_request_id = pull_request_comments.pull_request_id
+                WHERE issues.pull_request = 1 AND issues.repo_id = 1334
+                GROUP BY id
+             ) a
+            """)
+        rs = pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
+        return rs
+
+
     def ghtorrent_range(self):
         ghtorrentRangeSQL = s.sql.text("""
         SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date" 

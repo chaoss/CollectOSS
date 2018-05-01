@@ -316,7 +316,7 @@ addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 @apiParam {String} repo Name of the GitHub repository
 
 @apiSuccessExample {json} Success-Response:
-                []
+                [
                     {
                       "id": 136603,
                       "repo_id": 1334,
@@ -340,6 +340,35 @@ addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
                 ]
 """
 addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
+
+"""
+@api {get} /:owner/:repo/issue_comment_time 
+@apiName Issues
+@apiGroup Users
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                [
+                    {
+                        "id": 2,
+                        "opened": "2012-01-19T05:24:55.000Z",
+                        "first_commented": "2012-01-19T05:30:13.000Z",
+                        "pull_request": 0,
+                        "minutes_to_comment": 5.0
+                    },
+                    {
+                        "id": 3,
+                        "opened": "2012-01-26T15:07:56.000Z",
+                        "first_commented": "2012-01-26T15:09:28.000Z",
+                        "pull_request": 0,
+                        "minutes_to_comment": 1.0
+                    }
+                ]
+"""
+addMetric(app, ghtorrent.issue_comment_time, 'issue_comment_time')
+
 
 """
 @api {get} /:owner/:repo/timeseries/issue_comments count of new comments weekly
