@@ -1,18 +1,10 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend install-ubuntu-dependencies
 
-PY2 := $(shell command -v pip2 2> /dev/null)
-PY3 := $(shell command -v pip3 2> /dev/null)
-NODE := $(shell command -v npm 2> /dev/null)
-CONDA := $(shell command -v conda 2> /dev/null)
+SHELL=bash -l
 
 SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
-
-CONDAUPDATE=""
-CONDAACTIVATE=""
-ifdef CONDA
-		CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && source activate augur; fi;
-		CONDAACTIVATE=source activate augur;
-endif
+CONDAUPDATE=if ! conda activate augur; then conda env create -n=augur -f=environment.yml && conda activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
+CONDAACTIVATE=conda activate augur;
 
 default:
 	@ echo "Commands:"
@@ -34,27 +26,19 @@ default:
 	@ echo "    build            Builds documentation and frontend - use before pushing"
 	@ echo "    update-deps      Generates updated requirements.txt and environment.yml"
 	@ echo
+	@ echo "Dependencies:"
+	@ echo "    NPM              $(NODE)"
+	@ echo "    Anaconda         $(CONDA)"
 
 conda:
 
 
 install: conda
-		$(CONDAUPDATE) pip install --upgrade .
+		( $(CONDAUPDATE) pip install --upgrade . )
 
 install-dev: conda
-		$(CONDAUPDATE) pip install pipreqs sphinx
-ifdef PY3
-		$(CONDAACTIVATE) pip3 install --upgrade -e .
-endif
-ifndef PY2
-ifndef PY3
-		 $(CONDAACTIVATE) pip install --upgrade -e .
-endif
-endif
-ifdef NODE
-		npm install -g apidoc brunch
-		cd frontend/ && npm install
-endif
+		( $(CONDAUPDATE) pip install pipreqs sphinx )
+		( npm install -g apidoc brunch; cd frontend/ && npm install )
 
 install-msr:
 		@ ./docs/install-msr.sh
@@ -69,11 +53,11 @@ upgrade: download-upgrade install
 
 dev-start: dev-stop
 ifdef CONDA
-		@ bash -c '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
-		@ bash -c '(source activate augur; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
+		@ bash -lc '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
+		@ bash -lc '(conda activate augur; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 else
-		@ bash -c '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
-		@ bash -c '($(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
+		@ bash -lc '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
+		@ bash -lc '($(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 endif
 		@ echo "Server     Description       Log                   Monitoring                   PID                        "
 		@ echo "------------------------------------------------------------------------------------------                 "
@@ -107,13 +91,13 @@ dev-restart: dev-stop dev-start
 
 serve:
 ifdef CONDA
-		bash -c "$(SERVECOMMAND)"
+		bash -lc "$(SERVECOMMAND)"
 else
 		gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
 endif
 
 frontend:
-		bash -c 'cd frontend; brunch build'
+		bash -lc 'cd frontend; brunch build'
 
 python-docs:
 		cd docs/python   \
