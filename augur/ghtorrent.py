@@ -652,7 +652,7 @@ class GHTorrent(object):
                 FROM issues
                 LEFT JOIN issue_comments
                 ON issues.id = issue_comments.issue_id
-                WHERE issues.pull_request = 0 AND issues.repo_id = 1334
+                WHERE issues.pull_request = 0 AND issues.repo_id = :repoid
                 GROUP BY id
                 
                 UNION ALL
@@ -661,12 +661,64 @@ class GHTorrent(object):
                 FROM issues
                 LEFT JOIN pull_request_comments
                 ON issues.pull_request_id = pull_request_comments.pull_request_id
-                WHERE issues.pull_request = 1 AND issues.repo_id = 1334
+                WHERE issues.pull_request = 1 AND issues.repo_id = :repoid
                 GROUP BY id
              ) a
             """)
         rs = pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
         return rs
+
+    def maintainer_response_to_merge_request_duration(self, owner, repo=None):
+        """
+        *1). Get a list of all the comments on merge requests, and the user ids of the people who made those comments
+        2). Get a list of all maintainers for the repository
+        3). For merge request, append the ID of the first comment that was made by a maintainer to an array, if it exists (also append the issue id to a different array) ***use a data frame?***
+        *4). For every one of those comment IDs, append the timestamp difference to a array
+        5). Calculate mean time per week
+        """
+        repoid = self.repoid(owner, repo)
+        maintainerResponseToMRSQL = s.sql.text("""
+             SELECT
+               issues.issue_id as "issue_id", 
+               issue_comments.user_id as "user_id", 
+               issue_comments.comment_id as "comment_id",
+               issue_comments.issue_id as "comment_issue_id",
+               issue_comments.created_at as "issue_comment_created_at",
+               issues.created_at as "issue_created_at"
+            FROM issues, issue_comments
+            WHERE issue_comments.issue_id = issues.issue_id 
+            AND issues.pull_request = 1
+            AND issues.repo_id = :repoid
+            ORDER BY (issues.created_at)  
+            """) 
+        df = pd.read_sql(maintainerResponseToMRSQL, self.db, params={"repoid": str(repoid)})
+        return df
+
+        classified = self.classify_contributors(repoid, repo=None)
+
+        maintainerIDs = []
+        for index, row in classified.iterrows():
+            if row['role'] == "maintainer":
+                maintainerIDs = np.append(maintainerIDs, row['user'])
+
+        commentIDs = []
+        issueIDs = []
+        rowArray = []
+        for index, row in df.iterrows():
+            for user in maintainerIDs:
+                if row['user_id'] == user:
+                    commentIDs.append(row['comment_id'])
+                    issueIDs.append(row['issue_id'])
+                    rowArray.append(index)
+                    break
+
+        for row in rowArray:
+            timedelta = (df.loc[row, 'issue_comment_created_at'] - df.loc[row, 'issue_created_at']).total_seconds()
+            if timedelta > 0:
+                times = np.append(times, timedelta)
+
+        df2 = pd.DataFrame(data=times, columns=["response_time"])
+        return df2
 
 
     def ghtorrent_range(self):
