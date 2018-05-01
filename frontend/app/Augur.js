@@ -1,10 +1,10 @@
-import VueVega from 'vue-vega'
 const queryString = require('query-string')
 
 export default function Augur () {
   window.jQuery = require('jquery')
   window.Vue = require('vue')
   window.Vuex = require('vuex')
+  window.VueVega = require('vue-vega').default
   let AugurAPI = require('AugurAPI').default
   window.AugurAPI = new AugurAPI()
   window.AugurRepos = {}
@@ -12,8 +12,12 @@ export default function Augur () {
   window.$ = window.jQuery
   window._ = require('lodash')
   window.d3 = require('d3')
-  window.VueVega = VueVega
   window.SvgSaver = require('svgsaver')
+
+  window.AUGUR_CHART_STYLE = {
+    brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
+    dullColors: ['#CCCCCC', '#CCE7F2', '#D4F0B0', '#D8C3E3']
+  }
 
   let AugurApp = require('./components/AugurApp')
 

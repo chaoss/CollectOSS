@@ -121,7 +121,7 @@ python-docs:
 		&& make html
 
 api-docs:
-		apidoc --debug -f "\.py" -i augur/ -o docs/api/
+		cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/
 
 docs: api-docs python-docs
 

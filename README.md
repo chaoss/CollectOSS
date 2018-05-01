@@ -113,7 +113,7 @@ open Anaconda3-5.1.0-MacOSX-x86_64.pkg
 Clone the repo and install the libraries and tools needed by Augur
 
 ```bash
-git clone https://github.com/OSSHealth/augur/
+git clone git@github.com:OSSHealth/augur.git
 cd augur
 # Install the Python and Node tools and libraries needed
 make install-dev

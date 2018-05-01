@@ -19,7 +19,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../../augur'))
 
 
 # -- General configuration ------------------------------------------------
@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Augur'
-copyright = '2017, Augur Contributors'
+copyright = '2018, Augur Contributors'
 author = 'Augur Contributors'
 
 # The version info for the project you're documenting, acts as replacement for

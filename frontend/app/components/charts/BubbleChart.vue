@@ -120,7 +120,7 @@ export default {
     }
   },
   components: {
-    'vega-interactive': VueVega.mapVegaLiteSpec(spec)
+    'vega-interactive': window.VueVega.mapVegaLiteSpec(spec)
   },
   computed: {
     repo() {
