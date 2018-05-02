@@ -202,6 +202,8 @@ export default class AugurAPI {
     Timeseries(repo, 'communityEngagement', 'community_engagement')
     Timeseries(repo, 'linesChanged', 'lines_changed')
 
+
+    Endpoint(repo, 'maintainerResponseTime', 'pull/maintainer_response_time')
     Endpoint(repo, 'contributors', 'contributors')
     Endpoint(repo, 'contributions', 'contributions')
     Endpoint(repo, 'committerLocations', 'committer_locations')

@@ -619,7 +619,27 @@ addTimeseries(app, github.tags, 'tags')
 """
 addTimeseries(app, github.major_tags, 'tags/major')
 
-#TODO: Documentation
+"""
+@api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
+@apiDescription Metric: https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md
+@apiName LinesChanged
+@apiGroup Timeseries
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            'date': '2015-11-01T00:00:00Z', 
+                            'lines_changed': 396137.0
+                        },
+                        {
+                            'date': '2015-11-08T00:00:00Z', 
+                            'lines_changed': 3896.0
+                        },
+                    ]
+"""
 addTimeseries(app, github.lines_changed, 'lines_changed')
 
 """
@@ -651,6 +671,7 @@ addTimeseries(app, downloads.downloads, 'downloads')
 """
 @api {get} /:owner/:repo/contributors Total Contributions by User
 @apiName TotalContributions
+@apiDescription Metric: https://github.com/OSSHealth/metrics/blob/master/activity-metrics/contributors.md
 @apiGroup Users
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -689,6 +710,7 @@ addMetric(app, ghtorrent.contributors, 'contributors')
 """
 @api {get} /:owner/:repo/timeseries/contributions Contributions by Week
 @apiName ContributionsByWeek
+@apiDescriptions 
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -734,6 +756,7 @@ def contributions(owner, repo):
 """
 @api {get} /:owner/:repo/committer_locations Commits and Location by User
 @apiName CommitterLocations
+@apiDescription Metric Undefined
 @apiGroup Diversity
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -755,11 +778,31 @@ def contributions(owner, repo):
 """
 addMetric(app, ghtorrent.committer_locations, 'committer_locations')
 
+"""
+@api {get} /:owner/:repo/pulls/maintainer_response_time Time to First Maintainer Response to Merge Request
+@apiDescription Metric: https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md
+@apiName TimeToFirstMaintainerResponseToMergeRequest 
+@apiGroup Growth-Maturity-Decline
 
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "response_time":11044366.0
+                        },
+                        {
+                            "response_time":11044955.0
+                        },
+                    ]
+"""
+addMetric(app, ghtorrent.time_to_first_maintainer_response_to_merge_request, 'pulls/maintainer_response_time')
 
 """
 @api {get} /:owner/:repo/timeseries/community_age Timeline of events to determine the age of a community
 @apiName CommunityAge
+@apiDescription Metric Undefined
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -784,6 +827,7 @@ addMetric(app, ghtorrent.community_age, 'community_age')
 """
 @api {get} /:owner/:repo/dependencies List of dependencies from libraries.io
 @apiName Dependencies
+@apiDescription Metric Undefined
 @apiGroup Ecosystem
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -846,6 +890,7 @@ addMetric(app, librariesio.dependencies, 'dependencies')
 """
 @api {get} /:owner/:repo/dependents List of dependants from libraries.io
 @apiName Dependents
+@apiDescription Metric Undefined
 @apiGroup Ecosystem
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -890,6 +935,7 @@ addMetric(app, librariesio.dependency_stats, 'dependency_stats')
 """
 @api {get} /:owner/:repo/timeseries/total_committers count of new committers weekly
 @apiName UniqueCommitters
+@apiDescription Metric Undefined
 @apiGroup Timeseries
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -911,8 +957,8 @@ addTimeseries(app, ghtorrent.total_committers, 'total_committers')
 # Popularity
 """
 @api {get} /:owner/:repo/linking_websites Linking Websites
-@apiDescription Returns an array of websites and their rank according to http://publicwww.com/
 @apiName LinkingWebsites
+@apiDescription Returns an array of websites and their rank according to http://publicwww.com/
 @apiGroup Popularity
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -951,8 +997,8 @@ def ghtorrent_range():
 
 """
 @api {get} /:owner/:repo/bus_factor Bus Factor
-@apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
-@apiName GitHub
+@apiName BusFactor
+@apiDescription Metric Undefined
 @apiGroup Users
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -968,14 +1014,16 @@ def ghtorrent_range():
 """
 addMetric(app, github.bus_factor, 'bus_factor')
 
+
+
 #######################
 #   Batch Requests    #
 #######################
 
 """
 @api {post} /batch Bus Factor
-@apiDescription Returns results of batch requests
 @apiName Batch
+@apiDescription Returns results of batch requests
 @apiGroup Batch
 
 POST JSON of api requests
