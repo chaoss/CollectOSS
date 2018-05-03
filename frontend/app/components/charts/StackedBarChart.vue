@@ -12,7 +12,7 @@
 import { mapState } from 'vuex'
 
 export default {
-  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
   data() {
     return {
       values: []
@@ -25,9 +25,9 @@ export default {
     spec() {
       return {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "data": { "values": [] },        
-        "title": "Issue Activity",
-        "width": (this.$el) ? this.$el.offestWidth : 800, 
+        "data": { "values": [] },
+        "title": this.title,
+        "width": (this.$el) ? this.$el.offestWidth : 800,
         "height": 400,
         "autosize": "fit",
         "mark": "bar",
@@ -46,7 +46,7 @@ export default {
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.stackedbarchart').addClass('loader')
       if (this.repo) {
-        window.GHDataRepos[this.repo].issueActivity().then((data) => {
+        window.GHDataRepos[this.repo][this.source]().then((data) => {
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.stackedbarchart').removeClass('loader')
           this.values = data

@@ -113,7 +113,7 @@ let spec = {
 };
 
 export default {
-  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'comparedTo'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'comparedTo'],
   data() {
     return {
       values: []
@@ -137,8 +137,8 @@ export default {
       $(this.$el).find('.bubblechart').addClass('loader')
       let shared = {};
       if (this.repo) {
-        window.GHDataRepos[this.repo].contributors().then((data) => { 
-          shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e }) 
+        window.GHDataRepos[this.repo][this.source]().then((data) => {
+          shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
           console.log('rawr-before', shared.baseData)
           if (removeBelowAverageContributors) {
             shared.baseData = GHDataStats.aboveAverage(shared.baseData, 'total')

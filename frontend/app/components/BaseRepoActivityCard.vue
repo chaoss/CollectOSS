@@ -78,7 +78,7 @@
       </div>
 
       <div class="col col-12">
-        <bubble-chart source="contributions"
+        <bubble-chart source="contributors"
                       title="Contributior Overview"
                       size="total"
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
@@ -87,8 +87,8 @@
       </div>
  
       <div class="col col-12">
-        <stacked-bar-chart source="issueActivity" 
-                    title="Stacked Bar Chart" 
+        <stacked-bar-chart source="issueActivity"
+                    title="Issue Activity"
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Contributors"
                     disableRollingAverage=1>
