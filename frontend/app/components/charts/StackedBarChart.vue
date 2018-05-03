@@ -13,7 +13,7 @@ import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
 
 export default {
-  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
   data() {
     return {
       values: []
@@ -22,20 +22,13 @@ export default {
   computed: {
     repo() {
       return this.$store.state.baseRepo
-      //TODO: add in functionality for date rate change (convertDates in AugurStats.js)
-    },
-    earliest() {
-      return this.$store.state.startDate
-    },
-    latest() {
-      return this.$store.state.endDate
     },
     spec() {
       return {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "data": { "values": [] },        
-        "title": "Issue Activity",
-        "width": (this.$el) ? this.$el.offestWidth : 800, 
+        "data": { "values": [] },
+        "title": this.title,
+        "width": (this.$el) ? this.$el.offestWidth : 800,
         "height": 400,
         "autosize": "fit",
         "mark": "bar",
@@ -54,10 +47,9 @@ export default {
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.stackedbarchart').addClass('loader')
       if (this.repo) {
-        window.AugurRepos[this.repo].issueActivity().then((data) => {
+        window.AugurRepos[this.repo][this.source]().then((data) => {
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.stackedbarchart').removeClass('loader')
-          data = AugurStats.convertDates(data, this.earliest, this.latest)
           this.values = data
         })
       }

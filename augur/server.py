@@ -140,6 +140,16 @@ dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
 )
 ghtorrentplus = augur.GHTorrentPlus(dbstr=dbstr, ghtorrent=ghtorrent)
 
+
+dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
+    read_config('GHTorrentPlus', 'user', 'AUGUR_GHTORRENT_PLUS_USER', 'root'),
+    read_config('GHTorrentPlus', 'pass', 'AUGUR_GHTORRENT_PLUS_PASS', 'password'),
+    read_config('GHTorrentPlus', 'host', 'AUGUR_GHTORRENT_PLUS_HOST', '127.0.0.1'),
+    read_config('GHTorrentPlus', 'port', 'AUGUR_GHTORRENT_PLUS_PORT', '3306'),
+    read_config('GHTorrentPlus', 'name', 'AUGUR_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
+)
+ghtorrentplus = augur.GHTorrentPlus(dbstr=dbstr, ghtorrent=ghtorrent)
+
 """
 @api {get} / API Status
 @apiName Status
@@ -253,8 +263,8 @@ addTimeseries(app, ghtorrent.issues, 'issues')
 """
 @api {get} /:owner/:repo/timeseries/issues/activity
 @apiName Issues
-@apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/open-issues.md
+@apiGroup Timeseries
+
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -288,10 +298,11 @@ addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
 """
 @api {get} /:owner/:repo/timeseries/issues/closed
 @apiName Issues
-@apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/open-issues.md
+@apiGroup Timeseries
+
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
+
 @apiSuccessExample {json} Success-Response:
                 [
                     {
@@ -504,8 +515,8 @@ addTimeseries(app, ghtorrent.stargazers, 'stargazers')
 """
 @api {get} /:owner/:repo/watchers
 @apiName Community Engagement
-@apiGroup Growth-Maturity-Decline
-@apiDescription Metric Undefined
+@apiGroup Users
+
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -1023,11 +1034,11 @@ addMetric(app, github.bus_factor, 'bus_factor')
 
 """
 @api {post} /batch Bus Factor
+@apiDescription Returns results of batch requests
 @apiName Batch
 @apiGroup Batch
-@api {post} /batch Batch Requests
-@apiDescription POST JSON of api requests
 
+POST JSON of api requests
 """
 #TODO: documentation
 @app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])

@@ -75,4 +75,57 @@ The recommended width is 6 for half width and 12 for full width. So if I wanted 
 ```
 ## How to add a new nontimeseries metric
 
-Coming Soon!
+### Adding an endpoint
+
+In `frontend/app/AugurAPI.js`, add an attribute to the repo class that holds an endpoint object at the end of the file like this
+```javascript
+repo.<endpointName> = Endpoint('endpoint_name')
+```
+So if your endpoint name is `foo_bar` then the attribute would be
+```javascript
+repo.<fooBar> = Endpoint('foo_bar')
+```
+
+### Adding a chart
+In the `frontend/app/components/charts` directory define a chart for the metric
+
+In `frontend/app/components/BaseRepoActivityCard.vue` or `frontend/app/components/BaseRepoEcosystemCard.vue` import the chart at the bottom and export it
+
+In the same file, in the template in the section tag, add a div like this
+```html
+    <div class="row">
+      <div class="col col-'width'">
+        <chart-type source="attributeName"
+                    title="Chart title"
+                    cite-url="Optional link to explanation"
+                    cite-text="Optional link title">
+        </chart-type>
+      </div>
+...
+import ChartType from './charts/ChartType'
+
+module.exports = {
+  components: {
+    ChartType
+  }
+};
+```
+The recommended width is 6 for half width and 12 for full width. So if I wanted to add the `foo_bar` chart, it would look like this
+```html
+    <div class="row">
+      <div class="col col-12">
+        <foo-bar source="fooBar"
+                    title="Foo Bar"
+                    cite-url="https://foobar.com"
+                    cite-text="Link to foo bar explanation">
+        </foo-bar>
+      </div>
+...
+import FooBar from './charts/FooBar'
+
+module.exports = {
+  components: {
+    FooBar
+  }
+};
+```

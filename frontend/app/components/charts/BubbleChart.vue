@@ -113,7 +113,7 @@ let spec = {
 };
 
 export default {
-  props: ['citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'comparedTo'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'comparedTo'],
   data() {
     return {
       values: []
@@ -137,7 +137,7 @@ export default {
       $(this.$el).find('.bubblechart').addClass('loader')
       let shared = {};
       if (this.repo) {
-        window.AugurRepos[this.repo].contributors().then((data) => { 
+        window.AugurRepos[this.repo][this.source].then((data) => {
           shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e }) 
           if (removeBelowAverageContributors) {
             shared.baseData = AugurStats.aboveAverage(shared.baseData, 'total')

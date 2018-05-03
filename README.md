@@ -13,6 +13,8 @@ Augur is under heavy development; expect frequent backwards-incompatible changes
 
 Roadmap
 -------
+This project is a software prototype implementation of CHAOSS Metrics. The process for defining new metrics is located here: https://github.com/chaoss/metrics 
+
 Our technical, outreach, and academic goals [roadmap](https://github.com/OSSHealth/augur/wiki/Release-Schedule).
 
 
@@ -63,59 +65,58 @@ Now, to install:
 
 
 
-Local Installation (For Development)
------------------------------------------------------
+Installation without Docker (recommended for developers)
+---------------------------
+### Dependencies
+- Python 3.4.x/Python 2.7.x and `pip`
+- Static web server such as nginx or Apache
+- a MySQL 5.x database or later with the [GHTorrent database](http://ghtorrent.org/)
+  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
+  - Our Development team has a public read only database you can request access to
+  - If you want to install your own copy of the MSR14 dataset [Installation instructions](https://github.com/gousiosg/github-mirror/tree/master/sql)
+- a MySQL 5.x database with write access
+
+After restoring GHTorrent (or msr14) to MySQL, it is recommended you create a user for Augur. Augur only needs `SELECT` privileges.
+
+Once the database is set up, clone Augur
+```bash
+git clone https://github.com/OSSHealth/augur/
+cd augur && pip install -U .
+```
+Copy the files in [augur repo]/frontend/public to your webserver:
+
+Run `augur` to create the configuration file (augur.cfg). Edit the file to reflect your database credentials.
+
+Run `augur` to start the backend. Visit your front
+
+
+Developer Installation
+----------------------
 
 ### Dependencies
-- [Anaconda](https://www.anaconda.com/download/)
-- [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
+- Python 3.4.x and Python 2.7.x with `pip2` and `pip3`
+- MySQL 5.x or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
-- [NodeJS](http://nodejs.org) or newer and `npm`
+- NodeJS 7.x or newer
 
+#### Ubuntu
+```
+   ## Python Installs on UBUNUTU
+   sudo apt-get install python-pip
+   sudo apt-get install python3-pip
 
-#### Dependency Installation for Ubuntu
-
-```bash
-# Install NodeSource
-curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-
-# Install NodeJS and MariaDB 
-sudo apt-get install -y nodejs
-
-# Install Anaconda
-curl https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh > Anaconda.sh
-chmod +x Anaconda.sh
-
-# You must agree to Anaconda's license terms to proceed
-./Anaconda.sh -b
-rm Anaconda.sh
+   ## For Development you need NodeJS
+   sudo apt-get install nodejs
 ```
 
-
-#### Dependency Installation for OS X
+First, clone the repo and checkout the dev branch:
 
 ```bash
-# Install Homebrew
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-# Install node and mariadb
-brew install wget node mariadb
-
-# Install Anaconda
-cd ~/Downloads
-wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
-open Anaconda3-5.1.0-MacOSX-x86_64.pkg
+git clone https://github.com/OSSHealth/augur/ && cd augur && git checkout dev
 ```
 
-
-### Installation
-
-Clone the repo and install the libraries and tools needed by Augur
-
+Install the Python and Node developer dependencies:
 ```bash
-git clone git@github.com:OSSHealth/augur.git
-cd augur
-# Install the Python and Node tools and libraries needed
 make install-dev
 ```
 
