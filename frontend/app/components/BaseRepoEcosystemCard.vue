@@ -21,6 +21,15 @@
       </div>
     </div>
 
+    <div class="col col-6">
+      <bus-factor source="busFactor"
+                  title="Bus Factor"
+                  cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics-list.md"
+                  cite-text="Pony Factor">
+        <!-- cite URL to be updated when changes are pulled for pony factor -->
+      </bus-factor>
+    </div>
+
     <div class="row">
       <div class="col col-12">
         <dependency-overview></dependency-overview>
@@ -35,11 +44,13 @@
 
 import LineChart from './charts/LineChart'
 import DependencyOverview from './charts/DependencyOverview'
+import BusFactor from './charts/BusFactor'
 
 module.exports = {
   components: {
     LineChart,
-    DependencyOverview 
+    DependencyOverview,
+    BusFactor
   }
 };
 
