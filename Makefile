@@ -28,7 +28,7 @@ install:
 		bash -lc '$(CONDAUPDATE) pip install --upgrade .'
 
 install-dev:
-		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; cd frontend/ && npm install'
+		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; npm install -e .; cd frontend/ && npm install'
 
 install-msr:
 		@ ./docs/install-msr.sh
