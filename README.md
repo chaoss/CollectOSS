@@ -66,7 +66,7 @@ Now, to install:
 Local Installation (For Development)
 -----------------------------------------------------
 
-### Dependencies
+### Dependencies (OS Specific Instructions Below)
 - [Anaconda](https://www.anaconda.com/download/)
 - [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
   - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
