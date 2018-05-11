@@ -52,8 +52,7 @@ open Anaconda3-5.1.0-MacOSX-x86_64.pkg
 ```
 
 
-
-#### <a name="Install">Augur Installation Instructions</a>
+## <a name="Install">Augur Installation Instructions</a>
 
 Clone the repo and install the libraries and tools needed by Augur
 
