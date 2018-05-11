@@ -11,7 +11,7 @@ Augur is in active development. The tool is focused on prototyping open source s
 
 To **get Augur up and running quickly**, install our docker image. [Installation Instructions for Docker Image of Augur](./docker-install.md)
 
-To **contribute to our code base routinely**, we recommended that developers configure Augur on their local workstations.  
+To **contribute to our code base routinely**, we recommended that developers configure Augur on their local workstations.  [Installation Instructions for Developers](./dev-install.md)
 
 **Both configurations require a MariaDB database with a subset of the GHTorrent dataset** 
   - [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
