@@ -91,12 +91,17 @@ Clone the repo and install the libraries and tools needed by Augur
 
 ```bash
 git clone https://github.com/OSSHealth/augur/
+
 cd augur
+
 # Install the Python and Node tools and libraries needed
-make install-dev
+make install-dev-admin # some libraries require a root install.  
+
+# Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way. 
+
 ```
 
-Make sure you have a database user that has select access to the database where you installed [GHTorrent](http://ghtorrent.org/) and all priviledges on another database for Augur.
+**Make sure you have a database user that has select access to the database where you installed [GHTorrent](http://ghtorrent.org/) and all priviledges on another database for Augur.**
 
 ```sql
 CREATE USER 'augur'@'localhost' IDENTIFIED BY 'password';
@@ -106,9 +111,24 @@ CREATE DATABASE augur;
 GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
 ```
 
-Run `augur` to create an `augur.cfg` file. Edit this file with the the required information. In addition to your database information, you will need a [GitHub](https://developer.github.com/v3/) API Key, [PublicWWW](https://publicwww.com/) API Key, and [LibrariesIO](https://libraries.io/) API Key.
+**Augur runs in an Anaconda environment. To get started, you need to run 'augur' to create the augur.cfg file**
 
-You're ready to rock! To start both the frontend and backend, run:
+```bash
+conda activate augur
+augur
+```
+
+Edit the augur.cfg file with the the required information for database and API connections. 
+
+For all the API's and visualiazations to work, you will need to include: 
+
+- A [GitHub](https://developer.github.com/v3/) API Key, 
+- A [PublicWWW](https://publicwww.com/) API Key, and 
+- A [LibrariesIO](https://libraries.io/) API Key.
+
+You **CAN** get off the ground without those API keys though. 
+
+**You're ready to rock! To start both the frontend and backend, run:**
  ```bash
  make dev
  ```
