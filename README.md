@@ -7,9 +7,15 @@ master | [![Build Status](https://travis-ci.org/OSSHealth/augur.svg?branch=maste
 
 Augur is a Python library and REST server that provides data related to GitHub repositories. Hosting the Augur project requires a copy of the [GHTorrent database](http://ghtorrent.org/downloads.html).
 
-Augur is under heavy development; expect frequent backwards-incompatible changes until a 1.x.x release!
+Augur is in active development. The tool is focused on prototyping open source software metrics. 
 
+To **get Augur up and running quickly**, install our docker image. [Installation Instructions for Docker Image of Augur](./docker-install.md)
 
+To **contribute to our code base routinely**, we recommended that developers configure Augur on their local workstations.  
+
+**Both configurations require a MariaDB database with a subset of the GHTorrent dataset** 
+  - [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
+  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
 
 Roadmap
 -------
