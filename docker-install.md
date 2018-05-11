@@ -2,7 +2,7 @@ Installation with Docker (easy to get up and running)
 -----------------------------------------------------
 Before we begin, make sure you have everything you need installed: [Git](https://git-scm.com/downloads), [Docker](https://www.docker.com/community-edition), [Docker Compose](https://docs.docker.com/compose/install/)
 
-*Also remember the database dependency in the README.md file* 
+[*Also remember the database dependency in the README.md file*](http://ghtorrent.org/msr14.html)
 
 Now, to install:
 

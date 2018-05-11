@@ -1,16 +1,16 @@
 Local Installation (For Development)
 -----------------------------------------------------
 
-### Dependencies (OS Specific Instructions Below)
+### Install Dependencies (OS Specific Instructions Below)
 - [Anaconda](https://www.anaconda.com/download/)
 - [NodeJS](http://nodejs.org) or newer and `npm`
+
+[*Also remember the database dependency in the README.md file*](http://ghtorrent.org/msr14.html)
 
 1. [Dependency Installation for Ubuntu](#Ubuntu) 
 1. [Dependency Installation for OS X](#MacOSX)
 
-### [Augur Installation](#Install)
-
-*Also remember the database dependency in the README.md file* 
+### [Install Augur](#Install)
 
 ### <a name="Ubuntu">Ubuntu Dependency Installation Instructions</a>
 
