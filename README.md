@@ -7,7 +7,7 @@ master | [![Build Status](https://travis-ci.org/OSSHealth/augur.svg?branch=maste
 
 Augur is focused on prototyping open source software metrics. 
 
-Functionally, [Augur is a prototyped implementation](http://augurlabs.io) of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/CHAOSS/metrics). Technically, Augur is a Python library and REST server that presents metrics on open source software development project health and sustainability. Hosting the Augur project requires 
+Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/CHAOSS/metrics). Technically, Augur is a [Flask Web Application](http://augurlabs.io), [Python library](https://osshealth.github.io/augur/python/build/html/index.html) and [REST server](https://osshealth.github.io/augur/api/index.html) that presents metrics on open source software development project health and sustainability. Hosting the Augur project requires 
 
  - The [GHTorrent database](http://ghtorrent.org/downloads.html). 
     - You can use the *much smaller [MSR14 dataset](http://ghtorrent.org/msr14.html) for a quick look or to perform development.  
