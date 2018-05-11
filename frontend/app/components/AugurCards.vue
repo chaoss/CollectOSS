@@ -4,6 +4,9 @@
     <nav class="tabs">
       <ul>
         <li :class="{ active: (currentTab == 'gmd') }"><a href="#" @click="changeTab" data-value="gmd">Growth, Maturity, and Decline</a></li>
+        <li :class="{ active: (currentTab == 'diversityInclusion') }"><a href="#" @click="changeTab" data-value="diversityInclusion">Diversity and Inclusion</a></li>
+        <li :class="{ active: (currentTab == 'risk') }"><a href="#" @click="changeTab" data-value="risk">Risk</a></li>
+        <li :class="{ active: (currentTab == 'value') }"><a href="#" @click="changeTab" data-value="value">Value</a></li>
         <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
       </ul>
     </nav>
@@ -16,6 +19,15 @@
     <div ref="cards">
       <div v-if="(baseRepo && (currentTab == 'gmd'))">
         <growth-maturity-decline-card></growth-maturity-decline-card>
+      </div>
+      <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
+        <diversity-inclusion-card></diversity-inclusion-card>
+      </div>
+      <div v-if="(baseRepo && (currentTab == 'risk'))">
+        <risk-card></risk-card>
+      </div>
+      <div v-if="(baseRepo && (currentTab == 'value'))">
+        <value-card></value-card>
       </div>
       <div v-if="(baseRepo && (currentTab == 'activity'))" id="activity">
         <base-repo-activity-card></base-repo-activity-card>
@@ -37,13 +49,20 @@ import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
 import GrowthMaturityDeclineCard from './GrowthMaturityDeclineCard'
+import RiskCard from './RiskCard'
+import ValueCard from './ValueCard'
+import DiversityInclusionCard from './DiversityInclusionCard'
 
 module.exports = {
   components: {
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
     ComparedRepoActivityCard,
-    GrowthMaturityDeclineCard
+    GrowthMaturityDeclineCard,
+    RiskCard,
+    ValueCard,
+    DiversityInclusionCard,
+
   },
   data() {
     return {

@@ -129,7 +129,7 @@ then
   then
       wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh
       chmod +x Anaconda3-5.1.0-Linux-x86_64.sh
-      ./Miniconda3-latest-Linux-x86_64.sh -b -p ~/.anaconda
+      ./Anaconda3-5.1.0-Linux-x86_64.sh -b -p ~/.anaconda
       printf "# Added by Augur install script\n. $HOME/.anaconda/etc/profile.d/conda.sh:$PATH\"\n" >> ~/.bashrc
       printf "# Added by Augur install script\n. $HOME/.anaconda/etc/profile.d/conda.sh:$PATH\"\n" >> ~/.zshrc
       . $HOME/.anaconda/etc/profile.d/conda.sh
