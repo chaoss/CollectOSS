@@ -28,6 +28,8 @@ chmod +x Anaconda.sh
 # You must agree to Anaconda's license terms to proceed
 ./Anaconda.sh -b
 rm Anaconda.sh
+
+# [Install Augur](#Install)
 ```
 
 ### <a name="MacOSX">Mac OSX Dependency Installation Instructions</a>
@@ -43,7 +45,11 @@ brew install wget node mariadb
 cd ~/Downloads
 wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
 open Anaconda3-5.1.0-MacOSX-x86_64.pkg
+
+# [Install Augur](#Install)
 ```
+
+
 
 ### <a name="Install">Augur Installation Instructions</a>
 
