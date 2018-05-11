@@ -12,6 +12,8 @@ Local Installation (For Development)
 
 ### 2. [Install Augur](#Install)
 
+=====================================================
+
 #### <a name="Ubuntu">Ubuntu Dependency Installation Instructions</a>
 
 ```bash
