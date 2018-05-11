@@ -102,10 +102,11 @@ then
   then
     wget -qO- https://deb.nodesource.com/setup_10.x | sudo -E bash -
   fi
+  eval $NODE_CONFIG
   if yes_or_no "Would you like to modify your bashrc and zshrc to ensure Node packages to be installed locally? This is required to use 'make dev' without root" "Local configuration skipped."
   then
-    printf  >> $HOME/.bashrc
-    printf '# Added by Augur installer\nexport NPM_PACKAGES="$HOME/.npm-packages"\n export NODE_PATH="$NPM_PACKAGES/lib/node_modules${NODE_PATH:+:$NODE_PATH}"\n export PATH="$NPM_PACKAGES/bin:$PATH"' >> $HOME/.zshrc
+    printf $NODE_CONFIG >> $HOME/.bashrc
+    printf $NODE_CONFIG >> $HOME/.zshrc
   fi
 fi
 
@@ -124,9 +125,9 @@ fi
 if [[ "$INSTALL_ANACONDA" == "1"  ]]
 then
   printf "It is highly recommended to install Anaconda. Augur uses many packages included with Anaconda as well as Conda virtual environments.\nNot installing Anaconda may require sudo pip, which can potentially break system Python."
-  if yes_or_no "Install Anaconda (~600MB)?" "Anaconda not installed. Installation will use global Python environment."
+  if yes_or_no " Install Anaconda (~600MB)?" "Anaconda not installed. Installation will use global Python environment."
   then
-      wget -LOk https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh
+      wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh
       chmod +x Anaconda3-5.1.0-Linux-x86_64.sh
       ./Miniconda3-latest-Linux-x86_64.sh -b -p ~/.anaconda
       printf "# Added by Augur install script\n. $HOME/.anaconda/etc/profile.d/conda.sh:$PATH\"\n" >> ~/.bashrc
@@ -138,7 +139,7 @@ then
   else
     INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
     if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
-      echo "Python development files are missing." >&2
+      echo "Python develogpment files are missing." >&2
       if yes_or_no_critical "$PACKAGE_MANAGER $PYTHON_DEV" "Installation aborted."
       then
         $PACKAGE_MANAGER $PYTHON_DEV
@@ -166,7 +167,7 @@ echo "All dependencies in place."
 #
 echo 
 echo "Downloading Augur..."
-git clone https://github.com/OSSHealth/augur
+git clone https://github.com/OSSHealth/augur.git
 cd augur
 read -p "Would you like to install [m]aster or [d]ev: " -n 1 -r
 DEVELOPER=0
@@ -182,13 +183,13 @@ if hash conda 2>/dev/null; then
   conda activate augur
 fi
 
-pip install --upgrade .
+pip install -e .
 
 if [[ $? != 0 ]]
 then
   echo "Pip failed to install Augur. Some systems require root priviledges."
   yes_or_no_critical "Try again with sudo?" "Installation failed."
-  sudo pip install --upgrade .
+  sudo pip install -e .
   if [[ $? != 0 ]]
   then
     echo "Installation failed."
