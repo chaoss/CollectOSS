@@ -6,7 +6,9 @@ Local Installation (For Development)
 - [NodeJS](http://nodejs.org) or newer and `npm`
 
 <a name="Ubuntu">Ubuntu Dependency Installation Instructions</a>
+
 <a name="MacOSX">Mac OSX Dependency Installation Instructions</a>
+
 <a name="Install">Augur Installation Instructions</a>
 
 *Also remember the database dependency in the README.md file* 
