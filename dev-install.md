@@ -1,21 +1,31 @@
 Local Installation (For Development)
 -----------------------------------------------------
 
-### Dependencies (OS Specific Instructions Below)
-- [Anaconda](https://www.anaconda.com/download/)
-- [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
-  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
-- [NodeJS](http://nodejs.org) or newer and `npm`
+### 1. Install Dependencies (OS Specific Instructions Below)
+- Anaconda
+- NodeJS Version 8.0 or newer, which includes `npm`
 
+[*Also remember the database dependency in the README.md file*](http://ghtorrent.org/msr14.html)
 
-#### Dependency Installation for Ubuntu
+1. [Dependency Installation for Ubuntu](#Ubuntu) 
+1. [Dependency Installation for Ubuntu](#Fedora)
+1. [Dependency Installation for OS X](#MacOSX)
+
+### 2. [Install Augur](#Install)
+
+=====================================================
+
+#### <a name="Ubuntu">Ubuntu Dependency Installation Instructions</a>
 
 ```bash
 # Install NodeSource
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 
-# Install NodeJS and MariaDB 
+# Install NodeJS
 sudo apt-get install -y nodejs
+
+# Install MariaDB (if needed on the same machine for the GHTorrent/msr14 dataset)
+sudo apt-get install -y mariadb-server
 
 # Install Anaconda
 curl https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh > Anaconda.sh
@@ -24,26 +34,58 @@ chmod +x Anaconda.sh
 # You must agree to Anaconda's license terms to proceed
 ./Anaconda.sh -b
 rm Anaconda.sh
+
+# [Install Augur](#Install)
+```
+
+#### <a name="Fedora">Fedora Dependency Installation Instructions</a>
+
+```bash
+# Install NodeSource
+curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+sudo yum install -y nodejs
+
+
+# Install NodeJS
+sudo apt-get install -y nodejs
+
+# Install MariaDB (if needed on the same machine for the GHTorrent/msr14 dataset)
+sudo apt-get install -y mariadb-server
+
+# Install Anaconda
+curl https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh > Anaconda.sh
+chmod +x Anaconda.sh
+
+# You must agree to Anaconda's license terms to proceed
+./Anaconda.sh -b
+rm Anaconda.sh
+
+# [Install Augur](#Install)
 ```
 
 
-#### Dependency Installation for OS X
+#### <a name="MacOSX">Mac OSX Dependency Installation Instructions</a>
 
 ```bash
 # Install Homebrew
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-# Install node and mariadb
-brew install wget node mariadb
+# Install NodeJS 
+brew install wget node
+
+# Install MariaDB (if needed on the same machine for the GHTorrent/msr14 dataset)
+brew install wget mariadb
 
 # Install Anaconda
 cd ~/Downloads
 wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
 open Anaconda3-5.1.0-MacOSX-x86_64.pkg
+
+# [Install Augur](#Install)
 ```
 
 
-### Installation
+## <a name="Install">Augur Installation Instructions</a>
 
 Clone the repo and install the libraries and tools needed by Augur
 
