@@ -9,6 +9,7 @@ CURL_PACKAGE="curl"
 UNZIP_PACKAGE="unzip"
 PYTHON_DEV="python-dev"
 PYTHON_PACKAGE="python python-pip $PYTHON_DEV"
+NODE_CONFIG='export NPM_PACKAGES="$HOME/.npm-packages"\n export NODE_PATH="$NPM_PACKAGES/lib/node_modules${NODE_PATH:+:$NODE_PATH}"\n export PATH="$NPM_PACKAGES/bin:$PATH"'
 INSTALL_ANACONDA=0
 HAS_ANACONDA=0
 INSTALL_NODE_PPA=0
@@ -93,6 +94,22 @@ fi
 
 echo "+-------------+----------+"
 
+# Install NodeSource
+if [[ "$INSTALL_NODE_PPA" == "1" ]]
+then
+  echo "Node is missing or out of date."
+  if yes_or_no "Add NodeSource PPA (requires root priviledges)?" "NodeSource PPA skipped. Distribution node versions may not be compatible with Augur development."
+  then
+    wget -qO- https://deb.nodesource.com/setup_10.x | sudo -E bash -
+  fi
+  if yes_or_no "Would you like to modify your bashrc and zshrc to ensure Node packages to be installed locally? This is required to use 'make dev' without root" "Local configuration skipped."
+  then
+    printf  >> $HOME/.bashrc
+    printf '# Added by Augur installer\nexport NPM_PACKAGES="$HOME/.npm-packages"\n export NODE_PATH="$NPM_PACKAGES/lib/node_modules${NODE_PATH:+:$NODE_PATH}"\n export PATH="$NPM_PACKAGES/bin:$PATH"' >> $HOME/.zshrc
+  fi
+fi
+
+
 # Install dependencies for the installer to work
 if [[ "$PACKAGE_MANAGER" != "$SCRIPT_DEPENDENCY_INSTALL_COMMAND"  ]]
 then
@@ -103,32 +120,21 @@ then
   fi
 fi
 
-# Install NodeSource
-if [[ "$INSTALL_NODE_PPA" == "1" ]]
-then
-  echo "Node is missing or out of date."
-  if yes_or_no "Add NodeSource PPA (requires root priviledges)?" "NodeSource PPA skipped. Distribution node versions may not be compatible with Augur development."
-  then
-    curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
-  fi
-fi
-
 # Install Anaconda
 if [[ "$INSTALL_ANACONDA" == "1"  ]]
 then
   printf "It is highly recommended to install Anaconda. Augur uses many packages included with Anaconda as well as Conda virtual environments.\nNot installing Anaconda may require sudo pip, which can potentially break system Python."
-  if yes_or_no "Install Miniconda (34MB)?" "Anaconda not installed. Installation will use global Python environment."
+  if yes_or_no "Install Anaconda (~600MB)?" "Anaconda not installed. Installation will use global Python environment."
   then
-      curl -LOk https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-      chmod +x Miniconda3-latest-Linux-x86_64.sh
+      wget -LOk https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh
+      chmod +x Anaconda3-5.1.0-Linux-x86_64.sh
       ./Miniconda3-latest-Linux-x86_64.sh -b -p ~/.anaconda
-      printf "# Added by Augur install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.bashrc
-      printf "# Added by Augur install script\nexport PATH=\"$HOME/.anaconda/bin:$PATH\"\n" >> ~/.zshrc
-      export PATH="$HOME/.anaconda/bin:$PATH"
-      rm Miniconda3-latest-Linux-x86_64.sh
+      printf "# Added by Augur install script\n. $HOME/.anaconda/etc/profile.d/conda.sh:$PATH\"\n" >> ~/.bashrc
+      printf "# Added by Augur install script\n. $HOME/.anaconda/etc/profile.d/conda.sh:$PATH\"\n" >> ~/.zshrc
+      . $HOME/.anaconda/etc/profile.d/conda.sh
+      rm Anaconda3-5.1.0-Linux-x86_64.sh
       echo "Anaconda installed to ~/.anaconda"
       conda install -c conda conda-env
-      HAS_ANACONDA=1
   else
     INCLUDE_PY=$(python -c "from distutils import sysconfig as s; print s.get_config_vars()['INCLUDEPY']")
     if [ ! -f "${INCLUDE_PY}/Python.h" ]; then
@@ -173,7 +179,7 @@ fi
 if hash conda 2>/dev/null; then
   echo "Creating conda environment..."
   conda env create -f environment.yml
-  source activate augur
+  conda activate augur
 fi
 
 pip install --upgrade .
@@ -193,26 +199,11 @@ fi
 echo "Augur Python application installed."
 
 
-
-
-#
-# Database
-#
-echo "Now we're going to set up the database. We'll need MySQL root credentials to proceed."
-
-if yes_or_no "Continue with database setup?" "Database setup skipped. To manually set up database, augur and a default augur.cfg file will be created. Edit that file with the correct database settings.\nOr, run:\n\n curl -sOL https://raw.githubusercontent.com/OSSHealth/augur/dev/docs/install-msr.sh\nchmod +x install-msr.sh\n./install-msr.sh\n"
-then
-  ./docs/install-msr.sh
-fi
-
-
-
-
 #
 # Node
 #
 echo "Installing brunch, apidoc, and yarn..."
-npm install --global yarn apidoc brunch
+npm install --global apidoc brunch
 if [[ $? != 0 ]]
 then
   echo "NPM failed to install the packages. Some systems require root priviledges."

@@ -30,6 +30,9 @@ install:
 install-dev:
 		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
 
+install-dev-admin:
+	bash -lc '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+
 install-msr:
 		@ ./docs/install-msr.sh
 
