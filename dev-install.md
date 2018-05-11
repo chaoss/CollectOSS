@@ -5,15 +5,14 @@ Local Installation (For Development)
 - [Anaconda](https://www.anaconda.com/download/)
 - [NodeJS](http://nodejs.org) or newer and `npm`
 
-<a name="Ubuntu">Ubuntu Dependency Installation Instructions</a>
+[#### Dependency Installation for Ubuntu](#Ubuntu) 
+[#### Dependency Installation for OS X](#MacOSX)
 
-<a name="MacOSX">Mac OSX Dependency Installation Instructions</a>
-
-<a name="Install">Augur Installation Instructions</a>
+[### Augur Installation](#Install)
 
 *Also remember the database dependency in the README.md file* 
 
-[#### Dependency Installation for Ubuntu](#Ubuntu)
+### <a name="Ubuntu">Ubuntu Dependency Installation Instructions</a>
 
 ```bash
 # Install NodeSource
@@ -31,8 +30,7 @@ chmod +x Anaconda.sh
 rm Anaconda.sh
 ```
 
-
-[#### Dependency Installation for OS X](#MacOSX)
+<a name="MacOSX">Mac OSX Dependency Installation Instructions</a>
 
 ```bash
 # Install Homebrew
@@ -47,9 +45,7 @@ wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
 open Anaconda3-5.1.0-MacOSX-x86_64.pkg
 ```
 
-
-[### Installation](#Install)
-
+<a name="Install">Augur Installation Instructions</a>
 Clone the repo and install the libraries and tools needed by Augur
 
 ```bash
