@@ -5,10 +5,10 @@ Local Installation (For Development)
 - [Anaconda](https://www.anaconda.com/download/)
 - [NodeJS](http://nodejs.org) or newer and `npm`
 
-[#### Dependency Installation for Ubuntu](#Ubuntu) 
-[#### Dependency Installation for OS X](#MacOSX)
+1. [Dependency Installation for Ubuntu](#Ubuntu) 
+1. [Dependency Installation for OS X](#MacOSX)
 
-[### Augur Installation](#Install)
+### [Augur Installation](#Install)
 
 *Also remember the database dependency in the README.md file* 
 
