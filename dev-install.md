@@ -3,12 +3,15 @@ Local Installation (For Development)
 
 ### Dependencies (OS Specific Instructions Below)
 - [Anaconda](https://www.anaconda.com/download/)
-- [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
-  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
 - [NodeJS](http://nodejs.org) or newer and `npm`
 
+<a name="Ubuntu">Ubuntu Dependency Installation Instructions</a>
+<a name="MacOSX">Mac OSX Dependency Installation Instructions</a>
+<a name="Install">Augur Installation Instructions</a>
 
-#### Dependency Installation for Ubuntu
+*Also remember the database dependency in the README.md file* 
+
+[#### Dependency Installation for Ubuntu](#Ubuntu)
 
 ```bash
 # Install NodeSource
@@ -27,7 +30,7 @@ rm Anaconda.sh
 ```
 
 
-#### Dependency Installation for OS X
+[#### Dependency Installation for OS X](#MacOSX)
 
 ```bash
 # Install Homebrew
@@ -43,7 +46,7 @@ open Anaconda3-5.1.0-MacOSX-x86_64.pkg
 ```
 
 
-### Installation
+[### Installation](#Install)
 
 Clone the repo and install the libraries and tools needed by Augur
 

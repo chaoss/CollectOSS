@@ -15,7 +15,7 @@ To **contribute to our code base routinely**, we recommended that developers con
 
 **Both configurations require a MariaDB database with a subset of the GHTorrent dataset** 
   - [MySQL]/MariaDB or later with the [GHTorrent database](http://ghtorrent.org/)
-  - You can use the [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
+    - You can use the *much smaller [MSR14 dataset](http://ghtorrent.org/msr14.html) for testing
 
 Roadmap
 -------
