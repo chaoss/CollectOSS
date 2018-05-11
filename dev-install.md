@@ -132,7 +132,11 @@ You **CAN** get off the ground without those API keys though.
  ```bash
  make dev
  ```
- 
+
+
+
+### Start Developing on Augur!
+
 After making your changes, run `make build` to update the docs and frontend before adding them to your staging area.
 
 For futher instructions on how to add to Augur, here are guides to adding an endpoint to the full stack. 
