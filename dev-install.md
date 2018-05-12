@@ -135,29 +135,17 @@ You **CAN** get off the ground without those API keys though.
 
 
 
-### Start Developing on Augur!
 
-After making your changes, run `make build` to update the docs and frontend before adding them to your staging area.
+## macOS High Sierra (and possibly older OS X Versions) Errata:
 
-For futher instructions on how to add to Augur, here are guides to adding an endpoint to the full stack. 
-
-[Dev Guide Part 1](docs/dev-guide-pt1.md) 
-
-[Dev Guide Part 2](docs/dev-guide-pt2.md)
-
-Frontend development guide coming soon!
-
-macOS High Sierra (and possibly older OS X Versions) Errata:
-If you check the logs/frontend.log and find that "brunch" was not found: 
-```bash
-brew install npm
-npm install -g brunch
-brew install yarn
-```
-
-If the logs look good but the webpage at localhost:3333 is empty, it could be that Yarn installed the wrong version of some libraries. In that case:
-
-```bash
-cd frontend 
-npm install
-```
+1. If you check the logs/frontend.log and find that "brunch" was not found: 
+    ```bash
+    brew install npm
+    npm install -g brunch
+    brew install yarn
+    ```
+1. If the logs look good but the webpage at localhost:3333 is empty, it could be that Yarn installed the wrong version of some libraries. In that case:
+    ```bash
+    cd frontend 
+    npm install
+    ```
