@@ -28,7 +28,10 @@ install:
 		bash -lc '$(CONDAUPDATE) pip install --upgrade .'
 
 install-dev:
-		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; cd frontend/ && npm install'
+		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+
+install-dev-admin:
+	bash -lc '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
 
 install-msr:
 		@ ./docs/install-msr.sh
@@ -58,13 +61,11 @@ endif
 		@ echo "Stop servers:  make dev-stop "
 
 dev-stop:
-		@ if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;
-		@ if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;
+		@ bash -lc 'if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;'
+		@ bash -lc 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
 		@ echo
 
 dev: dev-restart monitor
-	@ read -p "Would you like to restart and continue monitoring? [y/n]: " -n 1 -r; \
-		echo; if [[ $$REPLY =~ ^[Yy]$$ ]]; then $(MAKE) dev; fi;
 
 monitor-frontend:
 		@ less +F logs/frontend.log

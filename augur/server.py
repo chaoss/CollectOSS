@@ -175,7 +175,7 @@ def api_root():
 @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Commits
 @apiName Commits
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md
+@apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
@@ -198,7 +198,7 @@ addTimeseries(app, ghtorrent.commits, 'commits')
 @api {get} /:owner/:repo/timeseries/commits/comments count of commit comments weekly
 @apiName CommitComments
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -219,7 +219,7 @@ addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
 @apiName Forks
 @apiGroup Growth-Maturity-Decline
 @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -238,11 +238,11 @@ addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
 addTimeseries(app, ghtorrent.forks, 'forks')
 
 """
-@api {get} /:owner/:repo/timeseries/issues?group_by=:group_by Issues
+@api {get} /:owner/:repo/timeseries/issues Issues
 @apiName Issues
-@apiGroup Timeseries
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/open-issues.md
+@apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -261,10 +261,10 @@ addTimeseries(app, ghtorrent.forks, 'forks')
 addTimeseries(app, ghtorrent.issues, 'issues')
 
 """
-@api {get} /:owner/:repo/timeseries/issues/activity
+@api {get} /:owner/:repo/timeseries/issues/activity Issues Activity
 @apiName Issues
-@apiGroup Timeseries
-
+@apiGroup Growth-Maturity-Decline
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -296,9 +296,9 @@ addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
 
 
 """
-@api {get} /:owner/:repo/timeseries/issues/closed
+@api {get} /:owner/:repo/timeseries/issues/closed Issues Closed
 @apiName Issues
-@apiGroup Timeseries
+@apiGroup Growth-Maturity-Decline
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -318,10 +318,10 @@ addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
 addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 
 """
-@api {get} /:owner/:repo/issue_close_time 
+@api {get} /:owner/:repo/issue_close_time Issue Close Time
 @apiName Issues
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -355,7 +355,7 @@ addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
 @api {get} /:owner/:repo/issue_comment_time 
 @apiName Issues
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -381,10 +381,10 @@ addMetric(app, ghtorrent.issue_comment_time, 'issue_comment_time')
 
 
 """
-@api {get} /:owner/:repo/timeseries/issue_comments count of new comments weekly
+@api {get} /:owner/:repo/timeseries/issue_comments Count of New Comments
 @apiName uniqueCommenters
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -404,7 +404,7 @@ addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
 @api {get} /:owner/:repo/timeseries/issues/response_time Issue Response Time
 @apiName IssueResponseTime
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -426,7 +426,7 @@ addTimeseries(app, ghtorrent.issue_response_time, 'issues/response_time')
 @api {get} /:owner/:repo/timeseries/pulls Pull Requests by Week
 @apiName PullRequestsByWeek
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -450,7 +450,7 @@ addTimeseries(app, ghtorrent.pulls, 'pulls')
 @api {get} /:owner/:repo/timeseries/pull_request_comments count of new pull request comments weekly
 @apiName PullRequestComments
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -471,7 +471,7 @@ addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
 @apiDescription For each week, the rate is calculated as (pull requests merged that week) / (pull requests opened that week).
 @apiName PullRequestAcceptanceRate
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric (incomplete): https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md
+@apiDescription <a href="incomplete): https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -533,7 +533,7 @@ addMetric(app, ghtorrent.watchers, 'watchers')
 @api {get} /:owner/:repo/timeseries/community_engagement
 @apiName Community Engagement
 @apiGroup Growth-Maturity-Decline
-@apiDescription Metric: https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-submitted-closed.md
+@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-submitted-closed.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
 
@@ -631,9 +631,9 @@ addTimeseries(app, github.major_tags, 'tags/major')
 
 """
 @api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
-@apiDescription Metric: https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md
+@apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
 @apiName LinesChanged
-@apiGroup Timeseries
+@apiGroup Growth-Maturity-Decline
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -681,7 +681,7 @@ addTimeseries(app, downloads.downloads, 'downloads')
 """
 @api {get} /:owner/:repo/contributors Total Contributions by User
 @apiName TotalContributions
-@apiDescription Metric: https://github.com/OSSHealth/metrics/blob/master/activity-metrics/contributors.md
+@apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/contributors.md">CHAOSS Metric Definition</a>
 @apiGroup Growth-Maturity-Decline
 
 @apiParam {String} owner Username of the owner of the GitHub repository
@@ -790,7 +790,7 @@ addMetric(app, ghtorrent.committer_locations, 'committer_locations')
 
 """
 @api {get} /:owner/:repo/pulls/maintainer_response_time Time to First Maintainer Response to Merge Request
-@apiDescription Metric: https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md
+@apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
 @apiName TimeToFirstMaintainerResponseToMergeRequest 
 @apiGroup Growth-Maturity-Decline
 
