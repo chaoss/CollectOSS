@@ -28,7 +28,7 @@ install:
 		bash -lc '$(CONDAUPDATE) pip install --upgrade .'
 
 install-dev:
-		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+		bash -lc '$(CONDAUPDATE) pip install3pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
 
 install-dev-admin:
 	bash -lc '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
@@ -43,13 +43,8 @@ upgrade: download-upgrade install
 		@ echo "Upgraded."
 
 dev-start: dev-stop
-ifdef CONDA
-		@ bash -lc '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
-		@ bash -lc '(conda activate augur; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
-else
-		@ bash -lc '(cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
-		@ bash -lc '($(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
-endif
+		@ bash -lc '$(CONDAACTIVATE) (cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
+		@ bash -lc '$(CONDAACTIVATE) (conda activate augur; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
 		@ echo "Server     Description       Log                   Monitoring                   PID                        "
 		@ echo "------------------------------------------------------------------------------------------                 "
 		@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
@@ -141,4 +136,3 @@ install-os-x-dependencies:
 	@ echo "Downloading Anaconda installer to ~/Downloads..."
 	cd ~/Downloads && wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
 	cd ~/Downloads && open Anaconda3-5.1.0-MacOSX-x86_64.pkg
-

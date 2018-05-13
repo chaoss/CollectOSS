@@ -115,12 +115,7 @@
 })();
 
 (function() {
-var global = typeof window === 'undefined' ? this : window;require.register("child_process", function(exports, require, module) {
-  module.exports = {};
-});
-require.register("fs", function(exports, require, module) {
-  module.exports = {};
-});
+var global = typeof window === 'undefined' ? this : window;
 var process;
 var __makeRelativeRequire = function(require, mappings, pref) {
   var none = {};
@@ -1276,7 +1271,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-429b02f1", __vue__options__)
+    hotAPI.reload("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -4450,14 +4445,7 @@ module.exports = exports['default'];
 });
 
 require.alias("buffer/index.js", "buffer");
-require.alias("events/events.js", "events");
-require.alias("stream-http/index.js", "http");
-require.alias("https-browserify/index.js", "https");
 require.alias("process/browser.js", "process");
-require.alias("punycode/punycode.js", "punycode");
-require.alias("querystring-es3/index.js", "querystring");
-require.alias("stream-browserify/index.js", "stream");
-require.alias("url/url.js", "url");
 require.alias("vue/dist/vue.common.js", "vue");process = require('process');require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
