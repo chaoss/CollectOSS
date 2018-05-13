@@ -8,35 +8,35 @@ Now, to install:
 
 1.  Clone the repo and enter its directory:
 
-    ```bash
-    git clone https://github.com/OSSHealth/augur
-    cd augur
-      ```
+```bash
+git clone https://github.com/OSSHealth/augur
+cd augur
+```
 
 
 2.  Set the following variables in your environment:
 
-    ```bash
-    # Most likely required
-    AUGUR_DB_USER
-    AUGUR_DB_PASS
-    AUGUR_DB_HOST
-    AUGUR_DB_PORT
-    AUGUR_DB_NAME
+```bash
+#Most likely required
+AUGUR_DB_USER
+AUGUR_DB_PASS
+AUGUR_DB_HOST
+AUGUR_DB_PORT
+AUGUR_DB_NAME
 
-    # Optional
-    AUGUR_HOST
-    AUGUR_PORT
-    AUGUR_PUBLIC_WWW_API_KEY
-    AUGUR_GITHUB_API_KEY
-    AUGUR_LIBRARIESIO_API_KEY
-    AUGUR_DEBUG
-    AUGUR_GHTORRENT_PLUS_USER
-    AUGUR_GHTORRENT_PLUS_PASS
-    AUGUR_GHTORRENT_PLUS_HOST
-    AUGUR_GHTORRENT_PLUS_PORT
-    AUGUR_GHTORRENT_PLUS_NAME
-    ```
+# Optional
+AUGUR_HOST
+AUGUR_PORT
+AUGUR_PUBLIC_WWW_API_KEY
+AUGUR_GITHUB_API_KEY
+AUGUR_LIBRARIESIO_API_KEY
+AUGUR_DEBUG
+AUGUR_GHTORRENT_PLUS_USER
+AUGUR_GHTORRENT_PLUS_PASS
+AUGUR_GHTORRENT_PLUS_HOST
+AUGUR_GHTORRENT_PLUS_PORT
+AUGUR_GHTORRENT_PLUS_NAME
+```
 
     docker-compose will automatically pass the relevant variables from the local environment to the container.
 

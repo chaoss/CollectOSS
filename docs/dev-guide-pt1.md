@@ -27,7 +27,11 @@ from .choass import Chaoss
 
 In Augur there are metrics and timeseries metrics. For all metrics, the function should return a Dataframe that can be serialized into json. For timeseries metrics, the Dataframe needs to have a column named `date` that holds timestamps.
 
-Once you have implemented your function in the corresponding data source file, make sure to `pip install -e . ` once again to reload your changes.
+Once you have implemented your function in the corresponding data source file, make sure to 
+```bash
+pip install -e . 
+``` 
+once again to reload your changes.
 
 #### Adding dependencies
 

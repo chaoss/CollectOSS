@@ -91,12 +91,17 @@ Clone the repo and install the libraries and tools needed by Augur
 
 ```bash
 git clone https://github.com/OSSHealth/augur/
+
 cd augur
+
 # Install the Python and Node tools and libraries needed
-make install-dev
+make install-dev-admin # some libraries require a root install.  
+
+# Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way. 
+
 ```
 
-Make sure you have a database user that has select access to the database where you installed [GHTorrent](http://ghtorrent.org/) and all priviledges on another database for Augur.
+**Make sure you have a database user that has select access to the database where you installed [GHTorrent](http://ghtorrent.org/) and all priviledges on another database for Augur.**
 
 ```sql
 CREATE USER 'augur'@'localhost' IDENTIFIED BY 'password';
@@ -106,34 +111,41 @@ CREATE DATABASE augur;
 GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
 ```
 
-Run `augur` to create an `augur.cfg` file. Edit this file with the the required information. In addition to your database information, you will need a [GitHub](https://developer.github.com/v3/) API Key, [PublicWWW](https://publicwww.com/) API Key, and [LibrariesIO](https://libraries.io/) API Key.
+**Augur runs in an Anaconda environment. To get started, you need to run 'augur' to create the augur.cfg file**
 
-You're ready to rock! To start both the frontend and backend, run:
+```bash
+conda activate augur
+augur
+```
+
+Edit the augur.cfg file with the the required information for database and API connections. 
+
+For all the API's and visualiazations to work, you will need to include: 
+
+- A [GitHub](https://developer.github.com/v3/) API Key, 
+- A [PublicWWW](https://publicwww.com/) API Key, and 
+- A [LibrariesIO](https://libraries.io/) API Key.
+
+You **CAN** get off the ground without those API keys though. 
+
+**You're ready to rock! To start both the frontend and backend, run:**
  ```bash
  make dev
  ```
- 
-After making your changes, run `make build` to update the docs and frontend before adding them to your staging area.
 
-For futher instructions on how to add to Augur, here are guides to adding an endpoint to the full stack. 
 
-[Dev Guide Part 1](docs/dev-guide-pt1.md) 
 
-[Dev Guide Part 2](docs/dev-guide-pt2.md)
 
-Frontend development guide coming soon!
+## macOS High Sierra (and possibly older OS X Versions) Errata:
 
-macOS High Sierra (and possibly older OS X Versions) Errata:
-If you check the logs/frontend.log and find that "brunch" was not found: 
-```bash
-brew install npm
-npm install -g brunch
-brew install yarn
-```
-
-If the logs look good but the webpage at localhost:3333 is empty, it could be that Yarn installed the wrong version of some libraries. In that case:
-
-```bash
-cd frontend 
-npm install
-```
+1. If you check the logs/frontend.log and find that "brunch" was not found: 
+    ```bash
+    brew install npm
+    npm install -g brunch
+    brew install yarn
+    ```
+1. If the logs look good but the webpage at localhost:3333 is empty, it could be that Yarn installed the wrong version of some libraries. In that case:
+    ```bash
+    cd frontend 
+    npm install
+    ```
