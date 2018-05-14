@@ -7,16 +7,16 @@
       <div class="col col-6">
         <line-chart source="commits"
                     title="Commits / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Community Activty">
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md"
+                    cite-text="Commits">
         </line-chart>
       </div>
 
       <div class="col col-6">
         <line-chart source="forks"
                     title="Forks / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Community Activty">
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md"
+                    cite-text="Forks">
         </line-chart>
       </div>
 
@@ -31,47 +31,47 @@
       <div class="col col-6">
         <line-chart source="issueComments" 
                     title="Issue Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"> 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/people-opening-issues.md"
+                    cite-text="Issue Comments"> 
         </line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="commitComments" 
+        <line-chart source="commitComments"
                     title="Commit Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"> 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-reviews.md"
+                    cite-text="Code Reviews (naive implementation)"> 
         </line-chart>
       </div>
 
       <div class="col col-6">
         <line-chart source="pullReqComments" 
                     title="Pull Request Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"> 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md"
+                    cite-text="Pull Request Comments"> 
         </line-chart>
       </div>
 
       <div class="col col-6">
         <line-chart source="pullsAcceptanceRate" 
-                    title="Pull Acceptance Rate" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"> 
+                    title="Pull Request Acceptance Rate" 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-made-closed.md"
+                    cite-text="Pull Requets Made / Closed"> 
         </line-chart>
       </div>
 
       <div class="col col-6">
         <line-chart source="issuesClosed" 
                     title="Issues Closed / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"> 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md"
+                    cite-text="Issue Resolution Efficiency"> 
         </line-chart>
       </div>
 
       <div class="col col-12">
         <line-chart source="totalCommitters" 
                     title="Total Committers" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contributors.md"
                     cite-text="Contributors"
                     disableRollingAverage=1>
         </line-chart>
@@ -81,8 +81,8 @@
         <bubble-chart source="contributors"
                       title="Contributior Overview"
                       size="total"
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                      cite-text="Community Activty">
+                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contributors.md"
+                      cite-text="Contributors">
         </bubble-chart>
       </div>
  
