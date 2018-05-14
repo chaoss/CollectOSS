@@ -1094,7 +1094,7 @@ def batch():
         responses.append({
             "path": path,
             "status": response.status_code,
-            "response": str(response.get_data())
+            "response": str(response.get_data(), 'utf8')
         })
 
     return Response(response=json.dumps(responses),

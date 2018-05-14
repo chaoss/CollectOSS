@@ -2,7 +2,6 @@
 
 SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
 CONDAUPDATE=if ! conda activate augur; then conda env create -n=augur -f=environment.yml && conda activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
-CONDAACTIVATE=conda activate augur;
 
 default:
 	@ echo "Commands:"
@@ -28,7 +27,7 @@ install:
 		bash -lc '$(CONDAUPDATE) pip install --upgrade .'
 
 install-dev:
-		bash -lc '$(CONDAUPDATE) pip install3pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
 
 install-dev-admin:
 	bash -lc '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
@@ -43,8 +42,8 @@ upgrade: download-upgrade install
 		@ echo "Upgraded."
 
 dev-start: dev-stop
-		@ bash -lc '$(CONDAACTIVATE) (cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid);'
-		@ bash -lc '$(CONDAACTIVATE) (conda activate augur; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid);'
+		@ bash -c '(source activate augur; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid;)'
+		@ bash -c '(source activate augur; $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
 		@ echo "Server     Description       Log                   Monitoring                   PID                        "
 		@ echo "------------------------------------------------------------------------------------------                 "
 		@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
@@ -56,8 +55,8 @@ dev-start: dev-stop
 		@ echo "Stop servers:  make dev-stop "
 
 dev-stop:
-		@ bash -lc 'if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;'
-		@ bash -lc 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
+		@ bash -c 'if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;'
+		@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
 		@ echo
 
 dev: dev-restart monitor

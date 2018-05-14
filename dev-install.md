@@ -94,6 +94,10 @@ git clone https://github.com/OSSHealth/augur/
 
 cd augur
 
+# If you are going to do active development, please use the dev branch
+git checkout dev
+
+
 # Install the Python and Node tools and libraries needed
 make install-dev-admin # some libraries require a root install.  
 
