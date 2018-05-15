@@ -5,7 +5,8 @@ import pandas
 @pytest.fixture
 def github():
     import augur
-    return augur.GitHubAPI(os.getenv("GITHUB_API_KEY"))
+    augurApp = augur.Application()
+    return augurApp.github()
 
 """
 Pandas testing format

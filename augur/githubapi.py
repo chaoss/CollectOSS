@@ -7,6 +7,8 @@ import github
 import numpy as np
 import datetime
 import requests
+# end imports
+# (don't remove the above line, it's for a script)
 
 class GitHubAPI(object):
     """
@@ -212,18 +214,27 @@ class GitHubAPI(object):
         genderized = names.merge(LocalCSV.name_gender, how='inner', on=['name'])
         return genderized
 
-    def lines_changed(self, owner, repo=None):
+    def lines_changed(self, owner, repo=None): 
+        """
+        Additions and deletions each week
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being am issue
+        """
+        # get the data we need from the GitHub API
+        # see <project_root>/augur/githubapi.py for examples using the GraphQL API
         url = "https://api.github.com/repos/{}/{}/stats/code_frequency".format(owner, repo)
         json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
-        dates = []
-        totals = []
-        for i in range(0, len(json)):
-            dates = np.append(dates, datetime.datetime.utcfromtimestamp(json[i][0]).strftime('%Y-%m-%dT%H:%M:%SZ')) 
-            totals = np.append(totals, json[i][1] + json[i][2])
-            # totals = np.append(totals, json[i][1] + abs(json[i][2]))
-        df1 = pd.DataFrame(data=dates, columns=["date"])
-        df2 = pd.DataFrame(data=totals, columns=["lines_changed"])
-        df = df1.join(df2)
+        # get our data into a dataframe
+        df = pd.DataFrame(json, columns=['date', 'additions', 'deletions'])
+        # all timeseries metrics need a 'date' column
+        df['date'] = pd.to_datetime(df['date'], unit='s', infer_datetime_format=True)
+        # normalize our data and create useful aggregates
+        df['deletions'] = df['deletions'] * -1
+        df['delta'] = df['additions'] - df['deletions']
+        df['total_lines'] = df['delta'].cumsum()
+        # return the dataframe
         return df
 
 

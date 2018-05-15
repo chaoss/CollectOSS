@@ -2,6 +2,8 @@ import requests
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
+# end imports
+# (don't remove the above line, it's for a script)
 
 class LibrariesIO(object):
     """Handles interaction with https://libraries.io/api to get dependency data"""

@@ -2,6 +2,8 @@ import pandas as pd
 import sqlalchemy as s
 import numpy as np
 import re
+# end imports
+# (don't remove the above line, it's for a script)
 
 class GHTorrentPlus(object):
     """Manages the custom schema for GHTorrent to improve performance of slow queries"""

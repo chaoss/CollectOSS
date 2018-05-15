@@ -3,6 +3,8 @@ import pandas as pd
 import requests
 import datetime
 import base64
+# end imports
+# (don't remove the above line, it's for a script)
 
 class Downloads(object):
     """Class for retrieveing download information using APIs and web scrapers"""

@@ -6,3 +6,4 @@ from .librariesio import LibrariesIO
 from .util import makeRelative
 from .downloads import Downloads
 from .localcsv import LocalCSV
+from .application import Application

@@ -16,24 +16,14 @@ from flask_cors import CORS
 import json
 
 AUGUR_API_VERSION = 'api/unstable'
-# Location to load configuration from
-CONFIG_BAD = False
+
+
 '''
 make a try and accept condition
 if its open the GH_DATA_ONFIG_FILE and then its open in read mode
 and if the file does't open the it print Couldn\'t open config file, attempting to create.
 '''
 
-try:
-    AUGUR_CONFIG_FILE = open(os.getenv('AUGUR_CONFIG_FILE', 'augur.cfg'), 'r+')
-except:
-    print('Couldn\'t open config file, attempting to create.')
-    AUGUR_CONFIG_FILE = open(os.getenv('AUGUR_CONFIG_FILE', 'augur.cfg'), 'w+')
-    CONFIG_BAD = True
-# Options to export the loaded configuration as environment variables for Docker
-AUGUR_ENV_EXPORT = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
-if AUGUR_ENV_EXPORT:
-    AUGUR_ENV_EXPORT_FILE = open(os.getenv('AUGUR_ENV_EXPORT_FILE', 'lastrun.cfg.sh'), 'w+')
 
 
 def serialize(data, orient='records'):
@@ -83,72 +73,32 @@ def addTimeseries(app, function, endpoint):
     app.route('/{}/<owner>/<repo>/timeseries/{}/relative_to/<ownerRelativeTo>/<repoRelativeTo>'.format(AUGUR_API_VERSION, endpoint))(flaskify(augur.util.makeRelative(function)))
 
 
+# Create Flask application
 app = Flask(__name__)
-CORS(app)# Try to open the config file and parse it
-parser = configparser.RawConfigParser()
-parser.readfp(AUGUR_CONFIG_FILE)
+CORS(app)
 
-if AUGUR_ENV_EXPORT:
-    AUGUR_ENV_EXPORT_FILE.write('#!/bin/bash\n')
+# Create Augur application
+augurApp = augur.Application()
 
-def read_config(section, name, environment_variable, default):
-    global CONFIG_BAD
-    value = default
-    try:
-        value = os.getenv(environment_variable, parser.get(section, name))
-    except Exception as e:
-        if not parser.has_section(section):
-            parser.add_section(section)
-        CONFIG_BAD = True
-        print('[' + section + ']->' + name + ' is missing. Your config will be regenerated with it included after execution.')
-        parser.set(section, name, default)
-        value = default
-    if AUGUR_ENV_EXPORT:
-        AUGUR_ENV_EXPORT_FILE.write('export ' + environment_variable + '="' + value + '"\n')
-    return value
+# Initalize all of the classes
+ghtorrent = augurApp.ghtorrent()
+ghtorrentplus = augurApp.ghtorrentplus() 
+publicwww = augurApp.publicwww()
+github = augurApp.github()
+librariesio = augurApp.librariesio()
+downloads = augurApp.downloads()
+localcsv = augurApp.localcsv()
 
-host = read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
-port = read_config('Server', 'port', 'AUGUR_PORT', '5000')
+# Where should we host
+host = augurApp.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
+port = augurApp.read_config('Server', 'port', 'AUGUR_PORT', '5000')
 
-publicwww = augur.PublicWWW(api_key=read_config('PublicWWW', 'APIKey', 'AUGUR_PUBLIC_WWW_API_KEY', 'None'))
-github = augur.GitHubAPI(api_key=read_config('GitHub', 'APIKey', 'AUGUR_GITHUB_API_KEY', 'None'))
-librariesio = augur.LibrariesIO(api_key=read_config('LibrariesIO', 'APIKey', 'AUGUR_LIBRARIESIO_API_KEY', 'None'), githubapi=github)
-downloads = augur.Downloads(github)
-localcsv = augur.LocalCSV()
-
-if (read_config('Development', 'developer', 'AUGUR_DEBUG', '0') == '1'):
+# Should we drop down to a shell
+if (augurApp.read_config('Development', 'developer', 'AUGUR_DEBUG', '0') == '1'):
     debugmode = True
 else:
     debugmode = False
 
-dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-    read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-    read_config('Database', 'pass', 'AUGUR_DB_PASS', 'password'),
-    read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-    read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-    read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
-)
-ghtorrent = augur.GHTorrent(dbstr=dbstr)
-
-
-dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-    read_config('GHTorrentPlus', 'user', 'AUGUR_GHTORRENT_PLUS_USER', 'root'),
-    read_config('GHTorrentPlus', 'pass', 'AUGUR_GHTORRENT_PLUS_PASS', 'password'),
-    read_config('GHTorrentPlus', 'host', 'AUGUR_GHTORRENT_PLUS_HOST', '127.0.0.1'),
-    read_config('GHTorrentPlus', 'port', 'AUGUR_GHTORRENT_PLUS_PORT', '3306'),
-    read_config('GHTorrentPlus', 'name', 'AUGUR_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
-)
-ghtorrentplus = augur.GHTorrentPlus(dbstr=dbstr, ghtorrent=ghtorrent)
-
-
-dbstr = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-    read_config('GHTorrentPlus', 'user', 'AUGUR_GHTORRENT_PLUS_USER', 'root'),
-    read_config('GHTorrentPlus', 'pass', 'AUGUR_GHTORRENT_PLUS_PASS', 'password'),
-    read_config('GHTorrentPlus', 'host', 'AUGUR_GHTORRENT_PLUS_HOST', '127.0.0.1'),
-    read_config('GHTorrentPlus', 'port', 'AUGUR_GHTORRENT_PLUS_PORT', '3306'),
-    read_config('GHTorrentPlus', 'name', 'AUGUR_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
-)
-ghtorrentplus = augur.GHTorrentPlus(dbstr=dbstr, ghtorrent=ghtorrent)
 
 """
 @api {get} / API Status
@@ -1105,22 +1055,10 @@ def batch():
 if (debugmode):
     app.debug = True
 
-if read_config('Development', 'interactive', 'AUGUR_INTERACTIVE', '0') == '1':
+if augurApp.read_config('Development', 'interactive', 'AUGUR_INTERACTIVE', '0') == '1':
     ipdb.set_trace()
 
-# Close files and save config
-if (CONFIG_BAD):
-    print('Regenerating config...')
-    AUGUR_CONFIG_FILE.seek(0)
-    parser.write(AUGUR_CONFIG_FILE)
-
-AUGUR_CONFIG_FILE.close()
-if AUGUR_ENV_EXPORT:
-    AUGUR_ENV_EXPORT_FILE.close()
-
-
-
-
+augurApp.finalize_config()
 
 
 def run():

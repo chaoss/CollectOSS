@@ -8,7 +8,8 @@ if sys.version_info > (3, 0):
     import urllib.parse as url
 else:
     import urllib as url
-
+# end imports
+# (don't remove the above line, it's for a script)
 
 class PublicWWW(object):
     """
