@@ -515,9 +515,10 @@ class GHTorrent(object):
         """
         Information helpful to determining a community's age
 
-        For now, returns the date of the first of each type of action (fork, pull request, etc.)
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with the first event of each type (commits, fork, ...)
         """
-
         repoid = self.repoid(owner, repo)
         communityAgeSQL = s.sql.text("""
         SELECT DATE(proj.created_at) AS "project",
@@ -548,6 +549,13 @@ class GHTorrent(object):
         return pd.read_sql(communityAgeSQL, self.db, params={"repoid": str(repoid)})
 
     def total_committers(self, owner, repo=None):
+        """
+        Number of total committers as of each week
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being a week
+        """
         repoid = self.repoid(owner, repo)
         totalCommittersSQL = s.sql.text("""
         SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_total_committers
@@ -564,6 +572,13 @@ class GHTorrent(object):
         return df
 
     def watchers(self, owner, repo=None):
+        """
+        Number of total watchers
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with the total number of watcher
+        """
         repoid = self.repoid(owner, repo)
         watchersSQL = s.sql.text("""
             SELECT COUNT(*) as "watchers"
@@ -573,6 +588,15 @@ class GHTorrent(object):
         return pd.read_sql(watchersSQL, self.db, params={"repoid": str(repoid)})
 
     def community_engagement(self, owner, repo):
+        """
+        Lots of information about issues and pull requests
+
+        TODO: More documentation
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being a week
+        """
         repoid = self.repoid(owner, repo)
         issuesFullSQL = s.sql.text("""
         SELECT DATE(date) as "date", 
@@ -644,6 +668,13 @@ class GHTorrent(object):
 
 
     def issue_comment_time(self, owner, repo):
+        """
+        Time to comment by issue
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being am issue
+        """
         repoid = self.repoid(owner, repo)
         issueCommentsSQL = s.sql.text("""
             SELECT *, TIMESTAMPDIFF(MINUTE, opened, first_commented) AS minutes_to_comment FROM ( 
@@ -675,6 +706,10 @@ class GHTorrent(object):
         3). For merge request, append the ID of the first comment that was made by a maintainer to an array, if it exists (also append the issue id to a different array) ***use a data frame?***
         *4). For every one of those comment IDs, append the timestamp difference to a array
         5). Calculate mean time per week
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being am issue
         """
         repoid = self.repoid(owner, repo)
         maintainerResponseToMRSQL = s.sql.text("""

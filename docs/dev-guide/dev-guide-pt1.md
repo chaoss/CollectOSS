@@ -4,11 +4,15 @@
 
 Augur uses the Flask framework for its backend, which is stored in the directory `augur`. `augur/__init__.py`, `augur/server.py`, `augur/deploy.py`, and `augur/util.py` contain the components. The other `augur/*.py`files contain python funtions that return dataframes to be serialzed into json by the functions in `augur/server.py`. The titles of those files are the data sources the metrics use.
 
+## Setting up your environment
+
+Before you begin, make sure to activate the augur Anaconda environment by running `conda activate augur`. If this environment doesn't exist, try running `make install-dev` again and watch out for any errors.
+
 ## Writing a Function for Augur
 
 ### Should I create a new .py file?
 
-If your python function uses a new data source, create a new Python file. If you use an already implemented data source, create your new functions under that file.
+If your python function uses a new data source, create a new Python file. If you use an already implemented data source, create your new functions under that file. For instance, if you were to create a metric using data from the GitHub API, you would write a function in [`augur/githubapi.py`](https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py)
 
 #### Adding a new .py file
 
@@ -26,12 +30,6 @@ from .choass import Chaoss
 ### Writing a function
 
 In Augur there are metrics and timeseries metrics. For all metrics, the function should return a Dataframe that can be serialized into json. For timeseries metrics, the Dataframe needs to have a column named `date` that holds timestamps.
-
-Once you have implemented your function in the corresponding data source file, make sure to 
-```bash
-pip install -e . 
-``` 
-once again to reload your changes.
 
 #### Adding dependencies
 
@@ -73,7 +71,7 @@ Make sure every function you write has a test.
 
 If you created a new data source, make sure you create an instance of your class, loading any configuration you need with the `read_config` function.
 
-To create an endpoint for a function, in `augur/server.py`, call  `AddMetric()` or `AddTimeseries()`  as such
+To create an endpoint for a function, in [`augur/server.py`](https://github.com/OSSHealth/augur/blob/master/augur/server.py), call  `addMetric()` or `addTimeseries()`
 
 ```python
 addTimeseries(app, file_name.function_name, 'function_name')

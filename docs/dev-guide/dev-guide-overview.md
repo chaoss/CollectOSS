@@ -1,7 +1,7 @@
 # Augur Development Guide: Making Contributions
 
 ## Getting Started
-See our [Contributing to Augur](./Contributing.md) guide for specifics on how we review pull requests. tl;dr: Fork our repo. Make a change. Use the mailing list for [CHAOSS](https://lists.linuxfoundation.org/mailman/listinfo/oss-health-metrics), Submit a pull request. 
+See our [Contributing to Augur](/CONTRIBUTING.md) guide for specifics on how we review pull requests. tl;dr: Fork our repo. Make a change. Use the mailing list for [CHAOSS](https://lists.linuxfoundation.org/mailman/listinfo/oss-health-metrics), Submit a pull request. 
 
 ## Building Changes
 After making your changes, run 
@@ -15,22 +15,20 @@ to update the docs and frontend before adding them to your staging area.
 ## Augur Development Overview
 
 ### tl;dr
-1. [Back End Development Guide](docs/dev-guide-pt1.md) 
-2. [Front End Development Guide](docs/dev-guide-pt2.md)
+  1. [Back End Development Guide](/docs/dev-guide-pt1.md) 
+  2. [Front End Development Guide](/docs/dev-guide-pt2.md)
 ---------------------
 
 ### Augur's Design Value System
 Augur's architecture is designed with an eye toward fulfilling its primary missions of rapid open source software metric prototyping and using data visualization to facilitate discussions among folks who manage open source communities. 
 
 **Core aims: **
-
-1. Rapid metrics prototyping
-1. Using data visualization to support discussion
+  1. Rapid metrics prototyping
+  2. Using data visualization to support discussion
 
 **Our visualization design follows two principles:**
-
-1. Allow comparisons across projects
-2. Where logical, show trends over time on a metric
+  1. Allow comparisons across projects
+  2. Where logical, show trends over time on a metric
 
 Project comparison helps people understand what a metric tells them.  If I show you total commits in a month or a year, what does that tell you about the health of an open source project?  If  you are able to compare a project you are managing with a project or two in the same space that you are familiar with, is that helpful? In most cases the answers are yes. We aim to produce not only metrics, but enough information for consumers of Augur to construct meaning. Which then helps the CHAOSS community build better, more useful metrics. 
 
@@ -64,8 +62,8 @@ If you want to ingest substantial amounts of new data, you may want to contribut
 The database system that you built with GHTorrent or MSR14 is our principle data storage environment right now. We have added a few small details to the GHTorrent database in a seperate schema called GHTorrent_Plus.  This schema is built on deployment, and supports aggregations of the GHTorrent Schema information so that metrics can be generated more quickly in a few cases. 
 
 ### Augur Data Reshaping for Analysis
-Now that you understand the basic structure of Augur, our [Back End Development Guide](docs/dev-guide-pt1.md) will be the place to start for reshaping data and building out analysis endpoints. The end result of new back end code is a **REST API Endpoint.**
+Now that you understand the basic structure of Augur, our [Back End Development Guide](/docs/dev-guide-pt1.md) will be the place to start for reshaping data and building out analysis endpoints. The end result of new back end code is a **REST API Endpoint.**
 
 ### Augur Data Presentation 
-Once you have a **REST API Endpoint**, you can stop and say, "I have built an endpoint. Here is my pull request".  OR, you can build front end visualizations for those endpoints, following our [Front End Development Guide](docs/dev-guide-pt2.md).
+Once you have a **REST API Endpoint**, you can stop and say, "I have built an endpoint. Here is my pull request".  OR, you can build front end visualizations for those endpoints, following our [Front End Development Guide](/docs/dev-guide-pt2.md).
 

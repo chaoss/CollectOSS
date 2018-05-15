@@ -13,7 +13,6 @@ git clone https://github.com/OSSHealth/augur
 cd augur
 ```
 
-
 2.  Set the following variables in your environment:
 
 ```bash
@@ -23,19 +22,18 @@ AUGUR_DB_PASS
 AUGUR_DB_HOST
 AUGUR_DB_PORT
 AUGUR_DB_NAME
-
-# Optional
-AUGUR_HOST
-AUGUR_PORT
-AUGUR_PUBLIC_WWW_API_KEY
-AUGUR_GITHUB_API_KEY
-AUGUR_LIBRARIESIO_API_KEY
-AUGUR_DEBUG
 AUGUR_GHTORRENT_PLUS_USER
 AUGUR_GHTORRENT_PLUS_PASS
 AUGUR_GHTORRENT_PLUS_HOST
 AUGUR_GHTORRENT_PLUS_PORT
 AUGUR_GHTORRENT_PLUS_NAME
+AUGUR_GITHUB_API_KEY
+
+# Optional
+AUGUR_HOST
+AUGUR_PORT
+AUGUR_PUBLIC_WWW_API_KEY
+AUGUR_LIBRARIESIO_API_KEY
 ```
 
     docker-compose will automatically pass the relevant variables from the local environment to the container.

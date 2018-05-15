@@ -70,7 +70,16 @@
         </line-chart>
       </div>
 
-      <div class="col col-12">
+      <div class="col col-6">
+        <line-chart source="linesChanged:total_lines" 
+                    title="Size of Code Base" 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/size-of-code-base.md"
+                    cite-text="Size of Code Base"
+                    disableRollingAverage=1>
+        </line-chart>
+      </div>
+
+      <div class="col col-6">
         <line-chart source="totalCommitters" 
                     title="Total Committers" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contributors.md"

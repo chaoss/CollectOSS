@@ -1,36 +1,38 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend install-ubuntu-dependencies
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upsteam
 
 SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
-CONDAUPDATE=if ! conda activate augur; then conda env create -n=augur -f=environment.yml && conda activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
+CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur && python -m ipykernel install --user --name augur --display-name "Python (augur)"; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
 
 default:
 	@ echo "Commands:"
-	@ echo
-	@ echo "    install          Installs augur using pip"
-	@ echo "    install-dev      Installs augur's developer dependencies (requires npm and pip)"
-	@ echo "    install-msr      Installs MSR14 dataset"
-	@ echo "    upgrade          Pulls newest version and installs"
-	@ echo "    test             Run pytest unit tests"
-	@ echo "    serve            Runs using gunicorn"
-	@ echo "    dev              Starts the full stack and monitors the logs"
-	@ echo "    dev-start        Runs 'make serve' and 'brunch w -s' in the background"
-	@ echo "    dev-stop         Stops the backgrounded commands"
-	@ echo "    dev-restart      Runs dev-stop then dev-restart"
-	@ echo "    python-docs      Generates new Sphinx documentation"
-	@ echo "    api-docs         Generates new apidocjs documentation"
-	@ echo "    docs             Generates all documentation"
-	@ echo "    frontend         Builds frontend with Brunch"
-	@ echo "    build            Builds documentation and frontend - use before pushing"
-	@ echo "    update-deps      Generates updated requirements.txt and environment.yml"
+	@ echo "    install                Installs augur using pip"
+	@ echo "    install-dev            Installs augur's developer dependencies (requires npm and pip)"
+	@ echo "    install-msr            Installs MSR14 dataset"
+	@ echo "    upgrade                Pulls newest version and installs"
+	@ echo "    test                   Run pytest unit tests"
+	@ echo "    serve                  Runs using gunicorn"
+	@ echo "    dev                    Starts the full stack and monitors the logs"
+	@ echo "    dev-start              Runs 'make serve' and 'brunch w -s' in the background"
+	@ echo "    dev-stop               Stops the backgrounded commands"
+	@ echo "    dev-restart            Runs dev-stop then dev-restart"
+	@ echo "    metric-status          Shows the implementation status of CHAOSS metrics"
+	@ echo "    edit-metrics-status    Edits the JSON file that tracks CHAOSS metrics implementation status"
+	@ echo "    python-docs            Generates new Sphinx documentation"
+	@ echo "    api-docs               Generates new apidocjs documentation"
+	@ echo "    docs                   Generates all documentation"
+	@ echo "    frontend               Builds frontend with Brunch"
+	@ echo "    build                  Builds documentation and frontend - use before pushing"
+	@ echo "    update-deps            Generates updated requirements.txt and environment.yml"
+
 
 install:
-		bash -lc '$(CONDAUPDATE) pip install --upgrade .'
+		bash -c '$(CONDAUPDATE) pip install --upgrade .'
 
 install-dev:
-		bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+		bash -c '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
 
 install-dev-admin:
-	bash -lc '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+	bash -c '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
 
 install-msr:
 		@ ./docs/install-msr.sh
@@ -38,7 +40,10 @@ install-msr:
 download-upgrade:
 		git pull
 
-upgrade: download-upgrade install
+update-upsteam: 
+	git submodule update --init --recursive
+
+upgrade: download-upgrade update-upsteam dev-install
 		@ echo "Upgraded."
 
 dev-start: dev-stop
@@ -120,6 +125,14 @@ ifdef CONDA
 		conda env export > environment.yml
 endif
 
+metrics-status: update-upsteam
+	@ cd docs/metrics/ && python status.py | less
+
+edit-metrics-status:
+	$(EDITOR) docs/metrics/status.json
+
+jupyter: check-test-env
+		@ bash -c 'source activate augur; cd notebooks; jupyter notebook'
 
 install-ubuntu-dependencies:
 	@ echo "Downloading NodeSource Installer..."

@@ -52,6 +52,7 @@ __pycache__
 _pycache_
 augur/bin
 .pytest_cache
+.ipynb_checkpoints
 
 # Node #
 ########
