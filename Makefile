@@ -15,8 +15,10 @@ default:
 	@ echo "    dev-start              Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop               Stops the backgrounded commands"
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
-	@ echo "    metric-status          Shows the implementation status of CHAOSS metrics"
+	@ echo "    metrics-status         Shows the implementation status of CHAOSS metrics"
 	@ echo "    edit-metrics-status    Edits the JSON file that tracks CHAOSS metrics implementation status"
+	@ echo "    jupyter                Launches the jupyter"
+	@ echo "    create-jupyter-env     Creates a jupyter environment for Augur"
 	@ echo "    python-docs            Generates new Sphinx documentation"
 	@ echo "    api-docs               Generates new apidocjs documentation"
 	@ echo "    docs                   Generates all documentation"
@@ -131,8 +133,11 @@ metrics-status: update-upsteam
 edit-metrics-status:
 	$(EDITOR) docs/metrics/status.json
 
-jupyter: check-test-env
+jupyter:
 		@ bash -c 'source activate augur; cd notebooks; jupyter notebook'
+
+create-jupyter-env:
+		python -m ipykernel install --user --name augur --display-name "Python (augur)";
 
 install-ubuntu-dependencies:
 	@ echo "Downloading NodeSource Installer..."
