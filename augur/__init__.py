@@ -1,9 +1,13 @@
+# Classes
+from .application import Application
+from .downloads import Downloads
 from .ghtorrent import GHTorrent
 from .ghtorrentplus import GHTorrentPlus
-from .publicwww import PublicWWW
+from .git import Git
 from .githubapi import GitHubAPI
 from .librariesio import LibrariesIO
-from .util import makeRelative
-from .downloads import Downloads
 from .localcsv import LocalCSV
-from .application import Application
+from .publicwww import PublicWWW
+
+# Functions
+from .util import makeRelative

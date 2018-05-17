@@ -128,7 +128,7 @@ ifdef CONDA
 endif
 
 metrics-status: update-upsteam
-	@ cd docs/metrics/ && python status.py | less
+	@ bash -c 'source activate augur; cd docs/metrics/ && python status.py'
 
 edit-metrics-status:
 	$(EDITOR) docs/metrics/status.json
