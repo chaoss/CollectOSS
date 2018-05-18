@@ -18,7 +18,9 @@ class Application(object):
         # Options to export the loaded configuration as environment variables for Docker
         self.__exportAsEnv = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
         if self.__exportAsEnv:
-            self.__exportFile = open(os.getenv('AUGUR_ENV_EXPORT_FILE', configFile), 'w+')
+            exportFilename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'lastrun.cfg.sh')
+            self.__exportFile = open(exportFilename, 'w+')
+            print('Exporting {} to environment variable export statements in {}'.format(configFile, exportFilename))
             self.__exportFile.write('#!/bin/bash\n')
 
         # Initialize the parser
@@ -26,16 +28,17 @@ class Application(object):
         self.parser.readfp(self.__configFile)
 
     def read_config(self, section, name, environment_variable, default):
-        value = default
-        try:
-            value = os.getenv(environment_variable, self.parser.get(section, name))
-        except Exception as e:
-            if not self.parser.has_section(section):
-                self.parser.add_section(section)
-            self.__configBad = True
-            print('[' + section + ']->' + name + ' is missing. Your config will be regenerated with it included after execution.')
-            self.parser.set(section, name, default)
-            value = default
+        value = os.getenv(environment_variable)
+        if value is None:
+            try:
+                value =  self.parser.get(section, name)
+            except Exception as e:
+                if not self.parser.has_section(section):
+                    self.parser.add_section(section)
+                self.__configBad = True
+                print('[' + section + ']->' + name + ' is missing. Your config will be regenerated with it included after execution.')
+                self.parser.set(section, name, default)
+                value = default
         if self.__exportAsEnv:
             self.__exportFile.write('export ' + environment_variable + '="' + value + '"\n')
         return value
