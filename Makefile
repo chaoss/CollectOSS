@@ -1,7 +1,7 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upsteam
 
 SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
-CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur && python -m ipykernel install --user --name augur --display-name "Python (augur)"; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
+CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
 
 default:
 	@ echo "Commands:"
@@ -31,7 +31,7 @@ install:
 		bash -c '$(CONDAUPDATE) pip install --upgrade .'
 
 install-dev:
-		bash -c '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+		bash -c '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-dev-admin:
 	bash -c '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
@@ -122,10 +122,8 @@ test: check-test-env
 
 update-deps:
 		@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
-		pipreqs ./
-ifdef CONDA
-		conda env export > environment.yml
-endif
+		pipreqs ./augur/
+		bash -c "source activate augur; conda env export > environment.yml"
 
 metrics-status: update-upsteam
 	@ bash -c 'source activate augur; cd docs/metrics/ && python status.py'
