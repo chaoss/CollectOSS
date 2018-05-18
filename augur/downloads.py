@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import datetime
 import base64
+from augur import logger
 # end imports
 # (don't remove the above line, it's for a script)
 

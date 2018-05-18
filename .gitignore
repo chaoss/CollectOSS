@@ -58,3 +58,8 @@ augur/bin
 ########
 *node_modules/
 yarn.lock
+
+# Augur #
+#########
+runtime/
+*.repolist.txt

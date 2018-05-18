@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
+from augur import logger
 # end imports
 # (don't remove the above line, it's for a script)
 

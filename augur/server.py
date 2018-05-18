@@ -15,6 +15,10 @@ from flask import Flask, request, Response
 from flask_cors import CORS
 import json
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 AUGUR_API_VERSION = 'api/unstable'
 
 
@@ -1069,7 +1073,7 @@ if __name__ == "__main__":
     try:
         run()
     except Exception as e:
-        print(e)
+        logger.info(e)
         type, value, tb = sys.exc_info()
         traceback.print_exc()
         if (debugmode):

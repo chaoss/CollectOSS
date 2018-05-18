@@ -7,6 +7,7 @@ import github
 import numpy as np
 import datetime
 import requests
+from augur import logger
 # end imports
 # (don't remove the above line, it's for a script)
 

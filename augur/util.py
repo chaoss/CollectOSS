@@ -1,6 +1,13 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
 import os
+
+# Logging
+import logging
+import coloredlogs
+coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'), fmt='%(asctime)s %(name)s[%(process)d] %(levelname)s %(message)s')
+logger = logging.getLogger('augur')
+
 # end imports
 # (don't remove the above line, it's for a script)
 

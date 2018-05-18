@@ -1,3 +1,6 @@
+# Functions
+from .util import makeRelative, logger
+
 # Classes
 from .application import Application
 from .downloads import Downloads
@@ -8,6 +11,3 @@ from .githubapi import GitHubAPI
 from .librariesio import LibrariesIO
 from .localcsv import LocalCSV
 from .publicwww import PublicWWW
-
-# Functions
-from .util import makeRelative

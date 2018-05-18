@@ -2,22 +2,26 @@ import pandas as pd
 import sqlalchemy as s
 import numpy as np
 import re
+from augur import logger
 
 class GHTorrent(object):
     """Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators"""
 
-    def __init__(self, dbstr):
+    def __init__(self, user, password, host, port, dbname):
         """
         Connect to GHTorrent
 
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
         """
-        self.DB_STR = dbstr
-        self.db = s.create_engine(dbstr, poolclass=s.pool.NullPool)
+        self.DB_STR = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+        )
+        logger.info('GHTorrent: Connecting to {}:{}/{} as {}'.format(host, port, dbname, user))
+        self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool)
         try:
             self.userid('howderek')
         except Exception as e:
-            print("Could not connect to database.\nError: " + str(e))
+            logger.info("Could not connect to database.\nError: " + str(e))
 
     def __single_table_count_by_date(self, table, repo_col='project_id', user_col='author_id', group_by="week"):
         """
