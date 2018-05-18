@@ -95,6 +95,22 @@
         </stacked-bar-chart>
       </div>
 
+     <div class="col col-12">
+        <line-chart source="commits100"
+                    title="Commits > 100 / Week" 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                    cite-text="Community Activty">
+        </line-chart>
+    </div>
+    
+    <div class="col col-12">
+        <line-chart source="fakes"
+                    title="Fake Contributors" 
+                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
+                    cite-text="Community Activty">
+        </line-chart>
+    </div>
+
     </div>
     
     <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> <span class="ghtorrent-version"></span> and the <a href="https://developer.github.com/">GitHub API</a></small>
