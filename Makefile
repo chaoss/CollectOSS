@@ -67,7 +67,7 @@ download-upgrade:
 update-upsteam: 
 	git submodule update --init --recursive
 
-upgrade: old-version download-upgrade update-upsteam install-dev
+upgrade: version download-upgrade update-upsteam install-dev
 	@ python util/post-upgrade.py $(OLDVERSION)
 	@ echo "Upgraded from $(OLDVERSION) to $(shell python util/print-version.py)."
 
@@ -155,7 +155,7 @@ create-jupyter-env:
 #
 .PHONY: to-json
 to-json:
-	@ python util/post-upgrade.py migrate_config_to_json
+	@ bash -c '$(CONDAACTIVATE) python util/post-upgrade.py migrate_config_to_json'
 
 .PHONY: to-env
 to-env:
