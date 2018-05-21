@@ -44,7 +44,7 @@ def printMetric(title, path):
     if fileID in statusMap:
         status = statusMap[fileID]
     if status != 'printed':
-        statusHTML += '<tr><td>{}</td><td><a href="https://github.com/chaoss/metrics/tree/master/{}"> {} ({})</td></tr>'.format(color_by_status[status], path, title, fileID)
+        statusHTML += '<tr><td>{}</td><td><a href="https://github.com/chaoss/wg-gmd/tree/master/{}"> {} ({})</td></tr>'.format(color_by_status[status], path, title, fileID)
     statusMap[fileID] = 'printed'
     return fileID
 
