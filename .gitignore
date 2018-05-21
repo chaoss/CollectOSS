@@ -63,3 +63,5 @@ yarn.lock
 #########
 runtime/
 *.repolist.txt
+*.config.*
+*.cfg.*

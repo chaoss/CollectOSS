@@ -1,0 +1,1 @@
+exec(open('augur/metadata.py').read()); print(__version__)

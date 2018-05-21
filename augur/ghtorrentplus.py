@@ -29,8 +29,7 @@ class GHTorrentPlus(object):
                 logger.info("[GHTorrentPlus] Creating Issue Response Time table...")
                 self.build_issue_response_time()
         except Exception as e:
-            logger.info("Could not connect to GHTorrentPlus database.\nError: " + str(e))
-            logger.info("API calls that depend on GHTorrentPlus will fail.")
+            logger.error("Could not connect to GHTorrentPlus database. Error: " + str(e))
 
     def build_issue_response_time(self):
         issuesClosedSQL = s.sql.text("""

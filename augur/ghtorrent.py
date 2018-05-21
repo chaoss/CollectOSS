@@ -21,7 +21,7 @@ class GHTorrent(object):
         try:
             self.userid('howderek')
         except Exception as e:
-            logger.info("Could not connect to database.\nError: " + str(e))
+            logger.error("Could not connect to GHTorrent database. Error: " + str(e))
 
     def __single_table_count_by_date(self, table, repo_col='project_id', user_col='author_id', group_by="week"):
         """

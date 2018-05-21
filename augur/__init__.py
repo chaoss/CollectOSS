@@ -1,3 +1,6 @@
+# Metadata
+from .metadata import __version__
+
 # Functions
 from .util import makeRelative, logger
 
