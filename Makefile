@@ -6,6 +6,7 @@ SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:
 CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
 CONDAACTIVATE=source activate augur;
 OLDVERSION="null"
+EDITOR?="vi"
 
 default:
 	@ echo "Installation Commands:"
@@ -65,7 +66,7 @@ download-upgrade:
 	git pull
 
 update-upsteam: 
-	git submodule update --init --recursive
+	git submodule update --init --recursive --remote
 
 upgrade: version download-upgrade update-upsteam install-dev
 	@ python util/post-upgrade.py $(OLDVERSION)
@@ -124,7 +125,7 @@ build: frontend docs
 	cd augur/static/ && brunch build --production
 
 test:
-		python -m pytest ./test
+		bash -c '$(CONDAACTIVATE) python -m pytest ./test'
 
 update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
@@ -146,7 +147,7 @@ jupyter:
 		@ bash -c '$(CONDAACTIVATE) cd notebooks; jupyter notebook'
 
 create-jupyter-env:
-		python -m ipykernel install --user --name augur --display-name "Python (augur)";
+		bash -c '$(CONDAACTIVATE) python -m ipykernel install --user --name augur --display-name "Python (augur)";'
 
 
 

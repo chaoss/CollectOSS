@@ -1,8 +1,6 @@
 #SPDX-License-Identifier: MIT
 import os
 import sys
-import ipdb
-import traceback
 if (sys.version_info > (3, 0)):
     import configparser as configparser
 else:
@@ -1057,13 +1055,6 @@ def batch():
                     status=207,
                     mimetype="application/json")
 
-
-if (debugmode):
-    app.debug = True
-
-if augurApp.read_config('Development', 'interactive', 'AUGUR_INTERACTIVE', '0') == '1':
-    ipdb.set_trace()
-
 augurApp.finalize_config()
 
 
@@ -1071,16 +1062,4 @@ def run():
     app.run(host=host, port=int(port), debug=debugmode)
 
 if __name__ == "__main__":
-    try:
-        run()
-    except Exception as e:
-        logger.info(e)
-        type, value, tb = sys.exc_info()
-        traceback.print_exc()
-        if (debugmode):
-            ipdb.post_mortem(tb)
-        exit(1)
-
-
-
-        
+    run() 
