@@ -5,10 +5,10 @@ Analyzes Git repos directly using dulwich
 
 import os
 import shutil
-
+import re
+import json
 import pandas as pd
-from dulwich.repo import Repo
-from dulwich import porcelain as git
+import git
 from augur import logger
 
 # end imports
@@ -47,7 +47,7 @@ class Git(object):
             try:
                 folder_name = os.path.splitext(os.path.basename(repo_url))[0]
                 repo_path = os.path.join(self.__folder, folder_name)
-                self.__repos[repo_url] = Repo(repo_path)
+                self.__repos[repo_url] = git.Repo(repo_path)
                 return self.__repos[repo_url]
             except:
                 raise ValueError("{} is not in the list_of_repositories".format(repo_url))
@@ -65,17 +65,20 @@ class Git(object):
                 repo_path = os.path.join(self.__folder, folder_name)
                 if not os.path.exists(repo_path):
                     logger.debug('Cloning %s', repo_url)
-                    git.clone(repo_url, repo_path, outstream=self.__log, errstream=self.__log)
-                repo = Repo(repo_path)
-                try:
-                    logger.debug('Pulling %s', repo_url)
-                    git.pull(repo, remote_location=repo_url, outstream=self.__log, errstream=self.__log)
-                except Exception as e:
-                    logger.debug('Re-Cloning %s because %s', repo_url, str(e))
-                    shutil.rmtree(repo_path)
-                    git.clone(repo_url, repo_path, outstream=self.__log, errstream=self.__log)
-                    repo = Repo(repo_path)
-                self.__repos[repo_url] = repo
+                    git.Git(self.__folder).clone(repo_url, repo_path)
+                    repo = git.Repo(repo_path)
+                    self.__repos[repo_url] = repo
+                else:
+                    try:
+                        repo = git.Repo(repo_path)
+                        logger.debug('Pulling %s', repo_url)
+                        repo.git.pull()
+                    except Exception as e:
+                        logger.debug('Re-Cloning %s because %s', repo_url, str(e))
+                        shutil.rmtree(repo_path)
+                        git.Git(self.__folder).clone(repo_url)
+                        repo = git.Repo(repo_path)
+                    self.__repos[repo_url] = repo
             lockfile.close()
             os.remove(lockfile_path)
 
@@ -84,4 +87,27 @@ class Git(object):
         Makes sure the storageFolder contains updated versions of all the repos
         """
         repo = self.get_repo_object(repo_url)
-        return repo
+        df = pd.DataFrame()
+        history = repo.git.log('--ignore-space-at-eol', '--ignore-blank-lines', '-b', '-p', '-U0', """--pretty=format:'[START ENTRY]%n{%n"hash":"%h",%n"author_name":"%an",%n"author_email":"%ae",%n"author_date":"%ai",%n"committer_name": "%cn",%n"committer_email":"%ce",%n"commit_date":"%ci",%n"parents":"%p"%n}%n#####SPLIT#####%s#####SPLIT#####'""")
+        frames = []
+        for entry in history.split('[START ENTRY]')[1:]:
+            splits = entry.split('#####SPLIT#####')
+            try:
+                data = json.loads(splits[0])
+            except json.JSONDecodeError as err:
+                print(err)
+                print(splits[0])
+                continue
+            data['message'] = splits[1]
+            if (len(splits[2]) > 2):
+                diffs = splits[2].split('diff --git')
+                for diff in diffs[1:]:
+                    filename = re.search('b(\/.+)', diff).group(1)
+                    # Find all the lines that begin with a plus or minus to count added
+                    additions = len(re.findall('\n\+[^\+\n]', diff))
+                    deletions = len(re.findall('\n-[^-\n]', diff))
+                    data['additions'] = additions
+                    data['deletions'] = deletions
+                    frames.append(pd.DataFrame(data, index=['hash']))
+        df = pd.concat(frames)
+        return df

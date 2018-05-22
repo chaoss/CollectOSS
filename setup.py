@@ -40,7 +40,7 @@ setup(
     install_requires=[
         'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
         'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub',
-        'dulwich', 'pyevent', 'gunicorn', 'datetime', 'traitlets', 'coloredlogs'],
+        'pyevent', 'gunicorn', 'datetime', 'traitlets', 'coloredlogs'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
