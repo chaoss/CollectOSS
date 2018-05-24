@@ -69,7 +69,6 @@ class GHTorrent(object):
                 WHERE {1} = :repoid
                 GROUP BY YEAR(created_at)""".format(table, repo_col)
 
-
     def __sub_table_count_by_date(self, parent_table, sub_table, parent_id, sub_id, project_id):
         """
         Generates query string to count occurances of rows per date for a given query sub-table.
@@ -91,7 +90,6 @@ class GHTorrent(object):
             AND {0}.{4} = :repoid
             GROUP BY YEARWEEK({1}.created_at)""".format(parent_table, sub_table, parent_id, sub_id, project_id)
     
-
     def repoid(self, owner_or_repoid, repo=None):
         """
         Returns a repository's ID as it appears in the GHTorrent projects table
@@ -311,7 +309,6 @@ class GHTorrent(object):
         forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
         return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
-
     def pulls(self, owner, repo=None):
         """
         Subgroup: Code Development
@@ -357,15 +354,9 @@ class GHTorrent(object):
     #####################################
 
 
-
-
-
     #####################################
     ###            VALUE              ###
     #####################################
-
-
-
 
 
     #####################################
@@ -386,7 +377,6 @@ class GHTorrent(object):
         df.drop(df.index[:1], inplace=True)
         return df
 
-
     def issue_comments(self, owner, repo=None):
         """
         Timeseries of issue comments
@@ -403,17 +393,6 @@ class GHTorrent(object):
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
-
-
-
-
-
-
-
-    # DEPENDENCY RELATED
-
-
-
 
     # COMMIT RELATED
 
@@ -468,7 +447,6 @@ class GHTorrent(object):
             ORDER BY commits DESC
         """)
         return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
-
 
     def total_committers(self, owner, repo=None):
         """
@@ -822,6 +800,9 @@ class GHTorrent(object):
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
 
+    # DEPENDENCY RELATED
+
+
     # OTHER
 
     def fakes(self, owner, repo=None):
@@ -836,8 +817,6 @@ class GHTorrent(object):
             GROUP BY YEARWEEK(date)
         """)    
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
-
-
 
     def ghtorrent_range(self):
         ghtorrentRangeSQL = s.sql.text("""

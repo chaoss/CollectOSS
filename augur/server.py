@@ -310,6 +310,26 @@ addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
 ###            RISK               ###
 #####################################
 
+"""
+@api {get} /:owner/:repo/bus_factor Bus Factor
+@apiName BusFactor
+@apiDescription Metric Undefined
+@apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
+@apiName GitHub
+@apiGroup Activity
+
+@apiParam {String} owner Username of the owner of the GitHub repository
+@apiParam {String} repo Name of the GitHub repository
+
+@apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "best": "5",
+                            "worst": "1"
+                        }
+                    ]
+"""
+addMetric(app, github.bus_factor, 'bus_factor')
 
 #####################################
 ###            VALUE              ###
@@ -323,7 +343,7 @@ addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
 """
 @api {get} /:owner/:repo/timeseries/issue_comments Count of New Comments
 @apiName uniqueCommenters
-@apiGroup Growth-Maturity-Decline
+@apiGroup Activity
 @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -345,14 +365,14 @@ addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
 ###         EXPERIMENTAL          ###
 #####################################
 
-# COMMIT RELATED
+### COMMIT RELATED ###
 #todo: document
 addTimeseries(app, ghtorrent.commits100, 'commits100')
 
 """
 @api {get} /:owner/:repo/timeseries/commits/comments count of commit comments weekly
 @apiName CommitComments
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -416,12 +436,11 @@ addTimeseries(app, ghtorrent.total_committers, 'total_committers')
 addMetric(app, ghtorrent.committer_locations, 'committer_locations')
 
 
-# ISSUE RELATED
-
+### ISSUE RELATED ###
 """
 @api {get} /:owner/:repo/timeseries/issues/activity Issues Activity
 @apiName Issues
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -455,7 +474,7 @@ addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
 """
 @api {get} /:owner/:repo/issue_close_time Issue Close Time
 @apiName Issues
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -488,12 +507,11 @@ addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
 
 
 # PULL REQUEST RELATED
-
 """
 @api {get} /:owner/:repo/timeseries/pulls/acceptance_rate Pull Request Acceptance Rate by Week
 @apiDescription For each week, the rate is calculated as (pull requests merged that week) / (pull requests opened that week).
 @apiName PullRequestAcceptanceRate
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 @apiDescription <a href="incomplete): https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -534,7 +552,7 @@ addMetric(app, ghtorrent.watchers, 'watchers')
 """
 @api {get} /:owner/:repo/timeseries/community_engagement
 @apiName Community Engagement
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-submitted-closed.md">CHAOSS Metric Definition</a>
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -589,7 +607,7 @@ addTimeseries(app, ghtorrent.community_engagement, 'community_engagement')
 @api {get} /:owner/:repo/timeseries/community_age Timeline of events to determine the age of a community
 @apiName CommunityAge
 @apiDescription Metric Undefined
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -614,7 +632,7 @@ addMetric(app, ghtorrent.community_age, 'community_age')
 @api {get} /:owner/:repo/contributors Total Contributions by User
 @apiName TotalContributions
 @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/contributors.md">CHAOSS Metric Definition</a>
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -649,7 +667,7 @@ addMetric(app, ghtorrent.contributors, 'contributors')
 @api {get} /:owner/:repo/timeseries/contributions Contributions by Week
 @apiName ContributionsByWeek
 @apiDescriptions 
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -692,8 +710,7 @@ def contributions(owner, repo):
                     mimetype="application/json")
 
 
-# DEPENDENCY RELATED
-
+### DEPENDENCY RELATED ###
 """
 @api {get} /:owner/:repo/dependencies List of dependencies from libraries.io
 @apiName Dependencies
@@ -761,7 +778,7 @@ addMetric(app, librariesio.dependencies, 'dependencies')
 @api {get} /:owner/:repo/dependents List of dependants from libraries.io
 @apiName Dependents
 @apiDescription Metric Undefined
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -803,13 +820,12 @@ addMetric(app, librariesio.dependency_stats, 'dependency_stats')
 
 
 
-# OTHER
-
+### OTHER ###
 """
 @api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
 @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
 @apiName LinesChanged
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -832,7 +848,7 @@ addTimeseries(app, github.lines_changed, 'lines_changed')
 @api {get} /:owner/:repo/timeseries/downloads Number of downloads
 @apiDescription Timeseries of downloads from package manager
 @apiName Downloads
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -858,7 +874,7 @@ addTimeseries(app, ghtorrent.fakes, 'fakes')
 @api {get} /:owner/:repo/timeseries/tags Tags release timeseries
 @apiDescription Timeseries of tags
 @apiName Tags
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 @apiDescription Metric Undefined
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -881,7 +897,7 @@ addTimeseries(app, github.tags, 'tags')
 @api {get} /:owner/:repo/timeseries/tags/major Tags for major releases timeseries
 @apiDescription Timeseries of Major release tags
 @apiName Major Release Tags
-@apiGroup Growth-Maturity-Decline
+@apiGroup Experimental
 @apiDescription Metric Undefined
 @apiParam {String} owner Username of the owner of the GitHub repository
 @apiParam {String} repo Name of the GitHub repository
@@ -935,29 +951,6 @@ def ghtorrent_range():
     return Response(response=ghtorrent_range,
                     status=200,
                     mimetype="application/json")
-
-
-"""
-@api {get} /:owner/:repo/bus_factor Bus Factor
-@apiName BusFactor
-@apiDescription Metric Undefined
-@apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
-@apiName GitHub
-@apiGroup Risk
-
-@apiParam {String} owner Username of the owner of the GitHub repository
-@apiParam {String} repo Name of the GitHub repository
-
-@apiSuccessExample {json} Success-Response:
-                    [
-                        {
-                            "best": "5",
-                            "worst": "1"
-                        }
-                    ]
-"""
-addMetric(app, github.bus_factor, 'bus_factor')
-
 
 
 #######################
