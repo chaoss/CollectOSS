@@ -485,37 +485,58 @@ var AugurAPI = function () {
         });
       };
 
-      Timeseries(repo, 'commits', 'commits');
-      Timeseries(repo, 'forks', 'forks');
+      // DIVERSITY AND INCLUSION
+
+      // GROWTH, MATURITY, AND DECLINE
       Timeseries(repo, 'issues', 'issues');
-      Timeseries(repo, 'pulls', 'pulls');
-      Timeseries(repo, 'stars', 'stargazers');
-      Timeseries(repo, 'tags', 'tags');
-      Timeseries(repo, 'downloads', 'downloads');
-      Timeseries(repo, 'totalCommitters', 'total_committers');
-      Timeseries(repo, 'issueComments', 'issue/comments');
-      Timeseries(repo, 'commitComments', 'commits/comments');
-      Timeseries(repo, 'pullReqComments', 'pulls/comments');
-      Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate');
       Timeseries(repo, 'issuesClosed', 'issues/closed');
       Timeseries(repo, 'issuesResponseTime', 'issues/response_time');
-      Timeseries(repo, 'issueActivity', 'issues/activity');
-      Timeseries(repo, 'communityEngagement', 'community_engagement');
-      Timeseries(repo, 'linesChanged', 'lines_changed');
-      Timeseries(repo, 'commits100', 'commits100');
-      Timeseries(repo, 'fakes', 'fakes');
-
+      Timeseries(repo, 'commits', 'commits');
       Endpoint(repo, 'maintainerResponseTime', 'pull/maintainer_response_time');
+      Timeseries(repo, 'forks', 'forks');
+      Timeseries(repo, 'pulls', 'pulls');
+      Timeseries(repo, 'pullReqComments', 'pulls/comments');
+
+      // RISK
+      Endpoint(repo, 'busFactor', 'bus_factor');
+
+      // VALUE
+
+      // ACTIVITY
+      Timeseries(repo, 'issueComments', 'issue/comments');
+
+      // EXPERIMENTAL
+
+      // Commit Related
+      Timeseries(repo, 'commits100', 'commits100');
+      Timeseries(repo, 'commitComments', 'commits/comments');
+      Timeseries(repo, 'totalCommitters', 'total_committers');
+      Endpoint(repo, 'committerLocations', 'committer_locations');
+
+      // Issue Related
+      Timeseries(repo, 'issueActivity', 'issues/activity');
+
+      // Pull Request Related
+      Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate');
+
+      // Community / Contributions
+      Endpoint(repo, 'watchers', 'watchers');
+      Timeseries(repo, 'communityEngagement', 'community_engagement');
+      Endpoint(repo, 'communityAge', 'community_age');
       Endpoint(repo, 'contributors', 'contributors');
       Endpoint(repo, 'contributions', 'contributions');
-      Endpoint(repo, 'committerLocations', 'committer_locations');
-      Endpoint(repo, 'communityAge', 'community_age');
-      Endpoint(repo, 'linkingWebsites', 'linking_websites');
-      Endpoint(repo, 'busFactor', 'bus_factor');
-      Endpoint(repo, 'dependents', 'dependents');
+
+      // Dependency Related
       Endpoint(repo, 'dependencies', 'dependencies');
+      Endpoint(repo, 'dependents', 'dependents');
       Endpoint(repo, 'dependencyStats', 'dependency_stats');
-      Endpoint(repo, 'watchers', 'watchers');
+
+      // Other
+      Timeseries(repo, 'linesChanged', 'lines_changed');
+      Timeseries(repo, 'downloads', 'downloads');
+      Timeseries(repo, 'fakes', 'fakes');
+      Timeseries(repo, 'tags', 'tags');
+      Endpoint(repo, 'linkingWebsites', 'linking_websites');
 
       return repo;
     }

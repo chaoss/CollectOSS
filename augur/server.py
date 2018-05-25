@@ -55,8 +55,8 @@ def addMetric(app, function, endpoint):
     app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
 
 def addGitMetric(app, function, endpoint):
-    """Simplifies adding routes that only accept owner/repo"""
-    app.route('/{}/<repourl>//{}'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
+    """Simplifies adding routes that accept"""
+    app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
 
 def addTimeseries(app, function, endpoint):
     """
@@ -100,92 +100,14 @@ class Server(object):
             debugmode = False
 
 
-        """
-        @api {get} / API Status
-        @apiName Status
-        @apiGroup Utility
-        """
-        @app.route('/{}/'.format(AUGUR_API_VERSION))
-        def api_root():
-            """API status"""
-            # @todo: When we support multiple data sources this should keep track of their status
-            # @todo: Add GHTorrent test to determine status
-            ghtorrent_status = "good"
-            # @todo: Add GitHub API status
-            # @todo: Add PublicWWW API status
-            return """{"status": "healthy", "ghtorrent": "{}"}""".format(ghtorrent_status)
+        #####################################
+        ###    DIVERSITY AND INCLUSION    ###
+        #####################################
 
-        #######################
-        #     Timeseries      #
-        #######################
 
-        # @todo: Link to LF Metrics
-
-        """
-        @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Commits
-        @apiName Commits
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-        @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "commits": 153
-                                },
-                                {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "commits": 192
-                                }
-                            ]
-        """
-        addTimeseries(app, ghtorrent.commits, 'commits')
-        addTimeseries(app, ghtorrent.commits100, 'commits100')
-        """
-        @api {get} /:owner/:repo/timeseries/commits/comments count of commit comments weekly
-        @apiName CommitComments
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {   "date":"2009-02-16T00:00:00.000Z",
-                                    "comments":1.0
-                                },
-                                {   "date":"2009-07-12T00:00:00.000Z",
-                                    "comments":2.0
-                                },
-
-        """
-        addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
-
-        """
-        @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
-        @apiName Forks
-        @apiGroup Growth-Maturity-Decline
-        @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md">CHAOSS Metric Definition</a>
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "forks": 13
-                                },
-                                {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "forks": 12
-                                }
-                            ]
-        """
-        addTimeseries(app, ghtorrent.forks, 'forks')
+        #####################################
+        ### GROWTH, MATURITY, AND DECLINE ###
+        #####################################
 
         """
         @api {get} /:owner/:repo/timeseries/issues Issues
@@ -211,41 +133,6 @@ class Server(object):
         addTimeseries(app, ghtorrent.issues, 'issues')
 
         """
-        @api {get} /:owner/:repo/timeseries/issues/activity Issues Activity
-        @apiName Issues
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 0.0,
-                                  "action": "closed"
-                                },
-                                {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 2.0,
-                                  "action": "opened"
-                                },
-                                {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 8.0,
-                                  "action": "reopened"
-                                },
-                                {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 12.0,
-                                  "action": "open"
-                                }
-                            ]
-        """
-        addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
-
-
-        """
         @api {get} /:owner/:repo/timeseries/issues/closed Issues Closed
         @apiName Issues
         @apiGroup Growth-Maturity-Decline
@@ -268,89 +155,6 @@ class Server(object):
         addTimeseries(app, ghtorrent.issues_closed, "issues/closed")
 
         """
-        @api {get} /:owner/:repo/issue_close_time Issue Close Time
-        @apiName Issues
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md">CHAOSS Metric Definition</a>
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                        [
-                            {
-                              "id": 136603,
-                              "repo_id": 1334,
-                              "opened": "2010-09-08 19:09:56",
-                              "pull_request": 1,
-                              "minutes_to_close": 1264.0,
-                              "average_minutes_to_close_as_of_close": 1264.0,
-                              "average_minutes_to_close_past_30_days": 1264.0,
-                              "z-score": -0.3152279792
-                            },
-                            {
-                              "id": 136602,
-                              "repo_id": 1334,
-                              "opened": "2010-09-09 04:33:23",
-                              "pull_request": 1,
-                              "minutes_to_close": 701.0,
-                              "average_minutes_to_close_as_of_close": 982.5,
-                              "average_minutes_to_close_past_30_days": 982.5,
-                              "z-score": -0.3184596776
-                            }
-                        ]
-        """
-        addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
-
-        """
-        @api {get} /:owner/:repo/issue_comment_time 
-        @apiName Issues
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md">CHAOSS Metric Definition</a>
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                        [
-                            {
-                                "id": 2,
-                                "opened": "2012-01-19T05:24:55.000Z",
-                                "first_commented": "2012-01-19T05:30:13.000Z",
-                                "pull_request": 0,
-                                "minutes_to_comment": 5.0
-                            },
-                            {
-                                "id": 3,
-                                "opened": "2012-01-26T15:07:56.000Z",
-                                "first_commented": "2012-01-26T15:09:28.000Z",
-                                "pull_request": 0,
-                                "minutes_to_comment": 1.0
-                            }
-                        ]
-        """
-        addMetric(app, ghtorrent.issue_comment_time, 'issue_comment_time')
-
-
-        """
-        @api {get} /:owner/:repo/timeseries/issue_comments Count of New Comments
-        @apiName uniqueCommenters
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {   "date":"2009-02-16T00:00:00.000Z",
-                                    "total_unique_comments":1.0
-                                },
-                                {   "date":"2009-07-12T00:00:00.000Z",
-                                    "total_unique_comments":2.0
-                                },
-                            ]
-        """
-        addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
-
-        """
         @api {get} /:owner/:repo/timeseries/issues/response_time Issue Response Time
         @apiName IssueResponseTime
         @apiGroup Growth-Maturity-Decline
@@ -371,6 +175,74 @@ class Server(object):
                             ]
         """
         addTimeseries(app, ghtorrent.issue_response_time, 'issues/response_time')
+
+        """
+        @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Commits
+        @apiName Commits
+        @apiGroup Growth-Maturity-Decline
+        @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+        @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2015-01-01T00:00:00.000Z",
+                                    "commits": 153
+                                },
+                                {
+                                    "date": "2015-01-08T00:00:00.000Z",
+                                    "commits": 192
+                                }
+                            ]
+        """
+        addTimeseries(app, ghtorrent.commits, 'commits')
+
+
+        """
+        @api {get} /:owner/:repo/pulls/maintainer_response_time Time to First Maintainer Response to Merge Request
+        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
+        @apiName TimeToFirstMaintainerResponseToMergeRequest 
+        @apiGroup Growth-Maturity-Decline
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "response_time":11044366.0
+                                },
+                                {
+                                    "response_time":11044955.0
+                                },
+                            ]
+        """
+        addMetric(app, ghtorrent.time_to_first_maintainer_response_to_merge_request, 'pulls/maintainer_response_time')
+
+        """
+        @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
+        @apiName Forks
+        @apiGroup Growth-Maturity-Decline
+        @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
+        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md">CHAOSS Metric Definition</a>
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2015-01-01T00:00:00.000Z",
+                                    "forks": 13
+                                },
+                                {
+                                    "date": "2015-01-08T00:00:00.000Z",
+                                    "forks": 12
+                                }
+                            ]
+        """
+        addTimeseries(app, ghtorrent.forks, 'forks')
 
         """
         @api {get} /:owner/:repo/timeseries/pulls Pull Requests by Week
@@ -416,11 +288,212 @@ class Server(object):
         """
         addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
 
+        #####################################
+        ###            RISK               ###
+        #####################################
+
+        """
+        @api {get} /:owner/:repo/bus_factor Bus Factor
+        @apiName BusFactor
+        @apiDescription Metric Undefined
+        @apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
+        @apiName GitHub
+        @apiGroup Activity
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "best": "5",
+                                    "worst": "1"
+                                }
+                            ]
+        """
+        addMetric(app, github.bus_factor, 'bus_factor')
+
+        #####################################
+        ###            VALUE              ###
+        #####################################
+
+
+        #####################################
+        ###           ACTIVITY            ###
+        #####################################
+
+        """
+        @api {get} /:owner/:repo/timeseries/issue_comments Count of New Comments
+        @apiName uniqueCommenters
+        @apiGroup Activity
+        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {   "date":"2009-02-16T00:00:00.000Z",
+                                    "total_unique_comments":1.0
+                                },
+                                {   "date":"2009-07-12T00:00:00.000Z",
+                                    "total_unique_comments":2.0
+                                },
+                            ]
+        """
+        addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
+
+
+        #####################################
+        ###         EXPERIMENTAL          ###
+        #####################################
+
+        ### COMMIT RELATED ###
+        #todo: document
+        addTimeseries(app, ghtorrent.commits100, 'commits100')
+
+        """
+        @api {get} /:owner/:repo/timeseries/commits/comments count of commit comments weekly
+        @apiName CommitComments
+        @apiGroup Experimental
+        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {   "date":"2009-02-16T00:00:00.000Z",
+                                    "comments":1.0
+                                },
+                                {   "date":"2009-07-12T00:00:00.000Z",
+                                    "comments":2.0
+                                },
+
+        """
+        addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
+
+        """
+        @api {get} /:owner/:repo/timeseries/total_committers count of new committers weekly
+        @apiName UniqueCommitters
+        @apiDescription Metric Undefined
+        @apiGroup Growth/Maturity-Decline
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {   "date":"2009-02-16T00:00:00.000Z",
+                                    "total_total_committers":1.0
+                                },
+                                {   "date":"2009-07-12T00:00:00.000Z",
+                                    "total_total_committers":2.0
+                                },
+                            ]
+        """
+        addTimeseries(app, ghtorrent.total_committers, 'total_committers')
+
+        """
+        @api {get} /:owner/:repo/committer_locations Commits and Location by User
+        @apiName CommitterLocations
+        @apiDescription Metric Undefined
+        @apiGroup Diversity-Inclusion
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "login": "bonnie",
+                                    "location": "Rowena, TX",
+                                    "commits": 12
+                                },
+                                {
+                                    "login":"clyde",
+                                    "location":"Ellis County, TX",
+                                    "commits": 12
+                                }
+                            ]
+        """
+        addMetric(app, ghtorrent.committer_locations, 'committer_locations')
+
+
+        ### ISSUE RELATED ###
+        """
+        @api {get} /:owner/:repo/timeseries/issues/activity Issues Activity
+        @apiName Issues
+        @apiGroup Experimental
+        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                  "date": "2010-12-23T00:00:00.000Z",
+                                  "count": 0.0,
+                                  "action": "closed"
+                                },
+                                {
+                                  "date": "2010-12-23T00:00:00.000Z",
+                                  "count": 2.0,
+                                  "action": "opened"
+                                },
+                                {
+                                  "date": "2010-12-23T00:00:00.000Z",
+                                  "count": 8.0,
+                                  "action": "reopened"
+                                },
+                                {
+                                  "date": "2010-12-23T00:00:00.000Z",
+                                  "count": 12.0,
+                                  "action": "open"
+                                }
+                            ]
+        """
+        addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
+
+        """
+        @api {get} /:owner/:repo/issue_close_time Issue Close Time
+        @apiName Issues
+        @apiGroup Experimental
+        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md">CHAOSS Metric Definition</a>
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                              "id": 136603,
+                              "repo_id": 1334,
+                              "opened": "2010-09-08 19:09:56",
+                              "pull_request": 1,
+                              "minutes_to_close": 1264.0,
+                              "average_minutes_to_close_as_of_close": 1264.0,
+                              "average_minutes_to_close_past_30_days": 1264.0,
+                              "z-score": -0.3152279792
+                            },
+                            {
+                              "id": 136602,
+                              "repo_id": 1334,
+                              "opened": "2010-09-09 04:33:23",
+                              "pull_request": 1,
+                              "minutes_to_close": 701.0,
+                              "average_minutes_to_close_as_of_close": 982.5,
+                              "average_minutes_to_close_past_30_days": 982.5,
+                              "z-score": -0.3184596776
+                            }
+                        ]
+        """
+        addMetric(app, ghtorrentplus.issue_close_time, 'issue_close_time')
+
+
+        # PULL REQUEST RELATED
         """
         @api {get} /:owner/:repo/timeseries/pulls/acceptance_rate Pull Request Acceptance Rate by Week
         @apiDescription For each week, the rate is calculated as (pull requests merged that week) / (pull requests opened that week).
         @apiName PullRequestAcceptanceRate
-        @apiGroup Growth-Maturity-Decline
+        @apiGroup Experimental
         @apiDescription <a href="incomplete): https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -439,29 +512,8 @@ class Server(object):
         """
         addTimeseries(app, ghtorrent.pull_acceptance_rate, 'pulls/acceptance_rate')
 
-        """
-        @api {get} /:owner/:repo/timeseries/stargazers?group_by=:group_by Stargazers
-        @apiName Stargazers
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription Metric Undefined
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-        @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
 
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "watchers": 133
-                                },
-                                {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "watchers": 54
-                                }
-                            ]
-        """
-        addTimeseries(app, ghtorrent.stargazers, 'stargazers')
-
+        # COMMUNITY / CONTRIBUTIONS
         """
         @api {get} /:owner/:repo/watchers
         @apiName Community Engagement
@@ -482,7 +534,7 @@ class Server(object):
         """
         @api {get} /:owner/:repo/timeseries/community_engagement
         @apiName Community Engagement
-        @apiGroup Growth-Maturity-Decline
+        @apiGroup Experimental
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-submitted-closed.md">CHAOSS Metric Definition</a>
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -534,105 +586,35 @@ class Server(object):
         addTimeseries(app, ghtorrent.community_engagement, 'community_engagement')
 
         """
-        @api {get} /:owner/:repo/timeseries/tags Tags release timeseries
-        @apiDescription Timeseries of tags
-        @apiName Tags
-        @apiGroup Growth-Maturity-Decline
+        @api {get} /:owner/:repo/timeseries/community_age Timeline of events to determine the age of a community
+        @apiName CommunityAge
         @apiDescription Metric Undefined
+        @apiGroup Experimental
+
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
 
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "release": 0.5
+                                    "login": "bonnie",
+                                    "location": "Rowena, TX",
+                                    "commits": 12
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "release": 0.5.1
+                                    "login":"clyde",
+                                    "location":"Ellis County, TX",
+                                    "commits": 12
                                 }
                             ]
         """
-        addTimeseries(app, github.tags, 'tags')
+        addMetric(app, ghtorrent.community_age, 'community_age')
 
-        """
-        @api {get} /:owner/:repo/timeseries/tags/major Tags for major releases timeseries
-        @apiDescription Timeseries of Major release tags
-        @apiName Major Release Tags
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription Metric Undefined
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "release": 1.0.0
-                                },
-                                {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "release": 2.0.0
-                                }
-                            ]
-        """
-        addTimeseries(app, github.major_tags, 'tags/major')
-
-        """
-        @api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
-        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
-        @apiName LinesChanged
-        @apiGroup Growth-Maturity-Decline
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    'date': '2015-11-01T00:00:00Z', 
-                                    'lines_changed': 396137.0
-                                },
-                                {
-                                    'date': '2015-11-08T00:00:00Z', 
-                                    'lines_changed': 3896.0
-                                },
-                            ]
-        """
-        addTimeseries(app, github.lines_changed, 'lines_changed')
-
-        """
-        @api {get} /:owner/:repo/timeseries/downloads Number of downloads
-        @apiDescription Timeseries of downloads from package manager
-        @apiName Downloads
-        @apiGroup Growth-Maturity-Decline
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "downlads": 235
-                                },
-                                {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "dowloads": 327
-                                }
-                            ]
-        """
-        addTimeseries(app, downloads.downloads, 'downloads')
-
-
-
-        # Contribution Trends
         """
         @api {get} /:owner/:repo/contributors Total Contributions by User
         @apiName TotalContributions
         @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/contributors.md">CHAOSS Metric Definition</a>
-        @apiGroup Growth-Maturity-Decline
+        @apiGroup Experimental
 
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -662,17 +644,12 @@ class Server(object):
                             ]
         """
         addMetric(app, ghtorrent.contributors, 'contributors')
-        addTimeseries(app, ghtorrent.fakes, 'fakes')
-
-        #######################
-        # Contribution Trends #
-        #######################
 
         """
         @api {get} /:owner/:repo/timeseries/contributions Contributions by Week
         @apiName ContributionsByWeek
         @apiDescriptions 
-        @apiGroup Growth-Maturity-Decline
+        @apiGroup Experimental
 
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -714,77 +691,8 @@ class Server(object):
                             status=200,
                             mimetype="application/json")
 
-        """
-        @api {get} /:owner/:repo/committer_locations Commits and Location by User
-        @apiName CommitterLocations
-        @apiDescription Metric Undefined
-        @apiGroup Diversity-Inclusion
 
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "login": "bonnie",
-                                    "location": "Rowena, TX",
-                                    "commits": 12
-                                },
-                                {
-                                    "login":"clyde",
-                                    "location":"Ellis County, TX",
-                                    "commits": 12
-                                }
-                            ]
-        """
-        addMetric(app, ghtorrent.committer_locations, 'committer_locations')
-
-        """
-        @api {get} /:owner/:repo/pulls/maintainer_response_time Time to First Maintainer Response to Merge Request
-        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
-        @apiName TimeToFirstMaintainerResponseToMergeRequest 
-        @apiGroup Growth-Maturity-Decline
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "response_time":11044366.0
-                                },
-                                {
-                                    "response_time":11044955.0
-                                },
-                            ]
-        """
-        addMetric(app, ghtorrent.time_to_first_maintainer_response_to_merge_request, 'pulls/maintainer_response_time')
-
-        """
-        @api {get} /:owner/:repo/timeseries/community_age Timeline of events to determine the age of a community
-        @apiName CommunityAge
-        @apiDescription Metric Undefined
-        @apiGroup Growth-Maturity-Decline
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "login": "bonnie",
-                                    "location": "Rowena, TX",
-                                    "commits": 12
-                                },
-                                {
-                                    "login":"clyde",
-                                    "location":"Ellis County, TX",
-                                    "commits": 12
-                                }
-                            ]
-        """
-        addMetric(app, ghtorrent.community_age, 'community_age')
-
+        ### DEPENDENCY RELATED ###
         """
         @api {get} /:owner/:repo/dependencies List of dependencies from libraries.io
         @apiName Dependencies
@@ -852,7 +760,7 @@ class Server(object):
         @api {get} /:owner/:repo/dependents List of dependants from libraries.io
         @apiName Dependents
         @apiDescription Metric Undefined
-        @apiGroup Growth-Maturity-Decline
+        @apiGroup Experimental
 
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -893,29 +801,103 @@ class Server(object):
         addMetric(app, librariesio.dependency_stats, 'dependency_stats')
 
 
+
+        ### OTHER ###
         """
-        @api {get} /:owner/:repo/timeseries/total_committers count of new committers weekly
-        @apiName UniqueCommitters
-        @apiDescription Metric Undefined
-        @apiGroup Growth/Maturity-Decline
+        @api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
+        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
+        @apiName LinesChanged
+        @apiGroup Experimental
 
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
 
         @apiSuccessExample {json} Success-Response:
                             [
-                                {   "date":"2009-02-16T00:00:00.000Z",
-                                    "total_total_committers":1.0
+                                {
+                                    'date': '2015-11-01T00:00:00Z', 
+                                    'lines_changed': 396137.0
                                 },
-                                {   "date":"2009-07-12T00:00:00.000Z",
-                                    "total_total_committers":2.0
+                                {
+                                    'date': '2015-11-08T00:00:00Z', 
+                                    'lines_changed': 3896.0
                                 },
                             ]
         """
-        addTimeseries(app, ghtorrent.total_committers, 'total_committers')
+        addTimeseries(app, github.lines_changed, 'lines_changed')
 
+        """
+        @api {get} /:owner/:repo/timeseries/downloads Number of downloads
+        @apiDescription Timeseries of downloads from package manager
+        @apiName Downloads
+        @apiGroup Experimental
 
-        # Popularity
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2015-01-01T00:00:00.000Z",
+                                    "downlads": 235
+                                },
+                                {
+                                    "date": "2015-01-08T00:00:00.000Z",
+                                    "dowloads": 327
+                                }
+                            ]
+        """
+        addTimeseries(app, downloads.downloads, 'downloads')
+
+        #todo: documentation
+        addTimeseries(app, ghtorrent.fakes, 'fakes')
+
+        """
+        @api {get} /:owner/:repo/timeseries/tags Tags release timeseries
+        @apiDescription Timeseries of tags
+        @apiName Tags
+        @apiGroup Experimental
+        @apiDescription Metric Undefined
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2015-01-01T00:00:00.000Z",
+                                    "release": 0.5
+                                },
+                                {
+                                    "date": "2015-01-08T00:00:00.000Z",
+                                    "release": 0.5.1
+                                }
+                            ]
+        """
+        addTimeseries(app, github.tags, 'tags')
+
+        """
+        @api {get} /:owner/:repo/timeseries/tags/major Tags for major releases timeseries
+        @apiDescription Timeseries of Major release tags
+        @apiName Major Release Tags
+        @apiGroup Experimental
+        @apiDescription Metric Undefined
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2015-01-01T00:00:00.000Z",
+                                    "release": 1.0.0
+                                },
+                                {
+                                    "date": "2015-01-08T00:00:00.000Z",
+                                    "release": 2.0.0
+                                }
+                            ]
+        """
+        addTimeseries(app, github.major_tags, 'tags/major')
+
         """
         @api {get} /:owner/:repo/linking_websites Linking Websites
         @apiName LinkingWebsites
@@ -952,17 +934,11 @@ class Server(object):
                             status=200,
                             mimetype="application/json")
 
-        #######################
-        #     GitHub API     #
-        #######################
-
         """
-        @api {get} /:owner/:repo/bus_factor Bus Factor
-        @apiName BusFactor
-        @apiDescription Metric Undefined
-        @apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
-        @apiName GitHub
-        @apiGroup Risk
+        @api {get} /git/lines_changed/:git_repo_url Lines Changed
+        @apiName Lines Changed (no whitespace)
+        @apiDescription Shows detailed information about each file changed by each commit
+        @apiGroup Uncategorized
 
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -970,25 +946,26 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "best": "5",
-                                    "worst": "1"
+                                    "additions":2,
+                                    "author_date":"2018-05-14 10:09:57 -0500",
+                                    "author_email":"s@goggins.com",
+                                    "author_name":"Sean P. Goggins",
+                                    "commit_date":"2018-05-16 10:12:22 -0500",
+                                    "committer_email":"derek@howderek.com",
+                                    "committer_name":"Derek Howard",
+                                    "deletions":0,"hash":"77e603a",
+                                    "message":"merge dev",
+                                    "parents":"b8ec0ed"
                                 }
                             ]
         """
-        addMetric(app, github.bus_factor, 'bus_factor')
-
-
-        #######################
-        #         Git         #
-        #######################
+        addGitMetric(app, git.lines_changed_minus_whitespace, 'lines_changed')
 
         """
-        @api {get} /:owner/:repo/bus_factor Bus Factor
-        @apiName BusFactor
-        @apiDescription Metric Undefined
-        @apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
-        @apiName GitHub
-        @apiGroup Risk
+        @api {get} /git/lines_changed/:git_repo_url Lines Changed
+        @apiName Lines Changed (no whitespace)
+        @apiDescription Shows detailed information about each file changed by each commit
+        @apiGroup Uncategorized
 
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -996,18 +973,20 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "best": "5",
-                                    "worst": "1"
+                                    "additions":2,
+                                    "author_date":"2018-05-14 10:09:57 -0500",
+                                    "author_email":"s@goggins.com",
+                                    "author_name":"Sean P. Goggins",
+                                    "commit_date":"2018-05-16 10:12:22 -0500",
+                                    "committer_email":"derek@howderek.com",
+                                    "committer_name":"Derek Howard",
+                                    "deletions":0,"hash":"77e603a",
+                                    "message":"merge dev",
+                                    "parents":"b8ec0ed"
                                 }
                             ]
         """
-        @app.route('/{}/git/repos'.format(AUGUR_API_VERSION))
-        def downloaded_repos():
-            drs = serialize(git.downloaded_repos())
-            return Response(response=drs,
-                            status=200,
-                            mimetype="application/json")
-
+        addGitMetric(app, git.changes_by_author, 'changes_by_author')
 
 
         #######################
@@ -1084,6 +1063,7 @@ class Server(object):
                             mimetype="application/json")
 
         augurApp.finalize_config()
+
 
 def run():
     create_flask_app().run(host=host, port=int(port), debug=debugmode)

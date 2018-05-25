@@ -69,7 +69,6 @@ class GHTorrent(object):
                 WHERE {1} = :repoid
                 GROUP BY YEAR(created_at)""".format(table, repo_col)
 
-
     def __sub_table_count_by_date(self, parent_table, sub_table, parent_id, sub_id, project_id):
         """
         Generates query string to count occurances of rows per date for a given query sub-table.
@@ -91,7 +90,6 @@ class GHTorrent(object):
             AND {0}.{4} = :repoid
             GROUP BY YEARWEEK({1}.created_at)""".format(parent_table, sub_table, parent_id, sub_id, project_id)
     
-
     def repoid(self, owner_or_repoid, repo=None):
         """
         Returns a repository's ID as it appears in the GHTorrent projects table
@@ -126,78 +124,20 @@ class GHTorrent(object):
         return userid
 
 
-    # Basic timeseries queries
-    def stargazers(self, owner, repo=None, group_by="week"):
-        """
-        Timeseries of when people starred a repo
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with stargazers/day
-        """
-        repoid = self.repoid(owner, repo)
-        stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id', 'user_id', group_by=group_by))
-        df = pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
-        df.drop(df.index[:1], inplace=True)
-        return df
-
-    # Commit metrics
-    def commits(self, owner, repo=None, group_by="week"):
-        """
-        Timeseries of all the commits on a repo
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with commits/day
-        """
-        repoid = self.repoid(owner, repo)
-        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
-        return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
-
-    # Example of using commits to find those over 100
-    def commits100(self, owner, repo=None, group_by="week"):
-        """
-        Timeseries of all the commits on a repo
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with commits/day
-        """
-        repoid = self.repoid(owner, repo)
-        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
-        temp = pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
-        tem = temp['commits'] > 100
-        return temp[tem].reset_index(drop=True)
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
 
 
-    def commit_comments(self, owner, repo=None, group_by="week"):
-        """
-        Timeseries of commit comments
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
 
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with new by week
-        """
-        repoid = self.repoid(owner, repo)
-        commitCommentsSQL = s.sql.text(self.__sub_table_count_by_date("commits", "commit_comments", "id", "commit_id", "project_id"))
-        return pd.read_sql(commitCommentsSQL, self.db, params={"repoid": str(repoid)})
-
-    #Forks metrics
-    def forks(self, owner, repo=None, group_by="week"):
-        """
-        Timeseries of when a repo's forks were created
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with forks/day
-        """
-        repoid = self.repoid(owner, repo)
-        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
-        return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
-
-    #Issue metrics
     def issues(self, owner, repo=None, group_by="week"):
         """
+        Subgroup: Individual Diversity
+        chaoss-metric: open-issues
+
         Timeseries of issues opened per day
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -209,7 +149,10 @@ class GHTorrent(object):
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
     def issues_closed(self, owner, repo=None):
-
+        """
+        Subgroup: Issue Resolution
+        chaoss-metric: closed-issues
+        """
         repoid = self.repoid(owner, repo)
         issuesClosedSQL = s.sql.text("""
         SELECT date(issue_events.created_at) as "date", COUNT(*) as issues_closed
@@ -221,8 +164,46 @@ class GHTorrent(object):
         """)
         return pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)})
 
+    def issue_response_time(self, owner, repo):
+        """
+        Subgroup: Issue Resolution
+        chaoss-metric: issue-response-time
+
+        Time to comment by issue
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being am issue
+        """
+        repoid = self.repoid(owner, repo)
+        issueCommentsSQL = s.sql.text("""
+            SELECT *, TIMESTAMPDIFF(MINUTE, opened, first_commented) AS minutes_to_comment FROM ( 
+                
+                SELECT issues.id AS id, issues.created_at AS opened, MIN(issue_comments.created_at) AS first_commented, 0 AS pull_request
+                FROM issues
+                LEFT JOIN issue_comments
+                ON issues.id = issue_comments.issue_id
+                WHERE issues.pull_request = 0 AND issues.repo_id = :repoid
+                GROUP BY id
+                
+                UNION ALL
+                
+                SELECT issues.id AS id, issues.created_at AS opened, MIN(pull_request_comments.created_at) AS first_commented, 1 AS pull_request
+                FROM issues
+                LEFT JOIN pull_request_comments
+                ON issues.pull_request_id = pull_request_comments.pull_request_id
+                WHERE issues.pull_request = 1 AND issues.repo_id = :repoid
+                GROUP BY id
+             ) a
+            """)
+        rs = pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
+        return rs
+
     def issues_with_close(self, owner, repo=None):
         """
+        Subgroup: Issue Resolution
+        chaoss-metric: closed-issue-resolution-duration
+
         How long on average each week it takes to close an issue
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -244,6 +225,157 @@ class GHTorrent(object):
             WHERE issues.repo_id = :repoid""")
         return pd.read_sql(issuesWithCloseSQL, self.db, params={"repoid": str(repoid)})
 
+    def commits(self, owner, repo=None, group_by="week"):
+        """
+        Subgroup: Code Development
+        chaoss-metric: code-commits
+
+        Timeseries of all the commits on a repo
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with commits/day
+        """
+        repoid = self.repoid(owner, repo)
+        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
+        return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
+
+    def time_to_first_maintainer_response_to_merge_request(self, owner, repo=None):
+        """
+        Subgroup: Code Development
+        chaoss-metric: maintainer-response-to-merge-request-duration
+
+        *1). Get a list of all the comments on merge requests, and the user ids of the people who made those comments
+        2). Get a list of all maintainers for the repository
+        3). For merge request, append the ID of the first comment that was made by a maintainer to an array, if it exists (also append the issue id to a different array) ***use a data frame?***
+        *4). For every one of those comment IDs, append the timestamp difference to a array
+        5). Calculate mean time per week
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being am issue
+        """
+        repoid = self.repoid(owner, repo)
+        maintainerResponseToMRSQL = s.sql.text("""
+             SELECT issues.id AS issue_id, issues.created_at AS pull_request_created_at, pull_request_comments.created_at AS pull_request_comment_created_at, pull_request_comments.user_id AS user_id, pull_request_comments.comment_id as pull_request_comment_id
+                FROM issues
+                JOIN pull_request_comments
+                ON issues.pull_request_id = pull_request_comments.pull_request_id
+                WHERE issues.pull_request = 1 
+                AND issues.repo_id = :repoid
+            """) 
+        df = pd.read_sql(maintainerResponseToMRSQL, self.db, params={"repoid": str(repoid)})
+
+        classified = self.classify_contributors(repoid, repo=None)
+
+        maintainerIDs = []
+        for index, row in classified.iterrows():
+            if row['role'] == "maintainer":
+                maintainerIDs = np.append(maintainerIDs, row['user'])
+
+        commentIDs = []
+        issueIDs = []
+        rowArray = []
+        for index, row in df.iterrows():
+            for user in maintainerIDs:
+                if row['user_id'] == user:
+                    commentIDs.append(row['pull_request_comment_id'])
+                    issueIDs.append(row['issue_id'])
+                    rowArray.append(index)
+                    break
+
+        times = []
+        for row in rowArray:
+            timedelta = (df.loc[row, 'pull_request_comment_created_at'] - df.loc[row, 'pull_request_created_at']).total_seconds()
+            if timedelta > 0:
+                times = np.append(times, timedelta)
+
+        df2 = pd.DataFrame(data=times, columns=["response_time"])
+        return df2
+
+    def forks(self, owner, repo=None, group_by="week"):
+        """
+        Subgroup: Code Development
+        chaoss-metric: forks
+
+        Timeseries of when a repo's forks were created
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with forks/day
+        """
+        repoid = self.repoid(owner, repo)
+        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
+        return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
+
+    def pulls(self, owner, repo=None):
+        """
+        Subgroup: Code Development
+        chaoss-metric: pull-requests-open
+
+        Timeseries of pull requests creation, also gives their associated activity
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with pull requests by day
+        """
+        repoid = self.repoid(owner, repo)
+        pullsSQL = s.sql.text("""
+            SELECT date(pull_request_history.created_at) AS "date",
+            COUNT(pull_requests.id) AS "pull_requests"
+            FROM pull_request_history
+            INNER JOIN pull_requests
+            ON pull_request_history.pull_request_id = pull_requests.id
+            WHERE pull_requests.head_repo_id = :repoid
+            AND pull_request_history.action = "merged"
+            GROUP BY WEEK(pull_request_history.created_at)
+        """)
+        return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
+
+    def pull_request_comments(self, owner, repo=None):
+        """
+        Subgroup: Code Development
+        chaoss-metric: pull-request-comments
+
+        Timeseries of pull request comments
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with new by week
+        """
+        repoid = self.repoid(owner, repo)
+        pullRequestCommentsSQL = s.sql.text(self.__sub_table_count_by_date("pull_requests", "pull_request_comments", "pullreq_id", "pull_request_id", "base_repo_id"))
+        return pd.read_sql(pullRequestCommentsSQL, self.db, params={"repoid": str(repoid)})
+
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+    def watchers(self, owner, repo=None, group_by="week"):
+        """
+        Timeseries of when people starred a repo
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with stargazers/day
+        """
+        repoid = self.repoid(owner, repo)
+        stargazersSQL = s.sql.text(self.__single_table_count_by_date('watchers', 'repo_id', 'user_id', group_by=group_by))
+        df = pd.read_sql(stargazersSQL, self.db, params={"repoid": str(repoid)})
+        df.drop(df.index[:1], inplace=True)
+        return df
+
     def issue_comments(self, owner, repo=None):
         """
         Timeseries of issue comments
@@ -256,27 +388,96 @@ class GHTorrent(object):
         issueCommentsSQL = s.sql.text(self.__sub_table_count_by_date("issues", "issue_comments", "issue_id", "issue_id", "repo_id"))
         return pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
 
-    def issue_response_time(self, owner, repo=None):
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
+
+    # COMMIT RELATED
+
+    def commits100(self, owner, repo=None, group_by="week"):
+        """
+        Timeseries of all the commits on a repo
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with commits/day
+        """
         repoid = self.repoid(owner, repo)
-        issueResponseTimeSQL = s.sql.text("""
-            SELECT issues.id                       AS "issue_id",
-                   issues.created_at               AS "created_at",
-                   MIN(issue_comments.created_at)  AS "responded_to"
-            FROM issues
-            JOIN issue_comments
-            ON issue_comments.issue_id = issues.id
-            WHERE issue_comments.user_id IN
-                 (SELECT users.id
-                FROM users
-                JOIN commits
-                WHERE commits.author_id = users.id
-                AND commits.project_id = :repoid
-            AND issues.repo_id = :repoid ) 
-            GROUP BY issues.id
-        """) 
-        return pd.read_sql(issueResponseTimeSQL, self.db, params={"repoid": str(repoid)})
+        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
+        temp = pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
+        tem = temp['commits'] > 100
+        return temp[tem].reset_index(drop=True)
+
+    def commit_comments(self, owner, repo=None, group_by="week"):
+        """
+        augur-metric: commit-comments
+
+        Timeseries of commit comments
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with new by week
+        """
+        repoid = self.repoid(owner, repo)
+        commitCommentsSQL = s.sql.text(self.__sub_table_count_by_date("commits", "commit_comments", "id", "commit_id", "project_id"))
+        return pd.read_sql(commitCommentsSQL, self.db, params={"repoid": str(repoid)})
+
+    def committer_locations(self, owner, repo=None):        
+        """
+        Return committers and their locations
+
+        @todo: Group by country code instead of users, needs the new schema
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo.
+        :return: DataFrame with users and locations sorted by commtis
+        """
+        repoid = self.repoid(owner, repo)
+        rawContributionsSQL = s.sql.text("""
+            SELECT users.login, users.location, COUNT(*) AS "commits"
+            FROM commits
+            JOIN project_commits
+            ON commits.id = project_commits.commit_id
+            JOIN users
+            ON users.id = commits.author_id
+            WHERE project_commits.project_id = :repoid
+            GROUP BY users.id
+            ORDER BY commits DESC
+        """)
+        return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
+
+    def total_committers(self, owner, repo=None):
+        """
+        augur-metric: total-committers
+        
+        Number of total committers as of each week
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being a week
+        """
+        repoid = self.repoid(owner, repo)
+        totalCommittersSQL = s.sql.text("""
+        SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_total_committers
+        FROM (
+            SELECT author_id, MIN(DATE(created_at)) created_at
+            FROM commits
+            WHERE project_id = :repoid
+            GROUP BY author_id
+            ORDER BY created_at ASC) AS total_committers
+        GROUP BY YEARWEEK(total_committers.created_at)
+        """)
+        df = pd.read_sql(totalCommittersSQL, self.db, params={"repoid": str(repoid)})
+        df['total_total_committers'] = df['total_total_committers'].cumsum()
+        return df
+
+    # ISSUE RELATED
 
     def issue_activity(self, owner, repo=None):
+        """
+        augur-metric: issue-activity
+        """
         repoid = self.repoid(owner, repo)
         issueActivity = s.sql.text("""
             SELECT Date(issues.created_at) as 'date', COUNT(issues.id) as 'issues_opened', SUM(CASE WHEN issue_events.action = 'closed' THEN 1 ELSE 0 END) as 'issues_closed', SUM(CASE WHEN issue_events.action = 'reopened' THEN 1 ELSE 0 END) as 'issues_reopened'
@@ -310,43 +511,13 @@ class GHTorrent(object):
         df4 = df1.join(df2).join(df3)
         return df4
 
-    #Pull request metrics
-    def pulls(self, owner, repo=None):
-        """
-        Timeseries of pull requests creation, also gives their associated activity
 
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with pull requests by day
-        """
-        repoid = self.repoid(owner, repo)
-        pullsSQL = s.sql.text("""
-            SELECT date(pull_request_history.created_at) AS "date",
-            COUNT(pull_requests.id) AS "pull_requests"
-            FROM pull_request_history
-            INNER JOIN pull_requests
-            ON pull_request_history.pull_request_id = pull_requests.id
-            WHERE pull_requests.head_repo_id = :repoid
-            AND pull_request_history.action = "merged"
-            GROUP BY WEEK(pull_request_history.created_at)
-        """)
-        return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
-
-    def pull_request_comments(self, owner, repo=None):
-        """
-        Timeseries of pull request comments
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with new by week
-        """
-        repoid = self.repoid(owner, repo)
-        pullRequestCommentsSQL = s.sql.text(self.__sub_table_count_by_date("pull_requests", "pull_request_comments", "pullreq_id", "pull_request_id", "base_repo_id"))
-        return pd.read_sql(pullRequestCommentsSQL, self.db, params={"repoid": str(repoid)})
-
+    # PULL REQUEST RELATED
 
     def pull_acceptance_rate(self, owner, repo=None):
         """
+        augur-metric: pull-acceptance-rate
+
         Timeseries of pull request acceptance rate (Number of pull requests merged on a date over Number of pull requests opened on a date)
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
@@ -373,55 +544,12 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
 
-    def contributors(self, owner, repo=None):
-        """
-        All the contributors to a project and the counts of their contributions
 
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with users id, users login, and their contributions by type
-        """
-        repoid = self.repoid(owner, repo)
-        contributorsSQL = s.sql.text("""
-            SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues,
-                               SUM(commit_comments) AS commit_comments, SUM(issue_comments) AS issue_comments,
-                               SUM(pull_requests) AS pull_requests, SUM(pull_request_comments) AS pull_request_comments,
-                  SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
-            FROM
-            (
-               (SELECT committer_id AS id, COUNT(*) AS commits, 0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid GROUP BY commits.committer_id)
-               UNION ALL
-               (SELECT reporter_id AS id, 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0, 0 FROM issues WHERE issues.repo_id = :repoid GROUP BY issues.reporter_id)
-               UNION ALL
-               (SELECT commit_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, COUNT(*) AS commit_comments, 0 AS issue_comments, 0 , 0 FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid GROUP BY commit_comments.user_id)
-               UNION ALL
-               (SELECT issue_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, 0 AS issue_comments, COUNT(*) AS issue_comments, 0, 0 FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid GROUP BY issue_comments.user_id)
-               UNION ALL
-               (SELECT actor_id AS id, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.id WHERE pull_request_history.action = 'opened' AND pull_requests.`base_repo_id` = 1334 GROUP BY actor_id)
-               UNION ALL
-               (SELECT user_id AS id, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id WHERE pull_requests.base_repo_id = 1334 GROUP BY user_id)
-            ) a
-            WHERE id IS NOT NULL
-            GROUP BY id
-            ORDER BY total DESC;
-        """)
-        return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
-
-
-
-    #Determines the amount of fake users were made for a particular week
-    def fakes(self, owner, repo=None):
-        repoid = self.repoid(owner, repo)
-        contributorsSQL = s.sql.text("""
-            SELECT date(created_at) AS "date", COUNT(*) AS fakes
-            FROM users
-            WHERE fake = true
-            GROUP BY YEARWEEK(date)
-        """)	
-        return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
+    # COMMUNITY / CONRIBUTIONS
 
     def contributions(self, owner, repo=None, userid=None):
         """
+        augur metric: contributions
         Timeseries of all the contributions to a project, optionally limited to a specific user
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table
@@ -471,30 +599,6 @@ class GHTorrent(object):
             parameterized = s.sql.text(rawContributionsSQL)
             return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
 
-    def committer_locations(self, owner, repo=None):
-        """
-        Return committers and their locations
-
-        @todo: Group by country code instead of users, needs the new schema
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
-        :param repo: The name of the repo.
-        :return: DataFrame with users and locations sorted by commtis
-        """
-        repoid = self.repoid(owner, repo)
-        rawContributionsSQL = s.sql.text("""
-            SELECT users.login, users.location, COUNT(*) AS "commits"
-            FROM commits
-            JOIN project_commits
-            ON commits.id = project_commits.commit_id
-            JOIN users
-            ON users.id = commits.author_id
-            WHERE project_commits.project_id = :repoid
-            GROUP BY users.id
-            ORDER BY commits DESC
-        """)
-        return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
-
     def classify_contributors(self, owner, repo=None):
         """
         Classify everyone who has interacted with a repo into
@@ -542,7 +646,6 @@ class GHTorrent(object):
                 """)
         return pd.read_sql(projectAgeSQL, self.db, params={"repoid": str(repoid)})
 
-
     def community_age(self, owner, repo=None):
         """
         Information helpful to determining a community's age
@@ -579,45 +682,6 @@ class GHTorrent(object):
         """)
 
         return pd.read_sql(communityAgeSQL, self.db, params={"repoid": str(repoid)})
-
-    def total_committers(self, owner, repo=None):
-        """
-        Number of total committers as of each week
-
-        :param owner: The name of the project owner
-        :param repo: The name of the repo
-        :return: DataFrame with each row being a week
-        """
-        repoid = self.repoid(owner, repo)
-        totalCommittersSQL = s.sql.text("""
-        SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_total_committers
-        FROM (
-            SELECT author_id, MIN(DATE(created_at)) created_at
-            FROM commits
-            WHERE project_id = :repoid
-            GROUP BY author_id
-            ORDER BY created_at ASC) AS total_committers
-        GROUP BY YEARWEEK(total_committers.created_at)
-        """)
-        df = pd.read_sql(totalCommittersSQL, self.db, params={"repoid": str(repoid)})
-        df['total_total_committers'] = df['total_total_committers'].cumsum()
-        return df
-
-    def watchers(self, owner, repo=None):
-        """
-        Number of total watchers
-
-        :param owner: The name of the project owner
-        :param repo: The name of the repo
-        :return: DataFrame with the total number of watcher
-        """
-        repoid = self.repoid(owner, repo)
-        watchersSQL = s.sql.text("""
-            SELECT COUNT(*) as "watchers"
-            FROM watchers 
-            WHERE repo_id = :repoid
-            """)
-        return pd.read_sql(watchersSQL, self.db, params={"repoid": str(repoid)})
 
     def community_engagement(self, owner, repo):
         """
@@ -698,89 +762,60 @@ class GHTorrent(object):
         counts['pull_requests_open'] = counts['pull_requests_delta'].cumsum()
         return counts
 
-
-    def issue_comment_time(self, owner, repo):
+    def contributors(self, owner, repo=None):        
         """
-        Time to comment by issue
+        augur-metric: contributors
 
-        :param owner: The name of the project owner
-        :param repo: The name of the repo
-        :return: DataFrame with each row being am issue
-        """
-        repoid = self.repoid(owner, repo)
-        issueCommentsSQL = s.sql.text("""
-            SELECT *, TIMESTAMPDIFF(MINUTE, opened, first_commented) AS minutes_to_comment FROM ( 
-                
-                SELECT issues.id AS id, issues.created_at AS opened, MIN(issue_comments.created_at) AS first_commented, 0 AS pull_request
-                FROM issues
-                LEFT JOIN issue_comments
-                ON issues.id = issue_comments.issue_id
-                WHERE issues.pull_request = 0 AND issues.repo_id = :repoid
-                GROUP BY id
-                
-                UNION ALL
-                
-                SELECT issues.id AS id, issues.created_at AS opened, MIN(pull_request_comments.created_at) AS first_commented, 1 AS pull_request
-                FROM issues
-                LEFT JOIN pull_request_comments
-                ON issues.pull_request_id = pull_request_comments.pull_request_id
-                WHERE issues.pull_request = 1 AND issues.repo_id = :repoid
-                GROUP BY id
-             ) a
-            """)
-        rs = pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
-        return rs
+        All the contributors to a project and the counts of their contributions
 
-    def time_to_first_maintainer_response_to_merge_request(self, owner, repo=None):
-        """
-        *1). Get a list of all the comments on merge requests, and the user ids of the people who made those comments
-        2). Get a list of all maintainers for the repository
-        3). For merge request, append the ID of the first comment that was made by a maintainer to an array, if it exists (also append the issue id to a different array) ***use a data frame?***
-        *4). For every one of those comment IDs, append the timestamp difference to a array
-        5). Calculate mean time per week
-
-        :param owner: The name of the project owner
-        :param repo: The name of the repo
-        :return: DataFrame with each row being am issue
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with users id, users login, and their contributions by type
         """
         repoid = self.repoid(owner, repo)
-        maintainerResponseToMRSQL = s.sql.text("""
-             SELECT issues.id AS issue_id, issues.created_at AS pull_request_created_at, pull_request_comments.created_at AS pull_request_comment_created_at, pull_request_comments.user_id AS user_id, pull_request_comments.comment_id as pull_request_comment_id
-                FROM issues
-                JOIN pull_request_comments
-                ON issues.pull_request_id = pull_request_comments.pull_request_id
-                WHERE issues.pull_request = 1 
-                AND issues.repo_id = :repoid
-            """) 
-        df = pd.read_sql(maintainerResponseToMRSQL, self.db, params={"repoid": str(repoid)})
+        contributorsSQL = s.sql.text("""
+            SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues,
+                               SUM(commit_comments) AS commit_comments, SUM(issue_comments) AS issue_comments,
+                               SUM(pull_requests) AS pull_requests, SUM(pull_request_comments) AS pull_request_comments,
+                  SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
+            FROM
+            (
+               (SELECT committer_id AS id, COUNT(*) AS commits, 0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid GROUP BY commits.committer_id)
+               UNION ALL
+               (SELECT reporter_id AS id, 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0, 0 FROM issues WHERE issues.repo_id = :repoid GROUP BY issues.reporter_id)
+               UNION ALL
+               (SELECT commit_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, COUNT(*) AS commit_comments, 0 AS issue_comments, 0 , 0 FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid GROUP BY commit_comments.user_id)
+               UNION ALL
+               (SELECT issue_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, 0 AS issue_comments, COUNT(*) AS issue_comments, 0, 0 FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid GROUP BY issue_comments.user_id)
+               UNION ALL
+               (SELECT actor_id AS id, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.id WHERE pull_request_history.action = 'opened' AND pull_requests.`base_repo_id` = 1334 GROUP BY actor_id)
+               UNION ALL
+               (SELECT user_id AS id, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id WHERE pull_requests.base_repo_id = 1334 GROUP BY user_id)
+            ) a
+            WHERE id IS NOT NULL
+            GROUP BY id
+            ORDER BY total DESC;
+        """)
+        return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
-        classified = self.classify_contributors(repoid, repo=None)
 
-        maintainerIDs = []
-        for index, row in classified.iterrows():
-            if row['role'] == "maintainer":
-                maintainerIDs = np.append(maintainerIDs, row['user'])
+    # DEPENDENCY RELATED
 
-        commentIDs = []
-        issueIDs = []
-        rowArray = []
-        for index, row in df.iterrows():
-            for user in maintainerIDs:
-                if row['user_id'] == user:
-                    commentIDs.append(row['pull_request_comment_id'])
-                    issueIDs.append(row['issue_id'])
-                    rowArray.append(index)
-                    break
 
-        times = []
-        for row in rowArray:
-            timedelta = (df.loc[row, 'pull_request_comment_created_at'] - df.loc[row, 'pull_request_created_at']).total_seconds()
-            if timedelta > 0:
-                times = np.append(times, timedelta)
+    # OTHER
 
-        df2 = pd.DataFrame(data=times, columns=["response_time"])
-        return df2
-
+    def fakes(self, owner, repo=None):
+        """
+        augur-metric: fakes
+        """
+        repoid = self.repoid(owner, repo)
+        contributorsSQL = s.sql.text("""
+            SELECT date(created_at) AS "date", COUNT(*) AS fakes
+            FROM users
+            WHERE fake = true
+            GROUP BY YEARWEEK(date)
+        """)    
+        return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
     def ghtorrent_range(self):
         ghtorrentRangeSQL = s.sql.text("""

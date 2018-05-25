@@ -24,8 +24,62 @@ class GitHubAPI(object):
         self.GITHUB_API_KEY = api_key
         self.__api = github.Github(api_key)
 
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
+
+
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+    def lines_changed(self, owner, repo=None): 
+        """
+        chaoss-metric: lines-of-code-changed
+        Additions and deletions each week
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being am issue
+        """
+        # get the data we need from the GitHub API
+        # see <project_root>/augur/githubapi.py for examples using the GraphQL API
+        url = "https://api.github.com/repos/{}/{}/stats/code_frequency".format(owner, repo)
+        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
+        # get our data into a dataframe
+        df = pd.DataFrame(json, columns=['date', 'additions', 'deletions'])
+        # all timeseries metrics need a 'date' column
+        df['date'] = pd.to_datetime(df['date'], unit='s', infer_datetime_format=True)
+        # normalize our data and create useful aggregates
+        df['deletions'] = df['deletions'] * -1
+        df['delta'] = df['additions'] - df['deletions']
+        df['total_lines'] = df['delta'].cumsum()
+        # return the dataframe
+        return df
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
+
     def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
         """
+        augur-metric: bus-factor
+
         Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
 
         :param owner: repo owner username
@@ -214,30 +268,6 @@ class GitHubAPI(object):
                 i += 1
         genderized = names.merge(LocalCSV.name_gender, how='inner', on=['name'])
         return genderized
-
-    def lines_changed(self, owner, repo=None): 
-        """
-        Additions and deletions each week
-
-        :param owner: The name of the project owner
-        :param repo: The name of the repo
-        :return: DataFrame with each row being am issue
-        """
-        # get the data we need from the GitHub API
-        # see <project_root>/augur/githubapi.py for examples using the GraphQL API
-        url = "https://api.github.com/repos/{}/{}/stats/code_frequency".format(owner, repo)
-        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
-        # get our data into a dataframe
-        df = pd.DataFrame(json, columns=['date', 'additions', 'deletions'])
-        # all timeseries metrics need a 'date' column
-        df['date'] = pd.to_datetime(df['date'], unit='s', infer_datetime_format=True)
-        # normalize our data and create useful aggregates
-        df['deletions'] = df['deletions'] * -1
-        df['delta'] = df['additions'] - df['deletions']
-        df['total_lines'] = df['delta'].cumsum()
-        # return the dataframe
-        return df
-
 
 
 

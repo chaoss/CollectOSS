@@ -31,6 +31,52 @@ class GHTorrentPlus(object):
         except Exception as e:
             logger.error("Could not connect to GHTorrentPlus database. Error: " + str(e))
 
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
+
+
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+    def issue_close_time(self, owner, repo=None):
+        """
+        augur-metric: closed-issue-resolution-duration
+        """
+        repoid = self.ghtorrent.repoid(owner, repo)
+        issuesClosedSQL = s.sql.text("""
+            SELECT * FROM issue_response_time WHERE repo_id = :repoid ORDER BY closed ASC
+        """)
+        rs = pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)}, index_col=['opened', 'closed'])
+        rs['average_minutes_to_close_as_of_close'] = rs.rolling(len(rs), 1).mean()['minutes_to_close']
+        rs['average_minutes_to_close_past_30_days'] = rs.rolling('30D').mean()['minutes_to_close']
+        mean = rs['minutes_to_close'].mean()
+        std = rs['minutes_to_close'].std(ddof=0)
+        rs['z-score'] = (rs['minutes_to_close'] - mean)/std
+        return rs
+
+    
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
+
+
     def build_issue_response_time(self):
         issuesClosedSQL = s.sql.text("""
             SELECT *, TIMESTAMPDIFF(MINUTE, opened, closed) AS minutes_to_close FROM ( 
@@ -57,15 +103,4 @@ class GHTorrentPlus(object):
         issue_response_time.to_sql("issue_response_time", self.db, if_exists="append")
         return issue_response_time
 
-    def issue_close_time(self, owner, repo=None):
-        repoid = self.ghtorrent.repoid(owner, repo)
-        issuesClosedSQL = s.sql.text("""
-            SELECT * FROM issue_response_time WHERE repo_id = :repoid ORDER BY closed ASC
-        """)
-        rs = pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)}, index_col=['opened', 'closed'])
-        rs['average_minutes_to_close_as_of_close'] = rs.rolling(len(rs), 1).mean()['minutes_to_close']
-        rs['average_minutes_to_close_past_30_days'] = rs.rolling('30D').mean()['minutes_to_close']
-        mean = rs['minutes_to_close'].mean()
-        std = rs['minutes_to_close'].std(ddof=0)
-        rs['z-score'] = (rs['minutes_to_close'] - mean)/std
-        return rs
+    
