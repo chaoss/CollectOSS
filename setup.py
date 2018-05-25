@@ -39,7 +39,7 @@ setup(
     keywords='ghtorrent github api data science',
     install_requires=[
         'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
-        'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'GitPython'
+        'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'GitPython',
         'pyevent', 'gunicorn', 'datetime', 'traitlets', 'coloredlogs', 'tldextract', 'python-daemon'],
     extras_require={
         'dev': ['check-manifest'],
