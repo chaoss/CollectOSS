@@ -2,7 +2,7 @@
 .PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade 
 .PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upsteam version
 
-SERVECOMMAND=gunicorn -w`getconf _NPROCESSORS_ONLN` -b0.0.0.0:5000 augur.server:app
+SERVECOMMAND=augur
 CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
 CONDAACTIVATE=source activate augur;
 OLDVERSION="null"

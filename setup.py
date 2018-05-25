@@ -39,15 +39,15 @@ setup(
     keywords='ghtorrent github api data science',
     install_requires=[
         'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
-        'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub',
-        'pyevent', 'gunicorn', 'datetime', 'traitlets', 'coloredlogs'],
+        'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'GitPython'
+        'pyevent', 'gunicorn', 'datetime', 'traitlets', 'coloredlogs', 'tldextract', 'python-daemon'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
     },
     entry_points={
         'console_scripts': [
-            'augur=augur.server:run',
+            'augur=augur.runtime:run',
         ],
     },
 )

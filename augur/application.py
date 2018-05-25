@@ -1,9 +1,26 @@
 import os
+import time
+import multiprocessing as mp
 import logging
 import configparser as configparser
 import json
+import coloredlogs
 import augur
 from augur import logger
+
+def updater_process(name, delay):
+    logger.info('Spawned updater process with PID {}'.format(os.getpid()))
+    app = augur.Application()
+    datasource = getattr(app, name)()
+    try:
+        while True:
+            logger.info('Updating {}...'.format(name))
+            datasource.update()
+            time.sleep(delay)
+    except KeyboardInterrupt:
+        os._exit(0)
+    except:
+        raise
 
 class Application(object):
     """Initalizes all classes form Augur using a config file or environment variables"""
@@ -45,14 +62,39 @@ class Application(object):
             self.__using_config_file = False
             self.__config = self.__default_config
 
+        # List of data sources that can do periodic updates
+        self.__updatable = []
+        self.__processes = []
+
+        # Initalize all objects to None
         self.__ghtorrent = None
         self.__ghtorrentplus = None
         self.__github = None
+        self.__git = None
         self.__librariesio = None
         self.__downloads = None
         self.__publicwww = None
         self.__localCSV = None
-        
+
+    def __updater(self, updates=None):
+        if updates is None:
+            updates = self.__updatable
+        for update in updates:
+            if not 'started' in update:
+                up = mp.Process(target=updater_process, args=(update['name'], update['delay']))
+                up.start()
+                self.__processes.append(up)
+                update['started'] = True
+
+    def init_all(self):
+        self.ghtorrent()
+        self.ghtorrentplus()
+        self.github()
+        self.git()
+        self.librariesio()
+        self.downloads()
+        self.publicwww()
+        self.localcsv()        
 
     def read_config(self, section, name, environment_variable, default):
         value = None
@@ -95,6 +137,17 @@ class Application(object):
         else:
             return path
 
+    def update_all(self):
+        print(self.__updatable)
+        for updatable in self.__updatable:
+            logger.info('Updating {}...'.format(updatable['name']))
+            updatable['update']()
+
+    def schedule_updates(self):
+        # don't use this, 
+        logger.debug('Scheduling updates...')
+        self.__updater()
+
     def ghtorrent(self):
         if self.__ghtorrent is None:
             logger.debug('Initializing GHTorrent')
@@ -119,15 +172,21 @@ class Application(object):
             , ghtorrent=self.ghtorrent())
         return self.__ghtorrentplus
 
-    def git(self):
+    def git(self, update=False):
         storage = self.path_relative_to_config(
             self.read_config('Git', 'storage', 'AUGUR_GIT_STORAGE', 'runtime/git_repos/')
         )
         repolist = self.read_config('Git', 'repositories', None, [])
-
-        if self.__github is None:
+        if self.__git is None:
             logger.debug('Initializing Git')
-            self.__git = augur.Git(list_of_repositories=repolist, storage_folder=storage)
+            self.__git = augur.Git(list_of_repositories=repolist, storage_folder=storage, csv=self.localcsv())
+            self.__updatable.append({
+                'name': 'git',
+                'delay': int(self.read_config('Git', 'refresh', 'AUGUR_GIT_REFRESH', '3600')),
+                'update': self.__git.update
+            })
+        if update:
+            self.__git.update()
         return self.__git
 
 

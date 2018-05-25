@@ -5,7 +5,7 @@ import os
 # Logging
 import logging
 import coloredlogs
-coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'), fmt='%(asctime)s %(name)s[%(process)d] %(levelname)s %(message)s')
+coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))
 logger = logging.getLogger('augur')
 
 # end imports
