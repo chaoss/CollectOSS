@@ -67,7 +67,6 @@ def addTimeseries(app, function, endpoint):
     :param endpoint:  GET endpoint to generate
     """
     addMetric(app, function, 'timeseries/{}'.format(endpoint))
-    app.route('/{}/<owner>/<repo>/timeseries/{}/relative_to/<ownerRelativeTo>/<repoRelativeTo>'.format(AUGUR_API_VERSION, endpoint))(flaskify(augur.util.makeRelative(function)))
 
 class Server(object):
     def __init__(self):
@@ -77,7 +76,8 @@ class Server(object):
         CORS(app)
 
         # Create Augur application
-        augurApp = augur.Application()
+        self.augurApp = augur.Application()
+        augurApp = self.augurApp
 
         # Initalize all of the classes
         ghtorrent = augurApp.ghtorrent()
@@ -88,16 +88,6 @@ class Server(object):
         librariesio = augurApp.librariesio()
         downloads = augurApp.downloads()
         localcsv = augurApp.localcsv()
-
-        # Where should we host
-        host = augurApp.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
-        port = augurApp.read_config('Server', 'port', 'AUGUR_PORT', '5000')
-
-        # Should we drop down to a shell
-        if (augurApp.read_config('Development', 'developer', 'AUGUR_DEBUG', '0') == '1'):
-            debugmode = True
-        else:
-            debugmode = False
 
 
         #####################################
@@ -1111,7 +1101,18 @@ class Server(object):
 
 
 def run():
-    create_flask_app().run(host=host, port=int(port), debug=debugmode)
+    server = Server()
+    host = server.augurApp.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
+    port = server.augurApp.read_config('Server', 'port', 'AUGUR_PORT', '5000')
+    Server().app.run(host=host, port=int(port))
+
+wsgi_app = None
+def wsgi(env, start_response):
+    global wsgi_app
+    if (wsgi_app is None):
+        app_instance = Server()
+        wsgi_app = app_instance.app
+    return wsgi_app(env, start_response)
 
 if __name__ == "__main__":
     run() 
