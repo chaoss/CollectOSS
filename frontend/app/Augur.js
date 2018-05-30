@@ -27,7 +27,10 @@ export default function Augur () {
 
   window.augur = new window.Vuex.Store({
     state: {
+      hasState: null,
+      tab: 'gmd',
       baseRepo: null,
+      gitRepo: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2005'),
@@ -38,21 +41,33 @@ export default function Augur () {
       byDate: false
     },
     mutations: {
-      setBaseRepo (state, payload) {
-        let repo = window.AugurAPI.Repo(payload.url)
+      setRepo (state, payload) {
+        let repo = window.AugurAPI.Repo(payload)
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
+        } else {
+          repo = window.AugurRepos[repo.toString()]
         }
-        state.baseRepo = repo.toString()
+        state.hasState = true
+        if (repo.owner && repo.name) {
+          state.baseRepo = repo.toString()
+          let title = repo.owner + '/' + repo.name + '- Augur'
+          state.tab = 'gmd'
+          let queryString = '?repo=' + repo.owner + '+' + repo.name
+          window.history.pushState(null, title, queryString)
+        }
+        if (payload.gitURL) {
+          let queryString = '?git=' + window.btoa(repo.gitURL)
+          window.history.pushState(null, 'Git Analysis - Augur', queryString)
+          state.tab = 'git'
+          state.gitRepo = repo.gitURL
+        }
         if (!payload.keepCompared) {
           state.comparedRepos = []
         }
-        let title = repo.owner + '/' + repo.name + '- Augur'
-        let queryString = '?repo=' + repo.owner + '+' + repo.name
-        window.history.pushState(null, title, queryString)
       },
       addComparedRepo (state, payload) {
-        let repo = window.AugurAPI.Repo(payload.url)
+        let repo = window.AugurAPI.Repo({ githubURL: payload.url })
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
         }
@@ -71,6 +86,9 @@ export default function Augur () {
       },
       setCompare (state, payload) {
         state.compare = payload.compare
+      },
+      setTab (state, payload) {
+        state.tab = payload.tab
       },
       setVizOptions (state, payload) {
         if (payload.trailingAverage) {
@@ -104,11 +122,14 @@ export default function Augur () {
   // Load state from query string
   let parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' })
   if (parsed.repo) {
-    window.AugurApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') })
+    window.AugurApp.$store.commit('setRepo', { githubURL: parsed.repo.replace(' ', '/') })
   }
   if (parsed.comparedTo) {
     parsed.comparedTo.forEach((repo) => {
-      window.AugurApp.$store.commit('addComparedRepo', { url: repo.replace(' ', '/') })
+      window.AugurApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') })
     })
+  }
+  if (parsed.git) {
+    window.AugurApp.$store.commit('setRepo', { gitURL: window.atob(parsed.git) })
   }
 }

@@ -1,15 +1,21 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
 import os
-
-# Logging
 import logging
 import coloredlogs
+import beaker
+
+# Logging
 coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))
 logger = logging.getLogger('augur')
 
 # end imports
 # (don't remove the above line, it's for a script)
+
+#def cached(self, )
+
+
+
 
 def makeRelative(function):
   """

@@ -14,11 +14,12 @@ from augur import logger
 # end imports
 # (don't remove the above line, it's for a script)
 
+
 class Git(object):
     """
     Analyzes Git repos directly using dulwich
     """
-    def __init__(self, list_of_repositories, storage_folder, csv):
+    def __init__(self, list_of_repositories, storage_folder, csv, cache=None):
         """
         Creates a new GitHub instance
 
@@ -26,14 +27,17 @@ class Git(object):
         :param storageFolder: Folder to download the repositories to
         """
         self._csv = csv
+        self.__cache = cache
         self._repo_urls = list_of_repositories
         self._repos = {}
         self._folder = os.path.abspath(storage_folder)
-        if not os.path.exists(self._folder):
-            os.makedirs(self._folder)
+        self._repo_folder = os.path.abspath(os.path.join(self._folder, 'repos'))
+        if not os.path.exists(self._repo_folder):
+            os.makedirs(self._repo_folder)
         self._log_location = os.path.join(self._folder, 'git_log.txt')
         self._log = open(self._log_location, 'wb')
         self.downloaded_repos()
+
 
     def get_repo_object(self, repo_url):
         """
@@ -47,7 +51,7 @@ class Git(object):
         else:
             try:
                 folder_name = os.path.splitext(os.path.basename(repo_url))[0]
-                repo_path = os.path.join(self._folder, folder_name)
+                repo_path = os.path.join(self._repo_folder, folder_name)
                 self._repos[repo_url] = git.Repo(repo_path)
                 return self._repos[repo_url]
             except:
@@ -60,10 +64,10 @@ class Git(object):
         for repo_url in self._repo_urls:
             logger.info('Git: Updating %s', repo_url)
             folder_name = os.path.splitext(os.path.basename(repo_url))[0]
-            repo_path = os.path.join(self._folder, folder_name)
+            repo_path = os.path.join(self._repo_folder, folder_name)
             if not os.path.exists(repo_path):
                 logger.debug('Cloning %s', repo_url)
-                git.Git(self._folder).clone(repo_url, repo_path)
+                git.Git(self._repo_folder).clone(repo_url, repo_path)
                 repo = git.Repo(repo_path)
                 self._repos[repo_url] = repo
             else:
@@ -74,7 +78,7 @@ class Git(object):
                 except Exception as e:
                     logger.debug('Re-Cloning %s because %s', repo_url, str(e))
                     shutil.rmtree(repo_path)
-                    git.Git(self._folder).clone(repo_url)
+                    git.Git(self._repo_folder).clone(repo_url)
                     repo = git.Repo(repo_path)
                 self._repos[repo_url] = repo
             logger.info('Git: Update completed for %s', repo_url)
@@ -128,5 +132,6 @@ class Git(object):
         """
         df = self.lines_changed_minus_whitespace(repo_url)
         df = df.groupby(['author_email', 'author_name']).sum().sort_values(by=['additions'], ascending=False)
-        df['classification'] = self.__csv.classify_emails(df.index.get_level_values('author_email'))
+        df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
+        df.reset_index(inplace=True)
         return df

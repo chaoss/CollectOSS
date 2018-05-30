@@ -18,14 +18,14 @@ class LocalCSV(object):
     
         def classifier(email):
             if email is None:
-                return 'unknown'
+                return 'Unknown'
             ext = tldextract.extract(email)
             domain = '{}.{}'.format(ext.domain, ext.suffix)
             if ext.suffix == 'edu':
-                return 'academic'
+                return 'Academic Institutions'
             if domain in self.companies.index:
-                return self.companies.classification[domain]
+                return self.companies['company'][domain]
             else:
-                return 'unknown'
+                return 'Unknown'
         
         return email_series.map(classifier)

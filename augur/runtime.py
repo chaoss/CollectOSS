@@ -25,8 +25,8 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
 def run():
     mp.set_start_method('forkserver')
     app = augur.Application()
+    logger.info('Initalizing background tasks...')
     app.init_all()
-    # app.update_all()
     app.schedule_updates()
     logger.info('Starting gunicorn workers...')
     host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')

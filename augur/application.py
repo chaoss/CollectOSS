@@ -81,7 +81,7 @@ class Application(object):
             updates = self.__updatable
         for update in updates:
             if not 'started' in update:
-                up = mp.Process(target=updater_process, args=(update['name'], update['delay']))
+                up = mp.Process(target=updater_process, args=(update['name'], update['delay']), daemon=True)
                 up.start()
                 self.__processes.append(up)
                 update['started'] = True

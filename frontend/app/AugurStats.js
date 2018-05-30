@@ -55,7 +55,7 @@ export default class AugurStats {
   }
 
   static describe (ary, key) {
-    let flat = ary.map((e) => { return e[key] })
+    let flat = AugurStats.flatten(ary, key)
     let mean = AugurStats.averageArray(flat)
     let stddev = AugurStats.standardDeviation(ary, key, mean)
     let variance = stddev * stddev
@@ -66,35 +66,39 @@ export default class AugurStats {
     }
   }
 
+  static flatten (array, key) {
+    return array.map((e) => { return e[key] })
+  }
+
   static rollingAverage (data, key, windowSizeInDays) {
     key = key || 'value'
-    windowSizeInDays = windowSizeInDays || 180
+    let period = (windowSizeInDays / 2)
+    return AugurStats.dateAggregate(data, period, period, period, (filteredData, date) => {
+      let flat = AugurStats.flatten(filteredData, key)
+      let datum = { date: date }
+      datum[key] = AugurStats.averageArray(flat)
+      return datum
+    })
+  }
+
+  static dateAggregate (data, daysBefore, daysAfter, interval, func) {
+    daysBefore = daysBefore || 30
+    interval = interval || ((daysAfter + daysBefore) / 4)
     let rolling = []
     let averageWindow = []
     let i = 0
-    let lastFound = -1
 
-    let after = new Date()
-    let before = new Date()
+    let earliest = new Date()
+    let latest = new Date()
 
-    for (let date = new Date(data[0].date); date <= data[data.length - 1].date; date.setDate(date.getDate() + 1)) {
-      after.setDate(date.getDate() - windowSizeInDays)
-
-      if (averageWindow.length < windowSizeInDays) {
-        for (; i < data.length && averageWindow.length <= windowSizeInDays; i++) {
-          if (lastFound > -1) {
-            for (let iter = new Date(data[lastFound].date); iter <= data[i].date; iter.setDate(iter.getDate() + 1)) {
-              averageWindow.push((data[i][key] + data[lastFound][key]) / 2)
-            }
-          }
-          lastFound = i
-        }
-      }
-
-      let average = {date: new Date(date)}
-      average[key] = AugurStats.averageArray(averageWindow.slice(0, windowSizeInDays))
-      averageWindow.shift()
-      rolling.push(average)
+    for (let date = new Date(data[0].date); date <= data[data.length - 1].date; date.setDate(date.getDate() + interval)) {
+      earliest = (new Date(date)).setDate(date.getDate() - daysBefore)
+      latest = (new Date(date)).setDate(date.getDate() + daysAfter)
+      averageWindow = data.filter((d) => {
+        return (earliest <= d.date) && (d.date <= latest)
+      })
+      rolling.push(func(averageWindow, new Date(date), i))
+      i++
     }
     return rolling
   }

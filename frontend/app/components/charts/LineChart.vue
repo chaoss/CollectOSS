@@ -51,6 +51,7 @@ export default {
     },
     chart () {
       // Set the MetricsGraphics config as much as we can
+      delete this.mgConfig.chart_type
       this.mgConfig.title = this.title || 'Activity'
       this.mgConfig.x_accessor = 'date'
       this.mgConfig.format = this.percentage ? 'percentage' : undefined
@@ -143,9 +144,14 @@ export default {
                   count++
                 })
               } else {
-                let field = Object.keys(obj[key][0]).splice(1)
-                onCreateData(obj, key, field, count)
-                count++
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  let field = Object.keys(obj[key][0]).splice(1)
+                  onCreateData(obj, key, field, count)
+                  count++
+                } else {
+                  this.renderError()
+                  return
+                }
               }
             } // end hasOwnProperty
           } // end for in
@@ -157,6 +163,7 @@ export default {
             // Build basic chart using rolling averages
             let d = defaultProcess(obj, key, field, count)
             let rolling = AugurStats.rollingAverage(d, 'value', this.period)
+            console.log('rolling, before+after', d, rolling)
             if (!this.disableRollingAverage) {
               normalized.push(rolling)
               this.mgConfig.legend.push(field)
@@ -199,9 +206,18 @@ export default {
           })
         }
 
-        this.mgConfig.data = normalized
-        this.mgConfig.legend_target = this.$refs.legend
-        this.renderChart()
+        if (normalized.length == 0) {
+          this.mgConfig.missing_text = 'Data empty'
+          this.renderError()
+        } else {
+          this.mgConfig.data = normalized
+          this.mgConfig.legend_target = this.$refs.legend
+          this.renderChart()
+        }
+        
+      }, () => {
+        this.mgConfig.missing_text = 'Data is missing or unavaliable'
+        this.renderError()
       }) // end batch request
 
       return '<div class="loader deleteme">' + this.title + '...</div>'
@@ -231,6 +247,15 @@ export default {
       this.$refs.chartholder.innerHTML = ''
       this.$refs.chartholder.appendChild(this.mgConfig.target)
       this.mgConfig.target.className = 'deleteme'
+      window.MG.data_graphic(this.mgConfig)
+    },
+    renderError () {
+      this.$refs.chart.className = 'linechart intro'
+      window.$(this.$refs.holder).find('.deleteme').remove()
+      this.$refs.chartholder.innerHTML = ''
+      this.$refs.chartholder.appendChild(this.mgConfig.target)
+      this.mgConfig.target.className = 'deleteme'
+      this.mgConfig.chart_type = 'missing-data'
       window.MG.data_graphic(this.mgConfig)
     }
   }// end methods

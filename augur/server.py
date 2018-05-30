@@ -934,6 +934,37 @@ class Server(object):
                             status=200,
                             mimetype="application/json")
 
+
+        #######################
+        #         Git         #
+        #######################
+
+        """
+        @api {get} /:owner/:repo/bus_factor Bus Factor
+        @apiName BusFactor
+        @apiDescription Metric Undefined
+        @apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
+        @apiName GitHub
+        @apiGroup Risk
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "best": "5",
+                                    "worst": "1"
+                                }
+                            ]
+        """
+        @app.route('/{}/git/repos'.format(AUGUR_API_VERSION))
+        def downloaded_repos():
+            drs = serialize(git.downloaded_repos())
+            return Response(response=drs,
+                            status=200,
+                            mimetype="application/json")
+
         """
         @api {get} /git/lines_changed/:git_repo_url Lines Changed
         @apiName Lines Changed (no whitespace)
@@ -989,6 +1020,7 @@ class Server(object):
         addGitMetric(app, git.changes_by_author, 'changes_by_author')
 
 
+
         #######################
         #   Batch Requests    #
         #######################
@@ -1011,52 +1043,65 @@ class Server(object):
             """
             if request.method == 'GET':
                 """this will return sensible defaults in the future"""
-                return make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}', 501)
+                return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}', 501)
 
             try:
                 requests = json.loads(request.data)
             except ValueError as e:
-                abort(400)
+                app.abort(400)
 
             responses = []
 
             for index, req in enumerate(requests):
+
+
                 method = req['method']
                 path = req['path']
                 body = req.get('body', None)
 
-                with app.app_context():
-                    with app.test_request_context(path, 
-                                                  method=method, 
-                                                  data=body):
-                        try:
-                            # Can modify flask.g here without affecting 
-                            # flask.g of the root request for the batch
+                try:
 
-                            # Pre process Request
-                            rv = app.preprocess_request()
+                    with app.app_context():
+                        with app.test_request_context(path, 
+                                                      method=method, 
+                                                      data=body):
+                            try:
+                                # Can modify flask.g here without affecting 
+                                # flask.g of the root request for the batch
 
-                            if rv is None:
-                                # Main Dispatch
-                                rv = app.dispatch_request()
+                                # Pre process Request
+                                rv = app.preprocess_request()
 
-                        except Exception as e:
-                            rv = app.handle_user_exception(e)
+                                if rv is None:
+                                    # Main Dispatch
+                                    rv = app.dispatch_request()
 
-                        response = app.make_response(rv)
+                            except Exception as e:
+                                rv = app.handle_user_exception(e)
 
-                        # Post process Request
-                        response = app.process_response(response)
+                            response = app.make_response(rv)
 
-                # Response is a Flask response object.
-                # _read_response(response) reads response.response 
-                # and returns a string. If your endpoints return JSON object,
-                # this string would be the response as a JSON string.
-                responses.append({
-                    "path": path,
-                    "status": response.status_code,
-                    "response": str(response.get_data(), 'utf8')
-                })
+                            # Post process Request
+                            response = app.process_response(response)
+
+                    # Response is a Flask response object.
+                    # _read_response(response) reads response.response 
+                    # and returns a string. If your endpoints return JSON object,
+                    # this string would be the response as a JSON string.
+                    responses.append({
+                        "path": path,
+                        "status": response.status_code,
+                        "response": str(response.get_data(), 'utf8')
+                    })
+
+                except Exception as e:  
+
+                    responses.append({
+                        "path": path,
+                        "status": 500,
+                        "response": str(e)
+                    })
+
 
             return Response(response=json.dumps(responses),
                             status=207,
