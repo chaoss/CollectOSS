@@ -2,7 +2,7 @@
 from .metadata import __version__
 
 # Functions
-from .util import makeRelative, logger
+from .util import logger
 
 # Classes
 from .application import Application
