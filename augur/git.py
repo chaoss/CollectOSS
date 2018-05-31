@@ -85,10 +85,10 @@ class Git(object):
 
     def downloaded_repos(self):
         urls = []
-        for entry in os.scandir(self._folder):
+        for entry in os.scandir(self._repo_folder):
             if entry.is_dir():
                 try:
-                    repo = git.Repo(os.path.join(self._folder, entry.name))
+                    repo = git.Repo(os.path.join(self._repo_folder, entry.name))
                     repo_url = repo.remotes.origin.url
                     urls.append(repo_url)
                     if not repo_url in self._repos:
@@ -104,7 +104,7 @@ class Git(object):
         """
         repo = self.get_repo_object(repo_url)
         df = pd.DataFrame()
-        history = repo.git.log('--ignore-space-at-eol', '--ignore-blank-lines', '-b', '-p', '-U0', """--pretty=format:'[START ENTRY]%n{%n"hash":"%h",%n"author_name":"%an",%n"author_email":"%ae",%n"author_date":"%ai",%n"committer_name": "%cn",%n"committer_email":"%ce",%n"commit_date":"%ci",%n"parents":"%p"%n}%n#####SPLIT#####%s#####SPLIT#####'""")
+        history = repo.git.log( '-p', '-w', '-m', '--full-history', """--pretty=format:'[START ENTRY]%n{%n"hash":"%h",%n"author_name":"%an",%n"author_email":"%ae",%n"author_date":"%ai",%n"committer_name": "%cn",%n"committer_email":"%ce",%n"commit_date":"%ci",%n"parents":"%p"%n}%n#####SPLIT#####%s#####SPLIT#####'""")
         frames = []
         for entry in history.split('[START ENTRY]')[1:]:
             splits = entry.split('#####SPLIT#####')
@@ -116,14 +116,18 @@ class Git(object):
             if (len(splits[2]) > 2):
                 diffs = splits[2].split('diff --git')
                 for diff in diffs[1:]:
-                    filename = re.search('b(\/.+)', diff).group(1)
-                    # Find all the lines that begin with a plus or minus to count added
-                    additions = len(re.findall('\n\+[^\+\n]', diff))
-                    deletions = len(re.findall('\n-[^-\n]', diff))
-                    data['additions'] = additions
-                    data['deletions'] = deletions
-                    frames.append(pd.DataFrame(data, index=['hash']))
+                    if '+' in diff:
+                        filename = re.search('b(\/.+)', diff).group(1)
+                        # Find all the lines that begin with a plus or minus to count added
+                        # Minus one to account the file matches
+                        additions = len(re.findall('\n\+[ \t]*[^\s]', diff)) - 1
+                        deletions = len(re.findall('\n-[ \t]*[^\s]', diff)) - 1
+                        data['additions'] = additions
+                        data['deletions'] = deletions
+                        frames.append(pd.DataFrame(data, index=['hash']))
         df = pd.concat(frames)
+        df['author_affiliation'] = self._csv.classify_emails(df['author_email'])
+        df['committer_affiliation'] = self._csv.classify_emails(df['committer_email'])
         return df
 
     def changes_by_author(self, repo_url):

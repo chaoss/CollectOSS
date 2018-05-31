@@ -73,7 +73,7 @@ export default class AugurStats {
   static rollingAverage (data, key, windowSizeInDays) {
     key = key || 'value'
     let period = (windowSizeInDays / 2)
-    return AugurStats.dateAggregate(data, period, period, period, (filteredData, date) => {
+    return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }
       datum[key] = AugurStats.averageArray(flat)

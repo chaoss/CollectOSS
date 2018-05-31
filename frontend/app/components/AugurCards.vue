@@ -51,7 +51,7 @@
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
         </div>
-        <section class="unmaterialized">
+        <section class="unmaterialized" v-if="(baseRepo && (currentTab == 'activity'))">
           <h3>Compare repository</h3>
           <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
         </section>

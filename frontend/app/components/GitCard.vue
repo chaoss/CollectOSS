@@ -3,7 +3,7 @@
     <h1>Git Metrics</h1>
     <h2>{{ $store.state.baseRepo }}</h2>
       <div class="row">
-        <facade-chart></facade-chart>
+        <lines-of-code-chart></lines-of-code-chart>
       </div>
     </div>
   </section>
@@ -12,12 +12,12 @@
 <script>
 
 import LineChart from './charts/LineChart'
-import FacadeChart from './charts/FacadeChart'
+import LinesOfCodeChart from './charts/LinesOfCodeChart'
 
 module.exports = {
   components: {
     LineChart,
-    FacadeChart
+    LinesOfCodeChart
   }
 }
 
