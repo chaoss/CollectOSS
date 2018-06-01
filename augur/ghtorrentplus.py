@@ -77,6 +77,7 @@ class GHTorrentPlus(object):
     #####################################
 
 
+    ##### TABLE BUILDING #####
     def build_issue_response_time(self):
         issuesClosedSQL = s.sql.text("""
             SELECT *, TIMESTAMPDIFF(MINUTE, opened, closed) AS minutes_to_close FROM ( 

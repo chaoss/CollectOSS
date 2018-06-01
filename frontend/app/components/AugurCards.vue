@@ -24,6 +24,7 @@
           <li :class="{ active: (currentTab == 'risk'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="risk">Risk</a></li>
           <li :class="{ active: (currentTab == 'value'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="value">Value</a></li>
           <li :class="{ active: (currentTab == 'activity'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
+          <li :class="{ active: (currentTab == 'experimental'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li>
           <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li>
         </ul>
       </nav>  
@@ -48,6 +49,9 @@
             <compared-repo-activity-card :comparedTo="repo"></compared-repo-activity-card>
           </div>
         </div>
+        <div v-if="(baseRepo && (currentTab == 'experimental'))">
+          <experimental-card></experimental-card>
+        </div>
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
         </div>
@@ -62,6 +66,7 @@
 </template>
 
 <script>
+import MainControls from './MainControls'
 import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
@@ -70,10 +75,11 @@ import RiskCard from './RiskCard'
 import ValueCard from './ValueCard'
 import DiversityInclusionCard from './DiversityInclusionCard'
 import GitCard from './GitCard'
-import MainControls from './MainControls.vue'
+import ExperimentalCard from './ExperimentalCard'
 
 module.exports = {
   components: {
+    MainControls,
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
     ComparedRepoActivityCard,
@@ -82,7 +88,7 @@ module.exports = {
     ValueCard,
     DiversityInclusionCard,
     GitCard,
-    MainControls,
+    ExperimentalCard
   },
   data() {
     return {
