@@ -191,18 +191,19 @@ export default class AugurAPI {
     Timeseries(repo, 'issuesClosed', 'issues/closed')
     Timeseries(repo, 'issuesResponseTime', 'issues/response_time')
     Timeseries(repo, 'commits', 'commits')
+    Timeseries(repo, 'linesChanged', 'lines_changed')
     Endpoint(repo, 'maintainerResponseTime', 'pull/maintainer_response_time')
     Timeseries(repo, 'forks', 'forks')
     Timeseries(repo, 'pulls', 'pulls')
     Timeseries(repo, 'pullReqComments', 'pulls/comments')
 
     // RISK
-    Endpoint(repo, 'busFactor', 'bus_factor')
 
     // VALUE
 
     // ACTIVITY
     Timeseries(repo, 'issueComments', 'issue/comments')
+    Endpoint(repo, 'watchers', 'watchers')
 
     // EXPERIMENTAL
 
@@ -219,12 +220,10 @@ export default class AugurAPI {
     Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate')
 
     // Community / Contributions
-    Endpoint(repo, 'watchers', 'watchers')
     Timeseries(repo, 'communityEngagement', 'community_engagement')
     Endpoint(repo, 'communityAge', 'community_age')
     Endpoint(repo, 'contributors', 'contributors')
     Endpoint(repo, 'contributions', 'contributions')
-
 
     // Dependency Related
     Endpoint(repo, 'dependencies', 'dependencies')
@@ -232,19 +231,12 @@ export default class AugurAPI {
     Endpoint(repo, 'dependencyStats', 'dependency_stats')
 
     // Other
-    Timeseries(repo, 'linesChanged', 'lines_changed')
+    Endpoint(repo, 'busFactor', 'bus_factor')
     Timeseries(repo, 'downloads', 'downloads')
     Timeseries(repo, 'fakes', 'fakes')
     Timeseries(repo, 'tags', 'tags')
     Endpoint(repo, 'linkingWebsites', 'linking_websites')
-
-
-
-
-
-
-
-
+    
     return repo
   }
 }

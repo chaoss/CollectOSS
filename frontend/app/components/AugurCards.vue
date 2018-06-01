@@ -8,6 +8,7 @@
         <li :class="{ active: (currentTab == 'risk') }"><a href="#" @click="changeTab" data-value="risk">Risk</a></li>
         <li :class="{ active: (currentTab == 'value') }"><a href="#" @click="changeTab" data-value="value">Value</a></li>
         <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
+        <li :class="{ active: (currentTab == 'experimental') }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li>
       </ul>
     </nav>
 
@@ -28,6 +29,9 @@
       </div>
       <div v-if="(baseRepo && (currentTab == 'value'))">
         <value-card></value-card>
+      </div>
+      <div v-if="(baseRepo && (currentTab == 'experimental'))">
+        <experimental-card></experimental-card>
       </div>
       <div v-if="(baseRepo && (currentTab == 'activity'))" id="activity">
         <base-repo-activity-card></base-repo-activity-card>
@@ -52,6 +56,7 @@ import GrowthMaturityDeclineCard from './GrowthMaturityDeclineCard'
 import RiskCard from './RiskCard'
 import ValueCard from './ValueCard'
 import DiversityInclusionCard from './DiversityInclusionCard'
+import ExperimentalCard from './ExperimentalCard'
 
 module.exports = {
   components: {
@@ -62,7 +67,7 @@ module.exports = {
     RiskCard,
     ValueCard,
     DiversityInclusionCard,
-
+    ExperimentalCard
   },
   data() {
     return {

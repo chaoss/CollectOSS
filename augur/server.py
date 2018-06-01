@@ -199,6 +199,28 @@ class Server(object):
         """
         addTimeseries(app, ghtorrent.commits, 'commits')
 
+        """
+        @api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
+        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
+        @apiName LinesChanged
+        @apiGroup Experimental
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    'date': '2015-11-01T00:00:00Z', 
+                                    'lines_changed': 396137.0
+                                },
+                                {
+                                    'date': '2015-11-08T00:00:00Z', 
+                                    'lines_changed': 3896.0
+                                },
+                            ]
+        """
+        addTimeseries(app, github.lines_changed, 'lines_changed')
 
         """
         @api {get} /:owner/:repo/pulls/maintainer_response_time Time to First Maintainer Response to Merge Request
@@ -341,6 +363,23 @@ class Server(object):
                             ]
         """
         addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
+        
+        """
+        @api {get} /:owner/:repo/watchers
+        @apiName Community Engagement
+        @apiGroup Users
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                              {
+                                "watchers": 40349
+                              }
+                            ]
+        """
+        addMetric(app, ghtorrent.watchers, 'watchers')
 
 
         #####################################
@@ -514,23 +553,6 @@ class Server(object):
 
 
         # COMMUNITY / CONTRIBUTIONS
-        """
-        @api {get} /:owner/:repo/watchers
-        @apiName Community Engagement
-        @apiGroup Users
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                              {
-                                "watchers": 40349
-                              }
-                            ]
-        """
-        addMetric(app, ghtorrent.watchers, 'watchers')
-
         """
         @api {get} /:owner/:repo/timeseries/community_engagement
         @apiName Community Engagement
@@ -803,29 +825,6 @@ class Server(object):
 
 
         ### OTHER ###
-        """
-        @api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
-        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
-        @apiName LinesChanged
-        @apiGroup Experimental
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    'date': '2015-11-01T00:00:00Z', 
-                                    'lines_changed': 396137.0
-                                },
-                                {
-                                    'date': '2015-11-08T00:00:00Z', 
-                                    'lines_changed': 3896.0
-                                },
-                            ]
-        """
-        addTimeseries(app, github.lines_changed, 'lines_changed')
-
         """
         @api {get} /:owner/:repo/timeseries/downloads Number of downloads
         @apiDescription Timeseries of downloads from package manager
