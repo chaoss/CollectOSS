@@ -9,7 +9,7 @@ import re
 import json
 import pandas as pd
 import git
-from augur import logger
+from augur.util import logger, get_cache
 
 # end imports
 # (don't remove the above line, it's for a script)
@@ -27,7 +27,7 @@ class Git(object):
         :param storageFolder: Folder to download the repositories to
         """
         self._csv = csv
-        self.__cache = cache
+        self.__cache = get_cache('augur-git', cache)
         self._repo_urls = list_of_repositories
         self._repos = {}
         self._folder = os.path.abspath(storage_folder)
@@ -61,6 +61,7 @@ class Git(object):
         """
         Makes sure the storage_folder contains updated versions of all the repos
         """
+        self.__cache.clear()
         for repo_url in self._repo_urls:
             logger.info('Git: Updating %s', repo_url)
             folder_name = os.path.splitext(os.path.basename(repo_url))[0]
@@ -81,7 +82,11 @@ class Git(object):
                     git.Git(self._repo_folder).clone(repo_url)
                     repo = git.Repo(repo_path)
                 self._repos[repo_url] = repo
+            logger.info('Git: Calculating metrics for %s', repo_url)
+            self.lines_changed_minus_whitespace(repo_url)
             logger.info('Git: Update completed for %s', repo_url)
+
+
 
     def downloaded_repos(self):
         urls = []
@@ -102,33 +107,44 @@ class Git(object):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
-        repo = self.get_repo_object(repo_url)
-        df = pd.DataFrame()
-        history = repo.git.log( '-p', '-w', '-m', '--full-history', """--pretty=format:'[START ENTRY]%n{%n"hash":"%h",%n"author_name":"%an",%n"author_email":"%ae",%n"author_date":"%ai",%n"committer_name": "%cn",%n"committer_email":"%ce",%n"commit_date":"%ci",%n"parents":"%p"%n}%n#####SPLIT#####%s#####SPLIT#####'""")
-        frames = []
-        for entry in history.split('[START ENTRY]')[1:]:
-            splits = entry.split('#####SPLIT#####')
-            try:
-                data = json.loads(splits[0])
-            except json.JSONDecodeError as err:
-                continue
-            data['message'] = splits[1]
-            if (len(splits[2]) > 2):
-                diffs = splits[2].split('diff --git')
-                for diff in diffs[1:]:
-                    if '+' in diff:
-                        filename = re.search('b(\/.+)', diff).group(1)
-                        # Find all the lines that begin with a plus or minus to count added
-                        # Minus one to account the file matches
-                        additions = len(re.findall('\n\+[ \t]*[^\s]', diff)) - 1
-                        deletions = len(re.findall('\n-[ \t]*[^\s]', diff)) - 1
-                        data['additions'] = additions
-                        data['deletions'] = deletions
-                        frames.append(pd.DataFrame(data, index=['hash']))
-        df = pd.concat(frames)
-        df['author_affiliation'] = self._csv.classify_emails(df['author_email'])
-        df['committer_affiliation'] = self._csv.classify_emails(df['committer_email'])
-        return df
+        def heavy_lifting():
+            repo = self.get_repo_object(repo_url)
+            df = pd.DataFrame()
+            """
+            Run a Git log command that returns each entry into 3 parts:
+                1. JSON of the metadata
+                2. Commit message
+                3. Diffs
+            """
+            
+            history = repo.git.log( '-p', '-w', '-m', '--full-history', """--pretty=format:'[START ENTRY]%n{%n"hash":"%h",%n"author_name":"%an",%n"author_email":"%ae",%n"author_date":"%ai",%n"committer_name": "%cn",%n"committer_email":"%ce",%n"commit_date":"%ci",%n"parents":"%p"%n}%n#####SPLIT#####%s#####SPLIT#####'""")
+            frames = []
+            # Split the message into individual entries
+            for entry in history.split('[START ENTRY]')[1:]:
+                splits = entry.split('#####SPLIT#####')
+                try:
+                    data = json.loads(splits[0])
+                except json.JSONDecodeError as err:
+                    continue
+                data['message'] = splits[1]
+                if (len(splits[2]) > 2):
+                    diffs = splits[2].split('diff --git')
+                    for diff in diffs[1:]:
+                        if '+' in diff:
+                            filename = re.search('b(\/.+)', diff).group(1)
+                            # Find all the lines that begin with a plus or minus to count added
+                            # Minus one to account the file matches
+                            additions = len(re.findall('\n\+[ \t]*[^\s]', diff)) - 1
+                            deletions = len(re.findall('\n-[ \t]*[^\s]', diff)) - 1
+                            data['additions'] = additions
+                            data['deletions'] = deletions
+                            frames.append(pd.DataFrame(data, index=['hash']))
+            df = pd.concat(frames)
+            df['author_affiliation'] = self._csv.classify_emails(df['author_email'])
+            df['committer_affiliation'] = self._csv.classify_emails(df['committer_email'])
+            return df
+        results = self.__cache.get(key='lc-{}'.format(repo_url), createfunc=heavy_lifting)
+        return results
 
     def changes_by_author(self, repo_url):
         """

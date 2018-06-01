@@ -13,7 +13,7 @@ AUGUR_API_VERSION = 'api/unstable'
 
 '''
 make a try and accept condition
-if its open the GH_DATA_ONFIG_FILE and then its open in read mode
+if its open the GH_DATA_CONFIG_FILE and then its open in read mode
 and if the file does't open the it print Couldn\'t open config file, attempting to create.
 '''
 
@@ -974,7 +974,8 @@ class Server(object):
                                     "commit_date":"2018-05-16 10:12:22 -0500",
                                     "committer_email":"derek@howderek.com",
                                     "committer_name":"Derek Howard",
-                                    "deletions":0,"hash":"77e603a",
+                                    "deletions":0,
+                                    "hash":"77e603a",
                                     "message":"merge dev",
                                     "parents":"b8ec0ed"
                                 }

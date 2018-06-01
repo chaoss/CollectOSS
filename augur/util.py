@@ -20,7 +20,7 @@ def get_data_path(path):
 
 memory_cache = None
 
-def get_cache(namespace, creation_function, cache_manager=None):
+def get_cache(namespace, cache_manager=None):
     global memory_cache
     if cache_manager is None:
         if memory_cache is None:

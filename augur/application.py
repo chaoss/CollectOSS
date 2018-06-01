@@ -6,6 +6,8 @@ import configparser as configparser
 import json
 import coloredlogs
 import augur
+from beaker.cache import CacheManager
+from beaker.util import parse_cache_config_options
 from augur import logger
 
 def updater_process(name, delay):
@@ -65,6 +67,19 @@ class Application(object):
         # List of data sources that can do periodic updates
         self.__updatable = []
         self.__processes = []
+
+        # Create cache
+        cache_config = self.read_config('Cache', 'config', None, {
+            'cache.type': 'file',
+            'cache.data_dir': 'runtime/cache/',
+            'cache.lock_dir': 'runtime/cache/'
+        })
+        if not os.path.exists(cache_config['cache.data_dir']):
+            os.makedirs(cache_config['cache.data_dir'])
+        if not os.path.exists(cache_config['cache.lock_dir']):
+            os.makedirs(cache_config['cache.lock_dir'])
+        cache_parsed = parse_cache_config_options(cache_config)
+        self.__cache = CacheManager(**cache_parsed)
 
         # Initalize all objects to None
         self.__ghtorrent = None
@@ -179,7 +194,12 @@ class Application(object):
         repolist = self.read_config('Git', 'repositories', None, [])
         if self.__git is None:
             logger.debug('Initializing Git')
-            self.__git = augur.Git(list_of_repositories=repolist, storage_folder=storage, csv=self.localcsv())
+            self.__git = augur.Git(
+                list_of_repositories=repolist,
+                storage_folder=storage,
+                csv=self.localcsv(),
+                cache=self.__cache
+            )
             self.__updatable.append({
                 'name': 'git',
                 'delay': int(self.read_config('Git', 'refresh', 'AUGUR_GIT_REFRESH', '3600')),
