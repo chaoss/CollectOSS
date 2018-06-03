@@ -228,6 +228,12 @@ export default class AugurAPI {
       Timeseries(repo, 'forks', 'forks')
       Timeseries(repo, 'pulls', 'pulls')
       Timeseries(repo, 'pullReqComments', 'pulls/comments')
+      Timeseries(repo, 'codeReviewIteration', 'code_review_iteration')
+      Timeseries(repo, 'maintainerResponseTime', 'pulls/maintainer_response_time')
+      Timeseries(repo, 'contributionAcceptance', 'contribution_acceptance')
+      Timeseries(repo, 'newContributingGithubOrganizations', 'new_contributing_github_organizations')
+      Endpoint(repo, 'contributingGithubOrganizations', 'contributing_github_organizations')
+      // Timeseries(repo, 'codeReviews', 'code_reviews')
 
       // RISK
       Endpoint(repo, 'busFactor', 'bus_factor')

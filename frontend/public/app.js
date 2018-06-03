@@ -551,6 +551,12 @@ var AugurAPI = function () {
         Timeseries(repo, 'forks', 'forks');
         Timeseries(repo, 'pulls', 'pulls');
         Timeseries(repo, 'pullReqComments', 'pulls/comments');
+        Timeseries(repo, 'codeReviewIteration', 'code_review_iteration');
+        Timeseries(repo, 'maintainerResponseTime', 'pulls/maintainer_response_time');
+        Timeseries(repo, 'contributionAcceptance', 'contribution_acceptance');
+        Timeseries(repo, 'newContributingGithubOrganizations', 'new_contributing_github_organizations');
+        Endpoint(repo, 'contributingGithubOrganizations', 'contributing_github_organizations');
+        // Timeseries(repo, 'codeReviews', 'code_reviews')
 
         // RISK
         Endpoint(repo, 'busFactor', 'bus_factor');
@@ -1313,7 +1319,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesResponseTime","title":"Issue Response Time","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md","cite-text":"Issue Response Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesResponseTime","title":"Issue Response Time","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md","cite-text":"Issue Response Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"maintainerResponseTime","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1533,11 +1539,17 @@ var spec = {
       "title": "Code Engagement",
       "width": 375,
       "height": 300,
-      "mark": "circle",
+      "mark": {
+        "type": "circle",
+        "cursor": "pointer"
+      },
       "selection": {
         "paintbrush": {
           "type": "single",
           "on": "mouseover"
+        },
+        "grid": {
+          "type": "interval", "bind": "scales"
         }
       },
       "encoding": {
@@ -1561,6 +1573,10 @@ var spec = {
           },
           "value": "grey"
         },
+        "tooltip": {
+          "field": "contributing_org",
+          "type": "quantitative"
+        },
         "size": {
           "field": "total",
           "type": "quantitative",
@@ -1576,11 +1592,17 @@ var spec = {
       "title": "Community Engagement",
       "width": 375,
       "height": 300,
-      "mark": "circle",
+      "mark": {
+        "type": "circle",
+        "cursor": "pointer"
+      },
       "selection": {
         "paintbrush": {
           "type": "single",
           "on": "mouseover"
+        },
+        "grid": {
+          "type": "interval", "bind": "scales"
         }
       },
       "encoding": {
@@ -1618,6 +1640,10 @@ var spec = {
             "field": "repo",
             "type": "nominal",
             "scale": { "range": ['#FF3647', '#4736FF'] }
+          },
+          "tooltip": {
+            "field": "contributing_org",
+            "type": "quantitative"
           },
           "value": "grey"
         }

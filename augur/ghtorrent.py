@@ -44,7 +44,7 @@ class GHTorrent(object):
         if group_by == "day":
             return """
                 SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
-                FROM {0} 
+                FROM {0}
                 WHERE {1} = :repoid
                 GROUP BY DATE(created_at)""".format(table, repo_col)
 
@@ -89,7 +89,7 @@ class GHTorrent(object):
             WHERE {1}.{3} = {0}.{2}
             AND {0}.{4} = :repoid
             GROUP BY YEARWEEK({1}.created_at)""".format(parent_table, sub_table, parent_id, sub_id, project_id)
-    
+
     def repoid(self, owner_or_repoid, repo=None):
         """
         Returns a repository's ID as it appears in the GHTorrent projects table
@@ -177,17 +177,17 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         issueCommentsSQL = s.sql.text("""
-            SELECT *, TIMESTAMPDIFF(MINUTE, opened, first_commented) AS minutes_to_comment FROM ( 
-                
+            SELECT *, TIMESTAMPDIFF(MINUTE, opened, first_commented) AS minutes_to_comment FROM (
+
                 SELECT issues.id AS id, issues.created_at AS opened, MIN(issue_comments.created_at) AS first_commented, 0 AS pull_request
                 FROM issues
                 LEFT JOIN issue_comments
                 ON issues.id = issue_comments.issue_id
                 WHERE issues.pull_request = 0 AND issues.repo_id = :repoid
                 GROUP BY id
-                
+
                 UNION ALL
-                
+
                 SELECT issues.id AS id, issues.created_at AS opened, MIN(pull_request_comments.created_at) AS first_commented, 1 AS pull_request
                 FROM issues
                 LEFT JOIN pull_request_comments
@@ -242,56 +242,223 @@ class GHTorrent(object):
 
     def time_to_first_maintainer_response_to_merge_request(self, owner, repo=None):
         """
-        Subgroup: Code Development
-        chaoss-metric: maintainer-response-to-merge-request-duration
-
-        *1). Get a list of all the comments on merge requests, and the user ids of the people who made those comments
-        2). Get a list of all maintainers for the repository
-        3). For merge request, append the ID of the first comment that was made by a maintainer to an array, if it exists (also append the issue id to a different array) ***use a data frame?***
-        *4). For every one of those comment IDs, append the timestamp difference to a array
-        5). Calculate mean time per week
+        Duration of time between a merge request being created and a maintainer commenting on that request
 
         :param owner: The name of the project owner
         :param repo: The name of the repo
-        :return: DataFrame with each row being am issue
+        :return: DataFrame with each row being a week
         """
         repoid = self.repoid(owner, repo)
         maintainerResponseToMRSQL = s.sql.text("""
-             SELECT issues.id AS issue_id, issues.created_at AS pull_request_created_at, pull_request_comments.created_at AS pull_request_comment_created_at, pull_request_comments.user_id AS user_id, pull_request_comments.comment_id as pull_request_comment_id
-                FROM issues
-                JOIN pull_request_comments
-                ON issues.pull_request_id = pull_request_comments.pull_request_id
-                WHERE issues.pull_request = 1 
-                AND issues.repo_id = :repoid
-            """) 
+            SELECT DATE(issues.created_at) AS date, TIMESTAMPDIFF(DAY, issues.created_at, pull_request_comments.created_at) as days, pull_request_comments.created_at AS pull_request_comment_created_at, issues.id AS issue_id, pull_request_comments.user_id AS user_id, pull_request_comments.comment_id as pull_request_comment_id
+            FROM issues
+            JOIN pull_request_comments
+            ON issues.pull_request_id = pull_request_comments.pull_request_id
+            JOIN
+                (SELECT DISTINCT actor_id
+                FROM pull_request_history
+                JOIN pull_requests
+                ON pull_request_history.pull_request_id = pull_requests.pullreq_id
+                WHERE action = "merged"
+                AND base_repo_id = :repoid
+                ORDER BY actor_id) a
+            ON a.actor_id = user_id
+            WHERE issues.pull_request = 1
+            AND issues.repo_id = :repoid
+            GROUP BY YEARWEEK(date)
+            """)
         df = pd.read_sql(maintainerResponseToMRSQL, self.db, params={"repoid": str(repoid)})
+        return df.iloc[:, 0:2]
 
-        classified = self.classify_contributors(repoid, repo=None)
+    def code_review_iteration(self, owner, repo=None):
+        """
+        Number of iterations (being closed and reopened) that a merge request (code review) goes through until it is finally merged
 
-        maintainerIDs = []
-        for index, row in classified.iterrows():
-            if row['role'] == "maintainer":
-                maintainerIDs = np.append(maintainerIDs, row['user'])
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being a merge request's date of creation
+        """
+        repoid = self.repoid(owner, repo)
 
-        commentIDs = []
-        issueIDs = []
-        rowArray = []
+        codeReviewIterationSQL = s.sql.text("""
+        SELECT
+            DATE(issues.created_at) AS "created_at",
+            DATE(pull_request_history.created_at) AS "merged_at",
+            issues.issue_id AS "issue_id",
+            pull_request_history.pull_request_id AS "pull_request_id",
+            pull_request_history.action AS "action",
+            COUNT(CASE WHEN action = "closed" THEN 1 ELSE NULL END) AS "count"
+        FROM issues, pull_request_history
+        WHERE find_in_set(pull_request_history.action, "closed,merged")>0
+        AND pull_request_history.pull_request_id IN(
+            SELECT pull_request_id
+            FROM pull_request_history
+            WHERE pull_request_history.action = "closed")   #go by reopened or closed??? (min: completed 1 iteration and has started another OR min: completed 1 iteration)
+        AND pull_request_history.pull_request_id = issues.issue_id
+        AND issues.pull_request = 1
+        AND issues.repo_id = :repoid
+        GROUP BY (issues.created_at) #YEARWEEK to get (iterations (all PRs in repo) / week) instead of (iterations / PR)?
+        """)
+
+        df = pd.read_sql(codeReviewIterationSQL, self.db, params={"repoid": str(repoid)})
+        return pd.DataFrame({'date': df['created_at'], 'iterations': df['count']})
+
+    def contribution_acceptance(self, owner, repo=None):
+        """
+        Rolling ratio between merged pull requests : unmerged pull requests
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being a week
+        """
+        repoid = self.repoid(owner, repo)
+        codeReviewIterationSQL = s.sql.text("""
+        SELECT by_PR.created_at as date,
+            count(CASE WHEN by_PR.action = 'merged' then 1 else null end) / count(CASE WHEN by_PR.action = 'closed' then 1 else null end) as 'ratio'
+        FROM
+            (SELECT
+                DATE(issues.created_at) AS "created_at",
+                issues.issue_id AS "issue_id",
+                pull_request_history.pull_request_id AS "pull_request_id",
+                pull_request_history.action AS "action"
+            FROM issues, pull_request_history
+            WHERE find_in_set(pull_request_history.action, "closed,merged")>0
+            AND pull_request_history.pull_request_id = issues.issue_id
+            AND issues.pull_request = 1
+            AND issues.repo_id = :repoid
+            GROUP BY (issues.created_at)) by_PR
+        GROUP BY YEARWEEK(by_PR.created_at)
+        """)
+
+        df = pd.read_sql(codeReviewIterationSQL, self.db, params={"repoid": str(repoid)})
+
+        return df
+
+    def new_contributing_github_organizations(self, owner, repo=None):
+        """
+        Number of new contributing organizations on a certain date
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being a week
+        """
+        repoid = self.repoid(owner, repo)
+
+        contributingOrgSQL = s.sql.text("""
+        SELECT
+            fields.date AS "date",
+            fields.id AS "contributing_org",
+            count(DISTINCT fields.user) AS count
+        FROM (
+                (SELECT organization_members.org_id AS id, commits.created_at AS date, commits.author_id AS user FROM organization_members, projects, commits
+                    WHERE projects.id = :repoid
+                    AND commits.project_id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND commits.author_id = organization_members.user_id GROUP BY commits.committer_id)
+                UNION ALL
+                (SELECT organization_members.org_id AS id, issues.created_at AS date, issues.reporter_id AS user FROM organization_members, projects, issues
+                    WHERE projects.id = :repoid
+                    AND issues.repo_id = :repoid
+                    AND pull_request = 0
+                    AND projects.owner_id <> organization_members.org_id
+                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)
+                UNION ALL
+                (SELECT organization_members.org_id AS id, commit_comments.created_at AS date, commit_comments.user_id as user FROM organization_members, projects, commit_comments JOIN commits ON commits.id = commit_comments.commit_id
+                    WHERE projects.id = :repoid
+                    AND commits.project_id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND commit_comments.user_id = organization_members.user_id GROUP BY commit_comments.user_id)
+                 UNION ALL
+                 (SELECT organization_members.org_id AS id, issue_comments.created_at AS date, issue_comments.user_id AS user FROM organization_members, projects, issue_comments JOIN issues ON issues.id = issue_comments.issue_id
+                    WHERE projects.id = :repoid
+                    AND issues.repo_id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND issue_comments.user_id = organization_members.user_id GROUP BY id)
+                 UNION ALL
+                 (SELECT organization_members.org_id AS id, issues.created_at AS date, issues.reporter_id AS user FROM organization_members, projects, issues
+                    WHERE projects.id = :repoid
+                    AND issues.repo_id = :repoid
+                    AND pull_request = 1
+                    AND projects.owner_id <> organization_members.org_id
+                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)
+                 UNION ALL
+                 (SELECT organization_members.org_id AS id, pull_request_comments.created_at AS date, pull_request_comments.user_id AS user FROM organization_members, projects, pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id
+                    WHERE pull_requests.base_repo_id = :repoid
+                    AND projects.id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND pull_request_comments.user_id = organization_members.user_id GROUP BY pull_request_comments.user_id)) fields
+
+        Group BY contributing_org
+        HAVING count > 1
+        ORDER BY YEARWEEK(date)
+        """)
+        df = pd.read_sql(contributingOrgSQL, self.db, params={"repoid": str(repoid)})
+        numOrgs = []
+        count = 0
         for index, row in df.iterrows():
-            for user in maintainerIDs:
-                if row['user_id'] == user:
-                    commentIDs.append(row['pull_request_comment_id'])
-                    issueIDs.append(row['issue_id'])
-                    rowArray.append(index)
-                    break
+            count += 1
+            numOrgs = np.append(numOrgs, count)
+        return pd.DataFrame({'date': df["date"], 'organizations': numOrgs})
 
-        times = []
-        for row in rowArray:
-            timedelta = (df.loc[row, 'pull_request_comment_created_at'] - df.loc[row, 'pull_request_created_at']).total_seconds()
-            if timedelta > 0:
-                times = np.append(times, timedelta)
+    def contributing_github_organizations(self, owner, repo=None):
+        """
+        All the contributing organizations to a project and the counts of each organization's contributions
 
-        df2 = pd.DataFrame(data=times, columns=["response_time"])
-        return df2
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being an outside contributing organization
+        """
+        repoid = self.repoid(owner, repo)
+        contributingOrgSQL = s.sql.text("""
+            SELECT id AS contributing_org, SUM(commits) AS commits, SUM(issues) AS issues,
+                               SUM(commit_comments) AS commit_comments, SUM(issue_comments) AS issue_comments,
+                               SUM(pull_requests) AS pull_requests, SUM(pull_request_comments) AS pull_request_comments,
+                  SUM(contribution_fields.commits + contribution_fields.issues + contribution_fields.commit_comments + contribution_fields.issue_comments + contribution_fields.pull_requests + contribution_fields.pull_request_comments) AS total, COUNT(DISTINCT contribution_fields.user) AS count
+            FROM
+            (
+                (SELECT organization_members.org_id AS id, commits.author_id AS user, COUNT(*) AS commits, 0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments FROM organization_members, projects, commits
+                    WHERE projects.id = :repoid
+                    AND commits.project_id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND commits.author_id = organization_members.user_id GROUP BY commits.committer_id)
+                UNION ALL
+                (SELECT organization_members.org_id AS id, reporter_id AS user, 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0, 0 FROM organization_members, projects, issues
+                    WHERE projects.id = :repoid
+                    AND issues.repo_id = :repoid
+                    AND pull_request = 0
+                    AND projects.owner_id <> organization_members.org_id
+                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)
+                UNION ALL
+                (SELECT organization_members.org_id AS id, commit_comments.user_id AS user, 0 AS commits, 0 AS commit_comments, COUNT(*) AS commit_comments, 0 AS issue_comments, 0 , 0 FROM organization_members, projects, commit_comments JOIN commits ON commits.id = commit_comments.commit_id
+                    WHERE projects.id = :repoid
+                    AND commits.project_id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND commit_comments.user_id = organization_members.user_id GROUP BY commit_comments.user_id)
+                 UNION ALL
+                 (SELECT organization_members.org_id AS id, issue_comments.user_id AS user, 0 AS commits, 0 AS commit_comments, 0 AS commit_comments, COUNT(*) AS issue_comments, 0 , 0 FROM organization_members, projects, issue_comments JOIN issues ON issues.id = issue_comments.issue_id
+                    WHERE projects.id = :repoid
+                    AND issues.repo_id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND issue_comments.user_id = organization_members.user_id GROUP BY id)
+                 UNION ALL
+                 (SELECT organization_members.org_id AS id, reporter_id AS user, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM organization_members, projects, issues
+                    WHERE projects.id = :repoid
+                    AND issues.repo_id = :repoid
+                    AND pull_request = 1
+                    AND projects.owner_id <> organization_members.org_id
+                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)
+                 UNION ALL
+                 (SELECT organization_members.org_id AS id, pull_request_comments.user_id AS user, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM organization_members, projects, pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id
+                    WHERE pull_requests.base_repo_id = :repoid
+                    AND projects.id = :repoid
+                    AND projects.owner_id <> organization_members.org_id
+                    AND pull_request_comments.user_id = organization_members.user_id GROUP BY pull_request_comments.user_id)
+            ) contribution_fields
+            group by id
+            having count > 1
+            ORDER BY total DESC
+        """)
+        return pd.read_sql(contributingOrgSQL, self.db, params={"repoid": str(repoid)})
 
     def forks(self, owner, repo=None, group_by="week"):
         """
@@ -423,7 +590,7 @@ class GHTorrent(object):
         commitCommentsSQL = s.sql.text(self.__sub_table_count_by_date("commits", "commit_comments", "id", "commit_id", "project_id"))
         return pd.read_sql(commitCommentsSQL, self.db, params={"repoid": str(repoid)})
 
-    def committer_locations(self, owner, repo=None):        
+    def committer_locations(self, owner, repo=None):
         """
         Return committers and their locations
 
@@ -450,7 +617,7 @@ class GHTorrent(object):
     def total_committers(self, owner, repo=None):
         """
         augur-metric: total-committers
-        
+
         Number of total committers as of each week
 
         :param owner: The name of the project owner
@@ -485,11 +652,11 @@ class GHTorrent(object):
                 JOIN issue_events ON issues.id = issue_events.issue_id
                 WHERE issues.repo_id = :repoid
                 GROUP BY YEARWEEK(issues.created_at)
-            """) 
+            """)
         df = pd.read_sql(issueActivity, self.db, params={"repoid": str(repoid)})
         df = df.assign(issues_open = 0)
         globalIssuesOpened = 0
-        df["issues_open"] = df["issues_opened"] - df["issues_closed"] + df["issues_reopened"] 
+        df["issues_open"] = df["issues_opened"] - df["issues_closed"] + df["issues_reopened"]
         dates = []
         issueActivityCount = []
         issuesAction = []
@@ -695,7 +862,7 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         issuesFullSQL = s.sql.text("""
-        SELECT DATE(date) as "date", 
+        SELECT DATE(date) as "date",
                SUM(issues_opened) AS "issues_opened",
                SUM(issues_closed) AS "issues_closed",
                SUM(pull_requests_opened) AS "pull_requests_opened",
@@ -704,7 +871,7 @@ class GHTorrent(object):
 
         FROM (
 
-            SELECT issue_events.created_at as "date", 
+            SELECT issue_events.created_at as "date",
                    issue_events.action = "closed" AND issues.pull_request = 0  AS issues_closed,
                    0 AS pull_requests_closed,
                    0 AS pull_requests_merged,
@@ -719,7 +886,7 @@ class GHTorrent(object):
 
             UNION ALL
 
-            SELECT pull_request_history.created_at as "date", 
+            SELECT pull_request_history.created_at as "date",
                    0 AS issues_closed,
                    pull_request_history.action = "closed" AND issues.pull_request = 1  AS pull_requests_closed,
                    pull_request_history.action = "merged" AND issues.pull_request = 1   AS pull_requests_merged,
@@ -738,7 +905,7 @@ class GHTorrent(object):
                    0 AS pull_requests_merged,
                    issues.pull_request = 0 AS issues_opened,
                    issues.pull_request AS pull_requests_opened
-                   
+
             FROM issues
             WHERE issues.repo_id = :repoid
 
@@ -762,7 +929,7 @@ class GHTorrent(object):
         counts['pull_requests_open'] = counts['pull_requests_delta'].cumsum()
         return counts
 
-    def contributors(self, owner, repo=None):        
+    def contributors(self, owner, repo=None):
         """
         augur-metric: contributors
 
@@ -788,9 +955,9 @@ class GHTorrent(object):
                UNION ALL
                (SELECT issue_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, 0 AS issue_comments, COUNT(*) AS issue_comments, 0, 0 FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid GROUP BY issue_comments.user_id)
                UNION ALL
-               (SELECT actor_id AS id, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.id WHERE pull_request_history.action = 'opened' AND pull_requests.`base_repo_id` = 1334 GROUP BY actor_id)
+               (SELECT actor_id AS id, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.id WHERE pull_request_history.action = 'opened' AND pull_requests.`base_repo_id` = :repoid GROUP BY actor_id)
                UNION ALL
-               (SELECT user_id AS id, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id WHERE pull_requests.base_repo_id = 1334 GROUP BY user_id)
+               (SELECT user_id AS id, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id WHERE pull_requests.base_repo_id = :repoid GROUP BY user_id)
             ) a
             WHERE id IS NOT NULL
             GROUP BY id
@@ -814,12 +981,12 @@ class GHTorrent(object):
             FROM users
             WHERE fake = true
             GROUP BY YEARWEEK(date)
-        """)    
+        """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
     def ghtorrent_range(self):
         ghtorrentRangeSQL = s.sql.text("""
-        SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date" 
+        SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date"
         FROM commits
         """)
         return pd.read_sql(ghtorrentRangeSQL, self.db)
