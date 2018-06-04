@@ -540,33 +540,36 @@ var AugurAPI = function () {
       };
 
       if (repo.owner && repo.name) {
+
         // DIVERSITY AND INCLUSION
 
         // GROWTH, MATURITY, AND DECLINE
-        Timeseries(repo, 'issues', 'issues');
-        Timeseries(repo, 'issuesClosed', 'issues/closed');
-        Timeseries(repo, 'issuesResponseTime', 'issues/response_time');
-        Timeseries(repo, 'commits', 'commits');
-        Endpoint(repo, 'maintainerResponseTime', 'pull/maintainer_response_time');
+        Timeseries(repo, 'closedIssues', 'issues/closed');
+        Timeseries(repo, 'closedIssueResolutionDuration', 'issues/time_to_close');
+        Timeseries(repo, 'codeCommits', 'commits');
+        Timeseries(repo, 'firstResponseToIssueDuration', 'issues/response_time');
         Timeseries(repo, 'forks', 'forks');
-        Timeseries(repo, 'pulls', 'pulls');
-        Timeseries(repo, 'pullReqComments', 'pulls/comments');
+        Timeseries(repo, 'linesOfCodeChanged', 'lines_changed');
+        Endpoint(repo, 'maintainterResponseToMergeRequestDuration', 'pull/maintainer_response_time');
+        Timeseries(repo, 'openIssues', 'issues');
+        Timeseries(repo, 'pullRequestComments', 'pulls/comments');
+        Timeseries(repo, 'pullRequestsOpen', 'pulls');
 
         // RISK
-        Endpoint(repo, 'busFactor', 'bus_factor');
 
         // VALUE
 
         // ACTIVITY
         Timeseries(repo, 'issueComments', 'issue/comments');
+        Endpoint(repo, 'watchers', 'watchers');
 
         // EXPERIMENTAL
 
         // Commit Related
         Timeseries(repo, 'commits100', 'commits100');
         Timeseries(repo, 'commitComments', 'commits/comments');
-        Timeseries(repo, 'totalCommitters', 'total_committers');
         Endpoint(repo, 'committerLocations', 'committer_locations');
+        Timeseries(repo, 'totalCommitters', 'total_committers');
 
         // Issue Related
         Timeseries(repo, 'issueActivity', 'issues/activity');
@@ -575,23 +578,24 @@ var AugurAPI = function () {
         Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate');
 
         // Community / Contributions
-        Endpoint(repo, 'watchers', 'watchers');
-        Timeseries(repo, 'communityEngagement', 'community_engagement');
         Endpoint(repo, 'communityAge', 'community_age');
+        Timeseries(repo, 'communityEngagement', 'community_engagement');
         Endpoint(repo, 'contributors', 'contributors');
         Endpoint(repo, 'contributions', 'contributions');
+        Endpoint(repo, 'projectAge', 'project_age');
 
         // Dependency Related
         Endpoint(repo, 'dependencies', 'dependencies');
-        Endpoint(repo, 'dependents', 'dependents');
         Endpoint(repo, 'dependencyStats', 'dependency_stats');
+        Endpoint(repo, 'dependents', 'dependents');
 
         // Other
-        Timeseries(repo, 'linesChanged', 'lines_changed');
+        Endpoint(repo, 'busFactor', 'bus_factor');
         Timeseries(repo, 'downloads', 'downloads');
         Timeseries(repo, 'fakes', 'fakes');
-        Timeseries(repo, 'tags', 'tags');
         Endpoint(repo, 'linkingWebsites', 'linking_websites');
+        Timeseries(repo, 'majorTags', 'tags/major');
+        Timeseries(repo, 'tags', 'tags');
       }
 
       if (repo.gitURL) {
@@ -1241,7 +1245,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-b05646f6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-b05646f6", __vue__options__)
+    hotAPI.rerender("data-v-b05646f6", __vue__options__)
   }
 })()}
 });
@@ -1313,7 +1317,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesResponseTime","title":"Issue Response Time","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md","cite-text":"Issue Response Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"closedIssues","title":"Closed Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"codeCommits","title":"Code Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"firstResponseToIssueDuration","title":"Issue Response Time","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md","cite-text":"Issue Response Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"openIssues","title":"Open Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullRequestsOpen","title":"Pull Requests Open / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullRequestComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1322,7 +1326,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.reload("data-v-429b02f1", __vue__options__)
+    hotAPI.rerender("data-v-429b02f1", __vue__options__)
   }
 })()}
 });

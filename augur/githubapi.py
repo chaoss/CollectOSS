@@ -33,7 +33,7 @@ class GitHubAPI(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
-    def lines_changed(self, owner, repo=None): 
+    def lines_of_code_changed(self, owner, repo=None): 
         """
         chaoss-metric: lines-of-code-changed
         Additions and deletions each week
@@ -145,58 +145,6 @@ class GitHubAPI(object):
 
         return pd.DataFrame(bus_factor)
 
-    def tags(self, owner, repo, raw=False):
-        """
-        Returns dates and names of tags
-
-        :param owner: repo owner username
-        :param repo: repo name
-        :param raw: Default False; Returns list of dicts
-        """
-
-        cursor = "null"
-        tags_list = []
-        url = "https://api.github.com/graphql"
-
-        while True:
-            query = {"query" :
-                     """
-                    query {
-                      repository(owner: "%s", name: "%s") {
-                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
-                          edges {
-                            cursor
-                            tag: node {
-                              name
-                              target {
-                                ... on Tag {
-                                  tagger {
-                                    date
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-            """ % (owner, repo, cursor)
-            }
-            r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
-            raw = r.text
-            data = json.loads(json.loads(json.dumps(raw)))
-            tags = data['data']['repository']['tags']['edges']
-            for i in tags:
-                try:
-                    tags_list.append({'date' : i['tag']['target']['tagger']['date'], 'release' : i['tag']['name']})
-                except KeyError:
-                    pass
-            if data['data']['repository']['tags']['edges'] == []:
-                break
-            else:
-                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
-        return pd.DataFrame(tags_list)
-
     def major_tags(self, owner, repo):
         """
         Returns dates and names of major version (according to semver) tags. May return blank if no major versions
@@ -257,6 +205,57 @@ class GitHubAPI(object):
 
         return pd.DataFrame(major_versions)
 
+    def tags(self, owner, repo, raw=False):
+        """
+        Returns dates and names of tags
+
+        :param owner: repo owner username
+        :param repo: repo name
+        :param raw: Default False; Returns list of dicts
+        """
+
+        cursor = "null"
+        tags_list = []
+        url = "https://api.github.com/graphql"
+
+        while True:
+            query = {"query" :
+                     """
+                    query {
+                      repository(owner: "%s", name: "%s") {
+                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
+                          edges {
+                            cursor
+                            tag: node {
+                              name
+                              target {
+                                ... on Tag {
+                                  tagger {
+                                    date
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+            """ % (owner, repo, cursor)
+            }
+            r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
+            raw = r.text
+            data = json.loads(json.loads(json.dumps(raw)))
+            tags = data['data']['repository']['tags']['edges']
+            for i in tags:
+                try:
+                    tags_list.append({'date' : i['tag']['target']['tagger']['date'], 'release' : i['tag']['name']})
+                except KeyError:
+                    pass
+            if data['data']['repository']['tags']['edges'] == []:
+                break
+            else:
+                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
+        return pd.DataFrame(tags_list)
 
     def contributors_gender(self, owner, repo=None):
         contributors = self.__api.get_repo((owner + "/" + repo)).get_contributors()

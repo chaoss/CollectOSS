@@ -55,31 +55,6 @@ class LibrariesIO(object):
         r = requests.get(url, params={"api_key": self.API_KEY})
         return r.json()
 
-    def dependents(self, owner, repo):
-        """   
-
-        Finds the packages depend on this repository
-
-        :param owner: GitHub username of the owner of the repo
-        :param repo: Repository name
-        :return: Dict that contains the results (https://libraries.io/api#project-dependents)
-        """
-        projectsUrl = "https://libraries.io/api/github/{owner}/{repo}/projects".format(owner=owner, repo=repo)
-        projectsRequest = requests.get(projectsUrl, params={"api_key": self.API_KEY})
-        json = projectsRequest.json()
-
-        if projectsRequest.status_code == 400:
-            print('You need to set the LibrariesIO API key in augur.cfg or the environment variable AUGUR_LIBRARIESIO_API_KEY')
-
-        if projectsRequest.status_code != 200:
-            return projectsRequest.json()
-        else:
-            project = projectsRequest.json()[0]['name']
-            platform = projectsRequest.json()[0]['platform']
-            dependentsUrl = "https://libraries.io/api/{platform}/{repo}/dependents".format(platform=platform, repo=repo)
-            dependentsRequest = requests.get(dependentsUrl, params={"api_key": self.API_KEY})
-            return dependentsRequest
-
     def dependency_stats(self, owner, repo):
         """
         Finds the number of dependencies, dependant projects, and dependent repos by scrapping it off of the libraries.io website
@@ -135,3 +110,29 @@ class LibrariesIO(object):
 
         return final_data
 
+    def dependents(self, owner, repo):
+        """   
+
+        Finds the packages depend on this repository
+
+        :param owner: GitHub username of the owner of the repo
+        :param repo: Repository name
+        :return: Dict that contains the results (https://libraries.io/api#project-dependents)
+        """
+        projectsUrl = "https://libraries.io/api/github/{owner}/{repo}/projects".format(owner=owner, repo=repo)
+        projectsRequest = requests.get(projectsUrl, params={"api_key": self.API_KEY})
+        json = projectsRequest.json()
+
+        if projectsRequest.status_code == 400:
+            print('You need to set the LibrariesIO API key in augur.cfg or the environment variable AUGUR_LIBRARIESIO_API_KEY')
+
+        if projectsRequest.status_code != 200:
+            return projectsRequest.json()
+        else:
+            project = projectsRequest.json()[0]['name']
+            platform = projectsRequest.json()[0]['platform']
+            dependentsUrl = "https://libraries.io/api/{platform}/{repo}/dependents".format(platform=platform, repo=repo)
+            dependentsRequest = requests.get(dependentsUrl, params={"api_key": self.API_KEY})
+            return dependentsRequest
+
+    

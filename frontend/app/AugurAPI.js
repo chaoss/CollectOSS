@@ -217,33 +217,36 @@ export default class AugurAPI {
     }
 
     if (repo.owner && repo.name) {
+
       // DIVERSITY AND INCLUSION
 
       // GROWTH, MATURITY, AND DECLINE
-      Timeseries(repo, 'issues', 'issues')
-      Timeseries(repo, 'issuesClosed', 'issues/closed')
-      Timeseries(repo, 'issuesResponseTime', 'issues/response_time')
-      Timeseries(repo, 'commits', 'commits')
-      Endpoint(repo, 'maintainerResponseTime', 'pull/maintainer_response_time')
+      Timeseries(repo, 'closedIssues', 'issues/closed')
+      Timeseries(repo, 'closedIssueResolutionDuration', 'issues/time_to_close')
+      Timeseries(repo, 'codeCommits', 'commits')
+      Timeseries(repo, 'firstResponseToIssueDuration', 'issues/response_time')
       Timeseries(repo, 'forks', 'forks')
-      Timeseries(repo, 'pulls', 'pulls')
-      Timeseries(repo, 'pullReqComments', 'pulls/comments')
+      Timeseries(repo, 'linesOfCodeChanged', 'lines_changed')
+      Endpoint(repo, 'maintainterResponseToMergeRequestDuration', 'pull/maintainer_response_time')
+      Timeseries(repo, 'openIssues', 'issues')
+      Timeseries(repo, 'pullRequestComments', 'pulls/comments')
+      Timeseries(repo, 'pullRequestsOpen', 'pulls')
 
       // RISK
-      Endpoint(repo, 'busFactor', 'bus_factor')
 
       // VALUE
 
       // ACTIVITY
       Timeseries(repo, 'issueComments', 'issue/comments')
+      Endpoint(repo, 'watchers', 'watchers')
 
       // EXPERIMENTAL
 
       // Commit Related
       Timeseries(repo, 'commits100', 'commits100')
       Timeseries(repo, 'commitComments', 'commits/comments')
-      Timeseries(repo, 'totalCommitters', 'total_committers')
       Endpoint(repo, 'committerLocations', 'committer_locations')
+      Timeseries(repo, 'totalCommitters', 'total_committers')
 
       // Issue Related
       Timeseries(repo, 'issueActivity', 'issues/activity')
@@ -252,23 +255,24 @@ export default class AugurAPI {
       Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate')
 
       // Community / Contributions
-      Endpoint(repo, 'watchers', 'watchers')
-      Timeseries(repo, 'communityEngagement', 'community_engagement')
       Endpoint(repo, 'communityAge', 'community_age')
+      Timeseries(repo, 'communityEngagement', 'community_engagement')
       Endpoint(repo, 'contributors', 'contributors')
       Endpoint(repo, 'contributions', 'contributions')
+      Endpoint(repo, 'projectAge', 'project_age')
 
       // Dependency Related
       Endpoint(repo, 'dependencies', 'dependencies')
-      Endpoint(repo, 'dependents', 'dependents')
       Endpoint(repo, 'dependencyStats', 'dependency_stats')
+      Endpoint(repo, 'dependents', 'dependents')
 
       // Other
-      Timeseries(repo, 'linesChanged', 'lines_changed')
+      Endpoint(repo, 'busFactor', 'bus_factor')
       Timeseries(repo, 'downloads', 'downloads')
       Timeseries(repo, 'fakes', 'fakes')
-      Timeseries(repo, 'tags', 'tags')
       Endpoint(repo, 'linkingWebsites', 'linking_websites')
+      Timeseries(repo, 'majorTags', 'tags/major')
+      Timeseries(repo, 'tags', 'tags')
     }
 
     if (repo.gitURL) {

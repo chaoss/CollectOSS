@@ -40,8 +40,9 @@ class GHTorrentPlus(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
-    def issue_close_time(self, owner, repo=None):
+    def issue_resolution_duration(self, owner, repo=None):
         """
+        Endpoint: issue_close_time
         augur-metric: closed-issue-resolution-duration
         """
         repoid = self.ghtorrent.repoid(owner, repo)

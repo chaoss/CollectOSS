@@ -123,7 +123,6 @@ class GHTorrent(object):
             userid = row[0]
         return userid
 
-
     #####################################
     ###    DIVERSITY AND INCLUSION    ###
     #####################################
@@ -133,24 +132,10 @@ class GHTorrent(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
-    def issues(self, owner, repo=None, group_by="week"):
-        """
-        Subgroup: Individual Diversity
-        chaoss-metric: open-issues
-
-        Timeseries of issues opened per day
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with issues/day
-        """
-        repoid = self.repoid(owner, repo)
-        issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id', 'reporter_id', group_by=group_by))
-        return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
-
-    def issues_closed(self, owner, repo=None):
+    def closed_issues(self, owner, repo=None):
         """
         Subgroup: Issue Resolution
+        Endpoint: issues/closed
         chaoss-metric: closed-issues
         """
         repoid = self.repoid(owner, repo)
@@ -164,10 +149,55 @@ class GHTorrent(object):
         """)
         return pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)})
 
-    def issue_response_time(self, owner, repo):
+    def closed_issue_resolution_duration(self, owner, repo=None):
         """
         Subgroup: Issue Resolution
-        chaoss-metric: issue-response-time
+        Endpoint: issues_with_close
+        chaoss-metric: closed-issue-resolution-duration
+
+        How long on average each week it takes to close an issue
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with issues/day
+        """
+        repoid = self.repoid(owner, repo)
+        issuesWithCloseSQL = s.sql.text("""
+            SELECT issues.id as "id",
+                   issues.created_at as "date",
+                   DATEDIFF(closed.created_at, issues.created_at)  AS "days_to_close"
+            FROM issues
+
+           JOIN
+                (SELECT * FROM issue_events
+                 WHERE issue_events.action = "closed") closed
+            ON issues.id = closed.issue_id
+
+            WHERE issues.repo_id = :repoid""")
+        return pd.read_sql(issuesWithCloseSQL, self.db, params={"repoid": str(repoid)})
+
+    def code_commits(self, owner, repo=None, group_by="week"):        
+        """
+        Subgroup: Code Development
+        Endpoint: commits
+        chaoss-metric: code-commits
+
+        Timeseries of all the commits on a repo
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with commits/day
+        """
+        repoid = self.repoid(owner, repo)
+        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
+        return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
+
+
+    def first_response_to_issue_duration(self, owner, repo):
+        """
+        Subgroup: Issue Resolution
+        Endpoint: issues/response_time
+        chaoss-metric: first-response-to-issue-duration
 
         Time to comment by issue
 
@@ -199,50 +229,25 @@ class GHTorrent(object):
         rs = pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
         return rs
 
-    def issues_with_close(self, owner, repo=None):
+    def forks(self, owner, repo=None, group_by="week"):
         """
-        Subgroup: Issue Resolution
-        chaoss-metric: closed-issue-resolution-duration
+        Subgroup: Code Development
+        chaoss-metric: forks
 
-        How long on average each week it takes to close an issue
+        Timeseries of when a repo's forks were created
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
         :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with issues/day
+        :return: DataFrame with forks/day
         """
         repoid = self.repoid(owner, repo)
-        issuesWithCloseSQL = s.sql.text("""
-            SELECT issues.id as "id",
-                   issues.created_at as "date",
-                   DATEDIFF(closed.created_at, issues.created_at)  AS "days_to_close"
-            FROM issues
+        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
+        return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
-           JOIN
-                (SELECT * FROM issue_events
-                 WHERE issue_events.action = "closed") closed
-            ON issues.id = closed.issue_id
-
-            WHERE issues.repo_id = :repoid""")
-        return pd.read_sql(issuesWithCloseSQL, self.db, params={"repoid": str(repoid)})
-
-    def commits(self, owner, repo=None, group_by="week"):
+    def maintainer_response_to_merge_request_duration(self, owner, repo=None):
         """
         Subgroup: Code Development
-        chaoss-metric: code-commits
-
-        Timeseries of all the commits on a repo
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with commits/day
-        """
-        repoid = self.repoid(owner, repo)
-        commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
-        return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
-
-    def time_to_first_maintainer_response_to_merge_request(self, owner, repo=None):
-        """
-        Subgroup: Code Development
+        Endpoint: time_to_first_maintainer_response_to_merge_request
         chaoss-metric: maintainer-response-to-merge-request-duration
 
         *1). Get a list of all the comments on merge requests, and the user ids of the people who made those comments
@@ -293,24 +298,41 @@ class GHTorrent(object):
         df2 = pd.DataFrame(data=times, columns=["response_time"])
         return df2
 
-    def forks(self, owner, repo=None, group_by="week"):
+    def open_issues(self, owner, repo=None, group_by="week"):
         """
-        Subgroup: Code Development
-        chaoss-metric: forks
+        Subgroup: Individual Diversity
+        Endpoint: issues
+        chaoss-metric: open-issues
 
-        Timeseries of when a repo's forks were created
+        Timeseries of issues opened per day
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
         :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with forks/day
+        :return: DataFrame with issues/day
         """
         repoid = self.repoid(owner, repo)
-        forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
-        return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
+        issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id', 'reporter_id', group_by=group_by))
+        return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
-    def pulls(self, owner, repo=None):
+    def pull_request_comments(self, owner, repo=None):
         """
         Subgroup: Code Development
+        chaoss-metric: pull-request-comments
+
+        Timeseries of pull request comments
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with new by week
+        """
+        repoid = self.repoid(owner, repo)
+        pullRequestCommentsSQL = s.sql.text(self.__sub_table_count_by_date("pull_requests", "pull_request_comments", "pullreq_id", "pull_request_id", "base_repo_id"))
+        return pd.read_sql(pullRequestCommentsSQL, self.db, params={"repoid": str(repoid)})
+
+    def pull_requests_open(self, owner, repo=None):
+        """
+        Subgroup: Code Development
+        Endpoint: pulls
         chaoss-metric: pull-requests-open
 
         Timeseries of pull requests creation, also gives their associated activity
@@ -331,22 +353,6 @@ class GHTorrent(object):
             GROUP BY WEEK(pull_request_history.created_at)
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
-
-    def pull_request_comments(self, owner, repo=None):
-        """
-        Subgroup: Code Development
-        chaoss-metric: pull-request-comments
-
-        Timeseries of pull request comments
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with new by week
-        """
-        repoid = self.repoid(owner, repo)
-        pullRequestCommentsSQL = s.sql.text(self.__sub_table_count_by_date("pull_requests", "pull_request_comments", "pullreq_id", "pull_request_id", "base_repo_id"))
-        return pd.read_sql(pullRequestCommentsSQL, self.db, params={"repoid": str(repoid)})
-
 
     #####################################
     ###            RISK               ###
@@ -387,7 +393,6 @@ class GHTorrent(object):
         repoid = self.repoid(owner, repo)
         issueCommentsSQL = s.sql.text(self.__sub_table_count_by_date("issues", "issue_comments", "issue_id", "issue_id", "repo_id"))
         return pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
-
 
     #####################################
     ###         EXPERIMENTAL          ###
@@ -513,10 +518,9 @@ class GHTorrent(object):
 
 
     # PULL REQUEST RELATED
-
-    def pull_acceptance_rate(self, owner, repo=None):
+    def pull_request_acceptance_rate(self, owner, repo=None):
         """
-        augur-metric: pull-acceptance-rate
+        augur-metric: pull-request-acceptance-rate
 
         Timeseries of pull request acceptance rate (Number of pull requests merged on a date over Number of pull requests opened on a date)
 
@@ -546,105 +550,6 @@ class GHTorrent(object):
 
 
     # COMMUNITY / CONRIBUTIONS
-
-    def contributions(self, owner, repo=None, userid=None):
-        """
-        augur metric: contributions
-        Timeseries of all the contributions to a project, optionally limited to a specific user
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :param userid: The id of user if you want to limit the contributions to a specific user.
-        :return: DataFrame with all of the contributions seperated by day.
-        """
-        repoid = self.repoid(owner, repo)
-        rawContributionsSQL = """
-            SELECT  DATE(coms.created_at) as "date",
-                    coms.count            as "commits",
-                    pulls.count           as "pull_requests",
-                    iss.count             as "issues",
-                    comcoms.count         as "commit_comments",
-                    pullscoms.count       as "pull_request_comments",
-                    isscoms.count         as "issue_comments",
-                    coms.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as "total"
-
-            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(created_at)) coms
-
-            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged'[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(created_at)) AS pulls
-            ON DATE(pulls.created_at) = DATE(coms.created_at)
-
-            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(created_at)) AS iss
-            ON DATE(iss.created_at) = DATE(coms.created_at)
-
-            LEFT JOIN (SELECT commit_comments.created_at AS created_at, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid[[ AND commit_comments.user_id = :userid]] GROUP BY DATE(commit_comments.created_at)) AS comcoms
-            ON DATE(comcoms.created_at) = DATE(coms.created_at)
-
-            LEFT JOIN (SELECT pull_request_comments.created_at AS created_at, COUNT(*) AS count FROM pull_request_comments JOIN pull_requests ON pull_request_comments.pull_request_id = pull_requests.id WHERE pull_requests.base_repo_id = :repoid[[ AND pull_request_comments.user_id = :userid]] GROUP BY DATE(pull_request_comments.created_at)) AS pullscoms
-            ON DATE(pullscoms.created_at) = DATE(coms.created_at)
-
-            LEFT JOIN (SELECT issue_comments.created_at AS created_at, COUNT(*) AS count FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid[[ AND issue_comments.user_id = :userid]] GROUP BY DATE(issue_comments.created_at)) AS isscoms
-            ON DATE(isscoms.created_at) = DATE(coms.created_at)
-
-            GROUP BY YEARWEEK(coms.created_at)
-            ORDER BY DATE(coms.created_at)
-        """
-
-        if (userid is not None and len(userid) > 0):
-            rawContributionsSQL = rawContributionsSQL.replace('[[', '')
-            rawContributionsSQL = rawContributionsSQL.replace(']]', '')
-            parameterized = s.sql.text(rawContributionsSQL)
-            return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid), "userid": str(userid)})
-        else:
-            rawContributionsSQL = re.sub(r'\[\[.+?\]\]', '', rawContributionsSQL)
-            parameterized = s.sql.text(rawContributionsSQL)
-            return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
-
-    def classify_contributors(self, owner, repo=None):
-        """
-        Classify everyone who has interacted with a repo into
-          - user
-          - tester
-          - rejected_contributor
-          - contributor
-          - major_contributor
-          - maintainer
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with the login and role of contributors
-        """
-        repoid = self.repoid(owner, repo)
-        contributors = self.contributors(repoid, repo=None)
-        sums = contributors.sum()
-
-        def classify(row):
-            role = 'user'
-            ratio = row / sums
-            if (ratio['issue_comments'] > 0.05):
-                role = 'tester'
-            if (row['pull_requests'] >= 1 and row['commits'] == 0):
-                role = 'rejected_contributor'
-            if (row['pull_requests'] >= 1 and row['commits'] >= 1):
-                role = 'contributor'
-            if (ratio['pull_requests'] > 0.10 or ratio['commits'] > 0.01):
-                role = 'major_contributor'
-            if (ratio['commits'] > 0.02 or ratio['pull_request_comments'] > 0.15):
-                role = 'maintainer'
-
-            return pd.Series({'user': row['user'], 'role': role})
-
-        roles = contributors.apply(classify, axis=1)
-        return roles
-
-    def project_age(self, owner, repo=None):
-        repoid = self.repoid(owner, repo)
-        projectAgeSQL = s.sql.text("""
-            SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
-                FROM projects
-                WHERE id = :repoid
-                GROUP BY YEARWEEK(created_at)
-                """)
-        return pd.read_sql(projectAgeSQL, self.db, params={"repoid": str(repoid)})
 
     def community_age(self, owner, repo=None):
         """
@@ -761,7 +666,7 @@ class GHTorrent(object):
         counts['pull_requests_delta'] = counts.pull_requests_opened - counts.pull_requests_closed
         counts['pull_requests_open'] = counts['pull_requests_delta'].cumsum()
         return counts
-
+        
     def contributors(self, owner, repo=None):        
         """
         augur-metric: contributors
@@ -797,6 +702,105 @@ class GHTorrent(object):
             ORDER BY total DESC;
         """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
+
+    def contributions(self, owner, repo=None, userid=None):
+        """
+        augur metric: contributions
+        Timeseries of all the contributions to a project, optionally limited to a specific user
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :param userid: The id of user if you want to limit the contributions to a specific user.
+        :return: DataFrame with all of the contributions seperated by day.
+        """
+        repoid = self.repoid(owner, repo)
+        rawContributionsSQL = """
+            SELECT  DATE(coms.created_at) as "date",
+                    coms.count            as "commits",
+                    pulls.count           as "pull_requests",
+                    iss.count             as "issues",
+                    comcoms.count         as "commit_comments",
+                    pullscoms.count       as "pull_request_comments",
+                    isscoms.count         as "issue_comments",
+                    coms.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as "total"
+
+            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(created_at)) coms
+
+            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged'[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(created_at)) AS pulls
+            ON DATE(pulls.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(created_at)) AS iss
+            ON DATE(iss.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT commit_comments.created_at AS created_at, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid[[ AND commit_comments.user_id = :userid]] GROUP BY DATE(commit_comments.created_at)) AS comcoms
+            ON DATE(comcoms.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT pull_request_comments.created_at AS created_at, COUNT(*) AS count FROM pull_request_comments JOIN pull_requests ON pull_request_comments.pull_request_id = pull_requests.id WHERE pull_requests.base_repo_id = :repoid[[ AND pull_request_comments.user_id = :userid]] GROUP BY DATE(pull_request_comments.created_at)) AS pullscoms
+            ON DATE(pullscoms.created_at) = DATE(coms.created_at)
+
+            LEFT JOIN (SELECT issue_comments.created_at AS created_at, COUNT(*) AS count FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid[[ AND issue_comments.user_id = :userid]] GROUP BY DATE(issue_comments.created_at)) AS isscoms
+            ON DATE(isscoms.created_at) = DATE(coms.created_at)
+
+            GROUP BY YEARWEEK(coms.created_at)
+            ORDER BY DATE(coms.created_at)
+        """
+
+        if (userid is not None and len(userid) > 0):
+            rawContributionsSQL = rawContributionsSQL.replace('[[', '')
+            rawContributionsSQL = rawContributionsSQL.replace(']]', '')
+            parameterized = s.sql.text(rawContributionsSQL)
+            return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid), "userid": str(userid)})
+        else:
+            rawContributionsSQL = re.sub(r'\[\[.+?\]\]', '', rawContributionsSQL)
+            parameterized = s.sql.text(rawContributionsSQL)
+            return pd.read_sql(parameterized, self.db, params={"repoid": str(repoid)})
+
+    def classify_contributors(self, owner, repo=None):
+        """
+        Classify everyone who has interacted with a repo into
+          - user
+          - tester
+          - rejected_contributor
+          - contributor
+          - major_contributor
+          - maintainer
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with the login and role of contributors
+        """
+        repoid = self.repoid(owner, repo)
+        contributors = self.contributors(repoid, repo=None)
+        sums = contributors.sum()
+
+        def classify(row):
+            role = 'user'
+            ratio = row / sums
+            if (ratio['issue_comments'] > 0.05):
+                role = 'tester'
+            if (row['pull_requests'] >= 1 and row['commits'] == 0):
+                role = 'rejected_contributor'
+            if (row['pull_requests'] >= 1 and row['commits'] >= 1):
+                role = 'contributor'
+            if (ratio['pull_requests'] > 0.10 or ratio['commits'] > 0.01):
+                role = 'major_contributor'
+            if (ratio['commits'] > 0.02 or ratio['pull_request_comments'] > 0.15):
+                role = 'maintainer'
+
+            return pd.Series({'user': row['user'], 'role': role})
+
+        roles = contributors.apply(classify, axis=1)
+        return roles
+
+    def project_age(self, owner, repo=None):
+        repoid = self.repoid(owner, repo)
+        projectAgeSQL = s.sql.text("""
+            SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
+                FROM projects
+                WHERE id = :repoid
+                GROUP BY YEARWEEK(created_at)
+                """)
+        return pd.read_sql(projectAgeSQL, self.db, params={"repoid": str(repoid)})
 
 
     # DEPENDENCY RELATED
