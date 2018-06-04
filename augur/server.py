@@ -78,7 +78,7 @@ class Server(object):
 
         # Initalize all of the classes
         ghtorrent = augurApp.ghtorrent()
-        ghtorrentplus = augurApp.ghtorrentplus() 
+        ghtorrentplus = augurApp.ghtorrentplus()
         publicwww = augurApp.publicwww()
         git = augurApp.git()
         github = augurApp.github()
@@ -165,6 +165,14 @@ class Server(object):
         """
         addTimeseries(app, ghtorrent.code_commits, 'commits')
 
+        # addTimeseries(app, github.code_reviews, 'code_reviews')
+
+        addTimeseries(app, ghtorrent.code_review_iteration, 'code_review_iteration')
+
+        addTimeseries(app, ghtorrent.contribution_acceptance, 'contribution_acceptance')
+
+        addMetric(app, ghtorrent.contributing_github_organizations, 'contributing_github_organizations')
+
         """
         @api {get} /:owner/:repo/timeseries/issues/response_time Issue Response Time
         @apiName IssueResponseTime
@@ -222,11 +230,11 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    'date': '2015-11-01T00:00:00Z', 
+                                    'date': '2015-11-01T00:00:00Z',
                                     'lines_changed': 396137.0
                                 },
                                 {
-                                    'date': '2015-11-08T00:00:00Z', 
+                                    'date': '2015-11-08T00:00:00Z',
                                     'lines_changed': 3896.0
                                 },
                             ]
@@ -270,7 +278,7 @@ class Server(object):
         """
         @api {get} /:owner/:repo/pulls/maintainer_response_time Time to First Maintainer Response to Merge Request
         @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
-        @apiName TimeToFirstMaintainerResponseToMergeRequest 
+        @apiName TimeToFirstMaintainerResponseToMergeRequest
         @apiGroup Growth-Maturity-Decline
 
         @apiParam {String} owner Username of the owner of the GitHub repository
@@ -286,7 +294,9 @@ class Server(object):
                                 },
                             ]
         """
-        addMetric(app, ghtorrent.maintainer_response_to_merge_request_duration, 'pulls/maintainer_response_time')
+        addTimeseries(app, ghtorrent.maintainer_response_to_merge_request_duration, 'pulls/maintainer_response_time')
+
+        addTimeseries(app, ghtorrent.new_contributing_github_organizations, 'new_contributing_github_organizations')
 
         """
         @api {get} /:owner/:repo/timeseries/issues issues
@@ -296,7 +306,6 @@ class Server(object):
         @apidescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md">chaoss metric definition</a>
         @apiparam {string} owner username of the owner of the github repository
         @apiparam {string} repo name of the github repository
-
         @apisuccessexample {json} success-response:
                             [
                                 {
@@ -312,8 +321,8 @@ class Server(object):
         addTimeseries(app, ghtorrent.open_issues, 'issues')
 
         """
-        @api {get} /:owner/:repo/timeseries/pull_request_comments count of new pull request comments weekly
-        @apiName PullRequestComments
+        @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
+        @apiName Forks
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md">CHAOSS Metric Definition</a>
         @apiParam {String} owner Username of the owner of the GitHub repository
@@ -355,6 +364,7 @@ class Server(object):
         """
         addTimeseries(app, ghtorrent.pull_requests_open, 'pulls')
 
+
         #####################################
         ###            RISK               ###
         #####################################
@@ -388,7 +398,7 @@ class Server(object):
                             ]
         """
         addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
-        
+
         """
         @api {get} /:owner/:repo/watchers
         @apiName Community Engagement
@@ -405,7 +415,6 @@ class Server(object):
                             ]
         """
         addMetric(app, ghtorrent.watchers, 'watchers')
-
 
         #####################################
         ###         EXPERIMENTAL          ###
@@ -595,7 +604,7 @@ class Server(object):
                                   "pull_requests_closed_rate_total": null,
                                   "pull_requests_delta": 0.0,
                                   "pull_requests_open": 0.0
-                                },                       
+                                },
                                 {
                                   "date": "2009-04-16T00:00:00.000Z",
                                   "issues_opened": 2.0,
@@ -615,7 +624,7 @@ class Server(object):
                                   "pull_requests_closed_rate_total": null,
                                   "pull_requests_delta": 2.0,
                                   "pull_requests_open": 1.0
-                                }                       
+                                }
                             ]
         """
         addTimeseries(app, ghtorrent.community_engagement, 'community_engagement')
@@ -658,7 +667,7 @@ class Server(object):
         """
         @api {get} /:owner/:repo/timeseries/contributions Contributions by Week
         @apiName ContributionsByWeek
-        @apiDescriptions 
+        @apiDescriptions
         @apiGroup Experimental
 
         @apiParam {String} owner Username of the owner of the GitHub repository
@@ -717,54 +726,54 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {   "full_name": "rails/rails"
-                                    "description": "Ruby on Rails", 
-                                    "fork": false, "created_at": "2008-04-11T02:19:47.000Z", 
-                                    "updated_at": "2017-09-20T20:16:47.181Z", 
-                                    "pushed_at": "2017-09-20T19:39:08.000Z", 
-                                    "homepage": "http://rubyonrails.org", 
-                                    "size": 155199, "stargazers_count": 36993, 
-                                    "language": "Ruby", "has_issues": true, 
-                                    "has_wiki": false, 
-                                    "has_pages": false, 
-                                    "forks_count": 15130, 
-                                    "mirror_url": null, 
-                                    "open_issues_count": 1157, 
-                                    "default_branch": "master", 
+                                    "description": "Ruby on Rails",
+                                    "fork": false, "created_at": "2008-04-11T02:19:47.000Z",
+                                    "updated_at": "2017-09-20T20:16:47.181Z",
+                                    "pushed_at": "2017-09-20T19:39:08.000Z",
+                                    "homepage": "http://rubyonrails.org",
+                                    "size": 155199, "stargazers_count": 36993,
+                                    "language": "Ruby", "has_issues": true,
+                                    "has_wiki": false,
+                                    "has_pages": false,
+                                    "forks_count": 15130,
+                                    "mirror_url": null,
+                                    "open_issues_count": 1157,
+                                    "default_branch": "master",
                                     "subscribers_count": 2452,
-                                    "uuid": "8514", "source_name": null, 
-                                    "license": "MIT", "private": false, 
-                                    "contributions_count": 2616, 
-                                    "has_readme": "README.md", 
-                                    "has_changelog": null, 
-                                    "has_contributing": "CONTRIBUTING.md", 
-                                    "has_license": "MIT-LICENSE", 
-                                    "has_coc": "CODE_OF_CONDUCT.md", 
-                                    "has_threat_model": null, 
-                                    "has_audit": null, 
-                                    "status": null, 
-                                    "last_synced_at": "2017-09-20T20:16:47.153Z", 
-                                    "rank": 28, "host_type": "GitHub", 
-                                    "host_domain": null, 
-                                    "name": null, 
-                                    "scm": "git", 
+                                    "uuid": "8514", "source_name": null,
+                                    "license": "MIT", "private": false,
+                                    "contributions_count": 2616,
+                                    "has_readme": "README.md",
+                                    "has_changelog": null,
+                                    "has_contributing": "CONTRIBUTING.md",
+                                    "has_license": "MIT-LICENSE",
+                                    "has_coc": "CODE_OF_CONDUCT.md",
+                                    "has_threat_model": null,
+                                    "has_audit": null,
+                                    "status": null,
+                                    "last_synced_at": "2017-09-20T20:16:47.153Z",
+                                    "rank": 28, "host_type": "GitHub",
+                                    "host_domain": null,
+                                    "name": null,
+                                    "scm": "git",
                                     "fork_policy": null,
-                                     "github_id": "8514", 
-                                     "pull_requests_enabled": null, 
-                                     "logo_url": null, 
-                                     "github_contributions_count": 2616, 
-                                     "keywords": ["activejob", "activerecord", "html", "mvc", "rails", "ruby"], 
+                                     "github_id": "8514",
+                                     "pull_requests_enabled": null,
+                                     "logo_url": null,
+                                     "github_contributions_count": 2616,
+                                     "keywords": ["activejob", "activerecord", "html", "mvc", "rails", "ruby"],
                                      "dependencies": [
-                                                        {   "project_name": "websocket-driver", 
-                                                            "name": "websocket-driver", 
-                                                            "platform": "rubygems", 
-                                                            "requirements": "~> 0.6.1", 
-                                                            "latest_stable": "0.7.0", 
-                                                            "latest": "0.7.0", 
-                                                            "deprecated": false, "outdated": true, 
+                                                        {   "project_name": "websocket-driver",
+                                                            "name": "websocket-driver",
+                                                            "platform": "rubygems",
+                                                            "requirements": "~> 0.6.1",
+                                                            "latest_stable": "0.7.0",
+                                                            "latest": "0.7.0",
+                                                            "deprecated": false, "outdated": true,
                                                             "filepath": "actioncable/actioncable.gemspec", "
                                                             kind": "runtime"
                                                         }
-                                                     ]                     
+                                                     ]
         """
         addMetric(app, librariesio.dependencies, 'dependencies')
         
@@ -779,8 +788,8 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "dependencies": "10", 
-                                    "dependent_projects": "10.6K", 
+                                    "dependencies": "10",
+                                    "dependent_projects": "10.6K",
                                     "dependent_repositories": "392K"
                                 }
                             ]
@@ -1042,11 +1051,11 @@ class Server(object):
                 try:
 
                     with app.app_context():
-                        with app.test_request_context(path, 
-                                                      method=method, 
+                        with app.test_request_context(path,
+                                                      method=method,
                                                       data=body):
                             try:
-                                # Can modify flask.g here without affecting 
+                                # Can modify flask.g here without affecting
                                 # flask.g of the root request for the batch
 
                                 # Pre process Request
@@ -1065,7 +1074,7 @@ class Server(object):
                             response = app.process_response(response)
 
                     # Response is a Flask response object.
-                    # _read_response(response) reads response.response 
+                    # _read_response(response) reads response.response
                     # and returns a string. If your endpoints return JSON object,
                     # this string would be the response as a JSON string.
                     responses.append({
@@ -1074,7 +1083,7 @@ class Server(object):
                         "response": str(response.get_data(), 'utf8')
                     })
 
-                except Exception as e:  
+                except Exception as e:
 
                     responses.append({
                         "path": path,
@@ -1105,4 +1114,4 @@ def wsgi(env, start_response):
     return wsgi_app(env, start_response)
 
 if __name__ == "__main__":
-    run() 
+    run()
