@@ -19,20 +19,26 @@ let spec = {
       "title": "Code Engagement",
       "width": 375,
       "height": 300,
-      "mark": "circle",
+      "mark": {
+        "type": "circle",
+        "cursor": "pointer"
+      },
       "selection": {
         "paintbrush": {
           "type": "single",
           "on": "mouseover",
+        },
+        "grid": {
+          "type": "interval", "bind": "scales"
         }
       },
       "encoding": {
         "x": {
-          "field": "commit_comments", 
+          "field": "commit_comments",
           "type": "quantitative",
         },
         "y": {
-          "field": "commits", 
+          "field": "commits",
           "type": "quantitative",
           "scale": {
             "type": "sqrt"
@@ -47,8 +53,12 @@ let spec = {
           },
           "value": "grey"
         },
+        "tooltip": {
+          "field": "contributing_org",
+          "type": "quantitative"
+        },
         "size": {
-          "field": "total", 
+          "field": "total",
           "type": "quantitative",
           "legend": {
             "title": "all contributions",
@@ -62,16 +72,22 @@ let spec = {
       "title": "Community Engagement",
       "width": 375,
       "height": 300,
-      "mark": "circle",
+      "mark": {
+        "type": "circle",
+        "cursor": "pointer"
+      },
       "selection": {
         "paintbrush": {
           "type": "single",
           "on": "mouseover",
+        },
+        "grid": {
+          "type": "interval", "bind": "scales"
         }
       },
       "encoding": {
         "x": {
-          "field": "issue_comments", 
+          "field": "issue_comments",
           "type": "quantitative",
           "scale": {
             "type": "sqrt",
@@ -82,14 +98,14 @@ let spec = {
           }
         },
         "y": {
-          "field": "issues", 
+          "field": "issues",
           "type": "quantitative",
           "scale": {
             "type": "sqrt"
           }
         },
         "size": {
-          "field": "total", 
+          "field": "total",
           "type": "quantitative",
           "legend": {
             "title": "all contributions",
@@ -105,6 +121,10 @@ let spec = {
             "type": "nominal",
             "scale": { "range": ['#FF3647', '#4736FF'] }
           },
+        "tooltip": {
+          "field": "contributing_org",
+          "type": "quantitative"
+        },
           "value": "grey"
         },
       }
@@ -138,7 +158,7 @@ export default {
       let shared = {};
       if (this.repo) {
         window.AugurRepos[this.repo][this.source]().then((data) => {
-          shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e }) 
+          shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
           if (removeBelowAverageContributors) {
             shared.baseData = AugurStats.aboveAverage(shared.baseData, 'total')
           }

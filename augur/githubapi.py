@@ -33,7 +33,7 @@ class GitHubAPI(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
-    def lines_changed(self, owner, repo=None): 
+    def lines_changed(self, owner, repo=None):
         """
         chaoss-metric: lines-of-code-changed
         Additions and deletions each week
@@ -163,7 +163,7 @@ class GitHubAPI(object):
                      """
                     query {
                       repository(owner: "%s", name: "%s") {
-                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
+                        tags: refs(refPrefix: "refs/tags/", first: 100, after: %s) {
                           edges {
                             cursor
                             tag: node {
@@ -194,7 +194,7 @@ class GitHubAPI(object):
             if data['data']['repository']['tags']['edges'] == []:
                 break
             else:
-                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
+                cursor = '"{}"'.format(data['data']['repository']['tags']['edges'][-1]['cursor'])
         return pd.DataFrame(tags_list)
 
     def major_tags(self, owner, repo):
@@ -270,5 +270,68 @@ class GitHubAPI(object):
         return genderized
 
 
+    # def code_reviews(self, owner, repo=None):
+    #     """
+    #     Number of code reviews (merge requests) for a project
+
+    #     :param owner: The name of the project owner
+    #     :param repo: The name of the repo
+    #     :return: DataFrame with each row being a merge request's creation date
+    #     """
+
+    #     url = 'https://api.github.com/graphql'
+    #     headers = {'Authorization': 'token %s' % self.GITHUB_API_KEY}
+    #     cursor = "null"
+    #     pullReqTime = []
+    #     numReviews = []
+    #     count = 0
+
+    #     while count < 100:
+
+    #         query = """
+    #         {
+    #           repository(owner: "%s", name: "%s") {
+    #                  pullRequests(first: 100, after: %s) {
+    #                     edges {
+    #                         cursor
+    #                         node {
+    #                           number
+    #                           createdAt
+    #                           reviews(first: 100) {
+    #                             edges {
+    #                               node {
+    #                                 createdAt
+    #                                 author {
+    #                                   login
+    #                                 }
+    #                                 createdAt
+    #                               }
+    #                             }
+    #                           }
+    #                         }
+    #                         cursor
+    #                     }
+    #                 }
+    #             }
+    #         }
+    #         """ % (owner, repo, cursor)
+
+    #         request = requests.post(url, json={'query': query}, headers=headers)
+    #         if request.status_code == 200:
+    #             data = request.json()
+    #         else:
+    #             raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
+
+    #         pullReqs = data['data']['repository']['pullRequests']['edges']
+    #         count += 1
+    #         for i in pullReqs:
+    #             pullReqTime = np.append(pullReqTime, i['node']['createdAt'])
+    #             numReviews = np.append(numReviews, len(i['node']['reviews']['edges']))
+    #         if len(data['data']['repository']['pullRequests']['edges']) < 100:
+    #             break
+    #         else:
+    #             cursor = '"{}"'.format(data['data']['repository']['pullRequests']['edges'][-1]['cursor'])
+
+    #     return pd.DataFrame({'date': pullReqTime, 'code_reviews': numReviews})
 
 
