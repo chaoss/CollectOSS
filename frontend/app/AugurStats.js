@@ -34,7 +34,16 @@ export default class AugurStats {
   }
 
   static averageArray (ary) {
-    return ary.reduce((a, e) => { return a + e }, 0) / (ary.length)
+    let len = ary.length
+    let sum = ary.reduce((a, e) => {
+      if (isFinite(e)) {
+        return a + e
+      } else {
+        len--
+        return a
+      }
+    }, 0)
+    return (sum / len) || 0
   }
 
   static aboveAverage (data, key) {
@@ -73,6 +82,9 @@ export default class AugurStats {
   static rollingAverage (data, key, windowSizeInDays) {
     key = key || 'value'
     let period = (windowSizeInDays / 2)
+    data = data.filter(datum => {
+      return isFinite(datum[key])
+    })
     return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }

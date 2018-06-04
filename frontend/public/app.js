@@ -665,9 +665,16 @@ var AugurStats = function () {
   }, {
     key: 'averageArray',
     value: function averageArray(ary) {
-      return ary.reduce(function (a, e) {
-        return a + e;
-      }, 0) / ary.length;
+      var len = ary.length;
+      var sum = ary.reduce(function (a, e) {
+        if (isFinite(e)) {
+          return a + e;
+        } else {
+          len--;
+          return a;
+        }
+      }, 0);
+      return sum / len || 0;
     }
   }, {
     key: 'aboveAverage',
@@ -717,6 +724,9 @@ var AugurStats = function () {
     value: function rollingAverage(data, key, windowSizeInDays) {
       key = key || 'value';
       var period = windowSizeInDays / 2;
+      data = data.filter(function (datum) {
+        return isFinite(datum[key]);
+      });
       return AugurStats.dateAggregate(data, period, period, period / 2, function (filteredData, date) {
         var flat = AugurStats.flatten(filteredData, key);
         var datum = { date: date };
