@@ -73,7 +73,7 @@ class Server(object):
                             }
                         ]
         """
-        addTimeseries(app, ghtorrent.closed_issues, "issues/closed")
+        self.addTimeseries(ghtorrent.closed_issues, "issues/closed")
 
         """
         @api {get} /:owner/:repo/timeseries/issues/time_to_close Time To Close
@@ -96,7 +96,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.closed_issue_resolution_duration, 'issues/time_to_close')
+        self.addTimeseries(ghtorrent.closed_issue_resolution_duration, 'issues/time_to_close')
 
         """
         @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Commits
@@ -119,15 +119,15 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.code_commits, 'commits')
+        self.addTimeseries(ghtorrent.code_commits, 'commits')
 
-        # addTimeseries(app, github.code_reviews, 'code_reviews')
+        # self.addTimeseries(github.code_reviews, 'code_reviews')
 
-        addTimeseries(app, ghtorrent.code_review_iteration, 'code_review_iteration')
+        self.addTimeseries(ghtorrent.code_review_iteration, 'code_review_iteration')
 
-        addTimeseries(app, ghtorrent.contribution_acceptance, 'contribution_acceptance')
+        self.addTimeseries(ghtorrent.contribution_acceptance, 'contribution_acceptance')
 
-        addMetric(app, ghtorrent.contributing_github_organizations, 'contributing_github_organizations')
+        self.addMetric(ghtorrent.contributing_github_organizations, 'contributing_github_organizations')
 
         """
         @api {get} /:owner/:repo/timeseries/issues/response_time Issue Response Time
@@ -149,7 +149,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.first_response_to_issue_duration, 'issues/response_time')
+        self.addTimeseries(ghtorrent.first_response_to_issue_duration, 'issues/response_time')
 
         """
         @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
@@ -172,7 +172,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.forks, 'forks') 
+        self.addTimeseries(ghtorrent.forks, 'forks') 
 
         """
         @api {get} /:owner/:repo/timeseries/lines_changed Net number of lines of code changed
@@ -195,7 +195,7 @@ class Server(object):
                                 },
                             ]
         """
-        addTimeseries(app, github.lines_of_code_changed, 'lines_changed')
+        self.addTimeseries(github.lines_of_code_changed, 'lines_changed')
 
         """
         @api {get} /:owner/:repo/issue_close_time Issue Close Time
@@ -229,7 +229,7 @@ class Server(object):
                             }
                         ]
         """
-        addMetric(app, ghtorrentplus.issue_resolution_duration, 'issues/time_to_close')
+        self.addMetric(ghtorrentplus.issue_resolution_duration, 'issues/time_to_close')
 
         """
         @api {get} /:owner/:repo/pulls/maintainer_response_time Time to First Maintainer Response to Merge Request
@@ -250,9 +250,9 @@ class Server(object):
                                 },
                             ]
         """
-        addTimeseries(app, ghtorrent.maintainer_response_to_merge_request_duration, 'pulls/maintainer_response_time')
+        self.addTimeseries(ghtorrent.maintainer_response_to_merge_request_duration, 'pulls/maintainer_response_time')
 
-        addTimeseries(app, ghtorrent.new_contributing_github_organizations, 'new_contributing_github_organizations')
+        self.addTimeseries(ghtorrent.new_contributing_github_organizations, 'new_contributing_github_organizations')
 
         """
         @api {get} /:owner/:repo/timeseries/issues issues
@@ -274,7 +274,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.open_issues, 'issues')
+        self.addTimeseries(ghtorrent.open_issues, 'issues')
 
         """
         @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
@@ -294,7 +294,7 @@ class Server(object):
                                 },
 
         """
-        addTimeseries(app, ghtorrent.pull_request_comments, 'pulls/comments')
+        self.addTimeseries(ghtorrent.pull_request_comments, 'pulls/comments')
 
         """
         @api {get} /:owner/:repo/timeseries/pulls Pull Requests by Week
@@ -318,7 +318,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.pull_requests_open, 'pulls')
+        self.addTimeseries(ghtorrent.pull_requests_open, 'pulls')
 
 
         #####################################
@@ -353,7 +353,7 @@ class Server(object):
                                 },
                             ]
         """
-        addTimeseries(app, ghtorrent.issue_comments, 'issue/comments')
+        self.addTimeseries(ghtorrent.issue_comments, 'issue/comments')
 
         """
         @api {get} /:owner/:repo/watchers
@@ -370,7 +370,7 @@ class Server(object):
                               }
                             ]
         """
-        addMetric(app, ghtorrent.watchers, 'watchers')
+        self.addMetric(ghtorrent.watchers, 'watchers')
 
         #####################################
         ###         EXPERIMENTAL          ###
@@ -378,7 +378,7 @@ class Server(object):
 
         ### COMMIT RELATED ###
         #todo: document
-        addTimeseries(app, ghtorrent.commits100, 'commits100')
+        self.addTimeseries(ghtorrent.commits100, 'commits100')
 
         """
         @api {get} /:owner/:repo/timeseries/commits/comments count of commit comments weekly
@@ -398,7 +398,7 @@ class Server(object):
                                 },
 
         """
-        addTimeseries(app, ghtorrent.commit_comments, 'commits/comments')
+        self.addTimeseries(ghtorrent.commit_comments, 'commits/comments')
 
         """
         @api {get} /:owner/:repo/committer_locations Commits and Location by User
@@ -423,7 +423,7 @@ class Server(object):
                                 }
                             ]
         """
-        addMetric(app, ghtorrent.committer_locations, 'committer_locations')
+        self.addMetric(ghtorrent.committer_locations, 'committer_locations')
 
         """
         @api {get} /:owner/:repo/timeseries/total_committers count of new committers weekly
@@ -444,7 +444,7 @@ class Server(object):
                                 },
                             ]
         """
-        addTimeseries(app, ghtorrent.total_committers, 'total_committers')
+        self.addTimeseries(ghtorrent.total_committers, 'total_committers')
 
         ### ISSUE RELATED ###
         """
@@ -479,7 +479,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.issue_activity, 'issues/activity')
+        self.addTimeseries(ghtorrent.issue_activity, 'issues/activity')
 
         # PULL REQUEST RELATED
         """
@@ -503,7 +503,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.pull_request_acceptance_rate, 'pulls/acceptance_rate')
+        self.addTimeseries(ghtorrent.pull_request_acceptance_rate, 'pulls/acceptance_rate')
 
         # COMMUNITY / CONTRIBUTIONS
         """
@@ -529,7 +529,7 @@ class Server(object):
                                 }
                             ]
         """
-        addMetric(app, ghtorrent.community_age, 'community_age')
+        self.addMetric(ghtorrent.community_age, 'community_age')
 
         """
         @api {get} /:owner/:repo/timeseries/community_engagement
@@ -583,7 +583,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, ghtorrent.community_engagement, 'community_engagement')
+        self.addTimeseries(ghtorrent.community_engagement, 'community_engagement')
 
         """
         @api {get} /:owner/:repo/contributors Total Contributions by User
@@ -618,7 +618,7 @@ class Server(object):
                                 }
                             ]
         """
-        addMetric(app, ghtorrent.contributors, 'contributors')
+        self.addMetric(ghtorrent.contributors, 'contributors')
 
         """
         @api {get} /:owner/:repo/timeseries/contributions Contributions by Week
@@ -661,13 +661,13 @@ class Server(object):
                 contribs = ghtorrent.contributions(repoid=repoid, userid=userid)
             else:
                 contribs = ghtorrent.contributions(repoid=repoid)
-            serialized_contributors = serialize(contribs, orient=request.args.get('orient'))
+            serialized_contributors = self.serialize(contribs, orient=request.args.get('orient'))
             return Response(response=serialized_contributors,
                             status=200,
                             mimetype="application/json")
 
         #todo: documentation
-        addMetric(app, ghtorrent.project_age, 'project_age')
+        self.addMetric(ghtorrent.project_age, 'project_age')
 
         ### DEPENDENCY RELATED ###
         """
@@ -731,7 +731,7 @@ class Server(object):
                                                         }
                                                      ]
         """
-        addMetric(app, librariesio.dependencies, 'dependencies')
+        self.addMetric(librariesio.dependencies, 'dependencies')
         
         """
         @api {get} /:owner/:repo/dependency_stats List of libraries.io stats
@@ -750,7 +750,7 @@ class Server(object):
                                 }
                             ]
         """
-        addMetric(app, librariesio.dependency_stats, 'dependency_stats')
+        self.addMetric(librariesio.dependency_stats, 'dependency_stats')
 
         """
         @api {get} /:owner/:repo/dependents List of dependants from libraries.io
@@ -775,7 +775,7 @@ class Server(object):
                                 }
                             ]
         """
-        addMetric(app, librariesio.dependents, 'dependents')
+        self.addMetric(librariesio.dependents, 'dependents')
 
         ### OTHER ###
         """
@@ -797,7 +797,7 @@ class Server(object):
                                 }
                             ]
         """
-        addMetric(app, github.bus_factor, "bus_factor")
+        self.addMetric(github.bus_factor, "bus_factor")
 
         """
         @api {get} /git/lines_changed/:git_repo_url Lines Changed
@@ -824,7 +824,7 @@ class Server(object):
                                 }
                             ]
         """
-        addGitMetric(app, git.changes_by_author, 'changes_by_author')
+        self.addGitMetric(git.changes_by_author, 'changes_by_author')
 
         """
         @api {get} /:owner/:repo/timeseries/downloads Number of downloads
@@ -847,11 +847,11 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, downloads.downloads, 'downloads')
+        self.addTimeseries(downloads.downloads, 'downloads')
 
         @app.route('/{}/git/repos'.format(AUGUR_API_VERSION))
         def downloaded_repos():
-            drs = serialize(git.downloaded_repos())
+            drs = self.serialize(git.downloaded_repos())
             return Response(response=drs,
                             status=200,
                             mimetype="application/json")
@@ -882,7 +882,7 @@ class Server(object):
                                 }
                             ]
         """
-        addGitMetric(app, git.lines_changed_minus_whitespace, 'lines_changed')
+        self.addGitMetric(git.lines_changed_minus_whitespace, 'lines_changed')
 
         """
         @api {get} /:owner/:repo/linking_websites Linking Websites
@@ -905,7 +905,7 @@ class Server(object):
                                 }
                             ]
         """
-        addMetric(app, publicwww.linking_websites, 'linking_websites')
+        self.addMetric(publicwww.linking_websites, 'linking_websites')
 
         """
         @api {get} /:owner/:repo/timeseries/tags/major Tags for major releases timeseries
@@ -928,7 +928,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, github.major_tags, 'tags/major')
+        self.addTimeseries(github.major_tags, 'tags/major')
 
         """
         @api {get} /:owner/:repo/timeseries/tags/major Tags for major releases timeseries
@@ -951,7 +951,7 @@ class Server(object):
                                 }
                             ]
         """
-        addTimeseries(app, github.tags, 'tags')
+        self.addTimeseries(github.tags, 'tags')
 
         """
         @api {get} /ghtorrent_range Range of dates covered by GHTorrent
@@ -970,12 +970,11 @@ class Server(object):
         #   Batch Requests    #
         #######################
 
-        """
-        @api {post} /batch Bus Factor
+                """
+        @api {post} /batch 
         @apiDescription Returns results of batch requests
         @apiName Batch
         @apiGroup Batch
-
         POST JSON of api requests
         """
         #TODO: documentation
@@ -983,17 +982,16 @@ class Server(object):
         def batch():
             """
             Execute multiple requests, submitted as a batch.
-
             :statuscode 207: Multi status
             """
             if request.method == 'GET':
                 """this will return sensible defaults in the future"""
-                return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}', 501)
+                return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
 
             try:
                 requests = json.loads(request.data)
             except ValueError as e:
-                app.abort(400)
+                request.abort(400)
 
             responses = []
 
@@ -1054,54 +1052,65 @@ class Server(object):
 
         augurApp.finalize_config()
 
-def serialize(data, orient='records'):
 
-    if orient is None:
-        orient = 'records'
+    def serialize(self, data, orient='records'):
 
-    result = ''
+        if orient is None:
+            orient = 'records'
 
-    if hasattr(data, 'to_json'):
-        result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
-    else:
-        try:
-            result = json.dumps(data)
-        except:
-            result = data
+        result = ''
 
-    return result
+        if hasattr(data, 'to_json'):
+            result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
+        else:
+            try:
+                result = json.dumps(data)
+            except:
+                result = data
 
-def flaskify(func):
-    """
-    Simplifies API endpoints that just accept owner and repo,
-    serializes them and spits them out
-    """
-    def generated_function(*args, **kwargs):
-        kwargs.update(request.args.to_dict())
-        df = func(*args, **kwargs)
-        return Response(response=serialize(df, orient=request.args.get('orient')),
-                        status=200,
-                        mimetype="application/json")
-    generated_function.__name__ = func.__name__
-    return generated_function
+        return result
 
-def addMetric(app, function, endpoint):
-    """Simplifies adding routes that only accept owner/repo"""
-    app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
+    def flaskify(self, func, cache=True):
+        """
+        Simplifies API endpoints that just accept owner and repo,
+        serializes them and spits them out
+        """
+        if cache:
+            def generated_function(*args, **kwargs):
+                kwargs.update(request.args.to_dict())
+                def heavy_lifting():
+                    return self.serialize(func(*args, **kwargs))
+                body = self.cache.get(key=str(request.path), createfunc=heavy_lifting)
+                return Response(response=body,
+                                status=200,
+                                mimetype="application/json")
+            generated_function.__name__ = func.__name__
+            return generated_function
+        else:
+            def generated_function(*args, **kwargs):
+                kwargs.update(request.args.to_dict())
+                return Response(response=self.serialize(func(*args, **kwargs)),
+                                status=200,
+                                mimetype="application/json")
+            generated_function.__name__ = func.__name__
+            return generated_function
 
-def addGitMetric(app, function, endpoint):
-    """Simplifies adding routes that accept"""
-    app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
+    def addMetric(self, function, endpoint, cache=True):
+        """Simplifies adding routes that only accept owner/repo"""
+        self.app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function, cache=cache))
 
-def addTimeseries(app, function, endpoint):
-    """
-    Simplifies adding routes that accept owner/repo and return timeseries
+    def addGitMetric(self, function, endpoint, cache=True):
+        """Simplifies adding routes that accept"""
+        self.app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function, cache=cache))
 
-    :param app:       Flask app
-    :param function:  Function from a datasource to add
-    :param endpoint:  GET endpoint to generate
-    """
-    addMetric(app, function, 'timeseries/{}'.format(endpoint))
+    def addTimeseries(self, function, endpoint):
+        """
+        Simplifies adding routes that accept owner/repo and return timeseries
+        :param app:       Flask app
+        :param function:  Function from a datasource to add
+        :param endpoint:  GET endpoint to generate
+        """
+        self.addMetric(function, 'timeseries/{}'.format(endpoint))
 
 def run():
     server = Server()
