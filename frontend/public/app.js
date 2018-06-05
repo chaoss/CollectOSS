@@ -1344,7 +1344,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-429b02f1", __vue__options__)
+    hotAPI.reload("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
