@@ -181,14 +181,16 @@ class Git(object):
                     diffs = splits[2].split('diff --git')
                     for diff in diffs[1:]:
                         if '+' in diff:
-                            filename = re.search('b(\/.+)', diff).group(1)
-                            # Find all the lines that begin with a plus or minus to count added
-                            # Minus one to account the file matches
-                            additions = len(re.findall('\n\+[ \t]*[^\s]', diff)) - 1
-                            deletions = len(re.findall('\n-[ \t]*[^\s]', diff)) - 1
-                            data['additions'] = additions
-                            data['deletions'] = deletions
-                            frames.append(pd.DataFrame(data, index=['hash']))
+                            file_search = re.search('b(\/.+)', diff)
+                            if file_search is not None:
+                                filename = file_search.group(1)
+                                # Find all the lines that begin with a plus or minus to count added
+                                # Minus one to account the file matches
+                                additions = len(re.findall('\n\+[ \t]*[^\s]', diff)) - 1
+                                deletions = len(re.findall('\n-[ \t]*[^\s]', diff)) - 1
+                                data['additions'] = additions
+                                data['deletions'] = deletions
+                                frames.append(pd.DataFrame(data, index=['hash']))
 
             
             if len(frames):

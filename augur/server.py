@@ -1062,13 +1062,13 @@ class Server(object):
 
         augurApp.finalize_config()
 
-    def addMetric(self, function, endpoint):
+    def addMetric(self, function, endpoint, cache=True):
         """Simplifies adding routes that only accept owner/repo"""
-        self.app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function))
+        self.app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function, cache=cache))
 
-    def addGitMetric(self, function, endpoint):
+    def addGitMetric(self, function, endpoint, cache=True):
         """Simplifies adding routes that accept"""
-        self.app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function))
+        self.app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function, cache=cache))
 
     def addTimeseries(self, function, endpoint):
         """
@@ -1097,21 +1097,30 @@ class Server(object):
 
         return result
 
-    def flaskify(self, func):
+    def flaskify(self, func, cache=True):
         """
         Simplifies API endpoints that just accept owner and repo,
         serializes them and spits them out
         """
-        def generated_function(*args, **kwargs):
-            kwargs.update(request.args.to_dict())
-            def heavy_lifting():
-                return self.serialize(func(*args, **kwargs))
-            body = self.cache.get(key=str(request.path), createfunc=heavy_lifting)
-            return Response(response=body,
-                            status=200,
-                            mimetype="application/json")
-        generated_function.__name__ = func.__name__
-        return generated_function
+        if cache:
+            def generated_function(*args, **kwargs):
+                kwargs.update(request.args.to_dict())
+                def heavy_lifting():
+                    return self.serialize(func(*args, **kwargs))
+                body = self.cache.get(key=str(request.path), createfunc=heavy_lifting)
+                return Response(response=body,
+                                status=200,
+                                mimetype="application/json")
+            generated_function.__name__ = func.__name__
+            return generated_function
+        else:
+            def generated_function(*args, **kwargs):
+                kwargs.update(request.args.to_dict())
+                return Response(response=self.serialize(func(*args, **kwargs)),
+                                status=200,
+                                mimetype="application/json")
+            generated_function.__name__ = func.__name__
+            return generated_function
 
 
 
