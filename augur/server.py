@@ -623,7 +623,7 @@ class Server(object):
         """
         @api {get} /:owner/:repo/timeseries/contributions Contributions by Week
         @apiName ContributionsByWeek
-        @apiDescriptions
+        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/contributors.md">CHAOSS Metric Definition</a>
         @apiGroup Experimental
 
         @apiParam {String} owner Username of the owner of the GitHub repository
@@ -895,7 +895,6 @@ class Server(object):
         @api {get} /git/repos Git Repos
         @apiName Git Repos
         @apiDescription Shows downloaded Git repos
-        @apiName GitHub
         @apiGroup Utility
 
         @apiParam {String} owner Username of the owner of the GitHub repository
