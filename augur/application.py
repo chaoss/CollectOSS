@@ -5,14 +5,15 @@ import logging
 import configparser as configparser
 import json
 import coloredlogs
-import augur
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
+from lockfile import LockFile
 from augur import logger
+import argparse
 
 def updater_process(name, delay):
-    logger.info('Spawned updater process with PID {}'.format(os.getpid()))
-    app = augur.Application()
+    logger.info('Spawned {} updater process with PID {}'.format(name, os.getpid()))
+    app = Application()
     datasource = getattr(app, name)()
     try:
         while True:
@@ -27,7 +28,12 @@ def updater_process(name, delay):
 class Application(object):
     """Initalizes all classes form Augur using a config file or environment variables"""
 
-    def __init__(self, config_file='augur.config.json', no_config_file=0):
+    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application'):
+
+        # Command line arguments
+        # TODO: make this useful
+        self.arg_parser = argparse.ArgumentParser(description=description)
+        self.arg_parser.parse_known_args()
 
         # Open the config file
         self.__already_exported = {}
@@ -41,6 +47,8 @@ class Application(object):
                 self.__config_file = open(self.__config_file_path, 'r+')
             except:
                 logger.info('Couldn\'t open {}, attempting to create. If you have a augur.cfg, you can convert it to a json file using "make to-json"'.format(config_file))
+                if not os.path.exists(self.__config_location):
+                    os.makedirs(self.__config_location)
                 self.__config_file = open(self.__config_file_path, 'w+')
                 self.__config_bad = True
             # Options to export the loaded configuration as environment variables for Docker
@@ -53,7 +61,9 @@ class Application(object):
 
             # Load the config file
             try:
-                self.__config = json.loads(self.__config_file.read())
+                config_text = self.__config_file.read()
+                config_text = config_text.replace('$(AUGUR)', self.__config_location)
+                self.__config = json.loads(config_text)
             except json.decoder.JSONDecodeError as e:
                 if not self.__config_bad:
                     self.__using_config_file = False
@@ -79,12 +89,12 @@ class Application(object):
         if not os.path.exists(cache_config['cache.lock_dir']):
             os.makedirs(cache_config['cache.lock_dir'])
         cache_parsed = parse_cache_config_options(cache_config)
-        self.__cache = CacheManager(**cache_parsed)
+        self.cache = CacheManager(**cache_parsed)
 
         # Initalize all objects to None
         self.__ghtorrent = None
         self.__ghtorrentplus = None
-        self.__github = None
+        self.__githubapi = None
         self.__git = None
         self.__librariesio = None
         self.__downloads = None
@@ -104,14 +114,14 @@ class Application(object):
     def init_all(self):
         self.ghtorrent()
         self.ghtorrentplus()
-        self.github()
+        self.githubapi()
         self.git()
         self.librariesio()
         self.downloads()
         self.publicwww()
         self.localcsv()        
 
-    def read_config(self, section, name, environment_variable, default):
+    def read_config(self, section, name, environment_variable=None, default=None):
         value = None
         if environment_variable is not None:
             value = os.getenv(environment_variable)
@@ -135,13 +145,22 @@ class Application(object):
             logger.debug('{}:{} = {}'.format(section, name, value))
         return value
 
+    def set_config(self, section, name, value):
+        if not section in self.__config:
+            self.__config[section] = {}
+        self.__config[section][name] = value
+
     def finalize_config(self):
+        # Parse args with help
+        self.arg_parser.parse_known_args()
         # Close files and save config
         if self.__config_bad:
             logger.info('Regenerating config with missing values...')
             self.__config_file.close()
             self.__config_file = open(self.__config_file_path, 'w')
-            self.__config_file.write(json.dumps(self.__config, sort_keys=True, indent=4))
+            config_text = json.dumps(self.__config, sort_keys=True, indent=4)
+            config_text = config_text.replace(self.__config_location, '$(AUGUR)')
+            self.__config_file.write(config_text)
         self.__config_file.close()
         if (self.__export_env):
             self.__export_file.close()
@@ -163,10 +182,22 @@ class Application(object):
         logger.debug('Scheduling updates...')
         self.__updater()
 
+    def join_updates(self):
+        """
+        Join to the update processes
+        """
+        for process in self.__processes:
+            process.join()
+
+    def shutdown_updates(self):
+        for process in self.__processes:
+            process.terminate()
+
     def ghtorrent(self):
+        from augur.ghtorrent import GHTorrent
         if self.__ghtorrent is None:
             logger.debug('Initializing GHTorrent')
-            self.__ghtorrent = augur.GHTorrent(
+            self.__ghtorrent = GHTorrent(
                 user=self.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
                 password=self.read_config('Database', 'pass', 'AUGUR_DB_PASS', 'password'),
                 host=self.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
@@ -176,9 +207,10 @@ class Application(object):
         return self.__ghtorrent
 
     def ghtorrentplus(self):
+        from augur.ghtorrentplus import GHTorrentPlus
         if self.__ghtorrentplus is None:
             logger.debug('Initializing GHTorrentPlus')
-            self.__ghtorrentplus = augur.GHTorrentPlus(
+            self.__ghtorrentplus = GHTorrentPlus(
                 user=self.read_config('GHTorrentPlus', 'user', 'AUGUR_GHTORRENT_PLUS_USER', 'root'),
                 password=self.read_config('GHTorrentPlus', 'pass', 'AUGUR_GHTORRENT_PLUS_PASS', 'password'),
                 host=self.read_config('GHTorrentPlus', 'host', 'AUGUR_GHTORRENT_PLUS_HOST', '127.0.0.1'),
@@ -188,17 +220,18 @@ class Application(object):
         return self.__ghtorrentplus
 
     def git(self, update=False):
+        from augur.git import Git
         storage = self.path_relative_to_config(
             self.read_config('Git', 'storage', 'AUGUR_GIT_STORAGE', 'runtime/git_repos/')
         )
         repolist = self.read_config('Git', 'repositories', None, [])
         if self.__git is None:
             logger.debug('Initializing Git')
-            self.__git = augur.Git(
+            self.__git = Git(
                 list_of_repositories=repolist,
                 storage_folder=storage,
                 csv=self.localcsv(),
-                cache=self.__cache
+                cache=self.cache
             )
             self.__updatable.append({
                 'name': 'git',
@@ -210,34 +243,43 @@ class Application(object):
         return self.__git
 
 
-    def github(self):
-        if self.__github is None:
+    def githubapi(self):
+        from augur.githubapi import GitHubAPI
+        if self.__githubapi is None:
             logger.debug('Initializing GitHub API')
-            self.__github = augur.GitHubAPI(api_key=self.read_config('GitHub', 'apikey', 'AUGUR_GITHUB_API_KEY', 'None'))
-        return self.__github
+            api_key=self.read_config('GitHub', 'apikey', 'AUGUR_GITHUB_API_KEY', 'None')
+            self.__githubapi = GitHubAPI(api_key=api_key)
+        return self.__githubapi
 
     def librariesio(self):
+        from augur.librariesio import LibrariesIO
         if self.__librariesio is None:
             logger.debug('Initializing LibrariesIO')
-            self.__librariesio = augur.LibrariesIO(api_key=self.read_config('LibrariesIO', 'apikey', 'AUGUR_LIBRARIESIO_API_KEY', 'None'), githubapi=self.github())
+            self.__librariesio = LibrariesIO(
+                api_key=self.read_config('LibrariesIO', 'apikey', 'AUGUR_LIBRARIESIO_API_KEY', 'None'), 
+                githubapi=self.githubapi()
+            )
         return self.__librariesio
 
     def downloads(self):
+        from augur.downloads import Downloads
         if self.__downloads is None:
             logger.debug('Initializing Downloads')
-            self.__downloads = augur.Downloads(self.github())
+            self.__downloads = Downloads(self.githubapi())
         return self.__downloads
 
     def publicwww(self):
+        from augur.publicwww import PublicWWW
         if self.__publicwww is None:
             logger.debug('Initializing PublicWWW')
-            self.__publicwww = augur.PublicWWW(api_key=self.read_config('PublicWWW', 'apikey', 'AUGUR_PUBLIC_WWW_API_KEY', 'None'))
+            self.__publicwww = PublicWWW(api_key=self.read_config('PublicWWW', 'apikey', 'AUGUR_PUBLIC_WWW_API_KEY', 'None'))
         return self.__publicwww
 
     def localcsv(self):
+        from augur.localcsv import LocalCSV
         if self.__localCSV is None:
             logger.debug('Initializing LocalCSV')
-            self.__localCSV = augur.LocalCSV()
+            self.__localCSV = LocalCSV()
         return self.__localCSV
 
 

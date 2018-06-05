@@ -22,7 +22,7 @@ class GitHubAPI(object):
         :param api_key: GitHub API key
         """
         self.GITHUB_API_KEY = api_key
-        self.__api = github.Github(api_key)
+        self.api = github.Github(api_key)
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###
@@ -100,10 +100,10 @@ class GitHubAPI(object):
         else:
             end = github.GithubObject.NotSet
 
-        commits = self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
+        commits = self.api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
 
         if filename != None:
-            self.__api.get_repo((owner + "/" + repo)).get_contents(filename)
+            self.api.get_repo((owner + "/" + repo)).get_contents(filename)
 
         df = []
 
@@ -259,7 +259,7 @@ class GitHubAPI(object):
 
 
     def contributors_gender(self, owner, repo=None):
-        contributors = self.__api.get_repo((owner + "/" + repo)).get_contributors()
+        contributors = self.api.get_repo((owner + "/" + repo)).get_contributors()
         names = pd.DataFrame(columns=['name'])
         i = 0
         for contributor in contributors:

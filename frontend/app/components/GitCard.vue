@@ -1,7 +1,7 @@
 <template>
   <section>
     <h1>Git Metrics</h1>
-    <h2>{{ $store.state.baseRepo }}</h2>
+    <h2>{{ $store.state.gitRepo }}</h2>
       <div class="row">
         <lines-of-code-chart></lines-of-code-chart>
       </div>

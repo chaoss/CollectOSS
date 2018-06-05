@@ -1,5 +1,6 @@
 export default class AugurStats {
-  static convertDates (data, earliest, latest) {
+  static convertDates (data, earliest, latest, key) {
+    key = key || 'date'
     earliest = earliest || new Date('01-01-2005')
     latest = latest || new Date()
     if (Array.isArray(data[0])) {
@@ -8,10 +9,12 @@ export default class AugurStats {
       })
     } else {
       data = data.map((d) => {
-        d.date = new Date(d.date)
+        d.date = new Date(d[key])
         return d
       }).filter((d) => {
         return earliest < d.date && d.date < latest
+      }).sort((a, b) => {
+        return a.date - b.date
       })
     }
     return data
@@ -128,7 +131,7 @@ export default class AugurStats {
   }
 
   static makeRelative (baseData, compareData, key, config) {
-    config.byDate = (config.byDate != undefined)
+    config.byDate = (config.byDate === true)
     config.earliest = config.earliest || new Date('01-01-2005')
     config.latest = config.latest || new Date()
     config.period = config.period || 180

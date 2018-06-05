@@ -6,7 +6,7 @@
           <tr>
             <td>Author</td>
             <td v-for="year in years">{{ year }}</td>
-            <td>Total</td>
+            <td>Total all time</td>
           </tr>
         </thead>
         <tbody>
@@ -24,7 +24,7 @@
           <tr>
             <td>Author</td>
             <td v-for="year in years">{{ year }}</td>
-            <td>Total</td>
+            <td>Total all time</td>
           </tr>
         </thead>
         <tbody>
