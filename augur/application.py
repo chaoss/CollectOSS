@@ -42,6 +42,7 @@ class Application(object):
         self.__config_bad = False
         self.__config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
         self.__config_location = os.path.dirname(self.__config_file_path)
+        self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
         if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
             try:
                 self.__config_file = open(self.__config_file_path, 'r+')
@@ -52,7 +53,7 @@ class Application(object):
                 self.__config_file = open(self.__config_file_path, 'w+')
                 self.__config_bad = True
             # Options to export the loaded configuration as environment variables for Docker
-            self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
+           
             if self.__export_env:
                 export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
                 self.__export_file = open(export_filename, 'w+')

@@ -892,12 +892,11 @@ class Server(object):
         #######################
 
         """
-        @api {get} /:owner/:repo/bus_factor Bus Factor
-        @apiName BusFactor
-        @apiDescription Metric Undefined
-        @apiDescription Returns an integer that is the number of developers that have a summed percentage of contributions higher than the threshold
+        @api {get} /git/repos Git Repos
+        @apiName Git Repos
+        @apiDescription Shows downloaded Git repos
         @apiName GitHub
-        @apiGroup Risk
+        @apiGroup Utility
 
         @apiParam {String} owner Username of the owner of the GitHub repository
         @apiParam {String} repo Name of the GitHub repository
@@ -946,9 +945,9 @@ class Server(object):
         self.addGitMetric(git.lines_changed_minus_whitespace, 'lines_changed')
 
         """
-        @api {get} /git/lines_changed/:git_repo_url Lines Changed
-        @apiName Lines Changed (no whitespace)
-        @apiDescription Shows detailed information about each file changed by each commit
+        @api {get} /git/changes_by_author/:git_repo_url Changes by Author
+        @apiName Changes by Author
+        @apiDescription Shows total changes by author
         @apiGroup Uncategorized
 
         @apiParam {String} owner Username of the owner of the GitHub repository
@@ -957,16 +956,10 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "additions":2,
-                                    "author_date":"2018-05-14 10:09:57 -0500",
-                                    "author_email":"s@goggins.com",
-                                    "author_name":"Sean P. Goggins",
-                                    "commit_date":"2018-05-16 10:12:22 -0500",
-                                    "committer_email":"derek@howderek.com",
-                                    "committer_name":"Derek Howard",
-                                    "deletions":0,"hash":"77e603a",
-                                    "message":"merge dev",
-                                    "parents":"b8ec0ed"
+                                    "additions":32142,
+                                    "deletions":34232,
+                                    "author_email":"derek@howderek.com",
+                                    "author_name":"Derek Howard",
                                 }
                             ]
         """
