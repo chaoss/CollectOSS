@@ -97,8 +97,6 @@ export default {
         }
       })
 
-      console.log('endp, f', endpoints, fields)
-
       // Get the repos we need
       let repos = []
       if (this.repo) {
@@ -163,7 +161,7 @@ export default {
             // Build basic chart using rolling averages
             let d = defaultProcess(obj, key, field, count)
             let rolling = AugurStats.rollingAverage(d, 'value', this.period)
-            console.log('rolling, before+after', d, rolling)
+            console.log(this.source, 'rolling, before+after', d, rolling)
             if (!this.disableRollingAverage) {
               normalized.push(rolling)
               this.mgConfig.legend.push(field)

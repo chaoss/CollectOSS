@@ -12,13 +12,13 @@
         </line-chart>
       </div>
 
-      <div class="col col-6">
+<!--       <div class="col col-6">
         <line-chart source="closedIssueResolutionDuration"
-                    title="Time to Close / Issue / Week" 
+                    title="Time to Close for Issue / Week" 
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md"
                     cite-text="Issues Closed">
         </line-chart>
-      </div>
+      </div> -->
 
       <div class="col col-6">
         <line-chart source="codeCommits"
@@ -46,24 +46,14 @@
         </line-chart>
       </div>
 
-
-      <div class="col col-12">
-        <bubble-chart source="contributingGithubOrganizations"
-                      title="Contributing Github Organizations Overview"
-                      size="total"
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md"
-                      cite-text="Contributing Organizations">
-        </bubble-chart>
-      </div>
-
-      <div class="col col-6">
+<!--       <div class="col col-6">
         <line-chart source="firstResponseToIssueDuration"
                     title="Issue Response Time" 
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md"
                     cite-text="Issue Response Time">
         </line-chart>
       </div>
-
+ -->
       <div class="col col-6">
         <line-chart source="forks"
                     title="Forks / Week" 
@@ -72,13 +62,13 @@
         </line-chart>
       </div>
 
-      <div class="col col-6">
+<!--       <div class="col col-6">
         <line-chart source="linesOfCodeChanged"
                     title="Lines Of Code Changed / Week" 
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/lines-of-code-changed.md"
                     cite-text="Lines Of Code Changed">
         </line-chart>
-      </div>
+      </div> -->
 
       <div class="col col-6">
         <line-chart source="maintainerResponseToMergeRequestDuration"
@@ -129,6 +119,15 @@
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md"
                     cite-text="Open Pull Requests">
         </line-chart>
+      </div>
+
+      <div class="col col-12">
+        <bubble-chart source="contributingGithubOrganizations"
+                      title="Contributing Github Organizations Overview"
+                      size="total"
+                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md"
+                      cite-text="Contributing Organizations">
+        </bubble-chart>
       </div>
 
     </div>

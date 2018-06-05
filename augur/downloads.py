@@ -10,7 +10,7 @@ from augur import logger
 class Downloads(object):
     """Class for retrieveing download information using APIs and web scrapers"""
     def __init__(self, githubapi):
-        self.__githubapi = githubapi._GitHubAPI__api
+        self.__githubapi = githubapi.api
         
 
     def downloads(self, owner, repo):

@@ -47,28 +47,32 @@ class GHTorrent(object):
                 FROM {0} 
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY DATE(created_at)""".format(table, repo_col)
+                GROUP BY DATE(created_at)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
         if group_by == "week":
             return """
                 SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY YEARWEEK(created_at)""".format(table, repo_col)
+                GROUP BY YEARWEEK(created_at)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
         if group_by == "month":
             return """
                 SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY MONTH(created_at), YEAR(created_at)""".format(table, repo_col)
+                GROUP BY MONTH(created_at), YEAR(created_at)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
         if group_by == "year":
             return """
                 SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY YEAR(created_at)""".format(table, repo_col)
+                GROUP BY YEAR(created_at)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
     def __sub_table_count_by_date(self, parent_table, sub_table, parent_id, sub_id, project_id):
         """

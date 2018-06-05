@@ -2,7 +2,7 @@
 import os
 import sys
 import json
-from flask import Flask, request, Response
+from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import augur
 
@@ -16,55 +16,6 @@ if its open the GH_DATA_CONFIG_FILE and then its open in read mode
 and if the file does't open the it print Couldn\'t open config file, attempting to create.
 '''
 
-def serialize(data, orient='records'):
-
-    if orient is None:
-        orient = 'records'
-
-    result = ''
-
-    if hasattr(data, 'to_json'):
-        result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
-    else:
-        try:
-            result = json.dumps(data)
-        except:
-            result = data
-
-    return result
-
-def flaskify(func):
-    """
-    Simplifies API endpoints that just accept owner and repo,
-    serializes them and spits them out
-    """
-    def generated_function(*args, **kwargs):
-        kwargs.update(request.args.to_dict())
-        df = func(*args, **kwargs)
-        return Response(response=serialize(df, orient=request.args.get('orient')),
-                        status=200,
-                        mimetype="application/json")
-    generated_function.__name__ = func.__name__
-    return generated_function
-
-def addMetric(app, function, endpoint):
-    """Simplifies adding routes that only accept owner/repo"""
-    app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
-
-def addGitMetric(app, function, endpoint):
-    """Simplifies adding routes that accept"""
-    app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
-
-def addTimeseries(app, function, endpoint):
-    """
-    Simplifies adding routes that accept owner/repo and return timeseries
-
-    :param app:       Flask app
-    :param function:  Function from a datasource to add
-    :param endpoint:  GET endpoint to generate
-    """
-    addMetric(app, function, 'timeseries/{}'.format(endpoint))
-
 class Server(object):
     def __init__(self):
         # Create Flask application
@@ -76,12 +27,17 @@ class Server(object):
         self.augurApp = augur.Application()
         augurApp = self.augurApp
 
+        # Initialize cache
+        expire_minutes = int(augurApp.read_config('Server', 'cache_expire', 'AUGUR_CACHE_EXPIRE', 3600))
+        self.cache = augurApp.cache.get_cache('server', expire=expire_minutes)
+        self.cache.clear()
+
         # Initalize all of the classes
         ghtorrent = augurApp.ghtorrent()
         ghtorrentplus = augurApp.ghtorrentplus()
         publicwww = augurApp.publicwww()
         git = augurApp.git()
-        github = augurApp.github()
+        github = augurApp.githubapi()
         librariesio = augurApp.librariesio()
         downloads = augurApp.downloads()
         localcsv = augurApp.localcsv()
@@ -1098,6 +1054,54 @@ class Server(object):
 
         augurApp.finalize_config()
 
+def serialize(data, orient='records'):
+
+    if orient is None:
+        orient = 'records'
+
+    result = ''
+
+    if hasattr(data, 'to_json'):
+        result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
+    else:
+        try:
+            result = json.dumps(data)
+        except:
+            result = data
+
+    return result
+
+def flaskify(func):
+    """
+    Simplifies API endpoints that just accept owner and repo,
+    serializes them and spits them out
+    """
+    def generated_function(*args, **kwargs):
+        kwargs.update(request.args.to_dict())
+        df = func(*args, **kwargs)
+        return Response(response=serialize(df, orient=request.args.get('orient')),
+                        status=200,
+                        mimetype="application/json")
+    generated_function.__name__ = func.__name__
+    return generated_function
+
+def addMetric(app, function, endpoint):
+    """Simplifies adding routes that only accept owner/repo"""
+    app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
+
+def addGitMetric(app, function, endpoint):
+    """Simplifies adding routes that accept"""
+    app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(flaskify(function))
+
+def addTimeseries(app, function, endpoint):
+    """
+    Simplifies adding routes that accept owner/repo and return timeseries
+
+    :param app:       Flask app
+    :param function:  Function from a datasource to add
+    :param endpoint:  GET endpoint to generate
+    """
+    addMetric(app, function, 'timeseries/{}'.format(endpoint))
 
 def run():
     server = Server()

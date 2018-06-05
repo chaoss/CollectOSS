@@ -10,7 +10,7 @@ class LibrariesIO(object):
     """Handles interaction with https://libraries.io/api to get dependency data"""
     def __init__(self, api_key, githubapi):
         self.API_KEY = api_key
-        self.__githubapi = githubapi._GitHubAPI__api
+        self.__githubapi = githubapi.api
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###

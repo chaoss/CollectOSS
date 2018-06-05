@@ -1,5 +1,6 @@
 export default class AugurStats {
-  static convertDates (data, earliest, latest) {
+  static convertDates (data, earliest, latest, key) {
+    key = key || 'date'
     earliest = earliest || new Date('01-01-2005')
     latest = latest || new Date()
     if (Array.isArray(data[0])) {
@@ -8,10 +9,12 @@ export default class AugurStats {
       })
     } else {
       data = data.map((d) => {
-        d.date = new Date(d.date)
+        d.date = new Date(d[key])
         return d
       }).filter((d) => {
         return earliest < d.date && d.date < latest
+      }).sort((a, b) => {
+        return a.date - b.date
       })
     }
     return data
@@ -34,7 +37,16 @@ export default class AugurStats {
   }
 
   static averageArray (ary) {
-    return ary.reduce((a, e) => { return a + e }, 0) / (ary.length)
+    let len = ary.length
+    let sum = ary.reduce((a, e) => {
+      if (isFinite(e)) {
+        return a + e
+      } else {
+        len--
+        return a
+      }
+    }, 0)
+    return (sum / len) || 0
   }
 
   static aboveAverage (data, key) {
@@ -73,6 +85,9 @@ export default class AugurStats {
   static rollingAverage (data, key, windowSizeInDays) {
     key = key || 'value'
     let period = (windowSizeInDays / 2)
+    data = data.filter(datum => {
+      return isFinite(datum[key])
+    })
     return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }
@@ -116,7 +131,7 @@ export default class AugurStats {
   }
 
   static makeRelative (baseData, compareData, key, config) {
-    config.byDate = (config.byDate != undefined)
+    config.byDate = (config.byDate === true)
     config.earliest = config.earliest || new Date('01-01-2005')
     config.latest = config.latest || new Date()
     config.period = config.period || 180
