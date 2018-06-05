@@ -3,11 +3,14 @@ import pandas as pd
 import requests
 import datetime
 import base64
+from augur import logger
+# end imports
+# (don't remove the above line, it's for a script)
 
 class Downloads(object):
     """Class for retrieveing download information using APIs and web scrapers"""
     def __init__(self, githubapi):
-        self.__githubapi = githubapi._GitHubAPI__api
+        self.__githubapi = githubapi.api
         
 
     def downloads(self, owner, repo):

@@ -7,6 +7,9 @@ import github
 import numpy as np
 import datetime
 import requests
+from augur import logger
+# end imports
+# (don't remove the above line, it's for a script)
 
 class GitHubAPI(object):
     """
@@ -19,10 +22,64 @@ class GitHubAPI(object):
         :param api_key: GitHub API key
         """
         self.GITHUB_API_KEY = api_key
-        self.__api = github.Github(api_key)
+        self.api = github.Github(api_key)
+
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
+
+
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+    def lines_changed(self, owner, repo=None):
+        """
+        chaoss-metric: lines-of-code-changed
+        Additions and deletions each week
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame with each row being am issue
+        """
+        # get the data we need from the GitHub API
+        # see <project_root>/augur/githubapi.py for examples using the GraphQL API
+        url = "https://api.github.com/repos/{}/{}/stats/code_frequency".format(owner, repo)
+        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
+        # get our data into a dataframe
+        df = pd.DataFrame(json, columns=['date', 'additions', 'deletions'])
+        # all timeseries metrics need a 'date' column
+        df['date'] = pd.to_datetime(df['date'], unit='s', infer_datetime_format=True)
+        # normalize our data and create useful aggregates
+        df['deletions'] = df['deletions'] * -1
+        df['delta'] = df['additions'] - df['deletions']
+        df['total_lines'] = df['delta'].cumsum()
+        # return the dataframe
+        return df
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
 
     def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
         """
+        augur-metric: bus-factor
+
         Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
 
         :param owner: repo owner username
@@ -43,10 +100,10 @@ class GitHubAPI(object):
         else:
             end = github.GithubObject.NotSet
 
-        commits = self.__api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
+        commits = self.api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
 
         if filename != None:
-            self.__api.get_repo((owner + "/" + repo)).get_contents(filename)
+            self.api.get_repo((owner + "/" + repo)).get_contents(filename)
 
         df = []
 
@@ -106,7 +163,7 @@ class GitHubAPI(object):
                      """
                     query {
                       repository(owner: "%s", name: "%s") {
-                        tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s") {
+                        tags: refs(refPrefix: "refs/tags/", first: 100, after: %s) {
                           edges {
                             cursor
                             tag: node {
@@ -137,7 +194,7 @@ class GitHubAPI(object):
             if data['data']['repository']['tags']['edges'] == []:
                 break
             else:
-                cursor = data['data']['repository']['tags']['edges'][-1]['cursor']
+                cursor = '"{}"'.format(data['data']['repository']['tags']['edges'][-1]['cursor'])
         return pd.DataFrame(tags_list)
 
     def major_tags(self, owner, repo):
@@ -202,7 +259,7 @@ class GitHubAPI(object):
 
 
     def contributors_gender(self, owner, repo=None):
-        contributors = self.__api.get_repo((owner + "/" + repo)).get_contributors()
+        contributors = self.api.get_repo((owner + "/" + repo)).get_contributors()
         names = pd.DataFrame(columns=['name'])
         i = 0
         for contributor in contributors:
@@ -212,21 +269,69 @@ class GitHubAPI(object):
         genderized = names.merge(LocalCSV.name_gender, how='inner', on=['name'])
         return genderized
 
-    def lines_changed(self, owner, repo=None):
-        url = "https://api.github.com/repos/{}/{}/stats/code_frequency".format(owner, repo)
-        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
-        dates = []
-        totals = []
-        for i in range(0, len(json)):
-            dates = np.append(dates, datetime.datetime.utcfromtimestamp(json[i][0]).strftime('%Y-%m-%dT%H:%M:%SZ')) 
-            totals = np.append(totals, json[i][1] + json[i][2])
-            # totals = np.append(totals, json[i][1] + abs(json[i][2]))
-        df1 = pd.DataFrame(data=dates, columns=["date"])
-        df2 = pd.DataFrame(data=totals, columns=["lines_changed"])
-        df = df1.join(df2)
-        return df
 
+    # def code_reviews(self, owner, repo=None):
+    #     """
+    #     Number of code reviews (merge requests) for a project
 
+    #     :param owner: The name of the project owner
+    #     :param repo: The name of the repo
+    #     :return: DataFrame with each row being a merge request's creation date
+    #     """
 
+    #     url = 'https://api.github.com/graphql'
+    #     headers = {'Authorization': 'token %s' % self.GITHUB_API_KEY}
+    #     cursor = "null"
+    #     pullReqTime = []
+    #     numReviews = []
+    #     count = 0
+
+    #     while count < 100:
+
+    #         query = """
+    #         {
+    #           repository(owner: "%s", name: "%s") {
+    #                  pullRequests(first: 100, after: %s) {
+    #                     edges {
+    #                         cursor
+    #                         node {
+    #                           number
+    #                           createdAt
+    #                           reviews(first: 100) {
+    #                             edges {
+    #                               node {
+    #                                 createdAt
+    #                                 author {
+    #                                   login
+    #                                 }
+    #                                 createdAt
+    #                               }
+    #                             }
+    #                           }
+    #                         }
+    #                         cursor
+    #                     }
+    #                 }
+    #             }
+    #         }
+    #         """ % (owner, repo, cursor)
+
+    #         request = requests.post(url, json={'query': query}, headers=headers)
+    #         if request.status_code == 200:
+    #             data = request.json()
+    #         else:
+    #             raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
+
+    #         pullReqs = data['data']['repository']['pullRequests']['edges']
+    #         count += 1
+    #         for i in pullReqs:
+    #             pullReqTime = np.append(pullReqTime, i['node']['createdAt'])
+    #             numReviews = np.append(numReviews, len(i['node']['reviews']['edges']))
+    #         if len(data['data']['repository']['pullRequests']['edges']) < 100:
+    #             break
+    #         else:
+    #             cursor = '"{}"'.format(data['data']['repository']['pullRequests']['edges'][-1]['cursor'])
+
+    #     return pd.DataFrame({'date': pullReqTime, 'code_reviews': numReviews})
 
 

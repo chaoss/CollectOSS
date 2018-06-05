@@ -184,7 +184,10 @@ function Augur() {
 
   window.augur = new window.Vuex.Store({
     state: {
+      hasState: null,
+      tab: 'gmd',
       baseRepo: null,
+      gitRepo: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2005'),
@@ -195,21 +198,33 @@ function Augur() {
       byDate: false
     },
     mutations: {
-      setBaseRepo: function setBaseRepo(state, payload) {
-        var repo = window.AugurAPI.Repo(payload.url);
+      setRepo: function setRepo(state, payload) {
+        var repo = window.AugurAPI.Repo(payload);
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo;
+        } else {
+          repo = window.AugurRepos[repo.toString()];
         }
-        state.baseRepo = repo.toString();
+        state.hasState = true;
+        if (repo.owner && repo.name) {
+          state.baseRepo = repo.toString();
+          var title = repo.owner + '/' + repo.name + '- Augur';
+          state.tab = 'gmd';
+          var _queryString = '?repo=' + repo.owner + '+' + repo.name;
+          window.history.pushState(null, title, _queryString);
+        }
+        if (payload.gitURL) {
+          var _queryString2 = '?git=' + window.btoa(repo.gitURL);
+          window.history.pushState(null, 'Git Analysis - Augur', _queryString2);
+          state.tab = 'git';
+          state.gitRepo = repo.gitURL;
+        }
         if (!payload.keepCompared) {
           state.comparedRepos = [];
         }
-        var title = repo.owner + '/' + repo.name + '- Augur';
-        var queryString = '?repo=' + repo.owner + '+' + repo.name;
-        window.history.pushState(null, title, queryString);
       },
       addComparedRepo: function addComparedRepo(state, payload) {
-        var repo = window.AugurAPI.Repo(payload.url);
+        var repo = window.AugurAPI.Repo({ githubURL: payload.url });
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo;
         }
@@ -228,6 +243,9 @@ function Augur() {
       },
       setCompare: function setCompare(state, payload) {
         state.compare = payload.compare;
+      },
+      setTab: function setTab(state, payload) {
+        state.tab = payload.tab;
       },
       setVizOptions: function setVizOptions(state, payload) {
         if (payload.trailingAverage) {
@@ -262,12 +280,15 @@ function Augur() {
   // Load state from query string
   var parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' });
   if (parsed.repo) {
-    window.AugurApp.$store.commit('setBaseRepo', { url: parsed.repo.replace(' ', '/') });
+    window.AugurApp.$store.commit('setRepo', { githubURL: parsed.repo.replace(' ', '/') });
   }
   if (parsed.comparedTo) {
     parsed.comparedTo.forEach(function (repo) {
-      window.AugurApp.$store.commit('addComparedRepo', { url: repo.replace(' ', '/') });
+      window.AugurApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') });
     });
+  }
+  if (parsed.git) {
+    window.AugurApp.$store.commit('setRepo', { gitURL: window.atob(parsed.git) });
   }
 }
 });
@@ -290,13 +311,15 @@ var AugurAPI = function () {
   function AugurAPI(hostURL, version, autobatch) {
     _classCallCheck(this, AugurAPI);
 
+    this.__downloadedGitRepos = [];
+
     this._version = version || '/api/unstable';
     this._host = hostURL || 'http://' + window.location.host;
     this.__cache = {};
     this.__timeout = null;
     this.__pending = {};
 
-    this.autobatch = typeof autobatch !== 'undefined' ? autobatch : true;
+    this.getDownloadedGitRepos = this.__EndpointFactory('git/repos');
     this.openRequests = 0;
   }
 
@@ -319,42 +342,69 @@ var AugurAPI = function () {
   // }
 
   _createClass(AugurAPI, [{
+    key: '__endpointURL',
+    value: function __endpointURL(endpoint) {
+      return '' + this._host + this._version + '/' + endpoint;
+    }
+  }, {
+    key: '__URLFunctionFactory',
+    value: function __URLFunctionFactory(url) {
+      var self = this;
+      return function (params, callback) {
+        var _this = this;
+
+        this.openRequests++;
+        if (self.__cache[window.btoa(url)]) {
+          if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
+            return new Promise(function (resolve, reject) {
+              resolve(self.__cache[window.btoa(url)].data);
+            });
+          }
+        }
+        return $.get(url, params).then(function (data) {
+          _this.openRequests--;
+          self.__cache[window.btoa(url)] = {
+            created_at: Date.now(),
+            data: data
+          };
+          return data;
+        });
+      };
+    }
+  }, {
+    key: '__EndpointFactory',
+    value: function __EndpointFactory(endpoint) {
+      return this.__URLFunctionFactory(this.__endpointURL(endpoint));
+    }
+  }, {
     key: 'batch',
     value: function batch(endpoints) {
-      var _this = this;
+      var _this2 = this;
 
       var str = '[{"method": "GET", "path": "' + endpoints.join('"},{"method": "GET", "path": "') + '"}]';
       this.openRequests++;
-      var url = '' + this._host + this._version + '/batch';
-
+      var url = this.__endpointURL('batch');
       // Check cached
       if (this.__cache[window.btoa(url + endpoints.join(','))]) {
         if (this.__cache[window.btoa(url + endpoints.join(','))].created_at > Date.now() - 1000 * 60) {
           return new Promise(function (resolve, reject) {
-            resolve(_this.__cache[window.btoa(url + endpoints.join(','))].data);
+            resolve(_this2.__cache[window.btoa(url + endpoints.join(','))].data);
           });
         }
       }
-
       return $.ajax(url, {
         type: 'post',
         data: str,
         dataType: 'json',
         contentType: 'application/json'
       }).then(function (data) {
-        _this.openRequests--;
+        _this2.openRequests--;
         // Save to cache
-        _this.__cache[window.btoa(url + endpoints.join(','))] = {
+        _this2.__cache[window.btoa(url + endpoints.join(','))] = {
           created_at: Date.now(),
           data: data
         };
-        return new Promise(function (resolve, reject) {
-          if (typeof data === 'undefined') {
-            reject(new Error('data-undefined'));
-          } else {
-            resolve(data);
-          }
-        });
+        return data;
       });
     }
   }, {
@@ -387,67 +437,66 @@ var AugurAPI = function () {
     }
   }, {
     key: 'Repo',
-    value: function Repo(owner, repoName) {
-      var _this2 = this;
+    value: function Repo(repo) {
+      var _this3 = this;
 
-      var repo;
-      if (repoName) {
-        repo = { owner: owner, name: repoName };
-      } else if (owner) {
-        var splitURL = owner.split('/');
+      if (repo.githubURL) {
+        var splitURL = repo.githubURL.split('/');
         if (splitURL.length < 3) {
-          repo = { owner: splitURL[0], name: splitURL[1] };
+          repo.owner = splitURL[0];
+          repo.name = splitURL[1];
         } else {
-          repo = { owner: splitURL[3], name: splitURL[4] };
+          repo.owner = splitURL[3];
+          repo.name = splitURL[4];
+        }
+      }
+
+      if (repo.gitURL) {
+        if (repo.gitURL.includes('github.com')) {
+          var _splitURL = repo.gitURL.split('/');
+          repo.owner = _splitURL[3];
+          repo.name = _splitURL[4].split('.')[0];
         }
       }
 
       repo.toString = function () {
-        return repo.owner + '/' + repo.name;
+        if (repo.owner && repo.name) {
+          return repo.owner + '/' + repo.name;
+        } else {
+          return JSON.stringify(repo);
+        }
       };
-
       repo.__endpointMap = {};
       repo.__reverseEndpointMap = {};
 
+      repo.getDownloadedStatus = function () {
+        _this3.getDownloadedGitRepos().then(function (data) {
+          var rs = false;
+          data.forEach(function (gitURL) {
+            if (gitURL.includes('github.com')) {
+              var _splitURL2 = gitURL.split('/');
+              var owner = _splitURL2[3];
+              var name = _splitURL2[4].split('.')[0];
+              if (repo.toString() === owner + '/' + name) {
+                rs = true;
+              }
+            }
+          });
+          return rs;
+        });
+      };
+
+      var __Endpoint = function __Endpoint(r, name, url) {
+        r[name] = _this3.__URLFunctionFactory(url);
+        return r[name];
+      };
+
       var Endpoint = function Endpoint(r, name, endpoint) {
-        _this2.openRequests++;
-        var self = _this2;
-        var fullEndpoint = _this2._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
-        var url = _this2._host + fullEndpoint;
+        var fullEndpoint = _this3._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
+        var url = _this3._host + fullEndpoint;
         r.__endpointMap[name] = fullEndpoint;
         r.__reverseEndpointMap[fullEndpoint] = { name: name, owner: repo.toString() };
-        r[name] = function (params, callback) {
-          var _this3 = this;
-
-          if (self.__cache[window.btoa(url)]) {
-            if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
-              return new Promise(function (resolve, reject) {
-                resolve(self.__cache[window.btoa(url)].data);
-              });
-            }
-          }
-          if (this.autobatch) {
-            return this.__autobatcher(url, params);
-          }
-          return $.get(url, params).then(function (data) {
-            _this3.openRequests--;
-            self.__cache[window.btoa(url)] = {
-              created_at: Date.now(),
-              data: data
-            };
-            if (typeof callback === 'function') {
-              callback(data);
-            }
-            return new Promise(function (resolve, reject) {
-              if (typeof data === 'undefined') {
-                reject(new Error('data-undefined'));
-              } else {
-                resolve(data);
-              }
-            });
-          });
-        };
-        return r[name];
+        return __Endpoint(r, name, url);
       };
 
       var Timeseries = function Timeseries(r, jsName, endpoint) {
@@ -459,6 +508,11 @@ var AugurAPI = function () {
         return func;
       };
 
+      var GitEndpoint = function GitEndpoint(r, jsName, endpoint) {
+        var url = _this3.__endpointURL('git/' + endpoint + '/' + r.gitURL);
+        return __Endpoint(r, jsName, url);
+      };
+
       repo.batch = function (jsNameArray, noExecute) {
         var routes = jsNameArray.map(function (e) {
           return repo.__endpointMap[e];
@@ -466,7 +520,7 @@ var AugurAPI = function () {
         if (noExecute) {
           return routes;
         }
-        return _this2.batch(routes).then(function (data) {
+        return _this3.batch(routes).then(function (data) {
           return new Promise(function (resolve, reject) {
             if (Array.isArray(data)) {
               var mapped = {};
@@ -485,35 +539,72 @@ var AugurAPI = function () {
         });
       };
 
-      Timeseries(repo, 'commits', 'commits');
-      Timeseries(repo, 'forks', 'forks');
-      Timeseries(repo, 'issues', 'issues');
-      Timeseries(repo, 'pulls', 'pulls');
-      Timeseries(repo, 'stars', 'stargazers');
-      Timeseries(repo, 'tags', 'tags');
-      Timeseries(repo, 'downloads', 'downloads');
-      Timeseries(repo, 'totalCommitters', 'total_committers');
-      Timeseries(repo, 'issueComments', 'issue/comments');
-      Timeseries(repo, 'commitComments', 'commits/comments');
-      Timeseries(repo, 'pullReqComments', 'pulls/comments');
-      Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate');
-      Timeseries(repo, 'issuesClosed', 'issues/closed');
-      Timeseries(repo, 'issuesResponseTime', 'issues/response_time');
-      Timeseries(repo, 'issueActivity', 'issues/activity');
-      Timeseries(repo, 'communityEngagement', 'community_engagement');
-      Timeseries(repo, 'linesChanged', 'lines_changed');
+      if (repo.owner && repo.name) {
+        // DIVERSITY AND INCLUSION
 
-      Endpoint(repo, 'maintainerResponseTime', 'pull/maintainer_response_time');
-      Endpoint(repo, 'contributors', 'contributors');
-      Endpoint(repo, 'contributions', 'contributions');
-      Endpoint(repo, 'committerLocations', 'committer_locations');
-      Endpoint(repo, 'communityAge', 'community_age');
-      Endpoint(repo, 'linkingWebsites', 'linking_websites');
-      Endpoint(repo, 'busFactor', 'bus_factor');
-      Endpoint(repo, 'dependents', 'dependents');
-      Endpoint(repo, 'dependencies', 'dependencies');
-      Endpoint(repo, 'dependencyStats', 'dependency_stats');
-      Endpoint(repo, 'watchers', 'watchers');
+        // GROWTH, MATURITY, AND DECLINE
+        Timeseries(repo, 'issues', 'issues');
+        Timeseries(repo, 'issuesClosed', 'issues/closed');
+        Timeseries(repo, 'issuesResponseTime', 'issues/response_time');
+        Timeseries(repo, 'commits', 'commits');
+        Endpoint(repo, 'maintainerResponseTime', 'pull/maintainer_response_time');
+        Timeseries(repo, 'forks', 'forks');
+        Timeseries(repo, 'pulls', 'pulls');
+        Timeseries(repo, 'pullReqComments', 'pulls/comments');
+        Timeseries(repo, 'codeReviewIteration', 'code_review_iteration');
+        Timeseries(repo, 'maintainerResponseTime', 'pulls/maintainer_response_time');
+        Timeseries(repo, 'contributionAcceptance', 'contribution_acceptance');
+        Timeseries(repo, 'newContributingGithubOrganizations', 'new_contributing_github_organizations');
+        Endpoint(repo, 'contributingGithubOrganizations', 'contributing_github_organizations');
+        // Timeseries(repo, 'codeReviews', 'code_reviews')
+
+        // RISK
+        Endpoint(repo, 'busFactor', 'bus_factor');
+
+        // VALUE
+
+        // ACTIVITY
+        Timeseries(repo, 'issueComments', 'issue/comments');
+
+        // EXPERIMENTAL
+
+        // Commit Related
+        Timeseries(repo, 'commits100', 'commits100');
+        Timeseries(repo, 'commitComments', 'commits/comments');
+        Timeseries(repo, 'totalCommitters', 'total_committers');
+        Endpoint(repo, 'committerLocations', 'committer_locations');
+
+        // Issue Related
+        Timeseries(repo, 'issueActivity', 'issues/activity');
+
+        // Pull Request Related
+        Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate');
+
+        // Community / Contributions
+        Endpoint(repo, 'watchers', 'watchers');
+        Timeseries(repo, 'communityEngagement', 'community_engagement');
+        Endpoint(repo, 'communityAge', 'community_age');
+        Endpoint(repo, 'contributors', 'contributors');
+        Endpoint(repo, 'contributions', 'contributions');
+
+        // Dependency Related
+        Endpoint(repo, 'dependencies', 'dependencies');
+        Endpoint(repo, 'dependents', 'dependents');
+        Endpoint(repo, 'dependencyStats', 'dependency_stats');
+
+        // Other
+        Timeseries(repo, 'linesChanged', 'lines_changed');
+        Timeseries(repo, 'downloads', 'downloads');
+        Timeseries(repo, 'fakes', 'fakes');
+        Timeseries(repo, 'tags', 'tags');
+        Endpoint(repo, 'linkingWebsites', 'linking_websites');
+      }
+
+      if (repo.gitURL) {
+        // Other
+        GitEndpoint(repo, 'linesChangedMinusWhitespace', 'lines_changed');
+        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author');
+      }
 
       return repo;
     }
@@ -543,7 +634,8 @@ var AugurStats = function () {
 
   _createClass(AugurStats, null, [{
     key: 'convertDates',
-    value: function convertDates(data, earliest, latest) {
+    value: function convertDates(data, earliest, latest, key) {
+      key = key || 'date';
       earliest = earliest || new Date('01-01-2005');
       latest = latest || new Date();
       if (Array.isArray(data[0])) {
@@ -552,10 +644,12 @@ var AugurStats = function () {
         });
       } else {
         data = data.map(function (d) {
-          d.date = new Date(d.date);
+          d.date = new Date(d[key]);
           return d;
         }).filter(function (d) {
           return earliest < d.date && d.date < latest;
+        }).sort(function (a, b) {
+          return a.date - b.date;
         });
       }
       return data;
@@ -580,9 +674,16 @@ var AugurStats = function () {
   }, {
     key: 'averageArray',
     value: function averageArray(ary) {
-      return ary.reduce(function (a, e) {
-        return a + e;
-      }, 0) / ary.length;
+      var len = ary.length;
+      var sum = ary.reduce(function (a, e) {
+        if (isFinite(e)) {
+          return a + e;
+        } else {
+          len--;
+          return a;
+        }
+      }, 0);
+      return sum / len || 0;
     }
   }, {
     key: 'aboveAverage',
@@ -610,9 +711,7 @@ var AugurStats = function () {
   }, {
     key: 'describe',
     value: function describe(ary, key) {
-      var flat = ary.map(function (e) {
-        return e[key];
-      });
+      var flat = AugurStats.flatten(ary, key);
       var mean = AugurStats.averageArray(flat);
       var stddev = AugurStats.standardDeviation(ary, key, mean);
       var variance = stddev * stddev;
@@ -623,36 +722,47 @@ var AugurStats = function () {
       };
     }
   }, {
+    key: 'flatten',
+    value: function flatten(array, key) {
+      return array.map(function (e) {
+        return e[key];
+      });
+    }
+  }, {
     key: 'rollingAverage',
     value: function rollingAverage(data, key, windowSizeInDays) {
       key = key || 'value';
-      windowSizeInDays = windowSizeInDays || 180;
+      var period = windowSizeInDays / 2;
+      data = data.filter(function (datum) {
+        return isFinite(datum[key]);
+      });
+      return AugurStats.dateAggregate(data, period, period, period / 2, function (filteredData, date) {
+        var flat = AugurStats.flatten(filteredData, key);
+        var datum = { date: date };
+        datum[key] = AugurStats.averageArray(flat);
+        return datum;
+      });
+    }
+  }, {
+    key: 'dateAggregate',
+    value: function dateAggregate(data, daysBefore, daysAfter, interval, func) {
+      daysBefore = daysBefore || 30;
+      interval = interval || (daysAfter + daysBefore) / 4;
       var rolling = [];
       var averageWindow = [];
       var i = 0;
-      var lastFound = -1;
 
-      var after = new Date();
-      var before = new Date();
+      var earliest = new Date();
+      var latest = new Date();
 
-      for (var date = new Date(data[0].date); date <= data[data.length - 1].date; date.setDate(date.getDate() + 1)) {
-        after.setDate(date.getDate() - windowSizeInDays);
-
-        if (averageWindow.length < windowSizeInDays) {
-          for (; i < data.length && averageWindow.length <= windowSizeInDays; i++) {
-            if (lastFound > -1) {
-              for (var iter = new Date(data[lastFound].date); iter <= data[i].date; iter.setDate(iter.getDate() + 1)) {
-                averageWindow.push((data[i][key] + data[lastFound][key]) / 2);
-              }
-            }
-            lastFound = i;
-          }
-        }
-
-        var average = { date: new Date(date) };
-        average[key] = AugurStats.averageArray(averageWindow.slice(0, windowSizeInDays));
-        averageWindow.shift();
-        rolling.push(average);
+      for (var date = new Date(data[0].date); date <= data[data.length - 1].date; date.setDate(date.getDate() + interval)) {
+        earliest = new Date(date).setDate(date.getDate() - daysBefore);
+        latest = new Date(date).setDate(date.getDate() + daysAfter);
+        averageWindow = data.filter(function (d) {
+          return earliest <= d.date && d.date <= latest;
+        });
+        rolling.push(func(averageWindow, new Date(date), i));
+        i++;
       }
       return rolling;
     }
@@ -674,7 +784,7 @@ var AugurStats = function () {
   }, {
     key: 'makeRelative',
     value: function makeRelative(baseData, compareData, key, config) {
-      config.byDate = config.byDate != undefined;
+      config.byDate = config.byDate === true;
       config.earliest = config.earliest || new Date('01-01-2005');
       config.latest = config.latest || new Date();
       config.period = config.period || 180;
@@ -737,161 +847,6 @@ var AugurStats = function () {
 exports.default = AugurStats;
 });
 
-;require.register("GHDataAPI.js", function(exports, require, module) {
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var $ = require('jquery');
-
-var AugurAPI = function () {
-  function AugurAPI(hostURL, version, autobatch) {
-    _classCallCheck(this, AugurAPI);
-
-    this._version = version || 'unstable';
-    this._host = hostURL || 'http://' + window.location.host + '/api/';
-    this.__cache = {};
-    this.__timeout = null;
-    this.__pending = {};
-
-    this.autobatch = typeof autobatch !== 'undefined' ? autobatch : true;
-    this.openRequests = 0;
-  }
-
-  _createClass(AugurAPI, [{
-    key: '__autobatcher',
-    value: function __autobatcher(url, params, fireTimeout) {
-      var _this = this;
-
-      if (this.__timeout !== null && !fireTimeout) {
-        this.__timeout = setTimeout(function () {
-          __autobatch(undefined, undefined, true);
-        });
-      }
-      return new Promise(function (resolve, reject) {
-        if (fireTimeout) {
-          var batchURL = _this._host + _this._version + '/batch';
-          var requestArray = [];
-          Object.keys(_this.__pending).forEach(function (key) {
-            requestArray.push({});
-          });
-          $.post(batchURL);
-        }
-      });
-    }
-  }, {
-    key: 'Repo',
-    value: function Repo(owner, repoName) {
-      var _this2 = this;
-
-      if (repoName) {
-        var repo = { owner: owner, name: repoName };
-      } else if (owner) {
-        var splitURL = owner.split('/');
-        if (splitURL.length < 3) {
-          var repo = { owner: splitURL[0], name: splitURL[1] };
-        } else {
-          var repo = { owner: splitURL[3], name: splitURL[4] };
-        }
-      }
-
-      repo.toString = function () {
-        return repo.owner + '/' + repo.name;
-      };
-
-      var Endpoint = function Endpoint(endpoint) {
-        _this2.openRequests++;
-        var self = _this2;
-        var url = _this2._host + _this2._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint;
-        return function (params, callback) {
-          var _this3 = this;
-
-          if (self.__cache[btoa(url)]) {
-            if (self.__cache[btoa(url)].created_at > Date.now() - 1000 * 60) {
-              return new Promise(function (resolve, reject) {
-                resolve(JSON.parse(self.__cache[btoa(url)].data));
-              });
-            }
-          }
-          if (this.autobatch) {
-            return this.__autobatcher(url, params);
-          }
-          return $.get(url, params).then(function (data) {
-            _this3.openRequests--;
-            self.__cache[btoa(url)] = {
-              created_at: Date.now(),
-              data: JSON.stringify(data)
-            };
-            if (typeof callback === 'function') {
-              callback(data);
-            }
-            return new Promise(function (resolve, reject) {
-              if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === undefined) {
-                reject();
-              } else {
-                resolve(data);
-              }
-            });
-          });
-        };
-      };
-
-      var Timeseries = function Timeseries(endpoint) {
-        var func = Endpoint('timeseries/' + endpoint);
-        func.relativeTo = function (baselineRepo, params, callback) {
-          var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name;
-          return Endpoint(url)();
-        };
-        return func;
-      };
-
-      repo.commits = Timeseries('commits');
-      repo.forks = Timeseries('forks');
-      repo.issues = Timeseries('issues');
-      repo.pulls = Timeseries('pulls');
-      repo.stars = Timeseries('stargazers');
-      repo.tags = Timeseries('tags');
-      repo.downloads = Timeseries('downloads');
-      repo.totalCommitters = Timeseries('total_committers');
-      repo.issueComments = Timeseries('issue/comments');
-      repo.commitComments = Timeseries('commits/comments');
-      repo.pullReqComments = Timeseries('pulls/comments');
-      repo.pullsAcceptanceRate = Timeseries('pulls/acceptance_rate');
-      repo.issuesClosed = Timeseries('issues/closed');
-      repo.issuesResponseTime = Timeseries('issues/response_time');
-      repo.issueActivity = Timeseries('issues/activity');
-
-      repo.contributors = Endpoint('contributors');
-      repo.contributions = Endpoint('contributions');
-      repo.committerLocations = Endpoint('committer_locations');
-      repo.communityAge = Endpoint('community_age');
-      repo.linkingWebsites = Endpoint('linking_websites');
-      repo.busFactor = Endpoint('bus_factor');
-      repo.dependents = Endpoint('dependents');
-      repo.dependencies = Endpoint('dependencies');
-      repo.dependencyStats = Endpoint('dependency_stats');
-      repo.watchers = Endpoint('watchers');
-
-      // testing
-
-      return repo;
-    }
-  }]);
-
-  return AugurAPI;
-}();
-
-exports.default = AugurAPI;
-});
-
 ;require.register("components/AugurApp.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -899,10 +854,6 @@ exports.default = AugurAPI;
 var _AugurHeader = require('./AugurHeader.vue');
 
 var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
-
-var _MainControls = require('./MainControls.vue');
-
-var _MainControls2 = _interopRequireDefault(_MainControls);
 
 var _AugurCards = require('./AugurCards.vue');
 
@@ -913,7 +864,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 module.exports = {
   components: {
     'augur-header': _AugurHeader2.default,
-    MainControls: _MainControls2.default,
     'augur-cards': _AugurCards2.default
   }
 };
@@ -921,7 +871,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('augur-header'),_vm._v(" "),_c('div',{staticClass:"content"},[_c('main-controls'),_vm._v(" "),_c('augur-cards')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('augur-header'),_vm._v(" "),_c('div',{staticClass:"content"},[_c('augur-cards')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -938,6 +888,10 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;require.register("components/AugurCards.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
+
+var _MainControls = require('./MainControls');
+
+var _MainControls2 = _interopRequireDefault(_MainControls);
 
 var _BaseRepoActivityCard = require('./BaseRepoActivityCard');
 
@@ -967,37 +921,56 @@ var _DiversityInclusionCard = require('./DiversityInclusionCard');
 
 var _DiversityInclusionCard2 = _interopRequireDefault(_DiversityInclusionCard);
 
+var _GitCard = require('./GitCard');
+
+var _GitCard2 = _interopRequireDefault(_GitCard);
+
+var _ExperimentalCard = require('./ExperimentalCard');
+
+var _ExperimentalCard2 = _interopRequireDefault(_ExperimentalCard);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
   components: {
+    MainControls: _MainControls2.default,
     BaseRepoActivityCard: _BaseRepoActivityCard2.default,
     BaseRepoEcosystemCard: _BaseRepoEcosystemCard2.default,
     ComparedRepoActivityCard: _ComparedRepoActivityCard2.default,
     GrowthMaturityDeclineCard: _GrowthMaturityDeclineCard2.default,
     RiskCard: _RiskCard2.default,
     ValueCard: _ValueCard2.default,
-    DiversityInclusionCard: _DiversityInclusionCard2.default
-
+    DiversityInclusionCard: _DiversityInclusionCard2.default,
+    GitCard: _GitCard2.default,
+    ExperimentalCard: _ExperimentalCard2.default
   },
   data: function data() {
     return {
-      currentTab: 'gmd'
+      downloadedRepos: []
     };
   },
 
   computed: {
+    hasState: function hasState() {
+      return this.$store.state.hasState;
+    },
     baseRepo: function baseRepo() {
       return this.$store.state.baseRepo;
     },
+    gitRepo: function gitRepo() {
+      return this.$store.state.gitRepo;
+    },
     comparedRepos: function comparedRepos() {
       return this.$store.state.comparedRepos;
+    },
+    currentTab: function currentTab() {
+      return this.$store.state.tab;
     }
   },
   methods: {
     onRepo: function onRepo(e) {
-      this.$store.commit('setBaseRepo', {
-        url: e.target.value
+      this.$store.commit('setRepo', {
+        githubURL: e.target.value
       });
     },
     onCompare: function onCompare(e) {
@@ -1006,16 +979,32 @@ module.exports = {
       });
     },
     changeTab: function changeTab(e) {
-      this.currentTab = e.target.dataset['value'];
+      this.$store.commit('setTab', {
+        tab: e.target.dataset['value']
+      });
       e.preventDefault();
+    },
+    getDownloadedRepos: function getDownloadedRepos() {
+      var _this = this;
+
+      this.downloadedRepos = [];
+      window.AugurAPI.getDownloadedGitRepos().then(function (data) {
+        _this.downloadedRepos = data;
+      });
+    },
+    btoa: function btoa(s) {
+      return window.btoa(s);
     }
+  },
+  mounted: function mounted() {
+    this.getDownloadedRepos();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion') }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk') }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value') }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])])])]),_vm._v(" "),_c('section',{class:{ hidden: _vm.baseRepo, unmaterialized: true }},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),_c('section',{class:{ hidden: !_vm.baseRepo, unmaterialized: true }},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo.url)}},[_vm._v(_vm._s(repo.url))]),_vm._v(" (updated: "+_vm._s(repo.updated)+")\n      ")])})],2)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card')],1):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls')],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1036,8 +1025,8 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 module.exports = {
   methods: {
     onRepo: function onRepo(e) {
-      this.$store.commit('setBaseRepo', {
-        url: e.target.value
+      this.$store.commit('setRepo', {
+        githubURL: e.target.value
       });
     }
   }
@@ -1046,8 +1035,8 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5 push-right"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])])])])])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-4"},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])]),_vm._v(" "),_c('div',{staticClass:"col col-4 push-right"})])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -1089,7 +1078,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Activity")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Community Activty"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/people-opening-issues.md","cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-reviews.md","cite-text":"Code Reviews (naive implementation)"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Request Acceptance Rate","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-made-closed.md","cite-text":"Pull Requets Made / Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-efficiency.md","cite-text":"Issue Resolution Efficiency"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributors.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributior Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributors.md","cite-text":"Contributors"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Activity")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/issue-comments.md","cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"watchers","title":"Watchers / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/watchers.md","cite-text":"Watchers"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1098,7 +1087,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-7655e5a2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-7655e5a2", __vue__options__)
+    hotAPI.reload("data-v-7655e5a2", __vue__options__)
   }
 })()}
 });
@@ -1233,6 +1222,87 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/ExperimentalCard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _LineChart = require('./charts/LineChart');
+
+var _LineChart2 = _interopRequireDefault(_LineChart);
+
+var _BubbleChart = require('./charts/BubbleChart');
+
+var _BubbleChart2 = _interopRequireDefault(_BubbleChart);
+
+var _StackedBarChart = require('./charts/StackedBarChart');
+
+var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  components: {
+    LineChart: _LineChart2.default,
+    BubbleChart: _BubbleChart2.default,
+    StackedBarChart: _StackedBarChart2.default
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity","disableRollingAverage":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-b05646f6", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-b05646f6", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/GitCard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _LineChart = require('./charts/LineChart');
+
+var _LineChart2 = _interopRequireDefault(_LineChart);
+
+var _LinesOfCodeChart = require('./charts/LinesOfCodeChart');
+
+var _LinesOfCodeChart2 = _interopRequireDefault(_LinesOfCodeChart);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  components: {
+    LineChart: _LineChart2.default,
+    LinesOfCodeChart: _LinesOfCodeChart2.default
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Git Metrics")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-f66913b6", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-f66913b6", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/GrowthMaturityDeclineCard.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -1262,7 +1332,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Open Issues","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Closed Issues","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/people-opening-issues.md","cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-reviews.md","cite-text":"Code Reviews (naive implementation)"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Request Acceptance Rate","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-made-closed.md","cite-text":"Pull Requets Made / Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributors.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributior Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributors.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesResponseTime","title":"Issue Response Time","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md","cite-text":"Issue Response Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"maintainerResponseTime","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1271,7 +1341,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-429b02f1", __vue__options__)
+    hotAPI.reload("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -1482,11 +1552,17 @@ var spec = {
       "title": "Code Engagement",
       "width": 375,
       "height": 300,
-      "mark": "circle",
+      "mark": {
+        "type": "circle",
+        "cursor": "pointer"
+      },
       "selection": {
         "paintbrush": {
           "type": "single",
           "on": "mouseover"
+        },
+        "grid": {
+          "type": "interval", "bind": "scales"
         }
       },
       "encoding": {
@@ -1510,6 +1586,10 @@ var spec = {
           },
           "value": "grey"
         },
+        "tooltip": {
+          "field": "contributing_org",
+          "type": "quantitative"
+        },
         "size": {
           "field": "total",
           "type": "quantitative",
@@ -1525,11 +1605,17 @@ var spec = {
       "title": "Community Engagement",
       "width": 375,
       "height": 300,
-      "mark": "circle",
+      "mark": {
+        "type": "circle",
+        "cursor": "pointer"
+      },
       "selection": {
         "paintbrush": {
           "type": "single",
           "on": "mouseover"
+        },
+        "grid": {
+          "type": "interval", "bind": "scales"
         }
       },
       "encoding": {
@@ -1567,6 +1653,10 @@ var spec = {
             "field": "repo",
             "type": "nominal",
             "scale": { "range": ['#FF3647', '#4736FF'] }
+          },
+          "tooltip": {
+            "field": "contributing_org",
+            "type": "quantitative"
           },
           "value": "grey"
         }
@@ -1888,6 +1978,7 @@ exports.default = {
     chart: function chart() {
       var _this = this;
 
+      delete this.mgConfig.chart_type;
       this.mgConfig.title = this.title || 'Activity';
       this.mgConfig.x_accessor = 'date';
       this.mgConfig.format = this.percentage ? 'percentage' : undefined;
@@ -1919,8 +2010,6 @@ exports.default = {
           fields[split[0]] = split[1].split('+');
         }
       });
-
-      console.log('endp, f', endpoints, fields);
 
       var repos = [];
       if (this.repo) {
@@ -1961,9 +2050,14 @@ exports.default = {
                   count++;
                 });
               } else {
-                var field = Object.keys(obj[key][0]).splice(1);
-                onCreateData(obj, key, field, count);
-                count++;
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  var field = Object.keys(obj[key][0]).splice(1);
+                  onCreateData(obj, key, field, count);
+                  count++;
+                } else {
+                  _this.renderError();
+                  return;
+                }
               }
             }
           }
@@ -1972,6 +2066,7 @@ exports.default = {
           buildLines(data[_this.repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count);
             var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+            console.log(_this.source, 'rolling, before+after', d, rolling);
             if (!_this.disableRollingAverage) {
               normalized.push(rolling);
               _this.mgConfig.legend.push(field);
@@ -2012,9 +2107,17 @@ exports.default = {
           });
         }
 
-        _this.mgConfig.data = normalized;
-        _this.mgConfig.legend_target = _this.$refs.legend;
-        _this.renderChart();
+        if (normalized.length == 0) {
+          _this.mgConfig.missing_text = 'Data empty';
+          _this.renderError();
+        } else {
+          _this.mgConfig.data = normalized;
+          _this.mgConfig.legend_target = _this.$refs.legend;
+          _this.renderChart();
+        }
+      }, function () {
+        _this.mgConfig.missing_text = 'Data is missing or unavaliable';
+        _this.renderError();
       });
 
       return '<div class="loader deleteme">' + this.title + '...</div>';
@@ -2047,6 +2150,15 @@ exports.default = {
       this.$refs.chartholder.appendChild(this.mgConfig.target);
       this.mgConfig.target.className = 'deleteme';
       window.MG.data_graphic(this.mgConfig);
+    },
+    renderError: function renderError() {
+      this.$refs.chart.className = 'linechart intro';
+      window.$(this.$refs.holder).find('.deleteme').remove();
+      this.$refs.chartholder.innerHTML = '';
+      this.$refs.chartholder.appendChild(this.mgConfig.target);
+      this.mgConfig.target.className = 'deleteme';
+      this.mgConfig.chart_type = 'missing-data';
+      window.MG.data_graphic(this.mgConfig);
     }
   } };
 })()
@@ -2063,6 +2175,106 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-4035d73d", __vue__options__)
   } else {
     hotAPI.reload("data-v-4035d73d", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/LinesOfCodeChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title'],
+  data: function data() {
+    var years = [];
+    for (var i = 4; i >= 0; i--) {
+      years.push(new Date().getFullYear() - i);
+    }
+    return {
+      contributors: [],
+      organizations: [],
+      years: years
+    };
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.gitRepo;
+    },
+    chart: function chart() {
+      var _this = this;
+
+      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var contributors = {};
+      var organizations = {};
+
+      var addChanges = function addChanges(dest, src) {
+        if (dest && src) {
+          if ((typeof dest === 'undefined' ? 'undefined' : _typeof(dest)) !== 'object') {
+            dest['additions'] = 0;
+            dest['deletions'] = 0;
+          }
+          dest['additions'] += src['additions'] || 0;
+          dest['deletions'] += src['deletions'] || 0;
+        }
+      };
+
+      var group = function group(obj, name, change) {
+        var year = new Date(change.author_date).getFullYear();
+        obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 };
+        addChanges(obj[change[name]], change);
+        obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 };
+        addChanges(obj[change[name]][year], change);
+      };
+
+      var flattenAndSort = function flattenAndSort(obj, keyName, sortField) {
+        return Object.keys(obj).map(function (key) {
+          var d = obj[key];
+          d[keyName] = key;
+          return d;
+        }).sort(function (a, b) {
+          return b[sortField] - a[sortField];
+        });
+      };
+
+      repo.linesChangedMinusWhitespace().then(function (changes) {
+        changes.forEach(function (change) {
+          if (isFinite(change.additions) && isFinite(change.deletions)) {
+            group(contributors, 'author_email', change);
+            if (change.author_affiliation !== 'Unknown') {
+              group(organizations, 'author_affiliation', change);
+            }
+          }
+        });
+
+        _this.contributors = flattenAndSort(contributors, 'email', 'additions');
+        _this.organizations = flattenAndSort(organizations, 'name', 'additions');
+
+        console.log(_this.contributors);
+      });
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('h3',[_vm._v("Lines of code added by the top 10 authors")]),_vm._v(" "),_c('table',[_c('thead',[_c('tr',[_c('td',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return _c('td',[_vm._v(_vm._s(year))])}),_vm._v(" "),_c('td',[_vm._v("Total all time")])],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.contributors.slice(0, 10)),function(contributor){return _c('tr',[_c('td',[_vm._v(_vm._s(contributor.email))]),_vm._v(" "),_vm._l((_vm.years),function(year){return _c('td',[_vm._v(_vm._s((contributor[year]) ? contributor[year].additions || 0 : 0))])}),_vm._v(" "),_c('td',[_vm._v(_vm._s(contributor.additions))])],2)}))]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h3',[_vm._v("Lines of code added by the top 5 organizations")]),_vm._v(" "),_c('table',[_c('thead',[_c('tr',[_c('td',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return _c('td',[_vm._v(_vm._s(year))])}),_vm._v(" "),_c('td',[_vm._v("Total all time")])],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.organizations.slice(0, 10)),function(organization){return _c('tr',[_c('td',[_vm._v(_vm._s(organization.name))]),_vm._v(" "),_vm._l((_vm.years),function(year){return _c('td',[_vm._v(_vm._s((organization[year]) ? organization[year].additions || 0 : 0))])}),_vm._v(" "),_c('td',[_vm._v(_vm._s(organization.additions))])],2)}))]),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-2b1e04b8", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-2b1e04b8", __vue__options__)
   }
 })()}
 });

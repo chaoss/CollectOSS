@@ -2,16 +2,49 @@ import requests
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
+from augur import logger
+# end imports
+# (don't remove the above line, it's for a script)
 
 class LibrariesIO(object):
     """Handles interaction with https://libraries.io/api to get dependency data"""
     def __init__(self, api_key, githubapi):
         self.API_KEY = api_key
-        self.__githubapi = githubapi._GitHubAPI__api
+        self.__githubapi = githubapi.api
+
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
+
+
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
 
 
     def dependencies(self, owner, repo):
         """
+
         Finds the packages that a project depends on
 
         :param owner: GitHub username of the owner of the repo
@@ -23,7 +56,8 @@ class LibrariesIO(object):
         return r.json()
 
     def dependents(self, owner, repo):
-        """
+        """   
+
         Finds the packages depend on this repository
 
         :param owner: GitHub username of the owner of the repo

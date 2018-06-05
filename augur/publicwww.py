@@ -8,7 +8,8 @@ if sys.version_info > (3, 0):
     import urllib.parse as url
 else:
     import urllib as url
-
+# end imports
+# (don't remove the above line, it's for a script)
 
 class PublicWWW(object):
     """
@@ -23,6 +24,35 @@ class PublicWWW(object):
         :param api_key: The API key for PublicWWW. This is required to get the full names of more results
         """
         self.__api_key = api_key
+
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
+
+
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
 
     def linking_websites(self, owner, repo):
         """

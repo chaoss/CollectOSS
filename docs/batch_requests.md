@@ -1,3 +1,0 @@
-Batch requests are a collection of API calls sent simultaneously to the Augur backend. They improve application performance by reducing the number of times the server must be contacted to collect a dataset. We plan on adding typical use-cases ("all the data about a given repo", "all activity metrics") to the batch API to make data collection easier for our users.
-
-We're excited about the large performance increase we expect batch requests to provode Augur which will in turn provide our users with a better exploration experience.

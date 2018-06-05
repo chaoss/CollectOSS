@@ -1,27 +1,33 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
 import os
+import logging
+import coloredlogs
+import beaker
 
-def makeRelative(function):
-  """
-  Decorator that makes a timeseries relative to another timeseries
-  """
-  def generated_function(owner, repo, ownerRelativeTo, repoRelativeTo):
-      baseData = function(ownerRelativeTo, repoRelativeTo)
-      comparableData = function(owner, repo)
-      columns = list(baseData.columns)
-      columns.remove('date')
-      relativeData = (
-        pd
-          .merge(baseData, comparableData, on='date', how='left')
-          .dropna()
-      )
-      for col in columns:
-        relativeData[col + '_ratio'] = relativeData[col + '_y'] / relativeData[col + '_x']
-      return relativeData
-  generated_function.__name__ = function.__name__ + '_relative'
-  return generated_function
+# Logging
+coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))
+logger = logging.getLogger('augur')
+
+# end imports
+# (don't remove the above line, it's for a script)
+
 
 _ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
     return os.path.join(_ROOT, 'data', path)
+
+
+memory_cache = None
+
+def get_cache(namespace, cache_manager=None):
+    global memory_cache
+    if cache_manager is None:
+        if memory_cache is None:
+            cache_opts = beaker.util.parse_cache_config_options({
+                'cache.type': 'memory',
+                'cache.lock_dir': '/tmp/augur/'
+            })
+            memory_cache = beaker.cache.CacheManager(**cache_opts)
+        cache_manger = memory_cache
+    return cache_manager.get_cache(namespace)

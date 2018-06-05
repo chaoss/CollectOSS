@@ -1,6 +1,7 @@
 name: augur
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - attrs=17.4.0
   - ca-certificates=2018.03.07
@@ -10,9 +11,11 @@ dependencies:
   - flask-cors=3.0.3
   - gunicorn=19.7.1
   - intel-openmp=2018.0.0
+  - ipykernel=4.8.2
   - itsdangerous=0.24
   - jinja2=2.10
   - markupsafe=1.0
+  - matplotlib=2.2.2
   - mkl=2018.0.2
   - mkl_fft=1.0.1
   - mkl_random=1.0.1

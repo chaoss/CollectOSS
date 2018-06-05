@@ -11,7 +11,6 @@ app.get('/', function(req, res) {
 })
 app.use('/api*', proxy('localhost:5000', {
   proxyReqPathResolver: function(req) {
-    augur_log('API call, proxy http://localhost:5000' + req.originalUrl)
     return req.originalUrl
   }
 }));
