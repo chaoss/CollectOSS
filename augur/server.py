@@ -970,7 +970,7 @@ class Server(object):
         #   Batch Requests    #
         #######################
 
-                """
+        """
         @api {post} /batch 
         @apiDescription Returns results of batch requests
         @apiName Batch
