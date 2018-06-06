@@ -208,12 +208,14 @@ class Git(object):
             results = new_results
         return results
 
-    def changes_by_author(self, repo_url):
+    def changes_by_author(self, repo_url, freq='M'):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
         df = self.lines_changed_minus_whitespace(repo_url)
-        df = df.groupby(['author_email', 'author_name']).sum().sort_values(by=['additions'], ascending=False)
+        df['author_date'] = pd.to_datetime(df['author_date'])
+        df = df.set_index('author_date')
+        df = df.groupby(['author_email', 'author_name', pd.TimeGrouper(freq)]).sum().sort_values(by=['additions'], ascending=False)
         df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
         df.reset_index(inplace=True)
         return df

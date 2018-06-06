@@ -94,12 +94,12 @@ export default {
             })
       }
 
-      repo.linesChangedMinusWhitespace().then((changes) => {
+      repo.changesByAuthor().then((changes) => {
         changes.forEach((change) => {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
             group(contributors, 'author_email', change)
             if (change.author_affiliation !== 'Unknown') {
-              group(organizations, 'author_affiliation', change)
+              group(organizations, 'affiliation', change)
             }
           }
         })

@@ -4,6 +4,7 @@ import sys
 import json
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
+import pandas as pd
 import augur
 
 sys.path.append('..')
@@ -654,15 +655,11 @@ class Server(object):
         """
         @app.route('/{}/<owner>/<repo>/contributions'.format(AUGUR_API_VERSION))
         def contributions(owner, repo):
-            repoid = ghtorrent.repoid(owner=owner, repo=repo)
+            repoid = ghtorrent.repoid(owner, repo)
             user = request.args.get('user')
-            if (user):
-                userid = ghtorrent.userid(username=user)
-                contribs = ghtorrent.contributions(repoid=repoid, userid=userid)
-            else:
-                contribs = ghtorrent.contributions(repoid=repoid)
-            serialized_contributors = self.serialize(contribs, orient=request.args.get('orient'))
-            return Response(response=serialized_contributors,
+            contribs = ghtorrent.contributions(owner, repo)
+            transformed_contributors = self.transform(contribs, orient=request.args.get('orient'))
+            return Response(response=transformed_contributors,
                             status=200,
                             mimetype="application/json")
 
@@ -851,7 +848,7 @@ class Server(object):
 
         @app.route('/{}/git/repos'.format(AUGUR_API_VERSION))
         def downloaded_repos():
-            drs = self.serialize(git.downloaded_repos())
+            drs = self.transform(git.downloaded_repos())
             return Response(response=drs,
                             status=200,
                             mimetype="application/json")
@@ -961,7 +958,7 @@ class Server(object):
         @app.route('/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
 
         def ghtorrent_range():
-            ghtorrent_range = serialize(ghtorrent.ghtorrent_range())
+            ghtorrent_range = self.transform(ghtorrent.ghtorrent_range())
             return Response(response=ghtorrent_range,
                             status=200,
                             mimetype="application/json")
@@ -1053,7 +1050,8 @@ class Server(object):
         augurApp.finalize_config()
 
 
-    def serialize(self, data, orient='records'):
+    def transform(self, data, orient='records', 
+        group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
 
         if orient is None:
             orient = 'records'
@@ -1061,6 +1059,13 @@ class Server(object):
         result = ''
 
         if hasattr(data, 'to_json'):
+            if group_by is not None:
+                data = data.group_by(group_by).aggregate(aggregate)
+            if resample is not None:
+                data['idx'] = pd.to_datetime(data[date_col])
+                data = data.set_index('idx')
+                data = data.resample(resample).aggregate(aggregate)
+                data['date'] = data.index
             result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
         else:
             try:
@@ -1073,14 +1078,13 @@ class Server(object):
     def flaskify(self, func, cache=True):
         """
         Simplifies API endpoints that just accept owner and repo,
-        serializes them and spits them out
+        transforms them and spits them out
         """
         if cache:
             def generated_function(*args, **kwargs):
-                kwargs.update(request.args.to_dict())
                 def heavy_lifting():
-                    return self.serialize(func(*args, **kwargs))
-                body = self.cache.get(key=str(request.path), createfunc=heavy_lifting)
+                    return self.transform(func(*args, **kwargs), **request.args.to_dict())
+                body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
                 return Response(response=body,
                                 status=200,
                                 mimetype="application/json")
@@ -1089,7 +1093,7 @@ class Server(object):
         else:
             def generated_function(*args, **kwargs):
                 kwargs.update(request.args.to_dict())
-                return Response(response=self.serialize(func(*args, **kwargs)),
+                return Response(response=self.transform(func(*args, **kwargs)),
                                 status=200,
                                 mimetype="application/json")
             generated_function.__name__ = func.__name__
