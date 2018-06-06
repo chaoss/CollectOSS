@@ -654,13 +654,9 @@ class Server(object):
         """
         @app.route('/{}/<owner>/<repo>/contributions'.format(AUGUR_API_VERSION))
         def contributions(owner, repo):
-            repoid = ghtorrent.repoid(owner=owner, repo=repo)
+            repoid = ghtorrent.repoid(owner, repo)
             user = request.args.get('user')
-            if (user):
-                userid = ghtorrent.userid(username=user)
-                contribs = ghtorrent.contributions(repoid=repoid, userid=userid)
-            else:
-                contribs = ghtorrent.contributions(repoid=repoid)
+            contribs = ghtorrent.contributions(owner, repo)
             serialized_contributors = self.serialize(contribs, orient=request.args.get('orient'))
             return Response(response=serialized_contributors,
                             status=200,
@@ -961,7 +957,7 @@ class Server(object):
         @app.route('/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
 
         def ghtorrent_range():
-            ghtorrent_range = serialize(ghtorrent.ghtorrent_range())
+            ghtorrent_range = self.serialize(ghtorrent.ghtorrent_range())
             return Response(response=ghtorrent_range,
                             status=200,
                             mimetype="application/json")
@@ -970,7 +966,7 @@ class Server(object):
         #   Batch Requests    #
         #######################
 
-                """
+        """
         @api {post} /batch 
         @apiDescription Returns results of batch requests
         @apiName Batch
