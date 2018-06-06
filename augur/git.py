@@ -116,10 +116,14 @@ class Git(object):
         with lock:
             self.is_updater = True
             for repo_url in self._repo_urls:
-                with self.get_repo(repo_url) as repo:           
-                    logger.info('Git: Calculating metrics for %s', repo.url)    
-                    # Do slow functions and rebuild their caches
-                    self.lines_changed_minus_whitespace(repo.url, rebuild_cache=True)
+                try:
+                    with self.get_repo(repo_url) as repo:           
+                        logger.info('Git: Calculating metrics for %s', repo.url)    
+                        # Do slow functions and rebuild their caches
+                        self.lines_changed_minus_whitespace(repo.url, rebuild_cache=True)
+                except:
+                    logger.info('Git: Update failed for %s', repo.url)
+                    pass
                    
             self.is_updater = False
 

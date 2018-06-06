@@ -64,6 +64,10 @@ export default {
       this.mgConfig.legend = []
       this.mgConfig.baselines = []
 
+      let earliest = this.earliest
+      let latest = this.latest
+      let period = this.period
+
       this.__download_data = {}
       this.__download_file = this.mgConfig.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
 

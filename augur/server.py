@@ -6,6 +6,7 @@ from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
+from augur.util import update_metric, metrics
 
 sys.path.append('..')
 
@@ -25,23 +26,39 @@ class Server(object):
         CORS(app)
 
         # Create Augur application
-        self.augurApp = augur.Application()
-        augurApp = self.augurApp
+        self.augur_app = augur.Application()
+        augur_app = self.augur_app
 
         # Initialize cache
-        expire_minutes = int(augurApp.read_config('Server', 'cache_expire', 'AUGUR_CACHE_EXPIRE', 3600))
-        self.cache = augurApp.cache.get_cache('server', expire=expire_minutes)
+        expire = int(augur_app.read_config('Server', 'cache_expire', 'AUGUR_CACHE_EXPIRE', 3600))
+        self.cache = augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
         # Initalize all of the classes
-        ghtorrent = augurApp.ghtorrent()
-        ghtorrentplus = augurApp.ghtorrentplus()
-        publicwww = augurApp.publicwww()
-        git = augurApp.git()
-        github = augurApp.githubapi()
-        librariesio = augurApp.librariesio()
-        downloads = augurApp.downloads()
-        localcsv = augurApp.localcsv()
+        ghtorrent = augur_app.ghtorrent()
+        ghtorrentplus = augur_app.ghtorrentplus()
+        publicwww = augur_app.publicwww()
+        git = augur_app.git()
+        github = augur_app.githubapi()
+        librariesio = augur_app.librariesio()
+        downloads = augur_app.downloads()
+        localcsv = augur_app.localcsv()
+
+
+        #####################################
+        ###          API STATUS           ###
+        #####################################
+        @app.route('/{}/'.format(AUGUR_API_VERSION))
+        def status():
+            status = {
+                'status': 'OK',
+                'avaliable_metrics': metrics
+            }
+            json = self.transform(status)
+            return Response(response=json,
+                            status=200,
+                            mimetype="application/json")
+
 
         #####################################
         ###    DIVERSITY AND INCLUSION    ###
@@ -1047,7 +1064,7 @@ class Server(object):
                             status=207,
                             mimetype="application/json")
 
-        augurApp.finalize_config()
+        augur_app.finalize_config()
 
 
     def transform(self, data, orient='records', 
@@ -1099,27 +1116,39 @@ class Server(object):
             generated_function.__name__ = func.__name__
             return generated_function
 
-    def addMetric(self, function, endpoint, cache=True):
+    def addMetric(self, function, endpoint, cache=True, augur_metric=None):
         """Simplifies adding routes that only accept owner/repo"""
-        self.app.route('/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function, cache=cache))
+        endpoint = '/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint)
+        self.app.route(endpoint)(self.flaskify(function, cache=cache))
+        self.updateMetricMetadata(augur_metric, endpoint)
+        
 
-    def addGitMetric(self, function, endpoint, cache=True):
+
+    def addGitMetric(self, function, endpoint, cache=True, augur_metric=None):
         """Simplifies adding routes that accept"""
-        self.app.route('/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint))(self.flaskify(function, cache=cache))
+        endpoint = '/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint)
+        self.app.route(endpoint)(self.flaskify(function, cache=cache))
+        self.updateMetricMetadata(augur_metric, endpoint)
 
-    def addTimeseries(self, function, endpoint):
+    def addTimeseries(self, function, endpoint, augur_metric=None):
         """
         Simplifies adding routes that accept owner/repo and return timeseries
         :param app:       Flask app
         :param function:  Function from a datasource to add
         :param endpoint:  GET endpoint to generate
         """
-        self.addMetric(function, 'timeseries/{}'.format(endpoint))
+        self.addMetric(function, 'timeseries/{}'.format(endpoint), augur_metric=augur_metric)
+
+    def updateMetricMetadata(self, augur_metric, endpoint):
+        if augur_metric is not None:
+            update_metric(augur_metric, {
+                'endpoint': endpoint            
+            })
 
 def run():
     server = Server()
-    host = server.augurApp.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
-    port = server.augurApp.read_config('Server', 'port', 'AUGUR_PORT', '5000')
+    host = server.augur_app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
+    port = server.augur_app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
     Server().app.run(host=host, port=int(port))
 
 wsgi_app = None

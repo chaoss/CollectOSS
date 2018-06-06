@@ -1994,6 +1994,10 @@ exports.default = {
       this.mgConfig.legend = [];
       this.mgConfig.baselines = [];
 
+      var earliest = this.earliest;
+      var latest = this.latest;
+      var period = this.period;
+
       this.__download_data = {};
       this.__download_file = this.mgConfig.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
 
