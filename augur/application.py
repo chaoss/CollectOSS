@@ -95,6 +95,7 @@ class Application(object):
         # Initalize all objects to None
         self.__ghtorrent = None
         self.__ghtorrentplus = None
+        self.__piper = None
         self.__githubapi = None
         self.__git = None
         self.__librariesio = None
@@ -120,7 +121,8 @@ class Application(object):
         self.librariesio()
         self.downloads()
         self.publicwww()
-        self.localcsv()        
+        self.localcsv()  
+        self.piper()      
 
     def read_config(self, section, name, environment_variable=None, default=None):
         value = None
@@ -206,6 +208,19 @@ class Application(object):
                 dbname=self.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
             )
         return self.__ghtorrent
+    def piper(self):
+        from augur.PiperReader import PiperMail
+        if self.__piper is None:
+            logger.debug('Initializing PiperMail')
+            self.__piper = PiperMail(
+                user=self.read_config('Pipermail', 'user', 'AUGUR_DB_USER', 'root'),
+                password=self.read_config('Pipermail', 'pass', 'AUGUR_DB_PASS', 'password'),
+                host=self.read_config('Pipermail', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+                port=self.read_config('Pipermail', 'port', 'AUGUR_DB_PORT', '3306'),
+                dbname=self.read_config('Pipermail', 'name', 'AUGUR_DB_NAME', 'Pipermail')
+            , ghtorrent=self.ghtorrent())
+        return self.__piper
+
 
     def ghtorrentplus(self):
         from augur.ghtorrentplus import GHTorrentPlus

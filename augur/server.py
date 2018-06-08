@@ -42,6 +42,7 @@ class Server(object):
         librariesio = augurApp.librariesio()
         downloads = augurApp.downloads()
         localcsv = augurApp.localcsv()
+        piper = augurApp.piper()
 
         #####################################
         ###    DIVERSITY AND INCLUSION    ###

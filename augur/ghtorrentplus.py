@@ -3,6 +3,7 @@ import sqlalchemy as s
 import numpy as np
 import re
 from augur import logger
+from sqlalchemy_utils import database_exists, create_database
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -19,6 +20,7 @@ class GHTorrentPlus(object):
             user, password, host, port, dbname
         )
         logger.debug('GHTorrentPlus: Connecting to {}:{}/{} as {}'.format(host, port, dbname, user))
+        print(('GHTorrentPlus: Connecting to {}:{}/{} as {}'.format(host, port, dbname, user))) 
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool)
         self.ghtorrent = ghtorrent
 
