@@ -5,7 +5,7 @@ import pprint
 #import mysql.connector
 from sqlalchemy import create_engine
 import sqlalchemy as s
-from sqlalchemy_utils import database_exists, create_database
+# from sqlalchemy_utils import database_exists, create_database
 from augur import logger
 from augur.ghtorrentplus import GHTorrentPlus
 import os
