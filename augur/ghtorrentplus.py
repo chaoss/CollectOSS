@@ -3,7 +3,6 @@ import sqlalchemy as s
 import numpy as np
 import re
 from augur import logger
-from sqlalchemy_utils import database_exists, create_database
 # end imports
 # (don't remove the above line, it's for a script)
 
