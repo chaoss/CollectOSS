@@ -36,6 +36,7 @@ def update_metric(metric_name, metadata=None):
     """
     Updates a metric's metadata
     """
+    global metrics
     if metadata is None:
         metadata = {}
     if metric_name not in metrics:
