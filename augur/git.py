@@ -121,6 +121,7 @@ class Git(object):
                         logger.info('Git: Calculating metrics for %s', repo.url)    
                         # Do slow functions and rebuild their caches
                         self.lines_changed_minus_whitespace(repo.url, rebuild_cache=True)
+                        self.changes_by_author(repo.url, rebuild_cache=True)
                 except:
                     logger.info('Git: Update failed for %s', repo.url)
                     pass
@@ -212,14 +213,19 @@ class Git(object):
             results = new_results
         return results
 
-    def changes_by_author(self, repo_url, freq='M'):
+    def changes_by_author(self, repo_url, freq='M', rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
-        df = self.lines_changed_minus_whitespace(repo_url)
-        df['author_date'] = pd.to_datetime(df['author_date'])
-        df = df.set_index('author_date')
-        df = df.groupby(['author_email', 'author_name', pd.TimeGrouper(freq)]).sum().sort_values(by=['additions'], ascending=False)
-        df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
-        df.reset_index(inplace=True)
-        return df
+        def heavy_lifting():
+            df = self.lines_changed_minus_whitespace(repo_url)
+            df['author_date'] = pd.to_datetime(df['author_date'])
+            df = df.set_index('author_date')
+            df = df.groupby(['author_email', 'author_name', pd.Grouper(freq=freq)]).sum().sort_values(by=['additions'], ascending=False)
+            df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
+            df.reset_index(inplace=True)
+            return df
+        if rebuild_cache:
+            self.__cache.remove_value(key='cba-{}'.format(repo_url))
+        results = self.__cache.get(key='cba-{}'.format(repo_url), createfunc=heavy_lifting)
+        return results
