@@ -148,7 +148,7 @@ class Git(object):
         return downloaded
 
 
-    def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=True):
+    def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
@@ -226,6 +226,6 @@ class Git(object):
             df.reset_index(inplace=True)
             return df
         if rebuild_cache:
-            self.__cache.remove_value(key='cba-{}'.format(repo_url))
-        results = self.__cache.get(key='cba-{}'.format(repo_url), createfunc=heavy_lifting)
+            self.__cache.remove_value(key='cba-{}-{}'.format(freq, repo_url))
+        results = self.__cache.get(key='cba-{}-{}'.format(freq, repo_url), createfunc=heavy_lifting)
         return results
