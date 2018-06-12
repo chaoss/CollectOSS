@@ -1994,6 +1994,10 @@ exports.default = {
       this.mgConfig.legend = [];
       this.mgConfig.baselines = [];
 
+      var earliest = this.earliest;
+      var latest = this.latest;
+      var period = this.period;
+
       this.__download_data = {};
       this.__download_file = this.mgConfig.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
 
@@ -2246,12 +2250,12 @@ exports.default = {
         });
       };
 
-      repo.linesChangedMinusWhitespace().then(function (changes) {
+      repo.changesByAuthor().then(function (changes) {
         changes.forEach(function (change) {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
             group(contributors, 'author_email', change);
             if (change.author_affiliation !== 'Unknown') {
-              group(organizations, 'author_affiliation', change);
+              group(organizations, 'affiliation', change);
             }
           }
         });

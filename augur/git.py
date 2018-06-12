@@ -116,10 +116,15 @@ class Git(object):
         with lock:
             self.is_updater = True
             for repo_url in self._repo_urls:
-                with self.get_repo(repo_url) as repo:           
-                    logger.info('Git: Calculating metrics for %s', repo.url)    
-                    # Do slow functions and rebuild their caches
-                    self.lines_changed_minus_whitespace(repo.url, rebuild_cache=True)
+                try:
+                    with self.get_repo(repo_url) as repo:           
+                        logger.info('Git: Calculating metrics for %s', repo.url)    
+                        # Do slow functions and rebuild their caches
+                        self.lines_changed_minus_whitespace(repo.url, rebuild_cache=True)
+                        self.changes_by_author(repo.url, rebuild_cache=True)
+                except:
+                    logger.info('Git: Update failed for %s', repo.url)
+                    pass
                    
             self.is_updater = False
 
@@ -143,7 +148,7 @@ class Git(object):
         return downloaded
 
 
-    def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=True):
+    def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
@@ -208,12 +213,19 @@ class Git(object):
             results = new_results
         return results
 
-    def changes_by_author(self, repo_url):
+    def changes_by_author(self, repo_url, freq='M', rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
-        df = self.lines_changed_minus_whitespace(repo_url)
-        df = df.groupby(['author_email', 'author_name']).sum().sort_values(by=['additions'], ascending=False)
-        df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
-        df.reset_index(inplace=True)
-        return df
+        def heavy_lifting():
+            df = self.lines_changed_minus_whitespace(repo_url)
+            df['author_date'] = pd.to_datetime(df['author_date'])
+            df = df.set_index('author_date')
+            df = df.groupby(['author_email', 'author_name', pd.Grouper(freq=freq)]).sum().sort_values(by=['additions'], ascending=False)
+            df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
+            df.reset_index(inplace=True)
+            return df
+        if rebuild_cache:
+            self.__cache.remove_value(key='cba-{}-{}'.format(freq, repo_url))
+        results = self.__cache.get(key='cba-{}-{}'.format(freq, repo_url), createfunc=heavy_lifting)
+        return results
