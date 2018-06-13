@@ -7,7 +7,6 @@ import sqlalchemy as s
 from augur import logger
 import os
 import augur
-#Count 2290
 #if(line[j:j+11]=="},\"unixfrom\"" or line[j:j+9] == "},\"origin\"" ):
 #9359610
 #1355 aaa-dev <CAGu-7A8CzjH8ch1YdyrZid=Zq7bsVThyE5_zKGLQ0hjxDSA8ZQ@mail.gmail.com>
@@ -30,7 +29,7 @@ def read_json(p):
 		#print(k)
 		return y,j
 
-def add_row_mess(columns1,df,di,row,archives):
+def add_row_mess(columns1,df,di,archives,row):
 	temp = 	di['data']['body']['plain']
 	words = ""
 	k = 1
@@ -51,7 +50,7 @@ def add_row_mess(columns1,df,di,row,archives):
 			df2 = df1.copy()
 			df3 = df.append(df2)
 			df = df3
-			#print("prev",prev)
+			print("prev",prev)
 			#print("\n\n\n",temp[prev:j],"\n\nYEAHHHHHHHHHHHHHHHHH!!!!!!!!!!!!!!\n\n\n")
 			prev = j
 			row+=1
@@ -60,7 +59,7 @@ def add_row_mess(columns1,df,di,row,archives):
 					#print(df1)
 				#if(row==428):
 					#print("\n\n",df3,"\n\n")
-	#print("jjjjjjjj",j)
+	print("jjjjjjjj",j)
 	if(j+5000>len(temp)):
 		k+=1
 		li = [[di['backend_name'],di['origin'],archives,
@@ -72,17 +71,17 @@ def add_row_mess(columns1,df,di,row,archives):
 		df2 = df1.copy()
 		df3 = df.append(df2)
 		df = df3
-		#print("prev1",prev)
+		print("prev1",prev)
 	#print(df)
-	#print(len(temp),"length")
+	print(len(temp),"length")
 	#if(row==428):
 	#	print(df3)
-	#print(row)
+	print(row)
 	#if(row == 430):
 	#	print(df3)
 	return df,row
-def add_row_mail_list(columns2,di,df_mail_list,archives):
-	li = [[di['backend_name'], di['origin'], archives]]
+def add_row_mail_list(columns2,di,df_mail_list):
+	li = [[di['backend_name'], di['origin']]]
 	#print("yeah",di['origin'])
 	df = pd.DataFrame(li,columns=columns2)
 	#print(df)
@@ -123,7 +122,7 @@ class PiperMail:
 		print("ugh")
 		print(link)
 		upload  = False
-		archives = ["aalldp-dev","alto-dev","advisory-group"]
+		archives = ["archetypes-dev"]
 		'''if("augur/notebooks" in os.getcwd()):
 				os.chdir("..")
 				print(os.getcwd())
@@ -132,21 +131,6 @@ class PiperMail:
 			path = "data/"	'''
 		print("Hey")
 		path = "/augur/data/"
-		db_name = "mail_lists"
-		db_name_csv = os.getcwd() + path + db_name
-		columns1 = 'backend_name','project','mailing_list','category','subject','date','message_from','message_id','message_text'
-		df5 = pd.DataFrame(columns=columns1)
-		df5.to_sql(name=db_name, con=self.db,if_exists='replace',index=False,
-				dtype={'backend_name': s.types.VARCHAR(length=300),
-					'project': s.types.VARCHAR(length=300),
-					'mailing_list': s.types.VARCHAR(length=1000),
-					'category': s.types.VARCHAR(length=300),
-					'subject': s.types.VARCHAR(length=400),
-					'date': s.types.VARCHAR(length=400),
-					'message_from': s.types.VARCHAR(length=500),
-					'message_id': s.types.VARCHAR(length=500),
-					'message_text': s.types.Text				   
-				})
 		for i in range(len(archives)):
 			place = os.getcwd() + path + 'opendaylight-' + archives[i]
 			name = os.getcwd() + path + archives[i]
@@ -171,12 +155,13 @@ class PiperMail:
 			#hard to upload to the database would have to decode it and upload
 			#to the database and then encode it back when requesting from
 			#the database
-			columns2 = "backend_name","mailing_list_url","project"
+			columns1 = 'backend_name','project','mailing_list','category','subject','date','message_from','message_id','message_text'
+			columns2 = "backend_name","origin"
 			df = pd.DataFrame(columns=columns1)
 			df5 = pd.DataFrame(columns=columns1)
 			#df = df.fillna(0) # with 0s rather than NaNs
 			if(i==0):
-				li = [[di['backend_name'],di['origin'],archives[i]]]
+				li = [[di['backend_name'],di['origin']]]
 				df_mail_list = pd.DataFrame(li,columns=columns2)
 			#print(len(x))
 			#print(j)
@@ -184,17 +169,24 @@ class PiperMail:
 			k = 1
 			y = False
 			while(j<len(x)):
-				df,row = add_row_mess(columns1,df,di,row,archives[i])
+				df,row = add_row_mess(columns1,df,di,archives[i],row)
 				df6 = df5.append(df)
 				df5 = df6		
 				val = False		
-				#print("\n\n\n\nROWWWWWWWWWWW!!!!!!!!! ",row,"\n\n\n")
-				if(row>=( (k*5000))):
-					#print("\n\n\n\nHEREEEEEEEEEEEEEE!!!!!!!!!!!!\n\n\n\n")
+				print("\n\n\n\nROWWWWWWWWWWW!!!!!!!!! ",row,"\n\n\n")
+				if(row>=( (k*300))):
+					print("\n\n\n\nHEREEEEEEEEEEEEEE!!!!!!!!!!!!\n\n\n\n")
 					y+=1
 					#df = df.reset_index(drop=True):
-					df5.to_sql(name=db_name, con=self.db,if_exists='append',index=False)
-					df5.to_csv(db_name_csv + ".csv", mode='a')
+					if(not y):
+						print("sigh!!!!!!!!!!!")
+						if self.db.dialect.has_table(self.db, archives[i]):
+							df5.to_sql(name=archives[i], con=self.db,if_exists='replace',index=False)
+							df5.to_csv(name + ".csv", mode='w')
+							print("REPLACEEEEEEEEEEE!!!!!!!!!!!")
+					else:
+						df5.to_sql(name=archives[i], con=self.db,if_exists='append',index=False)
+						df5.to_csv(name + ".csv", mode='a')
 					val = True
 					#print(df)
 					#break
@@ -209,10 +201,17 @@ class PiperMail:
 				di = json.loads(data)
 			if(val == False):
 				#df = df.reset_index(drop=True)
-				df5.to_sql(name=db_name, con=self.db,if_exists='append',index=False)
-				df5.to_csv(db_name_csv + ".csv", mode='a')
+				if(not y):
+						print("sigh!!!!!!!!!!!")
+						if self.db.dialect.has_table(self.db, archives[i]):
+							df5.to_sql(name=archives[i], con=self.db,if_exists='replace',index=False)
+							df5.to_csv(name + ".csv", mode='w')
+							print("REPLACEEEEEEEEEEE!!!!!!!!!!!")
+				else:
+					df5.to_sql(name=archives[i], con=self.db,if_exists='append',index=False)
+					df5.to_csv(name + ".csv", mode='a')
 			if(i!=0):
-				df_mail_list = add_row_mail_list(columns2,di,df_mail_list,archives[i])
+				df_mail_list = add_row_mail_list(columns2,di,df_mail_list)
 			#df = df.reset_index(drop=True)
 			#df.to_csv(name + ".csv", mode='a')
 			#print(archives[i])
@@ -226,6 +225,6 @@ class PiperMail:
 			name = os.getcwd() + path + "Mailing_List"
 			df_mail_list.to_csv(name + ".csv")
 			#print("Here")
-			df_mail_list.to_sql(name='mailing_list_jobs',con=self.db,if_exists='replace',index=False)
+			df_mail_list.to_sql(name='Mailing_Lists',con=self.db,if_exists='replace',index=False)
 		print("Finished")
 	

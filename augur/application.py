@@ -122,7 +122,8 @@ class Application(object):
         self.downloads()
         self.publicwww()
         self.localcsv()  
-        self.piper()      
+        self.piper() 
+        print("hey")   
 
     def read_config(self, section, name, environment_variable=None, default=None):
         value = None
