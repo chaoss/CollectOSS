@@ -3,11 +3,7 @@ import pandas as pd
 #import mysql.connector
 from sqlalchemy import create_engine
 import sqlalchemy as s
-<<<<<<< HEAD
-#from sqlalchemy_utils import database_exists, create_database
-=======
 # from sqlalchemy_utils import database_exists, create_database
->>>>>>> 9a0b18a3028afe7020472a0c00cec0684bee4935
 from augur import logger
 import os
 import augur
