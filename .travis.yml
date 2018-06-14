@@ -4,4 +4,4 @@ python:
 # command to install dependencies
 install: "pip install ."
 # command to run tests
-script: "python -m pytest ./test"
+script: "make test"
