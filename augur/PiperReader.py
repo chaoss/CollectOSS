@@ -3,10 +3,10 @@ import pandas as pd
 #import mysql.connector
 from sqlalchemy import create_engine
 import sqlalchemy as s
-# from sqlalchemy_utils import database_exists, create_database
 from augur import logger
 import os
 import augur
+import datetime
 #Count 2290
 #if(line[j:j+11]=="},\"unixfrom\"" or line[j:j+9] == "},\"origin\"" ):
 #9359610
@@ -14,6 +14,7 @@ import augur
 #<CAP3y0aZ=3eFxUbatK26H9qHV4xPJE6BdQxa=n2bqYqp45q=63A@mail.gmail.com>
 #428 alto-dev
 #Need to have pip install sqlalchemy-utils
+
 def read_json(p):
 		#print(p,"\n\n")
 		k = j = 0
@@ -42,9 +43,17 @@ def add_row_mess(columns1,df,di,row,archives):
 	else:
 		for j in range(100,len(temp),5000):
 			k+=1
+			date = di['data']['Date'].split()
+			dict1 = {'Jan':'1','Feb':'2','Mar':'3','Apr':'4','May':'5','Jun':'6',
+			        'Jul':'7','Aug':'8','Sep':'9','Oct':'10','Nov':'11','Dec':'12'}
+			f = "%d/%m/%Y %H:%M:%S"
+			#date[5] = date[5][0:1] + ':' +  date[5][1:3]
+			#print(date[5])
+			times = (date[1] + '/' + dict1[date[2]] + '/' + date[3] + ' ' + date[4])
+			date = datetime.datetime.strptime(times, f)
 			li = [[di['backend_name'],di['origin'],archives,
 			di['category'], di['data']['Subject'],
-			di['data']['Date'], di['data']['From'],
+			date, di['data']['From'],
 			di['data']['Message-ID'],
 			temp[prev:j] ]]
 			df1 = pd.DataFrame(li,columns=columns1)
@@ -63,9 +72,15 @@ def add_row_mess(columns1,df,di,row,archives):
 	#print("jjjjjjjj",j)
 	if(j+5000>len(temp)):
 		k+=1
+		date = di['data']['Date'].split()
+		dict1 = {'Jan':'1','Feb':'2','Mar':'3','Apr':'4','May':'5','Jun':'6',
+				'Jul':'7','Aug':'8','Sep':'9','Oct':'10','Nov':'11','Dec':'12'}
+		f = "%d/%m/%Y %H:%M:%S"
+		times = (date[1] + '/' + dict1[date[2]] + '/' + date[3] + ' ' + date[4])
+		date = datetime.datetime.strptime(times, f)
 		li = [[di['backend_name'],di['origin'],archives,
 		di['category'], di['data']['Subject'],
-		di['data']['Date'], di['data']['From'],
+		date, di['data']['From'],
 		di['data']['Message-ID'],
 		temp[prev:j+5000] ]]
 		df1 = pd.DataFrame(li,columns=columns1)
@@ -123,7 +138,8 @@ class PiperMail:
 		print("ugh")
 		print(link)
 		upload  = False
-		archives = ["aalldp-dev","alto-dev","advisory-group"]
+		archives = ["aalldp-dev","alto-dev","advisory-group","archetypes-dev"]
+		#archives = ["archetypes-dev","aalldp-dev"]
 		'''if("augur/notebooks" in os.getcwd()):
 				os.chdir("..")
 				print(os.getcwd())
@@ -142,7 +158,7 @@ class PiperMail:
 					'mailing_list': s.types.VARCHAR(length=1000),
 					'category': s.types.VARCHAR(length=300),
 					'subject': s.types.VARCHAR(length=400),
-					'date': s.types.VARCHAR(length=400),
+					'date': s.types.DateTime(),
 					'message_from': s.types.VARCHAR(length=500),
 					'message_id': s.types.VARCHAR(length=500),
 					'message_text': s.types.Text				   
@@ -184,6 +200,7 @@ class PiperMail:
 			k = 1
 			y = False
 			while(j<len(x)):
+				#print("Here",df)
 				df,row = add_row_mess(columns1,df,di,row,archives[i])
 				df6 = df5.append(df)
 				df5 = df6		
@@ -223,7 +240,7 @@ class PiperMail:
 		if(upload == True):
 			#print(df_mail_list)
 			#df_mail_list = df_mail_list.reset_index(drop=True)
-			name = os.getcwd() + path + "Mailing_List"
+			name = os.getcwd() + path + "mailing_list_jobs"
 			df_mail_list.to_csv(name + ".csv")
 			#print("Here")
 			df_mail_list.to_sql(name='mailing_list_jobs',con=self.db,if_exists='replace',index=False)
