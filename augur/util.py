@@ -40,10 +40,10 @@ def annotate(metadata=None, **kwargs):
         nonlocal metadata
         if not hasattr(func, 'metadata'):
             func.metadata = {}
+            metrics.append(func.metadata)
         if metadata is None:
             metadata = {}
         func.metadata.update(metadata)
         func.metadata.update(dict(kwargs))
-        metrics.append(func.metadata)
         return func
     return decorate

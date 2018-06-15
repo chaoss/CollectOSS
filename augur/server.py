@@ -1335,11 +1335,11 @@ class Server(object):
             generated_function.__name__ = func.__name__
             return generated_function
 
-    def addMetric(self, function, endpoint, cache=True):
+    def addMetric(self, function, endpoint, cache=True, **kwargs):
         """Simplifies adding routes that only accept owner/repo"""
         endpoint = '/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
-        self.updateMetricMetadata(function, endpoint)
+        self.updateMetricMetadata(function, endpoint, **kwargs)
         
 
 
@@ -1347,7 +1347,7 @@ class Server(object):
         """Simplifies adding routes that accept"""
         endpoint = '/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
-        self.updateMetricMetadata(function, endpoint)
+        self.updateMetricMetadata(function, endpoint=endpoint, metric_type='git')
 
     def addTimeseries(self, function, endpoint):
         """
@@ -1356,12 +1356,12 @@ class Server(object):
         :param function:  Function from a datasource to add
         :param endpoint:  GET endpoint to generate
         """
-        self.addMetric(function, 'timeseries/{}'.format(endpoint))
+        self.addMetric(function, 'timeseries/{}'.format(endpoint), metric_type='timeseries')
 
-    def updateMetricMetadata(self, function, endpoint):
+    def updateMetricMetadata(self, function, endpoint, **kwargs):
         # God forgive me
         real_func = getattr(function.__self__.__class__, function.__name__)
-        annotate(endpoint=endpoint)(real_func)
+        annotate(endpoint=endpoint, source=function.__self__.__class__.__name__, **kwargs)(real_func)
 
 def run():
     server = Server()
