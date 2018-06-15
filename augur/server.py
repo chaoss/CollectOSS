@@ -82,42 +82,41 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                         [
                             {
-                              "date": "2011-03-19T00:00:00.000Z",
-                              "issues_closed": 3
+                                "date": "2011-03-19T00:00:00.000Z",
+                                "issues_closed": 3
                             },
                             {
-                              "date": "2011-03-20T00:00:00.000Z",
-                              "issues_closed": 0
-                            
-
+                                "date": "2011-03-25T00:00:00.000Z",
+                                "issues_closed": 6
                             }
                         ]
         """
         self.addTimeseries(ghtorrent.closed_issues, "issues/closed")
 
         """
-        @api {get} /:owner/:repo/timeseries/issues/time_to_close Closed Issue Resolution Duration
-        @apiName ClosedIssueResolutionDuration
+        @api {get} /:owner/:repo/issue_close_time Issue Resolution Duration
+        @apiName IssueResolutionDuration
         @apiGroup Growth-Maturity-Decline
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/closed-issue-resolution-duration.md">CHAOSS Metric Definition</a>
+        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-duration.md">CHAOSS Metric Definition</a>
 
-        @apiParam {string} owner username of the owner of the github repository
-        @apiParam {string} repo name of the github repository
-        @apiParam {string} group_by (default to week) allows for results to be grouped by day, week, month, or year
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
 
-        @apiSucessExample {json} success-response:
-                            [
-                                {
-                                    "date": "2015-01-01t00:00:00.000z",
-                                    "issues":13
-                                },
-                                {
-                                    "date": "2015-01-08t00:00:00.000z",
-                                    "issues":15
-                                }
-                            ]
+        @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "id": 2,
+                                "date": "2012-01-19T05:24:55.000Z",
+                                "days_to_close": 7
+                            },
+                            {
+                                "id": 3,
+                                "date": "2012-01-26T15:07:56.000Z",
+                                "days_to_close": 0
+                            }
+                        ]
         """
-        self.addTimeseries(ghtorrent.closed_issue_resolution_duration, 'issues/time_to_close')
+        self.addMetric(ghtorrentplus.closed_issue_resolution_duration, 'issues/time_to_close')
 
         """
         @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Code Commits
@@ -132,12 +131,12 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "commits": 153
+                                    "date": "2017-08-27T00:00:00.000Z",
+                                    "commits": 44
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "commits": 192
+                                    "date": "2017-08-20T00:00:00.000Z",
+                                    "commits": 98
                                 }
                             ]
         """
@@ -145,10 +144,87 @@ class Server(object):
 
         # self.addTimeseries(github.code_reviews, 'code_reviews')
 
+        """
+        @api {get} /:owner/:repo/timeseries/code_review_iteration Code Review Iteration
+        @apiName CodeReviewIteration
+        @apiGroup Growth-Maturity-Decline
+        @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md">CHAOSS Metric Definition</a>
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2012-05-16T00:00:00.000Z",
+                                    "iterations": 2
+                                },
+                                {
+                                    "date": "2012-05-16T00:00:00.000Z",
+                                    "iterations": 1
+                                }
+                            ]
+        """
         self.addTimeseries(ghtorrent.code_review_iteration, 'code_review_iteration')
 
+        """
+        @api {get} /:owner/:repo/timeseries/contribution_acceptance Contribution Acceptance
+        @apiName ContributionAcceptance
+        @apiGroup Growth-Maturity-Decline
+        @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md">CHAOSS Metric Definition</a>
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2012-05-16T00:00:00.000Z",
+                                    "ratio": 1.1579
+                                },
+                                {
+                                    "date": "2012-05-20T00:00:00.000Z",
+                                    "ratio": 1.3929
+                                }
+                            ]
+        """
         self.addTimeseries(ghtorrent.contribution_acceptance, 'contribution_acceptance')
 
+        """
+        @api {get} /:owner/:repo/timeseries/contributing_github_organizations Contributing Github Organizations
+        @apiName ContributingGithubOrganizations 
+        @apiGroup Growth-Maturity-Decline
+        @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md">CHAOSS Metric Definition</a>
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "contributing_org": 4066,
+                                    "commits": 36069,
+                                    "issues": 432,
+                                    "commit_comments": 1597,
+                                    "issue_comments": 15421,
+                                    "pull_requests": 808,
+                                    "pull_request_comments": 0,
+                                    "total": 54327,
+                                    "count": 35
+                                },
+                                {
+                                    "contributing_org": 16465,
+                                    "commits": 39111,
+                                    "issues": 332,
+                                    "commit_comments": 524,
+                                    "issue_comments": 3188,
+                                    "pull_requests": 57,
+                                    "pull_request_comments": 18,
+                                    "total": 43230,
+                                    "count": 11
+                                }
+                            ]
+        """
         self.addMetric(ghtorrent.contributing_github_organizations, 'contributing_github_organizations')
 
         """
@@ -163,12 +239,18 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "created_at": "2013-09-16T17:00:54.000Z",
-                                    "responded_at": "2013-09-16T17:20:58.000Z"
+                                    "id": 2,
+                                    "opened": "2012-01-19T05:24:55.000Z",
+                                    "first_commented": "2012-01-19T05:30:13.000Z",
+                                    "pull_request": 0,
+                                    "minutes_to_comment": 5
                                 },
                                 {
-                                    "created_at": "2013-09-16T09:31:34.000Z",
-                                    "responded_at": "2013-09-16T09:43:03.000Z"
+                                    "id": 3,
+                                    "opened": "2012-01-26T15:07:56.000Z",
+                                    "first_commented": "2012-01-26T15:09:28.000Z",
+                                    "pull_request": 0,
+                                    "minutes_to_comment": 1
                                 }
                             ]
         """
@@ -187,12 +269,12 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "forks": 13
+                                    "date": "2017-08-20T00:00:00.000Z",
+                                    "projects": 48
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "forks": 12
+                                    "date": "2017-08-13T00:00:00.000Z",
+                                    "projects": 53
                                 }
                             ]
         """
@@ -217,45 +299,10 @@ class Server(object):
                                 {
                                     'date': '2015-11-08T00:00:00Z',
                                     'lines_changed': 3896.0
-                                },
+                                }
                             ]
         """
         self.addTimeseries(github.lines_of_code_changed, 'lines_changed')
-
-        """
-        @api {get} /:owner/:repo/issue_close_time Issue Resolution Duration
-        @apiName IssueResolutionDuration
-        @apiGroup Growth-Maturity-Decline
-        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-duration.md">CHAOSS Metric Definition</a>
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                        [
-                            {
-                              "id": 136603,
-                              "repo_id": 1334,
-                              "opened": "2010-09-08 19:09:56",
-                              "pull_request": 1,
-                              "minutes_to_close": 1264.0,
-                              "average_minutes_to_close_as_of_close": 1264.0,
-                              "average_minutes_to_close_past_30_days": 1264.0,
-                              "z-score": -0.3152279792
-                            },
-                            {
-                              "id": 136602,
-                              "repo_id": 1334,
-                              "opened": "2010-09-09 04:33:23",
-                              "pull_request": 1,
-                              "minutes_to_close": 701.0,
-                              "average_minutes_to_close_as_of_close": 982.5,
-                              "average_minutes_to_close_past_30_days": 982.5,
-                              "z-score": -0.3184596776
-                            }
-                        ]
-        """
-        self.addMetric(ghtorrentplus.issue_resolution_duration, 'issues/time_to_close')
 
         """
         @api {get} /:owner/:repo/pulls/maintainer_response_time Maintainer to Merge Request Duration
@@ -269,15 +316,38 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "response_time":11044366.0
+                                    "date": "2011-05-10T00:00:00.000Z",
+                                    "days": 32
                                 },
                                 {
-                                    "response_time":11044955.0
-                                },
+                                    "date": "2011-05-21T00:00:00.000Z",
+                                    "days": 3
+                                }
                             ]
         """
         self.addTimeseries(ghtorrent.maintainer_response_to_merge_request_duration, 'pulls/maintainer_response_time')
 
+        """
+        @api {get} /:owner/:repo/pulls/new_contributing_github_organizations New Contributing Github Organizations
+        @apiName NewContributingGithubOrganizations
+        @apiGroup Growth-Maturity-Decline
+        @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/new-contributing-organizations.md">CHAOSS Metric Definition</a>
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2008-04-12T23:43:38.000Z",
+                                    "organizations": 1
+                                },
+                                {
+                                    "date": "2008-08-23T15:05:52.000Z",
+                                    "organizations": 2
+                                }
+                            ]
+        """
         self.addTimeseries(ghtorrent.new_contributing_github_organizations, 'new_contributing_github_organizations')
 
         """
@@ -293,19 +363,19 @@ class Server(object):
         @apiSucessExample {json} success-response:
                             [
                                 {
-                                    "date": "2015-01-01t00:00:00.000z",
-                                    "issues":13
+                                    "date": "2017-08-27T00:00:00.000Z",
+                                    "issues": 67
                                 },
                                 {
-                                    "date": "2015-01-08t00:00:00.000z",
-                                    "issues":15
+                                    "date": "2017-08-20T00:00:00.000Z",
+                                    "issues": 100
                                 }
                             ]
         """
         self.addTimeseries(ghtorrent.open_issues, 'issues')
 
         """
-        @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Pull Request Comments
+        @api {get} /:owner/:repo/timeseries/pulls/comments?group_by=:group_by Pull Request Comments
         @apiName PullRequestComments
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md">CHAOSS Metric Definition</a>
@@ -315,12 +385,15 @@ class Server(object):
 
         @apiSuccessExample {json} Success-Response:
                             [
-                                {   "date":"2009-02-16T00:00:00.000Z",
-                                    "comments":1.0
+                                {
+                                    "date": "2011-11-15T00:00:00.000Z",
+                                    "counter": 3
                                 },
-                                {   "date":"2009-07-12T00:00:00.000Z",
-                                    "comments":2.0
-                                },
+                                {
+                                    "date": "2011-11-25T00:00:00.000Z",
+                                    "counter": 1
+                                }
+                            ]
 
         """
         self.addTimeseries(ghtorrent.pull_request_comments, 'pulls/comments')
@@ -337,14 +410,12 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "pull_requests": 1
-                                    "comments": 11
+                                    "date": "2013-01-09T00:00:00.000Z",
+                                    "pull_requests": 3
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "pull_requests": 2
-                                    "comments": 31
+                                    "date": "2016-01-14T00:00:00.000Z",
+                                    "pull_requests": 1
                                 }
                             ]
         """
@@ -376,12 +447,14 @@ class Server(object):
 
         @apiSuccessExample {json} Success-Response:
                             [
-                                {   "date":"2009-02-16T00:00:00.000Z",
-                                    "total_unique_comments":1.0
+                                {
+                                    "date": "2009-04-05T00:00:00.000Z",
+                                    "counter": 3
                                 },
-                                {   "date":"2009-07-12T00:00:00.000Z",
-                                    "total_unique_comments":2.0
-                                },
+                                {
+                                    "date": "2009-04-16T00:00:00.000Z",
+                                    "counter": 5
+                                }
                             ]
         """
         self.addTimeseries(ghtorrent.issue_comments, 'issue/comments')
@@ -397,9 +470,14 @@ class Server(object):
 
         @apiSuccessExample {json} Success-Response:
                             [
-                              {
-                                "watchers": 40349
-                              }
+                                {
+                                    "date": "2017-08-23T00:00:00.000Z",
+                                    "watchers": 86
+                                },
+                                {
+                                    "date": "2017-08-16T00:00:00.000Z",
+                                    "watchers": 113
+                                }
                             ]
         """
         self.addMetric(ghtorrent.watchers, 'watchers')
@@ -409,7 +487,27 @@ class Server(object):
         #####################################
 
         ### COMMIT RELATED ###
-        #todo: document
+        """
+        @api {get} /:owner/:repo/timeseries/commits100 Commits100
+        @apiName Commits100
+        @apiGroup Experimental
+        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2017-08-13T00:00:00.000Z",
+                                    "commits": 114
+                                },
+                                {
+                                    "date": "2017-08-06T00:00:00.000Z",
+                                    "commits": 113
+                                }
+                            ]
+        """
         self.addTimeseries(ghtorrent.commits100, 'commits100')
 
         """
@@ -423,12 +521,15 @@ class Server(object):
 
         @apiSuccessExample {json} Success-Response:
                             [
-                                {   "date":"2009-02-16T00:00:00.000Z",
-                                    "comments":1.0
-                                },
-                                {   "date":"2009-07-12T00:00:00.000Z",
-                                    "comments":2.0
-                                },
+                                    {
+                                        "date": "2008-07-10T00:00:00.000Z",
+                                        "counter": 2
+                                    },
+                                    {
+                                        "date": "2008-07-25T00:00:00.000Z",
+                                        "counter": 1
+                                    }
+                            ]
 
         """
         self.addTimeseries(ghtorrent.commit_comments, 'commits/comments')
@@ -445,14 +546,14 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "login": "bonnie",
-                                    "location": "Rowena, TX",
-                                    "commits": 12
+                                    "login": "rafaelfranca",
+                                    "location": "São Paulo, Brazil",
+                                    "commits": 7171
                                 },
                                 {
-                                    "login":"clyde",
-                                    "location":"Ellis County, TX",
-                                    "commits": 12
+                                    "login": "tenderlove",
+                                    "location": "Seattle",
+                                    "commits": 4605
                                 }
                             ]
         """
@@ -469,12 +570,14 @@ class Server(object):
 
         @apiSuccessExample {json} Success-Response:
                             [
-                                {   "date":"2009-02-16T00:00:00.000Z",
-                                    "total_total_committers":1.0
+                                {
+                                    "date": "2004-11-24T00:00:00.000Z",
+                                    "total_total_committers": 1
                                 },
-                                {   "date":"2009-07-12T00:00:00.000Z",
-                                    "total_total_committers":2.0
-                                },
+                                {
+                                    "date": "2005-02-18T00:00:00.000Z",
+                                    "total_total_committers": 2
+                                }
                             ]
         """
         self.addTimeseries(ghtorrent.total_committers, 'total_committers')
@@ -492,24 +595,44 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 0.0,
-                                  "action": "closed"
+                                    "date": "0000-00-00",
+                                    "count": 2,
+                                    "action": "closed"
                                 },
                                 {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 2.0,
-                                  "action": "opened"
+                                    "date": "0000-00-00",
+                                    "count": 70,
+                                    "action": "opened"
                                 },
                                 {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 8.0,
-                                  "action": "reopened"
+                                    "date": "0000-00-00",
+                                    "count": 0,
+                                    "action": "reopened"
                                 },
                                 {
-                                  "date": "2010-12-23T00:00:00.000Z",
-                                  "count": 12.0,
-                                  "action": "open"
+                                    "date": "0000-00-00",
+                                    "count": 68,
+                                    "action": "open"
+                                },
+                                {
+                                    "date": "2009-04-01T00:00:00.000Z",
+                                    "count": 0,
+                                    "action": "closed"
+                                },
+                                {
+                                    "date": "2009-04-01T00:00:00.000Z",
+                                    "count": 29,
+                                    "action": "opened"
+                                },
+                                {
+                                    "date": "2009-04-01T00:00:00.000Z",
+                                    "count": 0,
+                                    "action": "reopened"
+                                },
+                                {
+                                    "date": "2009-04-01T00:00:00.000Z",
+                                    "count": 29,
+                                    "action": "open"
                                 }
                             ]
         """
@@ -528,12 +651,12 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "rate": 0.5
+                                    "date": "2010-09-11T00:00:00.000Z",
+                                    "rate": 0.3333
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "rate": 0.33
+                                    "date": "2010-09-13T00:00:00.000Z",
+                                    "rate": 0.3333
                                 }
                             ]
         """
@@ -577,44 +700,44 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                  "date": "2009-04-01T00:00:00.000Z",
-                                  "issues_opened": 1.0,
-                                  "issues_closed": 0.0,
-                                  "pull_requests_opened": 0.0,
-                                  "pull_requests_merged": 0.0,
-                                  "pull_requests_closed": 0.0,
-                                  "issues_opened_total": 2.0,
-                                  "issues_closed_total": 0.0,
-                                  "issues_closed_rate_this_window": 0.0,
-                                  "issues_closed_rate_total": 0.0,
-                                  "issues_delta": 1.0,
-                                  "issues_open": 2.0,
-                                  "pull_requests_opened_total": 0.0,
-                                  "pull_requests_closed_total": 0.0,
-                                  "pull_requests_closed_rate_this_window": null,
-                                  "pull_requests_closed_rate_total": null,
-                                  "pull_requests_delta": 0.0,
-                                  "pull_requests_open": 0.0
+                                    "date": "2011-04-16T00:00:00.000Z",
+                                    "issues_opened": 0,
+                                    "issues_closed": 0,
+                                    "pull_requests_opened": 32,
+                                    "pull_requests_merged": 0,
+                                    "pull_requests_closed": 19,
+                                    "issues_opened_total": 4,
+                                    "issues_closed_total": 0,
+                                    "issues_closed_rate_this_window": null,
+                                    "issues_closed_rate_total": 0,
+                                    "issues_delta": 0,
+                                    "issues_open": 4,
+                                    "pull_requests_opened_total": 284,
+                                    "pull_requests_closed_total": 242,
+                                    "pull_requests_closed_rate_this_window": 0.59375,
+                                    "pull_requests_closed_rate_total": 0.8521126761,
+                                    "pull_requests_delta": 13,
+                                    "pull_requests_open": 42
                                 },
                                 {
-                                  "date": "2009-04-16T00:00:00.000Z",
-                                  "issues_opened": 2.0,
-                                  "issues_closed": 1.0,
-                                  "pull_requests_opened": 1.0,
-                                  "pull_requests_merged": 1.0,
-                                  "pull_requests_closed": 1.0,
-                                  "issues_opened_total": 3.0,
-                                  "issues_closed_total": 5.0,
-                                  "issues_closed_rate_this_window": 4.0,
-                                  "issues_closed_rate_total": 6.0,
-                                  "issues_delta": 1.0,
-                                  "issues_open": 2.0,
-                                  "pull_requests_opened_total": 3.0,
-                                  "pull_requests_closed_total": 5.0,
-                                  "pull_requests_closed_rate_this_window": null,
-                                  "pull_requests_closed_rate_total": null,
-                                  "pull_requests_delta": 2.0,
-                                  "pull_requests_open": 1.0
+                                    "date": "2011-04-17T00:00:00.000Z",
+                                    "issues_opened": 0,
+                                    "issues_closed": 0,
+                                    "pull_requests_opened": 15,
+                                    "pull_requests_merged": 1,
+                                    "pull_requests_closed": 14,
+                                    "issues_opened_total": 4,
+                                    "issues_closed_total": 0,
+                                    "issues_closed_rate_this_window": null,
+                                    "issues_closed_rate_total": 0,
+                                    "issues_delta": 0,
+                                    "issues_open": 4,
+                                    "pull_requests_opened_total": 299,
+                                    "pull_requests_closed_total": 256,
+                                    "pull_requests_closed_rate_this_window": 0.9333333333,
+                                    "pull_requests_closed_rate_total": 0.856187291,
+                                    "pull_requests_delta": 1,
+                                    "pull_requests_open": 43
                                 }
                             ]
         """
@@ -632,24 +755,24 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                            [
                                 {
-                                    "login": "foo",
-                                    "location": "Springfield",
-                                    "commits": 1337.0,
-                                    "pull_requests": 60.0,
-                                    "issues": null,
-                                    "commit_comments": 158.0,
-                                    "pull_request_comments": 718.0,
-                                    "issue_comments": 1668.0
+                                    "user": 8153,
+                                    "commits": 6825,
+                                    "issues": 127,
+                                    "commit_comments": 313,
+                                    "issue_comments": 13152,
+                                    "pull_requests": 1,
+                                    "pull_request_comments": 0,
+                                    "total": 20418
                                 },
                                 {
-                                    "login": "bar",
-                                    "location": null,
-                                    "commits": 3968.0,
-                                    "pull_requests": null,
-                                    "issues": 12.0,
-                                    "commit_comments": 158.0,
-                                    "pull_request_comments": 718.0,
-                                    "issue_comments": 1568.0
+                                    "user": 45381,
+                                    "commits": 2192,
+                                    "issues": 202,
+                                    "commit_comments": 130,
+                                    "issue_comments": 4633,
+                                    "pull_requests": 0,
+                                    "pull_request_comments": 0,
+                                    "total": 7157
                                 }
                             ]
         """
@@ -668,22 +791,24 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                            [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "commits": 37.0,
+                                    "date": "2004-11-24T00:00:00.000Z",
+                                    "commits": 3,
                                     "pull_requests": null,
                                     "issues": null,
-                                    "commit_comments": 7.0,
-                                    "pull_request_comments": 8.0,
-                                    "issue_comments": 17.0
+                                    "commit_comments": null,
+                                    "pull_request_comments": null,
+                                    "issue_comments": null,
+                                    "total": null
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "commits": 68.0,
+                                    "date": "2004-11-30T00:00:00.000Z",
+                                    "commits": 7,
                                     "pull_requests": null,
-                                    "issues": 12.0,
-                                    "commit_comments": 18.0,
-                                    "pull_request_comments": 13.0,
-                                    "issue_comments": 28.0
+                                    "issues": null,
+                                    "commit_comments": null,
+                                    "pull_request_comments": null,
+                                    "issue_comments": null,
+                                    "total": null
                                 }
                             ]
         """
@@ -697,7 +822,24 @@ class Server(object):
                             status=200,
                             mimetype="application/json")
 
-        #todo: documentation
+        """
+        @api {get} /:owner/:repo/timeseries/project_age Project Age
+        @apiName ProjectAge
+        @apiGroup Experimental
+        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                "date": "2008-04-11T00:00:00.000Z",
+                                "{0}": 1
+                                }
+                            ]
+        
+        """
         self.addMetric(ghtorrent.project_age, 'project_age')
 
         ### DEPENDENCY RELATED ###
@@ -712,55 +854,83 @@ class Server(object):
 
         @apiSuccessExample {json} Success-Response:
                             [
-                                {   "full_name": "rails/rails"
-                                    "description": "Ruby on Rails",
-                                    "fork": false, "created_at": "2008-04-11T02:19:47.000Z",
-                                    "updated_at": "2017-09-20T20:16:47.181Z",
-                                    "pushed_at": "2017-09-20T19:39:08.000Z",
-                                    "homepage": "http://rubyonrails.org",
-                                    "size": 155199, "stargazers_count": 36993,
-                                    "language": "Ruby", "has_issues": true,
-                                    "has_wiki": false,
-                                    "has_pages": false,
-                                    "forks_count": 15130,
-                                    "mirror_url": null,
-                                    "open_issues_count": 1157,
-                                    "default_branch": "master",
-                                    "subscribers_count": 2452,
-                                    "uuid": "8514", "source_name": null,
-                                    "license": "MIT", "private": false,
-                                    "contributions_count": 2616,
-                                    "has_readme": "README.md",
-                                    "has_changelog": null,
-                                    "has_contributing": "CONTRIBUTING.md",
-                                    "has_license": "MIT-LICENSE",
-                                    "has_coc": "CODE_OF_CONDUCT.md",
-                                    "has_threat_model": null,
-                                    "has_audit": null,
-                                    "status": null,
-                                    "last_synced_at": "2017-09-20T20:16:47.153Z",
-                                    "rank": 28, "host_type": "GitHub",
-                                    "host_domain": null,
-                                    "name": null,
-                                    "scm": "git",
-                                    "fork_policy": null,
-                                     "github_id": "8514",
-                                     "pull_requests_enabled": null,
-                                     "logo_url": null,
-                                     "github_contributions_count": 2616,
-                                     "keywords": ["activejob", "activerecord", "html", "mvc", "rails", "ruby"],
-                                     "dependencies": [
-                                                        {   "project_name": "websocket-driver",
-                                                            "name": "websocket-driver",
-                                                            "platform": "rubygems",
-                                                            "requirements": "~> 0.6.1",
-                                                            "latest_stable": "0.7.0",
-                                                            "latest": "0.7.0",
-                                                            "deprecated": false, "outdated": true,
-                                                            "filepath": "actioncable/actioncable.gemspec", "
-                                                            kind": "runtime"
-                                                        }
-                                                     ]
+                                "full_name": "rails/rails",
+                                "description": "Ruby on Rails",
+                                "fork": false,
+                                "created_at": "2008-04-11T02:19:47.000Z",
+                                "updated_at": "2018-05-08T14:18:07.000Z",
+                                "pushed_at": "2018-05-08T11:38:30.000Z",
+                                "homepage": "http://rubyonrails.org",
+                                "size": 163747,
+                                "stargazers_count": 39549,
+                                "language": "Ruby",
+                                "has_issues": true,
+                                "has_wiki": false,
+                                "has_pages": false,
+                                "forks_count": 16008,
+                                "mirror_url": null,
+                                "open_issues_count": 1079,
+                                "default_branch": "master",
+                                "subscribers_count": 2618,
+                                "uuid": "8514",
+                                "source_name": null,
+                                "license": "MIT",
+                                "private": false,
+                                "contributions_count": 2627,
+                                "has_readme": "README.md",
+                                "has_changelog": null,
+                                "has_contributing": "CONTRIBUTING.md",
+                                "has_license": "MIT-LICENSE",
+                                "has_coc": "CODE_OF_CONDUCT.md",
+                                "has_threat_model": null,
+                                "has_audit": null,
+                                "status": null,
+                                "last_synced_at": "2018-03-31T12:40:28.163Z",
+                                "rank": 28,
+                                "host_type": "GitHub",
+                                "host_domain": null,
+                                "name": null,
+                                "scm": "git",
+                                "fork_policy": null,
+                                "github_id": "8514",
+                                "pull_requests_enabled": null,
+                                "logo_url": null,
+                                "github_contributions_count": 2627,
+                                "keywords": [
+                                    "activejob",
+                                    "activerecord",
+                                    "framework",
+                                    "html",
+                                    "mvc",
+                                    "rails",
+                                    "ruby"
+                                ],
+                                "dependencies": [
+                                    {
+                                        "project_name": "blade-sauce_labs_plugin",
+                                        "name": "blade-sauce_labs_plugin",
+                                        "platform": "rubygems",
+                                        "requirements": "0.7.2",
+                                        "latest_stable": "0.7.3",
+                                        "latest": "0.7.3",
+                                        "deprecated": false,
+                                        "outdated": true,
+                                        "filepath": "Gemfile.lock",
+                                        "kind": "runtime"
+                                    },
+                                    {
+                                        "project_name": "blade-qunit_adapter",
+                                        "name": "blade-qunit_adapter",
+                                        "platform": "rubygems",
+                                        "requirements": "2.0.1",
+                                        "latest_stable": "2.0.1",
+                                        "latest": "2.0.1",
+                                        "deprecated": false,
+                                        "outdated": false,
+                                        "filepath": "Gemfile.lock",
+                                        "kind": "runtime"
+                                    }
+                            ]
         """
         self.addMetric(librariesio.dependencies, 'dependencies')
         
@@ -796,14 +966,47 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "login": "bonnie",
-                                    "location": "Rowena, TX",
-                                    "commits": 12
-                                },
-                                {
-                                    "login":"clyde",
-                                    "location":"Ellis County, TX",
-                                    "commits": 12
+                                    "name": "rspec-rails",
+                                    "platform": "Rubygems",
+                                    "description": "rspec-rails is a testing framework for Rails 3+.",
+                                    "homepage": "https://github.com/rspec/rspec-rails",
+                                    "repository_url": "https://github.com/rspec/rspec-rails",
+                                    "normalized_licenses": [
+                                        "MIT"
+                                    ],
+                                    "rank": 26,
+                                    "latest_release_published_at": "2017-11-20T09:27:22.144Z",
+                                    "latest_release_number": "3.7.2",
+                                    "language": "Ruby",
+                                    "status": null,
+                                    "package_manager_url": "https://rubygems.org/gems/rspec-rails",
+                                    "stars": 3666,
+                                    "forks": 732,
+                                    "keywords": [],
+                                    "latest_stable_release": {
+                                        "id": 11315605,
+                                        "project_id": 245284,
+                                        "number": "3.7.2",
+                                        "published_at": "2017-11-20T09:27:22.144Z",
+                                        "created_at": "2017-11-20T09:31:11.532Z",
+                                        "updated_at": "2017-11-20T09:31:11.532Z",
+                                        "runtime_dependencies_count": 7
+                                    },
+                                    "latest_download_url": "https://rubygems.org/downloads/rspec-rails-3.7.2.gem",
+                                    "dependents_count": 4116,
+                                    "dependent_repos_count": 129847,
+                                    "versions": [
+                                        {
+                                            "number": "2.12.2",
+                                            "published_at": "2013-01-12T18:56:40.027Z"
+                                        },
+                                        {
+                                            "number": "2.12.1",
+                                            "published_at": "2013-01-07T23:04:53.104Z"
+                                        },
+                                        {
+                                            "number": "2.12.0",
+                                            "published_at": "2012-11-13T03:37:01.354Z"
                                 }
                             ]
         """
@@ -868,12 +1071,12 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "downlads": 235
+                                    "date": "2018-06-14",
+                                    "downloads": 129148
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "dowloads": 327
+                                    "date": "2018-06-13",
+                                    "downloads": 131262
                                 }
                             ]
         """
@@ -949,12 +1152,12 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "release": 1.0.0
+                                    "date": "2008-04-10T17:25:14-07:00",
+                                    "release": "v1.0.0"
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "release": 2.0.0
+                                    "date": "2008-04-10T17:25:47-07:00",
+                                    "release": "v2.0.0"
                                 }
                             ]
         """
@@ -972,12 +1175,12 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "date": "2015-01-01T00:00:00.000Z",
-                                    "release": 1.0.0
+                                    "date": "2008-04-10T17:25:06-07:00",
+                                    "release": "v0.9.1"
                                 },
                                 {
-                                    "date": "2015-01-08T00:00:00.000Z",
-                                    "release": 2.0.0
+                                    "date": "2008-04-10T17:25:07-07:00",
+                                    "release": "v0.9.2"
                                 }
                             ]
         """
