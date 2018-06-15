@@ -6,7 +6,7 @@ from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
-from augur.util import update_metric, metrics
+from augur.util import annotate, metrics
 
 sys.path.append('..')
 
@@ -1335,34 +1335,33 @@ class Server(object):
             generated_function.__name__ = func.__name__
             return generated_function
 
-    def addMetric(self, function, endpoint, cache=True, augur_metric=None):
+    def addMetric(self, function, endpoint, cache=True):
         """Simplifies adding routes that only accept owner/repo"""
         endpoint = '/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
-        self.updateMetricMetadata(augur_metric, endpoint)
+        self.updateMetricMetadata(function, endpoint)
         
 
 
-    def addGitMetric(self, function, endpoint, cache=True, augur_metric=None):
+    def addGitMetric(self, function, endpoint, cache=True):
         """Simplifies adding routes that accept"""
         endpoint = '/{}/git/{}/<path:repo_url>/'.format(AUGUR_API_VERSION, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
-        self.updateMetricMetadata(augur_metric, endpoint)
+        self.updateMetricMetadata(function, endpoint)
 
-    def addTimeseries(self, function, endpoint, augur_metric=None):
+    def addTimeseries(self, function, endpoint):
         """
         Simplifies adding routes that accept owner/repo and return timeseries
         :param app:       Flask app
         :param function:  Function from a datasource to add
         :param endpoint:  GET endpoint to generate
         """
-        self.addMetric(function, 'timeseries/{}'.format(endpoint), augur_metric=augur_metric)
+        self.addMetric(function, 'timeseries/{}'.format(endpoint))
 
-    def updateMetricMetadata(self, augur_metric, endpoint):
-        if augur_metric is not None:
-            update_metric(augur_metric, {
-                'endpoint': endpoint            
-            })
+    def updateMetricMetadata(self, function, endpoint):
+        # God forgive me
+        real_func = getattr(function.__self__.__class__, function.__name__)
+        annotate(endpoint=endpoint)(real_func)
 
 def run():
     server = Server()

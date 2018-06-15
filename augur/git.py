@@ -122,8 +122,9 @@ class Git(object):
                         # Do slow functions and rebuild their caches
                         self.lines_changed_minus_whitespace(repo.url, rebuild_cache=True)
                         self.changes_by_author(repo.url, rebuild_cache=True)
-                except:
+                except Exception as e:
                     logger.info('Git: Update failed for %s', repo.url)
+                    logger.info('Git: Reason for failure: %s', str(e))
                     pass
                    
             self.is_updater = False

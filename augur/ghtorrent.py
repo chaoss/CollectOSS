@@ -3,6 +3,7 @@ import sqlalchemy as s
 import numpy as np
 import re
 from augur import logger
+from augur.util import annotate
 
 class GHTorrent(object):
     """Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators"""
@@ -137,6 +138,7 @@ class GHTorrent(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
+    @annotate(metric_name='closed-issues')
     def closed_issues(self, owner, repo=None):
         """
         Subgroup: Issue Resolution

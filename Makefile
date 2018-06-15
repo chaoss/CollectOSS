@@ -125,7 +125,11 @@ build: frontend docs
 	cd augur/static/ && brunch build --production
 
 test:
-		bash -c '$(CONDAACTIVATE) python -m pytest ./test'
+	bash -c '$(CONDAACTIVATE) python -m pytest ./test'
+
+.PHONY: unlock
+unlock:
+	find . -type f -name "*.lock" -delete
 
 update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }

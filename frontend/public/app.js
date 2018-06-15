@@ -205,19 +205,20 @@ function Augur() {
         } else {
           repo = window.AugurRepos[repo.toString()];
         }
+        var queryString = '';
         state.hasState = true;
         if (repo.owner && repo.name) {
           state.baseRepo = repo.toString();
-          var title = repo.owner + '/' + repo.name + '- Augur';
           state.tab = 'gmd';
-          var _queryString = '?repo=' + repo.owner + '+' + repo.name;
-          window.history.pushState(null, title, _queryString);
+          queryString += '?repo=' + repo.owner + '+' + repo.name;
         }
         if (payload.gitURL) {
-          var _queryString2 = '?git=' + window.btoa(repo.gitURL);
-          window.history.pushState(null, 'Git Analysis - Augur', _queryString2);
+          queryString += '?git=' + window.btoa(repo.gitURL);
           state.tab = 'git';
           state.gitRepo = repo.gitURL;
+        }
+        if (!payload.fromURL) {
+          window.history.pushState(null, 'Augur', queryString);
         }
         if (!payload.keepCompared) {
           state.comparedRepos = [];
@@ -279,16 +280,23 @@ function Augur() {
 
   // Load state from query string
   var parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' });
+  var payload = { fromURL: true };
+  var hasState = 0;
   if (parsed.repo) {
-    window.AugurApp.$store.commit('setRepo', { githubURL: parsed.repo.replace(' ', '/') });
+    payload.githubURL = parsed.repo.replace(' ', '/');
+    hasState = 1;
+  }
+  if (parsed.git) {
+    payload.gitURL = window.atob(parsed.git);
+    hasState = 1;
+  }
+  if (hasState) {
+    window.AugurApp.$store.commit('setRepo', payload);
   }
   if (parsed.comparedTo) {
     parsed.comparedTo.forEach(function (repo) {
       window.AugurApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') });
     });
-  }
-  if (parsed.git) {
-    window.AugurApp.$store.commit('setRepo', { gitURL: window.atob(parsed.git) });
   }
 }
 });

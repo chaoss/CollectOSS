@@ -31,26 +31,19 @@ def get_cache(namespace, cache_manager=None):
         cache_manager = __memory_cache
     return cache_manager.get_cache(namespace)
 
-metrics = {}
-def update_metric(metric_name, metadata=None):
-    """
-    Updates a metric's metadata
-    """
-    global metrics
-    if metadata is None:
-        metadata = {}
-    if metric_name not in metrics:
-            metrics[metric_name] = {}
-    if metadata not in metrics[metric_name]:
-        metrics[metric_name]['metadata'] = {}
-    metrics['metric_name']['metadata'].update(metadata)
-
-def implements_metric(*args, **kwargs):
+metrics = []
+def annotate(metadata=None, **kwargs):
     """
     Decorate a function as being a metric
     """
     def decorate(func):
-        update_metric(*args, **kwargs)
-        metrics['metric_name']['func'] = func
+        nonlocal metadata
+        if not hasattr(func, 'metadata'):
+            func.metadata = {}
+        if metadata is None:
+            metadata = {}
+        func.metadata.update(metadata)
+        func.metadata.update(dict(kwargs))
+        metrics.append(func.metadata)
         return func
     return decorate
