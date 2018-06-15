@@ -7,6 +7,7 @@ from augur import logger
 import os
 import augur
 import datetime
+from dateutil.parser import parse
 #Count 2290
 #if(line[j:j+11]=="},\"unixfrom\"" or line[j:j+9] == "},\"origin\"" ):
 #9359610
@@ -43,23 +44,33 @@ def add_row_mess(columns1,df,di,row,archives):
 	else:
 		for j in range(100,len(temp),5000):
 			k+=1
-			date = di['data']['Date'].split()
-			dict1 = {'Jan':'1','Feb':'2','Mar':'3','Apr':'4','May':'5','Jun':'6',
-			        'Jul':'7','Aug':'8','Sep':'9','Oct':'10','Nov':'11','Dec':'12'}
-			f = "%d/%m/%Y %H:%M:%S"
 			#date[5] = date[5][0:1] + ':' +  date[5][1:3]
 			#print(date[5])
-			times = (date[1] + '/' + dict1[date[2]] + '/' + date[3] + ' ' + date[4])
-			date = datetime.datetime.strptime(times, f)
+			split = di['data']['Date'].split()
+			s = " "
+			date = parse(s.join(split[:5]))
+			zone = split[5]
 			li = [[di['backend_name'],di['origin'],archives,
 			di['category'], di['data']['Subject'],
-			date, di['data']['From'],
+			date, zone,di['data']['From'],
 			di['data']['Message-ID'],
 			temp[prev:j] ]]
 			df1 = pd.DataFrame(li,columns=columns1)
-			df2 = df1.copy()
-			df3 = df.append(df2)
+			#df1['date'] = date
+			print(df1['date'])
+			#df1['date'] = pd.to_datetime(df['date'])
+			#print("\n\n\nHERE1",df1['date'])
+			#df1["date"] = pd.to_datetime(df["date"])
+			#df2 = df1.copy()
+			'''print(type(df2))
+			print(type(df2['date']))
+			print(df2)
+			print("\n\n",df2['date'])'''
+			#print(df)
+			#rint(type(df['date']))
+			df3 = df.append(df1)
 			df = df3
+			#print(di['data']['Date'])
 			#print("prev",prev)
 			#print("\n\n\n",temp[prev:j],"\n\nYEAHHHHHHHHHHHHHHHHH!!!!!!!!!!!!!!\n\n\n")
 			prev = j
@@ -72,21 +83,22 @@ def add_row_mess(columns1,df,di,row,archives):
 	#print("jjjjjjjj",j)
 	if(j+5000>len(temp)):
 		k+=1
-		date = di['data']['Date'].split()
-		dict1 = {'Jan':'1','Feb':'2','Mar':'3','Apr':'4','May':'5','Jun':'6',
-				'Jul':'7','Aug':'8','Sep':'9','Oct':'10','Nov':'11','Dec':'12'}
-		f = "%d/%m/%Y %H:%M:%S"
-		times = (date[1] + '/' + dict1[date[2]] + '/' + date[3] + ' ' + date[4])
-		date = datetime.datetime.strptime(times, f)
+		#di['data']['Date'] = parse(di['data']['Date'])
 		li = [[di['backend_name'],di['origin'],archives,
 		di['category'], di['data']['Subject'],
-		date, di['data']['From'],
+		date,zone, di['data']['From'],
 		di['data']['Message-ID'],
 		temp[prev:j+5000] ]]
 		df1 = pd.DataFrame(li,columns=columns1)
-		df2 = df1.copy()
-		df3 = df.append(df2)
+		#df1['date'] = date
+		print(df1['date'])
+		#df1['date'] = pd.to_datetime(df['date'])
+		#print("\n\n\nHERE2",df1['date'])
+		#df2 = df1.copy()
+		#type(df2)
+		df3 = df.append(df1)
 		df = df3
+		#print(di['data']['Date'])
 		#print("prev1",prev)
 	#print(df)
 	#print(len(temp),"length")
@@ -136,10 +148,11 @@ class PiperMail:
 	def make(self,link):
 		#print(self.db)
 		print("ugh")
+		print("wtf")
 		print(link)
 		upload  = False
-		archives = ["aalldp-dev","alto-dev","advisory-group","archetypes-dev"]
-		#archives = ["archetypes-dev","aalldp-dev"]
+		#archives = ["aalldp-dev","alto-dev","advisory-group","archetypes-dev"]
+		archives = ["archetypes-dev","aalldp-dev"]
 		'''if("augur/notebooks" in os.getcwd()):
 				os.chdir("..")
 				print(os.getcwd())
@@ -150,7 +163,7 @@ class PiperMail:
 		path = "/augur/data/"
 		db_name = "mail_lists"
 		db_name_csv = os.getcwd() + path + db_name
-		columns1 = 'backend_name','project','mailing_list','category','subject','date','message_from','message_id','message_text'
+		columns1 = 'backend_name','project','mailing_list','category','subject','date','timezone_UTC','message_from','message_id','message_text'
 		df5 = pd.DataFrame(columns=columns1)
 		df5.to_sql(name=db_name, con=self.db,if_exists='replace',index=False,
 				dtype={'backend_name': s.types.VARCHAR(length=300),
@@ -159,6 +172,7 @@ class PiperMail:
 					'category': s.types.VARCHAR(length=300),
 					'subject': s.types.VARCHAR(length=400),
 					'date': s.types.DateTime(),
+					'timezone': s.types.VARCHAR(length=5),
 					'message_from': s.types.VARCHAR(length=500),
 					'message_id': s.types.VARCHAR(length=500),
 					'message_text': s.types.Text				   
@@ -187,9 +201,10 @@ class PiperMail:
 			#hard to upload to the database would have to decode it and upload
 			#to the database and then encode it back when requesting from
 			#the database
-			columns2 = "backend_name","mailing_list_url","project"
 			df = pd.DataFrame(columns=columns1)
+			df["date"] = pd.to_datetime(df["date"])
 			df5 = pd.DataFrame(columns=columns1)
+			columns2 = "backend_name","mailing_list_url","project"
 			#df = df.fillna(0) # with 0s rather than NaNs
 			if(i==0):
 				li = [[di['backend_name'],di['origin'],archives[i]]]
