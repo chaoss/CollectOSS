@@ -57,7 +57,7 @@ def add_row_mess(columns1,df,di,row,archives):
 			temp[prev:j] ]]
 			df1 = pd.DataFrame(li,columns=columns1)
 			#df1['date'] = date
-			print(df1['date'])
+			#print(df1['date'])
 			#df1['date'] = pd.to_datetime(df['date'])
 			#print("\n\n\nHERE1",df1['date'])
 			#df1["date"] = pd.to_datetime(df["date"])
@@ -91,7 +91,7 @@ def add_row_mess(columns1,df,di,row,archives):
 		temp[prev:j+5000] ]]
 		df1 = pd.DataFrame(li,columns=columns1)
 		#df1['date'] = date
-		print(df1['date'])
+		#print(df1['date'])
 		#df1['date'] = pd.to_datetime(df['date'])
 		#print("\n\n\nHERE2",df1['date'])
 		#df2 = df1.copy()
@@ -152,7 +152,7 @@ class PiperMail:
 		print(link)
 		upload  = False
 		#archives = ["aalldp-dev","alto-dev","advisory-group","archetypes-dev"]
-		archives = ["archetypes-dev","aalldp-dev"]
+		archives = ["aalldp-dev","alto-dev","archetypes-dev"]
 		'''if("augur/notebooks" in os.getcwd()):
 				os.chdir("..")
 				print(os.getcwd())
