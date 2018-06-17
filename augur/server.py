@@ -1090,6 +1090,29 @@ class Server(object):
                             mimetype="application/json")
 
         """
+        @api {get} /:owner/:repo/timeseries/fakes Fakes
+        @apiName Fakes
+        @apiGroup Experimental
+        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2010-04-09T00:00:00.000Z",
+                                    "fakes": 1
+                                },
+                                {
+                                    "date": "2010-04-27T00:00:00.000Z",
+                                    "fakes": 2
+                                }
+                            ]
+        """
+        self.addTimeseries(ghtorrent.fakes, 'fakes')
+
+        """
         @api {get} /git/lines_changed/:git_repo_url Lines Changed (minus whitespace)
         @apiName LinesChanged 
         @apiGroup Experimental
@@ -1190,6 +1213,19 @@ class Server(object):
         @api {get} /ghtorrent_range GHTorrent Date Range
         @apiName GhtorrentRange
         @apiGroup Utility
+        @apiDescription Utility endpoint to show the range of dates GHTorrent covers.
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2008-04-10T17:25:06-07:00",
+                                    "release": "v0.9.1"
+                                },
+                                {
+                                    "date": "2008-04-10T17:25:07-07:00",
+                                    "release": "v0.9.2"
+                                }
+                            ]
         """
         @app.route('/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
 

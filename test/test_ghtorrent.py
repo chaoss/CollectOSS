@@ -26,64 +26,98 @@ The tests check if a value is anywhere in the dataframe
 
 
 # *** GROWTH, MATURITY, AND DECLINE *** #
-def test_issues(ghtorrent):
-    assert ghtorrent.issues('mongodb', 'mongo').isin(["2013-01-05"]).any
+def test_closed_issues(ghtorrent):
+    assert ghtorrent.closed_issues('cashmusic', 'platform').isin(["2012-11-09T00:00:00.000Z"]).any
 
-# issues closed
+def test_closed_issue_resolution_duration(ghtorrent):
+    assert ghtorrent.closed_issue_resolution_duration('mopidy', 'mopidy').isin(["2012-11-10T09:51:19.000Z"]).any
 
-def test_issue_response_time(ghtorrent):
-    assert ghtorrent.issue_response_time('hadley', 'devtools').isin([1]).any
+def test_code_commits(ghtorrent):
+    assert ghtorrent.code_commits('facebook', 'folly').isin(["2013-01-07"]).any
 
-def test_issues_with_close(ghtorrent):
-    assert ghtorrent.issues_with_close('TrinityCore', 'TrinityCore').isin(["2012-01-08"]).any
+def test_code_review_iteration(ghtorrent):
+    assert ghtorrent.code_review_iteration('apache', 'spark').isin(["2015-05-22T00:00:00.000Z"]).any
 
-def test_commits(ghtorrent):
-    assert ghtorrent.commits('facebook', 'folly').isin(["2013-01-07"]).any
+def test_contribution_acceptance(ghtorrent):
+    assert ghtorrent.contribution_acceptance('rails', 'rails').isin(["2012-05-16T00:00:00.000Z"]).any
 
-# time to first maintainer response
+def test_contributing_github_organizations(ghtorrent):
+    assert ghtorrent.contributing_github_organizations('rails', 'rails').isin(["4066"]).any
+
+def test_first_response_to_issue_duration(ghtorrent):
+    assert ghtorrent.first_response_to_issue_duration('AudioKit', 'AudioKit').isin(["13000839"]).any
 
 def test_forks(ghtorrent):
     assert ghtorrent.forks('facebook', 'hiphop-php').isin(["2012-01-08"]).any
 
-# pulls
+def test_maintainer_response_to_merge_request_duration(ghtorrent):
+    assert ghtorrent.maintainer_response_to_merge_request_duration('rails', 'rails').isin(["2011-05-10T00:00:00.000Z"]).any
+ 
+def test_new_contributing_github_organizations(ghtorrent):
+    assert ghtorrent.new_contributing_github_organizations('rails', 'rails').isin(["4066"]).any
 
-# pull request comments
+def test_open_issues(ghtorrent):
+    assert ghtorrent.open_issues('mongodb', 'mongo').isin(["2013-01-05"]).any
+
+def test_pull_request_comments(ghtorrent):
+    assert ghtorrent.pull_request_comments('rails', 'rails').isin(["2011-11-15T00:00:00.000Z"]).any 
+
+def test_pull_requests_open(ghtorrent):
+    assert ghtorrent.pull_requests_open('rails', 'rails').isin(["2013-01-09T00:00:00.000Z"]).any
 
 # *** RISK *** #
 
 # *** VALUE *** #
 
 # *** ACTIVITY *** #
-# watchers
 
-#issue comments
+def test_watchers(ghtorrent):
+    assert ghtorrent.watchers('rails', 'rails').isin(["2017-08-23T00:00:00.000Z"]).any
+
+def test_issue_comments(ghtorrent):
+    assert ghtorrent.issue_comments('rails', 'rails').isin(["2009-04-05T00:00:00.000Z"]).any
 
 # *** EXPERIMENTAL *** #
 
-# commits100
+def test_commits100(ghtorrent):
+    assert ghtorrent.commits100('rails', 'rails').isin(["2017-08-13T00:00:00.000Z"]).any
 
-# commit_comments
+def test_commit_comments(ghtorrent):
+    assert ghtorrent.commit_comments('rails', 'rails').isin(["2008-07-10T00:00:00.000Z"]).any
 
 def test_committer_locations(ghtorrent):
     assert ghtorrent.committer_locations('mavam', 'stat-cookbook').isin(["Berkeley, CA"]).any
+
+def test_total_committers(ghtorrent):
+    assert ghtorrent.total_committers('rails', 'rails').isin(["2004-11-24T00:00:00.000Z"]).any
 
 def test_issue_activity(ghtorrent):
     assert ghtorrent.issue_activity('bitcoin', 'bitcoin').isin(["2010-12-20T00:00:00.000Z"]).any
 
 def test_pull_acceptance_rate(ghtorrent):
-    assert ghtorrent.pull_acceptance_rate('akka', 'akka').isin([0.5]).any# commits100
+    assert ghtorrent.pull_request_acceptance_rate('akka', 'akka').isin([0.5]).any
+
+# def test_community_age(ghtorrent):
+#     assert ghtorrent.community_age('TEST', 'TEST').isin(["DATE"]).any
+
+def test_community_engagement(ghtorrent):
+    assert ghtorrent.community_engagement('rails', 'rails').isin(["2010-09-11T00:00:00.000Z"]).any
 
 def test_contributions(ghtorrent):
     assert ghtorrent.contributions('ariya', 'phantomjs').isin(["ariya"]).any
 
-# community age
-
-# community engagement
-
-# fakes
-
 def test_contributors(ghtorrent):
     assert ghtorrent.contributors('TTimo', 'doom3.gpl').isin(["sergiocampama"]).any 
+
+def test_project_age(ghtorrent):
+    assert ghtorrent.project_age('rails', 'rails').isin(["2008-04-11T00:00:00.000Z"]).any
+
+def test_fakes(ghtorrent):
+    assert ghtorrent.fakes('rails', 'rails').isin(["2008-09-24T00:00:00.000Z"]).any
+
+def test_ghtorrent_range(ghtorrent):
+    assert ghtorrent.ghtorrent_range().isin(["0000-00-00"]).any
+
 
 
 

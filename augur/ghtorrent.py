@@ -372,32 +372,6 @@ class GHTorrent(object):
         forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
         return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
-    def issues_with_close(self, owner, repo=None):
-        """
-        Subgroup: Issue Resolution
-        chaoss-metric: closed-issue-resolution-duration
-
-        How long on average each week it takes to close an issue
-
-        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-        :return: DataFrame with issues/day
-        """
-        repoid = self.repoid(owner, repo)
-        issuesWithCloseSQL = s.sql.text("""
-            SELECT issues.id as "id",
-                   issues.created_at as "date",
-                   DATEDIFF(closed.created_at, issues.created_at)  AS "days_to_close"
-            FROM issues
-
-           JOIN
-                (SELECT * FROM issue_events
-                 WHERE issue_events.action = "closed") closed
-            ON issues.id = closed.issue_id
-
-            WHERE issues.repo_id = :repoid""")
-        return pd.read_sql(issuesWithCloseSQL, self.db, params={"repoid": str(repoid)})
-
     def maintainer_response_to_merge_request_duration(self, owner, repo=None):
         """
         Duration of time between a merge request being created and a maintainer commenting on that request

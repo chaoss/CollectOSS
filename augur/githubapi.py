@@ -268,7 +268,6 @@ class GitHubAPI(object):
         genderized = names.merge(LocalCSV.name_gender, how='inner', on=['name'])
         return genderized
 
-
     # def code_reviews(self, owner, repo=None):
     #     """
     #     Number of code reviews (merge requests) for a project

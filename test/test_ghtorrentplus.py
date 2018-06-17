@@ -3,14 +3,16 @@ import pytest
 import pandas
 
 @pytest.fixture
-def publicwww():
+def ghtorrentplus():
     import augur
     augurApp = augur.Application()
-    return augurApp.publicwww()
+    return augurApp.ghtorrentplus()
 
 # *** DIVERSITY AND INCLUSION *** #
 
 # *** GROWTH, MATURITY, AND DECLINE *** #
+# def test_closed_issue_resolution_duration(ghtorrentplus):
+#     assert ghtorrentplus.closed_issue_resolution_duration('mopidy', 'mopidy').isin(["2012-11-10T09:51:19.000Z"]).any
 
 # *** RISK *** #
 
@@ -19,5 +21,3 @@ def publicwww():
 # *** ACTIVITY *** #
 
 # *** EXPERIMENTAL *** #
-# def test_linking_websites(publicwww):
-#     assert publicwww.linking_websites(owner='yihui', repo='knitr').isin(["sohu.com"]).any
