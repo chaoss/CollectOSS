@@ -1396,6 +1396,9 @@ class Server(object):
 
     def updateMetricMetadata(self, function, endpoint, **kwargs):
         # God forgive me
+        #
+        # Get the unbound function from the bound function's class so that we can modify metadata
+        # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
         annotate(endpoint=endpoint, source=function.__self__.__class__.__name__, **kwargs)(real_func)
 

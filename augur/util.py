@@ -36,13 +36,12 @@ def annotate(metadata=None, **kwargs):
     """
     Decorate a function as being a metric
     """
+    if metadata is None:
+        metadata ={}
     def decorate(func):
-        nonlocal metadata
         if not hasattr(func, 'metadata'):
             func.metadata = {}
             metrics.append(func.metadata)
-        if metadata is None:
-            metadata = {}
         func.metadata.update(metadata)
         func.metadata.update(dict(kwargs))
         return func

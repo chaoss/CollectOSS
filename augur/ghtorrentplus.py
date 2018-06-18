@@ -22,6 +22,7 @@ class GHTorrentPlus(object):
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool)
         self.ghtorrent = ghtorrent
 
+    def update(self):
         try:
             # Table creation
             if (buildMode == 'rebuild') or ((not self.db.dialect.has_table(self.db.connect(), 'issue_response_time')) 
@@ -49,9 +50,7 @@ class GHTorrentPlus(object):
         issuesClosedSQL = s.sql.text("""
             SELECT * FROM issue_response_time WHERE repo_id = :repoid ORDER BY closed ASC
         """)
-        rs = pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)}, index_col=['opened', 'closed'])
-        rs['average_minutes_to_close_as_of_close'] = rs.rolling(len(rs), 1).mean()['minutes_to_close']
-        rs['average_minutes_to_close_past_30_days'] = rs.rolling('30D').mean()['minutes_to_close']
+        rs = pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)}, index_col=['opened'])
         mean = rs['minutes_to_close'].mean()
         std = rs['minutes_to_close'].std(ddof=0)
         rs['z-score'] = (rs['minutes_to_close'] - mean)/std

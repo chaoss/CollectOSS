@@ -1,4 +1,4 @@
-from .localcsv import LocalCSV
+from augur.localcsv import LocalCSV
 import json
 import re
 from dateutil.parser import parse

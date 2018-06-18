@@ -13,6 +13,11 @@ Augur
 .. automodule:: ghtorrent
    :members:
 
+.. automodule:: ghtorrentplus
+   :members:
+
+.. automodule:: githubapi
+   :members:
 
 Indices and tables
 ==================

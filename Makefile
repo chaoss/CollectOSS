@@ -49,13 +49,13 @@ default:
 #  Installation
 #
 install:
-	bash -c '$(CONDAUPDATE) pip install --upgrade .'
+	bash -lc '$(CONDAUPDATE) pip install --upgrade .'
 
 install-dev:
-	bash -c '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
+	bash -lc '$(CONDAUPDATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-dev-admin:
-	bash -c '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+	bash -lc '$(CONDAUPDATE) sudo pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
 
 install-msr:
 	@ ./util/install-msr.sh
@@ -80,8 +80,8 @@ upgrade: version download-upgrade update-upsteam install-dev
 #  Development
 #
 dev-start: dev-stop
-	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
-	@ bash -c '($(CONDAACTIVATE) sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid;)'
+	@ bash -lc '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
+	@ bash -lc '($(CONDAACTIVATE) sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid;)'
 	@ echo "Server     Description       Log                   Monitoring                   PID                        "
 	@ echo "------------------------------------------------------------------------------------------                 "
 	@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
@@ -93,8 +93,8 @@ dev-start: dev-stop
 	@ echo "Stop servers:  make dev-stop "
 
 dev-stop:
-	@ bash -c 'if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;'
-	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
+	@ bash -lc 'if [[ -s logs/frontend.pid && (( `cat logs/frontend.pid` > 1 )) ]]; then printf "sending SIGTERM to node (Brunch) at PID $$(cat logs/frontend.pid); "; kill `cat logs/frontend.pid`; rm logs/frontend.pid > /dev/null 2>&1; fi;'
+	@ bash -lc 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
 	@ echo
 
 dev: dev-restart monitor
@@ -127,7 +127,7 @@ build: frontend docs
 	cd augur/static/ && brunch build --production
 
 test:
-	bash -c '$(CONDAACTIVATE) python -m pytest ./test'
+	bash -lc '$(CONDAACTIVATE) python -m pytest ./test'
 
 test-source:
 	bash -c '$(CONDAACTIVATE) python -m pytest test/test_${SOURCE}.py'
@@ -139,7 +139,7 @@ unlock:
 update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
 	pipreqs ./augur/
-	bash -c "$(CONDAACTIVATE) conda env export > environment.yml"
+	bash -lc "$(CONDAACTIVATE) conda env export > environment.yml"
 
 
 
@@ -147,16 +147,16 @@ update-deps:
 #  Prototyping
 #
 metrics-status: update-upsteam
-	@ bash -c '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
+	@ bash -lc '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
 
 edit-metrics-status:
 	$(EDITOR) docs/metrics/status.json
 
 jupyter:
-		@ bash -c '$(CONDAACTIVATE) cd notebooks; jupyter notebook'
+		@ bash -lc '$(CONDAACTIVATE) cd notebooks; jupyter notebook'
 
 create-jupyter-env:
-		bash -c '$(CONDAACTIVATE) python -m ipykernel install --user --name augur --display-name "Python (augur)";'
+		bash -lc '$(CONDAACTIVATE) python -m ipykernel install --user --name augur --display-name "Python (augur)";'
 
 
 
@@ -165,11 +165,11 @@ create-jupyter-env:
 #
 .PHONY: to-json
 to-json:
-	@ bash -c '$(CONDAACTIVATE) python util/post-upgrade.py migrate_config_to_json'
+	@ bash -lc '$(CONDAACTIVATE) python util/post-upgrade.py migrate_config_to_json'
 
 .PHONY: to-env
 to-env:
-	@ bash -c '$(CONDAACTIVATE) AUGUR_EXPORT_ENV=1; AUGUR_INIT_ONLY=1; augur'
+	@ bash -lc '$(CONDAACTIVATE) AUGUR_EXPORT_ENV=1; AUGUR_INIT_ONLY=1; augur'
 
 
 
