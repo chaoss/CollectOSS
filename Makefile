@@ -7,6 +7,7 @@ CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=enviro
 CONDAACTIVATE=source activate augur;
 OLDVERSION="null"
 EDITOR?="vi"
+SOURCE=*
 
 default:
 	@ echo "Installation Commands:"
@@ -24,6 +25,7 @@ default:
 	@ echo "    dev-stop               Stops the backgrounded commands"
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
 	@ echo "    test                   Run pytest unit tests"
+	@ echo "    test-source SOURCE={source}   Run pytest unit tests for the specified data source (name only, no extension)"
 	@ echo "    build                  Builds documentation and frontend - use before pushing"
 	@ echo "    frontend               Builds frontend with Brunch"
 	@ echo "    update-deps            Generates updated requirements.txt and environment.yml"
@@ -126,6 +128,9 @@ build: frontend docs
 
 test:
 	bash -c '$(CONDAACTIVATE) python -m pytest ./test'
+
+test-source:
+	bash -c '$(CONDAACTIVATE) python -m pytest test/test_${SOURCE}.py'
 
 .PHONY: unlock
 unlock:
