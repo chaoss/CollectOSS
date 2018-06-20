@@ -33,11 +33,13 @@ export default function Augur () {
       gitRepo: null,
       comparedRepos: [],
       trailingAverage: 180,
-      startDate: new Date('1 January 2005'),
+      startDate: new Date('1 June 2010'),
       endDate: new Date(),
       compare: 'each',
       showBelowAverage: false,
       rawWeekly: false,
+      showArea: false,
+      showTooltip: false,
       byDate: false
     },
     mutations: {
@@ -99,6 +101,12 @@ export default function Augur () {
         }
         if (typeof payload.showBelowAverage !== 'undefined') {
           state.showBelowAverage = payload.showBelowAverage
+        }
+        if (typeof payload.showArea !== 'undefined') {
+          state.showArea = payload.showArea
+        }
+        if (typeof payload.showTooltip !== 'undefined') {
+          state.showTooltip = payload.showTooltip
         }
       },
       reset (state) {
