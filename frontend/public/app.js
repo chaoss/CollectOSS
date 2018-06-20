@@ -1328,7 +1328,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.reload("data-v-429b02f1", __vue__options__)
+    hotAPI.rerender("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -1512,6 +1512,489 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-5e0cf204", __vue__options__)
   } else {
     hotAPI.reload("data-v-5e0cf204", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/AreaLineChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var numCharts = 0;
+var numRenders = [];
+var count = 0;
+var config = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+  "data": {
+    "values": []
+  },
+  "width": 420,
+  "height": 200,
+  "config": {
+    "axis": {
+      "grid": false
+    },
+    "legend": {
+      "offset": -80
+    },
+    "selection": {
+      "grid": {
+        "type": "interval", "bind": "scales"
+      }
+    }
+  },
+  "layer": [{
+
+    "encoding": {
+      "x": {
+        "field": "date",
+        "type": "temporal",
+        "timeUnit": "yearmonth",
+        "axis": {
+          "title": null
+        }
+      },
+      "y": {
+        "field": "value",
+        "type": "quantitative",
+
+        "axis": {
+          "title": null
+        }
+      },
+      "color": {
+        "field": "name",
+        "type": "nominal",
+        "scale": { "scheme": "set1" }
+
+      }
+    },
+    "mark": {
+      "type": "line",
+      "interpolate": "basis",
+
+      "clip": true
+    }
+  }],
+
+  "padding": {
+    "top": 20,
+    "left": 0,
+    "right": 30,
+    "bottom": 55
+
+  }
+};
+var ogLayers = {
+
+  "encoding": {
+    "x": {
+      "field": "date",
+      "type": "temporal",
+      "timeUnit": "yearmonth",
+      "axis": {
+        "title": null
+      }
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+
+      "axis": {
+        "title": null
+      }
+    },
+    "color": {
+      "field": "name",
+      "type": "nominal",
+      "scale": { "scheme": "set1" }
+
+    }
+  },
+  "mark": {
+    "type": "line",
+    "interpolate": "basis",
+
+    "clip": true
+  }
+};
+
+var area = {
+  "mark": {
+    "type": "area",
+    "interpolate": "basis",
+    "clip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "date",
+      "type": "temporal",
+      "timeUnit": "year"
+    },
+    "y": {
+      "aggregate": "ci1",
+      "field": "value",
+      "type": "quantitative"
+
+    },
+    "y2": {
+      "aggregate": "ci0",
+      "field": "value",
+      "type": "quantitative"
+    },
+    "color": { "type": "nominal", "scale": { "scheme": "set1" } },
+    "opacity": { "value": 0.2 }
+  }
+};
+var raw = {
+  "mark": {
+    "type": "line",
+    "clip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "date",
+      "type": "temporal",
+      "timeUnit": "yearmonthdatehoursminutes",
+      "scale": {
+
+        "domain": "unaggregated"
+      }
+    },
+    "y": {
+      "aggregate": "ci1",
+      "field": "value",
+      "type": "quantitative"
+
+    },
+    "y2": {
+      "aggregate": "ci0",
+      "field": "value",
+      "type": "quantitative"
+    },
+    "color": { "value": "blue" },
+    "opacity": { "value": 0.3 }
+  }
+};
+var tooltip = {
+  "encoding": {
+    "x": {
+      "field": "date",
+      "type": "temporal",
+      "timeUnit": "yearmonthdatehoursminutes",
+      "axis": {
+        "format": "%Y",
+        "title": null
+      }
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "title": null
+      }
+    },
+    "color": {
+      "field": "name",
+      "type": "nominal",
+      "value": "red"
+    },
+    "size": {
+      "condition": {
+        "selection": "yup",
+        "value": 15
+      },
+      "value": 35
+    }
+  },
+  "selection": {
+    "yup": {
+      "type": "interval",
+      "on": "mouseover",
+      "nearest": true
+    }
+  },
+  "mark": {
+    "type": "point",
+    "filled": true,
+    "clip": true,
+    "encode": {
+      "enter": { "tooltip": { "signal": "{'Unemployment Rate': format(datum.unemp.rate, '0.1%')}" } },
+      "update": { "fill": { "scale": "color", "field": "unemp.rate" } },
+      "hover": { "fill": { "value": "red" } }
+    }
+  }
+};
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  data: function data() {
+
+    return {
+      values: []
+    };
+  },
+
+  watch: {},
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    period: function period() {
+      return this.$store.state.trailingAverage;
+    },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
+    compare: function compare() {
+      return this.$store.state.compare;
+    },
+    rawWeekly: function rawWeekly() {
+      return this.$store.state.rawWeekly;
+    },
+    showArea: function showArea() {
+      return this.$store.state.showArea;
+    },
+    showTooltip: function showTooltip() {
+      return this.$store.state.showTooltip;
+    },
+    spec: function spec() {
+      if (count > 10) count = 0;
+
+      var newObj = { "title": this.title };
+      for (var k in config) {
+        newObj[k] = config[k];
+      }
+      if (this.rawWeekly) {
+        var check = false;
+        for (var x = 0; x < config.layer.length; x++) {
+          if (_.isEqual(config.layer[x], raw)) check = true;
+        }
+        if (check) config.layer.push(raw);
+      } else {
+        for (var x = 0; x < config.layer.length; x++) {
+          if (config.layer[x] == raw) {
+            config.layer[x] = null;
+            console.log("Popping : " + x);
+          }
+        }
+      }
+
+      if (this.showArea) {
+        config.layer.push(area);
+      } else {
+        for (var x = 0; x < config.layer.length; x++) {
+          if (config.layer[x] == raw) {
+            config.layer = ogLayers;
+            console.log("Popping : " + x);
+          }
+        }
+      }
+
+      for (var i = 0; i < config.layer.length; i++) {
+        config.layer[i].encoding.x["scale"] = {
+          "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
+        };
+      }
+
+      count++;
+      return newObj;
+    },
+    chart: function chart() {
+      var _this = this;
+
+      $(this.$el).find('.showme').addClass('invis');
+      $(this.$el).find('.arealinechart').addClass('loader');
+
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      var repos = [];
+      if (this.repo) {
+        repos.push(window.AugurRepos[this.repo]);
+      }
+      if (this.comparedTo) {
+        repos.push(window.AugurRepos[this.comparedTo]);
+      }
+
+      window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+        _this.__download_data = data;
+        _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
+        _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
+
+        var defaultProcess = function defaultProcess(obj, key, field, count) {
+          var d = _AugurStats2.default.convertKey(obj[key], field);
+          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+          return d;
+        };
+
+        var normalized = [];
+        var buildLines = function buildLines(obj, onCreateData) {
+          if (!obj) {
+            return;
+          }
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count);
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach(function (field) {
+                  onCreateData(obj, key, field, count);
+                  count++;
+                });
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  var field = Object.keys(obj[key][0]).splice(1);
+                  onCreateData(obj, key, field, count);
+                  count++;
+                } else {
+                  _this.renderError();
+                  return;
+                }
+              }
+            }
+          }
+        };
+        var legend = [];
+        var values = [];
+        var colors = [];
+        if (!_this.comparedTo) {
+          buildLines(data[_this.repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+            console.log('rolling, before+after', d, rolling);
+            if (!_this.disableRollingAverage) {
+              normalized.push(rolling);
+              legend.push(field);
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+            }
+            if (_this.rawWeekly || _this.disableRollingAverage) {
+              normalized.push(d);
+              legend.push("raw " + field);
+              colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
+            }
+          });
+        } else if (_this.compare === 'each' && _this.comparedTo) {
+          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
+            normalized.push(rolling);
+            legend.push(_this.comparedTo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          });
+          buildLines(data[_this.repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
+            normalized.push(rolling);
+            legend.push(_this.repo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
+          });
+        } else if (_this.comparedTo) {
+          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+            normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
+              earliest: _this.earliest,
+              latest: _this.latest,
+              byDate: true,
+              period: _this.period
+            }));
+            legend.push(_this.comparedTo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          });
+        }
+
+        if (normalized.length == 0) {
+
+          _this.renderError();
+        } else {
+          for (var i = 0; i < legend.length; i++) {
+            normalized[i].forEach(function (d) {
+              d.name = legend[i];
+              d.color = colors[i];
+              values.push(d);
+            });
+          }
+          _this.values = values;
+          $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+          $(_this.$el).find('.arealinechart').removeClass('loader');
+
+          _this.renderChart();
+        }
+      }, function () {
+        _this.renderError();
+      });
+    }
+  },
+  methods: {
+    downloadSVG: function downloadSVG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      svgsaver.asSvg(svg, this.__download_file + '.svg');
+    },
+    downloadPNG: function downloadPNG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      svgsaver.asPng(svg, this.__download_file + '.png');
+    },
+    renderChart: function renderChart() {
+      this.$refs.chart.className = 'linechart intro';
+      window.$(this.$refs.holder).find('.hideme').removeClass('invis');
+      window.$(this.$refs.holder).find('.showme').removeClass('invis');
+      window.$(this.$refs.holder).find('.deleteme').remove();
+
+      this.$refs.chartholder.innerHTML = '';
+      this.$refs.chartholder.appendChild(this.mgConfig.target);
+    },
+    renderError: function renderError() {
+      this.$refs.chart.className = 'linechart intro';
+      window.$(this.$refs.holder).find('.deleteme').remove();
+      this.$refs.chartholder.innerHTML = '';
+      this.$refs.chartholder.appendChild(this.mgConfig.target);
+    }
+  } };
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"arealinechart hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-4"},[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-1c771e30", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-1c771e30", __vue__options__)
   }
 })()}
 });
@@ -2163,7 +2646,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4035d73d", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4035d73d", __vue__options__)
+    hotAPI.rerender("data-v-4035d73d", __vue__options__)
   }
 })()}
 });
@@ -2344,7 +2827,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-6c07ac85", __vue__options__)
   } else {
-    hotAPI.reload("data-v-6c07ac85", __vue__options__)
+    hotAPI.rerender("data-v-6c07ac85", __vue__options__)
   }
 })()}
 });
