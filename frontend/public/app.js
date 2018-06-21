@@ -1850,6 +1850,7 @@ exports.default = {
 
       window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
         _this.__download_data = data;
+        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
         _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
         _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 

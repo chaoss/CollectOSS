@@ -431,6 +431,7 @@ export default {
       window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
         // Make it so the user can save the data we are using
         this.__download_data = data
+        this.__download_file = this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
         this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.__download_data))
         this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
 
