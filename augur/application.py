@@ -213,13 +213,7 @@ class Application(object):
         from augur.PiperReader import PiperMail
         if self.__piper is None:
             logger.debug('Initializing PiperMail')
-            self.__piper = PiperMail(
-                user=self.read_config('GHTorrentPlus', 'user', 'AUGUR_DB_USER', 'root'),
-                password=self.read_config('GHTorrentPlus', 'pass', 'AUGUR_DB_PASS', 'password'),
-                host=self.read_config('GHTorrentPlus', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-                port=self.read_config('GHTorrentPlus', 'port', 'AUGUR_DB_PORT', '3306'),
-                dbname=self.read_config('GHTorrentPlus', 'name', 'AUGUR_DB_NAME', 'Pipermail')
-            , ghtorrent=self.ghtorrent())
+            self.__piper = PiperMail()
         return self.__piper
 
 
