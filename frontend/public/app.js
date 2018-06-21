@@ -1744,22 +1744,20 @@ exports.default = {
         }
       };
       var tooltip = {
+
         "encoding": {
           "x": {
             "field": "date",
             "type": "temporal",
-            "timeUnit": "yearmonthdatehoursminutes",
+            "timeUnit": "yearmonth",
             "axis": {
-              "format": "%Y",
               "title": null
             }
           },
           "y": {
             "field": "value",
             "type": "quantitative",
-            "scale": {
-              "zero": false
-            },
+
             "axis": {
               "title": null
             }
@@ -1767,32 +1765,19 @@ exports.default = {
           "color": {
             "field": "name",
             "type": "nominal",
-            "value": "red"
+            "scale": { "scheme": "set1" }
+
           },
-          "size": {
-            "condition": {
-              "selection": "yup",
-              "value": 15
-            },
-            "value": 35
-          }
-        },
-        "selection": {
-          "yup": {
-            "type": "interval",
-            "on": "mouseover",
-            "nearest": true
+          "tooltip": {
+            "field": "value",
+            "type": "quantitative"
           }
         },
         "mark": {
           "type": "point",
-          "filled": true,
-          "clip": true,
-          "encode": {
-            "enter": { "tooltip": { "signal": "{'Unemployment Rate': format(datum.unemp.rate, '0.1%')}" } },
-            "update": { "fill": { "scale": "color", "field": "unemp.rate" } },
-            "hover": { "fill": { "value": "red" } }
-          }
+          "interpolate": "basis",
+
+          "clip": true
         }
       };
 

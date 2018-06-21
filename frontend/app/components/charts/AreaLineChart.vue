@@ -155,6 +155,7 @@ export default {
           }
         },
         "layer": [
+
           {
 
             "encoding": {
@@ -188,9 +189,6 @@ export default {
               "clip": true
             }
           }
-
-
-
         ],
 
         "padding": {
@@ -288,23 +286,22 @@ export default {
           }
         }
       let tooltip =
-          {
+
+      {
+
             "encoding": {
               "x": {
                 "field": "date",
                 "type": "temporal",
-                "timeUnit": "yearmonthdatehoursminutes",
+                "timeUnit": "yearmonth",
                 "axis": {
-                  "format": "%Y",
                   "title": null
                 }
               },
               "y": {
                 "field": "value",
                 "type": "quantitative",
-                "scale": {
-                  "zero": false
-                },
+
                 "axis": {
                   "title": null
                 }
@@ -312,34 +309,22 @@ export default {
               "color": {
                 "field": "name",
                 "type": "nominal",
-                "value": "red"
+                "scale":{"scheme": "set1"},
+
               },
-              "size": {
-                "condition": {
-                  "selection": "yup",
-                  "value": 15
-                },
-                "value": 35
-              }
-            },
-            "selection": {
-              "yup": {
-                "type": "interval",
-                "on": "mouseover",
-                "nearest": true
+              "tooltip": {
+                "field": "value",
+                "type": "quantitative"
               }
             },
             "mark": {
               "type": "point",
-              "filled": true,
-              "clip": true,
-              "encode": {
-              "enter": { "tooltip": {"signal": "{'Unemployment Rate': format(datum.unemp.rate, '0.1%')}"}},
-              "update": { "fill": {"scale": "color", "field": "unemp.rate"} },
-              "hover": { "fill": {"value": "red"} }
-            },
+              "interpolate": "basis",
+
+              "clip": true
             }
           }
+
 
       //when we have rendered the number of total charts, reset the chart count, this is to prevent duplicate marks overlapping
       if(count > 10) count = 0
@@ -373,7 +358,11 @@ export default {
       }
 
       //push the tooltip to general spec
-      if(this.showTooltip) {config.layer.push(tooltip)}
+      if(this.showTooltip) {
+        config.layer.push(tooltip)
+
+
+      }
       else {
         //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
         for(var x = 0; x < config.layer.length; x++) {
