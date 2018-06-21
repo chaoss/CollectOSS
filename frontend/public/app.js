@@ -1395,6 +1395,16 @@ module.exports = {
         rawWeekly: e.target.checked
       });
     },
+    onAreaChange: function onAreaChange(e) {
+      this.$store.commit('setVizOptions', {
+        showArea: e.target.checked
+      });
+    },
+    onTooltipChange: function onTooltipChange(e) {
+      this.$store.commit('setVizOptions', {
+        showTooltip: e.target.checked
+      });
+    },
     onShowBelowAverageChange: function onShowBelowAverageChange(e) {
       this.$store.commit('setVizOptions', {
         showBelowAverage: e.target.checked
@@ -1429,7 +1439,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('h4',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                    "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                  "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h5',[_vm._v("Comparison Options")]),_vm._v(" "),_c('label',[_vm._v("Type\n            "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h4',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Show raw weekly values"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n          "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('h4',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                    "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                  "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h5',[_vm._v("Comparison Options")]),_vm._v(" "),_c('label',[_vm._v("Type\n            "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h4',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Show raw weekly values"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onAreaChange}}),_vm._v("Show area"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n          "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1548,211 +1558,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var numCharts = 0;
 var numRenders = [];
 var count = 0;
-var config = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-  "data": {
-    "values": []
-  },
-  "width": 420,
-  "height": 200,
-  "config": {
-    "axis": {
-      "grid": false
-    },
-    "legend": {
-      "offset": -80
-    },
-    "selection": {
-      "grid": {
-        "type": "interval", "bind": "scales"
-      }
-    }
-  },
-  "layer": [{
-
-    "encoding": {
-      "x": {
-        "field": "date",
-        "type": "temporal",
-        "timeUnit": "yearmonth",
-        "axis": {
-          "title": null
-        }
-      },
-      "y": {
-        "field": "value",
-        "type": "quantitative",
-
-        "axis": {
-          "title": null
-        }
-      },
-      "color": {
-        "field": "name",
-        "type": "nominal",
-        "scale": { "scheme": "set1" }
-
-      }
-    },
-    "mark": {
-      "type": "line",
-      "interpolate": "basis",
-
-      "clip": true
-    }
-  }],
-
-  "padding": {
-    "top": 20,
-    "left": 0,
-    "right": 30,
-    "bottom": 55
-
-  }
-};
-var ogLayers = {
-
-  "encoding": {
-    "x": {
-      "field": "date",
-      "type": "temporal",
-      "timeUnit": "yearmonth",
-      "axis": {
-        "title": null
-      }
-    },
-    "y": {
-      "field": "value",
-      "type": "quantitative",
-
-      "axis": {
-        "title": null
-      }
-    },
-    "color": {
-      "field": "name",
-      "type": "nominal",
-      "scale": { "scheme": "set1" }
-
-    }
-  },
-  "mark": {
-    "type": "line",
-    "interpolate": "basis",
-
-    "clip": true
-  }
-};
-
-var area = {
-  "mark": {
-    "type": "area",
-    "interpolate": "basis",
-    "clip": true
-  },
-  "encoding": {
-    "x": {
-      "field": "date",
-      "type": "temporal",
-      "timeUnit": "year"
-    },
-    "y": {
-      "aggregate": "ci1",
-      "field": "value",
-      "type": "quantitative"
-
-    },
-    "y2": {
-      "aggregate": "ci0",
-      "field": "value",
-      "type": "quantitative"
-    },
-    "color": { "type": "nominal", "scale": { "scheme": "set1" } },
-    "opacity": { "value": 0.2 }
-  }
-};
-var raw = {
-  "mark": {
-    "type": "line",
-    "clip": true
-  },
-  "encoding": {
-    "x": {
-      "field": "date",
-      "type": "temporal",
-      "timeUnit": "yearmonthdatehoursminutes",
-      "scale": {
-
-        "domain": "unaggregated"
-      }
-    },
-    "y": {
-      "aggregate": "ci1",
-      "field": "value",
-      "type": "quantitative"
-
-    },
-    "y2": {
-      "aggregate": "ci0",
-      "field": "value",
-      "type": "quantitative"
-    },
-    "color": { "value": "blue" },
-    "opacity": { "value": 0.3 }
-  }
-};
-var tooltip = {
-  "encoding": {
-    "x": {
-      "field": "date",
-      "type": "temporal",
-      "timeUnit": "yearmonthdatehoursminutes",
-      "axis": {
-        "format": "%Y",
-        "title": null
-      }
-    },
-    "y": {
-      "field": "value",
-      "type": "quantitative",
-      "scale": {
-        "zero": false
-      },
-      "axis": {
-        "title": null
-      }
-    },
-    "color": {
-      "field": "name",
-      "type": "nominal",
-      "value": "red"
-    },
-    "size": {
-      "condition": {
-        "selection": "yup",
-        "value": 15
-      },
-      "value": 35
-    }
-  },
-  "selection": {
-    "yup": {
-      "type": "interval",
-      "on": "mouseover",
-      "nearest": true
-    }
-  },
-  "mark": {
-    "type": "point",
-    "filled": true,
-    "clip": true,
-    "encode": {
-      "enter": { "tooltip": { "signal": "{'Unemployment Rate': format(datum.unemp.rate, '0.1%')}" } },
-      "update": { "fill": { "scale": "color", "field": "unemp.rate" } },
-      "hover": { "fill": { "value": "red" } }
-    }
-  }
-};
 
 exports.default = {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
@@ -1790,23 +1595,217 @@ exports.default = {
       return this.$store.state.showTooltip;
     },
     spec: function spec() {
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "data": {
+          "values": []
+        },
+        "width": 420,
+        "height": 200,
+        "config": {
+          "axis": {
+            "grid": false
+          },
+          "legend": {
+            "offset": -80
+          },
+          "selection": {
+            "grid": {
+              "type": "interval", "bind": "scales"
+            }
+          }
+        },
+        "layer": [{
+
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "timeUnit": "yearmonth",
+              "axis": {
+                "title": null
+              }
+            },
+            "y": {
+              "field": "value",
+              "type": "quantitative",
+
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "field": "name",
+              "type": "nominal",
+              "scale": { "scheme": "set1" }
+
+            }
+          },
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+
+            "clip": true
+          }
+        }],
+
+        "padding": {
+          "top": 20,
+          "left": 0,
+          "right": 30,
+          "bottom": 55
+
+        }
+      };
+      var ogLayers = [{
+
+        "encoding": {
+          "x": {
+            "field": "date",
+            "type": "temporal",
+            "timeUnit": "yearmonth",
+            "axis": {
+              "title": null
+            }
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+
+            "axis": {
+              "title": null
+            }
+          },
+          "color": {
+            "field": "name",
+            "type": "nominal",
+            "scale": { "scheme": "set1" }
+
+          }
+        },
+        "mark": {
+          "type": "line",
+          "interpolate": "basis",
+
+          "clip": true
+        }
+      }];
+
+      var area = {
+        "mark": {
+          "type": "area",
+          "interpolate": "basis",
+          "clip": true
+        },
+        "encoding": {
+          "x": {
+            "field": "date",
+            "type": "temporal",
+            "timeUnit": "year"
+          },
+          "y": {
+            "aggregate": "ci1",
+            "field": "value",
+            "type": "quantitative"
+
+          },
+          "y2": {
+            "aggregate": "ci0",
+            "field": "value",
+            "type": "quantitative"
+          },
+          "color": { "type": "nominal", "scale": { "scheme": "set1" } },
+          "opacity": { "value": 0.2 }
+        }
+      };
+      var raw = {
+        "mark": {
+          "type": "line",
+          "clip": true
+        },
+        "encoding": {
+          "x": {
+            "field": "date",
+            "type": "temporal",
+            "timeUnit": "yearmonthdatehoursminutes",
+            "scale": {
+
+              "domain": "unaggregated"
+            }
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative"
+
+          },
+          "color": { "value": "blue" },
+          "opacity": { "value": 0.3 }
+        }
+      };
+      var tooltip = {
+        "encoding": {
+          "x": {
+            "field": "date",
+            "type": "temporal",
+            "timeUnit": "yearmonthdatehoursminutes",
+            "axis": {
+              "format": "%Y",
+              "title": null
+            }
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "scale": {
+              "zero": false
+            },
+            "axis": {
+              "title": null
+            }
+          },
+          "color": {
+            "field": "name",
+            "type": "nominal",
+            "value": "red"
+          },
+          "size": {
+            "condition": {
+              "selection": "yup",
+              "value": 15
+            },
+            "value": 35
+          }
+        },
+        "selection": {
+          "yup": {
+            "type": "interval",
+            "on": "mouseover",
+            "nearest": true
+          }
+        },
+        "mark": {
+          "type": "point",
+          "filled": true,
+          "clip": true,
+          "encode": {
+            "enter": { "tooltip": { "signal": "{'Unemployment Rate': format(datum.unemp.rate, '0.1%')}" } },
+            "update": { "fill": { "scale": "color", "field": "unemp.rate" } },
+            "hover": { "fill": { "value": "red" } }
+          }
+        }
+      };
+
       if (count > 10) count = 0;
 
       var newObj = { "title": this.title };
       for (var k in config) {
         newObj[k] = config[k];
       }
-      if (this.rawWeekly) {
-        var check = false;
-        for (var x = 0; x < config.layer.length; x++) {
-          if (_.isEqual(config.layer[x], raw)) check = true;
-        }
-        if (check) config.layer.push(raw);
-      } else {
+      if (this.rawWeekly) config.layer.push(raw);else {
         for (var x = 0; x < config.layer.length; x++) {
           if (config.layer[x] == raw) {
-            config.layer[x] = null;
-            console.log("Popping : " + x);
+            config.layer = ogLayers;
           }
         }
       }
@@ -1815,9 +1814,18 @@ exports.default = {
         config.layer.push(area);
       } else {
         for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == raw) {
+          if (config.layer[x] == area) {
             config.layer = ogLayers;
-            console.log("Popping : " + x);
+          }
+        }
+      }
+
+      if (this.showTooltip) {
+        config.layer.push(tooltip);
+      } else {
+        for (var x = 0; x < config.layer.length; x++) {
+          if (config.layer[x] == tooltip) {
+            config.layer = ogLayers;
           }
         }
       }

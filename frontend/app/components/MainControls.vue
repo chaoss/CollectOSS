@@ -2,7 +2,7 @@
 <div class="row" id="controls">
   <div class="col col-12">
     <div class="form">
-      
+
 
       <div class="row gutters">
         <div class="col col-7">
@@ -75,6 +75,12 @@
         <div class="form-item form-checkboxes">
           <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Show raw weekly values<sup class="warn"></sup></label><br>
         </div>
+        <div class="form-item form-checkboxes">
+          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Show area<sup class="warn"></sup></label><br>
+        </div>
+        <div class="form-item form-checkboxes">
+          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange">Show tooltip<sup class="warn"></sup></label><br>
+        </div>
         </label>
         <br>
         <label>Bubble Charts
@@ -132,6 +138,16 @@
       onRawWeeklyChange (e) {
         this.$store.commit('setVizOptions', {
           rawWeekly: e.target.checked
+        })
+      },
+      onAreaChange (e) {
+        this.$store.commit('setVizOptions', {
+          showArea: e.target.checked
+        })
+      },
+      onTooltipChange (e) {
+        this.$store.commit('setVizOptions', {
+          showTooltip: e.target.checked
         })
       },
       onShowBelowAverageChange (e) {

@@ -26,218 +26,7 @@ import AugurStats from 'AugurStats'
 let numCharts = 0
 let numRenders = []
 let count = 0
-let config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "data": {
-          "values": []
-        },
-        "width": 420,
-        "height": 200,
-        "config":{
-          "axis":{
-            "grid": false
-          },
-          "legend": {
-            "offset": -80,
-          },
-          "selection": {
-            "grid": {
-              "type": "interval", "bind": "scales"
-            }
-          }
-        },
-        "layer": [
-          {
 
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal",
-                "timeUnit": "yearmonth",
-                "axis": {
-                  "title": null
-                }
-              },
-              "y": {
-                "field": "value",
-                "type": "quantitative",
-
-                "axis": {
-                  "title": null
-                }
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-
-              }
-            },
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-
-              "clip": true
-            }
-          }
-
-
-
-        ],
-
-        "padding": {
-          "top": 20,
-          "left": 0,
-          "right": 30,
-          "bottom": 55
-
-
-        }
-      }
-let ogLayers = {
-
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal",
-                "timeUnit": "yearmonth",
-                "axis": {
-                  "title": null
-                }
-              },
-              "y": {
-                "field": "value",
-                "type": "quantitative",
-
-                "axis": {
-                  "title": null
-                }
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-
-              }
-            },
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-
-              "clip": true
-            }
-          }
-
-let area = {
-          "mark": {
-            "type": "area",
-            "interpolate": "basis",
-            "clip": true
-          },
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "timeUnit": "year"
-            },
-            "y": {
-              "aggregate": "ci1",
-              "field": "value",
-              "type": "quantitative"
-
-            },
-            "y2": {
-              "aggregate": "ci0",
-              "field": "value",
-              "type": "quantitative"
-            },
-            "color": {"type": "nominal", "scale":{"scheme": "set1"}},
-            "opacity": {"value": 0.2}
-          }
-        }
-let raw = {
-    "mark": {
-      "type": "line",
-      "clip": true
-    },
-    "encoding": {
-      "x": {
-        "field": "date",
-        "type": "temporal",
-        "timeUnit": "yearmonthdatehoursminutes",
-        "scale": {
-
-          "domain": "unaggregated"
-        }
-      },
-      "y": {
-        "aggregate": "ci1",
-        "field": "value",
-        "type": "quantitative"
-
-      },
-      "y2": {
-        "aggregate": "ci0",
-        "field": "value",
-        "type": "quantitative"
-      },
-      "color": {"value": "blue"},
-      "opacity": {"value": 0.3}
-    }
-  }
-let tooltip =
-    {
-      "encoding": {
-        "x": {
-          "field": "date",
-          "type": "temporal",
-          "timeUnit": "yearmonthdatehoursminutes",
-          "axis": {
-            "format": "%Y",
-            "title": null
-          }
-        },
-        "y": {
-          "field": "value",
-          "type": "quantitative",
-          "scale": {
-            "zero": false
-          },
-          "axis": {
-            "title": null
-          }
-        },
-        "color": {
-          "field": "name",
-          "type": "nominal",
-          "value": "red"
-        },
-        "size": {
-          "condition": {
-            "selection": "yup",
-            "value": 15
-          },
-          "value": 35
-        }
-      },
-      "selection": {
-        "yup": {
-          "type": "interval",
-          "on": "mouseover",
-          "nearest": true
-        }
-      },
-      "mark": {
-        "type": "point",
-        "filled": true,
-        "clip": true,
-        "encode": {
-        "enter": { "tooltip": {"signal": "{'Unemployment Rate': format(datum.unemp.rate, '0.1%')}"}},
-        "update": { "fill": {"scale": "color", "field": "unemp.rate"} },
-        "hover": { "fill": {"value": "red"} }
-      },
-      }
-    }
 
 // let mutations = {
 //   UPDATE_SPEC(config, values){
@@ -345,6 +134,213 @@ export default {
       // let topStdDev = []
       // let lowStdDev = []
 
+      let config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "data": {
+          "values": []
+        },
+        "width": 420,
+        "height": 200,
+        "config":{
+          "axis":{
+            "grid": false
+          },
+          "legend": {
+            "offset": -80,
+          },
+          "selection": {
+            "grid": {
+              "type": "interval", "bind": "scales"
+            }
+          }
+        },
+        "layer": [
+          {
+
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "timeUnit": "yearmonth",
+                "axis": {
+                  "title": null
+                }
+              },
+              "y": {
+                "field": "value",
+                "type": "quantitative",
+
+                "axis": {
+                  "title": null
+                }
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+
+              }
+            },
+            "mark": {
+              "type": "line",
+              "interpolate": "basis",
+
+              "clip": true
+            }
+          }
+
+
+
+        ],
+
+        "padding": {
+          "top": 20,
+          "left": 0,
+          "right": 30,
+          "bottom": 55
+
+
+        }
+      }
+      let ogLayers = [{
+
+                  "encoding": {
+                    "x": {
+                      "field": "date",
+                      "type": "temporal",
+                      "timeUnit": "yearmonth",
+                      "axis": {
+                        "title": null
+                      }
+                    },
+                    "y": {
+                      "field": "value",
+                      "type": "quantitative",
+
+                      "axis": {
+                        "title": null
+                      }
+                    },
+                    "color": {
+                      "field": "name",
+                      "type": "nominal",
+                      "scale":{"scheme": "set1"},
+
+                    }
+                  },
+                  "mark": {
+                    "type": "line",
+                    "interpolate": "basis",
+
+                    "clip": true
+                  }
+                }]
+
+      let area = {
+                "mark": {
+                  "type": "area",
+                  "interpolate": "basis",
+                  "clip": true
+                },
+                "encoding": {
+                  "x": {
+                    "field": "date",
+                    "type": "temporal",
+                    "timeUnit": "year"
+                  },
+                  "y": {
+                    "aggregate": "ci1",
+                    "field": "value",
+                    "type": "quantitative"
+
+                  },
+                  "y2": {
+                    "aggregate": "ci0",
+                    "field": "value",
+                    "type": "quantitative"
+                  },
+                  "color": {"type": "nominal", "scale":{"scheme": "set1"}},
+                  "opacity": {"value": 0.2}
+                }
+              }
+      let raw = {
+          "mark": {
+            "type": "line",
+            "clip": true
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "timeUnit": "yearmonthdatehoursminutes",
+              "scale": {
+
+                "domain": "unaggregated"
+              }
+            },
+            "y": {
+              "field": "value",
+              "type": "quantitative"
+
+            },
+            "color": {"value": "blue"},
+            "opacity": {"value": 0.3}
+          }
+        }
+      let tooltip =
+          {
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "timeUnit": "yearmonthdatehoursminutes",
+                "axis": {
+                  "format": "%Y",
+                  "title": null
+                }
+              },
+              "y": {
+                "field": "value",
+                "type": "quantitative",
+                "scale": {
+                  "zero": false
+                },
+                "axis": {
+                  "title": null
+                }
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "value": "red"
+              },
+              "size": {
+                "condition": {
+                  "selection": "yup",
+                  "value": 15
+                },
+                "value": 35
+              }
+            },
+            "selection": {
+              "yup": {
+                "type": "interval",
+                "on": "mouseover",
+                "nearest": true
+              }
+            },
+            "mark": {
+              "type": "point",
+              "filled": true,
+              "clip": true,
+              "encode": {
+              "enter": { "tooltip": {"signal": "{'Unemployment Rate': format(datum.unemp.rate, '0.1%')}"}},
+              "update": { "fill": {"scale": "color", "field": "unemp.rate"} },
+              "hover": { "fill": {"value": "red"} }
+            },
+            }
+          }
+
       //when we have rendered the number of total charts, reset the chart count, this is to prevent duplicate marks overlapping
       if(count > 10) count = 0
 
@@ -353,52 +349,41 @@ export default {
       for(var k in config) newObj[k] = config[k];
 
 
-      //so added marks do not overlap (eg multiple area marks on one chart, makes slower and changes opacity)
-      //if (count < 100){
 
-        //push the raw weekly mark to general spec
-        if(this.rawWeekly) {
-          let check = false
-          for(var x = 0; x < config.layer.length; x++) {
-            if(_.isEqual(config.layer[x], raw)) check = true;
-          }
-          if(check) config.layer.push(raw);
-        }
-        else {
-          //if user doesn't want raw weekly mark, then iterate through all marks and pop the raw weekly marks
-          for(var x = 0; x < config.layer.length; x++) {
-            if(config.layer[x] == raw) {
-              config.layer[x] = null
-              console.log("Popping : " + x)
-            }
+      //push the raw weekly mark to general spec
+      if(this.rawWeekly) config.layer.push(raw)
+      else {
+        //if user doesn't want raw weekly mark, then iterate through all marks and pop the raw weekly marks
+        for(var x = 0; x < config.layer.length; x++) {
+          if(config.layer[x] == raw) {
+            config.layer = ogLayers
           }
         }
+      }
 
-        //push the area to general spec
-        if(this.showArea) {config.layer.push(area)}
-        else {
-          //if user doesn't want area mark, then set layers to og
-          for(var x = 0; x < config.layer.length; x++) {
-            if(config.layer[x] == raw) {
-              config.layer = ogLayers
-              console.log("Popping : " + x)
-            }
+      //push the area to general spec
+      if(this.showArea) {config.layer.push(area)}
+      else {
+        //if user doesn't want area mark, then set layers to og
+        for(var x = 0; x < config.layer.length; x++) {
+          if(config.layer[x] == area) {
+            config.layer = ogLayers
           }
         }
+      }
 
-        //push the tooltip to general spec
-        // if(!this.showTooltip) {config.layer.push(tooltip)}
-        // else {
-        //   //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
-        //   for(var x = 0; x < config.layer.length; x++) {
-        //     if(config.layer[x] == tooltip) {
-        //       config.layer[x] = null
-        //       console.log("Popping : " + x)
-        //     }
-        //   }
-        // }
+      //push the tooltip to general spec
+      if(this.showTooltip) {config.layer.push(tooltip)}
+      else {
+        //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
+        for(var x = 0; x < config.layer.length; x++) {
+          if(config.layer[x] == tooltip) {
+            config.layer = ogLayers
+          }
+        }
+      }
 
-      //}
+
 
       // earliest: function (){
       for(var i = 0; i < config.layer.length; i++){
