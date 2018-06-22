@@ -101,6 +101,12 @@ class Git(object):
         self.is_updater = False
 
     def get_repo(self, repo_url):
+        """
+        Create a repo object from the given url
+
+        :param repo_url: URL of the repository
+        :return: a Repo obeject
+        """
         if repo_url in self._git_repos:
             return self._git_repos[repo_url]
         else:
@@ -132,6 +138,11 @@ class Git(object):
 
 
     def downloaded_repos(self):
+        """
+        Get all downloaded repositories and the date they were last updated
+
+        :return: a JSON object with the URL and date of last update for all downloaded repos        
+        """
         downloaded = []
         for repo_url in self._repo_urls:
             repo = self.get_repo(repo_url)
@@ -229,4 +240,4 @@ class Git(object):
         if rebuild_cache:
             self.__cache.remove_value(key='cba-{}-{}'.format(freq, repo_url))
         results = self.__cache.get(key='cba-{}-{}'.format(freq, repo_url), createfunc=heavy_lifting)
-        return results
+        return result5

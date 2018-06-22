@@ -43,8 +43,17 @@ class GHTorrentPlus(object):
 
     def closed_issue_resolution_duration(self, owner, repo=None):
         """
-        Endpoint: issue_close_time
-        augur-metric: closed-issue-resolution-duration
+        Returns a DataFrame with these columns:
+        id
+        repo_id
+        closed
+        pull_request
+        minutes_to_close
+        z-score
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with the above columns
         """
         repoid = self.ghtorrent.repoid(owner, repo)
         issuesClosedSQL = s.sql.text("""

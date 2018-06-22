@@ -35,12 +35,11 @@ class GitHubAPI(object):
 
     def lines_of_code_changed(self, owner, repo=None): 
         """
-        chaoss-metric: lines-of-code-changed
-        Additions and deletions each week
+        Timeseries of the count of lines added, deleted, and the net change each week
 
         :param owner: The name of the project owner
         :param repo: The name of the repo
-        :return: DataFrame with each row being am issue
+        :return: DataFrame with the associated lines changed information/week
         """
         # get the data we need from the GitHub API
         # see <project_root>/augur/githubapi.py for examples using the GraphQL API
@@ -78,8 +77,6 @@ class GitHubAPI(object):
 
     def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
         """
-        augur-metric: bus-factor
-
         Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
 
         :param owner: repo owner username
@@ -147,10 +144,11 @@ class GitHubAPI(object):
 
     def major_tags(self, owner, repo):
         """
-        Returns dates and names of major version (according to semver) tags. May return blank if no major versions
+        Timeseries of the dates and names of major version (according to semver) tags. May return blank if no major versions
 
         :param owner: repo owner username
         :param repo: repo name
+        :return: DataFrame with major versions and their release date
         """
         cursor = "null"
         tags_list = []
@@ -207,11 +205,12 @@ class GitHubAPI(object):
 
     def tags(self, owner, repo, raw=False):
         """
-        Returns dates and names of tags
+        Timeseries of the dates and names of tags
 
         :param owner: repo owner username
         :param repo: repo name
         :param raw: Default False; Returns list of dicts
+        :return: DataFrame with all tags and their release date
         """
 
         cursor = "null"

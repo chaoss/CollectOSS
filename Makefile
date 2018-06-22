@@ -24,8 +24,7 @@ default:
 	@ echo "    dev-start              Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop               Stops the backgrounded commands"
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
-	@ echo "    test                   Run pytest unit tests"
-	@ echo "    test-source SOURCE={source}   Run pytest unit tests for the specified data source (name only, no extension)"
+	@ echo "    test SOURCE={source}   Run pytest unit tests for the specified source file. Defaults to all"
 	@ echo "    build                  Builds documentation and frontend - use before pushing"
 	@ echo "    frontend               Builds frontend with Brunch"
 	@ echo "    update-deps            Generates updated requirements.txt and environment.yml"
@@ -116,10 +115,11 @@ frontend:
 python-docs:
 	cd docs/python   \
 	&& rm -rf _build \
-	&& make html
+	&& make html \
+	&& open build/html/index.html
 
 api-docs:
-	cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/
+	cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/ && open api/index.html
 
 docs: api-docs python-docs
 
@@ -127,9 +127,6 @@ build: frontend docs
 	cd augur/static/ && brunch build --production
 
 test:
-	bash -lc '$(CONDAACTIVATE) python -m pytest ./test'
-
-test-source:
 	bash -c '$(CONDAACTIVATE) python -m pytest test/test_${SOURCE}.py'
 
 .PHONY: unlock
