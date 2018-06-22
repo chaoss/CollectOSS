@@ -60,8 +60,7 @@ class PublicWWW(object):
 
         :param owner: The username of a project's owner
         :param repo: The name of the repository
-        :return: DataFrame with the issues' id the date it was
-                 opened, and the date it was first responded to
+        :return: DataFrame with repo's url and ranking
         """
 
         # Find websites that link to that repo

@@ -3,6 +3,8 @@
 .PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upsteam version
 
 SERVECOMMAND=augur
+CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
+CONDAACTIVATE=source activate augur;
 CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda activate augur; then conda env create -n=augur -f=environment.yml && conda activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
 CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
 OLDVERSION="null"
@@ -24,8 +26,7 @@ default:
 	@ echo "    dev-start              Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop               Stops the backgrounded commands"
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
-	@ echo "    test                   Run pytest unit tests"
-	@ echo "    test-source SOURCE={source}   Run pytest unit tests for the specified data source (name only, no extension)"
+	@ echo "    test SOURCE={source}   Run pytest unit tests for the specified source file. Defaults to all"
 	@ echo "    build                  Builds documentation and frontend - use before pushing"
 	@ echo "    frontend               Builds frontend with Brunch"
 	@ echo "    update-deps            Generates updated requirements.txt and environment.yml"
@@ -116,20 +117,21 @@ frontend:
 python-docs:
 	cd docs/python   \
 	&& rm -rf _build \
-	&& make html
+	&& make html \
+	&& open build/html/index.html
 
 api-docs:
-	cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/
+	cd docs \
+	&& apidoc --debug -f "\.py" -i ../augur/ -o api/ \
+	&& open api/index.html
 
 docs: api-docs python-docs
 
 build: frontend docs
-	cd augur/static/ && brunch build --production
+	cd augur/static/ \
+	&& brunch build --production
 
 test:
-	bash -c '$(CONDAACTIVATE) python -m pytest ./test'
-
-test-source:
 	bash -c '$(CONDAACTIVATE) python -m pytest test/test_${SOURCE}.py'
 
 .PHONY: unlock

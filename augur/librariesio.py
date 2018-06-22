@@ -44,7 +44,6 @@ class LibrariesIO(object):
 
     def dependencies(self, owner, repo):
         """
-
         Finds the packages that a project depends on
 
         :param owner: GitHub username of the owner of the repo
@@ -112,7 +111,6 @@ class LibrariesIO(object):
 
     def dependents(self, owner, repo):
         """   
-
         Finds the packages depend on this repository
 
         :param owner: GitHub username of the owner of the repo

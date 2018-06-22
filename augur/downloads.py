@@ -15,10 +15,11 @@ class Downloads(object):
 
     def downloads(self, owner, repo):
         """
-        Detects package file and calls correct function for download statistics
+        Timeseries that returns package file and calls the correct function to the create download statistics
 
         :param owner: repo owner username
         :param repo: repo name
+        :return: DataFrame with all downloads for that day
         """
         root_dir = self.__githubapi.get_repo((owner + "/" + repo)).get_dir_contents("/")
 
@@ -32,9 +33,10 @@ class Downloads(object):
 
     def ruby_downloads(self, repo):
         """
-        Returns daily downloads for ruby gems from bestgems.org API
+        Timeseries of daily downloads for ruby gems from bestgems.org API
 
         :param repo: repo name
+        :return: DataFrame with count of ruby downloads
         """
         r = requests.get("http://bestgems.org/api/v1/gems/%s/daily_downloads.json" % (repo))
         raw = r.text
@@ -52,6 +54,7 @@ class Downloads(object):
 
         :param repo: repo name
         :param contents: contents of package.json
+        :return: DataFrame with count of npm downloads
         """
         contents = json.loads(json.loads(json.dumps(contents)))
         name = contents["name"]

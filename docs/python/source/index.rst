@@ -19,6 +19,16 @@ Augur
 .. automodule:: githubapi
    :members:
 
+.. automodule:: librariesio
+   :members:
+
+.. automodule:: publicwww
+   :members:
+
+.. automodule:: downloads
+   :members:
+
+   
 Indices and tables
 ==================
 
