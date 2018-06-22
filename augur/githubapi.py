@@ -8,6 +8,7 @@ import numpy as np
 import datetime
 import requests
 from augur import logger
+from augur.util import annotate
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -33,6 +34,7 @@ class GitHubAPI(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
+    @annotate(metric_name='lines-of-code-changed', group='growth-maturity-decline')
     def lines_of_code_changed(self, owner, repo=None): 
         """
         Timeseries of the count of lines added, deleted, and the net change each week
@@ -75,6 +77,7 @@ class GitHubAPI(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
+    @annotate(metric_name='bus-factor', group='growth-maturity-decline')
     def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
         """
         Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
@@ -142,6 +145,7 @@ class GitHubAPI(object):
 
         return pd.DataFrame(bus_factor)
 
+    @annotate(metric_name='major-tags', group='growth-maturity-decline')
     def major_tags(self, owner, repo):
         """
         Timeseries of the dates and names of major version (according to semver) tags. May return blank if no major versions
@@ -203,6 +207,7 @@ class GitHubAPI(object):
 
         return pd.DataFrame(major_versions)
 
+    @annotate(metric_name='tags', group='growth-maturity-decline')
     def tags(self, owner, repo, raw=False):
         """
         Timeseries of the dates and names of tags

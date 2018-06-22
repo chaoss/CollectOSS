@@ -3,6 +3,7 @@ import sqlalchemy as s
 import numpy as np
 import re
 from augur import logger
+from augur.util import annotate
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -40,7 +41,8 @@ class GHTorrentPlus(object):
     #####################################
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
-
+    
+    @annotate(metric_name='closed-issue-resolution-duration', group='growth-maturity-decline')
     def closed_issue_resolution_duration(self, owner, repo=None):
         """
         Returns a DataFrame with these columns:

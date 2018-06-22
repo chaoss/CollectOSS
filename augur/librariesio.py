@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
 from augur import logger
+from augur.util import annotate
+
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -41,7 +43,7 @@ class LibrariesIO(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-
+    @annotate(metric_name='dependencies', group='experimental')
     def dependencies(self, owner, repo):
         """
         Finds the packages that a project depends on
@@ -54,6 +56,7 @@ class LibrariesIO(object):
         r = requests.get(url, params={"api_key": self.API_KEY})
         return r.json()
 
+    @annotate(metric_name='dependency-stats', group='experimental')
     def dependency_stats(self, owner, repo):
         """
         Finds the number of dependencies, dependant projects, and dependent repos by scrapping it off of the libraries.io website
@@ -109,6 +112,7 @@ class LibrariesIO(object):
 
         return final_data
 
+    @annotate(metric_name='dependents', group='experimental')
     def dependents(self, owner, repo):
         """   
         Finds the packages depend on this repository

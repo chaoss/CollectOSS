@@ -11,7 +11,7 @@ import datetime
 import pandas as pd
 import git
 from lockfile import LockFile, AlreadyLocked
-from augur.util import logger, get_cache
+from augur.util import logger, get_cache, annotate
 
 # end imports
 # (don't remove the above line, it's for a script
@@ -135,8 +135,36 @@ class Git(object):
                    
             self.is_updater = False
 
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
 
 
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
+
+    @annotate(metric_name='downloaded-repos', group='experimental')
     def downloaded_repos(self):
         """
         Get all downloaded repositories and the date they were last updated
@@ -159,7 +187,7 @@ class Git(object):
 
         return downloaded
 
-
+    @annotate(metric_name='lines-changed-minus-whitespace', group='experimental')
     def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
