@@ -253,7 +253,8 @@ class Git(object):
             results = new_results
         return results
 
-    def changes_by_author(self, repo_url, freq='M', rebuild_cache=False):
+    @annotate(metric_name='lines-changed-by-author', group='experimental')
+    def lines_changed_by_author(self, repo_url, freq='M', rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """

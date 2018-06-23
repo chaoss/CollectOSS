@@ -71,7 +71,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/issues/closed Closed Issues
-        @apiName ClosedIssues 
+        @apiName closed-issues 
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-closed.md">CHAOSS Metric Definition</a>
 
@@ -91,11 +91,11 @@ class Server(object):
                             }
                         ]
         """
-        self.addTimeseries(ghtorrent.closed_issues, "issues/closed")
+        self.addTimeseries(ghtorrent.closed_issues, 'issues/closed')
 
         """
-        @api {get} /:owner/:repo/issue_close_time Issue Resolution Duration
-        @apiName IssueResolutionDuration
+        @api {get} /:owner/:repo/issue_close_time Closed Issue Resolution Duration
+        @apiName closed-issue-resolution-duration
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-resolution-duration.md">CHAOSS Metric Definition</a>
 
@@ -120,7 +120,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Code Commits
-        @apiName CodeCommits
+        @apiName code-commits
         @apiGroup Growth-Maturity-Decline
         @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
 
@@ -146,7 +146,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/code_review_iteration Code Review Iteration
-        @apiName CodeReviewIteration
+        @apiName code-review-iteration
         @apiGroup Growth-Maturity-Decline
         @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md">CHAOSS Metric Definition</a>
 
@@ -169,7 +169,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/contribution_acceptance Contribution Acceptance
-        @apiName ContributionAcceptance
+        @apiName contribution-acceptance
         @apiGroup Growth-Maturity-Decline
         @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md">CHAOSS Metric Definition</a>
 
@@ -192,7 +192,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/contributing_github_organizations Contributing Github Organizations
-        @apiName ContributingGithubOrganizations 
+        @apiName contributing-github-organizations 
         @apiGroup Growth-Maturity-Decline
         @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md">CHAOSS Metric Definition</a>
 
@@ -229,7 +229,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/issues/response_time First Response To Issue Duration
-        @apiName FirstResponseToIssueDuration
+        @apiName first-response-to-issue-duration
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>
 
@@ -258,7 +258,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
-        @apiName Forks
+        @apiName forks
         @apiGroup Growth-Maturity-Decline
         @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md">CHAOSS Metric Definition</a>
@@ -282,7 +282,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/lines_changed Lines of Code Changed
-        @apiName LinesOfCodeChanged
+        @apiName lines-of-code-changed
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
 
@@ -305,8 +305,8 @@ class Server(object):
         self.addTimeseries(github.lines_of_code_changed, 'lines_changed')
 
         """
-        @api {get} /:owner/:repo/pulls/maintainer_response_time Maintainer to Merge Request Duration
-        @apiName MaintainerToMergeRequestDuration
+        @api {get} /:owner/:repo/pulls/maintainer_response_time Maintainer Response to Merge Request Duration
+        @apiName maintainer-response-to-merge-request-duration
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
 
@@ -329,7 +329,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/pulls/new_contributing_github_organizations New Contributing Github Organizations
-        @apiName NewContributingGithubOrganizations
+        @apiName new-github-contributing-organizations
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/new-contributing-organizations.md">CHAOSS Metric Definition</a>
 
@@ -352,7 +352,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/issues Open Issues
-        @apiName OpenIssues
+        @apiName open-issues
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/open-issues.md">CHAOSS Metric Definition</a>
 
@@ -376,7 +376,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/pulls/comments?group_by=:group_by Pull Request Comments
-        @apiName PullRequestComments
+        @apiName pull-request-comments
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md">CHAOSS Metric Definition</a>
 
@@ -400,7 +400,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/pulls Pull Requests Open
-        @apiName PullRequestsOpen
+        @apiName pull-requests-open
         @apiGroup Growth-Maturity-Decline
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-open.md">CHAOSS Metric Definition</a>
 
@@ -438,7 +438,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/issue_comments Issue Comments
-        @apiName IssueComments
+        @apiName issue-comments
         @apiGroup Activity
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-comments.md">CHAOSS Metric Definition</a>
 
@@ -461,7 +461,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/watchers Watchers
-        @apiName Watchers
+        @apiName watchers
         @apiGroup Activity
         @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/activity-metrics-list.md">CHAOSS Metric Definition</a>
 
@@ -489,7 +489,7 @@ class Server(object):
         ### COMMIT RELATED ###
         """
         @api {get} /:owner/:repo/timeseries/commits100 Commits100
-        @apiName Commits100
+        @apiName commits100
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -512,7 +512,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/commits/comments Commit Comments
-        @apiName CommitComments
+        @apiName commit-comments
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -536,7 +536,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/committer_locations Committer Locations
-        @apiName CommitterLocations
+        @apiName committer-locations
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -561,7 +561,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/total_committers Total Committers
-        @apiName TotalCommitters
+        @apiName total-committers
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -585,7 +585,7 @@ class Server(object):
         ### ISSUE RELATED ###
         """
         @api {get} /:owner/:repo/timeseries/issues/activity Issue Activity
-        @apiName IssueActivity
+        @apiName issue-activity
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -641,7 +641,7 @@ class Server(object):
         # PULL REQUEST RELATED
         """
         @api {get} /:owner/:repo/timeseries/pulls/acceptance_rate Pull Request Acceptance Rate 
-        @apiName PullRequestAcceptanceRate
+        @apiName pull-request-acceptance-rate
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -665,7 +665,7 @@ class Server(object):
         # COMMUNITY / CONTRIBUTIONS
         """
         @api {get} /:owner/:repo/timeseries/community_age Community Age
-        @apiName CommunityAge
+        @apiName community-age
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -690,7 +690,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/community_engagement Community Engagement
-        @apiName CommunityEngagement
+        @apiName community-engagement
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -745,7 +745,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/contributors Total Contributions by User
-        @apiName TotalContributions
+        @apiName contributors
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -780,7 +780,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/contributions Contributions
-        @apiName ContributionsByWeek
+        @apiName contributions
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -812,6 +812,8 @@ class Server(object):
                                 }
                             ]
         """
+        # ghtorrent.contributons, 'contributors'
+        # don't remove the above line it's for a script
         @app.route('/{}/<owner>/<repo>/contributions'.format(AUGUR_API_VERSION))
         def contributions(owner, repo):
             repoid = ghtorrent.repoid(owner, repo)
@@ -824,7 +826,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/project_age Project Age
-        @apiName ProjectAge
+        @apiName project-age
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -845,7 +847,7 @@ class Server(object):
         ### DEPENDENCY RELATED ###
         """
         @api {get} /:owner/:repo/dependencies Dependencies
-        @apiName Dependencies
+        @apiName dependencies
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -936,7 +938,7 @@ class Server(object):
         
         """
         @api {get} /:owner/:repo/dependency_stats Dependency Stats
-        @apiName DependencyStats
+        @apiName dependency-stats
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -956,7 +958,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/dependents Dependents
-        @apiName Dependents
+        @apiName dependents
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1015,7 +1017,7 @@ class Server(object):
         ### OTHER ###
         """
         @api {get} /:owner/:repo/bus_factor Bus Factor
-        @apiName BusFactor
+        @apiName bus-factor
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1033,35 +1035,8 @@ class Server(object):
         self.addMetric(github.bus_factor, "bus_factor")
 
         """
-        @api {get} /git/lines_changed/:git_repo_url Lines Changed by Author
-        @apiName ChangesByAuthor
-        @apiGroup Experimental
-        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "additions":2,
-                                    "author_date":"2018-05-14 10:09:57 -0500",
-                                    "author_email":"s@goggins.com",
-                                    "author_name":"Sean P. Goggins",
-                                    "commit_date":"2018-05-16 10:12:22 -0500",
-                                    "committer_email":"derek@howderek.com",
-                                    "committer_name":"Derek Howard",
-                                    "deletions":0,"hash":"77e603a",
-                                    "message":"merge dev",
-                                    "parents":"b8ec0ed"
-                                }
-                            ]
-        """
-        self.addGitMetric(git.changes_by_author, 'changes_by_author')
-
-        """
         @api {get} /:owner/:repo/timeseries/downloads Downloads
-        @apiName Downloads
+        @apiName downloads
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1091,7 +1066,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/fakes Fakes
-        @apiName Fakes
+        @apiName fakes
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1113,8 +1088,35 @@ class Server(object):
         self.addTimeseries(ghtorrent.fakes, 'fakes')
 
         """
+        @api {get} /git/lines_changed/:git_repo_url Lines Changed by Author
+        @apiName lines-changed-by-author
+        @apiGroup Experimental
+        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "additions":2,
+                                    "author_date":"2018-05-14 10:09:57 -0500",
+                                    "author_email":"s@goggins.com",
+                                    "author_name":"Sean P. Goggins",
+                                    "commit_date":"2018-05-16 10:12:22 -0500",
+                                    "committer_email":"derek@howderek.com",
+                                    "committer_name":"Derek Howard",
+                                    "deletions":0,"hash":"77e603a",
+                                    "message":"merge dev",
+                                    "parents":"b8ec0ed"
+                                }
+                            ]
+        """
+        self.addGitMetric(git.lines_changed_by_author, 'changes_by_author')
+
+        """
         @api {get} /git/lines_changed/:git_repo_url Lines Changed (minus whitespace)
-        @apiName LinesChanged 
+        @apiName lines-changed-minus-whitespace 
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1142,7 +1144,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/linking_websites Linking Websites
-        @apiName LinkingWebsites
+        @apiName linking-websites
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1165,7 +1167,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/tags/major Major Tags
-        @apiName MajorTags
+        @apiName major-tags
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1188,7 +1190,7 @@ class Server(object):
 
         """
         @api {get} /:owner/:repo/timeseries/tags/major Tages
-        @apiName Tags
+        @apiName tags
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1246,7 +1248,6 @@ class Server(object):
         @apiDescription Returns results of batch requests
         POST JSON of api requests
         """
-        #TODO: documentation
         @app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
         def batch():
             """

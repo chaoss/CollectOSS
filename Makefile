@@ -147,7 +147,7 @@ metrics-status: update-upsteam
 	@ bash -lc '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
 
 edit-metrics-status:
-	$(EDITOR) docs/metrics/status.json
+	$(EDITOR) docs/metrics/group-mapping.json
 
 jupyter:
 		@ bash -lc '$(CONDAACTIVATE) cd notebooks; jupyter notebook'

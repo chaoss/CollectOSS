@@ -407,7 +407,7 @@ class GHTorrent(object):
         SELECT
             fields.date AS "date",
             fields.id AS "contributing_org",
-            count(DISTINCT fields.user) AS count
+            count(DISTINCT fields.user) AS distinct_users
         FROM (
                 (SELECT organization_members.org_id AS id, commits.created_at AS date, commits.author_id AS user FROM organization_members, projects, commits
                     WHERE projects.id = :repoid
@@ -448,7 +448,7 @@ class GHTorrent(object):
                     AND pull_request_comments.user_id = organization_members.user_id GROUP BY pull_request_comments.user_id)) fields
 
         Group BY contributing_org
-        HAVING count > 1
+        HAVING distinct_users > 1
         ORDER BY YEARWEEK(date)
         """)
         df = pd.read_sql(contributingOrgSQL, self.db, params={"repoid": str(repoid)})
