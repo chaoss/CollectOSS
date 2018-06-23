@@ -4,10 +4,12 @@ search engine for the source of websites
 """
 import sys
 import pandas as pd
+from augur.util import annotate
 if sys.version_info > (3, 0):
     import urllib.parse as url
 else:
     import urllib as url
+
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -54,6 +56,7 @@ class PublicWWW(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
+    @annotate(metric_name='linking_websites', group='experimental')
     def linking_websites(self, owner, repo):
         """
         Finds the repo's popularity on the internet

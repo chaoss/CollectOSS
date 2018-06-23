@@ -3,24 +3,134 @@ import re
 import json
 import glob
 import webbrowser
+import pprint
 from flask import Flask, request, Response
 
-metric_files = ['upstream/1_Diversity-Inclusion.md', 'upstream/2_Growth-Maturity-Decline.md', 'upstream/3_Risk.md', 'upstream/4_Value.md']
+pp = pprint.PrettyPrinter()
 
-metric_type_by_file = {
-    'upstream/1_Diversity-Inclusion.md': 'Diversity and Inclusion',
-    'upstream/2_Growth-Maturity-Decline.md': 'Growth, Maturity, and Decline',
-    'upstream/3_Risk.md': 'Risk',
-    'upstream/4_Value.md': 'Value',
-}
+class Metric(object):
+    def __init__(self, tag="", name="", group="", status="unimplemented", endpoint="", source="", metricType="", url="/"):
+        self.tag = tag
+        self.name = name
+        self.group = group
+        self.status = status
+        self.endpoint = endpoint
+        self.source = source
+        self.metricType = metricType
+        self.url = url
 
-color_by_status = {
-    'unimplemented': '<span style="color: #C00">unimplemented</span>',
-    'in_progress': '<span style="color: #CC0">in progress</span>',
-    'implemented': '<span style="color: #0C0">implemented</span>'
-}
+class Parser(object):
 
-statusMap = json.loads(open('status.json', 'r').read())
+    def extractImplementedMetricData(self):
+        server = open("../../augur/server.py", 'r')
+        sourceRegEx = r'(Timeseries|Metric|Git)(?:Metric)?\((.*)\.(.*), \'(.*)\''
+        metricDataTuples = re.findall(sourceRegEx, server.read()) 
+        return metricDataTuples
+
+    def extractImplementedMetricGroup(self, tag):
+        mapping = json.loads(open('group-mapping.json', 'r').read())
+        return mapping[tag]
+
+class MetricsBuilder(object):
+
+    parser = Parser()
+    mapping = json.loads(open('group-mapping.json', 'r').read())
+
+    def buildImplementedMetricObjects(self):
+        implementedMetricData = self.parser.extractImplementedMetricData()
+        implementedMetricObjects = []
+        for metric in implementedMetricData:
+            implementedMetricObjects.append(self.buildImplementedMetricObject(metric))
+        return implementedMetricObjects
+
+    def buildUnimplementedMetricObject(self, mapping, tag):
+        name = re.sub("-", " ", tag.title())
+        group = self.parser.extractImplementedMetricGroup(tag)
+        return Metric(name=name, tag=tag, group=group)
+
+    def buildAllMetricObjects(self, mapping, implementedMetricData):
+        metrics = []
+        implementedMetricObjects = self.buildImplementedMetricObjects()
+        implementedMetricTags = [metric.tag for metric in implementedMetricObjects]
+        for tag in mapping:
+            if tag in implementedMetricTags:
+                metricToAppend = next(metric for metric in implementedMetricObjects if metric.tag == tag)
+            else:
+                metricToAppend = self.buildUnimplementedMetricObject(self.mapping, tag)
+            metrics.append(metricToAppend)
+
+        return metrics
+
+    def buildImplementedMetricObject(self, metric):
+        name = re.sub("_", " ", metric[2].title())
+        tag = re.sub("_", '-', metric[2])
+        group = self.parser.extractImplementedMetricGroup(tag)
+        status = "implemented"
+        endpoint = metric[3]
+        source = metric[1]
+        metricType = metric[0]
+        url = "/"
+        return Metric(tag, name, group, status, endpoint, source, metricType, url)
+
+    def printMetricList(self, metrics):
+        for metric in metrics:
+            print("Name: {}, Tag: {}, Group: {} Status: {}, Endpoint: {}, Source: {}, Type: {}".format(metric.name, metric.tag, metric.group, metric.status, metric.endpoint, metric.source, metric.metricType))
+
+    def extractMetricsWithGroup(self, group):
+        implementedMetricObjects = self.buildAllMetricObjects(self.mapping, self.buildImplementedMetricObjects())
+        return [metric for metric in implementedMetricObjects if metric.group == group]
+
+
+sources = [
+            "ghtorrent", 
+            "github", 
+            "git", 
+            "downloads", 
+            "ghtorrentplus",
+            "publicwww",
+            "librariesio"
+        ]
+
+bd = MetricsBuilder()
+ps = Parser()
+mapping = json.loads(open('group-mapping.json', 'r').read())
+
+implementedMetricData = ps.extractImplementedMetricData()
+metrics = bd.buildAllMetricObjects(mapping, implementedMetricData)
+
+growth_maturity_decline_metrics = bd.extractMetricsWithGroup("growth-maturity-decline")
+diversity_inclusion_metrics = bd.extractMetricsWithGroup("diversity-inclusion")
+risk_metrics = bd.extractMetricsWithGroup("risk")
+value_metrics = bd.extractMetricsWithGroup("value")
+activity_metrics = bd.extractMetricsWithGroup("activity")
+experimental_metrics = bd.extractMetricsWithGroup("experimental")
+
+class HTMLBuilder(object):
+
+    color_by_status = {
+        'unimplemented': '<span style="color: #C00">unimplemented</span>',
+        'in_progress': '<span style="color: #CC0">in progress</span>',
+        'implemented': '<span style="color: #0C0">implemented</span>'
+    }
+
+    def printMetric(self, metric, html):
+        html += '<tr><td>{}</td><td><a href="{}"> {} </td><td>{}</td><td>{}</td></tr>'.format(self.color_by_status[metric.status], metric.url, metric.name, metric.endpoint, metric.source)
+        return html
+
+    def addToStatusHTML(self, statusHTML, newHTML):
+        statusHTML += newHTML
+        return statusHTML
+
+    def createTableOfMetricObjects(self, header, metrics):
+        html = "<h2>{}</h2><table><tr><td>status</td><td>metric</td><td>endpoint</td><td>source</td></tr>".format(header)
+        for metric in metrics:
+            html = self.printMetric(metric, html)
+        html += '</table>'
+        return html
+
+
+HTMLBuilder = HTMLBuilder()
+
 statusHTML = """
 <html>
 <head>
@@ -31,38 +141,25 @@ statusHTML = """
 </head>
 <body>
     <h1>Augur Metrics Status</h1>
-    
 """
 
-def getFileID(path):
-    return os.path.splitext(os.path.basename(path))[0]
+diversity_inclusion_HTML = HTMLBuilder.createTableOfMetricObjects("Diversity and Inclusion", diversity_inclusion_metrics)
+statusHTML = HTMLBuilder.addToStatusHTML(statusHTML, diversity_inclusion_HTML)
 
-def printMetric(title, path):
-    global statusHTML
-    status = 'unimplemented'
-    fileID = getFileID(path)
-    if fileID in statusMap:
-        status = statusMap[fileID]
-    if status != 'printed':
-        statusHTML += '<tr><td>{}</td><td><a href="https://github.com/chaoss/wg-gmd/tree/master/{}"> {} ({})</td></tr>'.format(color_by_status[status], path, title, fileID)
-    statusMap[fileID] = 'printed'
-    return fileID
+growth_maturity_decline_HTML = HTMLBuilder.createTableOfMetricObjects("Growth, Maturity, and Decline", growth_maturity_decline_metrics)
+statusHTML = HTMLBuilder.addToStatusHTML(statusHTML, growth_maturity_decline_HTML)
 
-# Iterate through the category Markdown files to categorize links
-for filename in metric_files:
-    file = open(filename, 'r')
-    matches = re.findall(r'\[(.*?)\]\((.*?\.md)\)', file.read())
-    if len(matches) > 0:
-        statusHTML +=  '<h2>' + metric_type_by_file[filename] + '</h2><table><tr><td>status</td><td>metric</td></tr>'
-    for match in matches:
-        printMetric(match[0], match[1])
-    statusHTML +=  '</table>'
-    
+risk_HTML = HTMLBuilder.createTableOfMetricObjects("Risk", risk_metrics)
+statusHTML = HTMLBuilder.addToStatusHTML(statusHTML, risk_HTML)
 
-# Iterate through the files in activity-metrics to find uncategorized metrics
-statusHTML +=  '<h2>Uncategorized</h2><table><tr><td>status</td><td>metric</td></tr>'
-for filename in glob.iglob('upstream/activity-metrics/*.md'):
-    printMetric(getFileID(filename).replace('-', ' ').title(), 'activity-metrics/' + getFileID(filename) + '.md')
+value_HTML = HTMLBuilder.createTableOfMetricObjects("Value", value_metrics)
+statusHTML = HTMLBuilder.addToStatusHTML(statusHTML, value_HTML)
+
+activity_HTML = HTMLBuilder.createTableOfMetricObjects("Activity", activity_metrics)
+statusHTML = HTMLBuilder.addToStatusHTML(statusHTML, activity_HTML)
+
+experimental_HTML = HTMLBuilder.createTableOfMetricObjects("Experimental", experimental_metrics)
+statusHTML = HTMLBuilder.addToStatusHTML(statusHTML, experimental_HTML)
 
 
 statusHTML += """

@@ -4,6 +4,8 @@ import requests
 import datetime
 import base64
 from augur import logger
+from augur.util import annotate
+
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -11,8 +13,37 @@ class Downloads(object):
     """Class for retrieveing download information using APIs and web scrapers"""
     def __init__(self, githubapi):
         self.__githubapi = githubapi.api
-        
 
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
+
+
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
+        
+    @annotate(metric_name='downloads', group='experimental')
     def downloads(self, owner, repo):
         """
         Timeseries that returns package file and calls the correct function to the create download statistics
