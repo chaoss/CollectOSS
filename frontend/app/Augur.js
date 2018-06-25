@@ -37,7 +37,7 @@ export default function Augur () {
       endDate: new Date(),
       compare: 'each',
       showBelowAverage: false,
-      rawWeekly: false,
+      rawWeekly: true,
       showArea: false,
       showTooltip: false,
       byDate: false

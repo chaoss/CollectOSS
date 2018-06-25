@@ -235,15 +235,15 @@ export default {
           }
 
       //push the raw weekly mark to general spec
-      // if(this.rawWeekly) config.layer.push(raw)
-      // else {
-      //   //if user doesn't want raw weekly mark, then iterate through all marks and pop the raw weekly marks
-      //   for(var x = 0; x < config.layer.length; x++) {
-      //     if(config.layer[x] == raw) {
-      //       config.layer = ogLayers
-      //     }
-      //   }
-      // }
+      if(this.rawWeekly) config.layer.push(raw)
+      else {
+        //if user doesn't want raw weekly mark, then iterate through all marks and pop the raw weekly marks
+        for(var x = 0; x < config.layer.length; x++) {
+          if(config.layer[x] == raw) {
+            config.layer = ogLayers
+          }
+        }
+      }
 
       //push the area to general spec
       if(this.showArea) {config.layer.push(area)}

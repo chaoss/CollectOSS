@@ -194,7 +194,7 @@ function Augur() {
       endDate: new Date(),
       compare: 'each',
       showBelowAverage: false,
-      rawWeekly: false,
+      rawWeekly: true,
       showArea: false,
       showTooltip: false,
       byDate: false
@@ -1762,6 +1762,14 @@ exports.default = {
         }
       };
 
+      if (this.rawWeekly) config.layer.push(raw);else {
+        for (var x = 0; x < config.layer.length; x++) {
+          if (config.layer[x] == raw) {
+            config.layer = ogLayers;
+          }
+        }
+      }
+
       if (this.showArea) {
         config.layer.push(area);
       } else {
@@ -2201,7 +2209,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-273cda36", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-273cda36", __vue__options__)
+    hotAPI.reload("data-v-273cda36", __vue__options__)
   }
 })()}
 });
