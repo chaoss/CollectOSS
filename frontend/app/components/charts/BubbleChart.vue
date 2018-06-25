@@ -23,6 +23,9 @@ let spec = {
         "type": "circle",
         "cursor": "pointer"
       },
+      "transform": [{
+        "calculate": "'https://www.google.com/search?q=' + datum.name", "as": "url"
+      }],
       "selection": {
         "paintbrush": {
           "type": "single",
@@ -54,9 +57,10 @@ let spec = {
           "value": "grey"
         },
         "tooltip": {
-          "field": "contributing_org",
-          "type": "quantitative"
+          "field": "name",
+          "type": "nominal"
         },
+        //"href": {"field": "url", "type": "nominal"},
         "size": {
           "field": "total",
           "type": "quantitative",
@@ -76,6 +80,9 @@ let spec = {
         "type": "circle",
         "cursor": "pointer"
       },
+      "transform": [{
+        "calculate": "'https://www.google.com/search?q=' + datum.name", "as": "url"
+      }],
       "selection": {
         "paintbrush": {
           "type": "single",
@@ -121,10 +128,11 @@ let spec = {
             "type": "nominal",
             "scale": { "range": ['#FF3647', '#4736FF'] }
           },
-        "tooltip": {
-          "field": "contributing_org",
-          "type": "quantitative"
-        },
+          "tooltip": {
+            "field": "name",
+            "type": "nominal"
+          },
+          // "href": {"field": "url", "type": "nominal"},
           "value": "grey"
         },
       }

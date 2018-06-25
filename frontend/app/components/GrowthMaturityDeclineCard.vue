@@ -106,11 +106,11 @@
       </div> -->
 
       <div class="col col-12">
-        <bubble-chart source="contributingGithubOrganizations"
-                      title="Contributing Github Organizations Overview"
+        <bubble-chart source="contributors"
+                      title="Contributior Overview"
                       size="total"
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md"
-                      cite-text="Contributing Organizations">
+                      cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/contributors.md"
+                      cite-text="Contributors">
         </bubble-chart>
       </div>
 <!--

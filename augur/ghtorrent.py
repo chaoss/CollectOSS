@@ -941,7 +941,7 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         contributorsSQL = s.sql.text("""
-            SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues,
+            SELECT users.login as name, a.id AS user, SUM(commits) AS commits, SUM(issues) AS issues,
                                SUM(commit_comments) AS commit_comments, SUM(issue_comments) AS issue_comments,
                                SUM(pull_requests) AS pull_requests, SUM(pull_request_comments) AS pull_request_comments,
                   SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
@@ -958,9 +958,9 @@ class GHTorrent(object):
                (SELECT actor_id AS id, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.id WHERE pull_request_history.action = 'opened' AND pull_requests.`base_repo_id` = :repoid GROUP BY actor_id)
                UNION ALL
                (SELECT user_id AS id, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id WHERE pull_requests.base_repo_id = :repoid GROUP BY user_id)
-            ) a
-            WHERE id IS NOT NULL
-            GROUP BY id
+            ) a JOIN users ON users.id = a.id
+            WHERE a.id IS NOT NULL
+            GROUP BY a.id
             ORDER BY total DESC;
         """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
