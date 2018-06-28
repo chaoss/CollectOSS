@@ -33,13 +33,13 @@ export default function Augur () {
       gitRepo: null,
       comparedRepos: [],
       trailingAverage: 180,
-      startDate: new Date('1 June 2010'),
+      startDate: new Date('1 January 2011'),
       endDate: new Date(),
       compare: 'each',
       showBelowAverage: false,
-      rawWeekly: true,
+      rawWeekly: false,
       showArea: false,
-      showTooltip: false,
+      showTooltip: true,
       byDate: false
     },
     mutations: {

@@ -20,13 +20,13 @@
         </area-line-chart>
       </div>
 
-      <div class="col col-6">
+      <!-- <div class="col col-6">
         <area-line-chart source="issuesResponseTime"
                     title="Issue Response Time"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md"
                     cite-text="Issue Response Time">
         </area-line-chart>
-      </div>
+      </div> -->
 
       <div class="col col-6">
         <area-line-chart source="commits"

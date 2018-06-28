@@ -1041,6 +1041,18 @@ class Server(object):
 
             :statuscode 207: Multi status
             """
+
+            """
+            to have on future batch request for each individual chart:
+
+            - timeseries/metric
+            - props that are in current card files (title)
+            - do any of these things act like the vuex states?
+
+            - what would singular card(dashboard) look like now?
+
+
+            """
             if request.method == 'GET':
                 """this will return sensible defaults in the future"""
                 return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}', 501)

@@ -79,7 +79,7 @@
           <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Show area<sup class="warn"></sup></label><br>
         </div>
         <div class="form-item form-checkboxes">
-          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange">Show tooltip<sup class="warn"></sup></label><br>
+          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip<sup class="warn"></sup></label><br>
         </div>
         </label>
         <br>

@@ -70,20 +70,48 @@ export default {
           },
           "legend": {
             "offset": -80,
+
+            "titleFontSize": 0,
+            "titlePadding": 10
+
           },
           "selection": {
             "grid": {
               "type": "interval", "bind": "scales"
             }
-          }
+          },
+
+
         },
+
         "layer": [
           {
             "encoding": {
               "x": {
                 "field": "date",
+                "type": "temporal"
+              },
+              "y": {
+                "field": "value",
+                "type": "quantitative"
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              }
+            },
+            "mark": {
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
+            }
+          },
+          {
+            "encoding": {
+              "x": {
+                "field": "date",
                 "type": "temporal",
-                //"timeUnit": "yearmonthdatehoursminutesseconds",
                 "axis": {
                   "title": null
                 }
@@ -99,18 +127,32 @@ export default {
                 "field": "name",
                 "type": "nominal",
                 "scale":{"scheme": "set1"},
-
+              },
+              "opacity": {
+                "condition": {
+                  "selection": "tooltip",
+                  "value": 1
+                },
+                "value": 0
               }
             },
-            //"layer":[
-              //{
-                "mark": {
-                  "type": "line",
-                  "interpolate": "basis",
-                  "clip": true
-                }
-             // }
-            //]
+            "selection": {
+              "tooltip": {
+                "type": "single",
+                "nearest": true,
+                "on": "mouseover",
+                "encodings": [
+                  "x"
+                ],
+                "empty": "none"
+              }
+            },
+
+            "mark": {
+              "type": "point"
+
+            }
+
           }
         ],
         "padding": {
@@ -120,36 +162,76 @@ export default {
           "bottom": 55
         }
       }
-      let ogLayers = [{
-                  "encoding": {
-                    "x": {
-                      "field": "date",
-                      "type": "temporal",
-                      "timeUnit": "yearmonth",
-                      "axis": {
-                        "title": null
-                      }
-                    },
-                    "y": {
-                      "field": "value",
-                      "type": "quantitative",
+      let ogLayers = [
+          {
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal"
+              },
+              "y": {
+                "field": "value",
+                "type": "quantitative"
+              },
+              "color": {
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              }
 
-                      "axis": {
-                        "title": null
-                      }
-                    },
-                    "color": {
-                      "field": "name",
-                      "type": "nominal",
-                      "scale":{"scheme": "set1"},
-                    }
-                  },
-                  "mark": {
-                    "type": "line",
-                    "interpolate": "basis",
-                    "clip": true
-                  }
-                }]
+            },
+            "mark": {
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
+            }
+          },
+          {
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "axis": {
+                  "title": null
+                }
+              },
+              "y": {
+                "field": "value",
+                "type": "quantitative",
+                "axis": {
+                  "title": null
+                }
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              },
+              "opacity": {
+                "condition": {
+                  "selection": "tooltip",
+                  "value": 1
+                },
+                "value": 0
+              }
+            },
+            "selection": {
+              "tooltip": {
+                "type": "single",
+                "nearest": true,
+                "on": "mouseover",
+                "encodings": [
+                  "x"
+                ],
+                "empty": "none"
+              }
+            },
+
+            "mark": {
+              "type": "point"
+
+            }
+
+          }]
       let area = {
                 "mark": {
                   "type": "area",
@@ -177,9 +259,10 @@ export default {
                   "opacity": {"value": 0.2}
                 }
               }
-      let raw = {
+      let line = {
           "mark": {
             "type": "line",
+            "interpolate": "basis",
             "clip": true
           },
           "encoding": {
@@ -191,61 +274,80 @@ export default {
               }
             },
             "y": {
-              "field": "raw",
+              "field": "value",
               "type": "quantitative"
 
             },
-            "color": {"value": "blue"},
-            "opacity": {"value": 0.3}
+            "color": {
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              }
           }
         }
-      let tooltip =
-      {
-            "encoding": {
-              "x": {
-                "field": "date",
+      let rule =
+
+        {
+          "transform": [
+          {
+            "filter": {
+              "selection": "tooltip"
+            }
+          }
+        ],
+        "mark": "rule",
+        "encoding": {
+          "x": {
                 "type": "temporal",
-                "timeUnit": "yearmonth",
-                "axis": {
-                  "title": null
-                }
-              },
-              "y": {
-                "field": "value",
-                "type": "quantitative",
-                "axis": {
-                  "title": null
-                }
+                "field": "date"
               },
               "color": {
                 "field": "name",
                 "type": "nominal",
                 "scale":{"scheme": "set1"},
               },
-              "tooltip": {
-                "field": "value",
-                "type": "quantitative"
+              "opacity": {
+                "value": 0
               }
-            },
-            "mark": {
-              "type": "point",
-              "interpolate": "basis",
-              "clip": true
-            }
-          }
-
-      //push the raw weekly mark to general spec
-      if(this.rawWeekly) config.layer.push(raw)
-      else {
-        //if user doesn't want raw weekly mark, then iterate through all marks and pop the raw weekly marks
-        for(var x = 0; x < config.layer.length; x++) {
-          if(config.layer[x] == raw) {
-            config.layer = ogLayers
           }
         }
-      }
 
-      //push the area to general spec
+        let tooltip = {
+
+          "transform": [
+            {
+              "filter": {
+                "selection": "tooltip"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -5
+          },
+          "encoding": {
+            "text": {
+              "type": "quantitative",
+              "field": "value"
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": "value",
+              "type": "quantitative"
+            },
+            "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              }
+          }
+        }
+
+        //push the area to general spec
       if(this.showArea) {config.layer.push(area)}
       else {
         //if user doesn't want area mark, then set layers to og
@@ -256,8 +358,16 @@ export default {
         }
       }
 
+      //push the default line mark to spec
+      config.layer.push(line)
+
+
+
       //push the tooltip to general spec
-      if(this.showTooltip) config.layer.push(tooltip)
+      if(this.showTooltip) {
+        config.layer.push(tooltip)
+        //config.layer.push(rule)
+      }
       else {
         //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
         for(var x = 0; x < config.layer.length; x++) {
@@ -275,9 +385,8 @@ export default {
           }
       }
 
-      return config
-    },
-    chart() {
+      let hideRaw = !this.rawWeekly
+
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.arealinechart').addClass('loader')
       /*
@@ -381,7 +490,7 @@ export default {
               legend.push(field)
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
             }
-            if (this.rawWeekly || this.disableRollingAverage) {
+            if (!hideRaw || this.disableRollingAverage) {
               normalized.push(rolling)
               aggregates.push(d)
               legend.push(field)
@@ -422,19 +531,19 @@ export default {
         }
 
         if (normalized.length == 0) {
-          //this.mgConfig.missing_text = 'Data empty'
-
           this.renderError()
         } else {
           //shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
-          for(var i = 0; i < legend.length; i++){
-            normalized[i].forEach(d => {
-              d.name = legend[i]
-              d.color = colors[i]
-              values.push(d)
-            })
+          if(hideRaw) {
+            for(var i = 0; i < legend.length; i++){
+              normalized[i].forEach(d => {
+                d.name = legend[i]
+                d.color = colors[i]
+                values.push(d)
+              })
+            }
           }
-          if(this.rawWeekly){
+          else {
             for(var i = 0; i < legend.length; i++){
               aggregates[i].forEach(d => {
                 d.name = "raw " + legend[i]
@@ -442,6 +551,7 @@ export default {
                 values.push(d)
               })
             }
+            //config.layer.push(line)
           }
 
           this.values = values
@@ -456,7 +566,9 @@ export default {
         this.renderError()
       }) // end batch request
       //return '<div class="loader deleteme">' + this.title + '...</div>'
-    } // end chart()
+
+      return config
+    },
 
   }, // end computed
   methods: {

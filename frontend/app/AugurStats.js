@@ -35,6 +35,10 @@ export default class AugurStats {
 
   static averageArray (ary) {
     return ary.reduce((a, e) => { return a + e }, 0) / (ary.length)
+    // var x = 0
+    // var len = array.length
+    // while(len--){ array[len] = parseFloat(array[x]).toFixed(2);}
+    // return array
   }
 
   static aboveAverage (data, key) {
