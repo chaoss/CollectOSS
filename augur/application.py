@@ -121,9 +121,8 @@ class Application(object):
         self.librariesio()
         self.downloads()
         self.publicwww()
-        self.localcsv()  
+        self.localcsv()   
         self.piper() 
-        print("hey")   
 
     def read_config(self, section, name, environment_variable=None, default=None):
         value = None
@@ -211,10 +210,11 @@ class Application(object):
         return self.__ghtorrent
     def piper(self):
         from augur.PiperReader import PiperMail
+        path = self.read_config('PiperMail','mailing_lists')
         if self.__piper is None:
             logger.debug('Initializing PiperMail')
             self.__piper = PiperMail()
-        return self.__piper
+        return self.__piper,path
 
 
     def ghtorrentplus(self):
