@@ -1377,8 +1377,6 @@ class Server(object):
         endpoint = '/{}/<owner>/<repo>/{}'.format(AUGUR_API_VERSION, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
         self.updateMetricMetadata(function, endpoint, **kwargs)
-        
-
 
     def addGitMetric(self, function, endpoint, cache=True):
         """Simplifies adding routes that accept"""
@@ -1402,6 +1400,9 @@ class Server(object):
         # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
         annotate(endpoint=endpoint, source=function.__self__.__class__.__name__, **kwargs)(real_func)
+
+    def getMetrics(self):
+        return metrics
 
 def run():
     server = Server()

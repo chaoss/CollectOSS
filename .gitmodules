@@ -1,3 +1,3 @@
 [submodule "docs/metrics/upstream"]
 	path = docs/metrics/upstream
-	url = https://github.com/chaoss/metrics.git
+	url = https://github.com/OSSHealth/wg-gmd.git

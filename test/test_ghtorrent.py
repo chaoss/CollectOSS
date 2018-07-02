@@ -1,7 +1,7 @@
 import os
 import pytest
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def ghtorrent():
     import augur
     augurApp = augur.Application()

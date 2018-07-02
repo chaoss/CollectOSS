@@ -56,7 +56,7 @@ class PublicWWW(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-    @annotate(metric_name='linking_websites', group='experimental')
+    @annotate(metric_name='linking-websites', group='experimental')
     def linking_websites(self, owner, repo):
         """
         Finds the repo's popularity on the internet
