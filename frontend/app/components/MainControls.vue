@@ -64,6 +64,12 @@
               <label class="checkbox"><input name="comparebaseline" value="each" checked type="radio" @change="onCompareChange">Z-score</label><br>
               <label class="checkbox"><input name="comparebaseline" value="percentage" type="radio" @change="onCompareChange">Baseline is compared</label>
             </div>
+            <p></p>
+            <div class="col col-9">
+              <div class="form-item">
+                <input type="text" class="search reposearch" name="headersearch" placeholder="Compared Repository" @change="onComparedRepo">
+              </div>
+            </div>
             </label>
       </div>
       <div class="col col-5">
@@ -104,7 +110,6 @@
       onStartDateChange (e) {
         console.log(e)
         var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
-        console.log('date', date)
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
           delete this.startDateTimeout
@@ -118,7 +123,6 @@
       },
       onEndDateChange (e) {
         var date = Date.parse((this.$refs.endMonth.value + "/01/" + this.$refs.endYear.value))
-        console.log('date', date)
         if (this.endDateTimeout) {
           clearTimeout(this.endDateTimeout)
           delete this.endDateTimeout
@@ -159,6 +163,11 @@
         this.$store.commit('setCompare', {
           compare: e.target.value
         })
+      },
+      onComparedRepo (e) {
+        this.$store.commit('addComparedRepo', {
+          githubURL: e.target.value
+        })
       }
     },
     computed: {
@@ -187,4 +196,5 @@
       }
     }
   }
+
 </script>

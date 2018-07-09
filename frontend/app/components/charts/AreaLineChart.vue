@@ -26,12 +26,14 @@ export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
   data() {
     return {
+      legendLabels: [],
       values: []
     }
   },
   computed: {
     repo () {
       return this.$store.state.baseRepo
+      //return "rails/rails"
     },
     period () {
       return this.$store.state.trailingAverage
@@ -45,6 +47,10 @@ export default {
     compare () {
       return this.$store.state.compare
     },
+    // comparedTo () {
+    //   //return window.AugurAPI.Repo(this.$store.state.comparedRepos[0])
+    //   return "jquery/jquery"
+    // },
     rawWeekly () {
       return this.$store.state.rawWeekly
     },
@@ -56,6 +62,10 @@ export default {
     },
     spec() {
 
+      //returns recommended legend offset based on length of name
+      function fit_legend(name){
+        return -(name.length * 12)
+      }
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "title": {
@@ -69,8 +79,8 @@ export default {
             "grid": false
           },
           "legend": {
-            "offset": -80,
 
+            "offset": 0,
             "titleFontSize": 0,
             "titlePadding": 10
 
@@ -80,6 +90,19 @@ export default {
               "type": "interval", "bind": "scales"
             }
           },
+          "encoding": {
+            // "x": {
+            //   "scale": {
+            //     "domain": [0, "height"]
+            //   }
+            // },
+            "y": {
+              "scale": {
+                "range": [0, "height"]
+              }
+            }
+          }
+
 
 
         },
@@ -347,7 +370,7 @@ export default {
           }
         }
 
-        //push the area to general spec
+      //push the area to general spec
       if(this.showArea) {config.layer.push(area)}
       else {
         //if user doesn't want area mark, then set layers to og
@@ -357,11 +380,9 @@ export default {
           }
         }
       }
-
+      console.log("compared " + this.comparedTo)
       //push the default line mark to spec
       config.layer.push(line)
-
-
 
       //push the tooltip to general spec
       if(this.showTooltip) {
@@ -378,12 +399,15 @@ export default {
       }
 
       //set dates from main control options
+      //can either have first priority being to show data points across whole graph, or following user defined dates as first priority
       for(var i = 0; i < config.layer.length; i++){
         config.layer[i].encoding.x["scale"] =
           {
             "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
           }
       }
+
+
 
       let hideRaw = !this.rawWeekly
 
@@ -430,6 +454,7 @@ export default {
         this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.__download_data))
         this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
 
+
         // We usually want to limit dates and convert the key to being metrics-graphics friendly
         let defaultProcess = (obj, key, field, count) => {
           let d = AugurStats.convertKey(obj[key], field)
@@ -473,12 +498,13 @@ export default {
           } // end for in
         } // end normalize function
 
-
+        console.log("yasss" + this.repo)
 
         // Build the lines we need
         let legend = []
         let values = []
         let colors = []
+        let max = 0
         if (!this.comparedTo) {
           buildLines(data[this.repo], (obj, key, field, count) => {
             // Build basic chart using rolling averages
@@ -534,6 +560,8 @@ export default {
           this.renderError()
         } else {
           //shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
+          this.legendLabels = legend
+
           if(hideRaw) {
             for(var i = 0; i < legend.length; i++){
               normalized[i].forEach(d => {
@@ -555,6 +583,28 @@ export default {
           }
 
           this.values = values
+
+          //function getMaxY(arr){
+            // var temp = normalized[0]
+            // console.log(temp[0].value)
+            // var output = [];
+            // for (var i=0; i < temp.length ; ++i)
+            //     if(temp[i]) output.push(temp[i][value]);
+            // console.log("output" + output);
+            // var result = objArray.map(temp => temp.value);
+            // console.log(result)
+            // console.log(normalized[0])
+            //return result[0][0].reduce((max, b) => Math.max(max, b.value), data[0].value);
+          //}
+          //console.log(getMaxY())
+          //console.log("LOOK " + normalized[1][0].value)
+          config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
+          //console.log("range " + normalized[0][0].value)
+          //if(this.values[this.values.length - 1].value > Math.max.apply(Math, normalized) * .6) {
+            //console.log("IT IS HAPPENING HAHAH")
+            //config.config.legend.titlePadding = 175
+          //}
+
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.arealinechart').removeClass('loader')
           //this.mgConfig.legend_target = this.$refs.legend
@@ -566,7 +616,6 @@ export default {
         this.renderError()
       }) // end batch request
       //return '<div class="loader deleteme">' + this.title + '...</div>'
-
       return config
     },
 

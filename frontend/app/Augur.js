@@ -31,7 +31,7 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedRepos: [],
+      comparedTo: "jquery/jquery",
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
@@ -64,16 +64,19 @@ export default function Augur () {
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
-        if (!payload.keepCompared) {
-          state.comparedRepos = []
-        }
+        // if (!payload.keepCompared) {
+        //   state.comparedRepos = []
+        // }
       },
       addComparedRepo (state, payload) {
-        let repo = window.AugurAPI.Repo({ githubURL: payload.url })
+        //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
+        let repo = window.AugurAPI.Repo(payload)
+
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
         }
-        state.comparedRepos.push(repo.toString())
+        //state.comparedRepos.push(repo.toString())
+        state.comparedTo = repo.toString()
         let title = 'Augur'
         let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         window.history.pushState(null, title, queryString)
@@ -107,6 +110,9 @@ export default function Augur () {
         }
         if (typeof payload.showTooltip !== 'undefined') {
           state.showTooltip = payload.showTooltip
+        }
+        if (payload.comparedTo) {
+          state.comparedTo = payload.comparedTo
         }
       },
       reset (state) {
