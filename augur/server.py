@@ -823,6 +823,7 @@ class Server(object):
             return Response(response=transformed_contributors,
                             status=200,
                             mimetype="application/json")
+        self.updateMetricMetadata(ghtorrent.contributions, '/api/unstable/<owner>/<repo>/timeseries/contributions')
 
         """
         @api {get} /:owner/:repo/timeseries/project_age Project Age
