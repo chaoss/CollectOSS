@@ -33,7 +33,6 @@ export default {
   computed: {
     repo () {
       return this.$store.state.baseRepo
-      //return "rails/rails"
     },
     period () {
       return this.$store.state.trailingAverage
@@ -49,7 +48,7 @@ export default {
     },
     // comparedTo () {
     //   //return window.AugurAPI.Repo(this.$store.state.comparedRepos[0])
-    //   return "jquery/jquery"
+    //   return this.$store.state.comparedRepos
     // },
     rawWeekly () {
       return this.$store.state.rawWeekly
@@ -334,7 +333,7 @@ export default {
           }
         }
 
-        let tooltip = {
+        let valueText = {
 
           "transform": [
             {
@@ -363,9 +362,41 @@ export default {
               "type": "quantitative"
             },
             "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
+                "value": '#4736FF'
+              }
+          }
+        }
+
+        let dateText = {
+
+          "transform": [
+            {
+              "filter": {
+                "selection": "tooltip"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -15
+          },
+          "encoding": {
+            "text": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": "value",
+              "type": "quantitative"
+            },
+            "color": {
+                "value": "black"
               }
           }
         }
@@ -386,13 +417,15 @@ export default {
 
       //push the tooltip to general spec
       if(this.showTooltip) {
-        config.layer.push(tooltip)
+        config.layer.push(valueText)
+        config.layer.push(dateText)
+
         //config.layer.push(rule)
       }
       else {
         //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
         for(var x = 0; x < config.layer.length; x++) {
-          if(config.layer[x] == tooltip) {
+          if(config.layer[x] == valueText) {
             config.layer = ogLayers
           }
         }

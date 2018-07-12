@@ -67,7 +67,7 @@
             <p></p>
             <div class="col col-9">
               <div class="form-item">
-                <input type="text" class="search reposearch" name="headersearch" placeholder="Compared Repository" @change="onComparedRepo">
+                <!-- <input type="text" class="search reposearch" name="headersearch" placeholder="Compared Repository" @change="onComparedRepo"> -->
               </div>
             </div>
             </label>
@@ -164,11 +164,11 @@
           compare: e.target.value
         })
       },
-      onComparedRepo (e) {
-        this.$store.commit('addComparedRepo', {
-          githubURL: e.target.value
-        })
-      }
+      // onComparedRepo (e) {
+      //   this.$store.commit('addComparedRepo', {
+      //     githubURL: e.target.value
+      //   })
+      // }
     },
     computed: {
       months() { return [

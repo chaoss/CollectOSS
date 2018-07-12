@@ -188,7 +188,7 @@ function Augur() {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedTo: "jquery/jquery",
+      //comparedTo: "jquery/jquery",
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
@@ -268,9 +268,9 @@ function Augur() {
         if (typeof payload.showTooltip !== 'undefined') {
           state.showTooltip = payload.showTooltip;
         }
-        if (payload.comparedTo) {
-          state.comparedTo = payload.comparedTo;
-        }
+        // if (payload.comparedTo) {
+        //   state.comparedTo = payload.comparedTo
+        // }
       },
       reset: function reset(state) {
         state = {
@@ -688,10 +688,6 @@ var AugurStats = function () {
       return ary.reduce(function (a, e) {
         return a + e;
       }, 0) / ary.length;
-      // var x = 0
-      // var len = array.length
-      // while(len--){ array[len] = parseFloat(array[x]).toFixed(2);}
-      // return array
     }
   }, {
     key: 'aboveAverage',
@@ -744,7 +740,7 @@ var AugurStats = function () {
       return AugurStats.dateAggregate(data, period, period, period / 2, function (filteredData, date) {
         var flat = AugurStats.flatten(filteredData, key);
         var datum = { date: date };
-        datum[key] = AugurStats.averageArray(flat);
+        datum[key] = Math.round(AugurStats.averageArray(flat) * 100) / 100;
         return datum;
       });
     }
@@ -1422,11 +1418,6 @@ module.exports = {
       this.$store.commit('setCompare', {
         compare: e.target.value
       });
-    },
-    onComparedRepo: function onComparedRepo(e) {
-      this.$store.commit('addComparedRepo', {
-        githubURL: e.target.value
-      });
     }
   },
   computed: {
@@ -1452,8 +1443,8 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('h4',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                    "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                  "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h5',[_vm._v("Comparison Options")]),_vm._v(" "),_c('label',[_vm._v("Type\n            "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"Compared Repository"},on:{"change":_vm.onComparedRepo}})])])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h4',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Show raw weekly values"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onAreaChange}}),_vm._v("Show area"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n          "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])])])])])}
-__vue__options__.staticRenderFns = []
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('h4',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                    "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                  "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h5',[_vm._v("Comparison Options")]),_vm._v(" "),_c('label',[_vm._v("Type\n            "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])]),_vm._v(" "),_c('p'),_vm._v(" "),_vm._m(0)])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h4',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Show raw weekly values"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onAreaChange}}),_vm._v("Show area"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n          "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"form-item"})])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -1461,7 +1452,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4eb76a08", __vue__options__)
+    hotAPI.reload("data-v-4eb76a08", __vue__options__)
   }
 })()}
 });
@@ -1856,7 +1847,7 @@ exports.default = {
         }
       };
 
-      var tooltip = {
+      var valueText = {
 
         "transform": [{
           "filter": {
@@ -1883,9 +1874,39 @@ exports.default = {
             "type": "quantitative"
           },
           "color": {
-            "field": "name",
-            "type": "nominal",
-            "scale": { "scheme": "set1" }
+            "value": '#4736FF'
+          }
+        }
+      };
+
+      var dateText = {
+
+        "transform": [{
+          "filter": {
+            "selection": "tooltip"
+          }
+        }],
+        "mark": {
+          "type": "text",
+          "align": "left",
+          "dx": 5,
+          "dy": -15
+        },
+        "encoding": {
+          "text": {
+            "type": "temporal",
+            "field": "date"
+          },
+          "x": {
+            "type": "temporal",
+            "field": "date"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative"
+          },
+          "color": {
+            "value": "black"
           }
         }
       };
@@ -1904,10 +1925,11 @@ exports.default = {
       config.layer.push(line);
 
       if (this.showTooltip) {
-        config.layer.push(tooltip);
+        config.layer.push(valueText);
+        config.layer.push(dateText);
       } else {
         for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == tooltip) {
+          if (config.layer[x] == valueText) {
             config.layer = ogLayers;
           }
         }

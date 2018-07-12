@@ -35,10 +35,6 @@ export default class AugurStats {
 
   static averageArray (ary) {
     return ary.reduce((a, e) => { return a + e }, 0) / (ary.length)
-    // var x = 0
-    // var len = array.length
-    // while(len--){ array[len] = parseFloat(array[x]).toFixed(2);}
-    // return array
   }
 
   static aboveAverage (data, key) {
@@ -80,7 +76,7 @@ export default class AugurStats {
     return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }
-      datum[key] = AugurStats.averageArray(flat)
+      datum[key] = Math.round(AugurStats.averageArray(flat)*100)/100
       return datum
     })
   }

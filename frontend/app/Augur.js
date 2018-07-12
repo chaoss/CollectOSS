@@ -31,7 +31,7 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedTo: "jquery/jquery",
+      //comparedTo: "jquery/jquery",
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
@@ -111,9 +111,9 @@ export default function Augur () {
         if (typeof payload.showTooltip !== 'undefined') {
           state.showTooltip = payload.showTooltip
         }
-        if (payload.comparedTo) {
-          state.comparedTo = payload.comparedTo
-        }
+        // if (payload.comparedTo) {
+        //   state.comparedTo = payload.comparedTo
+        // }
       },
       reset (state) {
         state = {
