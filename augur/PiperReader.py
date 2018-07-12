@@ -27,7 +27,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 class PiperMail:
 	
-	def make(self,db,mail_check,archives,mail_lists,res):
+	def make(self,db,mail_check,archives,mail_lists,res,session):
 		print("Okay")
 		print(db)
 		print(mail_check)
@@ -115,9 +115,11 @@ class PiperMail:
 				print(res)
 				print("sigh")
 				y=0
-				while(res[y]!=archives):
+				print(res[y].project)
+				while(res[y].project!=archives[i]):
 					y+=1
-				res[y].last_message_date = self.convert_date(last_date)
+					print(res[y].project)
+				res[y].last_message_date = last_date
 				session.commit()
 
 			df_mail_list,numb = self.add_row_mail_list(columns2,di,df_mail_list,archives[i],last_date,numb)
