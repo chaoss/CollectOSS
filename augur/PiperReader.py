@@ -9,6 +9,8 @@ import augur
 import datetime
 from dateutil.parser import parse
 from datetime import datetime, timedelta
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import scoped_session, sessionmaker
 #Count 2290
 #if(line[j:j+11]=="},\"unixfrom\"" or line[j:j+9] == "},\"origin\"" ):
 #9359610
@@ -22,9 +24,10 @@ from datetime import datetime, timedelta
 #PiperRead8 had all comments
 
 
+
 class PiperMail:
-	def make(self,db,mail_check,archives,mail_lists):
-		#print(self.db)
+	
+	def make(self,db,mail_check,archives,mail_lists,res):
 		print("Okay")
 		print(db)
 		print(mail_check)
@@ -36,7 +39,7 @@ class PiperMail:
 		           'message_part','message_parts_tot', 'subject','date',\
 				   'message_from','message_id','message_text'
 		df5 = pd.DataFrame(columns=columns1)
-		columns2 = "backend_name","mailing_list_url","project","last_message_date"
+		columns2 = "augurlistID" ,"backend_name","mailing_list_url","project","last_message_date"
 		df_mail_list = pd.DataFrame(columns=columns2)
 		if(not mail_lists):			
 			df5.to_sql(name=db_name, con=db,if_exists='replace',index=False,
@@ -53,30 +56,26 @@ class PiperMail:
 						'message_id': s.types.VARCHAR(length=500),
 						'message_text': s.types.VARCHAR(length=12000)
 					})
-			df_mail_list.to_sql(name="mailing_list_jobs",con=db,if_exists='replace',index=False,
-								dtype={'backend_name': s.types.VARCHAR(length=300),
-								       'mailing_list_url': s.types.VARCHAR(length=300),
-									   'project': s.types.VARCHAR(length=300),
-									   'last_message_date': s.types.DateTime()
-								})
+		
 				
 		SQL = s.sql.text("""SELECT COUNT(*) FROM mail_lists""")
 		df7 = pd.read_sql(SQL, db)
 		augurmsgID = int(df7.values)+1
 		new = False
+		numb = 0
 		for i in range(len(archives)):
 			if(mail_check[archives[i]] == "update"):
-				place = os.getcwd() + path + 'opendaylight-' + 'temp_' + archives[i]
+				place = os.getcwd() + path + 'archive-' + 'temp_' + archives[i]
 			elif(mail_check[archives[i]] == 'new' ):
-				place = os.getcwd() + path + 'opendaylight-' + archives[i]
+				place = os.getcwd() + path + 'archive-' + archives[i]
 				new = True
 			else:
 				print("Skipping")
 				continue
 			f = open(place + '.json','r')
 			x = f.read()
-			temp = json.dumps(x)
 			f.close()
+			print(archives)
 			data,j = self.read_json(x)
 			di = json.loads(data)
 			df = pd.DataFrame(columns=columns1)
@@ -112,7 +111,16 @@ class PiperMail:
 			if(last_date < temp_date):
 				last_date = temp_date
 			print(last_date)
-			df_mail_list = self.add_row_mail_list(columns2,di,df_mail_list,archives[i],last_date)
+			if(mail_check[archives[i]] == 'update'):
+				print(res)
+				print("sigh")
+				y=0
+				while(res[y]!=archives):
+					y+=1
+				res[y].last_message_date = self.convert_date(last_date)
+				session.commit()
+
+			df_mail_list,numb = self.add_row_mail_list(columns2,di,df_mail_list,archives[i],last_date,numb)
 			print("File uploaded ",row)
 		if(new == True):
 			name = os.getcwd() + path + "mailing_list_jobs"
@@ -120,6 +128,7 @@ class PiperMail:
 			df_mail_list.to_sql(name='mailing_list_jobs',con=db,if_exists='append',index=False)
 			print("Mailing List Job uploaded")
 		print("Finished")
+
 	
 	def read_json(self,p):
 		k = j = 0
@@ -193,10 +202,11 @@ class PiperMail:
 			augurmsgID+=1
 		return df,row,augurmsgID
 	
-	def add_row_mail_list(self,columns2,di,df_mail_list,archives,last_date):
-		li = [[di['backend_name'], di['origin'], archives,last_date]]
+	def add_row_mail_list(self,columns2,di,df_mail_list,archives,last_date,numb):
+		li = [[numb,di['backend_name'], di['origin'], archives,last_date]]
 		df = pd.DataFrame(li,columns=columns2)
 		df4 = df_mail_list.append(df)
 		df_mail_list = df4
-		return df_mail_list
+		numb+=1
+		return df_mail_list,numb
 	
