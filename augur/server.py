@@ -2,11 +2,12 @@
 import os
 import sys
 import json
+import re
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
-from augur.util import annotate, metrics
+from augur.util import annotate, metrics, determineFrontendStatus
 
 sys.path.append('..')
 
@@ -1064,6 +1065,7 @@ class Server(object):
             return Response(response=drs,
                             status=200,
                             mimetype="application/json")
+        self.updateMetricMetadata(git.downloaded_repos, '/{}/git/repos'.format(AUGUR_API_VERSION))
 
         """
         @api {get} /:owner/:repo/timeseries/fakes Fakes
@@ -1237,6 +1239,7 @@ class Server(object):
             return Response(response=ghtorrent_range,
                             status=200,
                             mimetype="application/json")
+        self.updateMetricMetadata(ghtorrent.ghtorrent_range, '/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
 
         #######################
         #   Batch Requests    #
@@ -1400,7 +1403,12 @@ class Server(object):
         # Get the unbound function from the bound function's class so that we can modify metadata
         # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
-        annotate(endpoint=endpoint, source=function.__self__.__class__.__name__, **kwargs)(real_func)
+        tag = re.sub("_", "-", function.__name__).lower()
+        frontend_status = ''
+        frontend_status = determineFrontendStatus(endpoint)
+        metric_name = re.sub('_', ' ', function.__name__).title()
+
+        annotate(metric_name=metric_name, endpoint=endpoint, source=function.__self__.__class__.__name__, tag=tag, frontend_status=frontend_status, **kwargs)(real_func)
 
     def getMetrics(self):
         return metrics

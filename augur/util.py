@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 import pandas as pd
 import os
+import re
 import logging
 import coloredlogs
 import beaker
@@ -46,3 +47,53 @@ def annotate(metadata=None, **kwargs):
         func.metadata.update(dict(kwargs))
         return func
     return decorate
+
+def fileExists(path):
+    return os.path.exists(path)
+
+class frontendExtractor(object):
+    def __init__(self, endpoint):
+        self.api = None
+        self.endpoint_attributes = None
+        self.frontend_card_files = []
+        self.endpoint = endpoint
+
+
+def extractEndpointsAndAttributes(extractor):
+        if fileExists('../../frontend/app/AugurAPI.js'):
+            extractor.api = open("../../frontend/app/AugurAPI.js", 'r')
+            extractor.frontend_card_files = ['../../frontend/app/components/DiversityInclusionCard.vue', 
+                       '../../frontend/app/components/GrowthMaturityDeclineCard.vue', 
+                       '../../frontend/app/components/RiskCard.vue', 
+                       '../../frontend/app/components/ValueCard.vue',
+                       '../../frontend/app/components/ExperimentalCard.vue',
+                       '../../frontend/app/components/GitCard.vue']
+
+        if fileExists('frontend/app/AugurAPI.js'):
+            extractor.api = open("frontend/app/AugurAPI.js", 'r')
+            extractor.frontend_card_files = ['frontend/app/components/DiversityInclusionCard.vue', 
+                       'frontend/app/components/GrowthMaturityDeclineCard.vue', 
+                       'frontend/app/components/RiskCard.vue', 
+                       'frontend/app/components/ValueCard.vue',
+                       'frontend/app/components/ExperimentalCard.vue',
+                       'frontend/app/components/GitCard.vue']
+
+        extractor.endpoint_attributes = re.findall(r'(?:(?:Timeseries|Endpoint)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
+        return extractor
+
+def determineFrontendStatus(endpoint):
+    fe = frontendExtractor(endpoint)
+
+    extractor = extractEndpointsAndAttributes(fe)
+
+    attribute = [attribute[0] for attribute in extractor.endpoint_attributes if attribute[1] in endpoint]
+    # print(extractor.frontend_card_files)
+
+    status = 'unimplemented'
+    for card in extractor.frontend_card_files:
+        card = open(card, 'r').read()
+        if len(attribute) != 0 and attribute[0] in card:
+            status = 'implemented'
+            break
+
+    return status
