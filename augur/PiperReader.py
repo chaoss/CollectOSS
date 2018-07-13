@@ -110,17 +110,17 @@ class PiperMail:
 			temp_date = self.convert_date(di['data']['Date'])
 			if(last_date < temp_date):
 				last_date = temp_date
-			print(last_date)
-			if(mail_check[archives[i]] == 'update'):
-				print(res)
-				print("sigh")
-				y=0
-				print(res[y].project)
-				while(res[y].project!=archives[i]):
-					y+=1
+				print(last_date)
+				if(mail_check[archives[i]] == 'update'):
+					print(res)
+					print("sigh")
+					y=0
 					print(res[y].project)
-				res[y].last_message_date = last_date
-				session.commit()
+					while(res[y].project!=archives[i]):
+						y+=1
+						print(res[y].project)
+					res[y].last_message_date = last_date
+					session.commit()
 
 			df_mail_list,numb = self.add_row_mail_list(columns2,di,df_mail_list,archives[i],last_date,numb)
 			print("File uploaded ",row)
