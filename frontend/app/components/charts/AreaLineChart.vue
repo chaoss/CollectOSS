@@ -46,10 +46,9 @@ export default {
     compare () {
       return this.$store.state.compare
     },
-    // comparedTo () {
-    //   //return window.AugurAPI.Repo(this.$store.state.comparedRepos[0])
-    //   return this.$store.state.comparedRepos
-    // },
+    comparedRepo () {
+      return this.$store.state.comparedRepo
+    },
     rawWeekly () {
       return this.$store.state.rawWeekly
     },
@@ -61,10 +60,6 @@ export default {
     },
     spec() {
 
-      //returns recommended legend offset based on length of name
-      function fit_legend(name){
-        return -(name.length * 12)
-      }
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "title": {
@@ -84,28 +79,14 @@ export default {
             "titlePadding": 10
 
           },
-          "selection": {
-            "grid": {
-              "type": "interval", "bind": "scales"
-            }
-          },
-          "encoding": {
-            // "x": {
-            //   "scale": {
-            //     "domain": [0, "height"]
+          // "encoding": {
+            // "color": {
+            //     "field": "name",
+            //     "type": "nominal",
+            //     "scale":{"scheme": "set1"},
             //   }
-            // },
-            "y": {
-              "scale": {
-                "range": [0, "height"]
-              }
-            }
-          }
-
-
-
+          // }
         },
-
         "layer": [
           {
             "encoding": {
@@ -175,6 +156,85 @@ export default {
 
             }
 
+          },
+          {
+            "mark": {
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
+            },
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal"
+              },
+              "y": {
+                "field": "value",
+                "type": "quantitative"
+              }
+            }
+          },
+          //HERE IS COMPARED PARTS
+          {
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal"
+              },
+              "y": {
+                "field": "comparedValue",
+                "type": "quantitative"
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              },
+
+            },
+            "mark": {
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
+            }
+          },
+          {
+            "mark": {
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
+            },
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal"
+              },
+              "y": {
+                "field": "comparedValue",
+                "type": "quantitative"
+              }
+            }
+          },
+          {
+            "mark": {
+              "type": "line",
+              //"interpolate": "basis",
+              "clip": true
+            },
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal"
+              },
+              "y": {
+                "field": "comparedValue",
+                "type": "quantitative"
+
+              },
+              "color": {
+                "value": "red"
+              }
+            }
           }
         ],
         "padding": {
@@ -196,6 +256,7 @@ export default {
                 "type": "quantitative"
               },
               "color": {
+                "field": "name",
                 "type": "nominal",
                 "scale":{"scheme": "set1"},
               }
@@ -207,6 +268,7 @@ export default {
               "clip": true
             }
           },
+
           {
             "encoding": {
               "x": {
@@ -253,7 +315,138 @@ export default {
 
             }
 
-          }]
+          },
+          // {
+          //   "encoding": {
+          //     "x": {
+          //       "field": "date",
+          //       "type": "temporal"
+          //     },
+          //     "y": {
+          //       "field": "value",
+          //       "type": "quantitative"
+          //     }
+          //   }
+          // }
+        ]
+
+      let comparedPoint =
+          {
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "axis": {
+                  "title": null
+                }
+              },
+              "y": {
+                "field": "comparedValue",
+                "type": "quantitative",
+                "axis": {
+                  "title": null
+                }
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              },
+              "opacity": {
+                "condition": {
+                  "selection": "tooltip",
+                  "value": 1
+                },
+                "value": 0
+              }
+            },
+            "selection": {
+              "comparedTooltip": {
+                "type": "single",
+                "nearest": true,
+                "on": "mouseover",
+                "encodings": [
+                  "x"
+                ],
+                "empty": "none"
+              }
+            },
+            "mark": {
+              "type": "point"
+
+            }
+
+          }
+
+        let comparedValueText = {
+
+          "transform": [
+            {
+              "filter": {
+                "selection": "comparedTooltip"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -5
+          },
+          "encoding": {
+            "text": {
+              "type": "quantitative",
+              "field": "comparedValue"
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": "comparedValue",
+              "type": "quantitative"
+            },
+            "color": {
+                "value": '#4736FF'
+              }
+          }
+        }
+
+        let comparedDateText = {
+
+          "transform": [
+            {
+              "filter": {
+                "selection": "comparedTooltip"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -15
+          },
+          "encoding": {
+            "text": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": "comparedValue",
+              "type": "quantitative"
+            },
+            "color": {
+                "value": "black"
+              }
+          }
+        }
+
+
       let area = {
                 "mark": {
                   "type": "area",
@@ -284,26 +477,24 @@ export default {
       let line = {
           "mark": {
             "type": "line",
-            "interpolate": "basis",
-            "clip": true
+            //"interpolate": "basis",
+            //"clip": true
           },
           "encoding": {
             "x": {
               "field": "date",
-              "type": "temporal",
-              "scale": {
-                "domain": "unaggregated"
-              }
+              "type": "temporal"
             },
             "y": {
               "field": "value",
               "type": "quantitative"
 
             },
-            "color": {
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-              }
+            // "color": {
+            //   "field": "name",
+            //   "type": "nominal",
+            //   "scale":{"scheme": "set1"},
+            // }
           }
         }
       let rule =
@@ -313,6 +504,32 @@ export default {
           {
             "filter": {
               "selection": "tooltip"
+            }
+          }
+        ],
+        "mark": "rule",
+        "encoding": {
+          "x": {
+                "type": "temporal",
+                "field": "date"
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale":{"scheme": "set1"},
+              },
+              "opacity": {
+                "value": 1
+              }
+          }
+        }
+      let comparedRule =
+
+        {
+          "transform": [
+          {
+            "filter": {
+              "selection": "comparedTooltip"
             }
           }
         ],
@@ -411,16 +628,19 @@ export default {
           }
         }
       }
-      console.log("compared " + this.comparedTo)
-      //push the default line mark to spec
-      config.layer.push(line)
+
+      //push parts of layer that use "comparedValue" key if there is a comparedRepo
+      if(this.comparedRepo){
+        config.layer.push(comparedPoint)
+        config.layer.push(comparedValueText)
+        config.layer.push(comparedDateText)
+        //config.layer.push(comparedOtherLine)
+      }
 
       //push the tooltip to general spec
       if(this.showTooltip) {
         config.layer.push(valueText)
         config.layer.push(dateText)
-
-        //config.layer.push(rule)
       }
       else {
         //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
@@ -474,8 +694,8 @@ export default {
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo])
       } // end if (this.$store.repo)
-      if (this.comparedTo) {
-        repos.push(window.AugurRepos[this.comparedTo])
+      if (this.comparedRepo) {
+        repos.push(window.AugurRepos[this.comparedRepo])
       }
 
 
@@ -489,8 +709,19 @@ export default {
 
 
         // We usually want to limit dates and convert the key to being metrics-graphics friendly
-        let defaultProcess = (obj, key, field, count) => {
-          let d = AugurStats.convertKey(obj[key], field)
+        let defaultProcess = (obj, key, field, count, compared) => {
+          // let a = null
+          //let b = AugurStats.convertKey(obj[key], field)
+          let d = null
+          if(compared) {
+            d = AugurStats.convertComparedKey(obj[key], field)
+            //d = b.concat(a)
+
+          }
+          else {
+            d = AugurStats.convertKey(obj[key], field)
+          }
+
           d = AugurStats.convertDates(d, this.earliest, this.latest)
           return d
         }
@@ -499,13 +730,13 @@ export default {
         // BuildLines iterates over the fields requested and runs onCreateData on each
         let normalized = []
         let aggregates = []
-        let buildLines = (obj, onCreateData) => {
+        let buildLines = (obj, onCreateData, compared) => {
           if (!obj) {
             return
           }
           if (!onCreateData) {
             onCreateData = (obj, key, field, count) => {
-              let d = defaultProcess(obj, key, field, count)
+              let d = defaultProcess(obj, key, field, count, compared)
               normalized.push(d)
             }
           }
@@ -531,17 +762,16 @@ export default {
           } // end for in
         } // end normalize function
 
-        console.log("yasss" + this.repo)
 
         // Build the lines we need
         let legend = []
         let values = []
         let colors = []
         let max = 0
-        if (!this.comparedTo) {
+        if (!this.comparedRepo) {
           buildLines(data[this.repo], (obj, key, field, count) => {
             // Build basic chart using rolling averages
-            let d = defaultProcess(obj, key, field, count)
+            let d = defaultProcess(obj, key, field, count, false)
             let rolling = AugurStats.rollingAverage(d, 'value', this.period)
             if (!this.disableRollingAverage) {
               normalized.push(rolling)
@@ -555,38 +785,41 @@ export default {
               legend.push(field)
               colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count])
             }
-          })
-        } else if (this.compare === 'each' && this.comparedTo) {
+          }, false)
+        } else if (this.compare === 'each' && this.comparedRepo) {
           // Build comparison using z-scores
-          buildLines(data[this.comparedTo], (obj, key, field, count) => {
-            let d = defaultProcess(obj, key, field, count)
-            let rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period)
-            normalized.push(rolling)
-            aggregates.push(d)
-            legend.push(this.comparedTo + ' ' + field)
-            colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
-          })
           buildLines(data[this.repo], (obj, key, field, count) => {
-            let d = defaultProcess(obj, key, field, count)
-            let rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period)
+            let d = defaultProcess(obj, key, field, count, false)
+            let rolling = AugurStats.rollingAverage(d, 'value', this.period)
+
+            //let rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period)
             normalized.push(rolling)
             aggregates.push(d)
             legend.push(this.repo + ' ' + field)
             colors.push(window.AUGUR_CHART_STYLE.dullColors[count])
-          })
-        } else if (this.comparedTo) {
+          }, false)
+          buildLines(data[this.comparedRepo], (obj, key, field, count) => {
+            let d = defaultProcess(obj, key, field, count, true)
+            let rolling = AugurStats.rollingAverage(d, 'comparedValue', this.period)
+            //let rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', this.period)
+            normalized.push(rolling)
+            aggregates.push(d)
+            legend.push(this.comparedRepo + ' ' + field)
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
+          }, true)
+        } else if (this.comparedRepo) {
           // Build chart compared to baseline
           //this.mgConfig.baselines = [{value: 1, label: this.repo}]
-          buildLines(data[this.comparedTo], (obj, key, field, count) => {
+          buildLines(data[this.comparedRepo], (obj, key, field, count) => {
             normalized.push(AugurStats.makeRelative(obj[key], data[this.repo][key], field, {
               earliest: this.earliest,
               latest: this.latest,
               byDate: true,
               period: this.period
             }))
-            legend.push(this.comparedTo + ' ' + field)
+            legend.push(this.comparedRepo + ' ' + field)
             colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
-          })
+          }, true)
         }
 
         if (normalized.length == 0) {
@@ -600,7 +833,7 @@ export default {
               normalized[i].forEach(d => {
                 d.name = legend[i]
                 d.color = colors[i]
-                values.push(d)
+                values.push(d);
               })
             }
           }
@@ -612,8 +845,8 @@ export default {
                 values.push(d)
               })
             }
-            //config.layer.push(line)
           }
+
 
           this.values = values
 

@@ -188,7 +188,7 @@ function Augur() {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      //comparedTo: "jquery/jquery",
+      comparedRepo: null,
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
@@ -226,17 +226,37 @@ function Augur() {
         // }
       },
       addComparedRepo: function addComparedRepo(state, payload) {
-        //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
-        var repo = window.AugurAPI.Repo(payload);
+        // //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
+        // let repo = window.AugurAPI.Repo(payload)
 
+        // if (!window.AugurRepos[repo.toString()]) {
+        //   window.AugurRepos[repo.toString()] = repo
+        // }
+        // //state.comparedRepos.push(repo.toString())
+        // state.comparedTo = repo.toString()
+        // let title = 'Augur'
+        // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
+        // window.history.pushState(null, title, queryString)
+        var repo = window.AugurAPI.Repo(payload);
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo;
+        } else {
+          repo = window.AugurRepos[repo.toString()];
         }
-        //state.comparedRepos.push(repo.toString())
-        state.comparedTo = repo.toString();
-        var title = 'Augur';
-        var queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
-        window.history.pushState(null, title, queryString);
+        state.hasState = true;
+        if (repo.owner && repo.name) {
+          state.comparedRepo = repo.toString();
+          var title = repo.owner + '/' + repo.name + '- Augur';
+          state.tab = 'gmd';
+          var _queryString3 = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
+          window.history.pushState(null, title, _queryString3);
+        }
+        if (payload.gitURL) {
+          var _queryString4 = '?git=' + window.btoa(repo.gitURL);
+          window.history.pushState(null, 'Git Analysis - Augur', _queryString4);
+          state.tab = 'git';
+          state.gitRepo = repo.gitURL;
+        }
       },
       setDates: function setDates(state, payload) {
         if (payload.startDate) {
@@ -275,7 +295,7 @@ function Augur() {
       reset: function reset(state) {
         state = {
           baseRepo: null,
-          comparedRepos: [],
+          comparedRepo: null,
           trailingAverage: 180,
           startDate: new Date('1 January 2005'),
           endDate: new Date(),
@@ -683,6 +703,23 @@ var AugurStats = function () {
       return data;
     }
   }, {
+    key: 'convertComparedKey',
+    value: function convertComparedKey(data, key) {
+      if (Array.isArray(data[0])) {
+        data = data.map(function (datum) {
+          return AugurStats.convertKey(datum, key);
+        });
+      } else {
+        return data.map(function (d) {
+          return {
+            date: d.date,
+            comparedValue: d[key]
+          };
+        });
+      }
+      return data;
+    }
+  }, {
     key: 'averageArray',
     value: function averageArray(ary) {
       return ary.reduce(function (a, e) {
@@ -735,7 +772,7 @@ var AugurStats = function () {
   }, {
     key: 'rollingAverage',
     value: function rollingAverage(data, key, windowSizeInDays) {
-      key = key || 'value';
+      //key = key || 'value'
       var period = windowSizeInDays / 2;
       return AugurStats.dateAggregate(data, period, period, period / 2, function (filteredData, date) {
         var flat = AugurStats.flatten(filteredData, key);
@@ -823,7 +860,7 @@ var AugurStats = function () {
   }, {
     key: 'zscores',
     value: function zscores(data, key) {
-      key = key || 'value';
+      // key = key || 'value'
       var stats = AugurStats.describe(data, key);
       return data.map(function (e) {
         var newObj = {};
@@ -1005,7 +1042,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo)}},[_vm._v(_vm._s(repo))])])})],2)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card')],1):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls')],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter another GitHub URL if you want to compare")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Compared GitHub URL"},on:{"change":_vm.onCompare}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo)}},[_vm._v(_vm._s(repo))])])})],2)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card')],1):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls')],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1029,6 +1066,11 @@ module.exports = {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
       });
+    },
+    onCompare: function onCompare(e) {
+      this.$store.commit('addComparedRepo', {
+        githubURL: e.target.value
+      });
     }
   }
 };
@@ -1036,7 +1078,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])]),_vm._v(" "),_c('div',{staticClass:"col col-4 push-right"})])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"Compared GitHub URL"},on:{"change":_vm.onCompare}})])]),_vm._v(" "),_c('div',{staticClass:"col col-4 push-right"})])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1584,6 +1626,9 @@ exports.default = {
     compare: function compare() {
       return this.$store.state.compare;
     },
+    comparedRepo: function comparedRepo() {
+      return this.$store.state.comparedRepo;
+    },
     rawWeekly: function rawWeekly() {
       return this.$store.state.rawWeekly;
     },
@@ -1596,9 +1641,6 @@ exports.default = {
     spec: function spec() {
       var _this = this;
 
-      function fit_legend(name) {
-        return -(name.length * 12);
-      }
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "title": {
@@ -1617,22 +1659,8 @@ exports.default = {
             "titleFontSize": 0,
             "titlePadding": 10
 
-          },
-          "selection": {
-            "grid": {
-              "type": "interval", "bind": "scales"
-            }
-          },
-          "encoding": {
-            "y": {
-              "scale": {
-                "range": [0, "height"]
-              }
-            }
           }
-
         },
-
         "layer": [{
           "encoding": {
             "x": {
@@ -1698,6 +1726,80 @@ exports.default = {
 
           }
 
+        }, {
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal"
+            },
+            "y": {
+              "field": "value",
+              "type": "quantitative"
+            }
+          }
+        }, {
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal"
+            },
+            "y": {
+              "field": "comparedValue",
+              "type": "quantitative"
+            },
+            "color": {
+              "field": "name",
+              "type": "nominal",
+              "scale": { "scheme": "set1" }
+            }
+
+          },
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          }
+        }, {
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal"
+            },
+            "y": {
+              "field": "comparedValue",
+              "type": "quantitative"
+            }
+          }
+        }, {
+          "mark": {
+            "type": "line",
+
+            "clip": true
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal"
+            },
+            "y": {
+              "field": "comparedValue",
+              "type": "quantitative"
+
+            },
+            "color": {
+              "value": "red"
+            }
+          }
         }],
         "padding": {
           "top": 20,
@@ -1717,6 +1819,7 @@ exports.default = {
             "type": "quantitative"
           },
           "color": {
+            "field": "name",
             "type": "nominal",
             "scale": { "scheme": "set1" }
           }
@@ -1772,6 +1875,116 @@ exports.default = {
         }
 
       }];
+
+      var comparedPoint = {
+        "encoding": {
+          "x": {
+            "field": "date",
+            "type": "temporal",
+            "axis": {
+              "title": null
+            }
+          },
+          "y": {
+            "field": "comparedValue",
+            "type": "quantitative",
+            "axis": {
+              "title": null
+            }
+          },
+          "color": {
+            "field": "name",
+            "type": "nominal",
+            "scale": { "scheme": "set1" }
+          },
+          "opacity": {
+            "condition": {
+              "selection": "tooltip",
+              "value": 1
+            },
+            "value": 0
+          }
+        },
+        "selection": {
+          "comparedTooltip": {
+            "type": "single",
+            "nearest": true,
+            "on": "mouseover",
+            "encodings": ["x"],
+            "empty": "none"
+          }
+        },
+        "mark": {
+          "type": "point"
+
+        }
+
+      };
+
+      var comparedValueText = {
+
+        "transform": [{
+          "filter": {
+            "selection": "comparedTooltip"
+          }
+        }],
+        "mark": {
+          "type": "text",
+          "align": "left",
+          "dx": 5,
+          "dy": -5
+        },
+        "encoding": {
+          "text": {
+            "type": "quantitative",
+            "field": "comparedValue"
+          },
+          "x": {
+            "type": "temporal",
+            "field": "date"
+          },
+          "y": {
+            "field": "comparedValue",
+            "type": "quantitative"
+          },
+          "color": {
+            "value": '#4736FF'
+          }
+        }
+      };
+
+      var comparedDateText = {
+
+        "transform": [{
+          "filter": {
+            "selection": "comparedTooltip"
+          }
+        }],
+        "mark": {
+          "type": "text",
+          "align": "left",
+          "dx": 5,
+          "dy": -15
+        },
+        "encoding": {
+          "text": {
+            "type": "temporal",
+            "field": "date"
+          },
+          "x": {
+            "type": "temporal",
+            "field": "date"
+          },
+          "y": {
+            "field": "comparedValue",
+            "type": "quantitative"
+          },
+          "color": {
+            "value": "black"
+          }
+        }
+      };
+
       var area = {
         "mark": {
           "type": "area",
@@ -1801,26 +2014,17 @@ exports.default = {
       };
       var line = {
         "mark": {
-          "type": "line",
-          "interpolate": "basis",
-          "clip": true
+          "type": "line"
         },
         "encoding": {
           "x": {
             "field": "date",
-            "type": "temporal",
-            "scale": {
-              "domain": "unaggregated"
-            }
+            "type": "temporal"
           },
           "y": {
             "field": "value",
             "type": "quantitative"
 
-          },
-          "color": {
-            "type": "nominal",
-            "scale": { "scheme": "set1" }
           }
         }
       };
@@ -1828,6 +2032,28 @@ exports.default = {
         "transform": [{
           "filter": {
             "selection": "tooltip"
+          }
+        }],
+        "mark": "rule",
+        "encoding": {
+          "x": {
+            "type": "temporal",
+            "field": "date"
+          },
+          "color": {
+            "field": "name",
+            "type": "nominal",
+            "scale": { "scheme": "set1" }
+          },
+          "opacity": {
+            "value": 1
+          }
+        }
+      };
+      var comparedRule = {
+        "transform": [{
+          "filter": {
+            "selection": "comparedTooltip"
           }
         }],
         "mark": "rule",
@@ -1920,9 +2146,12 @@ exports.default = {
           }
         }
       }
-      console.log("compared " + this.comparedTo);
 
-      config.layer.push(line);
+      if (this.comparedRepo) {
+        config.layer.push(comparedPoint);
+        config.layer.push(comparedValueText);
+        config.layer.push(comparedDateText);
+      }
 
       if (this.showTooltip) {
         config.layer.push(valueText);
@@ -1960,8 +2189,8 @@ exports.default = {
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo]);
       }
-      if (this.comparedTo) {
-        repos.push(window.AugurRepos[this.comparedTo]);
+      if (this.comparedRepo) {
+        repos.push(window.AugurRepos[this.comparedRepo]);
       }
 
       window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
@@ -1970,21 +2199,27 @@ exports.default = {
         _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
         _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 
-        var defaultProcess = function defaultProcess(obj, key, field, count) {
-          var d = _AugurStats2.default.convertKey(obj[key], field);
+        var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
+          var d = null;
+          if (compared) {
+            d = _AugurStats2.default.convertComparedKey(obj[key], field);
+          } else {
+            d = _AugurStats2.default.convertKey(obj[key], field);
+          }
+
           d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
           return d;
         };
 
         var normalized = [];
         var aggregates = [];
-        var buildLines = function buildLines(obj, onCreateData) {
+        var buildLines = function buildLines(obj, onCreateData, compared) {
           if (!obj) {
             return;
           }
           if (!onCreateData) {
             onCreateData = function onCreateData(obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count);
+              var d = defaultProcess(obj, key, field, count, compared);
               normalized.push(d);
             };
           }
@@ -2009,16 +2244,13 @@ exports.default = {
             }
           }
         };
-
-        console.log("yasss" + _this.repo);
-
         var legend = [];
         var values = [];
         var colors = [];
         var max = 0;
-        if (!_this.comparedTo) {
+        if (!_this.comparedRepo) {
           buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count);
+            var d = defaultProcess(obj, key, field, count, false);
             var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
             if (!_this.disableRollingAverage) {
               normalized.push(rolling);
@@ -2032,35 +2264,37 @@ exports.default = {
               legend.push(field);
               colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
             }
-          });
-        } else if (_this.compare === 'each' && _this.comparedTo) {
-          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count);
-            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
-            normalized.push(rolling);
-            aggregates.push(d);
-            legend.push(_this.comparedTo + ' ' + field);
-            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          });
+          }, false);
+        } else if (_this.compare === 'each' && _this.comparedRepo) {
           buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count);
-            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
+            var d = defaultProcess(obj, key, field, count, false);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+
             normalized.push(rolling);
             aggregates.push(d);
             legend.push(_this.repo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-          });
-        } else if (_this.comparedTo) {
-          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+          }, false);
+          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count, true);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
+
+            normalized.push(rolling);
+            aggregates.push(d);
+            legend.push(_this.comparedRepo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          }, true);
+        } else if (_this.comparedRepo) {
+          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
             normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
               earliest: _this.earliest,
               latest: _this.latest,
               byDate: true,
               period: _this.period
             }));
-            legend.push(_this.comparedTo + ' ' + field);
+            legend.push(_this.comparedRepo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          });
+          }, true);
         }
 
         if (normalized.length == 0) {

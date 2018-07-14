@@ -8,6 +8,10 @@
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
       </section>
       <section class="unmaterialized">
+        <h3>Enter another GitHub URL if you want to compare</h3>
+        <input type="text" class="search reposearch" placeholder="Compared GitHub URL" @change="onCompare"/>
+      </section>
+      <section class="unmaterialized">
         <h3>Downloaded Git repositories</h3>
         <div v-for="repo in downloadedRepos">
           <a :href="'?git=' + btoa(repo)" class="repolink">{{ repo }}</a>
@@ -27,7 +31,7 @@
           <li :class="{ active: (currentTab == 'experimental'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li>
           <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li>
         </ul>
-      </nav>  
+      </nav>
 
       <div ref="cards">
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
@@ -110,7 +114,7 @@ module.exports = {
     },
     currentTab() {
       return this.$store.state.tab
-    }, 
+    },
   },
   methods: {
     onRepo (e) {
