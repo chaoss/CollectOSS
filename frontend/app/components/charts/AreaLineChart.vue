@@ -78,165 +78,9 @@ export default {
             "titleFontSize": 0,
             "titlePadding": 10
 
-          },
-          // "encoding": {
-            // "color": {
-            //     "field": "name",
-            //     "type": "nominal",
-            //     "scale":{"scheme": "set1"},
-            //   }
-          // }
-        },
-        "layer": [
-          {
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal"
-              },
-              "y": {
-                "field": "value",
-                "type": "quantitative"
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-              }
-            },
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-              "clip": true
-            }
-          },
-          {
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal",
-                "axis": {
-                  "title": null
-                }
-              },
-              "y": {
-                "field": "value",
-                "type": "quantitative",
-                "axis": {
-                  "title": null
-                }
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-              },
-              "opacity": {
-                "condition": {
-                  "selection": "tooltip",
-                  "value": 1
-                },
-                "value": 0
-              }
-            },
-            "selection": {
-              "tooltip": {
-                "type": "single",
-                "nearest": true,
-                "on": "mouseover",
-                "encodings": [
-                  "x"
-                ],
-                "empty": "none"
-              }
-            },
-
-            "mark": {
-              "type": "point"
-
-            }
-
-          },
-          {
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-              "clip": true
-            },
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal"
-              },
-              "y": {
-                "field": "value",
-                "type": "quantitative"
-              }
-            }
-          },
-          //HERE IS COMPARED PARTS
-          {
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal"
-              },
-              "y": {
-                "field": "comparedValue",
-                "type": "quantitative"
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-              },
-
-            },
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-              "clip": true
-            }
-          },
-          {
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-              "clip": true
-            },
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal"
-              },
-              "y": {
-                "field": "comparedValue",
-                "type": "quantitative"
-              }
-            }
-          },
-          {
-            "mark": {
-              "type": "line",
-              //"interpolate": "basis",
-              "clip": true
-            },
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal"
-              },
-              "y": {
-                "field": "comparedValue",
-                "type": "quantitative"
-
-              },
-              "color": {
-                "value": "red"
-              }
-            }
           }
-        ],
+        },
+        "layer": [],
         "padding": {
           "top": 20,
           "left": 0,
@@ -244,61 +88,40 @@ export default {
           "bottom": 55
         }
       }
-      let ogLayers = [
-          {
+
+      //cannot have duplicate selection, so keep track if it has already been added
+      let selectionAdded = false
+
+      let getStandardLine = function (key) {
+        let color = "FF3647"
+        if (key != "value"){
+          color = "4736FF"
+        }
+        return {
             "encoding": {
               "x": {
                 "field": "date",
                 "type": "temporal"
               },
               "y": {
-                "field": "value",
+                "field": key,
                 "type": "quantitative"
               },
               "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
+                "value": color
               }
-
             },
             "mark": {
               "type": "line",
               "interpolate": "basis",
               "clip": true
-            }
-          },
-
-          {
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal",
-                "axis": {
-                  "title": null
-                }
-              },
-              "y": {
-                "field": "value",
-                "type": "quantitative",
-                "axis": {
-                  "title": null
-                }
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-              },
-              "opacity": {
-                "condition": {
-                  "selection": "tooltip",
-                  "value": 1
-                },
-                "value": 0
-              }
             },
-            "selection": {
+
+          }
+      }
+
+      let getStandardPoint = function (key) {
+        let selection = {
               "tooltip": {
                 "type": "single",
                 "nearest": true,
@@ -308,30 +131,12 @@ export default {
                 ],
                 "empty": "none"
               }
-            },
-
-            "mark": {
-              "type": "point"
-
             }
-
-          },
-          // {
-          //   "encoding": {
-          //     "x": {
-          //       "field": "date",
-          //       "type": "temporal"
-          //     },
-          //     "y": {
-          //       "field": "value",
-          //       "type": "quantitative"
-          //     }
-          //   }
-          // }
-        ]
-
-      let comparedPoint =
-          {
+        if (selectionAdded) {
+          selection = null
+        }
+        selectionAdded = true
+        return {
             "encoding": {
               "x": {
                 "field": "date",
@@ -341,7 +146,7 @@ export default {
                 }
               },
               "y": {
-                "field": "comparedValue",
+                "field": key,
                 "type": "quantitative",
                 "axis": {
                   "title": null
@@ -350,7 +155,7 @@ export default {
               "color": {
                 "field": "name",
                 "type": "nominal",
-                "scale":{"scheme": "set1"},
+                "scale": { "range": ['#FF3647', '#4736FF'] }
               },
               "opacity": {
                 "condition": {
@@ -360,197 +165,74 @@ export default {
                 "value": 0
               }
             },
-            "selection": {
-              "comparedTooltip": {
-                "type": "single",
-                "nearest": true,
-                "on": "mouseover",
-                "encodings": [
-                  "x"
-                ],
-                "empty": "none"
-              }
-            },
             "mark": {
               "type": "point"
-
-            }
-
+            },
+            "selection": selection
           }
+      }
 
-        let comparedValueText = {
-
-          "transform": [
-            {
-              "filter": {
-                "selection": "comparedTooltip"
-              }
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -5
-          },
-          "encoding": {
-            "text": {
-              "type": "quantitative",
-              "field": "comparedValue"
-            },
-            "x": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "y": {
-              "field": "comparedValue",
-              "type": "quantitative"
-            },
-            "color": {
-                "value": '#4736FF'
-              }
-          }
-        }
-
-        let comparedDateText = {
-
-          "transform": [
-            {
-              "filter": {
-                "selection": "comparedTooltip"
-              }
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -15
-          },
-          "encoding": {
-            "text": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "x": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "y": {
-              "field": "comparedValue",
-              "type": "quantitative"
-            },
-            "color": {
-                "value": "black"
-              }
-          }
-        }
-
-
-      let area = {
-                "mark": {
-                  "type": "area",
-                  "interpolate": "basis",
-                  "clip": true
+    let getArea = function (key) {
+        return {
+              "mark": {
+                "type": "area",
+                "interpolate": "basis",
+                "clip": true
+              },
+              "encoding": {
+                "x": {
+                  "field": "date",
+                  "type": "temporal",
+                  "timeUnit": "year"
                 },
-                "encoding": {
-                  "x": {
-                    "field": "date",
-                    "type": "temporal",
-                    "timeUnit": "year"
-                  },
-                  "y": {
-                    "aggregate": "ci1",
-                    "field": "value",
-                    "type": "quantitative"
+                "y": {
+                  "aggregate": "ci1",
+                  "field": key,
+                  "type": "quantitative"
 
-                  },
-                  "y2": {
-                    "aggregate": "ci0",
-                    "field": "value",
-                    "type": "quantitative"
-                  },
-                  "color": {"type": "nominal", "scale":{"scheme": "set1"}},
-                  "opacity": {"value": 0.2}
-                }
+                },
+                "y2": {
+                  "aggregate": "ci0",
+                  "field": key,
+                  "type": "quantitative"
+                },
+                "color": {
+                  "value": "green"
+                },
+                "opacity": {"value": 0.2}
               }
-      let line = {
-          "mark": {
-            "type": "line",
-            //"interpolate": "basis",
-            //"clip": true
-          },
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal"
-            },
-            "y": {
-              "field": "value",
-              "type": "quantitative"
-
-            },
-            // "color": {
-            //   "field": "name",
-            //   "type": "nominal",
-            //   "scale":{"scheme": "set1"},
-            // }
-          }
-        }
-      let rule =
-
-        {
-          "transform": [
-          {
-            "filter": {
-              "selection": "tooltip"
             }
           }
-        ],
-        "mark": "rule",
-        "encoding": {
-          "x": {
-                "type": "temporal",
-                "field": "date"
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-              },
-              "opacity": {
-                "value": 1
-              }
-          }
-        }
-      let comparedRule =
 
+    let rule =
+
+      {
+        "transform": [
         {
-          "transform": [
-          {
-            "filter": {
-              "selection": "comparedTooltip"
-            }
-          }
-        ],
-        "mark": "rule",
-        "encoding": {
-          "x": {
-                "type": "temporal",
-                "field": "date"
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale":{"scheme": "set1"},
-              },
-              "opacity": {
-                "value": 0
-              }
+          "filter": {
+            "selection": "tooltip"
           }
         }
+      ],
+      "mark": "rule",
+      "encoding": {
+        "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "color": {
+              "field": "name",
+              "type": "nominal",
+              "scale":{"scheme": "set1"},
+            },
+            "opacity": {
+              "value": 1
+            }
+        }
+      }
 
-        let valueText = {
+      let getValueText = function (key){
+          return {
 
           "transform": [
             {
@@ -568,85 +250,112 @@ export default {
           "encoding": {
             "text": {
               "type": "quantitative",
-              "field": "value"
+              "field": key
             },
             "x": {
               "type": "temporal",
               "field": "date"
             },
             "y": {
-              "field": "value",
+              "field": key,
               "type": "quantitative"
             },
             "color": {
-                "value": '#4736FF'
+                "value": "green"
               }
-          }
-        }
-
-        let dateText = {
-
-          "transform": [
-            {
-              "filter": {
-                "selection": "tooltip"
-              }
-            }
-          ],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -15
-          },
-          "encoding": {
-            "text": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "x": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "y": {
-              "field": "value",
-              "type": "quantitative"
-            },
-            "color": {
-                "value": "black"
-              }
-          }
-        }
-
-      //push the area to general spec
-      if(this.showArea) {config.layer.push(area)}
-      else {
-        //if user doesn't want area mark, then set layers to og
-        for(var x = 0; x < config.layer.length; x++) {
-          if(config.layer[x] == area) {
-            config.layer = ogLayers
           }
         }
       }
 
-      //push parts of layer that use "comparedValue" key if there is a comparedRepo
-      if(this.comparedRepo){
-        config.layer.push(comparedPoint)
-        config.layer.push(comparedValueText)
-        config.layer.push(comparedDateText)
-        //config.layer.push(comparedOtherLine)
+      let getDateText = function (key){
+        return {
+
+          "transform": [
+            {
+              "filter": {
+                "selection": "tooltip"
+              }
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -15
+          },
+          "encoding": {
+            "text": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative"
+            },
+            "color": {
+                "value": "black"
+              }
+          }
+        }
+      }
+
+      //so we can reference the comparedRepo inside of functions ("buildMetric()" specifically)
+      let comparedRepo = this.comparedRepo
+
+      let buildMetric = function () {
+        //build lines and points for initial repo
+        buildLines("value")
+
+        //build lines and points for compared repo
+        if(comparedRepo) buildLines("comparedValue")
+      }
+
+      let buildLines = function (key) {
+        config.layer.push(getStandardLine(key))
+        config.layer.push(getStandardPoint(key))
+      }
+
+      let buildTooltip = function (key) {
+        config.layer.push(getValueText(key))
+        config.layer.push(getDateText(key))
+      }
+
+      buildMetric()
+
+      //push the area to general spec
+      if(this.showArea) {
+        config.layer.push(getArea("value"))
+        if(this.comparedRepo){
+          config.layer.push(getArea("comparedValue"))
+        }
+      }
+      else {
+        //if user doesn't want area mark, then set layers to og
+        for(var x = 0; x < config.layer.length; x++) {
+          if(config.layer[x] == getArea("value")) {
+            buildMetric()
+          }
+        }
       }
 
       //push the tooltip to general spec
       if(this.showTooltip) {
-        config.layer.push(valueText)
-        config.layer.push(dateText)
+        buildTooltip("value")
+        //push parts of layer that use "comparedValue" key if there is a comparedRepo
+        if(this.comparedRepo){
+          buildTooltip("comparedValue")
+          config.layer.push(rule)
+        }
       }
       else {
         //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
         for(var x = 0; x < config.layer.length; x++) {
-          if(config.layer[x] == valueText) {
-            config.layer = ogLayers
+          if(config.layer[x] == getValueText("value")) {
+            buildMetric()
           }
         }
       }
@@ -659,8 +368,6 @@ export default {
             "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
           }
       }
-
-
 
       let hideRaw = !this.rawWeekly
 
@@ -826,7 +533,7 @@ export default {
           this.renderError()
         } else {
           //shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
-          this.legendLabels = legend
+
 
           if(hideRaw) {
             for(var i = 0; i < legend.length; i++){
@@ -847,7 +554,9 @@ export default {
             }
           }
 
-
+          //if(this.comparedRepo){this.legendLabels = legend}
+          //else{for (var label in legend){this.legendLabels.push(label[0])}}
+          this.legendLabels = legend
           this.values = values
 
           //function getMaxY(arr){

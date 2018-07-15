@@ -1661,20 +1661,34 @@ exports.default = {
 
           }
         },
-        "layer": [{
+        "layer": [],
+        "padding": {
+          "top": 20,
+          "left": 0,
+          "right": 30,
+          "bottom": 55
+        }
+      };
+
+      var selectionAdded = false;
+
+      var getStandardLine = function getStandardLine(key) {
+        var color = "FF3647";
+        if (key != "value") {
+          color = "4736FF";
+        }
+        return {
           "encoding": {
             "x": {
               "field": "date",
               "type": "temporal"
             },
             "y": {
-              "field": "value",
+              "field": key,
               "type": "quantitative"
             },
             "color": {
-              "field": "name",
-              "type": "nominal",
-              "scale": { "scheme": "set1" }
+              "value": color
             }
           },
           "mark": {
@@ -1682,7 +1696,25 @@ exports.default = {
             "interpolate": "basis",
             "clip": true
           }
-        }, {
+
+        };
+      };
+
+      var getStandardPoint = function getStandardPoint(key) {
+        var selection = {
+          "tooltip": {
+            "type": "single",
+            "nearest": true,
+            "on": "mouseover",
+            "encodings": ["x"],
+            "empty": "none"
+          }
+        };
+        if (selectionAdded) {
+          selection = null;
+        }
+        selectionAdded = true;
+        return {
           "encoding": {
             "x": {
               "field": "date",
@@ -1692,7 +1724,7 @@ exports.default = {
               }
             },
             "y": {
-              "field": "value",
+              "field": key,
               "type": "quantitative",
               "axis": {
                 "title": null
@@ -1701,7 +1733,7 @@ exports.default = {
             "color": {
               "field": "name",
               "type": "nominal",
-              "scale": { "scheme": "set1" }
+              "scale": { "range": ['#FF3647', '#4736FF'] }
             },
             "opacity": {
               "condition": {
@@ -1711,323 +1743,45 @@ exports.default = {
               "value": 0
             }
           },
-          "selection": {
-            "tooltip": {
-              "type": "single",
-              "nearest": true,
-              "on": "mouseover",
-              "encodings": ["x"],
-              "empty": "none"
-            }
-          },
-
           "mark": {
             "type": "point"
+          },
+          "selection": selection
+        };
+      };
 
-          }
-
-        }, {
+      var getArea = function getArea(key) {
+        return {
           "mark": {
-            "type": "line",
+            "type": "area",
             "interpolate": "basis",
             "clip": true
           },
           "encoding": {
             "x": {
               "field": "date",
-              "type": "temporal"
+              "type": "temporal",
+              "timeUnit": "year"
             },
             "y": {
-              "field": "value",
+              "aggregate": "ci1",
+              "field": key,
               "type": "quantitative"
-            }
-          }
-        }, {
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal"
+
             },
-            "y": {
-              "field": "comparedValue",
+            "y2": {
+              "aggregate": "ci0",
+              "field": key,
               "type": "quantitative"
             },
             "color": {
-              "field": "name",
-              "type": "nominal",
-              "scale": { "scheme": "set1" }
-            }
-
-          },
-          "mark": {
-            "type": "line",
-            "interpolate": "basis",
-            "clip": true
-          }
-        }, {
-          "mark": {
-            "type": "line",
-            "interpolate": "basis",
-            "clip": true
-          },
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal"
+              "value": "green"
             },
-            "y": {
-              "field": "comparedValue",
-              "type": "quantitative"
-            }
+            "opacity": { "value": 0.2 }
           }
-        }, {
-          "mark": {
-            "type": "line",
-
-            "clip": true
-          },
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal"
-            },
-            "y": {
-              "field": "comparedValue",
-              "type": "quantitative"
-
-            },
-            "color": {
-              "value": "red"
-            }
-          }
-        }],
-        "padding": {
-          "top": 20,
-          "left": 0,
-          "right": 30,
-          "bottom": 55
-        }
-      };
-      var ogLayers = [{
-        "encoding": {
-          "x": {
-            "field": "date",
-            "type": "temporal"
-          },
-          "y": {
-            "field": "value",
-            "type": "quantitative"
-          },
-          "color": {
-            "field": "name",
-            "type": "nominal",
-            "scale": { "scheme": "set1" }
-          }
-
-        },
-        "mark": {
-          "type": "line",
-          "interpolate": "basis",
-          "clip": true
-        }
-      }, {
-        "encoding": {
-          "x": {
-            "field": "date",
-            "type": "temporal",
-            "axis": {
-              "title": null
-            }
-          },
-          "y": {
-            "field": "value",
-            "type": "quantitative",
-            "axis": {
-              "title": null
-            }
-          },
-          "color": {
-            "field": "name",
-            "type": "nominal",
-            "scale": { "scheme": "set1" }
-          },
-          "opacity": {
-            "condition": {
-              "selection": "tooltip",
-              "value": 1
-            },
-            "value": 0
-          }
-        },
-        "selection": {
-          "tooltip": {
-            "type": "single",
-            "nearest": true,
-            "on": "mouseover",
-            "encodings": ["x"],
-            "empty": "none"
-          }
-        },
-
-        "mark": {
-          "type": "point"
-
-        }
-
-      }];
-
-      var comparedPoint = {
-        "encoding": {
-          "x": {
-            "field": "date",
-            "type": "temporal",
-            "axis": {
-              "title": null
-            }
-          },
-          "y": {
-            "field": "comparedValue",
-            "type": "quantitative",
-            "axis": {
-              "title": null
-            }
-          },
-          "color": {
-            "field": "name",
-            "type": "nominal",
-            "scale": { "scheme": "set1" }
-          },
-          "opacity": {
-            "condition": {
-              "selection": "tooltip",
-              "value": 1
-            },
-            "value": 0
-          }
-        },
-        "selection": {
-          "comparedTooltip": {
-            "type": "single",
-            "nearest": true,
-            "on": "mouseover",
-            "encodings": ["x"],
-            "empty": "none"
-          }
-        },
-        "mark": {
-          "type": "point"
-
-        }
-
+        };
       };
 
-      var comparedValueText = {
-
-        "transform": [{
-          "filter": {
-            "selection": "comparedTooltip"
-          }
-        }],
-        "mark": {
-          "type": "text",
-          "align": "left",
-          "dx": 5,
-          "dy": -5
-        },
-        "encoding": {
-          "text": {
-            "type": "quantitative",
-            "field": "comparedValue"
-          },
-          "x": {
-            "type": "temporal",
-            "field": "date"
-          },
-          "y": {
-            "field": "comparedValue",
-            "type": "quantitative"
-          },
-          "color": {
-            "value": '#4736FF'
-          }
-        }
-      };
-
-      var comparedDateText = {
-
-        "transform": [{
-          "filter": {
-            "selection": "comparedTooltip"
-          }
-        }],
-        "mark": {
-          "type": "text",
-          "align": "left",
-          "dx": 5,
-          "dy": -15
-        },
-        "encoding": {
-          "text": {
-            "type": "temporal",
-            "field": "date"
-          },
-          "x": {
-            "type": "temporal",
-            "field": "date"
-          },
-          "y": {
-            "field": "comparedValue",
-            "type": "quantitative"
-          },
-          "color": {
-            "value": "black"
-          }
-        }
-      };
-
-      var area = {
-        "mark": {
-          "type": "area",
-          "interpolate": "basis",
-          "clip": true
-        },
-        "encoding": {
-          "x": {
-            "field": "date",
-            "type": "temporal",
-            "timeUnit": "year"
-          },
-          "y": {
-            "aggregate": "ci1",
-            "field": "value",
-            "type": "quantitative"
-
-          },
-          "y2": {
-            "aggregate": "ci0",
-            "field": "value",
-            "type": "quantitative"
-          },
-          "color": { "type": "nominal", "scale": { "scheme": "set1" } },
-          "opacity": { "value": 0.2 }
-        }
-      };
-      var line = {
-        "mark": {
-          "type": "line"
-        },
-        "encoding": {
-          "x": {
-            "field": "date",
-            "type": "temporal"
-          },
-          "y": {
-            "field": "value",
-            "type": "quantitative"
-
-          }
-        }
-      };
       var rule = {
         "transform": [{
           "filter": {
@@ -2050,116 +1804,119 @@ exports.default = {
           }
         }
       };
-      var comparedRule = {
-        "transform": [{
-          "filter": {
-            "selection": "comparedTooltip"
-          }
-        }],
-        "mark": "rule",
-        "encoding": {
-          "x": {
-            "type": "temporal",
-            "field": "date"
+
+      var getValueText = function getValueText(key) {
+        return {
+
+          "transform": [{
+            "filter": {
+              "selection": "tooltip"
+            }
+          }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -5
           },
-          "color": {
-            "field": "name",
-            "type": "nominal",
-            "scale": { "scheme": "set1" }
-          },
-          "opacity": {
-            "value": 0
+          "encoding": {
+            "text": {
+              "type": "quantitative",
+              "field": key
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative"
+            },
+            "color": {
+              "value": "green"
+            }
           }
-        }
+        };
       };
 
-      var valueText = {
+      var getDateText = function getDateText(key) {
+        return {
 
-        "transform": [{
-          "filter": {
-            "selection": "tooltip"
+          "transform": [{
+            "filter": {
+              "selection": "tooltip"
+            }
+          }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -15
+          },
+          "encoding": {
+            "text": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative"
+            },
+            "color": {
+              "value": "black"
+            }
           }
-        }],
-        "mark": {
-          "type": "text",
-          "align": "left",
-          "dx": 5,
-          "dy": -5
-        },
-        "encoding": {
-          "text": {
-            "type": "quantitative",
-            "field": "value"
-          },
-          "x": {
-            "type": "temporal",
-            "field": "date"
-          },
-          "y": {
-            "field": "value",
-            "type": "quantitative"
-          },
-          "color": {
-            "value": '#4736FF'
-          }
-        }
+        };
       };
 
-      var dateText = {
+      var comparedRepo = this.comparedRepo;
 
-        "transform": [{
-          "filter": {
-            "selection": "tooltip"
-          }
-        }],
-        "mark": {
-          "type": "text",
-          "align": "left",
-          "dx": 5,
-          "dy": -15
-        },
-        "encoding": {
-          "text": {
-            "type": "temporal",
-            "field": "date"
-          },
-          "x": {
-            "type": "temporal",
-            "field": "date"
-          },
-          "y": {
-            "field": "value",
-            "type": "quantitative"
-          },
-          "color": {
-            "value": "black"
-          }
-        }
+      var buildMetric = function buildMetric() {
+        buildLines("value");
+
+        if (comparedRepo) buildLines("comparedValue");
       };
+
+      var buildLines = function buildLines(key) {
+        config.layer.push(getStandardLine(key));
+        config.layer.push(getStandardPoint(key));
+      };
+
+      var buildTooltip = function buildTooltip(key) {
+        config.layer.push(getValueText(key));
+        config.layer.push(getDateText(key));
+      };
+
+      buildMetric();
 
       if (this.showArea) {
-        config.layer.push(area);
+        config.layer.push(getArea("value"));
+        if (this.comparedRepo) {
+          config.layer.push(getArea("comparedValue"));
+        }
       } else {
         for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == area) {
-            config.layer = ogLayers;
+          if (config.layer[x] == getArea("value")) {
+            buildMetric();
           }
         }
-      }
-
-      if (this.comparedRepo) {
-        config.layer.push(comparedPoint);
-        config.layer.push(comparedValueText);
-        config.layer.push(comparedDateText);
       }
 
       if (this.showTooltip) {
-        config.layer.push(valueText);
-        config.layer.push(dateText);
+        buildTooltip("value");
+
+        if (this.comparedRepo) {
+          buildTooltip("comparedValue");
+          config.layer.push(rule);
+        }
       } else {
         for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == valueText) {
-            config.layer = ogLayers;
+          if (config.layer[x] == getValueText("value")) {
+            buildMetric();
           }
         }
       }
@@ -2300,7 +2057,6 @@ exports.default = {
         if (normalized.length == 0) {
           _this.renderError();
         } else {
-          _this.legendLabels = legend;
 
           if (hideRaw) {
             for (var i = 0; i < legend.length; i++) {
@@ -2320,6 +2076,7 @@ exports.default = {
             }
           }
 
+          _this.legendLabels = legend;
           _this.values = values;
 
           config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
