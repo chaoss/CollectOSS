@@ -112,10 +112,6 @@ def test_project_age(ghtorrent):
 def test_fakes(ghtorrent):
     assert ghtorrent.fakes('rails', 'rails').isin(["2008-09-24T00:00:00.000Z"]).any
 
-def test_ghtorrent_range(ghtorrent):
-    assert ghtorrent.ghtorrent_range().isin(["0000-00-00"]).any
-
-
 
 
 
