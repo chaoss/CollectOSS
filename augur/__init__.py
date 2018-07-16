@@ -7,6 +7,9 @@ from .util import logger
 # Classes
 from .application import Application
 
+# Plugins
+from .augurplugin import AugurPlugin
+
 def data_sources():
     from .downloads import Downloads
     from .ghtorrent import GHTorrent
