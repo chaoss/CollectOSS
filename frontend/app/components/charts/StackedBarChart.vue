@@ -113,17 +113,17 @@ export default {
           // Build basic chart
           normalized.push(defaultProcess(obj, key, field, count))
         })
-        console.log(normalized, normalized.length)
+
         if (normalized.length == 0) {
           this.renderError()
         } else {
             for(var i = 0; i < normalized.length; i++){
-              console.log("about to do it")
               normalized[i].forEach(d => {
-                d.name = legend[i]
-                d.color = colors[i]
+                //d.name = legend[i]
+                //d.color = colors[i]
                 values.push(d);
               })
+              console.log("VAL" + values)
             }
           }
 

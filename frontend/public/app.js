@@ -1965,7 +1965,6 @@ exports.default = {
         _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 
         var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
-          console.log(obj, key, field, obj[key]);
           var d = null;
           if (compared) {
             d = _AugurStats2.default.convertComparedKey(obj[key], field);
@@ -2015,7 +2014,6 @@ exports.default = {
         var colors = [];
         if (!_this.comparedRepo) {
           buildLines(data[_this.repo], function (obj, key, field, count) {
-            console.log(data[_this.repo], obj, key, field, count);
             var d = defaultProcess(obj, key, field, count, false);
             var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
             if (!_this.disableRollingAverage) {
@@ -3021,17 +3019,15 @@ exports.default = {
         buildLines(data[_this.repo], function (obj, key, field, count) {
           normalized.push(defaultProcess(obj, key, field, count));
         });
-        console.log(normalized, normalized.length);
+
         if (normalized.length == 0) {
           _this.renderError();
         } else {
           for (var i = 0; i < normalized.length; i++) {
-            console.log("about to do it");
             normalized[i].forEach(function (d) {
-              d.name = legend[i];
-              d.color = colors[i];
               values.push(d);
             });
+            console.log("VAL" + values);
           }
         }
 

@@ -419,7 +419,6 @@ export default {
         let defaultProcess = (obj, key, field, count, compared) => {
           // let a = null
           //let b = AugurStats.convertKey(obj[key], field)
-          console.log(obj, key, field, obj[key])
           let d = null
           if(compared) {
             d = AugurStats.convertComparedKey(obj[key], field)
@@ -478,7 +477,6 @@ export default {
         if (!this.comparedRepo) {
           buildLines(data[this.repo], (obj, key, field, count) => {
             // Build basic chart using rolling averages
-            console.log(data[this.repo], obj, key, field, count)
             let d = defaultProcess(obj, key, field, count, false)
             let rolling = AugurStats.rollingAverage(d, 'value', this.period)
             if (!this.disableRollingAverage) {
