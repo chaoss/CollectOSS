@@ -155,7 +155,7 @@ export default {
               "color": {
                 "field": "name",
                 "type": "nominal",
-                "scale": { "range": ['#FF3647', '#4736FF'] }
+                "scale": { "range": ['#4736FF','#FF3647' ] }
               },
               "opacity": {
                 "condition": {
@@ -223,7 +223,7 @@ export default {
             "color": {
               "field": "name",
               "type": "nominal",
-              "scale":{"scheme": "set1"},
+              "scale": { "range": [ '#4736FF','#FF3647'] }
             },
             "opacity": {
               "value": 1
@@ -415,10 +415,11 @@ export default {
         this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
 
 
-        // We usually want to limit dates and convert the key to being metrics-graphics friendly
+        // We usually want to limit dates and convert the key to being vega-lite friendly
         let defaultProcess = (obj, key, field, count, compared) => {
           // let a = null
           //let b = AugurStats.convertKey(obj[key], field)
+          console.log(obj, key, field, obj[key])
           let d = null
           if(compared) {
             d = AugurStats.convertComparedKey(obj[key], field)
@@ -443,12 +444,12 @@ export default {
           }
           if (!onCreateData) {
             onCreateData = (obj, key, field, count) => {
-              let d = defaultProcess(obj, key, field, count, compared)
               normalized.push(d)
             }
           }
           let count = 0
           for (var key in obj) {
+
             if (obj.hasOwnProperty(key)) {
               if (fields[key]) {
                 fields[key].forEach((field) => {
@@ -474,10 +475,10 @@ export default {
         let legend = []
         let values = []
         let colors = []
-        let max = 0
         if (!this.comparedRepo) {
           buildLines(data[this.repo], (obj, key, field, count) => {
             // Build basic chart using rolling averages
+            console.log(data[this.repo], obj, key, field, count)
             let d = defaultProcess(obj, key, field, count, false)
             let rolling = AugurStats.rollingAverage(d, 'value', this.period)
             if (!this.disableRollingAverage) {

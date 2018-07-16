@@ -297,7 +297,7 @@ class GHTorrent(object):
         AND pull_request_history.pull_request_id = issues.issue_id
         AND issues.pull_request = 1
         AND issues.repo_id = :repoid
-        GROUP BY (issues.created_at) #YEARWEEK to get (iterations (all PRs in repo) / week) instead of (iterations / PR)?
+        GROUP BY YEARWEEK(issues.created_at) #YEARWEEK to get (iterations (all PRs in repo) / week) instead of (iterations / PR)?
         """)
 
         df = pd.read_sql(codeReviewIterationSQL, self.db, params={"repoid": str(repoid)})

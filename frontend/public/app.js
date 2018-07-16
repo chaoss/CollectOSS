@@ -692,6 +692,14 @@ var AugurStats = function () {
         data = data.map(function (datum) {
           return AugurStats.convertKey(datum, key);
         });
+      } else if (key.length > 1) {
+        return data.map(function (d) {
+          return {
+            date: d.date,
+            value: d[key[0]],
+            field: d[key[1]]
+          };
+        });
       } else {
         return data.map(function (d) {
           return {
@@ -1269,9 +1277,9 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
-var _LineChart = require('./charts/LineChart');
+var _AreaLineChart = require('./charts/AreaLineChart');
 
-var _LineChart2 = _interopRequireDefault(_LineChart);
+var _AreaLineChart2 = _interopRequireDefault(_AreaLineChart);
 
 var _BubbleChart = require('./charts/BubbleChart');
 
@@ -1285,7 +1293,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 module.exports = {
   components: {
-    LineChart: _LineChart2.default,
+    AreaLineChart: _AreaLineChart2.default,
     BubbleChart: _BubbleChart2.default,
     StackedBarChart: _StackedBarChart2.default
   }
@@ -1294,7 +1302,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity","disableRollingAverage":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1303,7 +1311,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-b05646f6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-b05646f6", __vue__options__)
+    hotAPI.rerender("data-v-b05646f6", __vue__options__)
   }
 })()}
 });
@@ -1380,7 +1388,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"maintainerResponseTime","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributior Overview","size":"total","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/contributors.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.comparedRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributior Overview","size":"total","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/contributors.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1389,7 +1397,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.reload("data-v-429b02f1", __vue__options__)
+    hotAPI.rerender("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -1733,7 +1741,7 @@ exports.default = {
             "color": {
               "field": "name",
               "type": "nominal",
-              "scale": { "range": ['#FF3647', '#4736FF'] }
+              "scale": { "range": ['#4736FF', '#FF3647'] }
             },
             "opacity": {
               "condition": {
@@ -1797,7 +1805,7 @@ exports.default = {
           "color": {
             "field": "name",
             "type": "nominal",
-            "scale": { "scheme": "set1" }
+            "scale": { "range": ['#4736FF', '#FF3647'] }
           },
           "opacity": {
             "value": 1
@@ -1957,6 +1965,7 @@ exports.default = {
         _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 
         var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
+          console.log(obj, key, field, obj[key]);
           var d = null;
           if (compared) {
             d = _AugurStats2.default.convertComparedKey(obj[key], field);
@@ -1976,12 +1985,12 @@ exports.default = {
           }
           if (!onCreateData) {
             onCreateData = function onCreateData(obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count, compared);
               normalized.push(d);
             };
           }
           var count = 0;
           for (var key in obj) {
+
             if (obj.hasOwnProperty(key)) {
               if (fields[key]) {
                 fields[key].forEach(function (field) {
@@ -2004,9 +2013,9 @@ exports.default = {
         var legend = [];
         var values = [];
         var colors = [];
-        var max = 0;
         if (!_this.comparedRepo) {
           buildLines(data[_this.repo], function (obj, key, field, count) {
+            console.log(data[_this.repo], obj, key, field, count);
             var d = defaultProcess(obj, key, field, count, false);
             var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
             if (!_this.disableRollingAverage) {
@@ -2927,7 +2936,9 @@ exports.default = {
       return this.$store.state.baseRepo;
     },
     spec: function spec() {
-      return {
+      var _this = this;
+
+      var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "data": { "values": [] },
         "title": this.title,
@@ -2937,27 +2948,99 @@ exports.default = {
         "mark": "bar",
         "encoding": {
           "y": { "aggregate": "sum",
-            "field": "count",
+            "field": "value",
             "type": "quantitative" },
           "x": { "field": "date",
             "type": "temporal" },
-          "color": { "field": "action",
+          "color": { "field": "field",
             "type": "nominal" }
         }
       };
-    },
-    chart: function chart() {
-      var _this = this;
 
-      $(this.$el).find('.showme').addClass('invis');
-      $(this.$el).find('.stackedbarchart').addClass('loader');
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
+
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      var repos = [];
       if (this.repo) {
-        window.AugurRepos[this.repo][this.source]().then(function (data) {
-          $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-          $(_this.$el).find('.stackedbarchart').removeClass('loader');
-          _this.values = data;
-        });
+        repos.push(window.AugurRepos[this.repo]);
       }
+
+      window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+        var defaultProcess = function defaultProcess(obj, key, field, count) {
+          var d = _AugurStats2.default.convertKey(obj[key], field);
+          return _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+        };
+
+        var normalized = [];
+        var buildLines = function buildLines(obj, onCreateData) {
+          if (!obj) {
+            return;
+          }
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count);
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach(function (field) {
+                  console.log(field);
+                  onCreateData(obj, key, field, count);
+                  console.log(field);
+                  count++;
+                });
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  var field = Object.keys(obj[key][0]).splice(1);
+                  onCreateData(obj, key, field, count);
+                  count++;
+                } else {
+                  _this.renderError();
+                  return;
+                }
+              }
+            }
+          }
+        };
+
+        var values = [];
+
+        buildLines(data[_this.repo], function (obj, key, field, count) {
+          normalized.push(defaultProcess(obj, key, field, count));
+        });
+        console.log(normalized, normalized.length);
+        if (normalized.length == 0) {
+          _this.renderError();
+        } else {
+          for (var i = 0; i < normalized.length; i++) {
+            console.log("about to do it");
+            normalized[i].forEach(function (d) {
+              d.name = legend[i];
+              d.color = colors[i];
+              values.push(d);
+            });
+          }
+        }
+
+        $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+        $(_this.$el).find('.stackedbarchart').removeClass('loader');
+        _this.values = values;
+      });
+
+      return config;
     }
   }
 };

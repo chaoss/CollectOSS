@@ -22,7 +22,16 @@ export default class AugurStats {
       data = data.map((datum) => {
         return AugurStats.convertKey(datum, key)
       })
-    } else {
+    } else if (key.length > 1){
+      return data.map((d) => {
+        return {
+          date: d.date,
+          value: d[key[0]],
+          field: d[key[1]]
+        }
+      })
+    }
+    else{
       return data.map((d) => {
         return {
           date: d.date,

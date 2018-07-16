@@ -2,6 +2,7 @@
   <section>
     <h1>Growth, Maturity, and Decline</h1>
     <h2>{{ $store.state.baseRepo }}</h2>
+    <h2>{{ $store.state.comparedRepo }}</h2>
     <div class="row">
 
       <div class="col col-6">
@@ -60,7 +61,7 @@
         </area-line-chart>
       </div>
 
-      <div class="col col-6">
+      <!-- <div class="col col-6">
         <area-line-chart source="codeReviewIteration"
                       title="Number of Code Review Iterations"
                       size="total"
@@ -94,7 +95,7 @@
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md"
                       cite-text="New Contributing Organizations">
         </area-line-chart>
-      </div>
+      </div> -->
 
       <!-- <div class="col col-6">
         <area-line-chart source="codeReviews"

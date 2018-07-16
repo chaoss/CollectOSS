@@ -5,62 +5,61 @@
       <div class="row">
 
       <div class="col col-6">
-        <line-chart source="commitComments"
-                    title="Commit Comments / Week " 
+        <area-line-chart source="commitComments"
+                    title="Commit Comments / Week "
                     cite-url=""
-                    cite-text="Commit Comments"> 
-        </line-chart>
+                    cite-text="Commit Comments">
+        </area-line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="totalCommitters"
-                    title="Committers" 
+        <area-line-chart source="totalCommitters"
+                    title="Committers"
                     cite-url=""
-                    cite-text="Total Commiters"> 
-        </line-chart>
+                    cite-text="Total Commiters">
+        </area-line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="pullsAcceptanceRate"
-                    title="Pull Acceptance Rate" 
+        <area-line-chart source="pullsAcceptanceRate"
+                    title="Pull Acceptance Rate"
                     cite-url=""
-                    cite-text="Total Commiters"> 
-        </line-chart>
+                    cite-text="Total Commiters">
+        </area-line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="communityEngagement:issues_open"
-                    title="Community Engagement: Open Issues" 
+        <area-line-chart source="communityEngagement:issues_open"
+                    title="Community Engagement: Open Issues"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md"
                     cite-text="Open Issues"
                     disable-rolling-average=1>
-        </line-chart>
+        </area-line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="communityEngagement:issues_closed_total"
-                    title="Community Engagement: Closed Issues" 
+        <area-line-chart source="communityEngagement:issues_closed_total"
+                    title="Community Engagement: Closed Issues"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md"
                     cite-text="Closed Issues"
                     disable-rolling-average=1>
-        </line-chart>
+        </area-line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="fakes"
-                    title="Fakes" 
+        <area-line-chart source="fakes"
+                    title="Fakes"
                     cite-url=""
                     cite-text="Fakes"
                     disable-rolling-average=1>
-        </line-chart>
+        </area-line-chart>
       </div>
 
       <div class="col col-12">
         <stacked-bar-chart source="issueActivity"
                     title="Issue Activity"
                     cite-url=""
-                    cite-text="Issue Activity"
-                    disableRollingAverage=1>
+                    cite-text="Issue Activity">
         </stacked-bar-chart>
       </div>
 
@@ -71,22 +70,22 @@
                       cite-url=""
                       cite-text="Contributors">
         </bubble-chart>
-      </div> 
-      
+      </div>
+
     </div>
-    
+
   </section>
 </template>
 
 <script>
 
-import LineChart from './charts/LineChart'
+import AreaLineChart from './charts/AreaLineChart'
 import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
 
 module.exports = {
   components: {
-    LineChart,
+    AreaLineChart,
     BubbleChart,
     StackedBarChart
   }
