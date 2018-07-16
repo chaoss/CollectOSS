@@ -1,7 +1,7 @@
 <template>
   <section>
     <h1>Experimental</h1>
-    <h2>{{ $store.state.baseRepo }}</h2>
+    <h2>{{ $store.state.baseRepo }}   {{ $store.state.comparedRepo }}</h2>
       <div class="row">
 
       <div class="col col-6">
