@@ -2633,6 +2633,11 @@ section.unmaterialized {
 .fixed {
   position: relative;
 }
+section.status {
+  box-shadow: 0 0 0 0;
+  background: #f0f0f0;
+  padding: 24px 24px 48px 24px;
+}
 @media (min-width: 1230px) {
   #cards {
     width: 100%;

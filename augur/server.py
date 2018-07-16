@@ -461,6 +461,29 @@ class Server(object):
         self.addTimeseries(ghtorrent.issue_comments, 'issue/comments')
 
         """
+        @api {get} /:owner/:repo/timeseries/pulls/made-closed Pull Requests Made-Closed 
+        @apiName pull-requests-made-closed
+        @apiGroup Activity
+        @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-made-closed.md">CHAOSS Metric Definition</a>
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "date": "2010-09-11T00:00:00.000Z",
+                                    "rate": 0.3333
+                                },
+                                {
+                                    "date": "2010-09-13T00:00:00.000Z",
+                                    "rate": 0.3333
+                                }
+                            ]
+        """
+        self.addTimeseries(ghtorrent.pull_requests_made_closed, 'pulls/made_closed')
+
+        """
         @api {get} /:owner/:repo/watchers Watchers
         @apiName watchers
         @apiGroup Activity
@@ -481,7 +504,7 @@ class Server(object):
                                 }
                             ]
         """
-        self.addMetric(ghtorrent.watchers, 'watchers')
+        self.addTimeseries(ghtorrent.watchers, 'watchers')
 
         #####################################
         ###         EXPERIMENTAL          ###
@@ -1065,7 +1088,7 @@ class Server(object):
             return Response(response=drs,
                             status=200,
                             mimetype="application/json")
-        self.updateMetricMetadata(git.downloaded_repos, '/{}/git/repos'.format(AUGUR_API_VERSION))
+        self.updateMetricMetadata(function=git.downloaded_repos, endpoint='/{}/git/repos'.format(AUGUR_API_VERSION), metric_type='git')
 
         """
         @api {get} /:owner/:repo/timeseries/fakes Fakes
@@ -1239,7 +1262,16 @@ class Server(object):
             return Response(response=ghtorrent_range,
                             status=200,
                             mimetype="application/json")
-        self.updateMetricMetadata(ghtorrent.ghtorrent_range, '/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
+        # self.updateMetricMetadata(ghtorrent.ghtorrent_range, '/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
+
+        @app.route('/{}/metrics/status'.format(AUGUR_API_VERSION))
+        def metric_status():
+            return open('docs/metrics/output/index.html').read()
+            # return 
+            # status_file = open('docs/metrics/output/status.json', 'r').read()
+            # response = json.loads(status_file)
+            # response = self.transform(response)
+            # return Response(response=response, mimetype="application/json")
 
         #######################
         #   Batch Requests    #
@@ -1405,13 +1437,13 @@ class Server(object):
         real_func = getattr(function.__self__.__class__, function.__name__)
         tag = re.sub("_", "-", function.__name__).lower()
         frontend_status = ''
-        frontend_status = determineFrontendStatus(endpoint)
         metric_name = re.sub('_', ' ', function.__name__).title()
+        annotate(metric_name=metric_name, endpoint=endpoint, source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
+        self.writeMetadata()
 
-        annotate(metric_name=metric_name, endpoint=endpoint, source=function.__self__.__class__.__name__, tag=tag, frontend_status=frontend_status, **kwargs)(real_func)
-
-    def getMetrics(self):
-        return metrics
+    def writeMetadata(self):
+        metadata = open('docs/metrics/output/metadata.json', 'w')
+        metadata.write(json.dumps(metrics, indent=4))
 
 def run():
     server = Server()

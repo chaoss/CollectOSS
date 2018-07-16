@@ -59,13 +59,14 @@ class frontendExtractor(object):
         self.endpoint = endpoint
 
 
-def extractEndpointsAndAttributes(extractor):
+def extractEndpointsAndAttributes(extractor, type):
         if fileExists('../../frontend/app/AugurAPI.js'):
             extractor.api = open("../../frontend/app/AugurAPI.js", 'r')
             extractor.frontend_card_files = ['../../frontend/app/components/DiversityInclusionCard.vue', 
                        '../../frontend/app/components/GrowthMaturityDeclineCard.vue', 
                        '../../frontend/app/components/RiskCard.vue', 
                        '../../frontend/app/components/ValueCard.vue',
+                       '../../frontend/app/components/BaseRepoActivityCard.vue',
                        '../../frontend/app/components/ExperimentalCard.vue',
                        '../../frontend/app/components/GitCard.vue']
 
@@ -75,19 +76,33 @@ def extractEndpointsAndAttributes(extractor):
                        'frontend/app/components/GrowthMaturityDeclineCard.vue', 
                        'frontend/app/components/RiskCard.vue', 
                        'frontend/app/components/ValueCard.vue',
+                       'frontend/app/components/BaseRepoActivityCard.vue',
                        'frontend/app/components/ExperimentalCard.vue',
                        'frontend/app/components/GitCard.vue']
 
-        extractor.endpoint_attributes = re.findall(r'(?:(?:Timeseries|Endpoint)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
+        if type is 'timeseries':
+            extractor.endpoint_attributes = re.findall(r'(?:(Timeseries)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
+        if type is 'metric':
+            extractor.endpoint_attributes = re.findall(r'(?:(Endpoint)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
+        if type is 'git':
+            extractor.endpoint_attributes = re.findall(r'(?:(GitEndpoint)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
         return extractor
+
 
 def determineFrontendStatus(endpoint):
     fe = frontendExtractor(endpoint)
 
-    extractor = extractEndpointsAndAttributes(fe)
+    if '/api/unstable/<owner>/<repo>/timeseries/' in endpoint:
+        extractor = extractEndpointsAndAttributes(fe, 'timeseries')
+        attribute = [attribute[1] for attribute in extractor.endpoint_attributes if '/api/unstable/<owner>/<repo>/timeseries/' + attribute[2] == endpoint]
 
-    attribute = [attribute[0] for attribute in extractor.endpoint_attributes if attribute[1] in endpoint]
-    # print(extractor.frontend_card_files)
+    elif '/api/unstable/<owner>/<repo>/' in endpoint:
+        extractor = extractEndpointsAndAttributes(fe, 'metric')
+        attribute = [attribute[1] for attribute in extractor.endpoint_attributes if '/api/unstable/<owner>/<repo>/' + attribute[2] == endpoint]
+
+    elif '/api/unstable/git/' in endpoint:
+        extractor = extractEndpointsAndAttributes(fe, 'git')
+        attribute = [attribute[1] for attribute in extractor.endpoint_attributes if '/api/unstable/git/' + attribute[2] == endpoint]
 
     status = 'unimplemented'
     for card in extractor.frontend_card_files:
@@ -95,5 +110,7 @@ def determineFrontendStatus(endpoint):
         if len(attribute) != 0 and attribute[0] in card:
             status = 'implemented'
             break
+
+    print((attribute, status))
 
     return status

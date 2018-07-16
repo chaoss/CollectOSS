@@ -2,31 +2,29 @@ import os
 import re
 import json
 import glob
-import webbrowser
-import augur
-from flask import Flask, request, Response
-from augur.server import metrics as implemented_metric_metadata
-from augur.server import Server
+from bs4 import BeautifulSoup
+import augur.server
+import augur.util as util
 
 import pprint
 pp = pprint.PrettyPrinter()
 
 class Metric(object):
     def __init__(self):
-        self.tag = ''
-        self.name = ''
-        self.group = ''
+        self.tag = 'n/a'
+        self.name = 'n/a'
+        self.group = 'n/a'
         self.backend_status = 'undefined'
         self.frontend_status = 'unimplemented'
-        self.endpoint = ''
-        self.escaped_endpoint = ''
-        self.source = ''
-        self.metric_type = ''
+        self.endpoint = 'n/a'
+        self.escaped_endpoint = 'n/a'
+        self.source = 'n/a'
+        self.metric_type = 'n/a'
         self.url = '/'
         self.is_defined = False
 
     def setName(self, raw_name):
-        self.name = re.sub(r'-$|\*', '', re.sub('-', ' ', raw_name).title())
+        self.name = re.sub('/', '-', re.sub(r'-$|\*', '', re.sub('-', ' ', raw_name).title()))
 
     def setTag(self):
         self.tag = re.sub(r'-$|\*', '', re.sub(' ', '-', self.name).lower())
@@ -54,8 +52,6 @@ def createDefinedMetricTags():
         defined_metric_tags.append(getFileID(filename))
 
     return defined_metric_tags
-
-defined_metric_tags = createDefinedMetricTags()
 
 def extractGroupedMetricNamesFromFile(filename):
     metric_file = open(filename, 'r')
@@ -116,17 +112,20 @@ def createImplementedMetric(metadata):
     metric.setTag()
     metric.backend_status = 'implemented'
     metric.group = metadata['group']
-    metric.frontend_status = metadata['frontend_status']
+    # metric.frontend_status = util.determineFrontendStatus(metric.endpoint)
 
     if 'source' in metadata:
         metric.source = metadata['source']
 
     if 'endpoint' in metadata:
         metric.endpoint = metadata['endpoint']
+        metric.frontend_status = util.determineFrontendStatus(metric.endpoint)
         metric.createHTMLSafeEndpoint()
 
     if 'metric_type' in metadata:
         metric.metric_type = metadata['metric_type']
+    else:
+        metric.metric_type = 'metric'
 
     if metric.tag in defined_metric_tags:
         metric.setUrl()
@@ -146,7 +145,7 @@ def createActivityMetric(raw_name):
 
     return metric
 
-def copyImplementedMetricsIntoGroups():
+def copyImplementedMetrics():
     # takes implemented metrics and copies their data to the appropriate metric object
     implemented_metric_tags = [metric.tag for metric in implemented_metrics]
     for group in metric_groups:
@@ -155,34 +154,27 @@ def copyImplementedMetricsIntoGroups():
                 metric_to_copy = (next((metric for metric in implemented_metrics if metric.tag == grouped_metric.tag)))
                 grouped_metric.__dict__ =  metric_to_copy.__dict__.copy()
 
-metric_files = ['upstream/1_Diversity-Inclusion.md', 'upstream/2_Growth-Maturity-Decline.md', 'upstream/3_Risk.md', 'upstream/4_Value.md']
+def buildImplementedMetrics():
+    implemented_metrics = []
+    implemented_metric_metadata = []
 
-metric_type_by_file = {
-    'upstream/1_Diversity-Inclusion.md': 'diversity-inclusion',
-    'upstream/2_Growth-Maturity-Decline.md': 'growth-maturity-decline',
-    'upstream/3_Risk.md': 'risk',
-    'upstream/4_Value.md': 'value',
-}
+    with open('output/metadata.json', 'r') as metadata:
+        implemented_metric_metadata = json.load(metadata)
 
-app = augur.Application("../../augur.config.json")
-sources = augur.data_sources()
-sv = Server()
-implemented_metrics = []
+    for metric in implemented_metric_metadata:
+        implemented_metrics.append(createImplementedMetric(metric))
 
-for metric in implemented_metric_metadata:
-    implemented_metrics.append(createImplementedMetric(metric))
+    return implemented_metrics
 
-diversity_inclusion_metrics = createGroupedMetrics('upstream/1_Diversity-Inclusion.md')
-growth_maturity_decline_metrics = createGroupedMetrics('upstream/2_Growth-Maturity-Decline.md')
-risk_metrics = createGroupedMetrics('upstream/3_Risk.md')
-value_metrics = createGroupedMetrics('upstream/4_Value.md')
-metric_groups = [diversity_inclusion_metrics, growth_maturity_decline_metrics, risk_metrics, value_metrics]
-experimental_metrics = [metric for metric in implemented_metrics if metric.group == "experimental"]
+def writeStatusToFile():
+    status = []
+    status_json = open('output/status.json', 'w')
 
-activity_metrics = createActivityMetrics(metric_groups)
-metric_groups.append(activity_metrics)
+    for group in metric_groups:
+        for metric in group:
+            status.append(metric.__dict__)
 
-copyImplementedMetricsIntoGroups()
+    json.dump(status, status_json, indent=4)
 
 class HTMLBuilder(object):
 
@@ -202,17 +194,76 @@ class HTMLBuilder(object):
 
     def addMetricToTable(self, metric, html):
         if metric.url != '/' and metric.group != 'experimental':
-            html += '<tr><td>{}</td><td>{}</td><td><a href="https://github.com/chaoss/wg-gmd/tree/master/{}"> {} </td><td>{}</td><td>{}</td></tr>'.format(self.color_by_backend_status[metric.backend_status], self.color_by_frontend_status[metric.frontend_status], metric.url, metric.name, metric.escaped_endpoint, metric.source)
+            html += """
+                    <tr>
+                        <td>{}</td>
+                        <td>{}</td>
+                        <td><a href="https://github.com/chaoss/wg-gmd/tree/master/{}">{}</td>
+                        <td>{}</td>
+                        <td>{}</td>
+                        <td>{}</td>
+                    </tr>""".format(self.color_by_backend_status[metric.backend_status], self.color_by_frontend_status[metric.frontend_status], metric.url, metric.name, metric.escaped_endpoint, metric.source, metric.metric_type)
         else:
-            html += '<tr><td>{}</td><td>{}</td><td> {} </td><td>{}</td><td>{}</td></tr>'.format(self.color_by_backend_status[metric.backend_status], self.color_by_frontend_status[metric.frontend_status], metric.name, metric.escaped_endpoint, metric.source)
+            html += """
+                    <tr>
+                        <td>{}</td>
+                        <td>{}</td>
+                        <td>{}</td>
+                        <td>{}</td>
+                        <td>{}</td>
+                        <td>{}</td>
+                    </tr>""".format(self.color_by_backend_status[metric.backend_status], self.color_by_frontend_status[metric.frontend_status], metric.name, metric.escaped_endpoint, metric.source, metric.metric_type)
         return html
 
     def addTableWithHeader(self, header, metrics):
-        html_to_add = "<h2>{}</h2><table><tr><td>backend_status</td><td>frontend_status</td><td>metric</td><td>endpoint</td><td>source</td></tr>".format(header)
+        html_to_add = """
+                        <h2>{}</h2>
+                            <table>
+                                <tr>
+                                    <td>backend status</td>
+                                    <td>frontend status</td>
+                                    <td>metric</td>
+                                    <td>endpoint</td>
+                                    <td>source</td>
+                                    <td>metric type</td>
+                                </tr>""".format(header)
         for metric in metrics:
             html_to_add = self.addMetricToTable(metric, html_to_add)
         html_to_add += '</table>'
         self.html += html_to_add
+
+    def writeStatusPageToFile(self):
+        index = open('output/index.html', 'w')
+        soup = BeautifulSoup(self.html, 'html.parser')
+        self.html = soup.prettify()
+        index.write(self.html)
+
+metric_files = ['upstream/1_Diversity-Inclusion.md', 'upstream/2_Growth-Maturity-Decline.md', 'upstream/3_Risk.md', 'upstream/4_Value.md']
+
+metric_type_by_file = {
+    'upstream/1_Diversity-Inclusion.md': 'diversity-inclusion',
+    'upstream/2_Growth-Maturity-Decline.md': 'growth-maturity-decline',
+    'upstream/3_Risk.md': 'risk',
+    'upstream/4_Value.md': 'value',
+}
+
+defined_metric_tags = createDefinedMetricTags()
+implemented_metrics = buildImplementedMetrics()
+
+diversity_inclusion_metrics = createGroupedMetrics('upstream/1_Diversity-Inclusion.md')
+growth_maturity_decline_metrics = createGroupedMetrics('upstream/2_Growth-Maturity-Decline.md')
+risk_metrics = createGroupedMetrics('upstream/3_Risk.md')
+value_metrics = createGroupedMetrics('upstream/4_Value.md')
+metric_groups = [diversity_inclusion_metrics, growth_maturity_decline_metrics, risk_metrics, value_metrics]
+
+activity_metrics = createActivityMetrics(metric_groups)
+metric_groups.append(activity_metrics)
+
+experimental_metrics = [metric for metric in implemented_metrics if metric.group == "experimental"]
+metric_groups.append(experimental_metrics)
+
+copyImplementedMetrics()
+writeStatusToFile()
 
 HTMLBuilder = HTMLBuilder()
 
@@ -227,30 +278,22 @@ HTMLBuilder.html = """
 <body>
     <h1>Augur Metrics Status</h1>
 """
-
 HTMLBuilder.addTableWithHeader("Diversity and Inclusion", diversity_inclusion_metrics)
 HTMLBuilder.addTableWithHeader('Growth, Maturity, and Decline', growth_maturity_decline_metrics)
 HTMLBuilder.addTableWithHeader("Risk", risk_metrics)
 HTMLBuilder.addTableWithHeader("Value", value_metrics)
 HTMLBuilder.addTableWithHeader("Activity", activity_metrics)
 HTMLBuilder.addTableWithHeader("Experimental", experimental_metrics)
-
 HTMLBuilder.html += """
     </table>
 </body>
 </html>
 """
 
-app = Flask(__name__)
+HTMLBuilder.writeStatusPageToFile()
 
-@app.route("/")
-def root():
-    return HTMLBuilder.html
+# util.determineFrontendStatus('/api/unstable/<owner>/<repo>/timeseries/pulls/made-closed')
+# util.determineFrontendStatus('/api/unstable/<owner>/<repo>/timeseries/pulls')
+# util.determineFrontendStatus('/api/unstable/<owner>/<repo>/contributing_github_organizations')
 
-def run():
-    webbrowser.open_new_tab('http://localhost:5001/')
-    app.run(port=5001)
-
-if __name__ == "__main__":
-     run()
 

@@ -540,6 +540,35 @@ class GHTorrent(object):
         issueCommentsSQL = s.sql.text(self.__sub_table_count_by_date("issues", "issue_comments", "issue_id", "issue_id", "repo_id"))
         return pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
 
+    @annotate(metric_name='pull-requests-made-closed', group='activity')
+    def pull_requests_made_closed(self, owner, repo=None):
+        """
+        Timeseries of the ratio of pull requests made/closed
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with the ratio of pull requests made/closed
+        """
+        repoid = self.repoid(owner, repo)
+        pullRequestsMadeClosedSQL = s.sql.text("""
+        SELECT DATE(closed_on) AS "date", CAST(num_opened AS DECIMAL)/CAST(num_closed AS DECIMAL) AS "rate"
+                FROM
+                    (SELECT COUNT(DISTINCT pull_request_id) AS num_opened, DATE(pull_request_history.created_at) AS opened_on
+                    FROM pull_request_history
+                    JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
+                    WHERE action = 'opened' AND pull_requests.base_repo_id = :repoid
+                    GROUP BY opened_on) opened
+                JOIN
+                    (SELECT count(distinct pull_request_id) AS num_closed, DATE(pull_request_history.created_at) AS closed_on
+                    FROM pull_request_history
+                    JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
+                    WHERE action = 'closed'
+                    AND pull_requests.base_repo_id = :repoid
+                    GROUP BY closed_on) closed
+                ON closed.closed_on = opened.opened_on
+        """)
+        return pd.read_sql(pullRequestsMadeClosedSQL, self.db, params={"repoid": str(repoid)})
+
     @annotate(metric_name='watchers', group='activity')
     def watchers(self, owner, repo=None, group_by="week"):
         """
@@ -1022,14 +1051,3 @@ class GHTorrent(object):
             GROUP BY YEARWEEK(date)
         """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
-
-    @annotate(metric_name='ghtorrent-range', group='experimental')
-    def ghtorrent_range(self):
-        """
-        Returns the range of dates GHTorrent covers 
-        """
-        ghtorrentRangeSQL = s.sql.text("""
-        SELECT MIN(date(created_at)) AS "min_date", MAX(date(created_at)) AS "max_date"
-        FROM commits
-        """)
-        return pd.read_sql(ghtorrentRangeSQL, self.db)

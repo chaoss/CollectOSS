@@ -68,8 +68,8 @@
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/lines-of-code-changed.md"
                     cite-text="Lines Of Code Changed">
         </line-chart>
-      </div> -->
-
+      </div>
+ -->
       <div class="col col-6">
         <line-chart source="maintainerResponseToMergeRequestDuration"
                       title="Time to First Maintainer Response to Merge Request"

@@ -41,7 +41,7 @@ setup(
         'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
         'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'GitPython',
         'pyevent', 'gunicorn', 'datetime', 'traitlets', 'coloredlogs', 'tldextract', 'python-daemon', 'beaker',
-        'lockfile'],
+        'lockfile', 're'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
