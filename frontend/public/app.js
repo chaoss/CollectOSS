@@ -188,13 +188,15 @@ function Augur() {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedRepos: [],
+      comparedRepo: null,
       trailingAverage: 180,
-      startDate: new Date('1 January 2005'),
+      startDate: new Date('1 January 2011'),
       endDate: new Date(),
       compare: 'each',
       showBelowAverage: false,
       rawWeekly: false,
+      showArea: false,
+      showTooltip: true,
       byDate: false
     },
     mutations: {
@@ -217,22 +219,42 @@ function Augur() {
           state.tab = 'git';
           state.gitRepo = repo.gitURL;
         }
-        if (!payload.fromURL) {
-          window.history.pushState(null, 'Augur', queryString);
-        }
-        if (!payload.keepCompared) {
-          state.comparedRepos = [];
-        }
+        // if (!payload.keepCompared) {
+        //   state.comparedRepos = []
+        // }
       },
       addComparedRepo: function addComparedRepo(state, payload) {
-        var repo = window.AugurAPI.Repo({ githubURL: payload.url });
+        // //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
+        // let repo = window.AugurAPI.Repo(payload)
+
+        // if (!window.AugurRepos[repo.toString()]) {
+        //   window.AugurRepos[repo.toString()] = repo
+        // }
+        // //state.comparedRepos.push(repo.toString())
+        // state.comparedTo = repo.toString()
+        // let title = 'Augur'
+        // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
+        // window.history.pushState(null, title, queryString)
+        var repo = window.AugurAPI.Repo(payload);
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo;
+        } else {
+          repo = window.AugurRepos[repo.toString()];
         }
-        state.comparedRepos.push(repo.toString());
-        var title = 'Augur';
-        var queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
-        window.history.pushState(null, title, queryString);
+        state.hasState = true;
+        if (repo.owner && repo.name) {
+          state.comparedRepo = repo.toString();
+          var title = repo.owner + '/' + repo.name + '- Augur';
+          state.tab = 'gmd';
+          var _queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
+          window.history.pushState(null, title, _queryString);
+        }
+        if (payload.gitURL) {
+          var _queryString2 = '?git=' + window.btoa(repo.gitURL);
+          window.history.pushState(null, 'Git Analysis - Augur', _queryString2);
+          state.tab = 'git';
+          state.gitRepo = repo.gitURL;
+        }
       },
       setDates: function setDates(state, payload) {
         if (payload.startDate) {
@@ -258,11 +280,20 @@ function Augur() {
         if (typeof payload.showBelowAverage !== 'undefined') {
           state.showBelowAverage = payload.showBelowAverage;
         }
+        if (typeof payload.showArea !== 'undefined') {
+          state.showArea = payload.showArea;
+        }
+        if (typeof payload.showTooltip !== 'undefined') {
+          state.showTooltip = payload.showTooltip;
+        }
+        // if (payload.comparedTo) {
+        //   state.comparedTo = payload.comparedTo
+        // }
       },
       reset: function reset(state) {
         state = {
           baseRepo: null,
-          comparedRepos: [],
+          comparedRepo: null,
           trailingAverage: 180,
           startDate: new Date('1 January 2005'),
           endDate: new Date(),
@@ -673,11 +704,36 @@ var AugurStats = function () {
         data = data.map(function (datum) {
           return AugurStats.convertKey(datum, key);
         });
+      } else if (key.length > 1) {
+        return data.map(function (d) {
+          return {
+            date: d.date,
+            value: d[key[0]],
+            field: d[key[1]]
+          };
+        });
       } else {
         return data.map(function (d) {
           return {
             date: d.date,
             value: d[key]
+          };
+        });
+      }
+      return data;
+    }
+  }, {
+    key: 'convertComparedKey',
+    value: function convertComparedKey(data, key) {
+      if (Array.isArray(data[0])) {
+        data = data.map(function (datum) {
+          return AugurStats.convertKey(datum, key);
+        });
+      } else {
+        return data.map(function (d) {
+          return {
+            date: d.date,
+            comparedValue: d[key]
           };
         });
       }
@@ -743,7 +799,7 @@ var AugurStats = function () {
   }, {
     key: 'rollingAverage',
     value: function rollingAverage(data, key, windowSizeInDays) {
-      key = key || 'value';
+      //key = key || 'value'
       var period = windowSizeInDays / 2;
       data = data.filter(function (datum) {
         return isFinite(datum[key]);
@@ -751,7 +807,7 @@ var AugurStats = function () {
       return AugurStats.dateAggregate(data, period, period, period / 2, function (filteredData, date) {
         var flat = AugurStats.flatten(filteredData, key);
         var datum = { date: date };
-        datum[key] = AugurStats.averageArray(flat);
+        datum[key] = Math.round(AugurStats.averageArray(flat) * 100) / 100;
         return datum;
       });
     }
@@ -834,7 +890,7 @@ var AugurStats = function () {
   }, {
     key: 'zscores',
     value: function zscores(data, key) {
-      key = key || 'value';
+      // key = key || 'value'
       var stats = AugurStats.describe(data, key);
       return data.map(function (e) {
         var newObj = {};
@@ -1360,7 +1416,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/MainControls.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
 module.exports = {
   methods: {
@@ -1369,7 +1425,6 @@ module.exports = {
 
       console.log(e);
       var date = Date.parse(this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value);
-      console.log('date', date);
       if (this.startDateTimeout) {
         clearTimeout(this.startDateTimeout);
         delete this.startDateTimeout;
@@ -1385,7 +1440,6 @@ module.exports = {
       var _this2 = this;
 
       var date = Date.parse(this.$refs.endMonth.value + "/01/" + this.$refs.endYear.value);
-      console.log('date', date);
       if (this.endDateTimeout) {
         clearTimeout(this.endDateTimeout);
         delete this.endDateTimeout;
@@ -1405,6 +1459,16 @@ module.exports = {
     onRawWeeklyChange: function onRawWeeklyChange(e) {
       this.$store.commit('setVizOptions', {
         rawWeekly: e.target.checked
+      });
+    },
+    onAreaChange: function onAreaChange(e) {
+      this.$store.commit('setVizOptions', {
+        showArea: e.target.checked
+      });
+    },
+    onTooltipChange: function onTooltipChange(e) {
+      this.$store.commit('setVizOptions', {
+        showTooltip: e.target.checked
       });
     },
     onShowBelowAverageChange: function onShowBelowAverageChange(e) {
@@ -1441,8 +1505,8 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('h4',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                    "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                  "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h5',[_vm._v("Comparison Options")]),_vm._v(" "),_c('label',[_vm._v("Type\n            "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h4',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Show raw weekly values"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n          "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])])])])])}
-__vue__options__.staticRenderFns = []
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('h4',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                    "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                  "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h5',[_vm._v("Comparison Options")]),_vm._v(" "),_c('label',[_vm._v("Type\n            "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])]),_vm._v(" "),_c('p'),_vm._v(" "),_vm._m(0)])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h4',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Show raw weekly values"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onAreaChange}}),_vm._v("Show area"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n          "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"form-item"})])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -1568,6 +1632,9 @@ var spec = {
         "type": "circle",
         "cursor": "pointer"
       },
+      "transform": [{
+        "calculate": "'https://www.google.com/search?q=' + datum.name", "as": "url"
+      }],
       "selection": {
         "paintbrush": {
           "type": "single",
@@ -1599,9 +1666,10 @@ var spec = {
           "value": "grey"
         },
         "tooltip": {
-          "field": "contributing_org",
-          "type": "quantitative"
+          "field": "name",
+          "type": "nominal"
         },
+
         "size": {
           "field": "total",
           "type": "quantitative",
@@ -1621,6 +1689,9 @@ var spec = {
         "type": "circle",
         "cursor": "pointer"
       },
+      "transform": [{
+        "calculate": "'https://www.google.com/search?q=' + datum.name", "as": "url"
+      }],
       "selection": {
         "paintbrush": {
           "type": "single",
@@ -1667,9 +1738,10 @@ var spec = {
             "scale": { "range": ['#FF3647', '#4736FF'] }
           },
           "tooltip": {
-            "field": "contributing_org",
-            "type": "quantitative"
+            "field": "name",
+            "type": "nominal"
           },
+
           "value": "grey"
         }
       }
@@ -1948,6 +2020,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _vuex = require('vuex');
+
 var _AugurStats = require('AugurStats');
 
 var _AugurStats2 = _interopRequireDefault(_AugurStats);
@@ -1955,16 +2029,11 @@ var _AugurStats2 = _interopRequireDefault(_AugurStats);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'percentage', 'comparedTo', 'disableRollingAverage', 'alwaysByDate', 'innerKey'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
   data: function data() {
     return {
-      mgConfig: {
-        time_series: true,
-        full_width: true,
-        height: 200,
-        y_mouseover: '%d'
-      },
-      graphData: {}
+      legendLabels: [],
+      values: []
     };
   },
 
@@ -1984,38 +2053,308 @@ exports.default = {
     compare: function compare() {
       return this.$store.state.compare;
     },
+    comparedRepo: function comparedRepo() {
+      return this.$store.state.comparedRepo;
+    },
     rawWeekly: function rawWeekly() {
       return this.$store.state.rawWeekly;
     },
-    chart: function chart() {
+    showArea: function showArea() {
+      return this.$store.state.showArea;
+    },
+    showTooltip: function showTooltip() {
+      return this.$store.state.showTooltip;
+    },
+    spec: function spec() {
       var _this = this;
 
-      delete this.mgConfig.chart_type;
-      this.mgConfig.title = this.title || 'Activity';
-      this.mgConfig.x_accessor = 'date';
-      this.mgConfig.format = this.percentage ? 'percentage' : undefined;
-      this.mgConfig.compare = this.compare;
-      this.mgConfig.byDate = true;
-      this.mgConfig.area = this.rawWeekly;
-      this.mgConfig.y_accessor = 'value';
-      this.mgConfig.legend_target = this.$refs.legend;
-      this.mgConfig.colors = [];
-      this.mgConfig.legend = [];
-      this.mgConfig.baselines = [];
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "title": {
+          "text": this.title,
+          "offset": 15
+        },
+        "width": 420,
+        "height": 200,
+        "config": {
+          "axis": {
+            "grid": false
+          },
+          "legend": {
 
-      var earliest = this.earliest;
-      var latest = this.latest;
-      var period = this.period;
+            "offset": 0,
+            "titleFontSize": 0,
+            "titlePadding": 10
 
-      this.__download_data = {};
-      this.__download_file = this.mgConfig.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+          }
+        },
+        "layer": [],
+        "padding": {
+          "top": 20,
+          "left": 0,
+          "right": 30,
+          "bottom": 55
+        }
+      };
 
-      if (this.$refs.chart) {
-        this.$refs.chart.className = 'linechart loader';
-        window.$(this.$refs.holder).find('.hideme').addClass('invis');
-        window.$(this.$refs.holder).find('.showme').removeClass('invis');
+      var selectionAdded = false;
+
+      var getStandardLine = function getStandardLine(key) {
+        var color = "FF3647";
+        if (key != "value") {
+          color = "4736FF";
+        }
+        return {
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal"
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative"
+            },
+            "color": {
+              "value": color
+            }
+          },
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          }
+
+        };
+      };
+
+      var getStandardPoint = function getStandardPoint(key) {
+        var selection = {
+          "tooltip": {
+            "type": "single",
+            "nearest": true,
+            "on": "mouseover",
+            "encodings": ["x"],
+            "empty": "none"
+          }
+        };
+        if (selectionAdded) {
+          selection = null;
+        }
+        selectionAdded = true;
+        return {
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": {
+                "title": null
+              }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "field": "name",
+              "type": "nominal",
+              "scale": { "range": ['#4736FF', '#FF3647'] }
+            },
+            "opacity": {
+              "condition": {
+                "selection": "tooltip",
+                "value": 1
+              },
+              "value": 0
+            }
+          },
+          "mark": {
+            "type": "point"
+          },
+          "selection": selection
+        };
+      };
+
+      var getArea = function getArea(key) {
+        return {
+          "mark": {
+            "type": "area",
+            "interpolate": "basis",
+            "clip": true
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "timeUnit": "year"
+            },
+            "y": {
+              "aggregate": "ci1",
+              "field": key,
+              "type": "quantitative"
+
+            },
+            "y2": {
+              "aggregate": "ci0",
+              "field": key,
+              "type": "quantitative"
+            },
+            "color": {
+              "value": "green"
+            },
+            "opacity": { "value": 0.2 }
+          }
+        };
+      };
+
+      var rule = {
+        "transform": [{
+          "filter": {
+            "selection": "tooltip"
+          }
+        }],
+        "mark": "rule",
+        "encoding": {
+          "x": {
+            "type": "temporal",
+            "field": "date"
+          },
+          "color": {
+            "field": "name",
+            "type": "nominal",
+            "scale": { "range": ['#4736FF', '#FF3647'] }
+          }
+        }
+      };
+
+      var getValueText = function getValueText(key) {
+        return {
+
+          "transform": [{
+            "filter": {
+              "selection": "tooltip"
+            }
+          }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -5
+          },
+          "encoding": {
+            "text": {
+              "type": "quantitative",
+              "field": key
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative"
+            },
+            "color": {
+              "value": "green"
+            }
+          }
+        };
+      };
+
+      var getDateText = function getDateText(key) {
+        return {
+
+          "transform": [{
+            "filter": {
+              "selection": "tooltip"
+            }
+          }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -15
+          },
+          "encoding": {
+            "text": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "x": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative"
+            },
+            "color": {
+              "value": "black"
+            }
+          }
+        };
+      };
+
+      var comparedRepo = this.comparedRepo;
+
+      var buildMetric = function buildMetric() {
+        buildLines("value");
+
+        if (comparedRepo) buildLines("comparedValue");
+      };
+
+      var buildLines = function buildLines(key) {
+        config.layer.push(getStandardLine(key));
+        config.layer.push(getStandardPoint(key));
+      };
+
+      var buildTooltip = function buildTooltip(key) {
+        config.layer.push(getValueText(key));
+        config.layer.push(getDateText(key));
+      };
+
+      buildMetric();
+
+      if (this.showArea) {
+        config.layer.push(getArea("value"));
+        if (this.comparedRepo) {
+          config.layer.push(getArea("comparedValue"));
+        }
+      } else {
+        for (var x = 0; x < config.layer.length; x++) {
+          if (config.layer[x] == getArea("value")) {
+            buildMetric();
+          }
+        }
       }
-      this.mgConfig.target = document.createElement('div');
+
+      if (this.showTooltip) {
+        buildTooltip("value");
+
+        if (this.comparedRepo) {
+          buildTooltip("comparedValue");
+          config.layer.push(rule);
+        }
+      } else {
+        for (var x = 0; x < config.layer.length; x++) {
+          if (config.layer[x] == getValueText("value")) {
+            buildMetric();
+          }
+        }
+      }
+
+      for (var i = 0; i < config.layer.length; i++) {
+        config.layer[i].encoding.x["scale"] = {
+          "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
+        };
+      }
+
+      var hideRaw = !this.rawWeekly;
+
+      $(this.$el).find('.showme').addClass('invis');
+      $(this.$el).find('.linechart').addClass('loader');
 
       var endpoints = [];
       var fields = {};
@@ -2031,34 +2370,42 @@ exports.default = {
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo]);
       }
-      if (this.comparedTo) {
-        repos.push(window.AugurRepos[this.comparedTo]);
+      if (this.comparedRepo) {
+        repos.push(window.AugurRepos[this.comparedRepo]);
       }
 
       window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
         _this.__download_data = data;
+        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
         _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
         _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 
-        var defaultProcess = function defaultProcess(obj, key, field, count) {
-          var d = _AugurStats2.default.convertKey(obj[key], field);
+        var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
+          var d = null;
+          if (compared) {
+            d = _AugurStats2.default.convertComparedKey(obj[key], field);
+          } else {
+            d = _AugurStats2.default.convertKey(obj[key], field);
+          }
+
           d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
           return d;
         };
 
         var normalized = [];
-        var buildLines = function buildLines(obj, onCreateData) {
+        var aggregates = [];
+        var buildLines = function buildLines(obj, onCreateData, compared) {
           if (!obj) {
             return;
           }
           if (!onCreateData) {
             onCreateData = function onCreateData(obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count);
               normalized.push(d);
             };
           }
           var count = 0;
           for (var key in obj) {
+
             if (obj.hasOwnProperty(key)) {
               if (fields[key]) {
                 fields[key].forEach(function (field) {
@@ -2078,65 +2425,95 @@ exports.default = {
             }
           }
         };
-        if (!_this.comparedTo) {
+        var legend = [];
+        var values = [];
+        var colors = [];
+        if (!_this.comparedRepo) {
           buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count);
+            var d = defaultProcess(obj, key, field, count, false);
             var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-            console.log(_this.source, 'rolling, before+after', d, rolling);
             if (!_this.disableRollingAverage) {
               normalized.push(rolling);
-              _this.mgConfig.legend.push(field);
-              _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+              aggregates.push(d);
+              legend.push(field);
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
             }
-            if (_this.rawWeekly || _this.disableRollingAverage) {
-              normalized.push(d);
-              _this.mgConfig.legend.push(field);
-              _this.mgConfig.colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
+            if (!hideRaw || _this.disableRollingAverage) {
+              normalized.push(rolling);
+              aggregates.push(d);
+              legend.push(field);
+              colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
             }
-          });
-        } else if (_this.compare === 'each' && _this.comparedTo) {
-          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count);
-            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
-            normalized.push(rolling);
-            _this.mgConfig.legend.push(_this.comparedTo + ' ' + field);
-            _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          });
+          }, false);
+        } else if (_this.compare === 'each' && _this.comparedRepo) {
           buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count);
-            var rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
+            var d = defaultProcess(obj, key, field, count, false);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+
             normalized.push(rolling);
-            _this.mgConfig.legend.push(_this.repo + ' ' + field);
-            _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-          });
-        } else if (_this.comparedTo) {
-          _this.mgConfig.baselines = [{ value: 1, label: _this.repo }];
-          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+            aggregates.push(d);
+            legend.push(_this.repo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
+          }, false);
+          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count, true);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
+
+            normalized.push(rolling);
+            aggregates.push(d);
+            legend.push(_this.comparedRepo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          }, true);
+        } else if (_this.comparedRepo) {
+          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
             normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
               earliest: _this.earliest,
               latest: _this.latest,
               byDate: true,
               period: _this.period
             }));
-            _this.mgConfig.legend.push(_this.comparedTo + ' ' + field);
-            _this.mgConfig.colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          });
+            legend.push(_this.comparedRepo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          }, true);
         }
 
         if (normalized.length == 0) {
-          _this.mgConfig.missing_text = 'Data empty';
           _this.renderError();
         } else {
-          _this.mgConfig.data = normalized;
-          _this.mgConfig.legend_target = _this.$refs.legend;
+
+          if (hideRaw) {
+            for (var i = 0; i < legend.length; i++) {
+              normalized[i].forEach(function (d) {
+                d.name = legend[i];
+                d.color = colors[i];
+                values.push(d);
+              });
+            }
+          } else {
+            for (var i = 0; i < legend.length; i++) {
+              aggregates[i].forEach(function (d) {
+                d.name = "raw " + legend[i];
+                d.color = colors[i];
+                values.push(d);
+              });
+            }
+          }
+
+          _this.legendLabels = legend;
+          _this.values = values;
+
+          config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
+
+
+          $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+          $(_this.$el).find('.linechart').removeClass('loader');
+
           _this.renderChart();
         }
       }, function () {
-        _this.mgConfig.missing_text = 'Data is missing or unavaliable';
         _this.renderError();
       });
-
-      return '<div class="loader deleteme">' + this.title + '...</div>';
+      return config;
     }
   },
   methods: {
@@ -2151,37 +2528,26 @@ exports.default = {
       svgsaver.asPng(svg, this.__download_file + '.png');
     },
     renderChart: function renderChart() {
-      var _this2 = this;
-
       this.$refs.chart.className = 'linechart intro';
       window.$(this.$refs.holder).find('.hideme').removeClass('invis');
       window.$(this.$refs.holder).find('.showme').removeClass('invis');
       window.$(this.$refs.holder).find('.deleteme').remove();
-      window.$(this.mgConfig.target).hover(function (onEnterEvent) {
-        window.$(_this2.$refs.legend).hide();
-      }, function (onLeaveEvent) {
-        window.$(_this2.$refs.legend).show();
-      });
+
       this.$refs.chartholder.innerHTML = '';
       this.$refs.chartholder.appendChild(this.mgConfig.target);
-      this.mgConfig.target.className = 'deleteme';
-      window.MG.data_graphic(this.mgConfig);
     },
     renderError: function renderError() {
       this.$refs.chart.className = 'linechart intro';
       window.$(this.$refs.holder).find('.deleteme').remove();
       this.$refs.chartholder.innerHTML = '';
       this.$refs.chartholder.appendChild(this.mgConfig.target);
-      this.mgConfig.target.className = 'deleteme';
-      this.mgConfig.chart_type = 'missing-data';
-      window.MG.data_graphic(this.mgConfig);
     }
   } };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{ref:"chart",staticClass:"linechart"},[_c('div',{ref:"legend",staticClass:"legend hideme invis"}),_vm._v(" "),_c('div',{ref:"chartholder"}),_vm._v(" "),_c('span',{ref:"chartStatus",staticClass:"showme",domProps:{"innerHTML":_vm._s(_vm.chart)}})]),_vm._v(" "),_c('div',{staticClass:"row below-chart hideme invis"},[_c('div',{staticClass:"col col-6"},[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-5"},[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2324,7 +2690,9 @@ exports.default = {
       return this.$store.state.baseRepo;
     },
     spec: function spec() {
-      return {
+      var _this = this;
+
+      var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "data": { "values": [] },
         "title": this.title,
@@ -2334,27 +2702,97 @@ exports.default = {
         "mark": "bar",
         "encoding": {
           "y": { "aggregate": "sum",
-            "field": "count",
+            "field": "value",
             "type": "quantitative" },
           "x": { "field": "date",
             "type": "temporal" },
-          "color": { "field": "action",
+          "color": { "field": "field",
             "type": "nominal" }
         }
       };
-    },
-    chart: function chart() {
-      var _this = this;
 
-      $(this.$el).find('.showme').addClass('invis');
-      $(this.$el).find('.stackedbarchart').addClass('loader');
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
+
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      var repos = [];
       if (this.repo) {
-        window.AugurRepos[this.repo][this.source]().then(function (data) {
-          $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-          $(_this.$el).find('.stackedbarchart').removeClass('loader');
-          _this.values = data;
-        });
+        repos.push(window.AugurRepos[this.repo]);
       }
+
+      window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+        var defaultProcess = function defaultProcess(obj, key, field, count) {
+          var d = _AugurStats2.default.convertKey(obj[key], field);
+          return _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+        };
+
+        var normalized = [];
+        var buildLines = function buildLines(obj, onCreateData) {
+          if (!obj) {
+            return;
+          }
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count);
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach(function (field) {
+                  console.log(field);
+                  onCreateData(obj, key, field, count);
+                  console.log(field);
+                  count++;
+                });
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  var field = Object.keys(obj[key][0]).splice(1);
+                  onCreateData(obj, key, field, count);
+                  count++;
+                } else {
+                  _this.renderError();
+                  return;
+                }
+              }
+            }
+          }
+        };
+
+        var values = [];
+
+        buildLines(data[_this.repo], function (obj, key, field, count) {
+          normalized.push(defaultProcess(obj, key, field, count));
+        });
+
+        if (normalized.length == 0) {
+          _this.renderError();
+        } else {
+          for (var i = 0; i < normalized.length; i++) {
+            normalized[i].forEach(function (d) {
+              values.push(d);
+            });
+            console.log("VAL" + values);
+          }
+        }
+
+        $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+        $(_this.$el).find('.stackedbarchart').removeClass('loader');
+        _this.values = values;
+      });
+
+      return config;
     }
   }
 };

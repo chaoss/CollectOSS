@@ -31,13 +31,15 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedRepos: [],
+      comparedRepo: null,
       trailingAverage: 180,
-      startDate: new Date('1 January 2005'),
+      startDate: new Date('1 January 2011'),
       endDate: new Date(),
       compare: 'each',
       showBelowAverage: false,
       rawWeekly: false,
+      showArea: false,
+      showTooltip: true,
       byDate: false
     },
     mutations: {
@@ -60,22 +62,44 @@ export default function Augur () {
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
-        if (!payload.fromURL) {
-          window.history.pushState(null, 'Augur', queryString)
-        }
-        if (!payload.keepCompared) {
-          state.comparedRepos = []
-        }
+        // if (!payload.keepCompared) {
+        //   state.comparedRepos = []
+        // }
       },
       addComparedRepo (state, payload) {
-        let repo = window.AugurAPI.Repo({ githubURL: payload.url })
+        // //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
+        // let repo = window.AugurAPI.Repo(payload)
+
+        // if (!window.AugurRepos[repo.toString()]) {
+        //   window.AugurRepos[repo.toString()] = repo
+        // }
+        // //state.comparedRepos.push(repo.toString())
+        // state.comparedTo = repo.toString()
+        // let title = 'Augur'
+        // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
+        // window.history.pushState(null, title, queryString)
+        let repo = window.AugurAPI.Repo(payload)
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
+        } else {
+          repo = window.AugurRepos[repo.toString()]
         }
-        state.comparedRepos.push(repo.toString())
-        let title = 'Augur'
-        let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
-        window.history.pushState(null, title, queryString)
+        state.hasState = true
+        if (repo.owner && repo.name) {
+          state.comparedRepo = repo.toString()
+          let title = repo.owner + '/' + repo.name + '- Augur'
+          state.tab = 'gmd'
+          let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
+          window.history.pushState(null, title, queryString)
+        }
+        if (payload.gitURL) {
+          let queryString = '?git=' + window.btoa(repo.gitURL)
+          window.history.pushState(null, 'Git Analysis - Augur', queryString)
+          state.tab = 'git'
+          state.gitRepo = repo.gitURL
+        }
+
+
       },
       setDates (state, payload) {
         if (payload.startDate) {
@@ -101,11 +125,20 @@ export default function Augur () {
         if (typeof payload.showBelowAverage !== 'undefined') {
           state.showBelowAverage = payload.showBelowAverage
         }
+        if (typeof payload.showArea !== 'undefined') {
+          state.showArea = payload.showArea
+        }
+        if (typeof payload.showTooltip !== 'undefined') {
+          state.showTooltip = payload.showTooltip
+        }
+        // if (payload.comparedTo) {
+        //   state.comparedTo = payload.comparedTo
+        // }
       },
       reset (state) {
         state = {
           baseRepo: null,
-          comparedRepos: [],
+          comparedRepo: null,
           trailingAverage: 180,
           startDate: new Date('1 January 2005'),
           endDate: new Date(),

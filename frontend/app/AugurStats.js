@@ -25,11 +25,36 @@ export default class AugurStats {
       data = data.map((datum) => {
         return AugurStats.convertKey(datum, key)
       })
-    } else {
+    } else if (key.length > 1){
+      return data.map((d) => {
+        return {
+          date: d.date,
+          value: d[key[0]],
+          field: d[key[1]]
+        }
+      })
+    }
+    else{
       return data.map((d) => {
         return {
           date: d.date,
           value: d[key]
+        }
+      })
+    }
+    return data
+  }
+
+  static convertComparedKey (data, key) {
+    if (Array.isArray(data[0])) {
+      data = data.map((datum) => {
+        return AugurStats.convertKey(datum, key)
+      })
+    } else {
+      return data.map((d) => {
+        return {
+          date: d.date,
+          comparedValue: d[key]
         }
       })
     }
@@ -83,7 +108,7 @@ export default class AugurStats {
   }
 
   static rollingAverage (data, key, windowSizeInDays) {
-    key = key || 'value'
+    //key = key || 'value'
     let period = (windowSizeInDays / 2)
     data = data.filter(datum => {
       return isFinite(datum[key])
@@ -91,7 +116,7 @@ export default class AugurStats {
     return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }
-      datum[key] = AugurStats.averageArray(flat)
+      datum[key] = Math.round(AugurStats.averageArray(flat)*100)/100
       return datum
     })
   }
@@ -180,7 +205,7 @@ export default class AugurStats {
   }
 
   static zscores (data, key) {
-    key = key || 'value'
+    // key = key || 'value'
     let stats = AugurStats.describe(data, key)
     return data.map((e) => {
       let newObj = {}

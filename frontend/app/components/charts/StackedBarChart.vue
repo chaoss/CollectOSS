@@ -24,7 +24,7 @@ export default {
       return this.$store.state.baseRepo
     },
     spec() {
-      return {
+      let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "data": { "values": [] },
         "title": this.title,
@@ -34,26 +34,108 @@ export default {
         "mark": "bar",
         "encoding": {
           "y": {"aggregate": "sum",
-                "field": "count", 
+                "field": "value",
                 "type": "quantitative"},
-          "x": {"field": "date", 
+          "x": {"field": "date",
                 "type": "temporal"},
-          "color": {"field": "action", 
+          "color": {"field": "field",
                     "type": "nominal"}
         }
       }
-    },
-    chart() {
-      $(this.$el).find('.showme').addClass('invis')
-      $(this.$el).find('.stackedbarchart').addClass('loader')
+
+
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis')
+      $(this.$el).find('.stackedbarchart').removeClass('loader')
+
+      let endpoints = []
+      let fields = {}
+      this.source.split(',').forEach((endpointAndFields) => {
+        let split = endpointAndFields.split(':')
+        endpoints.push(split[0])
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+')
+        }
+      })
+
+      // Get the repos we need
+      let repos = []
       if (this.repo) {
-        window.AugurRepos[this.repo][this.source]().then((data) => {
-          $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-          $(this.$el).find('.stackedbarchart').removeClass('loader')
-          this.values = data
-        })
+        repos.push(window.AugurRepos[this.repo])
       }
-    }
+
+      window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+        // We usually want to limit dates and convert the key to being vega-lite friendly
+        let defaultProcess = (obj, key, field, count) => {
+          let d = AugurStats.convertKey(obj[key], field)
+          return AugurStats.convertDates(d, this.earliest, this.latest)
+        }
+
+        // Normalize the data into [{ date, value },{ date, value }]
+        // BuildLines iterates over the fields requested and runs onCreateData on each
+        let normalized = []
+        let buildLines = (obj, onCreateData) => {
+          if (!obj) {
+            return
+          }
+          if (!onCreateData) {
+            onCreateData = (obj, key, field, count) => {
+              let d = defaultProcess(obj, key, field, count)
+              normalized.push(d)
+            }
+          }
+          let count = 0
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach((field) => {
+                  console.log(field)
+                  onCreateData(obj, key, field, count)
+                  console.log(field)
+                  count++
+                })
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  let field = Object.keys(obj[key][0]).splice(1)
+                  onCreateData(obj, key, field, count)
+                  count++
+                } else {
+                  this.renderError()
+                  return
+                }
+              }
+            } // end hasOwnProperty
+          } // end for in
+        } // end normalize function
+
+        let values = []
+
+        buildLines(data[this.repo], (obj, key, field, count) => {
+          // Build basic chart
+          normalized.push(defaultProcess(obj, key, field, count))
+        })
+
+        if (normalized.length == 0) {
+          this.renderError()
+        } else {
+            for(var i = 0; i < normalized.length; i++){
+              normalized[i].forEach(d => {
+                //d.name = legend[i]
+                //d.color = colors[i]
+                values.push(d);
+              })
+              console.log("VAL" + values)
+            }
+          }
+
+        $(this.$el).find('.showme, .hidefirst').removeClass('invis')
+        $(this.$el).find('.stackedbarchart').removeClass('loader')
+        this.values = values
+      })
+
+
+      return config
+
+    },
   }
 }
 
