@@ -234,9 +234,13 @@ class HTMLBuilder(object):
 
     def writeStatusPageToFile(self):
         index = open('output/index.html', 'w')
+        frontend = open('../../frontend/app/assets/metrics_status.html', 'w')
+
         soup = BeautifulSoup(self.html, 'html.parser')
         self.html = soup.prettify()
+
         index.write(self.html)
+        frontend.write(self.html)
 
 metric_files = ['upstream/1_Diversity-Inclusion.md', 'upstream/2_Growth-Maturity-Decline.md', 'upstream/3_Risk.md', 'upstream/4_Value.md']
 
@@ -290,10 +294,7 @@ HTMLBuilder.html += """
 </html>
 """
 
+print("Building metrics_status.html")
 HTMLBuilder.writeStatusPageToFile()
-
-# util.determineFrontendStatus('/api/unstable/<owner>/<repo>/timeseries/pulls/made-closed')
-# util.determineFrontendStatus('/api/unstable/<owner>/<repo>/timeseries/pulls')
-# util.determineFrontendStatus('/api/unstable/<owner>/<repo>/contributing_github_organizations')
-
+print("Finished building metrics_status.html")
 

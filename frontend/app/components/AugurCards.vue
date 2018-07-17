@@ -7,9 +7,6 @@
         <h3>Enter a GitHub URL to get started</h3>
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
       </section>
-      <section class="status">
-        <h3><a href="/api/unstable/metrics/status">Metrics Status</a></h3>
-      </section>
       <section class="unmaterialized">
         <h3>Downloaded Git repositories</h3>
         <div v-for="repo in downloadedRepos">

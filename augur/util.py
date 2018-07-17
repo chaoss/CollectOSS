@@ -111,6 +111,4 @@ def determineFrontendStatus(endpoint):
             status = 'implemented'
             break
 
-    print((attribute, status))
-
     return status

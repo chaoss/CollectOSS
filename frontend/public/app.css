@@ -2572,6 +2572,17 @@ header .search {
   width: 100%;
   margin-top: 25px;
 }
+.header-nav {
+  margin-top: 25px;
+  display: block;
+}
+.header-nav-item {
+  padding: 10px 10px;
+  display: inline-block;
+  float: right;
+  text-decoration: none;
+  color: #777;
+}
 #logo {
   display: inline-block;
   margin-top: 0px;

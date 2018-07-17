@@ -1264,15 +1264,6 @@ class Server(object):
                             mimetype="application/json")
         # self.updateMetricMetadata(ghtorrent.ghtorrent_range, '/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
 
-        @app.route('/{}/metrics/status'.format(AUGUR_API_VERSION))
-        def metric_status():
-            return open('docs/metrics/output/index.html').read()
-            # return 
-            # status_file = open('docs/metrics/output/status.json', 'r').read()
-            # response = json.loads(status_file)
-            # response = self.transform(response)
-            # return Response(response=response, mimetype="application/json")
-
         #######################
         #   Batch Requests    #
         #######################
