@@ -13,7 +13,7 @@ import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
 
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
   data() {
     return {
       values: []
@@ -63,7 +63,7 @@ export default {
         repos.push(window.AugurRepos[this.repo])
       }
 
-      window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+      let processData = (data) => {
         // We usually want to limit dates and convert the key to being vega-lite friendly
         let defaultProcess = (obj, key, field, count) => {
           let d = AugurStats.convertKey(obj[key], field)
@@ -130,7 +130,16 @@ export default {
         $(this.$el).find('.showme, .hidefirst').removeClass('invis')
         $(this.$el).find('.stackedbarchart').removeClass('loader')
         this.values = values
-      })
+      }
+
+      if (this.data) {
+        processData(this.data)
+      } else {
+        window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+          processData(data)
+        })
+      }
+
 
 
       return config

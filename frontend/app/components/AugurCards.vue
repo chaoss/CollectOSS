@@ -58,6 +58,9 @@
         </div>
         <div v-if="(baseRepo && (currentTab == 'experimental'))">
           <experimental-card></experimental-card>
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+            <compared-repo-experimental-card :comparedTo="repo"></compared-repo-experimental-card>
+          </div>
         </div>
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
@@ -84,6 +87,7 @@ import ValueCard from './ValueCard'
 import DiversityInclusionCard from './DiversityInclusionCard'
 import GitCard from './GitCard'
 import ExperimentalCard from './ExperimentalCard'
+import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
 
 module.exports = {
   components: {
@@ -97,7 +101,8 @@ module.exports = {
     ValueCard,
     DiversityInclusionCard,
     GitCard,
-    ExperimentalCard
+    ExperimentalCard,
+    ComparedRepoExperimentalCard
   },
   data() {
     return {
