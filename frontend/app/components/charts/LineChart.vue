@@ -23,7 +23,7 @@ import AugurStats from 'AugurStats'
 
 
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'comparedTo'],
   data() {
     return {
       legendLabels: [],
@@ -46,8 +46,8 @@ export default {
     compare () {
       return this.$store.state.compare
     },
-    comparedRepo () {
-      return this.$store.state.comparedRepo
+    comparedRepos () {
+      return this.$store.state.comparedRepos
     },
     rawWeekly () {
       return this.$store.state.rawWeekly
@@ -132,6 +132,7 @@ export default {
                 "empty": "none"
               }
             }
+        let rng = ['#4736FF','#FF3647']
         if (selectionAdded) {
           selection = null
         }
@@ -155,7 +156,8 @@ export default {
               "color": {
                 "field": "name",
                 "type": "nominal",
-                "scale": { "range": ['#4736FF','#FF3647' ] }
+                "scale": { "range": ['#FF3647','#4736FF']}
+                //"value": this.legendLabels
               },
               "opacity": {
                 "condition": {
@@ -223,7 +225,7 @@ export default {
             "color": {
               "field": "name",
               "type": "nominal",
-              "scale": { "range": [ '#4736FF','#FF3647'] }
+              "scale": { "range": ['#FF3647','#4736FF'] }
             }
         }
       }
@@ -301,14 +303,14 @@ export default {
       }
 
       //so we can reference the comparedRepo inside of functions ("buildMetric()" specifically)
-      let comparedRepo = this.comparedRepo
+      let comparedTo = this.comparedTo
 
       let buildMetric = function () {
         //build lines and points for initial repo
         buildLines("value")
 
         //build lines and points for compared repo
-        if(comparedRepo) buildLines("comparedValue")
+        if(comparedTo) buildLines("comparedValue")
       }
 
       let buildLines = function (key) {
@@ -323,10 +325,11 @@ export default {
 
       buildMetric()
 
+      //console.log(this.legendLabels)
       //push the area to general spec
       if(this.showArea) {
         config.layer.push(getArea("value"))
-        if(this.comparedRepo){
+        if(comparedTo){
           config.layer.push(getArea("comparedValue"))
         }
       }
@@ -343,7 +346,7 @@ export default {
       if(this.showTooltip) {
         buildTooltip("value")
         //push parts of layer that use "comparedValue" key if there is a comparedRepo
-        if(this.comparedRepo){
+        if(comparedTo){
           buildTooltip("comparedValue")
           config.layer.push(rule)
         }
@@ -392,19 +395,17 @@ export default {
         }
       })
 
-
       // Get the repos we need
       let repos = []
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo])
       } // end if (this.$store.repo)
-      if (this.comparedRepo) {
-        repos.push(window.AugurRepos[this.comparedRepo])
+      if (this.comparedTo) {
+        repos.push(window.AugurRepos[this.comparedTo])
       }
 
-
-      // Make a batch request for all the data we need
-      window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+      if (this.data) {
+        let data = this.data
         // Make it so the user can save the data we are using
         this.__download_data = data
         this.__download_file = this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
@@ -471,7 +472,7 @@ export default {
         let legend = []
         let values = []
         let colors = []
-        if (!this.comparedRepo) {
+        if (!this.comparedTo) {
           buildLines(data[this.repo], (obj, key, field, count) => {
             // Build basic chart using rolling averages
             let d = defaultProcess(obj, key, field, count, false)
@@ -489,7 +490,7 @@ export default {
               colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count])
             }
           }, false)
-        } else if (this.compare === 'each' && this.comparedRepo) {
+        } else if (this.compare === 'each' && this.comparedTo) {
           // Build comparison using z-scores
           buildLines(data[this.repo], (obj, key, field, count) => {
             let d = defaultProcess(obj, key, field, count, false)
@@ -501,19 +502,19 @@ export default {
             legend.push(this.repo + ' ' + field)
             colors.push(window.AUGUR_CHART_STYLE.dullColors[count])
           }, false)
-          buildLines(data[this.comparedRepo], (obj, key, field, count) => {
+          buildLines(data[this.comparedTo], (obj, key, field, count) => {
             let d = defaultProcess(obj, key, field, count, true)
             let rolling = AugurStats.rollingAverage(d, 'comparedValue', this.period)
             //let rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', this.period)
             normalized.push(rolling)
             aggregates.push(d)
-            legend.push(this.comparedRepo + ' ' + field)
+            legend.push(this.comparedTo + ' ' + field)
             colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
           }, true)
-        } else if (this.comparedRepo) {
+        } else if (this.comparedRepos.length > 0) {
           // Build chart compared to baseline
           //this.mgConfig.baselines = [{value: 1, label: this.repo}]
-          buildLines(data[this.comparedRepo], (obj, key, field, count) => {
+          buildLines(data[this.comparedTo], (obj, key, field, count) => {
             normalized.push(AugurStats.makeRelative(obj[key], data[this.repo][key], field, {
               earliest: this.earliest,
               latest: this.latest,
@@ -582,10 +583,193 @@ export default {
           this.renderChart()
         }
 
-      }, () => {
-        //this.mgConfig.missing_text = 'Data is missing or unavaliable'
-        this.renderError()
-      }) // end batch request
+      } else {
+        window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+        // Make it so the user can save the data we are using
+        this.__download_data = data
+        this.__download_file = this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
+        this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.__download_data))
+        this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
+
+
+        // We usually want to limit dates and convert the key to being vega-lite friendly
+        let defaultProcess = (obj, key, field, count, compared) => {
+          // let a = null
+          //let b = AugurStats.convertKey(obj[key], field)
+          let d = null
+          if(compared) {
+            d = AugurStats.convertComparedKey(obj[key], field)
+            //d = b.concat(a)
+
+          }
+          else {
+            d = AugurStats.convertKey(obj[key], field)
+          }
+
+          d = AugurStats.convertDates(d, this.earliest, this.latest)
+          return d
+        }
+
+        // Normalize the data into [{ date, value },{ date, value }]
+        // BuildLines iterates over the fields requested and runs onCreateData on each
+        let normalized = []
+        let aggregates = []
+        let buildLines = (obj, onCreateData, compared) => {
+          if (!obj) {
+            return
+          }
+          if (!onCreateData) {
+            onCreateData = (obj, key, field, count) => {
+              normalized.push(d)
+            }
+          }
+          let count = 0
+          for (var key in obj) {
+
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach((field) => {
+                  onCreateData(obj, key, field, count)
+                  count++
+                })
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  let field = Object.keys(obj[key][0]).splice(1)
+                  onCreateData(obj, key, field, count)
+                  count++
+                } else {
+                  this.renderError()
+                  return
+                }
+              }
+            } // end hasOwnProperty
+          } // end for in
+        } // end normalize function
+
+
+        // Build the lines we need
+        let legend = []
+        let values = []
+        let colors = []
+        if (!this.comparedTo) {
+          buildLines(data[this.repo], (obj, key, field, count) => {
+            // Build basic chart using rolling averages
+            let d = defaultProcess(obj, key, field, count, false)
+            let rolling = AugurStats.rollingAverage(d, 'value', this.period)
+            if (!this.disableRollingAverage) {
+              normalized.push(rolling)
+              aggregates.push(d)
+              legend.push(field)
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
+            }
+            if (!hideRaw || this.disableRollingAverage) {
+              normalized.push(rolling)
+              aggregates.push(d)
+              legend.push(field)
+              colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count])
+            }
+          }, false)
+        } else if (this.compare === 'each' && this.comparedTo) {
+          // Build comparison using z-scores
+          buildLines(data[this.comparedTo], (obj, key, field, count) => {
+            let d = defaultProcess(obj, key, field, count, false)
+            let rolling = AugurStats.rollingAverage(d, 'value', this.period)
+
+            //let rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period)
+            normalized.push(rolling)
+            aggregates.push(d)
+            legend.push(this.comparedTo + ' ' + field)
+            colors.push(window.AUGUR_CHART_STYLE.dullColors[count])
+          }, false)
+          buildLines(data[this.repo], (obj, key, field, count) => {
+            let d = defaultProcess(obj, key, field, count, true)
+            let rolling = AugurStats.rollingAverage(d, 'comparedValue', this.period)
+            //let rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', this.period)
+            normalized.push(rolling)
+            aggregates.push(d)
+            legend.push(this.repo + ' ' + field)
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
+          }, true)
+        } else if (this.comparedTo) {
+          // Build chart compared to baseline
+          //this.mgConfig.baselines = [{value: 1, label: this.repo}]
+          buildLines(data[this.comparedTo], (obj, key, field, count) => {
+            normalized.push(AugurStats.makeRelative(obj[key], data[this.repo][key], field, {
+              earliest: this.earliest,
+              latest: this.latest,
+              byDate: true,
+              period: this.period
+            }))
+            legend.push(this.comparedTo + ' ' + field)
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
+          }, true)
+        }
+
+        if (normalized.length == 0) {
+          this.renderError()
+        } else {
+          //shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
+
+
+          if(hideRaw) {
+            for(var i = 0; i < legend.length; i++){
+              normalized[i].forEach(d => {
+                d.name = legend[i]
+                d.color = colors[i]
+                values.push(d);
+              })
+            }
+          }
+          else {
+            for(var i = 0; i < legend.length; i++){
+              aggregates[i].forEach(d => {
+                d.name = "raw " + legend[i]
+                d.color = colors[i]
+                values.push(d)
+              })
+            }
+          }
+
+          //if(this.comparedRepo){this.legendLabels = legend}
+          //else{for (var label in legend){this.legendLabels.push(label[0])}}
+          this.legendLabels = colors
+          this.values = values
+
+          //function getMaxY(arr){
+            // var temp = normalized[0]
+            // console.log(temp[0].value)
+            // var output = [];
+            // for (var i=0; i < temp.length ; ++i)
+            //     if(temp[i]) output.push(temp[i][value]);
+            // console.log("output" + output);
+            // var result = objArray.map(temp => temp.value);
+            // console.log(result)
+            // console.log(normalized[0])
+            //return result[0][0].reduce((max, b) => Math.max(max, b.value), data[0].value);
+          //}
+          //console.log(getMaxY())
+          //console.log("LOOK " + normalized[1][0].value)
+          config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
+          //console.log("range " + normalized[0][0].value)
+          //if(this.values[this.values.length - 1].value > Math.max.apply(Math, normalized) * .6) {
+            //console.log("IT IS HAPPENING HAHAH")
+            //config.config.legend.titlePadding = 175
+          //}
+
+          $(this.$el).find('.showme, .hidefirst').removeClass('invis')
+          $(this.$el).find('.linechart').removeClass('loader')
+          //this.mgConfig.legend_target = this.$refs.legend
+          this.renderChart()
+        }
+
+        }, () => {
+          //this.mgConfig.missing_text = 'Data is missing or unavaliable'
+          this.renderError()
+        }) // end batch request
+      }
+
+
+
       //return '<div class="loader deleteme">' + this.title + '...</div>'
       return config
     },

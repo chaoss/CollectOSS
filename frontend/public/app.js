@@ -188,7 +188,7 @@ function Augur() {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedRepo: null,
+      comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
@@ -245,7 +245,7 @@ function Augur() {
         }
         state.hasState = true;
         if (repo.owner && repo.name) {
-          state.comparedRepo = repo.toString();
+          state.comparedRepos.push(repo.toString());
           var title = repo.owner + '/' + repo.name + '- Augur';
           state.tab = 'gmd';
           var _queryString3 = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
@@ -955,6 +955,10 @@ var _GrowthMaturityDeclineCard = require('./GrowthMaturityDeclineCard');
 
 var _GrowthMaturityDeclineCard2 = _interopRequireDefault(_GrowthMaturityDeclineCard);
 
+var _ComparedRepoGrowthMaturityDeclineCard = require('./ComparedRepoGrowthMaturityDeclineCard');
+
+var _ComparedRepoGrowthMaturityDeclineCard2 = _interopRequireDefault(_ComparedRepoGrowthMaturityDeclineCard);
+
 var _RiskCard = require('./RiskCard');
 
 var _RiskCard2 = _interopRequireDefault(_RiskCard);
@@ -984,6 +988,7 @@ module.exports = {
     BaseRepoEcosystemCard: _BaseRepoEcosystemCard2.default,
     ComparedRepoActivityCard: _ComparedRepoActivityCard2.default,
     GrowthMaturityDeclineCard: _GrowthMaturityDeclineCard2.default,
+    ComparedRepoGrowthMaturityDeclineCard: _ComparedRepoGrowthMaturityDeclineCard2.default,
     RiskCard: _RiskCard2.default,
     ValueCard: _ValueCard2.default,
     DiversityInclusionCard: _DiversityInclusionCard2.default,
@@ -1021,7 +1026,7 @@ module.exports = {
     },
     onCompare: function onCompare(e) {
       this.$store.commit('addComparedRepo', {
-        url: e.target.value
+        githubURL: e.target.value
       });
     },
     changeTab: function changeTab(e) {
@@ -1050,7 +1055,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter another GitHub URL if you want to compare")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Compared GitHub URL"},on:{"change":_vm.onCompare}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo)}},[_vm._v(_vm._s(repo))])])})],2)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card')],1):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls')],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter another GitHub URL if you want to compare")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Compared GitHub URL"},on:{"change":_vm.onCompare}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo)}},[_vm._v(_vm._s(repo))])])})],2)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card')],1):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls')],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1074,11 +1079,6 @@ module.exports = {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
       });
-    },
-    onCompare: function onCompare(e) {
-      this.$store.commit('addComparedRepo', {
-        githubURL: e.target.value
-      });
     }
   }
 };
@@ -1086,7 +1086,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"Compared GitHub URL"},on:{"change":_vm.onCompare}})])]),_vm._v(" "),_c('div',{staticClass:"col col-4 push-right"})])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])]),_vm._v(" "),_c('div',{staticClass:"col col-4 push-right"})])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1230,6 +1230,50 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/ComparedRepoGrowthMaturityDeclineCard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _LineChart = require('./charts/LineChart');
+
+var _LineChart2 = _interopRequireDefault(_LineChart);
+
+var _BubbleChart = require('./charts/BubbleChart');
+
+var _BubbleChart2 = _interopRequireDefault(_BubbleChart);
+
+var _StackedBarChart = require('./charts/StackedBarChart');
+
+var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  props: ['comparedTo'],
+  components: {
+    LineChart: _LineChart2.default,
+    BubbleChart: _BubbleChart2.default,
+    StackedBarChart: _StackedBarChart2.default
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth Maturity Decline Comparison")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.comparedTo)+" compared to "+_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","compared-to":_vm.comparedTo,"cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","compared-to":_vm.comparedTo,"cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","compared-to":_vm.comparedTo,"cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","compared-to":_vm.comparedTo,"cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","compared-to":_vm.comparedTo,"cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","compared-to":_vm.comparedTo,"cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"maintainerResponseTime","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","compared-to":_vm.comparedTo,"cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","compared-to":_vm.comparedTo,"cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","compared-to":_vm.comparedTo,"cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/people-opening-issues.md","compared-to":_vm.comparedTo,"cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/code-reviews.md","compared-to":_vm.comparedTo,"cite-text":"Code Reviews (naive implementation)"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","compared-to":_vm.comparedTo,"cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Request Acceptance Rate","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-made-closed.md","compared-to":_vm.comparedTo,"cite-text":"Pull Requets Made / Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/contributors.md","compared-to":_vm.comparedTo,"cite-text":"Contributors","disableRollingAverage":"1"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-4ab8ebc0", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-4ab8ebc0", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/DiversityInclusionCard.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -1277,9 +1321,9 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
-var _AreaLineChart = require('./charts/AreaLineChart');
+var _LineChart = require('./charts/LineChart');
 
-var _AreaLineChart2 = _interopRequireDefault(_AreaLineChart);
+var _LineChart2 = _interopRequireDefault(_LineChart);
 
 var _BubbleChart = require('./charts/BubbleChart');
 
@@ -1293,7 +1337,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 module.exports = {
   components: {
-    AreaLineChart: _AreaLineChart2.default,
+    LineChart: _LineChart2.default,
     BubbleChart: _BubbleChart2.default,
     StackedBarChart: _StackedBarChart2.default
   }
@@ -1302,7 +1346,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo)+"   "+_vm._s(_vm.$store.state.comparedRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo)+"   "+_vm._s(_vm.$store.state.comparedRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1370,25 +1414,20 @@ var _StackedBarChart = require('./charts/StackedBarChart');
 
 var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
 
-var _AreaLineChart = require('./charts/AreaLineChart');
-
-var _AreaLineChart2 = _interopRequireDefault(_AreaLineChart);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
   components: {
     LineChart: _LineChart2.default,
     BubbleChart: _BubbleChart2.default,
-    StackedBarChart: _StackedBarChart2.default,
-    AreaLineChart: _AreaLineChart2.default
+    StackedBarChart: _StackedBarChart2.default
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo)+"   "+_vm._s(_vm.$store.state.comparedRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('area-line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributior Overview","size":"total","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/contributors.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issues","title":"Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issuesClosed","title":"Issues Closed / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commits","title":"Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pulls","title":"Pulls / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"maintainerResponseTime","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/people-opening-issues.md","cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/code-reviews.md","cite-text":"Code Reviews (naive implementation)"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullReqComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Request Acceptance Rate","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-made-closed.md","cite-text":"Pull Requets Made / Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Total Committers","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/contributors.md","cite-text":"Contributors","disableRollingAverage":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributior Overview","size":"total","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/contributors.md","cite-text":"Contributors"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1589,555 +1628,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-5e0cf204", __vue__options__)
   } else {
     hotAPI.reload("data-v-5e0cf204", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/charts/AreaLineChart.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _vuex = require('vuex');
-
-var _AugurStats = require('AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
-  data: function data() {
-    return {
-      legendLabels: [],
-      values: []
-    };
-  },
-
-  computed: {
-    repo: function repo() {
-      return this.$store.state.baseRepo;
-    },
-    period: function period() {
-      return this.$store.state.trailingAverage;
-    },
-    earliest: function earliest() {
-      return this.$store.state.startDate;
-    },
-    latest: function latest() {
-      return this.$store.state.endDate;
-    },
-    compare: function compare() {
-      return this.$store.state.compare;
-    },
-    comparedRepo: function comparedRepo() {
-      return this.$store.state.comparedRepo;
-    },
-    rawWeekly: function rawWeekly() {
-      return this.$store.state.rawWeekly;
-    },
-    showArea: function showArea() {
-      return this.$store.state.showArea;
-    },
-    showTooltip: function showTooltip() {
-      return this.$store.state.showTooltip;
-    },
-    spec: function spec() {
-      var _this = this;
-
-      var config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "title": {
-          "text": this.title,
-          "offset": 15
-        },
-        "width": 420,
-        "height": 200,
-        "config": {
-          "axis": {
-            "grid": false
-          },
-          "legend": {
-
-            "offset": 0,
-            "titleFontSize": 0,
-            "titlePadding": 10
-
-          }
-        },
-        "layer": [],
-        "padding": {
-          "top": 20,
-          "left": 0,
-          "right": 30,
-          "bottom": 55
-        }
-      };
-
-      var selectionAdded = false;
-
-      var getStandardLine = function getStandardLine(key) {
-        var color = "FF3647";
-        if (key != "value") {
-          color = "4736FF";
-        }
-        return {
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal"
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative"
-            },
-            "color": {
-              "value": color
-            }
-          },
-          "mark": {
-            "type": "line",
-            "interpolate": "basis",
-            "clip": true
-          }
-
-        };
-      };
-
-      var getStandardPoint = function getStandardPoint(key) {
-        var selection = {
-          "tooltip": {
-            "type": "single",
-            "nearest": true,
-            "on": "mouseover",
-            "encodings": ["x"],
-            "empty": "none"
-          }
-        };
-        if (selectionAdded) {
-          selection = null;
-        }
-        selectionAdded = true;
-        return {
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": {
-                "title": null
-              }
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
-            "color": {
-              "field": "name",
-              "type": "nominal",
-              "scale": { "range": ['#4736FF', '#FF3647'] }
-            },
-            "opacity": {
-              "condition": {
-                "selection": "tooltip",
-                "value": 1
-              },
-              "value": 0
-            }
-          },
-          "mark": {
-            "type": "point"
-          },
-          "selection": selection
-        };
-      };
-
-      var getArea = function getArea(key) {
-        return {
-          "mark": {
-            "type": "area",
-            "interpolate": "basis",
-            "clip": true
-          },
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "timeUnit": "year"
-            },
-            "y": {
-              "aggregate": "ci1",
-              "field": key,
-              "type": "quantitative"
-
-            },
-            "y2": {
-              "aggregate": "ci0",
-              "field": key,
-              "type": "quantitative"
-            },
-            "color": {
-              "value": "green"
-            },
-            "opacity": { "value": 0.2 }
-          }
-        };
-      };
-
-      var rule = {
-        "transform": [{
-          "filter": {
-            "selection": "tooltip"
-          }
-        }],
-        "mark": "rule",
-        "encoding": {
-          "x": {
-            "type": "temporal",
-            "field": "date"
-          },
-          "color": {
-            "field": "name",
-            "type": "nominal",
-            "scale": { "range": ['#4736FF', '#FF3647'] }
-          }
-        }
-      };
-
-      var getValueText = function getValueText(key) {
-        return {
-
-          "transform": [{
-            "filter": {
-              "selection": "tooltip"
-            }
-          }],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -5
-          },
-          "encoding": {
-            "text": {
-              "type": "quantitative",
-              "field": key
-            },
-            "x": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative"
-            },
-            "color": {
-              "value": "green"
-            }
-          }
-        };
-      };
-
-      var getDateText = function getDateText(key) {
-        return {
-
-          "transform": [{
-            "filter": {
-              "selection": "tooltip"
-            }
-          }],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -15
-          },
-          "encoding": {
-            "text": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "x": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative"
-            },
-            "color": {
-              "value": "black"
-            }
-          }
-        };
-      };
-
-      var comparedRepo = this.comparedRepo;
-
-      var buildMetric = function buildMetric() {
-        buildLines("value");
-
-        if (comparedRepo) buildLines("comparedValue");
-      };
-
-      var buildLines = function buildLines(key) {
-        config.layer.push(getStandardLine(key));
-        config.layer.push(getStandardPoint(key));
-      };
-
-      var buildTooltip = function buildTooltip(key) {
-        config.layer.push(getValueText(key));
-        config.layer.push(getDateText(key));
-      };
-
-      buildMetric();
-
-      if (this.showArea) {
-        config.layer.push(getArea("value"));
-        if (this.comparedRepo) {
-          config.layer.push(getArea("comparedValue"));
-        }
-      } else {
-        for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == getArea("value")) {
-            buildMetric();
-          }
-        }
-      }
-
-      if (this.showTooltip) {
-        buildTooltip("value");
-
-        if (this.comparedRepo) {
-          buildTooltip("comparedValue");
-          config.layer.push(rule);
-        }
-      } else {
-        for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == getValueText("value")) {
-            buildMetric();
-          }
-        }
-      }
-
-      for (var i = 0; i < config.layer.length; i++) {
-        config.layer[i].encoding.x["scale"] = {
-          "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
-        };
-      }
-
-      var hideRaw = !this.rawWeekly;
-
-      $(this.$el).find('.showme').addClass('invis');
-      $(this.$el).find('.arealinechart').addClass('loader');
-
-      var endpoints = [];
-      var fields = {};
-      this.source.split(',').forEach(function (endpointAndFields) {
-        var split = endpointAndFields.split(':');
-        endpoints.push(split[0]);
-        if (split[1]) {
-          fields[split[0]] = split[1].split('+');
-        }
-      });
-
-      var repos = [];
-      if (this.repo) {
-        repos.push(window.AugurRepos[this.repo]);
-      }
-      if (this.comparedRepo) {
-        repos.push(window.AugurRepos[this.comparedRepo]);
-      }
-
-      window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
-        _this.__download_data = data;
-        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
-        _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
-        _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
-
-        var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
-          var d = null;
-          if (compared) {
-            d = _AugurStats2.default.convertComparedKey(obj[key], field);
-          } else {
-            d = _AugurStats2.default.convertKey(obj[key], field);
-          }
-
-          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
-          return d;
-        };
-
-        var normalized = [];
-        var aggregates = [];
-        var buildLines = function buildLines(obj, onCreateData, compared) {
-          if (!obj) {
-            return;
-          }
-          if (!onCreateData) {
-            onCreateData = function onCreateData(obj, key, field, count) {
-              normalized.push(d);
-            };
-          }
-          var count = 0;
-          for (var key in obj) {
-
-            if (obj.hasOwnProperty(key)) {
-              if (fields[key]) {
-                fields[key].forEach(function (field) {
-                  onCreateData(obj, key, field, count);
-                  count++;
-                });
-              } else {
-                if (Array.isArray(obj[key]) && obj[key].length > 0) {
-                  var field = Object.keys(obj[key][0]).splice(1);
-                  onCreateData(obj, key, field, count);
-                  count++;
-                } else {
-                  _this.renderError();
-                  return;
-                }
-              }
-            }
-          }
-        };
-        var legend = [];
-        var values = [];
-        var colors = [];
-        if (!_this.comparedRepo) {
-          buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count, false);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-            if (!_this.disableRollingAverage) {
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(field);
-              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-            }
-            if (!hideRaw || _this.disableRollingAverage) {
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(field);
-              colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
-            }
-          }, false);
-        } else if (_this.compare === 'each' && _this.comparedRepo) {
-          buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count, false);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-
-            normalized.push(rolling);
-            aggregates.push(d);
-            legend.push(_this.repo + ' ' + field);
-            colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-          }, false);
-          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count, true);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
-
-            normalized.push(rolling);
-            aggregates.push(d);
-            legend.push(_this.comparedRepo + ' ' + field);
-            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          }, true);
-        } else if (_this.comparedRepo) {
-          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
-            normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
-              earliest: _this.earliest,
-              latest: _this.latest,
-              byDate: true,
-              period: _this.period
-            }));
-            legend.push(_this.comparedRepo + ' ' + field);
-            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          }, true);
-        }
-
-        if (normalized.length == 0) {
-          _this.renderError();
-        } else {
-
-          if (hideRaw) {
-            for (var i = 0; i < legend.length; i++) {
-              normalized[i].forEach(function (d) {
-                d.name = legend[i];
-                d.color = colors[i];
-                values.push(d);
-              });
-            }
-          } else {
-            for (var i = 0; i < legend.length; i++) {
-              aggregates[i].forEach(function (d) {
-                d.name = "raw " + legend[i];
-                d.color = colors[i];
-                values.push(d);
-              });
-            }
-          }
-
-          _this.legendLabels = legend;
-          _this.values = values;
-
-          config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
-
-
-          $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-          $(_this.$el).find('.arealinechart').removeClass('loader');
-
-          _this.renderChart();
-        }
-      }, function () {
-        _this.renderError();
-      });
-      return config;
-    }
-  },
-  methods: {
-    downloadSVG: function downloadSVG(e) {
-      var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.chartholder).find('svg')[0];
-      svgsaver.asSvg(svg, this.__download_file + '.svg');
-    },
-    downloadPNG: function downloadPNG(e) {
-      var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.chartholder).find('svg')[0];
-      svgsaver.asPng(svg, this.__download_file + '.png');
-    },
-    renderChart: function renderChart() {
-      this.$refs.chart.className = 'linechart intro';
-      window.$(this.$refs.holder).find('.hideme').removeClass('invis');
-      window.$(this.$refs.holder).find('.showme').removeClass('invis');
-      window.$(this.$refs.holder).find('.deleteme').remove();
-
-      this.$refs.chartholder.innerHTML = '';
-      this.$refs.chartholder.appendChild(this.mgConfig.target);
-    },
-    renderError: function renderError() {
-      this.$refs.chart.className = 'linechart intro';
-      window.$(this.$refs.holder).find('.deleteme').remove();
-      this.$refs.chartholder.innerHTML = '';
-      this.$refs.chartholder.appendChild(this.mgConfig.target);
-    }
-  } };
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"arealinechart hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-5"},[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-1c771e30", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-1c771e30", __vue__options__)
   }
 })()}
 });
@@ -2566,7 +2056,7 @@ var _AugurStats2 = _interopRequireDefault(_AugurStats);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'comparedTo'],
   data: function data() {
     return {
       legendLabels: [],
@@ -2590,8 +2080,8 @@ exports.default = {
     compare: function compare() {
       return this.$store.state.compare;
     },
-    comparedRepo: function comparedRepo() {
-      return this.$store.state.comparedRepo;
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
     },
     rawWeekly: function rawWeekly() {
       return this.$store.state.rawWeekly;
@@ -2674,6 +2164,7 @@ exports.default = {
             "empty": "none"
           }
         };
+        var rng = ['#4736FF', '#FF3647'];
         if (selectionAdded) {
           selection = null;
         }
@@ -2697,7 +2188,7 @@ exports.default = {
             "color": {
               "field": "name",
               "type": "nominal",
-              "scale": { "range": ['#4736FF', '#FF3647'] }
+              "scale": { "range": ['#FF3647', '#4736FF'] }
             },
             "opacity": {
               "condition": {
@@ -2761,7 +2252,7 @@ exports.default = {
           "color": {
             "field": "name",
             "type": "nominal",
-            "scale": { "range": ['#4736FF', '#FF3647'] }
+            "scale": { "range": ['#FF3647', '#4736FF'] }
           }
         }
       };
@@ -2834,12 +2325,12 @@ exports.default = {
         };
       };
 
-      var comparedRepo = this.comparedRepo;
+      var comparedTo = this.comparedTo;
 
       var buildMetric = function buildMetric() {
         buildLines("value");
 
-        if (comparedRepo) buildLines("comparedValue");
+        if (comparedTo) buildLines("comparedValue");
       };
 
       var buildLines = function buildLines(key) {
@@ -2856,7 +2347,7 @@ exports.default = {
 
       if (this.showArea) {
         config.layer.push(getArea("value"));
-        if (this.comparedRepo) {
+        if (comparedTo) {
           config.layer.push(getArea("comparedValue"));
         }
       } else {
@@ -2870,7 +2361,7 @@ exports.default = {
       if (this.showTooltip) {
         buildTooltip("value");
 
-        if (this.comparedRepo) {
+        if (comparedTo) {
           buildTooltip("comparedValue");
           config.layer.push(rule);
         }
@@ -2907,149 +2398,295 @@ exports.default = {
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo]);
       }
-      if (this.comparedRepo) {
-        repos.push(window.AugurRepos[this.comparedRepo]);
+      if (this.comparedTo) {
+        repos.push(window.AugurRepos[this.comparedTo]);
       }
 
-      window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
-        _this.__download_data = data;
-        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
-        _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
-        _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
+      if (this.data) {
+        var i;
+        var i;
 
-        var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
-          var d = null;
-          if (compared) {
-            d = _AugurStats2.default.convertComparedKey(obj[key], field);
-          } else {
-            d = _AugurStats2.default.convertKey(obj[key], field);
-          }
+        (function () {
+          var data = _this.data;
 
-          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
-          return d;
-        };
+          _this.__download_data = data;
+          _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+          _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
+          _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 
-        var normalized = [];
-        var aggregates = [];
-        var buildLines = function buildLines(obj, onCreateData, compared) {
-          if (!obj) {
-            return;
-          }
-          if (!onCreateData) {
-            onCreateData = function onCreateData(obj, key, field, count) {
-              normalized.push(d);
-            };
-          }
-          var count = 0;
-          for (var key in obj) {
+          var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
+            var d = null;
+            if (compared) {
+              d = _AugurStats2.default.convertComparedKey(obj[key], field);
+            } else {
+              d = _AugurStats2.default.convertKey(obj[key], field);
+            }
 
-            if (obj.hasOwnProperty(key)) {
-              if (fields[key]) {
-                fields[key].forEach(function (field) {
-                  onCreateData(obj, key, field, count);
-                  count++;
-                });
-              } else {
-                if (Array.isArray(obj[key]) && obj[key].length > 0) {
-                  var field = Object.keys(obj[key][0]).splice(1);
-                  onCreateData(obj, key, field, count);
-                  count++;
+            d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+            return d;
+          };
+
+          var normalized = [];
+          var aggregates = [];
+          var buildLines = function buildLines(obj, onCreateData, compared) {
+            if (!obj) {
+              return;
+            }
+            if (!onCreateData) {
+              onCreateData = function onCreateData(obj, key, field, count) {
+                normalized.push(d);
+              };
+            }
+            var count = 0;
+            for (var key in obj) {
+
+              if (obj.hasOwnProperty(key)) {
+                if (fields[key]) {
+                  fields[key].forEach(function (field) {
+                    onCreateData(obj, key, field, count);
+                    count++;
+                  });
                 } else {
-                  _this.renderError();
-                  return;
+                  if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                    var field = Object.keys(obj[key][0]).splice(1);
+                    onCreateData(obj, key, field, count);
+                    count++;
+                  } else {
+                    _this.renderError();
+                    return;
+                  }
                 }
               }
             }
-          }
-        };
-        var legend = [];
-        var values = [];
-        var colors = [];
-        if (!_this.comparedRepo) {
-          buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count, false);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-            if (!_this.disableRollingAverage) {
+          };
+          var legend = [];
+          var values = [];
+          var colors = [];
+          if (!_this.comparedTo) {
+            buildLines(data[_this.repo], function (obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count, false);
+              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+              if (!_this.disableRollingAverage) {
+                normalized.push(rolling);
+                aggregates.push(d);
+                legend.push(field);
+                colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+              }
+              if (!hideRaw || _this.disableRollingAverage) {
+                normalized.push(rolling);
+                aggregates.push(d);
+                legend.push(field);
+                colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
+              }
+            }, false);
+          } else if (_this.compare === 'each' && _this.comparedTo) {
+            buildLines(data[_this.repo], function (obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count, false);
+              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+
               normalized.push(rolling);
               aggregates.push(d);
-              legend.push(field);
+              legend.push(_this.repo + ' ' + field);
+              colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
+            }, false);
+            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count, true);
+              var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
+
+              normalized.push(rolling);
+              aggregates.push(d);
+              legend.push(_this.comparedTo + ' ' + field);
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-            }
-            if (!hideRaw || _this.disableRollingAverage) {
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(field);
-              colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
-            }
-          }, false);
-        } else if (_this.compare === 'each' && _this.comparedRepo) {
-          buildLines(data[_this.repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count, false);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-
-            normalized.push(rolling);
-            aggregates.push(d);
-            legend.push(_this.repo + ' ' + field);
-            colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-          }, false);
-          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count, true);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
-
-            normalized.push(rolling);
-            aggregates.push(d);
-            legend.push(_this.comparedRepo + ' ' + field);
-            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          }, true);
-        } else if (_this.comparedRepo) {
-          buildLines(data[_this.comparedRepo], function (obj, key, field, count) {
-            normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
-              earliest: _this.earliest,
-              latest: _this.latest,
-              byDate: true,
-              period: _this.period
-            }));
-            legend.push(_this.comparedRepo + ' ' + field);
-            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          }, true);
-        }
-
-        if (normalized.length == 0) {
-          _this.renderError();
-        } else {
-
-          if (hideRaw) {
-            for (var i = 0; i < legend.length; i++) {
-              normalized[i].forEach(function (d) {
-                d.name = legend[i];
-                d.color = colors[i];
-                values.push(d);
-              });
-            }
-          } else {
-            for (var i = 0; i < legend.length; i++) {
-              aggregates[i].forEach(function (d) {
-                d.name = "raw " + legend[i];
-                d.color = colors[i];
-                values.push(d);
-              });
-            }
+            }, true);
+          } else if (_this.comparedRepos.length > 0) {
+            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+              normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
+                earliest: _this.earliest,
+                latest: _this.latest,
+                byDate: true,
+                period: _this.period
+              }));
+              legend.push(_this.comparedRepo + ' ' + field);
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+            }, true);
           }
 
-          _this.legendLabels = legend;
-          _this.values = values;
+          if (normalized.length == 0) {
+            _this.renderError();
+          } else {
 
-          config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
+            if (hideRaw) {
+              for (i = 0; i < legend.length; i++) {
+                normalized[i].forEach(function (d) {
+                  d.name = legend[i];
+                  d.color = colors[i];
+                  values.push(d);
+                });
+              }
+            } else {
+              for (i = 0; i < legend.length; i++) {
+                aggregates[i].forEach(function (d) {
+                  d.name = "raw " + legend[i];
+                  d.color = colors[i];
+                  values.push(d);
+                });
+              }
+            }
+
+            _this.legendLabels = legend;
+            _this.values = values;
+
+            config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
 
 
-          $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-          $(_this.$el).find('.linechart').removeClass('loader');
+            $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+            $(_this.$el).find('.linechart').removeClass('loader');
 
-          _this.renderChart();
-        }
-      }, function () {
-        _this.renderError();
-      });
+            _this.renderChart();
+          }
+        })();
+      } else {
+        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+          _this.__download_data = data;
+          _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+          _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
+          _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
+
+          var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
+            var d = null;
+            if (compared) {
+              d = _AugurStats2.default.convertComparedKey(obj[key], field);
+            } else {
+              d = _AugurStats2.default.convertKey(obj[key], field);
+            }
+
+            d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+            return d;
+          };
+
+          var normalized = [];
+          var aggregates = [];
+          var buildLines = function buildLines(obj, onCreateData, compared) {
+            if (!obj) {
+              return;
+            }
+            if (!onCreateData) {
+              onCreateData = function onCreateData(obj, key, field, count) {
+                normalized.push(d);
+              };
+            }
+            var count = 0;
+            for (var key in obj) {
+
+              if (obj.hasOwnProperty(key)) {
+                if (fields[key]) {
+                  fields[key].forEach(function (field) {
+                    onCreateData(obj, key, field, count);
+                    count++;
+                  });
+                } else {
+                  if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                    var field = Object.keys(obj[key][0]).splice(1);
+                    onCreateData(obj, key, field, count);
+                    count++;
+                  } else {
+                    _this.renderError();
+                    return;
+                  }
+                }
+              }
+            }
+          };
+          var legend = [];
+          var values = [];
+          var colors = [];
+          if (!_this.comparedTo) {
+            buildLines(data[_this.repo], function (obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count, false);
+              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+              if (!_this.disableRollingAverage) {
+                normalized.push(rolling);
+                aggregates.push(d);
+                legend.push(field);
+                colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+              }
+              if (!hideRaw || _this.disableRollingAverage) {
+                normalized.push(rolling);
+                aggregates.push(d);
+                legend.push(field);
+                colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
+              }
+            }, false);
+          } else if (_this.compare === 'each' && _this.comparedTo) {
+            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count, false);
+              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+
+              normalized.push(rolling);
+              aggregates.push(d);
+              legend.push(_this.comparedTo + ' ' + field);
+              colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
+            }, false);
+            buildLines(data[_this.repo], function (obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count, true);
+              var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
+
+              normalized.push(rolling);
+              aggregates.push(d);
+              legend.push(_this.repo + ' ' + field);
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+            }, true);
+          } else if (_this.comparedTo) {
+            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+              normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
+                earliest: _this.earliest,
+                latest: _this.latest,
+                byDate: true,
+                period: _this.period
+              }));
+              legend.push(_this.comparedTo + ' ' + field);
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+            }, true);
+          }
+
+          if (normalized.length == 0) {
+            _this.renderError();
+          } else {
+
+            if (hideRaw) {
+              for (var i = 0; i < legend.length; i++) {
+                normalized[i].forEach(function (d) {
+                  d.name = legend[i];
+                  d.color = colors[i];
+                  values.push(d);
+                });
+              }
+            } else {
+              for (var i = 0; i < legend.length; i++) {
+                aggregates[i].forEach(function (d) {
+                  d.name = "raw " + legend[i];
+                  d.color = colors[i];
+                  values.push(d);
+                });
+              }
+            }
+
+            _this.legendLabels = colors;
+            _this.values = values;
+
+            config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
+
+
+            $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+            $(_this.$el).find('.linechart').removeClass('loader');
+
+            _this.renderChart();
+          }
+        }, function () {
+          _this.renderError();
+        });
+      }
+
       return config;
     }
   },
@@ -3093,7 +2730,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4035d73d", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4035d73d", __vue__options__)
+    hotAPI.reload("data-v-4035d73d", __vue__options__)
   }
 })()}
 });

@@ -31,7 +31,7 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedRepo: null,
+      comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
@@ -88,7 +88,7 @@ export default function Augur () {
         }
         state.hasState = true
         if (repo.owner && repo.name) {
-          state.comparedRepo = repo.toString()
+          state.comparedRepos.push(repo.toString())
           let title = repo.owner + '/' + repo.name + '- Augur'
           state.tab = 'gmd'
           let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name

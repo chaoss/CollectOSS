@@ -36,6 +36,9 @@
       <div ref="cards">
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
           <growth-maturity-decline-card></growth-maturity-decline-card>
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+            <compared-repo-growth-maturity-decline-card :comparedTo="repo"></compared-repo-growth-maturity-decline-card>
+          </div>
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
           <diversity-inclusion-card></diversity-inclusion-card>
@@ -59,7 +62,7 @@
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
         </div>
-        <section class="unmaterialized" v-if="(baseRepo && (currentTab == 'activity'))">
+        <section class="unmaterialized" v-if="(baseRepo)">
           <h3>Compare repository</h3>
           <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
         </section>
@@ -75,6 +78,7 @@ import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
 import GrowthMaturityDeclineCard from './GrowthMaturityDeclineCard'
+import ComparedRepoGrowthMaturityDeclineCard from './ComparedRepoGrowthMaturityDeclineCard'
 import RiskCard from './RiskCard'
 import ValueCard from './ValueCard'
 import DiversityInclusionCard from './DiversityInclusionCard'
@@ -88,6 +92,7 @@ module.exports = {
     BaseRepoEcosystemCard,
     ComparedRepoActivityCard,
     GrowthMaturityDeclineCard,
+    ComparedRepoGrowthMaturityDeclineCard,
     RiskCard,
     ValueCard,
     DiversityInclusionCard,
@@ -124,7 +129,7 @@ module.exports = {
     },
     onCompare (e) {
       this.$store.commit('addComparedRepo', {
-        url: e.target.value
+        githubURL: e.target.value
       })
     },
     changeTab (e) {
