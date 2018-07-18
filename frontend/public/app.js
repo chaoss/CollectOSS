@@ -2401,282 +2401,146 @@ exports.default = {
         repos.push(window.AugurRepos[this.comparedTo]);
       }
 
-      if (this.data) {
-        var i;
-        var i;
+      var processData = function processData(data) {
+        _this.__download_data = data;
+        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+        _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
+        _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 
-        (function () {
-          var data = _this.data;
+        var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
+          var d = null;
+          if (compared) {
+            d = _AugurStats2.default.convertComparedKey(obj[key], field);
+          } else {
+            d = _AugurStats2.default.convertKey(obj[key], field);
+          }
 
-          _this.__download_data = data;
-          _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
-          _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
-          _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
+          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+          return d;
+        };
 
-          var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
-            var d = null;
-            if (compared) {
-              d = _AugurStats2.default.convertComparedKey(obj[key], field);
-            } else {
-              d = _AugurStats2.default.convertKey(obj[key], field);
-            }
+        var normalized = [];
+        var aggregates = [];
+        var buildLines = function buildLines(obj, onCreateData, compared) {
+          if (!obj) {
+            return;
+          }
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
 
-            d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
-            return d;
-          };
-
-          var normalized = [];
-          var aggregates = [];
-          var buildLines = function buildLines(obj, onCreateData, compared) {
-            if (!obj) {
-              return;
-            }
-            if (!onCreateData) {
-              onCreateData = function onCreateData(obj, key, field, count) {
-                normalized.push(d);
-              };
-            }
-            var count = 0;
-            for (var key in obj) {
-
-              if (obj.hasOwnProperty(key)) {
-                if (fields[key]) {
-                  fields[key].forEach(function (field) {
-                    onCreateData(obj, key, field, count);
-                    count++;
-                  });
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach(function (field) {
+                  onCreateData(obj, key, field, count);
+                  count++;
+                });
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  var field = Object.keys(obj[key][0]).splice(1);
+                  onCreateData(obj, key, field, count);
+                  count++;
                 } else {
-                  if (Array.isArray(obj[key]) && obj[key].length > 0) {
-                    var field = Object.keys(obj[key][0]).splice(1);
-                    onCreateData(obj, key, field, count);
-                    count++;
-                  } else {
-                    _this.renderError();
-                    return;
-                  }
+                  _this.renderError();
+                  return;
                 }
               }
             }
-          };
-          var legend = [];
-          var values = [];
-          var colors = [];
-          if (!_this.comparedTo) {
-            buildLines(data[_this.repo], function (obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count, false);
-              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-              if (!_this.disableRollingAverage) {
-                normalized.push(rolling);
-                aggregates.push(d);
-                legend.push(field);
-                colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-              }
-              if (!hideRaw || _this.disableRollingAverage) {
-                normalized.push(rolling);
-                aggregates.push(d);
-                legend.push(field);
-                colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
-              }
-            }, false);
-          } else if (_this.compare === 'each' && _this.comparedTo) {
-            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count, false);
-              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(_this.comparedTo + ' ' + field);
-              colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-            }, false);
-            buildLines(data[_this.repo], function (obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count, true);
-              var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
-
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(_this.repo + ' ' + field);
-              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-            }, true);
-          } else if (_this.comparedTo) {
-            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
-              normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
-                earliest: _this.earliest,
-                latest: _this.latest,
-                byDate: true,
-                period: _this.period
-              }));
-              legend.push(_this.comparedTo + ' ' + field);
-              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-            }, true);
           }
-
-          if (normalized.length == 0) {
-            _this.renderError();
-          } else {
-            if (hideRaw) {
-              for (i = 0; i < legend.length; i++) {
-                normalized[i].forEach(function (d) {
-                  d.name = legend[i];
-                  d.color = colors[i];
-                  values.push(d);
-                });
-              }
-            } else {
-              for (i = 0; i < legend.length; i++) {
-                aggregates[i].forEach(function (d) {
-                  d.name = "raw " + legend[i];
-                  d.color = colors[i];
-                  values.push(d);
-                });
-              }
+        };
+        var legend = [];
+        var values = [];
+        var colors = [];
+        if (!_this.comparedTo) {
+          buildLines(data[_this.repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count, false);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+            if (!_this.disableRollingAverage) {
+              normalized.push(rolling);
+              aggregates.push(d);
+              legend.push(field);
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
             }
+            if (!hideRaw || _this.disableRollingAverage) {
+              normalized.push(rolling);
+              aggregates.push(d);
+              legend.push(field);
+              colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
+            }
+          }, false);
+        } else if (_this.compare === 'each' && _this.comparedTo) {
+          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count, false);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
 
-            _this.legendLabels = legend;
-            _this.values = values;
+            normalized.push(rolling);
+            aggregates.push(d);
+            legend.push(_this.comparedTo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
+          }, false);
+          buildLines(data[_this.repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count, true);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
 
-            config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
+            normalized.push(rolling);
+            aggregates.push(d);
+            legend.push(_this.repo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          }, true);
+        } else if (_this.comparedTo) {
+          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+            normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
+              earliest: _this.earliest,
+              latest: _this.latest,
+              byDate: true,
+              period: _this.period
+            }));
+            legend.push(_this.comparedTo + ' ' + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          }, true);
+        }
 
-            $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-            $(_this.$el).find('.linechart').removeClass('loader');
-
-            _this.renderChart();
+        if (normalized.length == 0) {
+          _this.renderError();
+        } else {
+          if (hideRaw) {
+            for (var i = 0; i < legend.length; i++) {
+              normalized[i].forEach(function (d) {
+                d.name = legend[i];
+                d.color = colors[i];
+                values.push(d);
+              });
+            }
+          } else {
+            for (var i = 0; i < legend.length; i++) {
+              aggregates[i].forEach(function (d) {
+                d.name = "raw " + legend[i];
+                d.color = colors[i];
+                values.push(d);
+              });
+            }
           }
-        })();
+
+          _this.legendLabels = legend;
+          _this.values = values;
+
+          config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
+
+          $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+          $(_this.$el).find('.linechart').removeClass('loader');
+
+          _this.renderChart();
+        }
+      };
+      if (this.data) {
+        processData(this.data);
       } else {
         window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
-          _this.__download_data = data;
-          _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
-          _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
-          _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
-
-          var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
-            var d = null;
-            if (compared) {
-              d = _AugurStats2.default.convertComparedKey(obj[key], field);
-            } else {
-              d = _AugurStats2.default.convertKey(obj[key], field);
-            }
-
-            d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
-            return d;
-          };
-
-          var normalized = [];
-          var aggregates = [];
-          var buildLines = function buildLines(obj, onCreateData, compared) {
-            if (!obj) {
-              return;
-            }
-            if (!onCreateData) {
-              onCreateData = function onCreateData(obj, key, field, count) {
-                normalized.push(d);
-              };
-            }
-            var count = 0;
-            for (var key in obj) {
-
-              if (obj.hasOwnProperty(key)) {
-                if (fields[key]) {
-                  fields[key].forEach(function (field) {
-                    onCreateData(obj, key, field, count);
-                    count++;
-                  });
-                } else {
-                  if (Array.isArray(obj[key]) && obj[key].length > 0) {
-                    var field = Object.keys(obj[key][0]).splice(1);
-                    onCreateData(obj, key, field, count);
-                    count++;
-                  } else {
-                    _this.renderError();
-                    return;
-                  }
-                }
-              }
-            }
-          };
-          var legend = [];
-          var values = [];
-          var colors = [];
-          if (!_this.comparedTo) {
-            buildLines(data[_this.repo], function (obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count, false);
-              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-              if (!_this.disableRollingAverage) {
-                normalized.push(rolling);
-                aggregates.push(d);
-                legend.push(field);
-                colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-              }
-              if (!hideRaw || _this.disableRollingAverage) {
-                normalized.push(rolling);
-                aggregates.push(d);
-                legend.push(field);
-                colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
-              }
-            }, false);
-          } else if (_this.compare === 'each' && _this.comparedTo) {
-            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count, false);
-              var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(_this.comparedTo + ' ' + field);
-              colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-            }, false);
-            buildLines(data[_this.repo], function (obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count, true);
-              var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
-
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(_this.repo + ' ' + field);
-              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-            }, true);
-          } else if (_this.comparedTo) {
-            buildLines(data[_this.comparedTo], function (obj, key, field, count) {
-              normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
-                earliest: _this.earliest,
-                latest: _this.latest,
-                byDate: true,
-                period: _this.period
-              }));
-              legend.push(_this.comparedTo + ' ' + field);
-              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-            }, true);
-          }
-
-          if (normalized.length == 0) {
-            _this.renderError();
-          } else {
-            if (hideRaw) {
-              for (var i = 0; i < legend.length; i++) {
-                normalized[i].forEach(function (d) {
-                  d.name = legend[i];
-                  d.color = colors[i];
-                  values.push(d);
-                });
-              }
-            } else {
-              for (var i = 0; i < legend.length; i++) {
-                aggregates[i].forEach(function (d) {
-                  d.name = "raw " + legend[i];
-                  d.color = colors[i];
-                  values.push(d);
-                });
-              }
-            }
-
-            _this.legendLabels = legend;
-            _this.values = values;
-
-            config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
-
-            $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-            $(_this.$el).find('.linechart').removeClass('loader');
-
-            _this.renderChart();
-          }
+          processData(data);
         }, function () {
           _this.renderError();
         });
