@@ -27,11 +27,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 class PiperMail:
 	
-	def make(self,db,mail_check,archives,mail_lists,res,session):
-		print("Okay")
-		print(db)
-		print(mail_check)
-		print("Hey")
+	def make(self,db,mail_check,archives,mail_lists,res,session,di,numb):
 		path = "/augur/data/"
 		db_name = "mail_lists"
 		db_name_csv = os.getcwd() + path + db_name
@@ -56,38 +52,32 @@ class PiperMail:
 						'message_id': s.types.VARCHAR(length=500),
 						'message_text': s.types.VARCHAR(length=12000)
 					})
+			mail_lists = True
 		
-				
+		#print(di[0]['data']['Date'])	
 		SQL = s.sql.text("""SELECT COUNT(*) FROM mail_lists""")
 		df7 = pd.read_sql(SQL, db)
 		augurmsgID = int(df7.values)+1
-		new = False
-		numb = 0
 		for i in range(len(archives)):
 			if(mail_check[archives[i]] == "update"):
-				place = os.getcwd() + path + 'archive-' + 'temp_' + archives[i]
+				new = False
 			elif(mail_check[archives[i]] == 'new' ):
-				place = os.getcwd() + path + 'archive-' + archives[i]
+				#place = os.getcwd() + path + 'archive-' + archives[i]
 				new = True
 			else:
 				print("Skipping")
 				continue
-			f = open(place + '.json','r')
-			x = f.read()
-			f.close()
 			print(archives)
-			data,j = self.read_json(x)
-			di = json.loads(data)
 			df = pd.DataFrame(columns=columns1)
 			df["date"] = pd.to_datetime(df["date"])
 			df5 = pd.DataFrame(columns=columns1)
 			#columns2= "backend_name","mailing_list_url","project"
-			last_date = self.convert_date(di['data']['Date'])
+			last_date = self.convert_date(di[0]['data']['Date'])
 			row = 1
 			k = 1
 			y = False
-			while(j<len(x)):
-				df,row,augurmsgID = self.add_row_mess(columns1,df,di,row,archives[i],augurmsgID)
+			for j in range(len(di)):
+				df,row,augurmsgID = self.add_row_mess(columns1,df,di[j],row,archives[0],augurmsgID)
 				df6 = df5.append(df)
 				df5 = df6		
 				val = False		
@@ -98,31 +88,31 @@ class PiperMail:
 					val = True
 					y = True
 				df = pd.DataFrame(columns=columns1)
-				data,r= self.read_json(x[j:])
-				j+=r
-				if(j==len(x)):
-					break
-				di = json.loads(data)
+				#data,r= self.read_json(x[j:])
+				#j+=r
+				#if(j==len(x)):
+				#	break
+				#di = json.loads(data)
 			if(val == False):
 				#print(df5)
 				df5.to_sql(name=db_name, con=db,if_exists='append',index=False)
 				df5.to_csv(db_name_csv + ".csv", mode='a')
-			temp_date = self.convert_date(di['data']['Date'])
+			temp_date = self.convert_date(di[j]['data']['Date'])
 			if(last_date < temp_date):
 				last_date = temp_date
 				print(last_date)
-				if(mail_check[archives[i]] == 'update'):
+				if(mail_check[archives[0]] == 'update'):
 					print(res)
 					print("sigh")
 					y=0
 					print(res[y].project)
-					while(res[y].project!=archives[i]):
+					while(res[y].project!=archives[0]):
 						y+=1
 						print(res[y].project)
 					res[y].last_message_date = last_date
 					session.commit()
 
-			df_mail_list,numb = self.add_row_mail_list(columns2,di,df_mail_list,archives[i],last_date,numb)
+			df_mail_list,numb = self.add_row_mail_list(columns2,di[i],df_mail_list,archives[0],last_date,numb)
 			print("File uploaded ",row)
 		if(new == True):
 			name = os.getcwd() + path + "mailing_list_jobs"
@@ -130,19 +120,7 @@ class PiperMail:
 			df_mail_list.to_sql(name='mailing_list_jobs',con=db,if_exists='append',index=False)
 			print("Mailing List Job uploaded")
 		print("Finished")
-
-	
-	def read_json(self,p):
-		k = j = 0
-		y=""
-		for line in p:
-			if(p[j:j+9] == "\"origin\":" or p[j:j+11] == "\"unixfrom\":"):
-				k+=1
-			y+=line
-			j+=1
-			if(k==2 and line == "}"):
-				break
-		return y,j
+		return numb,mail_lists
 	
 	def convert_date(self,di):
 		split = di.split()
@@ -161,7 +139,6 @@ class PiperMail:
 
 	def add_row_mess(self,columns1,df,di,row,archives,augurmsgID):
 		temp = 	di['data']['body']['plain']
-		words = ""
 		k = 1
 		val = False
 		prev = 0
@@ -202,6 +179,7 @@ class PiperMail:
 			df3 = df.append(df1)
 			df = df3
 			augurmsgID+=1
+		row+=row_num
 		return df,row,augurmsgID
 	
 	def add_row_mail_list(self,columns2,di,df_mail_list,archives,last_date,numb):
