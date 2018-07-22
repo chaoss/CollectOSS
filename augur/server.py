@@ -1114,61 +1114,6 @@ class Server(object):
         self.addTimeseries(ghtorrent.fakes, 'fakes')
 
         """
-        @api {get} /git/lines_changed/:git_repo_url Lines Changed by Author
-        @apiName lines-changed-by-author
-        @apiGroup Experimental
-        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "additions":2,
-                                    "author_date":"2018-05-14 10:09:57 -0500",
-                                    "author_email":"s@goggins.com",
-                                    "author_name":"Sean P. Goggins",
-                                    "commit_date":"2018-05-16 10:12:22 -0500",
-                                    "committer_email":"derek@howderek.com",
-                                    "committer_name":"Derek Howard",
-                                    "deletions":0,"hash":"77e603a",
-                                    "message":"merge dev",
-                                    "parents":"b8ec0ed"
-                                }
-                            ]
-        """
-        self.addGitMetric(git.lines_changed_by_author, 'changes_by_author')
-
-        """
-        @api {get} /git/lines_changed/:git_repo_url Lines Changed (minus whitespace)
-        @apiName lines-changed-minus-whitespace 
-        @apiGroup Experimental
-        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
-
-        @apiParam {String} owner Username of the owner of the GitHub repository
-        @apiParam {String} repo Name of the GitHub repository
-
-        @apiSuccessExample {json} Success-Response:
-                            [
-                                {
-                                    "additions":2,
-                                    "author_date":"2018-05-14 10:09:57 -0500",
-                                    "author_email":"s@goggins.com",
-                                    "author_name":"Sean P. Goggins",
-                                    "commit_date":"2018-05-16 10:12:22 -0500",
-                                    "committer_email":"derek@howderek.com",
-                                    "committer_name":"Derek Howard",
-                                    "deletions":0,
-                                    "hash":"77e603a",
-                                    "message":"merge dev",
-                                    "parents":"b8ec0ed"
-                                }
-                            ]
-        """
-        self.addGitMetric(git.lines_changed_minus_whitespace, 'lines_changed')
-
-        """
         @api {get} /:owner/:repo/linking_websites Linking Websites
         @apiName linking-websites
         @apiGroup Experimental
@@ -1341,9 +1286,10 @@ class Server(object):
                     # and returns a string. If your endpoints return JSON object,
                     # this string would be the response as a JSON string.
                     responses.append({
-                        "path": path,
-                        "status": response.status_code,
-                        "response": str(response.get_data(), 'utf8')
+                        # "path": path,
+                        # "status": response.status_code,
+                        # "response": str(response.get_data(), 'utf8'),
+                        "metadata": self.getMetricMetadataByEndpoint(path)
                     })
 
                 except Exception as e:
@@ -1353,7 +1299,6 @@ class Server(object):
                         "status": 500,
                         "response": str(e)
                     })
-
 
             return Response(response=json.dumps(responses),
                             status=207,
@@ -1443,6 +1388,15 @@ class Server(object):
         metric_name = re.sub('_', ' ', function.__name__).title()
         annotate(metric_name=metric_name, endpoint=endpoint, source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
         self.writeMetadata()
+        # self.getMetricMetadataByEndpoint("issues/closed")
+
+    def getMetricMetadataByEndpoint(self, endpoint):
+        new_endpoint = re.findall(r'(?:/api/unstable/[a-zA-Z]*/[a-zA-Z]*/)(.*)', endpoint)
+        for x in metrics:
+            if "endpoint" in x:
+                if new_endpoint[0] in x['endpoint']:
+                    return json.dumps(x)
+        return None
 
     def writeMetadata(self):
         metadata = open('docs/metrics/output/metadata.json', 'w')

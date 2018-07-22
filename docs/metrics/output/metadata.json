@@ -256,20 +256,12 @@
         "metric_type": "git"
     },
     {
-        "metric_name": "Lines Changed Minus Whitespace",
-        "group": "experimental",
-        "endpoint": "/api/unstable/git/lines_changed/<path:repo_url>/",
-        "source": "Git",
-        "tag": "lines-changed-minus-whitespace",
-        "metric_type": "git"
+        "metric_name": "lines-changed-minus-whitespace",
+        "group": "experimental"
     },
     {
-        "metric_name": "Lines Changed By Author",
-        "group": "experimental",
-        "endpoint": "/api/unstable/git/changes_by_author/<path:repo_url>/",
-        "source": "Git",
-        "tag": "lines-changed-by-author",
-        "metric_type": "git"
+        "metric_name": "lines-changed-by-author",
+        "group": "experimental"
     },
     {
         "metric_name": "Dependencies",

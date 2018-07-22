@@ -242,7 +242,10 @@ class HTMLBuilder(object):
         index.write(self.html)
         frontend.write(self.html)
 
-metric_files = ['upstream/1_Diversity-Inclusion.md', 'upstream/2_Growth-Maturity-Decline.md', 'upstream/3_Risk.md', 'upstream/4_Value.md']
+metric_files = ['upstream/1_Diversity-Inclusion.md', 
+                'upstream/2_Growth-Maturity-Decline.md', 
+                'upstream/3_Risk.md', 
+                'upstream/4_Value.md']
 
 metric_type_by_file = {
     'upstream/1_Diversity-Inclusion.md': 'diversity-inclusion',
