@@ -2,6 +2,7 @@ import os
 import re
 import json
 import glob
+import cgi
 from bs4 import BeautifulSoup
 import augur.server
 import augur.util as util
@@ -31,9 +32,6 @@ class Metric(object):
 
     def setUrl(self):
        self.url = 'activity-metrics/' + self.tag + '.md'
-
-    def createHTMLSafeEndpoint(self):
-        self.escaped_endpoint = re.sub(">", "&gt;", re.sub("<", "&lt;", self.endpoint))
 
 def printMetricGroup(group, level='quiet'):
     if level == 'quiet':
@@ -120,7 +118,7 @@ def createImplementedMetric(metadata):
     if 'endpoint' in metadata:
         metric.endpoint = metadata['endpoint']
         metric.frontend_status = util.determineFrontendStatus(metric.endpoint)
-        metric.createHTMLSafeEndpoint()
+        metric.escaped_endpoint = metadata['escaped_endpoint']
 
     if 'metric_type' in metadata:
         metric.metric_type = metadata['metric_type']

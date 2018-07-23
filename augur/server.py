@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import re
+import cgi
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
@@ -1216,7 +1217,7 @@ class Server(object):
         """
         @api {post} /batch Batch Requests
         @apiName Batch
-        @apiGroup Batch
+        @apiGroup Utility
         @apiDescription Returns results of batch requests
         POST JSON of api requests
         """
@@ -1286,9 +1287,9 @@ class Server(object):
                     # and returns a string. If your endpoints return JSON object,
                     # this string would be the response as a JSON string.
                     responses.append({
-                        # "path": path,
-                        # "status": response.status_code,
-                        # "response": str(response.get_data(), 'utf8'),
+                        "path": path,
+                        "status": response.status_code,
+                        "response": str(response.get_data(), 'utf8'),
                         "metadata": self.getMetricMetadataByEndpoint(path)
                     })
 
@@ -1301,6 +1302,50 @@ class Server(object):
                     })
 
             return Response(response=json.dumps(responses),
+                            status=207,
+                            mimetype="application/json")
+
+        """
+        @api {post} /batch/metadata Batch Requests Metadata 
+        @apiName BatchMetadata
+        @apiGroup Utility
+        @apiDescription Returns metadata of batch requests endpoints
+        POST JSON of api requests
+        """
+        @app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
+        def batch_metadata():
+            """
+            Execute multiple requests, submitted as a batch.
+            :statuscode 207: Multi status
+            """
+            if request.method == 'GET':
+                """returns metadata for all metrics"""
+                return app.make_response(str(metrics))
+
+            try:
+                requests = json.loads(request.data)
+            except ValueError as e:
+                request.abort(400)
+
+            metadata = []
+
+            for index, req in enumerate(requests):
+
+                path = req['path']
+
+                try:
+                    metadata.append({
+                        "metadata": self.getMetricMetadataByEndpoint(path)
+                    })
+
+                except Exception as e:
+                    metadata.append({
+                        "path": path,
+                        "status": 500,
+                        "response": str(e)
+                    })
+
+            return Response(response=json.dumps(metadata),
                             status=207,
                             mimetype="application/json")
 
@@ -1386,9 +1431,8 @@ class Server(object):
         tag = re.sub("_", "-", function.__name__).lower()
         frontend_status = ''
         metric_name = re.sub('_', ' ', function.__name__).title()
-        annotate(metric_name=metric_name, endpoint=endpoint, source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
+        annotate(metric_name=metric_name, endpoint=endpoint, escaped_endpoint=cgi.escape(endpoint), source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
         self.writeMetadata()
-        # self.getMetricMetadataByEndpoint("issues/closed")
 
     def getMetricMetadataByEndpoint(self, endpoint):
         new_endpoint = re.findall(r'(?:/api/unstable/[a-zA-Z]*/[a-zA-Z]*/)(.*)', endpoint)

@@ -1,6 +1,6 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop 
 .PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade 
-.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upsteam version
+.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upstream version
 
 SERVECOMMAND=augur
 CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
@@ -17,7 +17,7 @@ default:
 	@ echo "    install-e              Installs augur in editable mode (pip -e)"
 	@ echo "    install-dev            Installs augur's developer dependencies (requires npm and pip)"
 	@ echo "    install-msr            Installs MSR14 dataset"
-	@ echo "    update-upsteam         Updates git submodules"
+	@ echo "    update-upstream         Updates git submodules"
 	@ echo "    upgrade                Pulls newest version, installs, performs migrations"
 	@ echo "    version                Print the currently installed version"
 	@ echo
@@ -69,10 +69,10 @@ version:
 download-upgrade:
 	git pull
 
-update-upsteam: 
+update-upstream: 
 	git submodule update --init --recursive --remote
 
-upgrade: version download-upgrade update-upsteam install-dev
+upgrade: version download-upgrade update-upstream install-dev
 	@ python util/post-upgrade.py $(OLDVERSION)
 	@ echo "Upgraded from $(OLDVERSION) to $(shell python util/print-version.py)."
 
@@ -150,10 +150,10 @@ update-deps:
 #  Prototyping
 #
 
-build-metrics-status: update-upsteam
+build-metrics-status: update-upstream
 	@ bash -c '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
 
-metrics-status: update-upsteam build-metrics-status
+metrics-status: update-upstream build-metrics-status
 	open docs/metrics/output/index.html
 
 jupyter:
