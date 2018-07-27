@@ -3,11 +3,11 @@ import os
 import sys
 import json
 import re
-import cgi
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
+from augur.routes import create_all_routes
 from augur.util import annotate, metrics, determineFrontendStatus
 
 sys.path.append('..')
@@ -24,6 +24,7 @@ class Server(object):
     def __init__(self):
         # Create Flask application
         self.app = Flask(__name__)
+        self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
 
@@ -39,12 +40,14 @@ class Server(object):
         # Initalize all of the classes
         ghtorrent = augur_app.ghtorrent()
         ghtorrentplus = augur_app.ghtorrentplus()
-        publicwww = augur_app.publicwww()
-        git = augur_app.git()
+        git = augur_app.facade()
         github = augur_app.githubapi()
         librariesio = augur_app.librariesio()
         downloads = augur_app.downloads()
         localcsv = augur_app.localcsv()
+
+        
+        create_all_routes(self)
 
 
         #####################################
@@ -1115,8 +1118,8 @@ class Server(object):
         self.addTimeseries(ghtorrent.fakes, 'fakes')
 
         """
-        @api {get} /:owner/:repo/linking_websites Linking Websites
-        @apiName linking-websites
+        @api {get} /git/lines_changed/:git_repo_url Lines Changed by Author
+        @apiName lines-changed-by-author
         @apiGroup Experimental
         @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
@@ -1126,16 +1129,48 @@ class Server(object):
         @apiSuccessExample {json} Success-Response:
                             [
                                 {
-                                    "url": "missouri.edu",
-                                    "rank": "1"
-                                },
-                                {
-                                    "url": "unomaha.edu",
-                                    "rank": "2"
+                                    "additions":2,
+                                    "author_date":"2018-05-14 10:09:57 -0500",
+                                    "author_email":"s@goggins.com",
+                                    "author_name":"Sean P. Goggins",
+                                    "commit_date":"2018-05-16 10:12:22 -0500",
+                                    "committer_email":"derek@howderek.com",
+                                    "committer_name":"Derek Howard",
+                                    "deletions":0,"hash":"77e603a",
+                                    "message":"merge dev",
+                                    "parents":"b8ec0ed"
                                 }
                             ]
         """
-        self.addMetric(publicwww.linking_websites, 'linking_websites')
+        self.addGitMetric(git.lines_changed_by_author, 'changes_by_author')
+
+        """
+        @api {get} /git/lines_changed/:git_repo_url Lines Changed (minus whitespace)
+        @apiName lines-changed-minus-whitespace 
+        @apiGroup Experimental
+        @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+        @apiParam {String} owner Username of the owner of the GitHub repository
+        @apiParam {String} repo Name of the GitHub repository
+
+        @apiSuccessExample {json} Success-Response:
+                            [
+                                {
+                                    "additions":2,
+                                    "author_date":"2018-05-14 10:09:57 -0500",
+                                    "author_email":"s@goggins.com",
+                                    "author_name":"Sean P. Goggins",
+                                    "commit_date":"2018-05-16 10:12:22 -0500",
+                                    "committer_email":"derek@howderek.com",
+                                    "committer_name":"Derek Howard",
+                                    "deletions":0,
+                                    "hash":"77e603a",
+                                    "message":"merge dev",
+                                    "parents":"b8ec0ed"
+                                }
+                            ]
+        """
+        self.addGitMetric(git.lines_changed_minus_whitespace, 'lines_changed')
 
         """
         @api {get} /:owner/:repo/timeseries/tags/major Major Tags
@@ -1204,8 +1239,8 @@ class Server(object):
         @app.route('/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
 
         def ghtorrent_range():
-            ghtorrent_range = self.transform(ghtorrent.ghtorrent_range())
-            return Response(response=ghtorrent_range,
+            ghr = self.transform(ghtorrent.ghtorrent_range())
+            return Response(response=ghr,
                             status=200,
                             mimetype="application/json")
         # self.updateMetricMetadata(ghtorrent.ghtorrent_range, '/{}/ghtorrent_range'.format(AUGUR_API_VERSION))
@@ -1217,7 +1252,7 @@ class Server(object):
         """
         @api {post} /batch Batch Requests
         @apiName Batch
-        @apiGroup Utility
+        @apiGroup Batch
         @apiDescription Returns results of batch requests
         POST JSON of api requests
         """
@@ -1289,8 +1324,7 @@ class Server(object):
                     responses.append({
                         "path": path,
                         "status": response.status_code,
-                        "response": str(response.get_data(), 'utf8'),
-                        "metadata": self.getMetricMetadataByEndpoint(path)
+                        "response": str(response.get_data(), 'utf8')
                     })
 
                 except Exception as e:
@@ -1301,51 +1335,8 @@ class Server(object):
                         "response": str(e)
                     })
 
+
             return Response(response=json.dumps(responses),
-                            status=207,
-                            mimetype="application/json")
-
-        """
-        @api {post} /batch/metadata Batch Requests Metadata 
-        @apiName BatchMetadata
-        @apiGroup Utility
-        @apiDescription Returns metadata of batch requests endpoints
-        POST JSON of api requests
-        """
-        @app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
-        def batch_metadata():
-            """
-            Execute multiple requests, submitted as a batch.
-            :statuscode 207: Multi status
-            """
-            if request.method == 'GET':
-                """returns metadata for all metrics"""
-                return app.make_response(str(metrics))
-
-            try:
-                requests = json.loads(request.data)
-            except ValueError as e:
-                request.abort(400)
-
-            metadata = []
-
-            for index, req in enumerate(requests):
-
-                path = req['path']
-
-                try:
-                    metadata.append({
-                        "metadata": self.getMetricMetadataByEndpoint(path)
-                    })
-
-                except Exception as e:
-                    metadata.append({
-                        "path": path,
-                        "status": 500,
-                        "response": str(e)
-                    })
-
-            return Response(response=json.dumps(metadata),
                             status=207,
                             mimetype="application/json")
 
@@ -1431,16 +1422,8 @@ class Server(object):
         tag = re.sub("_", "-", function.__name__).lower()
         frontend_status = ''
         metric_name = re.sub('_', ' ', function.__name__).title()
-        annotate(metric_name=metric_name, endpoint=endpoint, escaped_endpoint=cgi.escape(endpoint), source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
+        annotate(metric_name=metric_name, endpoint=endpoint, source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
         self.writeMetadata()
-
-    def getMetricMetadataByEndpoint(self, endpoint):
-        new_endpoint = re.findall(r'(?:/api/unstable/[a-zA-Z]*/[a-zA-Z]*/)(.*)', endpoint)
-        for x in metrics:
-            if "endpoint" in x:
-                if new_endpoint[0] in x['endpoint']:
-                    return json.dumps(x)
-        return None
 
     def writeMetadata(self):
         metadata = open('docs/metrics/output/metadata.json', 'w')

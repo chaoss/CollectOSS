@@ -26,7 +26,7 @@ setup(
     url='https://github.com/OSSHealth/augur',
     author='Derek Howard',
     author_email='derek@howderek.com',
-    packages=['augur', 'augur.plugins'],
+    packages=['augur', 'augur.plugins', 'augur.routes'],
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',

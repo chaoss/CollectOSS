@@ -53,10 +53,14 @@ class Facade(object):
     @annotate(metric_name='downloaded-repos', group='experimental')
     def downloaded_repos(self):
         repoSQL = s.sql.text("""
-            SELECT * FROM repos;
+            SELECT git as url, status FROM repos;
         """)
         results = pd.read_sql(repoSQL, self.db)
         return results
+
+    @annotate(metric_name='lines-changed-minus-whitespace', group='experimental')
+    def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
+        pass
 
     @annotate(metric_name='lines-changed-by-author', group='experimental')
     def lines_changed_by_author(self, repo_url):
@@ -64,13 +68,13 @@ class Facade(object):
         Makes sure the storageFolder contains updated versions of all the repos
         """
         repoSQL = s.sql.text("""
-            SELECT author_email, author_date, SUM(added), SUM(removed), SUM(whitespace)
+            SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
             FROM analysis_data
             WHERE repos_id = (SELECT id FROM repos WHERE git = :repourl)
-            GROUP BY repos_id, author_date, author_email
+            GROUP BY repos_id, author_date, author_affiliation, author_email
             ORDER BY author_date ASC;
         """)
-        results = pd.read_sql(repoSQL, self.db, params={"repourl": repo_url}, index_col=['author_email'])
+        results = pd.read_sql(repoSQL, self.db, params={"repourl": repo_url})
         return results
 
     

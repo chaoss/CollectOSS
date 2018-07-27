@@ -1,5 +1,5 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop 
-.PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade 
+.PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
 .PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upstream version
 
 SERVECOMMAND=augur
@@ -151,7 +151,7 @@ update-deps:
 #
 
 build-metrics-status: update-upstream
-	@ bash -c '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
+	-@ bash -c '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
 
 metrics-status: update-upstream build-metrics-status
 	open docs/metrics/output/index.html
