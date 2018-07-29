@@ -107,6 +107,7 @@ class Application(object):
         self.__ghtorrentplus = None
         self.__githubapi = None
         self.__git = None
+        self.__facade = None
         self.__librariesio = None
         self.__downloads = None
         self.__publicwww = None
@@ -153,6 +154,7 @@ class Application(object):
         self.ghtorrentplus()
         self.githubapi()
         self.git()
+        self.facade()
         self.librariesio()
         self.downloads()
         self.publicwww()
@@ -247,6 +249,19 @@ class Application(object):
                 dbname=self.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
             )
         return self.__ghtorrent
+
+    def facade(self):
+        from augur.facade import Facade
+        if self.__facade is None:
+            logger.debug('Initializing Facade')
+            self.__facade = Facade(
+                user=self.read_config('Facade', 'user', 'AUGUR_FACADE_DB_USER', 'root'),
+                password=self.read_config('Facade', 'pass', 'AUGUR_FACADE_DB_PASS', ''),
+                host=self.read_config('Facade', 'host', 'AUGUR_FACADE_DB_HOST', '127.0.0.1'),
+                port=self.read_config('Facade', 'port', 'AUGUR_FACADE_DB_PORT', '3306'),
+                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade')
+            )
+        return self.__facade
 
     def ghtorrentplus(self):
         from augur.ghtorrentplus import GHTorrentPlus

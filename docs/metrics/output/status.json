@@ -2158,6 +2158,45 @@
         "is_defined": false
     },
     {
+        "tag": "downloaded-repos",
+        "name": "Downloaded Repos",
+        "group": "experimental",
+        "backend_status": "implemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "/api/unstable/git/repos",
+        "escaped_endpoint": "/api/unstable/git/repos",
+        "source": "Git",
+        "metric_type": "git",
+        "url": "/",
+        "is_defined": false
+    },
+    {
+        "tag": "lines-changed-minus-whitespace",
+        "name": "Lines Changed Minus Whitespace",
+        "group": "experimental",
+        "backend_status": "implemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "/api/unstable/git/lines_changed/<path:repo_url>/",
+        "escaped_endpoint": "/api/unstable/git/lines_changed/&lt;path:repo_url&gt;/",
+        "source": "Git",
+        "metric_type": "git",
+        "url": "/",
+        "is_defined": false
+    },
+    {
+        "tag": "lines-changed-by-author",
+        "name": "Lines Changed By Author",
+        "group": "experimental",
+        "backend_status": "implemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "/api/unstable/git/changes_by_author/<path:repo_url>/",
+        "escaped_endpoint": "/api/unstable/git/changes_by_author/&lt;path:repo_url&gt;/",
+        "source": "Git",
+        "metric_type": "git",
+        "url": "/",
+        "is_defined": false
+    },
+    {
         "tag": "dependencies",
         "name": "Dependencies",
         "group": "experimental",

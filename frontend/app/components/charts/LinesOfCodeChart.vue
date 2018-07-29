@@ -11,7 +11,7 @@
         </thead>
         <tbody>
           <tr v-for="contributor in contributors.slice(0, 10)">
-            <td>{{ contributor.email }}</td>
+            <td>{{ contributor.author_email }}</td>
             <td v-for="year in years">{{ (contributor[year]) ? contributor[year].additions || 0 : 0}}</td>
             <td>{{ contributor.additions }}</td>
           </tr>
@@ -104,7 +104,7 @@ export default {
           }
         })
         
-        this.contributors = flattenAndSort(contributors, 'email', 'additions')
+        this.contributors = flattenAndSort(contributors, 'author_email', 'additions')
         this.organizations = flattenAndSort(organizations, 'name', 'additions')
             
 

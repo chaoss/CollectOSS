@@ -10,7 +10,7 @@
       <section class="unmaterialized">
         <h3>Downloaded Git repositories</h3>
         <div v-for="repo in downloadedRepos">
-          <a :href="'?git=' + btoa(repo.url)" class="repolink">{{ repo.url }}</a> (updated: {{ repo.updated }})
+          <a :href="'?git=' + btoa(repo.url)" class="repolink">{{ repo.url }}</a> (status: {{ repo.status }})
         </div>
       </section>
     </div>

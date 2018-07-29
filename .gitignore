@@ -45,6 +45,11 @@ Thumbs.db
 *.cache
 *.pyc
 *.swp
+*.un~
+
+# Git #
+#######
+*.orig
 
 # Python junk #
 ###############

@@ -2,9 +2,10 @@ import os
 import re
 import json
 import glob
+import cgi
 from bs4 import BeautifulSoup
 import augur.server
-import augur.util as util
+from augur.util import getFileID, determineFrontendStatus
 
 import pprint
 pp = pprint.PrettyPrinter()
@@ -32,18 +33,12 @@ class Metric(object):
     def setUrl(self):
        self.url = 'activity-metrics/' + self.tag + '.md'
 
-    def createHTMLSafeEndpoint(self):
-        self.escaped_endpoint = re.sub(">", "&gt;", re.sub("<", "&lt;", self.endpoint))
-
 def printMetricGroup(group, level='quiet'):
     if level == 'quiet':
         pp.pprint([metric.tag for metric in group])
 
     if level == 'verbose':
         pp.pprint([("Name: {} \n Tag: {} \nBackend Status: {} \nFrontend Status: {} \nEndpoint: {} \nUrl: {} \nDefined: {}".format(metric.name, metric.tag, metric.backend_status, metric.frontend_status, metric.escaped_endpoint, metric.url, metric.is_defined)) for metric in group])
-
-def getFileID(path):
-    return os.path.splitext(os.path.basename(path))[0]
 
 def createDefinedMetricTags():
     defined_metric_tags = []
@@ -119,8 +114,8 @@ def createImplementedMetric(metadata):
 
     if 'endpoint' in metadata:
         metric.endpoint = metadata['endpoint']
-        metric.frontend_status = util.determineFrontendStatus(metric.endpoint)
-        metric.createHTMLSafeEndpoint()
+        metric.frontend_status = determineFrontendStatus(metric.endpoint)
+        metric.escaped_endpoint = metadata['escaped_endpoint']
 
     if 'metric_type' in metadata:
         metric.metric_type = metadata['metric_type']
@@ -242,7 +237,10 @@ class HTMLBuilder(object):
         index.write(self.html)
         frontend.write(self.html)
 
-metric_files = ['upstream/1_Diversity-Inclusion.md', 'upstream/2_Growth-Maturity-Decline.md', 'upstream/3_Risk.md', 'upstream/4_Value.md']
+metric_files = ['upstream/1_Diversity-Inclusion.md', 
+                'upstream/2_Growth-Maturity-Decline.md', 
+                'upstream/3_Risk.md', 
+                'upstream/4_Value.md']
 
 metric_type_by_file = {
     'upstream/1_Diversity-Inclusion.md': 'diversity-inclusion',

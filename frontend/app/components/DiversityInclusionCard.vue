@@ -3,7 +3,7 @@
     <h1>Diversity and Inclusion</h1>
     <h2>{{ $store.state.baseRepo }}   {{ $store.state.comparedRepo }}</h2>
       <div class="row">
-        <p>These metrics have not yet been developed.</p>
+        <p>We currently do not have any metrics developed for this group.</p>
       </div>
     </div>
 

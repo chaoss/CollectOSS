@@ -14,7 +14,7 @@
         </div>
         <nav class="col col-4 header-nav">
           <a class="header-nav-item" href="static/metrics_status.html">Metrics Status</a>
-          <a class="header-nav-item" href="https://github.com/OSSHealth/augur/tree/dev">GitHub</a>
+          <a class="header-nav-item" href="https://github.com/OSSHealth/augur">GitHub</a>
           <a class="header-nav-item" href="https://osshealth.github.io/augur/">Documentation</a>
         </nav>
       </div>
