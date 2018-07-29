@@ -22,6 +22,7 @@
 *.rar
 *.tar
 *.zip
+.vagrant
 
 # Logs and databases #
 ######################
