@@ -141,7 +141,7 @@ let spec = {
 };
 
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'comparedTo'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'comparedTo'],
   data() {
     return {
       values: []
@@ -164,7 +164,7 @@ export default {
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.bubblechart').addClass('loader')
       let shared = {};
-      if (this.repo) {
+      let processData = (data) => {
         window.AugurRepos[this.repo][this.source]().then((data) => {
           shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
           if (removeBelowAverageContributors) {
@@ -188,6 +188,38 @@ export default {
           $(this.$el).find('.showme, .hidefirst').removeClass('invis')
           $(this.$el).find('.bubblechart').removeClass('loader')
         })
+      }
+      if (this.repo) {
+
+        if (this.data){
+          processData(this.data)
+        } else {
+          window.AugurRepos[this.repo][this.source]().then((data) => {
+            shared.baseData = data.map((e) => { e.repo = this.repo.toString(); return e })
+            if (removeBelowAverageContributors) {
+              shared.baseData = AugurStats.aboveAverage(shared.baseData, 'total')
+            }
+            if (this.comparedTo) {
+              return window.AugurRepos[this.comparedTo].contributors();
+            } else {
+              return new Promise((resolve, reject) => { resolve() });
+            }
+          }).then((compareData) => {
+            if (compareData) {
+              compareData = compareData.map((e) => { e.repo = this.comparedTo; return e })
+              if (removeBelowAverageContributors) {
+                compareData = AugurStats.aboveAverage(compareData, 'total')
+              }
+              this.values = _.concat(shared.baseData, compareData)
+            } else {
+              this.values = shared.baseData;
+            }
+            $(this.$el).find('.showme, .hidefirst').removeClass('invis')
+            $(this.$el).find('.bubblechart').removeClass('loader')
+          })
+        }
+
+
       }
     }
   }

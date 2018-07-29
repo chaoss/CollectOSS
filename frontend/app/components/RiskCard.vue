@@ -1,12 +1,12 @@
 <template>
   <section>
     <h1>Risk</h1>
-    <h2>{{ $store.state.baseRepo }}</h2>
+    <h2>{{ $store.state.baseRepo }}   {{ $store.state.comparedRepo }}</h2>
       <div class="row">
         <p>We currently do not have any metrics developed for this group.</p>
       </div>
     </div>
-    
+
   </section>
 </template>
 

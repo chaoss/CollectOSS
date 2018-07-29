@@ -248,13 +248,13 @@
     },
     {
         "tag": "closed-issue-resolution-duration",
-        "name": "Closed Issue Resolution Duration",
+        "name": "closed-issue-resolution-duration",
         "group": "growth-maturity-decline",
         "backend_status": "implemented",
         "frontend_status": "unimplemented",
-        "endpoint": "/api/unstable/<owner>/<repo>/issues/time_to_close",
-        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/issues/time_to_close",
-        "source": "GHTorrentPlus",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
         "metric_type": "metric",
         "url": "activity-metrics/closed-issue-resolution-duration.md",
         "is_defined": false

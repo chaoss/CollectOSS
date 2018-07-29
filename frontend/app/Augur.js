@@ -31,14 +31,15 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      comparedRepo: null,
+      comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
-      compare: 'each',
+      compare: 'zscore',
       showBelowAverage: false,
       rawWeekly: false,
       showArea: false,
+      showDetail: false,
       showTooltip: true,
       byDate: false
     },
@@ -86,7 +87,7 @@ export default function Augur () {
         }
         state.hasState = true
         if (repo.owner && repo.name) {
-          state.comparedRepo = repo.toString()
+          state.comparedRepos.push(repo.toString())
           let title = repo.owner + '/' + repo.name + '- Augur'
           state.tab = 'gmd'
           let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
@@ -131,9 +132,9 @@ export default function Augur () {
         if (typeof payload.showTooltip !== 'undefined') {
           state.showTooltip = payload.showTooltip
         }
-        // if (payload.comparedTo) {
-        //   state.comparedTo = payload.comparedTo
-        // }
+        if (typeof payload.showDetail !== 'undefined') {
+          state.showDetail = payload.showDetail
+        }
       },
       reset (state) {
         state = {
