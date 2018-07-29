@@ -3,13 +3,13 @@ import os
 import sys
 import json
 import re
-import cgi
+import html
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
 from augur.util import annotate, metrics, determineFrontendStatus, writeMetadata
-from augur.routes import create_all_routes
+from augur.routes import create_all_routes  
 
 sys.path.append('..')
 
@@ -32,12 +32,13 @@ class Server(object):
         self.cache = augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
+        self.show_metadata = False
+
         create_all_routes(self)
 
         #####################################
         ###          Utility              ###
         #####################################
-        
         @app.route('/{}/'.format(self.api_version))
         def status():
             status = {
@@ -140,7 +141,88 @@ class Server(object):
                             mimetype="application/json")
 
 
-    def transform(self, data, orient='records', 
+        """
+        @api {post} /batch Batch Requests
+        @apiName Batch
+        @apiGroup Batch
+        @apiDescription Returns results of batch requests
+        POST JSON of api requests
+        """
+        @app.route('/{}/batch/metadata'.format(self.api_version), methods=['GET', 'POST'])
+        def batch_metadata():
+
+            self.show_metadata = True
+
+            if request.method == 'GET':
+                """this will return sensible defaults in the future"""
+                return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
+
+            try:
+                requests = json.loads(request.data)
+            except ValueError as e:
+                request.abort(400)
+
+            responses = []
+
+            for index, req in enumerate(requests):
+
+
+                method = req['method']
+                path = req['path']
+                body = req.get('body', None)
+
+                try:
+
+                    with app.app_context():
+                        with app.test_request_context(path,
+                                                      method=method,
+                                                      data=body):
+                            try:
+                                # Can modify flask.g here without affecting
+                                # flask.g of the root request for the batch
+
+                                # Pre process Request
+                                rv = app.preprocess_request()
+
+                                if rv is None:
+                                    # Main Dispatch
+                                    rv = app.dispatch_request()
+
+                            except Exception as e:
+                                rv = app.handle_user_exception(e)
+
+                            response = app.make_response(rv)
+
+                            # Post process Request
+                            response = app.process_response(response)
+
+                    # Response is a Flask response object.
+                    # _read_response(response) reads response.response
+                    # and returns a string. If your endpoints return JSON object,
+                    # this string would be the response as a JSON string.
+
+                    responses.append({
+                        "path": path,
+                        "status": response.status_code,
+                        "response": str(response.get_data(), 'utf8'),
+                    })
+
+                except Exception as e:
+
+                    responses.append({
+                        "path": path,
+                        "status": 500,
+                        "response": str(e)
+                    })
+
+            self.show_metadata = False
+
+            return Response(response=json.dumps(responses),
+                            status=207,
+                            mimetype="application/json")
+
+
+    def transform(self, args, kwargs, func, orient='records', 
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
 
         if orient is None:
@@ -148,20 +230,25 @@ class Server(object):
 
         result = ''
 
-        if hasattr(data, 'to_json'):
-            if group_by is not None:
-                data = data.group_by(group_by).aggregate(aggregate)
-            if resample is not None:
-                data['idx'] = pd.to_datetime(data[date_col])
-                data = data.set_index('idx')
-                data = data.resample(resample).aggregate(aggregate)
-                data['date'] = data.index
-            result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
+        data = func(*args, **kwargs)
+
+        if not self.show_metadata:
+            if hasattr(data, 'to_json'):
+                if group_by is not None:
+                    data = data.group_by(group_by).aggregate(aggregate)
+                if resample is not None:
+                    data['idx'] = pd.to_datetime(data[date_col])
+                    data = data.set_index('idx')
+                    data = data.resample(resample).aggregate(aggregate)
+                    data['date'] = data.index
+                result = data.to_json(orient=orient, date_format='iso', date_unit='ms')
+            else:
+                try:
+                    result = json.dumps(data)
+                except:
+                    result = data
         else:
-            try:
-                result = json.dumps(data)
-            except:
-                result = data
+            result = json.dumps(func.metadata)
 
         return result
 
@@ -173,7 +260,7 @@ class Server(object):
         if cache:
             def generated_function(*args, **kwargs):
                 def heavy_lifting():
-                    return self.transform(func(*args, **kwargs), **request.args.to_dict())
+                    return self.transform(args, kwargs, func ,**request.args.to_dict())
                 body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
                 return Response(response=body,
                                 status=200,
@@ -183,7 +270,7 @@ class Server(object):
         else:
             def generated_function(*args, **kwargs):
                 kwargs.update(request.args.to_dict())
-                return Response(response=self.transform(func(*args, **kwargs)),
+                return Response(response=self.transform(args, kwargs, func, **request.args.to_dict()),
                                 status=200,
                                 mimetype="application/json")
             generated_function.__name__ = func.__name__
@@ -219,7 +306,7 @@ class Server(object):
         tag = re.sub("_", "-", function.__name__).lower()
         frontend_status = ''
         metric_name = re.sub('_', ' ', function.__name__).title()
-        annotate(metric_name=metric_name, endpoint=endpoint, escaped_endpoint=cgi.escape(endpoint), source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
+        annotate(metric_name=metric_name, endpoint=endpoint, escaped_endpoint=html.escape(endpoint), source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
         writeMetadata(metrics)
 
 def run():

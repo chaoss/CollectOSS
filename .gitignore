@@ -46,6 +46,11 @@ Thumbs.db
 *.pyc
 *.swp
 
+# Git #
+#######
+*.orig
+*.un~
+
 # Python junk #
 ###############
 __pycache__
