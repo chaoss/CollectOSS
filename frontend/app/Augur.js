@@ -55,11 +55,14 @@ export default function Augur () {
         state.hasState = true
         if (repo.owner && repo.name) {
           state.baseRepo = repo.toString()
+          let title = repo.owner + '/' + repo.name + '- Augur'
           state.tab = 'gmd'
           queryString += '?repo=' + repo.owner + '+' + repo.name
+          window.history.pushState(null, title, queryString)
         }
         if (payload.gitURL) {
           queryString += '?git=' + window.btoa(repo.gitURL)
+          window.history.pushState(null, 'Git Analysis - Augur', queryString)
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }

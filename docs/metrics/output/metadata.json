@@ -338,5 +338,116 @@
         "source": "GHTorrent",
         "tag": "fakes",
         "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "closed-issue-resolution-duration",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "Lines Of Code Changed",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/lines_changed",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/lines_changed",
+        "source": "GitHubAPI",
+        "tag": "lines-of-code-changed",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Bus Factor",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/bus_factor",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/bus_factor",
+        "source": "GitHubAPI",
+        "tag": "bus-factor"
+    },
+    {
+        "metric_name": "Major Tags",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/tags/major",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/tags/major",
+        "source": "GitHubAPI",
+        "tag": "major-tags",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Tags",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/tags",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/tags",
+        "source": "GitHubAPI",
+        "tag": "tags",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "downloaded-repos",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "lines-changed-minus-whitespace",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "lines-changed-by-author",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "Downloaded Repos",
+        "group": "experimental",
+        "endpoint": "/api/unstable/git/repos",
+        "escaped_endpoint": "/api/unstable/git/repos",
+        "source": "Facade",
+        "tag": "downloaded-repos",
+        "metric_type": "git"
+    },
+    {
+        "metric_name": "Lines Changed Minus Whitespace",
+        "group": "experimental",
+        "endpoint": "/api/unstable/git/lines_changed/<path:repo_url>/",
+        "escaped_endpoint": "/api/unstable/git/lines_changed/&lt;path:repo_url&gt;/",
+        "source": "Facade",
+        "tag": "lines-changed-minus-whitespace",
+        "metric_type": "git"
+    },
+    {
+        "metric_name": "Lines Changed By Author",
+        "group": "experimental",
+        "endpoint": "/api/unstable/git/changes_by_author/<path:repo_url>/",
+        "escaped_endpoint": "/api/unstable/git/changes_by_author/&lt;path:repo_url&gt;/",
+        "source": "Facade",
+        "tag": "lines-changed-by-author",
+        "metric_type": "git"
+    },
+    {
+        "metric_name": "Dependencies",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/dependencies",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/dependencies",
+        "source": "LibrariesIO",
+        "tag": "dependencies"
+    },
+    {
+        "metric_name": "Dependency Stats",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/dependency_stats",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/dependency_stats",
+        "source": "LibrariesIO",
+        "tag": "dependency-stats"
+    },
+    {
+        "metric_name": "Dependents",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/dependents",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/dependents",
+        "source": "LibrariesIO",
+        "tag": "dependents"
+    },
+    {
+        "metric_name": "Downloads",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/downloads",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/downloads",
+        "source": "Downloads",
+        "tag": "downloads",
+        "metric_type": "timeseries"
     }
 ]

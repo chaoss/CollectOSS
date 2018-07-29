@@ -30,7 +30,7 @@
       </nav>
 
       <div ref="cards">
-        <section class="unmaterialized" v-if="(baseRepo)">
+        <section class="unmaterialized" v-if="(baseRepo && (currentTab == 'gmd' || currentTab == 'experimental' || currentTab == 'activity'))">
           <h3>Compare repository</h3>
           <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
         </section>
