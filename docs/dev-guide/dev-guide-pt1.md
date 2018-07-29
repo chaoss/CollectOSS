@@ -14,17 +14,22 @@ Before you begin, make sure to activate the augur Anaconda environment by runnin
 
 If your Python function uses a new data source, create a new Python file. If you use an already implemented data source, create your new functions under that file. For instance, if you were to create a metric using data from the GitHub API, you would write a function in [`augur/githubapi.py`](https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py)
 
-#### Adding a new .py file
+#### Creating a new data source
 
-In the file, create a class to put your functions into, then in `augur/__init__.py` add a line with the following format
+In the file, create a class to put your functions into, then in `augur/application.py` add a line with the following format. If the class was called `Chaoss`, the line would look like this:
 
 ```python
-from .file_name import Class
+self.__chaoss = None
 ```
-For example if I added a file named `augur/chaoss.py` that contains the class `Chaoss` the addition to `augur/__init__.py` would be
+And then add an initializer function with the same name as the datasource, which might look something like this:
 
 ```python
-from .choass import Chaoss
+    def chaoss(self):
+        from augur.chaoss import Chaoss
+        if self.__chaoss is None:
+            logger.debug('Initializing CHAOSS')
+            self.__chaoss = Chaoss()
+        return self.__chaoss
 ```
 
 ### Writing a function
@@ -96,21 +101,21 @@ Make sure every function you write has a test.
 
 ## Creating an endpoint for a function
 
-If you created a new data source, make sure you create an instance of your class, loading any configuration you need with the `read_config` function.
+If you created a new data source, you need to add a new file to `augur/routes/` called `<data_source>routes.py`. Then, define a function called `create_routes` that takes one argument, `server`; inside this function is where you will put your endpoints.
 
-To create an endpoint for a function, in [`augur/server.py`](https://github.com/OSSHealth/augur/blob/master/augur/server.py), call  `addMetric()` or `addTimeseries()`
+To create an endpoint for a function, in `augur/routes/<data_source>.py`, call  `server.addMetric()` or `server.addTimeseries()` like so:
 
 ```python
-addTimeseries(app, file_name.function_name, 'function_name')
+server.addTimeseries(file_name.function_name, 'endpoint')
 ```
-for a function `foo()` in `augur/bar.py`
+So if you created a data source `bar` that had a function `foo()`, inside the file `augur/routes/barroutes.py` you would place the following:
 
 ```python
-addTimeseries(app, bar.foo, 'foo')
+server.addTimeseries(bar.foo, 'foo')
 ```
 If the metric is not a timeseries metric, replace `AddTimeseries()` with `AddMetric()`
 
-* Later, once you have finalized the metric, go back and add documentation. Follow the format already outlined in `server.py` to build your documentation.
+* Later, once you have finalized the metric, go back and add documentation. Follow the format already outlined to build your documentation.
 
 ## Using the Python Debugger
 

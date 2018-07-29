@@ -2,6 +2,7 @@
 import pandas as pd
 import os
 import re
+import json
 import logging
 import coloredlogs
 import beaker
@@ -13,6 +14,8 @@ logger = logging.getLogger('augur')
 # end imports
 # (don't remove the above line, it's for a script)
 
+def getFileID(path):
+    return os.path.splitext(os.path.basename(path))[0]
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
@@ -112,3 +115,7 @@ def determineFrontendStatus(endpoint):
             break
 
     return status
+
+def writeMetadata(metrics):
+    metadata = open('docs/metrics/output/metadata.json', 'w')
+    metadata.write(json.dumps(metrics, indent=4))
