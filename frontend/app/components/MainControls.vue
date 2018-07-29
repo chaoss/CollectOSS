@@ -68,9 +68,9 @@
           <div class="col col-1"></div>
           <div class="col col-5">
             <h5>Rendering</h5>
-            <label>Line Charts
+            <label>Line Charts<sup>1</sup>
             <div class="append col col-10">
-              <input type="number" min="2" id="averagetimespan" value="180" @change="onTrailingAverageChange"><span>day average</span>
+              <input type="number" min="2" ref="info" id="averagetimespan" data-value="180" @change="onTrailingAverageChange"><span>day average</span>
             </div>
             <p></p>
             <h6>Comparison Type</h6>
@@ -117,8 +117,8 @@
         </div>
         </label>
         <small class="warn"> - These options affect performance</small>
-        <!-- <p></p> -->
-        <p>Line charts show a rolling average over a 180-day period with data points at each 45-day interval</p>
+        <br>
+        <small>1. Line charts show a rolling average over a {{ info.days }}-day period with data points at each {{ info.points }}-day interval</small>
       </div>
 
       </div>
@@ -136,6 +136,14 @@
 
 <script>
   module.exports = {
+    data() {
+      return {
+        info: {
+          days: 180,
+          points: 45
+        }
+      }
+    },
     methods: {
       onStartDateChange (e) {
         console.log(e)
@@ -165,6 +173,8 @@
         }, 500);
       },
       onTrailingAverageChange (e) {
+        this.info.days = e.target.value
+        this.info.points = e.target.value / 4
         this.$store.commit('setVizOptions', {
           trailingAverage: e.target.value
         })

@@ -484,6 +484,7 @@ export default {
 
       let hideRaw = !this.rawWeekly
       let compare = this.compare
+      let period = this.period
 
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.linechart').addClass('loader')
@@ -585,7 +586,7 @@ export default {
             buildLines(data[this.repo], (obj, key, field, count) => {
               // Build basic chart using rolling averages
               let d = defaultProcess(obj, key, field, count, false)
-              let rolling = AugurStats.rollingAverage(d, 'value', this.period)
+              let rolling = AugurStats.rollingAverage(d, 'value', period)
               normalized.push(AugurStats.standardDeviationLines(rolling, 'value', ""))
               aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
               legend.push(field)
@@ -597,8 +598,8 @@ export default {
             buildLines(data[this.comparedTo], (obj, key, field, count) => {
               let d = defaultProcess(obj, key, field, count, false)
               let rolling = null
-              if (compare == 'zscore') rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period)
-              else rolling = AugurStats.rollingAverage(d, 'value', this.period)
+              if (compare == 'zscore') rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', period)
+              else rolling = AugurStats.rollingAverage(d, 'value', period)
               normalized.push(AugurStats.standardDeviationLines(rolling, 'value', ""))
               aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
               legend.push(this.comparedTo + ' ' + field)
@@ -606,10 +607,10 @@ export default {
             }, false)
             buildLines(data[this.repo], (obj, key, field, count) => {
               let d = defaultProcess(obj, key, field, count, true)
-              //let rolling = AugurStats.rollingAverage(d, 'comparedValue', this.period)
+              //let rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
               let rolling = null
-              if (compare == 'zscore') rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', this.period)
-              else rolling = AugurStats.rollingAverage(d, 'comparedValue', this.period)
+              if (compare == 'zscore') rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', period)
+              else rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
               normalized.push(AugurStats.standardDeviationLines(rolling, 'comparedValue', "Compared"))
               aggregates.push(AugurStats.standardDeviationLines(d, 'comparedValue', "Compared"))
               legend.push(this.repo + ' ' + field)
@@ -623,7 +624,7 @@ export default {
                 earliest: this.earliest,
                 latest: this.latest,
                 byDate: true,
-                period: this.period
+                period: period
               }))
               legend.push(this.comparedTo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
