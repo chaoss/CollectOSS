@@ -237,12 +237,8 @@
         "metric_type": "timeseries"
     },
     {
-        "metric_name": "Closed Issue Resolution Duration",
-        "group": "growth-maturity-decline",
-        "endpoint": "/api/unstable/<owner>/<repo>/issues/time_to_close",
-        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/issues/time_to_close",
-        "source": "GHTorrentPlus",
-        "tag": "closed-issue-resolution-duration"
+        "metric_name": "closed-issue-resolution-duration",
+        "group": "growth-maturity-decline"
     },
     {
         "metric_name": "Lines Of Code Changed",

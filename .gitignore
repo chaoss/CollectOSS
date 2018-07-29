@@ -51,6 +51,11 @@ Thumbs.db
 #######
 *.orig
 
+# Git #
+#######
+*.orig
+*.un~
+
 # Python junk #
 ###############
 __pycache__
