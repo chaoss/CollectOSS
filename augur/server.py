@@ -11,8 +11,6 @@ import augur
 from augur.util import annotate, metrics, determineFrontendStatus, writeMetadata
 from augur.routes import create_all_routes  
 
-sys.path.append('..')
-
 AUGUR_API_VERSION = 'api/unstable'
 
 class Server(object):
@@ -223,7 +221,7 @@ class Server(object):
                             mimetype="application/json")
 
 
-    def transform(self, args, kwargs, func, orient='records', 
+    def transform(self, func, args=None, kwargs=None, orient='records', 
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
 
         if orient is None:
@@ -231,7 +229,10 @@ class Server(object):
 
         result = ''
 
-        data = func(*args, **kwargs)
+        if not args and not kwargs:
+            data = func()
+        else:
+            data = func(*args, **kwargs)
 
         if not self.show_metadata:
             if hasattr(data, 'to_json'):
@@ -261,7 +262,7 @@ class Server(object):
         if cache:
             def generated_function(*args, **kwargs):
                 def heavy_lifting():
-                    return self.transform(args, kwargs, func ,**request.args.to_dict())
+                    return self.transform( func, args, kwargs, **request.args.to_dict())
                 body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
                 return Response(response=body,
                                 status=200,
@@ -271,7 +272,7 @@ class Server(object):
         else:
             def generated_function(*args, **kwargs):
                 kwargs.update(request.args.to_dict())
-                return Response(response=self.transform(args, kwargs, func, **request.args.to_dict()),
+                return Response(response=self.transform( func, args, kwargs, **request.args.to_dict()),
                                 status=200,
                                 mimetype="application/json")
             generated_function.__name__ = func.__name__

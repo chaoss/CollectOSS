@@ -30,7 +30,7 @@ def create_routes(server):
 
     @server.app.route('/{}/git/repos'.format(server.api_version))
     def downloaded_repos():
-        drs = server.transform(git.downloaded_repos())
+        drs = server.transform(git.downloaded_repos)
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
