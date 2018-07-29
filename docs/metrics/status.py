@@ -5,7 +5,7 @@ import glob
 import cgi
 from bs4 import BeautifulSoup
 import augur.server
-import augur.util as util
+from augur.util import getFileID, determineFrontendStatus
 
 import pprint
 pp = pprint.PrettyPrinter()
@@ -39,9 +39,6 @@ def printMetricGroup(group, level='quiet'):
 
     if level == 'verbose':
         pp.pprint([("Name: {} \n Tag: {} \nBackend Status: {} \nFrontend Status: {} \nEndpoint: {} \nUrl: {} \nDefined: {}".format(metric.name, metric.tag, metric.backend_status, metric.frontend_status, metric.escaped_endpoint, metric.url, metric.is_defined)) for metric in group])
-
-def getFileID(path):
-    return os.path.splitext(os.path.basename(path))[0]
 
 def createDefinedMetricTags():
     defined_metric_tags = []
@@ -117,7 +114,7 @@ def createImplementedMetric(metadata):
 
     if 'endpoint' in metadata:
         metric.endpoint = metadata['endpoint']
-        metric.frontend_status = util.determineFrontendStatus(metric.endpoint)
+        metric.frontend_status = determineFrontendStatus(metric.endpoint)
         metric.escaped_endpoint = metadata['escaped_endpoint']
 
     if 'metric_type' in metadata:

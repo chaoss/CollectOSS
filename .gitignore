@@ -46,6 +46,11 @@ Thumbs.db
 *.pyc
 *.swp
 
+# Git #
+#######
+*.un~
+*.orig
+
 # Python junk #
 ###############
 __pycache__
@@ -66,3 +71,4 @@ augur/plugins/
 *.repolist.txt
 *.config.*
 *.cfg.*
+metadata.json

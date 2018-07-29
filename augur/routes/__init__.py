@@ -1,6 +1,18 @@
 import importlib
+import os
+import glob
+from augur.util import getFileID
 
-route_files = ['downloads', 'facade', 'ghtorrent', 'ghtorrentplus', 'git', 'githubapi', 'librariesio', 'publicwww']
+def getRouteFiles():
+    route_files = []
+
+    for filename in glob.iglob("**/routes/*"):
+    	if not getFileID(filename).startswith('__'):
+    		route_files.append(getFileID(filename))
+    		
+    return route_files
+
+route_files = getRouteFiles()
 
 def create_all_routes(server):
     for route_file in route_files:
@@ -8,4 +20,4 @@ def create_all_routes(server):
             module = importlib.import_module('.' + route_file, 'augur.routes')
             module.create_routes(server)
         except Exception as e:
-            pass
+           print(e) 

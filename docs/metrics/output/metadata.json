@@ -1,5 +1,6 @@
 [
     {
+<<<<<<< HEAD
         "metric_name": "Closed Issues",
         "group": "growth-maturity-decline",
         "endpoint": "/api/unstable/<owner>/<repo>/timeseries/issues/closed",
@@ -208,6 +209,114 @@
         "source": "GHTorrent",
         "tag": "fakes",
         "metric_type": "timeseries"
+=======
+        "metric_name": "closed-issues",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "code-commits",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "code-review-iteration",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "contribution-acceptance",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "contributing-github-organizations",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "first-response-to-issue-duration",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "forks",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "maintainer-response-to-merge-request-duration",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "new-contributing-github-organizations",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "open-issues",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "pull-request-comments",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "pull-requests-open",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "issue-comments",
+        "group": "activity"
+    },
+    {
+        "metric_name": "pull-requests-made-closed",
+        "group": "activity"
+    },
+    {
+        "metric_name": "watchers",
+        "group": "activity"
+    },
+    {
+        "metric_name": "commits100",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "commit-comments",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "committer-locations",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "total-committers",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "issue-activity",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "pull-request-acceptance-rate",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "community-age",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "community-engagement",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "contributors",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "contributions",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "project-age",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "fakes",
+        "group": "experimental"
+>>>>>>> server
     },
     {
         "metric_name": "Closed Issue Resolution Duration",
@@ -217,6 +326,7 @@
         "tag": "closed-issue-resolution-duration"
     },
     {
+<<<<<<< HEAD
         "metric_name": "Lines Of Code Changed",
         "group": "growth-maturity-decline",
         "endpoint": "/api/unstable/<owner>/<repo>/timeseries/lines_changed",
@@ -246,10 +356,27 @@
         "source": "GitHubAPI",
         "tag": "tags",
         "metric_type": "timeseries"
+=======
+        "metric_name": "lines-of-code-changed",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "bus-factor",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "major-tags",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "tags",
+        "group": "growth-maturity-decline"
+>>>>>>> server
     },
     {
         "metric_name": "downloaded-repos",
         "group": "experimental"
+<<<<<<< HEAD
     },
     {
         "metric_name": "lines-changed-minus-whitespace",
@@ -266,6 +393,8 @@
         "source": "Facade",
         "tag": "downloaded-repos",
         "metric_type": "git"
+=======
+>>>>>>> server
     },
     {
         "metric_name": "Lines Changed Minus Whitespace",
@@ -284,6 +413,7 @@
         "metric_type": "git"
     },
     {
+<<<<<<< HEAD
         "metric_name": "Dependencies",
         "group": "experimental",
         "endpoint": "/api/unstable/<owner>/<repo>/dependencies",
@@ -318,5 +448,25 @@
         "endpoint": "/api/unstable/<owner>/<repo>/linking_websites",
         "source": "PublicWWW",
         "tag": "linking-websites"
+=======
+        "metric_name": "dependencies",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "dependency-stats",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "dependents",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "downloads",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "linking-websites",
+        "group": "experimental"
+>>>>>>> server
     }
 ]
