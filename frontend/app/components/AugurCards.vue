@@ -27,11 +27,19 @@
           <li :class="{ active: (currentTab == 'experimental'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li>
           <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li>
         </ul>
-      </nav>  
+      </nav>
 
       <div ref="cards">
+        <section class="unmaterialized" v-if="(baseRepo)">
+          <h3>Compare repository</h3>
+          <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
+        </section>
+        <main-controls></main-controls>
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
           <growth-maturity-decline-card></growth-maturity-decline-card>
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+            <compared-repo-growth-maturity-decline-card :comparedTo="repo"></compared-repo-growth-maturity-decline-card>
+          </div>
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
           <diversity-inclusion-card></diversity-inclusion-card>
@@ -51,15 +59,13 @@
         </div>
         <div v-if="(baseRepo && (currentTab == 'experimental'))">
           <experimental-card></experimental-card>
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+            <compared-repo-experimental-card :comparedTo="repo"></compared-repo-experimental-card>
+          </div>
         </div>
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
         </div>
-        <section class="unmaterialized" v-if="(baseRepo && (currentTab == 'activity'))">
-          <h3>Compare repository</h3>
-          <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
-        </section>
-        <main-controls></main-controls>
       </div>
     </div>
   </div>
@@ -71,11 +77,13 @@ import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
 import GrowthMaturityDeclineCard from './GrowthMaturityDeclineCard'
+import ComparedRepoGrowthMaturityDeclineCard from './ComparedRepoGrowthMaturityDeclineCard'
 import RiskCard from './RiskCard'
 import ValueCard from './ValueCard'
 import DiversityInclusionCard from './DiversityInclusionCard'
 import GitCard from './GitCard'
 import ExperimentalCard from './ExperimentalCard'
+import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
 
 module.exports = {
   components: {
@@ -84,11 +92,13 @@ module.exports = {
     BaseRepoEcosystemCard,
     ComparedRepoActivityCard,
     GrowthMaturityDeclineCard,
+    ComparedRepoGrowthMaturityDeclineCard,
     RiskCard,
     ValueCard,
     DiversityInclusionCard,
     GitCard,
-    ExperimentalCard
+    ExperimentalCard,
+    ComparedRepoExperimentalCard
   },
   data() {
     return {
@@ -110,7 +120,7 @@ module.exports = {
     },
     currentTab() {
       return this.$store.state.tab
-    }, 
+    },
   },
   methods: {
     onRepo (e) {
@@ -120,7 +130,7 @@ module.exports = {
     },
     onCompare (e) {
       this.$store.commit('addComparedRepo', {
-        url: e.target.value
+        githubURL: e.target.value
       })
     },
     changeTab (e) {

@@ -1,7 +1,7 @@
 [
     {
-        "tag": "contributor-demographics",
-        "name": "Contributor Demographics",
+        "tag": "metric",
+        "name": "Metric",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -11,6 +11,19 @@
         "metric_type": "n/a",
         "url": "/",
         "is_defined": false
+    },
+    {
+        "tag": "contributor-demographics",
+        "name": "Contributor Demographics",
+        "group": "n/a",
+        "backend_status": "unimplemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "activity-metrics/contributor-demographics.md",
+        "is_defined": true
     },
     {
         "tag": "leadership-demographics",
@@ -28,6 +41,19 @@
     {
         "tag": "new-contributors-vs-maintainers",
         "name": "New Contributors Vs Maintainers",
+        "group": "n/a",
+        "backend_status": "undefined",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "/",
+        "is_defined": false
+    },
+    {
+        "tag": "metric",
+        "name": "Metric",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -106,6 +132,19 @@
     {
         "tag": "maintainer-commit-organizational-diversity",
         "name": "Maintainer Commit Organizational Diversity",
+        "group": "n/a",
+        "backend_status": "undefined",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "/",
+        "is_defined": false
+    },
+    {
+        "tag": "metric",
+        "name": "Metric",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -260,19 +299,6 @@
         "is_defined": false
     },
     {
-        "tag": "issue-resolution-efficiency",
-        "name": "Issue Resolution Efficiency",
-        "group": "n/a",
-        "backend_status": "unimplemented",
-        "frontend_status": "unimplemented",
-        "endpoint": "n/a",
-        "escaped_endpoint": "n/a",
-        "source": "n/a",
-        "metric_type": "n/a",
-        "url": "activity-metrics/issue-resolution-efficiency.md",
-        "is_defined": true
-    },
-    {
         "tag": "code-commits",
         "name": "Code Commits",
         "group": "growth-maturity-decline",
@@ -364,84 +390,6 @@
         "is_defined": false
     },
     {
-        "tag": "forks",
-        "name": "Forks",
-        "group": "growth-maturity-decline",
-        "backend_status": "implemented",
-        "frontend_status": "implemented",
-        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/forks",
-        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/forks",
-        "source": "GHTorrent",
-        "metric_type": "timeseries",
-        "url": "activity-metrics/forks.md",
-        "is_defined": false
-    },
-    {
-        "tag": "pull-requests-open",
-        "name": "Pull Requests Open",
-        "group": "growth-maturity-decline",
-        "backend_status": "implemented",
-        "frontend_status": "implemented",
-        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls",
-        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls",
-        "source": "GHTorrent",
-        "metric_type": "timeseries",
-        "url": "activity-metrics/pull-requests-open.md",
-        "is_defined": false
-    },
-    {
-        "tag": "pull-requests-closed",
-        "name": "Pull Requests Closed",
-        "group": "n/a",
-        "backend_status": "undefined",
-        "frontend_status": "unimplemented",
-        "endpoint": "n/a",
-        "escaped_endpoint": "n/a",
-        "source": "n/a",
-        "metric_type": "n/a",
-        "url": "/",
-        "is_defined": false
-    },
-    {
-        "tag": "pull-request-comment-duration",
-        "name": "Pull Request Comment Duration",
-        "group": "n/a",
-        "backend_status": "undefined",
-        "frontend_status": "unimplemented",
-        "endpoint": "n/a",
-        "escaped_endpoint": "n/a",
-        "source": "n/a",
-        "metric_type": "n/a",
-        "url": "/",
-        "is_defined": false
-    },
-    {
-        "tag": "pull-request-comment-diversity",
-        "name": "Pull Request Comment Diversity",
-        "group": "n/a",
-        "backend_status": "undefined",
-        "frontend_status": "unimplemented",
-        "endpoint": "n/a",
-        "escaped_endpoint": "n/a",
-        "source": "n/a",
-        "metric_type": "n/a",
-        "url": "/",
-        "is_defined": false
-    },
-    {
-        "tag": "pull-request-comments",
-        "name": "Pull Request Comments",
-        "group": "growth-maturity-decline",
-        "backend_status": "implemented",
-        "frontend_status": "implemented",
-        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls/comments",
-        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls/comments",
-        "source": "GHTorrent",
-        "metric_type": "timeseries",
-        "url": "activity-metrics/pull-request-comments.md",
-        "is_defined": false
-    },
-    {
         "tag": "contributors",
         "name": "Contributors",
         "group": "experimental",
@@ -507,21 +455,8 @@
         "is_defined": true
     },
     {
-        "tag": "contribution-acceptance",
-        "name": "Contribution Acceptance",
-        "group": "growth-maturity-decline",
-        "backend_status": "implemented",
-        "frontend_status": "implemented",
-        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/contribution_acceptance",
-        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/contribution_acceptance",
-        "source": "GHTorrent",
-        "metric_type": "timeseries",
-        "url": "activity-metrics/contribution-acceptance.md",
-        "is_defined": false
-    },
-    {
-        "tag": "activity-metric",
-        "name": "Activity Metric",
+        "tag": "metric",
+        "name": "Metric",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -546,8 +481,8 @@
         "is_defined": false
     },
     {
-        "tag": "qualified-committers",
-        "name": "Qualified Committers",
+        "tag": "committers",
+        "name": "Committers",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -585,8 +520,8 @@
         "is_defined": false
     },
     {
-        "tag": "-activity-metric",
-        "name": " Activity Metric",
+        "tag": "metric",
+        "name": "Metric",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -611,8 +546,8 @@
         "is_defined": false
     },
     {
-        "tag": "package-license-declaration",
-        "name": "Package License Declaration",
+        "tag": "project-license-declaration",
+        "name": "Project License Declaration",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -650,8 +585,8 @@
         "is_defined": false
     },
     {
-        "tag": "-activity-metric",
-        "name": " Activity Metric",
+        "tag": "metric",
+        "name": "Metric",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -702,8 +637,8 @@
         "is_defined": false
     },
     {
-        "tag": "activity-metric",
-        "name": "Activity Metric",
+        "tag": "metric",
+        "name": "Metric",
         "group": "n/a",
         "backend_status": "undefined",
         "frontend_status": "unimplemented",
@@ -971,7 +906,7 @@
         "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/bus_factor",
         "source": "GitHubAPI",
         "metric_type": "metric",
-        "url": "/",
+        "url": "activity-metrics/bus-factor.md",
         "is_defined": false
     },
     {
@@ -1025,6 +960,19 @@
         "metric_type": "n/a",
         "url": "activity-metrics/community-activity.md",
         "is_defined": true
+    },
+    {
+        "tag": "contribution-acceptance",
+        "name": "Contribution Acceptance",
+        "group": "growth-maturity-decline",
+        "backend_status": "implemented",
+        "frontend_status": "implemented",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/contribution_acceptance",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/contribution_acceptance",
+        "source": "GHTorrent",
+        "metric_type": "timeseries",
+        "url": "activity-metrics/contribution-acceptance.md",
+        "is_defined": false
     },
     {
         "tag": "contribution-age",
@@ -1157,6 +1105,32 @@
         "is_defined": false
     },
     {
+        "tag": "followers",
+        "name": "Followers",
+        "group": "n/a",
+        "backend_status": "unimplemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "activity-metrics/followers.md",
+        "is_defined": true
+    },
+    {
+        "tag": "forks",
+        "name": "Forks",
+        "group": "growth-maturity-decline",
+        "backend_status": "implemented",
+        "frontend_status": "implemented",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/forks",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/forks",
+        "source": "GHTorrent",
+        "metric_type": "timeseries",
+        "url": "activity-metrics/forks.md",
+        "is_defined": false
+    },
+    {
         "tag": "gatherings",
         "name": "Gatherings",
         "group": "n/a",
@@ -1233,6 +1207,19 @@
         "metric_type": "n/a",
         "url": "/",
         "is_defined": false
+    },
+    {
+        "tag": "language-makeup",
+        "name": "Language Makeup",
+        "group": "n/a",
+        "backend_status": "unimplemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "activity-metrics/language-makeup.md",
+        "is_defined": true
     },
     {
         "tag": "license-conflicts",
@@ -1352,6 +1339,19 @@
         "is_defined": false
     },
     {
+        "tag": "package-license-declaration",
+        "name": "Package License Declaration",
+        "group": "n/a",
+        "backend_status": "undefined",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "/",
+        "is_defined": false
+    },
+    {
         "tag": "path-to-leadership",
         "name": "Path To Leadership",
         "group": "n/a",
@@ -1363,6 +1363,19 @@
         "metric_type": "n/a",
         "url": "/",
         "is_defined": false
+    },
+    {
+        "tag": "people-opening-issues",
+        "name": "People Opening Issues ",
+        "group": "n/a",
+        "backend_status": "unimplemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "activity-metrics/people-opening-issues.md",
+        "is_defined": true
     },
     {
         "tag": "project-life-cycle",
@@ -1456,6 +1469,32 @@
         "is_defined": false
     },
     {
+        "tag": "pull-request-comments",
+        "name": "Pull Request Comments",
+        "group": "growth-maturity-decline",
+        "backend_status": "implemented",
+        "frontend_status": "implemented",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls/comments",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls/comments",
+        "source": "GHTorrent",
+        "metric_type": "timeseries",
+        "url": "activity-metrics/pull-request-comments.md",
+        "is_defined": false
+    },
+    {
+        "tag": "pull-request-comment-duration",
+        "name": "Pull Request Comment Duration",
+        "group": "n/a",
+        "backend_status": "undefined",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "/",
+        "is_defined": false
+    },
+    {
         "tag": "pull-request-discussion-diversity",
         "name": "Pull Request Discussion Diversity",
         "group": "n/a",
@@ -1469,16 +1508,55 @@
         "is_defined": true
     },
     {
-        "tag": "pull-requests-made-closed",
-        "name": "Pull Requests Made Closed",
-        "group": "activity",
+        "tag": "pull-request-made-closed",
+        "name": "Pull Request Made-Closed",
+        "group": "n/a",
+        "backend_status": "undefined",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "/",
+        "is_defined": false
+    },
+    {
+        "tag": "pull-requests-open",
+        "name": "Pull Requests Open",
+        "group": "growth-maturity-decline",
         "backend_status": "implemented",
         "frontend_status": "implemented",
-        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls/made_closed",
-        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls/made_closed",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls",
         "source": "GHTorrent",
         "metric_type": "timeseries",
-        "url": "activity-metrics/pull-requests-made-closed.md",
+        "url": "activity-metrics/pull-requests-open.md",
+        "is_defined": false
+    },
+    {
+        "tag": "pull-requests-over-time",
+        "name": "Pull Requests Over Time",
+        "group": "n/a",
+        "backend_status": "unimplemented",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "activity-metrics/pull-requests-over-time.md",
+        "is_defined": true
+    },
+    {
+        "tag": "qualified-committers",
+        "name": "Qualified Committers",
+        "group": "n/a",
+        "backend_status": "undefined",
+        "frontend_status": "unimplemented",
+        "endpoint": "n/a",
+        "escaped_endpoint": "n/a",
+        "source": "n/a",
+        "metric_type": "n/a",
+        "url": "/",
         "is_defined": false
     },
     {
@@ -1693,27 +1771,27 @@
         "tag": "total-contributing-organizations",
         "name": "Total Contributing Organizations",
         "group": "n/a",
-        "backend_status": "undefined",
+        "backend_status": "unimplemented",
         "frontend_status": "unimplemented",
         "endpoint": "n/a",
         "escaped_endpoint": "n/a",
         "source": "n/a",
         "metric_type": "n/a",
-        "url": "/",
-        "is_defined": false
+        "url": "activity-metrics/total-contributing-organizations.md",
+        "is_defined": true
     },
     {
         "tag": "total-contributors",
         "name": "Total Contributors",
         "group": "n/a",
-        "backend_status": "undefined",
+        "backend_status": "unimplemented",
         "frontend_status": "unimplemented",
         "endpoint": "n/a",
         "escaped_endpoint": "n/a",
         "source": "n/a",
         "metric_type": "n/a",
-        "url": "/",
-        "is_defined": false
+        "url": "activity-metrics/total-contributors.md",
+        "is_defined": true
     },
     {
         "tag": "total-new-contributing-organizations",

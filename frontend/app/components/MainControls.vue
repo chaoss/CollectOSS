@@ -6,96 +6,126 @@
 
       <div class="row gutters">
         <div class="col col-7">
-          <h4>Configuration</h4>
-            <div class="row gutters">
-              <div class="col col-6">
-                <div class="form-item">
-                  <label>Start Date
-                    <div class="row gutters">
-                      <div class="col col-7">
-                        <div class="form-item">
-                          <select ref="startMonth" @change=onStartDateChange>
-                            <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
-                          </select>
-                          <div class="desc">Month</div>
-                        </div>
-                      </div>
-                      <div class="col col-5">
-                        <div class="form-item">
-                          <select ref="startYear" @change=onStartDateChange>
-                            <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2010">{{ year }}</option>
-                          </select>
-                          <div class="desc">Year</div>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-            </div>
+          <div class="row">
             <div class="col col-6">
-              <div class="form-item">
-                <label>End Date
-                  <div class="row gutters">
-                    <div class="col col-7">
-                      <div class="form-item">
-                        <select ref="endMonth" @change=onEndDateChange>
-                          <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
-                        </select>
-                        <div class="desc">Month</div>
-                      </div>
-                    </div>
-                    <div class="col col-5">
-                      <div class="form-item">
-                        <select ref="endYear" @change=onEndDateChange>
-                          <option v-for="year in years" v-bind:value="year" v-bind:selected="year == thisYear">{{ year }}</option>
-                        </select>
-                        <div class="desc">Year</div>
-                      </div>
+              <h5>Configuration</h5>
+                <div class="row gutters">
+                  <div class="col col-11">
+                    <div class="form-item">
+                      <label>Start Date
+                        <div class="row gutters">
+                          <div class="col col-7">
+                            <div class="form-item">
+                              <select ref="startMonth" @change=onStartDateChange>
+                                <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
+                              </select>
+                              <div class="desc">Month</div>
+                            </div>
+                          </div>
+                          <div class="col col-5">
+                            <div class="form-item">
+                              <select ref="startYear" @change=onStartDateChange>
+                                <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2010">{{ year }}</option>
+                              </select>
+                              <div class="desc">Year</div>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
                     </div>
                   </div>
-                </label>
-              </div>
-            </div>
+                </div>
+                <p></p>
+                <div class="row gutters">
+                  <div class="col col-11">
+                    <div class="form-item">
+                      <label>End Date
+                        <div class="row gutters">
+                          <div class="col col-7">
+                            <div class="form-item">
+                              <select ref="endMonth" @change=onEndDateChange>
+                                <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
+                              </select>
+                              <div class="desc">Month</div>
+                            </div>
+                          </div>
+                          <div class="col col-5">
+                            <div class="form-item">
+                              <select ref="endYear" @change=onEndDateChange>
+                                <option v-for="year in years" v-bind:value="year" v-bind:selected="year == thisYear">{{ year }}</option>
+                              </select>
+                              <div class="desc">Year</div>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              <br>
+
           </div>
-          <br>
-          <h5>Comparison Options</h5>
-            <label>Type
-            <div class="form-item form-checkboxes">
-              <label class="checkbox"><input name="comparebaseline" value="each" checked type="radio" @change="onCompareChange">Z-score</label><br>
-              <label class="checkbox"><input name="comparebaseline" value="percentage" type="radio" @change="onCompareChange">Baseline is compared</label>
+          <div class="col col-1"></div>
+          <div class="col col-5">
+            <h5>Rendering</h5>
+            <label>Line Charts
+            <div class="append col col-10">
+              <input type="number" min="2" id="averagetimespan" value="180" @change="onTrailingAverageChange"><span>day average</span>
             </div>
             <p></p>
-            <div class="col col-9">
-              <div class="form-item">
-                <!-- <input type="text" class="search reposearch" name="headersearch" placeholder="Compared Repository" @change="onComparedRepo"> -->
-              </div>
-            </div>
+            <h6>Comparison Type</h6>
+                <label>
+                <div class="form-item form-checkboxes">
+                  <label class="checkbox"><input name="comparebaseline" value="zscore" checked type="radio" @change="onCompareChange">Z-score</label><br>
+                  <label class="checkbox"><input name="comparebaseline" value="baseline" type="radio" @change="onCompareChange">Baseline is compared</label>
+                </div>
+                </label>
             </label>
-      </div>
+            <br>
+
+          </div>
+          </div>
+
+        </div>
+
+
       <div class="col col-5">
-        <h4>Rendering</h4>
         <label>Line Charts
-        <div class="append">
-          <input type="number" min="2" id="averagetimespan" value="180" @change="onTrailingAverageChange"><span>day average</span>
-        </div>
-        <div class="form-item form-checkboxes">
-          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Show raw weekly values<sup class="warn"></sup></label><br>
-        </div>
-        <div class="form-item form-checkboxes">
-          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Show area<sup class="warn"></sup></label><br>
-        </div>
-        <div class="form-item form-checkboxes">
-          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip<sup class="warn"></sup></label><br>
+        <div class="row">
+          <div class="col col-6">
+            <div class="form-item form-checkboxes">
+              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
+            </div>
+            <div class="form-item form-checkboxes">
+              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Standard deviation<sup class="warn"></sup></label>
+            </div>
+          </div>
+          <div class="col col-6">
+            <div class="form-item form-checkboxes">
+              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip<sup class="warn"></sup></label>
+            </div>
+            <div class="form-item form-checkboxes">
+              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onDetailChange">Enable detail<sup class="warn"></sup></label>
+            </div>
+          </div>
         </div>
         </label>
-        <br>
+        <p></p>
         <label>Bubble Charts
-          <div class="form-item form-checkboxes">
-            <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
-          </div>
+        <div class="form-item form-checkboxes">
+          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
+        </div>
         </label>
         <small class="warn"> - These options affect performance</small>
+        <!-- <p></p> -->
+        <p>Line charts show a rolling average over a 180-day period with data points at each 45-day interval</p>
       </div>
+
+      </div>
+
+
+
+
 
       </div>
 
@@ -164,11 +194,11 @@
           compare: e.target.value
         })
       },
-      // onComparedRepo (e) {
-      //   this.$store.commit('addComparedRepo', {
-      //     githubURL: e.target.value
-      //   })
-      // }
+      onDetailChange (e) {
+        this.$store.commit('setVizOptions', {
+          showDetail: e.target.checked
+        })
+      }
     },
     computed: {
       months() { return [
