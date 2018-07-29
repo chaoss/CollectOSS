@@ -36,8 +36,6 @@ default:
 	@ echo "    docs                   Generates all documentation"
 	@ echo
 	@ echo "Prototyping:"
-	@ echo "    metrics-status         Shows the implementation status of CHAOSS metrics"
-	@ echo "    build-metrics-status   Builds the page that shows the implementation status of CHAOSS metrics"
 	@ echo "    jupyter                Launches the jupyter"
 	@ echo "    create-jupyter-env     Creates a jupyter environment for Augur"
 	@ echo 
@@ -99,7 +97,7 @@ dev-stop:
 	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
 	@ echo
 
-dev: build-metrics-status dev-restart monitor
+dev: update-upstream dev-restart monitor
 
 monitor-frontend:
 	@ less +F logs/frontend.log
@@ -149,13 +147,6 @@ update-deps:
 # 
 #  Prototyping
 #
-
-build-metrics-status: update-upstream
-	-@ bash -c '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
-
-metrics-status: update-upstream build-metrics-status
-	open docs/metrics/output/index.html
-
 jupyter:
 		@ bash -c '$(CONDAACTIVATE) cd notebooks; jupyter notebook'
 

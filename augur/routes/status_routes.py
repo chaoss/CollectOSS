@@ -2,10 +2,9 @@ import os
 import re
 import json
 import glob
-import cgi
+from flask import Response
 from bs4 import BeautifulSoup
-import augur.server
-from augur.util import getFileID, determineFrontendStatus
+from augur.util import getFileID
 
 import pprint
 pp = pprint.PrettyPrinter()
@@ -43,7 +42,7 @@ def printMetricGroup(group, level='quiet'):
 def createDefinedMetricTags():
     defined_metric_tags = []
 
-    for filename in glob.iglob('upstream/activity-metrics/*.md'):
+    for filename in glob.iglob('docs/metrics/upstream/activity-metrics/*.md'):
         defined_metric_tags.append(getFileID(filename))
 
     return defined_metric_tags
@@ -52,13 +51,13 @@ def extractGroupedMetricNamesFromFile(filename):
     metric_file = open(filename, 'r')
 
     regEx = r'^(?!Name)(.*[^-])(?:\ \|)'
-    if filename == 'upstream/2_Growth-Maturity-Decline.md':
+    if filename == 'docs/metrics/upstream/2_Growth-Maturity-Decline.md':
         regEx = r'\[(.*?)\]\((?:.*?\.md)\)'
 
     return re.findall(regEx, metric_file.read(), re.M)
 
 def extractActivityMetricNames():
-    activity_file = open('upstream/activity-metrics-list.md', 'r')
+    activity_file = open('docs/metrics/upstream/activity-metrics-list.md', 'r')
     raw_activity_names = re.findall(r'\|(?:\[|)(.*)\|(?:\]|)(?:\S| )', activity_file.read())
     return [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names if '---' not in name and 'Name' not in name]
 
@@ -114,7 +113,8 @@ def createImplementedMetric(metadata):
 
     if 'endpoint' in metadata:
         metric.endpoint = metadata['endpoint']
-        metric.frontend_status = determineFrontendStatus(metric.endpoint)
+        metric.frontend_status = "broken"
+        # metric.frontend_status = determineFrontendStatus(metric.endpoint)
         metric.escaped_endpoint = metadata['escaped_endpoint']
 
     if 'metric_type' in metadata:
@@ -153,8 +153,8 @@ def buildImplementedMetrics():
     implemented_metrics = []
     implemented_metric_metadata = []
 
-    with open('output/metadata.json', 'r') as metadata:
-        implemented_metric_metadata = json.load(metadata)
+    with open('docs/metrics/output/metadata.json', 'r') as metadata:
+    	implemented_metric_metadata = json.load(metadata)
 
     for metric in implemented_metric_metadata:
         implemented_metrics.append(createImplementedMetric(metric))
@@ -163,7 +163,7 @@ def buildImplementedMetrics():
 
 def writeStatusToFile():
     status = []
-    status_json = open('output/status.json', 'w')
+    status_json = open('docs/metrics/output/status.json', 'w')
 
     for group in metric_groups:
         for metric in group:
@@ -171,91 +171,76 @@ def writeStatusToFile():
 
     json.dump(status, status_json, indent=4)
 
-class HTMLBuilder(object):
+def fileExists(path):
+    return os.path.exists(path)
 
-    def __init__(self):
-        self.html = """"""
+class frontendExtractor(object):
+    def __init__(self, endpoint):
+        self.api = None
+        self.endpoint_attributes = None
+        self.frontend_card_files = []
+        self.endpoint = endpoint
 
-    color_by_backend_status = {
-        'unimplemented': '<span style="color: #C00">unimplemented</span>',
-        'undefined': '<span style="color: #CC0">undefined</span>',
-        'implemented': '<span style="color: #0C0">implemented</span>'
-    }
+def extractEndpointsAndAttributes(extractor, type):
+        if fileExists('../../frontend/app/AugurAPI.js'):
+            extractor.api = open("../../frontend/app/AugurAPI.js", 'r')
+            extractor.frontend_card_files = ['../../frontend/app/components/DiversityInclusionCard.vue', 
+                       '../../frontend/app/components/GrowthMaturityDeclineCard.vue', 
+                       '../../frontend/app/components/RiskCard.vue', 
+                       '../../frontend/app/components/ValueCard.vue',
+                       '../../frontend/app/components/BaseRepoActivityCard.vue',
+                       '../../frontend/app/components/ExperimentalCard.vue',
+                       '../../frontend/app/components/GitCard.vue']
 
-    color_by_frontend_status = {
-        'unimplemented': '<span style="color: #C00">unimplemented</span>',
-        'implemented': '<span style="color: #0C0">implemented</span>'
-    }
+        if fileExists('frontend/app/AugurAPI.js'):
+            extractor.api = open("frontend/app/AugurAPI.js", 'r')
+            extractor.frontend_card_files = ['frontend/app/components/DiversityInclusionCard.vue', 
+                       'frontend/app/components/GrowthMaturityDeclineCard.vue', 
+                       'frontend/app/components/RiskCard.vue', 
+                       'frontend/app/components/ValueCard.vue',
+                       'frontend/app/components/BaseRepoActivityCard.vue',
+                       'frontend/app/components/ExperimentalCard.vue',
+                       'frontend/app/components/GitCard.vue']
 
-    def addMetricToTable(self, metric, html):
-        if metric.url != '/' and metric.group != 'experimental':
-            html += """
-                    <tr>
-                        <td>{}</td>
-                        <td>{}</td>
-                        <td><a href="https://github.com/chaoss/wg-gmd/tree/master/{}">{}</td>
-                        <td>{}</td>
-                        <td>{}</td>
-                        <td>{}</td>
-                    </tr>""".format(self.color_by_backend_status[metric.backend_status], self.color_by_frontend_status[metric.frontend_status], metric.url, metric.name, metric.escaped_endpoint, metric.source, metric.metric_type)
-        else:
-            html += """
-                    <tr>
-                        <td>{}</td>
-                        <td>{}</td>
-                        <td>{}</td>
-                        <td>{}</td>
-                        <td>{}</td>
-                        <td>{}</td>
-                    </tr>""".format(self.color_by_backend_status[metric.backend_status], self.color_by_frontend_status[metric.frontend_status], metric.name, metric.escaped_endpoint, metric.source, metric.metric_type)
-        return html
+        if type is 'timeseries':
+            extractor.endpoint_attributes = re.findall(r'(?:(Timeseries)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
+        if type is 'metric':
+            extractor.endpoint_attributes = re.findall(r'(?:(Endpoint)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
+        if type is 'git':
+            extractor.endpoint_attributes = re.findall(r'(?:(GitEndpoint)\(repo, )\'(.*)\', \'(.*)\'', extractor.api.read())
+        return extractor
 
-    def addTableWithHeader(self, header, metrics):
-        html_to_add = """
-                        <h2>{}</h2>
-                            <table>
-                                <tr>
-                                    <td>backend status</td>
-                                    <td>frontend status</td>
-                                    <td>metric</td>
-                                    <td>endpoint</td>
-                                    <td>source</td>
-                                    <td>metric type</td>
-                                </tr>""".format(header)
-        for metric in metrics:
-            html_to_add = self.addMetricToTable(metric, html_to_add)
-        html_to_add += '</table>'
-        self.html += html_to_add
+def determineFrontendStatus(endpoint):
+    fe = frontendExtractor(endpoint)
 
-    def writeStatusPageToFile(self):
-        index = open('output/index.html', 'w')
-        frontend = open('../../frontend/app/assets/metrics_status.html', 'w')
+    if '/api/unstable/<owner>/<repo>/timeseries/' in endpoint:
+        extractor = extractEndpointsAndAttributes(fe, 'timeseries')
+        attribute = [attribute[1] for attribute in extractor.endpoint_attributes if '/api/unstable/<owner>/<repo>/timeseries/' + attribute[2] == endpoint]
 
-        soup = BeautifulSoup(self.html, 'html.parser')
-        self.html = soup.prettify()
+    elif '/api/unstable/<owner>/<repo>/' in endpoint:
+        extractor = extractEndpointsAndAttributes(fe, 'metric')
+        attribute = [attribute[1] for attribute in extractor.endpoint_attributes if '/api/unstable/<owner>/<repo>/' + attribute[2] == endpoint]
 
-        index.write(self.html)
-        frontend.write(self.html)
+    elif '/api/unstable/git/' in endpoint:
+        extractor = extractEndpointsAndAttributes(fe, 'git')
+        attribute = [attribute[1] for attribute in extractor.endpoint_attributes if '/api/unstable/git/' + attribute[2] == endpoint]
 
-metric_files = ['upstream/1_Diversity-Inclusion.md', 
-                'upstream/2_Growth-Maturity-Decline.md', 
-                'upstream/3_Risk.md', 
-                'upstream/4_Value.md']
+    status = 'unimplemented'
+    for card in extractor.frontend_card_files:
+        card = open(card, 'r').read()
+        if len(attribute) != 0 and attribute[0] in card:
+            status = 'implemented'
+            break
 
-metric_type_by_file = {
-    'upstream/1_Diversity-Inclusion.md': 'diversity-inclusion',
-    'upstream/2_Growth-Maturity-Decline.md': 'growth-maturity-decline',
-    'upstream/3_Risk.md': 'risk',
-    'upstream/4_Value.md': 'value',
-}
+    return status
 
 defined_metric_tags = createDefinedMetricTags()
 implemented_metrics = buildImplementedMetrics()
 
-diversity_inclusion_metrics = createGroupedMetrics('upstream/1_Diversity-Inclusion.md')
-growth_maturity_decline_metrics = createGroupedMetrics('upstream/2_Growth-Maturity-Decline.md')
-risk_metrics = createGroupedMetrics('upstream/3_Risk.md')
-value_metrics = createGroupedMetrics('upstream/4_Value.md')
+diversity_inclusion_metrics = createGroupedMetrics('docs/metrics/upstream/1_Diversity-Inclusion.md')
+growth_maturity_decline_metrics = createGroupedMetrics('docs/metrics/upstream/2_Growth-Maturity-Decline.md')
+risk_metrics = createGroupedMetrics('docs/metrics/upstream/3_Risk.md')
+value_metrics = createGroupedMetrics('docs/metrics/upstream/4_Value.md')
 metric_groups = [diversity_inclusion_metrics, growth_maturity_decline_metrics, risk_metrics, value_metrics]
 
 activity_metrics = createActivityMetrics(metric_groups)
@@ -267,32 +252,17 @@ metric_groups.append(experimental_metrics)
 copyImplementedMetrics()
 writeStatusToFile()
 
-HTMLBuilder = HTMLBuilder()
+def create_routes(server):
 
-HTMLBuilder.html = """
-<html>
-<head>
-    <title>Augur Metrics Status</title>
-    <style>
-        td { padding: 5px }
-    </style>
-</head>
-<body>
-    <h1>Augur Metrics Status</h1>
-"""
-HTMLBuilder.addTableWithHeader("Diversity and Inclusion", diversity_inclusion_metrics)
-HTMLBuilder.addTableWithHeader('Growth, Maturity, and Decline', growth_maturity_decline_metrics)
-HTMLBuilder.addTableWithHeader("Risk", risk_metrics)
-HTMLBuilder.addTableWithHeader("Value", value_metrics)
-HTMLBuilder.addTableWithHeader("Activity", activity_metrics)
-HTMLBuilder.addTableWithHeader("Experimental", experimental_metrics)
-HTMLBuilder.html += """
-    </table>
-</body>
-</html>
-"""
+	@server.app.route("/{}/metrics/status".format(server.api_version))
+	def metrics_status():
 
-print("Building metrics_status.html")
-HTMLBuilder.writeStatusPageToFile()
-print("Finished building metrics_status.html")
+		metrics = []
 
+		for group in metric_groups:
+			for metric in group:
+				metrics.append(metric.__dict__)
+
+		return Response(response=json.dumps(metrics),
+		                status=200,
+		                mimetype="application/json")

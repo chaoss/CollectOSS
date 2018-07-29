@@ -8,7 +8,7 @@ from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
-from augur.util import annotate, metrics, determineFrontendStatus, writeMetadata
+from augur.util import annotate, metrics, writeMetadata
 from augur.routes import create_all_routes  
 
 AUGUR_API_VERSION = 'api/unstable'
@@ -40,11 +40,9 @@ class Server(object):
         @app.route('/{}/'.format(self.api_version))
         def status():
             status = {
-                'status': 'OK',
-                'avaliable_metrics': metrics
+                'status': 'OK'
             }
-            json = self.transform(status)
-            return Response(response=json,
+            return Response(response=json.dumps(status),
                             status=200,
                             mimetype="application/json")
 
@@ -141,11 +139,11 @@ class Server(object):
 
 
         """
-        @api {post} /batch Batch Requests
-        @apiName Batch
+        @api {post} /batch Batch Request Metadata
+        @apiName BatchMetadata
         @apiGroup Batch
-        @apiDescription Returns results of batch requests
-        POST JSON of api requests
+        @apiDescription Returns metadata of batch requests
+        POST JSON of API requests metadata
         """
         @app.route('/{}/batch/metadata'.format(self.api_version), methods=['GET', 'POST'])
         def batch_metadata():
@@ -154,7 +152,7 @@ class Server(object):
 
             if request.method == 'GET':
                 """this will return sensible defaults in the future"""
-                return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
+                return app.make_response(json.dumps(metrics))
 
             try:
                 requests = json.loads(request.data)
@@ -164,7 +162,6 @@ class Server(object):
             responses = []
 
             for index, req in enumerate(requests):
-
 
                 method = req['method']
                 path = req['path']
@@ -306,7 +303,6 @@ class Server(object):
         # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
         tag = re.sub("_", "-", function.__name__).lower()
-        frontend_status = ''
         metric_name = re.sub('_', ' ', function.__name__).title()
         annotate(metric_name=metric_name, endpoint=endpoint, escaped_endpoint=html.escape(endpoint), source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
         writeMetadata(metrics)
