@@ -8,10 +8,6 @@
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
       </section>
       <section class="unmaterialized">
-        <h3>Enter another GitHub URL if you want to compare</h3>
-        <input type="text" class="search reposearch" placeholder="Compared GitHub URL" @change="onCompare"/>
-      </section>
-      <section class="unmaterialized">
         <h3>Downloaded Git repositories</h3>
         <div v-for="repo in downloadedRepos">
           <a :href="'?git=' + btoa(repo)" class="repolink">{{ repo }}</a>
@@ -34,6 +30,11 @@
       </nav>
 
       <div ref="cards">
+        <section class="unmaterialized" v-if="(baseRepo)">
+          <h3>Compare repository</h3>
+          <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
+        </section>
+        <main-controls></main-controls>
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
           <growth-maturity-decline-card></growth-maturity-decline-card>
           <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
@@ -65,11 +66,6 @@
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
         </div>
-        <section class="unmaterialized" v-if="(baseRepo)">
-          <h3>Compare repository</h3>
-          <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
-        </section>
-        <main-controls></main-controls>
       </div>
     </div>
   </div>

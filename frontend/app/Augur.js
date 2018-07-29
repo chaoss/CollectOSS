@@ -35,10 +35,11 @@ export default function Augur () {
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
-      compare: 'each',
+      compare: 'zscore',
       showBelowAverage: false,
       rawWeekly: false,
       showArea: false,
+      showDetail: false,
       showTooltip: true,
       byDate: false
     },
@@ -133,9 +134,9 @@ export default function Augur () {
         if (typeof payload.showTooltip !== 'undefined') {
           state.showTooltip = payload.showTooltip
         }
-        // if (payload.comparedTo) {
-        //   state.comparedTo = payload.comparedTo
-        // }
+        if (typeof payload.showDetail !== 'undefined') {
+          state.showDetail = payload.showDetail
+        }
       },
       reset (state) {
         state = {

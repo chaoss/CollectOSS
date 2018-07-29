@@ -192,10 +192,11 @@ function Augur() {
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
-      compare: 'each',
+      compare: 'zscore',
       showBelowAverage: false,
       rawWeekly: false,
       showArea: false,
+      showDetail: false,
       showTooltip: true,
       byDate: false
     },
@@ -288,9 +289,9 @@ function Augur() {
         if (typeof payload.showTooltip !== 'undefined') {
           state.showTooltip = payload.showTooltip;
         }
-        // if (payload.comparedTo) {
-        //   state.comparedTo = payload.comparedTo
-        // }
+        if (typeof payload.showDetail !== 'undefined') {
+          state.showDetail = payload.showDetail;
+        }
       },
       reset: function reset(state) {
         state = {
@@ -746,9 +747,30 @@ var AugurStats = function () {
       });
     }
   }, {
+    key: 'standardDeviationLines',
+    value: function standardDeviationLines(data, key, extension, mean) {
+      var flat = data.map(function (e) {
+        return e[key];
+      });
+      mean = mean || AugurStats.averageArray(flat);
+      var distances = flat.map(function (e) {
+        return (e - mean) * (e - mean);
+      });
+      return data.map(function (e) {
+        var newObj = {};
+        if (e.date) {
+          newObj.date = new Date(e.date);
+          newObj[key] = e[key];
+        }
+        newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances));
+        newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances));
+        return newObj;
+      });
+    }
+  }, {
     key: 'standardDeviation',
-    value: function standardDeviation(ary, key, mean) {
-      var flat = ary.map(function (e) {
+    value: function standardDeviation(data, key, mean) {
+      var flat = data.map(function (e) {
         return e[key];
       });
       mean = mean || AugurStats.averageArray(flat);
@@ -876,7 +898,7 @@ var AugurStats = function () {
           newObj.date = new Date(e.date);
         }
         var zscore = (e[key] - stats['mean']) / stats['stddev'];
-        newObj.value = zscore;
+        newObj[key] = zscore;
         return newObj;
       });
     }
@@ -1060,7 +1082,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter another GitHub URL if you want to compare")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Compared GitHub URL"},on:{"change":_vm.onCompare}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo)}},[_vm._v(_vm._s(repo))])])})],2)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls')],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo)}},[_vm._v(_vm._s(repo))])])})],2)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e()],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1274,7 +1296,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4ccc0254", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4ccc0254", __vue__options__)
+    hotAPI.reload("data-v-4ccc0254", __vue__options__)
   }
 })()}
 });
@@ -1404,7 +1426,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-b05646f6", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-b05646f6", __vue__options__)
+    hotAPI.reload("data-v-b05646f6", __vue__options__)
   }
 })()}
 });
@@ -1556,6 +1578,11 @@ module.exports = {
       this.$store.commit('setCompare', {
         compare: e.target.value
       });
+    },
+    onDetailChange: function onDetailChange(e) {
+      this.$store.commit('setVizOptions', {
+        showDetail: e.target.checked
+      });
     }
   },
   computed: {
@@ -1581,8 +1608,8 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('h4',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                    "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                  "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h5',[_vm._v("Comparison Options")]),_vm._v(" "),_c('label',[_vm._v("Type\n            "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"percentage","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])]),_vm._v(" "),_c('p'),_vm._v(" "),_vm._m(0)])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h4',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"append"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Show raw weekly values"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onAreaChange}}),_vm._v("Show area"),_c('sup',{staticClass:"warn"})]),_c('br')]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('br'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n          "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])])])])])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"form-item"})])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h5',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                        "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                        "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h5',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts\n            "),_c('div',{staticClass:"append col col-10"},[_c('input',{attrs:{"type":"number","min":"2","id":"averagetimespan","value":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])])])]),_vm._v(" "),_c('br')])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('label',[_vm._v("Line Charts\n        "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation"),_c('sup',{staticClass:"warn"})])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail"),_c('sup',{staticClass:"warn"})])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n        "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")]),_vm._v(" "),_c('p',[_vm._v("Line charts show a rolling average over a 180-day period with data points at each 45-day interval")])])])])])])}
+__vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -2177,37 +2204,38 @@ exports.default = {
     showTooltip: function showTooltip() {
       return this.$store.state.showTooltip;
     },
+    showDetail: function showDetail() {
+      return this.$store.state.showDetail;
+    },
     spec: function spec() {
       var _this = this;
 
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "title": {
-          "text": this.title,
-          "offset": 15
-        },
-        "width": 420,
-        "height": 200,
         "config": {
           "axis": {
             "grid": false
           },
           "legend": {
-
             "offset": 0,
             "titleFontSize": 0,
             "titlePadding": 10
-
           }
         },
-        "layer": [],
-        "padding": {
-          "top": 20,
-          "left": 0,
-          "right": 30,
-          "bottom": 55
-        }
+        "vconcat": [{
+          "title": {
+            "text": this.title,
+            "offset": 15
+          },
+          "width": 420,
+          "height": 200,
+
+          "layer": []
+        }]
       };
+
+      var brush = { "filter": { "selection": "brush" } };
+      if (!this.showDetail) brush = { "filter": "datum.date > 0" };
 
       var selectionAdded = false;
 
@@ -2216,11 +2244,14 @@ exports.default = {
         if (key != "value") {
           color = "4736FF";
         }
+        selectionAdded = true;
         return {
+          "transform": [brush],
           "encoding": {
             "x": {
               "field": "date",
-              "type": "temporal"
+              "type": "temporal",
+              "axis": { "format": "%b %Y" }
             },
             "y": {
               "field": key,
@@ -2232,18 +2263,17 @@ exports.default = {
           },
           "mark": {
             "type": "line",
-            "interpolate": "basis",
+
             "clip": true
           }
-
         };
       };
 
-      var getStandardPoint = function getStandardPoint(key) {
+      var getToolPoint = function getToolPoint(key) {
         var selection = {
           "tooltip": {
             "type": "single",
-            "nearest": true,
+
             "on": "mouseover",
             "encodings": ["x"],
             "empty": "none"
@@ -2254,12 +2284,58 @@ exports.default = {
         }
         selectionAdded = true;
         return {
+          "transform": [brush],
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": { "format": "%b %Y" }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative"
+            },
+            "opacity": {
+              "value": 0
+            },
+            "size": {
+              "value": 3000
+            }
+          },
+          "mark": {
+            "type": "point",
+
+            "clip": true
+          },
+          "selection": selection
+        };
+      };
+
+      var getStandardPoint = function getStandardPoint(key) {
+        var selection = {
+          "tooltip": {
+            "type": "interval",
+            "nearest": true,
+            "on": "mouseover",
+            "encodings": ["x"],
+            "empty": "none"
+          }
+        };
+        if (selectionAdded) {
+          selection = null;
+        }
+        selectionAdded = true;
+        var col = '#FF3647';
+        if (key != "value") col = '#4736FF';
+        return {
+          "transform": [brush],
           "encoding": {
             "x": {
               "field": "date",
               "type": "temporal",
               "axis": {
-                "title": null
+                "title": null,
+                "format": "%b %Y"
               }
             },
             "y": {
@@ -2270,13 +2346,12 @@ exports.default = {
               }
             },
             "color": {
-              "field": "name",
-              "type": "nominal",
-              "scale": { "range": ['#FF3647', '#4736FF'] }
+              "value": col
             },
             "opacity": {
               "condition": {
                 "selection": "tooltip",
+
                 "value": 1
               },
               "value": 0
@@ -2289,8 +2364,9 @@ exports.default = {
         };
       };
 
-      var getArea = function getArea(key) {
+      var getArea = function getArea(extension) {
         return {
+          "transform": [brush],
           "mark": {
             "type": "area",
             "interpolate": "basis",
@@ -2300,17 +2376,16 @@ exports.default = {
             "x": {
               "field": "date",
               "type": "temporal",
-              "timeUnit": "year"
+              "axis": { "format": "%b %Y" }
             },
             "y": {
-              "aggregate": "ci1",
-              "field": key,
+
+              "field": "lower" + extension,
               "type": "quantitative"
 
             },
             "y2": {
-              "aggregate": "ci0",
-              "field": key,
+              "field": "upper" + extension,
               "type": "quantitative"
             },
             "color": {
@@ -2331,12 +2406,11 @@ exports.default = {
         "encoding": {
           "x": {
             "type": "temporal",
-            "field": "date"
+            "field": "date",
+            "axis": { "format": "%b %Y" }
           },
           "color": {
-            "field": "name",
-            "type": "nominal",
-            "scale": { "range": ['#FF3647', '#4736FF'] }
+            "value": "black"
           }
         }
       };
@@ -2362,7 +2436,8 @@ exports.default = {
             },
             "x": {
               "type": "temporal",
-              "field": "date"
+              "field": "date",
+              "axis": { "format": "%b %Y" }
             },
             "y": {
               "field": key,
@@ -2396,7 +2471,8 @@ exports.default = {
             },
             "x": {
               "type": "temporal",
-              "field": "date"
+              "field": "date",
+              "axis": { "format": "%b %Y" }
             },
             "y": {
               "field": key,
@@ -2409,6 +2485,43 @@ exports.default = {
         };
       };
 
+      var getDetail = function getDetail(key) {
+        var color = "FF3647";
+        if (key != "value") {
+          color = "4736FF";
+        }
+        return {
+          "width": 420,
+          "height": 60,
+          "mark": "line",
+          "title": {
+            "text": " "
+          },
+          "selection": {
+            "brush": { "type": "interval", "encodings": ["x"] }
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": { "format": "%b %Y", "title": " " }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative",
+              "axis": null
+            },
+            "opacity": {
+              "value": 0.5
+            },
+            "color": {
+              "value": color
+            }
+          }
+
+        };
+      };
+
       var comparedTo = this.comparedTo;
 
       var buildMetric = function buildMetric() {
@@ -2418,25 +2531,33 @@ exports.default = {
       };
 
       var buildLines = function buildLines(key) {
-        config.layer.push(getStandardLine(key));
-        config.layer.push(getStandardPoint(key));
+        config.vconcat[0].layer.push(getToolPoint(key));
+        config.vconcat[0].layer.push(getStandardLine(key));
+        config.vconcat[0].layer.push(getStandardPoint(key));
       };
 
       var buildTooltip = function buildTooltip(key) {
-        config.layer.push(getValueText(key));
-        config.layer.push(getDateText(key));
+        config.vconcat[0].layer.push(getValueText(key));
+        config.vconcat[0].layer.push(getDateText(key));
       };
+
+      if (this.showDetail) {
+        config.vconcat[1] = getDetail("value");
+        if (this.comparedTo) config.vconcat[1] = getDetail("comparedValue");
+      } else {
+        if (config.vconcat[1]) config.vconcat.pop();
+      }
 
       buildMetric();
 
       if (this.showArea) {
-        config.layer.push(getArea("value"));
+        config.vconcat[0].layer.push(getArea(""));
         if (comparedTo) {
-          config.layer.push(getArea("comparedValue"));
+          config.vconcat[0].layer.push(getArea("Compared"));
         }
       } else {
-        for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == getArea("value")) {
+        for (var x = 0; x < config.vconcat[0].layer.length; x++) {
+          if (config.vconcat[0].layer[x] == getArea("value")) {
             buildMetric();
           }
         }
@@ -2447,23 +2568,30 @@ exports.default = {
 
         if (comparedTo) {
           buildTooltip("comparedValue");
-          config.layer.push(rule);
+          config.vconcat[0].layer.push(rule);
         }
       } else {
-        for (var x = 0; x < config.layer.length; x++) {
-          if (config.layer[x] == getValueText("value")) {
+        for (var x = 0; x < config.vconcat[0].layer.length; x++) {
+          if (config.vconcat[0].layer[x] == getValueText("value")) {
             buildMetric();
           }
         }
       }
 
-      for (var i = 0; i < config.layer.length; i++) {
-        config.layer[i].encoding.x["scale"] = {
+      if (this.showDetail) {
+        config.vconcat[1].encoding.x["scale"] = {
           "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
         };
+      } else {
+        for (var i = 0; i < config.vconcat[0].layer.length; i++) {
+          config.vconcat[0].layer[i].encoding.x["scale"] = {
+            "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
+          };
+        }
       }
 
       var hideRaw = !this.rawWeekly;
+      var compare = this.compare;
 
       $(this.$el).find('.showme').addClass('invis');
       $(this.$el).find('.linechart').addClass('loader');
@@ -2544,35 +2672,33 @@ exports.default = {
           buildLines(data[_this.repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count, false);
             var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+            normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'value', ""));
+            aggregates.push(_AugurStats2.default.standardDeviationLines(d, 'value', ""));
+            legend.push(field);
             if (!_this.disableRollingAverage) {
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(field);
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
             }
             if (!hideRaw || _this.disableRollingAverage) {
-              normalized.push(rolling);
-              aggregates.push(d);
-              legend.push(field);
               colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
             }
           }, false);
-        } else if (_this.compare === 'each' && _this.comparedTo) {
+        } else if (compare == 'zscore' || compare == 'baseline' && _this.comparedTo) {
           buildLines(data[_this.comparedTo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count, false);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
-
-            normalized.push(rolling);
-            aggregates.push(d);
+            var rolling = null;
+            if (compare == 'zscore') rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);else rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
+            normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'value', ""));
+            aggregates.push(_AugurStats2.default.standardDeviationLines(d, 'value', ""));
             legend.push(_this.comparedTo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
           }, false);
           buildLines(data[_this.repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count, true);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
 
-            normalized.push(rolling);
-            aggregates.push(d);
+            var rolling = null;
+            if (compare == 'zscore') rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'comparedValue'), 'comparedValue', _this.period);else rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
+            normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'comparedValue', "Compared"));
+            aggregates.push(_AugurStats2.default.standardDeviationLines(d, 'comparedValue', "Compared"));
             legend.push(_this.repo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
           }, true);
@@ -2593,6 +2719,7 @@ exports.default = {
           _this.renderError();
         } else {
           if (hideRaw) {
+            values = [];
             for (var i = 0; i < legend.length; i++) {
               normalized[i].forEach(function (d) {
                 d.name = legend[i];
@@ -2601,6 +2728,7 @@ exports.default = {
               });
             }
           } else {
+            values = [];
             for (var i = 0; i < legend.length; i++) {
               aggregates[i].forEach(function (d) {
                 d.name = "raw " + legend[i];
@@ -2613,14 +2741,13 @@ exports.default = {
           _this.legendLabels = legend;
           _this.values = values;
 
-          config.config.legend.offset = -(String(_this.legendLabels[0]).length * 6.5) - 20;
-
           $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
           $(_this.$el).find('.linechart').removeClass('loader');
 
           _this.renderChart();
         }
       };
+
       if (this.data) {
         processData(this.data);
       } else {

@@ -70,8 +70,26 @@ export default class AugurStats {
     })
   }
 
-  static standardDeviation (ary, key, mean) {
-    let flat = ary.map((e) => { return e[key] })
+  static standardDeviationLines (data, key, extension, mean) {
+    let flat = data.map((e) => { return e[key] })
+    mean = mean || AugurStats.averageArray(flat)
+    let distances = flat.map((e) => {
+      return (e - mean) * (e - mean)
+    })
+    return data.map((e) => {
+      let newObj = {}
+      if (e.date) {
+        newObj.date = new Date(e.date)
+        newObj[key] = e[key]
+      }
+      newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances))
+      newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances))
+      return newObj
+    })
+  }
+
+  static standardDeviation (data, key, mean) {
+    let flat = data.map((e) => { return e[key] })
     mean = mean || AugurStats.averageArray(flat)
     let distances = flat.map((e) => {
       return (e - mean) * (e - mean)
@@ -198,7 +216,7 @@ export default class AugurStats {
         newObj.date = new Date(e.date)
       }
       let zscore = ((e[key] - stats['mean']) / stats['stddev'])
-      newObj.value = zscore
+      newObj[key] = zscore
       return newObj
     })
   }
