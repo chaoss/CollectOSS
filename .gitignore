@@ -45,10 +45,10 @@ Thumbs.db
 *.cache
 *.pyc
 *.swp
+*.un~
 
 # Git #
 #######
-*.un~
 *.orig
 
 # Python junk #
@@ -71,4 +71,3 @@ augur/plugins/
 *.repolist.txt
 *.config.*
 *.cfg.*
-metadata.json

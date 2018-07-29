@@ -35,7 +35,7 @@ class Server(object):
         create_all_routes(self)
 
         #####################################
-        ###          Utility              ###
+        ###          UTILITY              ###
         #####################################
         
         @app.route('/{}/'.format(self.api_version))
