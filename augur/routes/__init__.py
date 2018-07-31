@@ -14,8 +14,11 @@ def getRouteFiles():
 
 route_files = getRouteFiles()
 
-def create_all_routes(server):
+def create_all_datasource_routes(server):
     for route_file in route_files:
         module = importlib.import_module('.' + route_file, 'augur.routes')
         module.create_routes(server)
 
+def create_status_routes(server):
+	module = importlib.import_module('.__status_routes', 'augur.routes')
+	module.create_routes(server)
