@@ -35,7 +35,7 @@ def get_cache(namespace, cache_manager=None):
         cache_manager = __memory_cache
     return cache_manager.get_cache(namespace)
 
-metrics = []
+metric_metadata = []
 def annotate(metadata=None, **kwargs):
     """
     Decorate a function as being a metric
@@ -45,7 +45,7 @@ def annotate(metadata=None, **kwargs):
     def decorate(func):
         if not hasattr(func, 'metadata'):
             func.metadata = {}
-            metrics.append(func.metadata)
+            metric_metadata.append(func.metadata)
         func.metadata.update(metadata)
         func.metadata.update(dict(kwargs))
         return func
