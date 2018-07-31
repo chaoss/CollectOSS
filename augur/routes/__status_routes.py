@@ -5,6 +5,7 @@ import requests
 from flask import Response
 from augur.util import metric_metadata
 
+
 class Metric(object):
 	def __init__(self):
 		self.tag = 'n/a'
@@ -58,7 +59,7 @@ def createImplementedMetric(metadata):
 		metric.frontend_status = frontendStatusExtractor.determineFrontendStatus(metric)
 		metric.escaped_endpoint = metadata['escaped_endpoint']
 
-	if determineIfMetricIsDefined(metric.tag):
+	if metric.tag in defined_tags:
 		metric.setUrl()
 
 	return metric
@@ -70,7 +71,6 @@ def buildImplementedMetrics():
 		implemented_metrics.append(createImplementedMetric(metadata))
 
 	return implemented_metrics
-
 
 # grouped metrics
 def extractGroupedMetricNamesFromRemoteFile(remote):
@@ -97,7 +97,6 @@ def createGroupedMetricsFromListOfRemotes(remotes_list, group):
 		remote_metrics.append(createMetric(name, group))
 
 	return remote_metrics
-
 
 # activity metrics
 def extractActivityMetricNames():
@@ -134,27 +133,23 @@ def createMetric(raw_name, group):
 	metric.setTag()
 	metric.group = group
 
-	if determineIfMetricIsDefined(metric.tag):
+	if metric.tag in defined_tags:
 		metric.is_defined = True
 		metric.setUrl()
 		metric.backend_status = 'unimplemented'
 
 	return metric
 
-
 # other
-def determineIfMetricIsDefined(tag):
+def getDefinedMetricTags():
 
-	activity_remote_url = "https://raw.githubusercontent.com/{}/master/activity-metrics/".format(activity_repo_remote)
+	activity_files = requests.get("https://api.github.com/repos/{}/contents/activity-metrics".format(activity_repo_remote)).json()
+	defined_tags = []
 
-	status_code = requests.get(activity_remote_url + tag + ".md").status_code
+	for file in activity_files:
+		defined_tags.append(re.sub(".md", '', file['name']))
 
-	# ipdb.set_trace()
-
-	if status_code == 404:
-		return False
-	else:
-		return True
+	return defined_tags
 
 class FrontendStatusExtractor(object):
 	def __init__(self):
@@ -186,6 +181,8 @@ class FrontendStatusExtractor(object):
 
 
 activity_repo_remote = "OSSHealth/wg-gmd"
+
+defined_tags = getDefinedMetricTags()
 
 frontendStatusExtractor = FrontendStatusExtractor()
 implemented_metrics = buildImplementedMetrics()
@@ -228,7 +225,6 @@ metrics_by_group.append(experimental_metrics)
 copyImplementedMetrics()
 
 def create_routes(server):
-
 	@server.app.route("/{}/metrics/status".format(server.api_version))
 	def metrics_status():
 

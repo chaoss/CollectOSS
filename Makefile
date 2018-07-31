@@ -1,6 +1,6 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop 
 .PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
-.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upstream version
+.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
 
 SERVECOMMAND=augur
 CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
@@ -17,7 +17,6 @@ default:
 	@ echo "    install-e              Installs augur in editable mode (pip -e)"
 	@ echo "    install-dev            Installs augur's developer dependencies (requires npm and pip)"
 	@ echo "    install-msr            Installs MSR14 dataset"
-	@ echo "    update-upstream         Updates git submodules"
 	@ echo "    upgrade                Pulls newest version, installs, performs migrations"
 	@ echo "    version                Print the currently installed version"
 	@ echo
@@ -67,10 +66,7 @@ version:
 download-upgrade:
 	git pull
 
-update-upstream: 
-	git submodule update --init --recursive --remote
-
-upgrade: version download-upgrade update-upstream install-dev
+upgrade: version download-upgrade install-dev
 	@ python util/post-upgrade.py $(OLDVERSION)
 	@ echo "Upgraded from $(OLDVERSION) to $(shell python util/print-version.py)."
 
@@ -97,7 +93,7 @@ dev-stop:
 	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
 	@ echo
 
-dev: update-upstream dev-restart monitor
+dev: dev-restart monitor
 
 monitor-frontend:
 	@ less +F logs/frontend.log

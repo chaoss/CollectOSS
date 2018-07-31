@@ -8,7 +8,7 @@ from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
-from augur.util import annotate, metric_metadata, writeMetadata
+from augur.util import annotate, metric_metadata
 from augur.routes import create_all_datasource_routes, create_status_routes  
 
 AUGUR_API_VERSION = 'api/unstable'
@@ -306,7 +306,6 @@ class Server(object):
         tag = re.sub("_", "-", function.__name__).lower()
         metric_name = re.sub('_', ' ', function.__name__).title()
         annotate(metric_name=metric_name, endpoint=endpoint, escaped_endpoint=html.escape(endpoint), source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
-        writeMetadata(metric_metadata)
 
 def run():
     server = Server()

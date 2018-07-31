@@ -50,7 +50,3 @@ def annotate(metadata=None, **kwargs):
         func.metadata.update(dict(kwargs))
         return func
     return decorate
-
-def writeMetadata(metrics):
-    metadata = open('docs/metrics/output/metadata.json', 'w')
-    metadata.write(json.dumps(metrics, indent=4))
