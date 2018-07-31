@@ -1,12 +1,9 @@
-import os
 import re
 import json
 import glob
-from flask import Response
-from bs4 import BeautifulSoup
-from augur.util import getFileID, metric_metadata
-import pprint
 import requests
+from flask import Response
+from augur.util import metric_metadata
 
 class Metric(object):
 	def __init__(self):
