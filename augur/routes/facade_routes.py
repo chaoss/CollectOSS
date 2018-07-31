@@ -2,7 +2,7 @@ from flask import Response
 
 def create_routes(server):
 
-    git = server.augur_app.facade()
+    facade = server.augur_app.facade()
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###
@@ -30,11 +30,11 @@ def create_routes(server):
 
     @server.app.route('/{}/git/repos'.format(server.api_version))
     def downloaded_repos():
-        drs = server.transform(git.downloaded_repos)
+        drs = server.transform(facade.downloaded_repos)
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
-    server.updateMetricMetadata(function=git.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
+    server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
 
     """
     @api {get} /git/lines_changed/:git_repo_url Lines Changed by Author
@@ -61,7 +61,7 @@ def create_routes(server):
                             }
                         ]
     """
-    server.addGitMetric(git.lines_changed_by_author, 'changes_by_author')
+    server.addGitMetric(facade.lines_changed_by_author, 'changes_by_author')
 
     """
     @api {get} /git/lines_changed/:git_repo_url Lines Changed (minus whitespace)
@@ -89,5 +89,5 @@ def create_routes(server):
                             }
                         ]
     """
-    server.addGitMetric(git.lines_changed_minus_whitespace, 'lines_changed')
+    server.addGitMetric(facade.lines_changed_minus_whitespace, 'lines_changed')
 
