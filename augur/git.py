@@ -164,109 +164,109 @@ class Git(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-    @annotate(metric_name='downloaded-repos', group='experimental')
-    def downloaded_repos(self):
-        """
-        Get all downloaded repositories and the date they were last updated
+    # @annotate(metric_name='downloaded-repos', group='experimental')
+    # def downloaded_repos(self):
+    #     """
+    #     Get all downloaded repositories and the date they were last updated
 
-        :return: a JSON object with the URL and date of last update for all downloaded repos        
-        """
-        downloaded = []
-        for repo_url in self._repo_urls:
-            repo = self.get_repo(repo_url)
-            updated = 'never'
-            if repo.lock.is_locked():
-                updated = 'now'
-            else:
-                if 'last_updated' in repo.data:
-                    updated = repo.data['last_updated']
-            downloaded.append({
-                'url': repo_url,
-                'updated': updated
-            })
+    #     :return: a JSON object with the URL and date of last update for all downloaded repos        
+    #     """
+    #     downloaded = []
+    #     for repo_url in self._repo_urls:
+    #         repo = self.get_repo(repo_url)
+    #         updated = 'never'
+    #         if repo.lock.is_locked():
+    #             updated = 'now'
+    #         else:
+    #             if 'last_updated' in repo.data:
+    #                 updated = repo.data['last_updated']
+    #         downloaded.append({
+    #             'url': repo_url,
+    #             'updated': updated
+    #         })
 
-        return downloaded
+    #     return downloaded
 
-    @annotate(metric_name='lines-changed-minus-whitespace', group='experimental')
-    def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
-        """
-        Makes sure the storageFolder contains updated versions of all the repos
-        """
-        def heavy_lifting():
-            nonlocal df
-            from_commit = None
+    # @annotate(metric_name='lines-changed-minus-whitespace', group='experimental')
+    # def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
+    #     """
+    #     Makes sure the storageFolder contains updated versions of all the repos
+    #     """
+    #     def heavy_lifting():
+    #         nonlocal df
+    #         from_commit = None
             
-            repo = self.get_repo(repo_url)
-            git_repo = repo.git()
+    #         repo = self.get_repo(repo_url)
+    #         git_repo = repo.git()
             
-            frames = []
-            if df is not None:
-                frames.append(df)
-                from_commit = df['hash'].iloc[-1]
-            """
-            Run a Git log command that returns each entry into 3 parts:
-                1. JSON of the metadata
-                2. Commit message
-                3. Diffs
-            """
-            arg_array = ['-p', '-w', '-m', '--full-history', '--reverse', """--pretty=format:'[START ENTRY]%n{%n"hash":"%h",%n"author_name":"%an",%n"author_email":"%ae",%n"author_date":"%ai",%n"committer_name": "%cn",%n"committer_email":"%ce",%n"commit_date":"%ci",%n"parents":"%p"%n}%n#####SPLIT#####%s#####SPLIT#####'"""]
-            if from_commit is not None:
-                arg_array.append('{}..'.format(from_commit))
-            history = git_repo.git.log(*arg_array)
-            # Split the message into individual entries
-            entries = history.split('[START ENTRY]')[1:]
-            for entry in entries:
-                splits = entry.split('#####SPLIT#####')
-                try:
-                    data = json.loads(splits[0])
-                except json.JSONDecodeError as err:
-                    continue
-                data['message'] = splits[1]
-                if (len(splits[2]) > 2):
-                    diffs = splits[2].split('diff --git')
-                    for diff in diffs[1:]:
-                        if '+' in diff:
-                            file_search = re.search('b(\/.+)', diff)
-                            if file_search is not None:
-                                filename = file_search.group(1)
-                                # Find all the lines that begin with a plus or minus to count added
-                                # Minus one to account the file matches
-                                additions = len(re.findall('\n\+[ \t]*[^\s]', diff)) - 1
-                                deletions = len(re.findall('\n-[ \t]*[^\s]', diff)) - 1
-                                data['additions'] = additions
-                                data['deletions'] = deletions
-                                frames.append(pd.DataFrame(data, index=['hash']))
+    #         frames = []
+    #         if df is not None:
+    #             frames.append(df)
+    #             from_commit = df['hash'].iloc[-1]
+    #         """
+    #         Run a Git log command that returns each entry into 3 parts:
+    #             1. JSON of the metadata
+    #             2. Commit message
+    #             3. Diffs
+    #         """
+    #         arg_array = ['-p', '-w', '-m', '--full-history', '--reverse', """--pretty=format:'[START ENTRY]%n{%n"hash":"%h",%n"author_name":"%an",%n"author_email":"%ae",%n"author_date":"%ai",%n"committer_name": "%cn",%n"committer_email":"%ce",%n"commit_date":"%ci",%n"parents":"%p"%n}%n#####SPLIT#####%s#####SPLIT#####'"""]
+    #         if from_commit is not None:
+    #             arg_array.append('{}..'.format(from_commit))
+    #         history = git_repo.git.log(*arg_array)
+    #         # Split the message into individual entries
+    #         entries = history.split('[START ENTRY]')[1:]
+    #         for entry in entries:
+    #             splits = entry.split('#####SPLIT#####')
+    #             try:
+    #                 data = json.loads(splits[0])
+    #             except json.JSONDecodeError as err:
+    #                 continue
+    #             data['message'] = splits[1]
+    #             if (len(splits[2]) > 2):
+    #                 diffs = splits[2].split('diff --git')
+    #                 for diff in diffs[1:]:
+    #                     if '+' in diff:
+    #                         file_search = re.search('b(\/.+)', diff)
+    #                         if file_search is not None:
+    #                             filename = file_search.group(1)
+    #                             # Find all the lines that begin with a plus or minus to count added
+    #                             # Minus one to account the file matches
+    #                             additions = len(re.findall('\n\+[ \t]*[^\s]', diff)) - 1
+    #                             deletions = len(re.findall('\n-[ \t]*[^\s]', diff)) - 1
+    #                             data['additions'] = additions
+    #                             data['deletions'] = deletions
+    #                             frames.append(pd.DataFrame(data, index=['hash']))
 
             
-            if len(frames):
-                df = pd.concat(frames)
-            df['author_affiliation'] = self._csv.classify_emails(df['author_email'])
-            df['committer_affiliation'] = self._csv.classify_emails(df['committer_email'])
-            return df
+    #         if len(frames):
+    #             df = pd.concat(frames)
+    #         df['author_affiliation'] = self._csv.classify_emails(df['author_email'])
+    #         df['committer_affiliation'] = self._csv.classify_emails(df['committer_email'])
+    #         return df
         
-        results = self.__cache.get(key='lc-{}'.format(repo_url), createfunc=heavy_lifting)
-        if rebuild_cache:
-            self.__cache.remove_value(key='lc-{}'.format(repo_url))
-            new_results = self.lines_changed_minus_whitespace(repo_url, df=results, rebuild_cache=False)
-            if len(new_results) > len(results):
-                logger.info('Git: Added commits from %s to %s', results['hash'].iloc[-1], new_results['hash'].iloc[-1])
-            results = new_results
-        return results
+    #     results = self.__cache.get(key='lc-{}'.format(repo_url), createfunc=heavy_lifting)
+    #     if rebuild_cache:
+    #         self.__cache.remove_value(key='lc-{}'.format(repo_url))
+    #         new_results = self.lines_changed_minus_whitespace(repo_url, df=results, rebuild_cache=False)
+    #         if len(new_results) > len(results):
+    #             logger.info('Git: Added commits from %s to %s', results['hash'].iloc[-1], new_results['hash'].iloc[-1])
+    #         results = new_results
+    #     return results
 
-    @annotate(metric_name='lines-changed-by-author', group='experimental')
-    def lines_changed_by_author(self, repo_url, freq='M', rebuild_cache=False):
-        """
-        Makes sure the storageFolder contains updated versions of all the repos
-        """
-        def heavy_lifting():
-            df = self.lines_changed_minus_whitespace(repo_url)
-            df['author_date'] = pd.to_datetime(df['author_date'])
-            df = df.set_index('author_date')
-            df = df.groupby(['author_email', 'author_name', pd.Grouper(freq=freq)]).sum().sort_values(by=['additions'], ascending=False)
-            df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
-            df.reset_index(inplace=True)
-            return df
-        if rebuild_cache:
-            self.__cache.remove_value(key='cba-{}-{}'.format(freq, repo_url))
-        results = self.__cache.get(key='cba-{}-{}'.format(freq, repo_url), createfunc=heavy_lifting)
-        return result5
+    # @annotate(metric_name='lines-changed-by-author', group='experimental')
+    # def lines_changed_by_author(self, repo_url, freq='M', rebuild_cache=False):
+    #     """
+    #     Makes sure the storageFolder contains updated versions of all the repos
+    #     """
+    #     def heavy_lifting():
+    #         df = self.lines_changed_minus_whitespace(repo_url)
+    #         df['author_date'] = pd.to_datetime(df['author_date'])
+    #         df = df.set_index('author_date')
+    #         df = df.groupby(['author_email', 'author_name', pd.Grouper(freq=freq)]).sum().sort_values(by=['additions'], ascending=False)
+    #         df['affiliation'] = self._csv.classify_emails(df.index.get_level_values('author_email'))
+    #         df.reset_index(inplace=True)
+    #         return df
+    #     if rebuild_cache:
+    #         self.__cache.remove_value(key='cba-{}-{}'.format(freq, repo_url))
+    #     results = self.__cache.get(key='cba-{}-{}'.format(freq, repo_url), createfunc=heavy_lifting)
+    #     return result5

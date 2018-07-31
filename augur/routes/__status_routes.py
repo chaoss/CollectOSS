@@ -5,6 +5,7 @@ import requests
 from flask import Response
 from augur.util import metric_metadata
 
+import ipdb
 
 class Metric(object):
 	def __init__(self):
@@ -51,8 +52,6 @@ def createImplementedMetric(metadata):
 
 	if 'metric_type' in metadata:
 	    metric.metric_type = metadata['metric_type']
-	else:
-	    metric.metric_type = 'metric'
 
 	if 'endpoint' in metadata:
 		metric.endpoint = metadata['endpoint']
@@ -66,6 +65,8 @@ def createImplementedMetric(metadata):
 
 def buildImplementedMetrics():
 	implemented_metrics = []
+
+	# ipdb.set_trace()
 
 	for metadata in metric_metadata:
 		implemented_metrics.append(createImplementedMetric(metadata))
@@ -143,11 +144,12 @@ def createMetric(raw_name, group):
 # other
 def getDefinedMetricTags():
 
-	activity_files = requests.get("https://api.github.com/repos/{}/contents/activity-metrics".format(activity_repo_remote)).json()
+	# TODO: FIX GITHUB AUTH
+	# activity_files = requests.get("https://api.github.com/repos/{}/contents/activity-metrics".format(activity_repo_remote), auth=('user', server.augur_app.githubapi().GITHUB_API_KEY)).json()
 	defined_tags = []
 
-	for file in activity_files:
-		defined_tags.append(re.sub(".md", '', file['name']))
+	# for file in activity_files:
+	# 	defined_tags.append(re.sub(".md", '', file['name']))
 
 	return defined_tags
 
@@ -233,7 +235,7 @@ def create_routes(server):
 		for group in metrics_by_group:
 			for metric in group:
 				metrics_status.append(metric.__dict__)
-
+				
 		return Response(response=json.dumps(metrics_status),
 						status=200,
 						mimetype="application/json")
