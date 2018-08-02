@@ -3,7 +3,7 @@
 
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
-       <section class="unmaterialized">
+     <!--  <section class="unmaterialized">
         <h3>Enter a GitHub URL to get started</h3>
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
       </section>
@@ -13,8 +13,8 @@
           <a :href="'?git=' + btoa(repo.url)" class="repolink">{{ repo.url }}</a> (status: {{ repo.status }})
         </div>
       </section>
-   <section class="unmaterialized">
-        <metric-status-card v-for="metric in metricsStatus" :metric="metric"></metric-status-card>
+ -->      <section class="unmaterialized">
+        <all-metrics-status-card></all-metrics-status-card>
       </section>
     </div>
 
@@ -76,7 +76,7 @@
 
 <script>
 import MainControls from './MainControls'
-import MetricStatusCard from './MetricStatusCard'
+import AllMetricsStatusCard from './AllMetricsStatusCard'
 import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
@@ -92,7 +92,7 @@ import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
 module.exports = {
   components: {
     MainControls,
-    MetricStatusCard,
+    AllMetricsStatusCard,
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
     ComparedRepoActivityCard,
@@ -108,7 +108,6 @@ module.exports = {
   data() {
     return {
       downloadedRepos: [],
-      metricsStatus: []
     }
   },
   computed: {
@@ -151,19 +150,12 @@ module.exports = {
         this.downloadedRepos = data
       })
     },
-    getMetricsStatus() {
-      this.metricsStatus = []
-      window.AugurAPI.getMetricsStatus().then((data) => {
-        this.metricsStatus = data
-      })
-    },
     btoa(s) {
       return window.btoa(s)
     }
   },
-  mounted () {
+  mounted() {
     this.getDownloadedRepos()
-    this.getMetricsStatus()
   }
 }
 </script>

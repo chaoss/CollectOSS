@@ -29,7 +29,7 @@ def create_routes(server):
     #####################################   
 
     @server.app.route('/{}/git/repos'.format(server.api_version))
-    def downloaded_repos():
+    def facade_downloaded_repos(): #TODO: make this name automatic - wrapper?
         drs = server.transform(facade.downloaded_repos)
         return Response(response=drs,
                         status=200,

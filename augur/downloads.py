@@ -43,7 +43,7 @@ class Downloads(object):
     ###         EXPERIMENTAL          ###
     #####################################
         
-    @annotate(metric_name='downloads', group='experimental')
+    @annotate(tag='downloads', group='experimental')
     def downloads(self, owner, repo):
         """
         Timeseries that returns package file and calls the correct function to the create download statistics

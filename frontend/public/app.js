@@ -941,6 +941,67 @@ var AugurStats = function () {
 exports.default = AugurStats;
 });
 
+;require.register("components/AllMetricsStatusCard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _MetricStatusCard = require('./MetricStatusCard.vue');
+
+var _MetricStatusCard2 = _interopRequireDefault(_MetricStatusCard);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+
+  components: {
+    MetricStatusCard: _MetricStatusCard2.default
+  },
+
+  name: 'AllMetricsStatusCard',
+
+  data: function data() {
+    return {
+      metricsStatus: []
+    };
+  },
+
+  methods: {
+    getMetricsStatus: function getMetricsStatus() {
+      var _this = this;
+
+      this.metricsStatus = [];
+      window.AugurAPI.getMetricsStatus().then(function (data) {
+        _this.metricsStatus = data;
+      });
+    }
+  },
+  mounted: function mounted() {
+    this.getMetricsStatus();
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('h2',[_vm._v("Diversity and Inclusion")]),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return [_c('table',{staticClass:"metrics-status-card"},[_c('metric-status-card',{attrs:{"metric":metric}})],1)]})],2)}
+__vue__options__.staticRenderFns = []
+__vue__options__._scopeId = "data-v-17a4f8de"
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-17a4f8de", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-17a4f8de", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/AugurApp.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -987,9 +1048,9 @@ var _MainControls = require('./MainControls');
 
 var _MainControls2 = _interopRequireDefault(_MainControls);
 
-var _MetricStatusCard = require('./MetricStatusCard');
+var _AllMetricsStatusCard = require('./AllMetricsStatusCard');
 
-var _MetricStatusCard2 = _interopRequireDefault(_MetricStatusCard);
+var _AllMetricsStatusCard2 = _interopRequireDefault(_AllMetricsStatusCard);
 
 var _BaseRepoActivityCard = require('./BaseRepoActivityCard');
 
@@ -1040,7 +1101,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 module.exports = {
   components: {
     MainControls: _MainControls2.default,
-    MetricStatusCard: _MetricStatusCard2.default,
+    AllMetricsStatusCard: _AllMetricsStatusCard2.default,
     BaseRepoActivityCard: _BaseRepoActivityCard2.default,
     BaseRepoEcosystemCard: _BaseRepoEcosystemCard2.default,
     ComparedRepoActivityCard: _ComparedRepoActivityCard2.default,
@@ -1055,8 +1116,7 @@ module.exports = {
   },
   data: function data() {
     return {
-      downloadedRepos: [],
-      metricsStatus: []
+      downloadedRepos: []
     };
   },
 
@@ -1102,28 +1162,19 @@ module.exports = {
         _this.downloadedRepos = data;
       });
     },
-    getMetricsStatus: function getMetricsStatus() {
-      var _this2 = this;
-
-      this.metricsStatus = [];
-      window.AugurAPI.getMetricsStatus().then(function (data) {
-        _this2.metricsStatus = data;
-      });
-    },
     btoa: function btoa(s) {
       return window.btoa(s);
     }
   },
   mounted: function mounted() {
     this.getDownloadedRepos();
-    this.getMetricsStatus();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink",attrs:{"href":'?git=' + _vm.btoa(repo.url)}},[_vm._v(_vm._s(repo.url))]),_vm._v(" (status: "+_vm._s(repo.status)+")\n      ")])})],2),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},_vm._l((_vm.metricsStatus),function(metric){return _c('metric-status-card',{attrs:{"metric":metric}})}))]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd' || _vm.currentTab == 'experimental' || _vm.currentTab == 'activity')))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e()],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('all-metrics-status-card')],1)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[((_vm.baseRepo && (_vm.currentTab == 'gmd' || _vm.currentTab == 'experimental' || _vm.currentTab == 'activity')))?_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Compare repository")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}})]):_vm._e(),_vm._v(" "),_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e()],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1676,25 +1727,53 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/MetricStatusCard.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = {
 
-  name: 'MetricsStatusCard',
-  props: ['metric'],
+  name: "MetricStatusCard",
+
+  props: ["metric"],
+
   data: function data() {
-    return {};
+    return {
+      backend_color: "#0c0",
+      frontend_color: "#0c0"
+    };
+  },
+
+  methods: {
+    getBackendStatus: function getBackendStatus() {
+      if (this.metric["backend_status"] == "unimplemented") {
+        this.backend_color = "#c00";
+      } else if (this.metric["backend_status"] == "undefined") {
+        this.backend_color = "#cc0";
+      } else if (this.metric["backend_status"] == "implemented") {
+        this.backend_color = "0c0";
+      }
+    },
+    getFrontendStatus: function getFrontendStatus() {
+      if (this.metric["frontend_status"] == "unimplemented") {
+        this.frontend_color = "#c00";
+      } else if (this.metric["frontend_status"] == "implemented") {
+        this.frontend_color = "#0c0";
+      }
+    }
+  },
+  mounted: function mounted() {
+    this.getBackendStatus();
+    this.getFrontendStatus();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('ul',[_c('li',[_c('b',[_vm._v("Name: "+_vm._s(_vm.metric.name))])]),_vm._v(" "),_c('ul',[_c('li',[_vm._v("\n\t\t\t    Tag: "+_vm._s(_vm.metric.tag)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.url != '/')?_c('li',[_vm._v("\n\t\t\t    URL: "+_vm._s(_vm.metric.url)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tGroup: "+_vm._s(_vm.metric.group)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.endpoint != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tEndpoint: "+_vm._s(_vm.metric.endpoint)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),(_vm.metric.source != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tSource: "+_vm._s(_vm.metric.source)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tBackend Status: "+_vm._s(_vm.metric.backend_status)+"\n\t\t\t  ")]),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tFrontend Status: "+_vm._s(_vm.metric.frontend_status)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.metric_type != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tMetric Type: "+_vm._s(_vm.metric.metric_type)+"\n\t\t\t  ")]):_vm._e()])])}
-__vue__options__.staticRenderFns = []
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_vm._m(0),_vm._v(" "),_c('tr',[_c('td',{style:({ color: _vm.backend_color })},[_vm._v(_vm._s(_vm.metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.frontend_color })},[_vm._v(_vm._s(_vm.metric.frontend_status))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(_vm.metric.name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(_vm.metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(_vm.metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(_vm.metric.metric_type))])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',[_c('td',[_vm._v("backend status")]),_vm._v(" "),_c('td',[_vm._v("frontend status")]),_vm._v(" "),_c('td',[_vm._v("name")]),_vm._v(" "),_c('td',[_vm._v("endpoint")]),_vm._v(" "),_c('td',[_vm._v("source")]),_vm._v(" "),_c('td',[_vm._v("metric type")])])}]
 __vue__options__._scopeId = "data-v-e8c39942"
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)

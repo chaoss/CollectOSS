@@ -42,7 +42,7 @@ class GHTorrentPlus(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
     
-    @annotate(metric_name='closed-issue-resolution-duration', group='growth-maturity-decline')
+    @annotate(tag='closed-issue-resolution-duration', group='growth-maturity-decline')
     def closed_issue_resolution_duration(self, owner, repo=None):
         """
         Returns a DataFrame with these columns:

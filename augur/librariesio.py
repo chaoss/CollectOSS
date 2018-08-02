@@ -43,7 +43,7 @@ class LibrariesIO(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-    @annotate(metric_name='dependencies', group='experimental')
+    @annotate(tag='dependencies', group='experimental')
     def dependencies(self, owner, repo):
         """
         Finds the packages that a project depends on
@@ -56,7 +56,7 @@ class LibrariesIO(object):
         r = requests.get(url, params={"api_key": self.API_KEY})
         return r.json()
 
-    @annotate(metric_name='dependency-stats', group='experimental')
+    @annotate(tag='dependency-stats', group='experimental')
     def dependency_stats(self, owner, repo):
         """
         Finds the number of dependencies, dependant projects, and dependent repos by scrapping it off of the libraries.io website
@@ -112,7 +112,7 @@ class LibrariesIO(object):
 
         return final_data
 
-    @annotate(metric_name='dependents', group='experimental')
+    @annotate(tag='dependents', group='experimental')
     def dependents(self, owner, repo):
         """   
         Finds the packages depend on this repository
