@@ -2714,11 +2714,8 @@ cite.metric a {
   background: #eee;
   color: #000;
 }
-.linechart {
-  position: relative;
-  z-index: 1;
-  height: 300px;
-  margin-bottom: 60px;
+.error {
+  background: #ccc;
 }
 .marks {
   padding: 10px 0px 0px 0px !important;
@@ -2766,6 +2763,9 @@ cite.metric a {
 }
 .intro {
   animation: intro 2s;
+}
+[v-cloak] {
+  animation: outro 1s, loader 1.5s infinite;
 }
 @media print {
   body {

@@ -134,7 +134,7 @@ export default class AugurStats {
     return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }
-      datum[key] = Math.round(AugurStats.averageArray(flat)*100)/100
+      datum[key + "Rolling"] = Math.round(AugurStats.averageArray(flat)*100)/100
       return datum
     })
   }

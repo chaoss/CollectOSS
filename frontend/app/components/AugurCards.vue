@@ -33,10 +33,6 @@
       </nav>
 
       <div ref="cards">
-        <section class="unmaterialized" v-if="(baseRepo && (currentTab == 'gmd' || currentTab == 'experimental' || currentTab == 'activity'))">
-          <h3>Compare repository</h3>
-          <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
-        </section>
         <main-controls></main-controls>
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
           <growth-maturity-decline-card></growth-maturity-decline-card>
@@ -131,11 +127,6 @@ module.exports = {
   methods: {
     onRepo (e) {
       this.$store.commit('setRepo', {
-        githubURL: e.target.value
-      })
-    },
-    onCompare (e) {
-      this.$store.commit('addComparedRepo', {
         githubURL: e.target.value
       })
     },

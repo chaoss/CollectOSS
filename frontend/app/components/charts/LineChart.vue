@@ -1,6 +1,6 @@
 <template>
   <div ref="holder">
-    <div class="hidefirst invis">
+    <div class="hidefirst invis linechart">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
     </div>
@@ -96,9 +96,16 @@ export default {
       let selectionAdded = false
 
       let getStandardLine = function (key) {
-        let color = "FF3647"
-        if (key != "value"){
-          color = "4736FF"
+        let raw = true
+        let opacity = 1
+        if(key.substring(key.length - 7) == "Rolling") raw = false
+        let color = "#FF3647"
+        if (key != "valueRolling"){
+          if (raw) {
+            color = "gray"
+            opacity = .5
+          }
+          else color = "#4736FF"
         }
         selectionAdded = true
         return {
@@ -109,14 +116,20 @@ export default {
               "x": {
                 "field": "date",
                 "type": "temporal",
-                "axis": {"format": "%b %Y"}
+                "axis": {"format": "%b %Y", "title": " "}
               },
               "y": {
                 "field": key,
-                "type": "quantitative"
+                "type": "quantitative",
+                "axis": {
+                  "title": null
+                }
               },
               "color": {
                 "value": color
+              },
+              "opacity": {
+                "value": opacity
               }
             },
             "mark": {
@@ -127,11 +140,10 @@ export default {
           }
       }
 
-      let getToolPoint = function (key) {
+      let getToolPoint = (key) => {
         let selection = {
               "tooltip": {
                 "type": "single",
-                //"nearest": true,
                 "on": "mouseover",
                 "encodings": [
                   "x"
@@ -139,6 +151,8 @@ export default {
                 "empty": "none"
               }
             }
+        let size = 7
+        if (this.rawWeekly || this.compareTo) size = 3
         if (selectionAdded) {
           selection = null
         }
@@ -151,22 +165,17 @@ export default {
               "x": {
                 "field": "date",
                 "type": "temporal",
-                "axis": {"format": "%b %Y"}
-              },
-              "y": {
-                "field": key,
-                "type": "quantitative"
+                "axis": {"format": "%b %Y", "title": " "}
               },
               "opacity": {
                 "value": 0
               },
               "size": {
-                "value": 3000
+                "value": size
               }
             },
             "mark": {
-              "type": "point",
-              //"interpolate": "basis",
+              "type": "rule",
               "clip": true
             },
             "selection": selection
@@ -189,8 +198,15 @@ export default {
           selection = null
         }
         selectionAdded = true
-        let col = '#FF3647'
-        if (key != "value") col = '#4736FF'
+        let raw = true
+        if(key.substring(key.length - 7) == "Rolling") raw = false
+        let color = "#FF3647"
+        if (key != "valueRolling"){
+          if (raw) {
+            color = "gray"
+          }
+          else color = "#4736FF"
+        }
         return {
             "transform": [
               brush
@@ -200,7 +216,7 @@ export default {
                 "field": "date",
                 "type": "temporal",
                 "axis": {
-                  "title": null,
+                  "title": " ",
                   "format": "%b %Y"
                 },
               },
@@ -212,12 +228,11 @@ export default {
                 }
               },
               "color": {
-                "value": col
+                "value": color
               },
               "opacity": {
                 "condition": {
                   "selection": "tooltip",
-                  //"test": "datum.value < 90",
                   "value": 1
                 },
                 "value": 0
@@ -227,7 +242,6 @@ export default {
               "type": "point"
             },
             "selection": selection
-            //"test": "datum." + key + " > 0",
           }
       }
 
@@ -245,17 +259,21 @@ export default {
                   "x": {
                     "field": "date",
                     "type": "temporal",
-                    "axis": {"format": "%b %Y"}
+                    "axis": {"format": "%b %Y", "title": " "}
                   },
                   "y": {
-
                     "field": "lower" + extension,
-                    "type": "quantitative"
-
+                    "type": "quantitative",
+                    "axis": {
+                      "title": null
+                    }
                   },
                   "y2": {
                     "field": "upper" + extension,
-                    "type": "quantitative"
+                    "type": "quantitative",
+                    "axis": {
+                      "title": null
+                    }
                   },
                   "color": {
                     "value": "green"
@@ -279,7 +297,7 @@ export default {
         "x": {
               "type": "temporal",
               "field": "date",
-              "axis": {"format": "%b %Y"}
+              "axis": {"format": "%b %Y", "title": " "}
             },
             "color": {
               "value": "black"
@@ -309,13 +327,16 @@ export default {
               "field": key
             },
             "x": {
-              "type": "temporal",
               "field": "date",
-              "axis": {"format": "%b %Y"}
+              "type": "temporal",
+              "axis": {"format": "%b %Y", "title": " "}
             },
             "y": {
               "field": key,
-              "type": "quantitative"
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
             },
             "color": {
                 "value": "green"
@@ -346,13 +367,16 @@ export default {
               "field": "date"
             },
             "x": {
-              "type": "temporal",
               "field": "date",
-              "axis": {"format": "%b %Y"}
+              "type": "temporal",
+              "axis": {"format": "%b %Y", "title": " "}
             },
             "y": {
               "field": key,
-              "type": "quantitative"
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
             },
             "color": {
                 "value": "black"
@@ -362,9 +386,9 @@ export default {
       }
 
       let getDetail = function (key) {
-        let color = "FF3647"
-        if (key != "value"){
-          color = "4736FF"
+        let color = "#FF3647"
+        if (key != "valueRolling"){
+          color = "#4736FF"
         }
         return {
             "width": 420,
@@ -385,7 +409,9 @@ export default {
               "y": {
                 "field": key,
                 "type": "quantitative",
-                "axis": null
+                "axis": {
+                  "title": null
+                }
               },
               "opacity": {
                 "value": 0.5
@@ -399,72 +425,85 @@ export default {
           }
       }
 
-      //so we can reference the comparedRepo inside of functions ("buildMetric()" specifically)
+      //so we can reference these props inside of functions
       let comparedTo = this.comparedTo
+      let rawWeekly = this.rawWeekly
 
-      let buildMetric = function () {
+      let buildMetric = () => {
         //build lines and points for initial repo
-        buildLines("value")
+        buildLines("valueRolling")
 
         //build lines and points for compared repo
-        if(comparedTo) buildLines("comparedValue")
+        if(this.comparedTo) buildLines("comparedValueRolling")
+        if(this.rawWeekly) {
+          buildLines("value")
+          if(comparedTo) buildLines("comparedValue")
+        }
+
       }
 
       let buildLines = function (key) {
-        config.vconcat[0].layer.push(getToolPoint(key))
         config.vconcat[0].layer.push(getStandardLine(key))
-        config.vconcat[0].layer.push(getStandardPoint(key))
       }
 
       let buildTooltip = function (key) {
+        config.vconcat[0].layer.push(getToolPoint(key))
+        config.vconcat[0].layer.push(getStandardPoint(key))
         config.vconcat[0].layer.push(getValueText(key))
         config.vconcat[0].layer.push(getDateText(key))
       }
 
       if(this.showDetail) {
-        config.vconcat[1] = (getDetail("value"))
-        if (this.comparedTo) config.vconcat[1] = (getDetail("comparedValue"))
+        config.vconcat[1] = (getDetail("valueRolling"))
+        //if (this.comparedTo) config.vconcat[1] = (getDetail("comparedValueRolling"))
       }
       else {
         //if user doesn't want detail, then set vconcat to og
         if (config.vconcat[1]) config.vconcat.pop()
       }
 
+      //push the tooltip to general spec
+      if(this.showTooltip) {
+        if(this.rawWeekly){
+          buildTooltip("value")
+        } else buildTooltip("valueRolling")
+
+        //push parts of layer that use "comparedValue" key if there is a comparedRepo
+        if(this.comparedTo){
+          if(this.rawWeekly){
+            buildTooltip("comparedValue")
+          } else buildTooltip("comparedValueRolling")
+          config.vconcat[0].layer.push(rule)
+        }
+      } else {
+        //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
+        for(var x = 0; x < config.vconcat[0].layer.length; x++) {
+          if(config.vconcat[0].layer[x] == getValueText("valueRolling")) {
+            config.vconcat[0].layer = []
+            buildMetric()
+          }
+        }
+      }
+
       buildMetric()
 
       //push the area to general spec
       if(this.showArea) {
-        config.vconcat[0].layer.push(getArea(""))
+        config.vconcat[0].layer.push(getArea("Rolling"))
         if(comparedTo){
-          config.vconcat[0].layer.push(getArea("Compared"))
+          config.vconcat[0].layer.push(getArea("ComparedRolling"))
         }
       }
       else {
         //if user doesn't want area mark, then set layers to og
         for(var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if(config.vconcat[0].layer[x] == getArea("value")) {
+          if(config.vconcat[0].layer[x] == getArea("valueRolling")) {
             buildMetric()
           }
         }
       }
 
-      //push the tooltip to general spec
-      if(this.showTooltip) {
-        buildTooltip("value")
-        //push parts of layer that use "comparedValue" key if there is a comparedRepo
-        if(comparedTo){
-          buildTooltip("comparedValue")
-          config.vconcat[0].layer.push(rule)
-        }
-      }
-      else {
-        //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
-        for(var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if(config.vconcat[0].layer[x] == getValueText("value")) {
-            buildMetric()
-          }
-        }
-      }
+
 
       //set dates from main control options
       if(this.showDetail) {
@@ -587,7 +626,7 @@ export default {
               // Build basic chart using rolling averages
               let d = defaultProcess(obj, key, field, count, false)
               let rolling = AugurStats.rollingAverage(d, 'value', period)
-              normalized.push(AugurStats.standardDeviationLines(rolling, 'value', ""))
+              normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', ""))
               aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
               legend.push(field)
               if (!this.disableRollingAverage) { colors.push(window.AUGUR_CHART_STYLE.brightColors[count]) }
@@ -598,9 +637,12 @@ export default {
             buildLines(data[this.comparedTo], (obj, key, field, count) => {
               let d = defaultProcess(obj, key, field, count, false)
               let rolling = null
-              if (compare == 'zscore') rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', period)
+              if (compare == 'zscore') {
+                rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', period)
+                d = AugurStats.zscores(d, 'value')
+              }
               else rolling = AugurStats.rollingAverage(d, 'value', period)
-              normalized.push(AugurStats.standardDeviationLines(rolling, 'value', ""))
+              normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', ""))
               aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
               legend.push(this.comparedTo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.dullColors[count])
@@ -609,9 +651,13 @@ export default {
               let d = defaultProcess(obj, key, field, count, true)
               //let rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
               let rolling = null
-              if (compare == 'zscore') rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', period)
+              if (compare == 'zscore') {
+                rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', period)
+                d = AugurStats.zscores(d, 'comparedValue')
+              }
               else rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
-              normalized.push(AugurStats.standardDeviationLines(rolling, 'comparedValue', "Compared"))
+
+              normalized.push(AugurStats.standardDeviationLines(rolling, 'comparedValueRolling', "Compared"))
               aggregates.push(AugurStats.standardDeviationLines(d, 'comparedValue', "Compared"))
               legend.push(this.repo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
@@ -634,18 +680,15 @@ export default {
           if (normalized.length == 0) {
             this.renderError()
           } else {
-            if(hideRaw) {
-              values = []
-              for(var i = 0; i < legend.length; i++){
-                normalized[i].forEach(d => {
-                  d.name = legend[i]
-                  d.color = colors[i]
-                  values.push(d);
-                })
-              }
+            values = []
+            for(var i = 0; i < legend.length; i++){
+              normalized[i].forEach(d => {
+                d.name = legend[i]
+                d.color = colors[i]
+                values.push(d);
+              })
             }
-            else {
-              values = []
+            if (!hideRaw) {
               for(var i = 0; i < legend.length; i++){
                 aggregates[i].forEach(d => {
                   d.name = "raw " + legend[i]
@@ -662,18 +705,26 @@ export default {
 
             $(this.$el).find('.showme, .hidefirst').removeClass('invis')
             $(this.$el).find('.linechart').removeClass('loader')
+            this.loading = false
             //this.mgConfig.legend_target = this.$refs.legend
             this.renderChart()
+
           }
       }
 
       if (this.data) {
-        processData(this.data)
+        processData(this.data).then(() => this.loading = false)
       } else {
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
+          this.loading = false
+          if (data.length == 0) {
+            $(this.$el).find('.linechart').addClass('error')
+            this.renderError()
+          }
         }, () => {
-          //this.mgConfig.missing_text = 'Data is missing or unavaliable'
+          this.missing_text = 'Data is missing or unavaliable'
+
           this.renderError()
         }) // end batch request
       }
@@ -712,7 +763,7 @@ export default {
       //window.MG.data_graphic(this.mgConfig)
     },
     renderError () {
-      this.$refs.chart.className = 'linechart intro'
+      this.$refs.chart.className = 'linechart intro error'
       window.$(this.$refs.holder).find('.deleteme').remove()
       this.$refs.chartholder.innerHTML = ''
       this.$refs.chartholder.appendChild(this.mgConfig.target)

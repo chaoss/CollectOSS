@@ -4,125 +4,133 @@
     <div class="form">
 
 
-      <div class="row gutters">
-        <div class="col col-7">
-          <div class="row">
-            <div class="col col-6">
-              <h5>Configuration</h5>
-                <div class="row gutters">
-                  <div class="col col-11">
-                    <div class="form-item">
-                      <label>Start Date
-                        <div class="row gutters">
-                          <div class="col col-7">
-                            <div class="form-item">
-                              <select ref="startMonth" @change=onStartDateChange>
-                                <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
-                              </select>
-                              <div class="desc">Month</div>
+      <div class="topic">
+        <div class="date"  @click="toggleCollapsation">Configuration options &#9663</div>
+        <p></p>
+        <div class="row gutters" v-show="isCollapsed">
+          <div class="col col-12">
+            <h5>Compare repository</h5>
+            <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
+            <p></p>
+          </div>
+          <div class="col col-7">
+            <div class="row">
+              <div class="col col-6">
+                <h6>Configuration</h6>
+                  <div class="row gutters">
+                    <div class="col col-11">
+                      <div class="form-item">
+                        <label>Start Date
+                          <div class="row gutters">
+                            <div class="col col-7">
+                              <div class="form-item">
+                                <select ref="startMonth" @change=onStartDateChange>
+                                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
+                                </select>
+                                <div class="desc">Month</div>
+                              </div>
+                            </div>
+                            <div class="col col-5">
+                              <div class="form-item">
+                                <select ref="startYear" @change=onStartDateChange>
+                                  <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2010">{{ year }}</option>
+                                </select>
+                                <div class="desc">Year</div>
+                              </div>
                             </div>
                           </div>
-                          <div class="col col-5">
-                            <div class="form-item">
-                              <select ref="startYear" @change=onStartDateChange>
-                                <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2010">{{ year }}</option>
-                              </select>
-                              <div class="desc">Year</div>
-                            </div>
-                          </div>
-                        </div>
-                      </label>
+                        </label>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <p></p>
-                <div class="row gutters">
-                  <div class="col col-11">
-                    <div class="form-item">
-                      <label>End Date
-                        <div class="row gutters">
-                          <div class="col col-7">
-                            <div class="form-item">
-                              <select ref="endMonth" @change=onEndDateChange>
-                                <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
-                              </select>
-                              <div class="desc">Month</div>
+                  <p></p>
+                  <div class="row gutters">
+                    <div class="col col-11">
+                      <div class="form-item">
+                        <label>End Date
+                          <div class="row gutters">
+                            <div class="col col-7">
+                              <div class="form-item">
+                                <select ref="endMonth" @change=onEndDateChange>
+                                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
+                                </select>
+                                <div class="desc">Month</div>
+                              </div>
+                            </div>
+                            <div class="col col-5">
+                              <div class="form-item">
+                                <select ref="endYear" @change=onEndDateChange>
+                                  <option v-for="year in years" v-bind:value="year" v-bind:selected="year == thisYear">{{ year }}</option>
+                                </select>
+                                <div class="desc">Year</div>
+                              </div>
                             </div>
                           </div>
-                          <div class="col col-5">
-                            <div class="form-item">
-                              <select ref="endYear" @change=onEndDateChange>
-                                <option v-for="year in years" v-bind:value="year" v-bind:selected="year == thisYear">{{ year }}</option>
-                              </select>
-                              <div class="desc">Year</div>
-                            </div>
-                          </div>
-                        </div>
-                      </label>
+                        </label>
+                      </div>
                     </div>
                   </div>
-                </div>
+                <br>
+
+            </div>
+            <div class="col col-1"></div>
+            <div class="col col-5">
+              <h6>Rendering</h6>
+              <label>Line Charts<sup>1</sup><sup class="warn"></sup>
+              <div class="append col col-10">
+                <input type="number" min="20" ref="info" id="averagetimespan" data-value="180" @change="onTrailingAverageChange" placeholder="180"><span>day average</span>
+              </div>
+              <p></p>
+              <h6>Comparison Type</h6>
+                  <label>
+                  <div class="form-item form-checkboxes">
+                    <label class="checkbox"><input name="comparebaseline" value="zscore" checked type="radio" @change="onCompareChange">Z-score</label><br>
+                    <label class="checkbox"><input name="comparebaseline" value="baseline" type="radio" @change="onCompareChange">Baseline is compared</label>
+                  </div>
+                  </label>
+              </label>
               <br>
 
-          </div>
-          <div class="col col-1"></div>
-          <div class="col col-5">
-            <h5>Rendering</h5>
-            <label>Line Charts<sup>1</sup>
-            <div class="append col col-10">
-              <input type="number" min="2" ref="info" id="averagetimespan" data-value="180" @change="onTrailingAverageChange"><span>day average</span>
             </div>
-            <p></p>
-            <h6>Comparison Type</h6>
-                <label>
-                <div class="form-item form-checkboxes">
-                  <label class="checkbox"><input name="comparebaseline" value="zscore" checked type="radio" @change="onCompareChange">Z-score</label><br>
-                  <label class="checkbox"><input name="comparebaseline" value="baseline" type="radio" @change="onCompareChange">Baseline is compared</label>
-                </div>
-                </label>
-            </label>
-            <br>
+            </div>
 
           </div>
-          </div>
 
+
+        <div class="col col-5">
+          <label>Line Charts
+          <div class="row">
+            <div class="col col-6">
+              <div class="form-item form-checkboxes">
+                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
+              </div>
+              <div class="form-item form-checkboxes">
+                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Standard deviation</label>
+              </div>
+            </div>
+            <div class="col col-6">
+              <div class="form-item form-checkboxes">
+                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip</label>
+              </div>
+              <div class="form-item form-checkboxes">
+                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onDetailChange">Enable detail</label>
+              </div>
+            </div>
+          </div>
+          </label>
+          <p></p>
+          <label>Bubble Charts
+          <div class="form-item form-checkboxes">
+            <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
+          </div>
+          </label>
+          <small class="warn"> - These options affect performance</small>
+          <br>
+          <small>1. Line charts show a rolling average over a {{ info.days }}-day period with data points at each {{ info.points }}-day interval</small>
         </div>
 
-
-      <div class="col col-5">
-        <label>Line Charts
-        <div class="row">
-          <div class="col col-6">
-            <div class="form-item form-checkboxes">
-              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
-            </div>
-            <div class="form-item form-checkboxes">
-              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Standard deviation<sup class="warn"></sup></label>
-            </div>
-          </div>
-          <div class="col col-6">
-            <div class="form-item form-checkboxes">
-              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip<sup class="warn"></sup></label>
-            </div>
-            <div class="form-item form-checkboxes">
-              <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onDetailChange">Enable detail<sup class="warn"></sup></label>
-            </div>
-          </div>
         </div>
-        </label>
-        <p></p>
-        <label>Bubble Charts
-        <div class="form-item form-checkboxes">
-          <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
-        </div>
-        </label>
-        <small class="warn"> - These options affect performance</small>
-        <br>
-        <small>1. Line charts show a rolling average over a {{ info.days }}-day period with data points at each {{ info.points }}-day interval</small>
       </div>
-
-      </div>
-
 
 
 
@@ -141,10 +149,15 @@
         info: {
           days: 180,
           points: 45
-        }
+        },
+        isCollapsed: false
+
       }
     },
     methods: {
+      toggleCollapsation() {
+        this.isCollapsed = !this.isCollapsed;
+      },
       onStartDateChange (e) {
         console.log(e)
         var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
@@ -202,6 +215,11 @@
       onCompareChange (e) {
         this.$store.commit('setCompare', {
           compare: e.target.value
+        })
+      },
+      onCompare (e) {
+        this.$store.commit('addComparedRepo', {
+          githubURL: e.target.value
         })
       },
       onDetailChange (e) {
