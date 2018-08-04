@@ -51,21 +51,21 @@ export default function Augur () {
         } else {
           repo = window.AugurRepos[repo.toString()]
         }
-        let queryString = ''
+        state.queryObject = {}
         state.hasState = true
         if (repo.owner && repo.name) {
           state.baseRepo = repo.toString()
           let title = repo.owner + '/' + repo.name + '- Augur'
           state.tab = 'gmd'
-          queryString += '?repo=' + repo.owner + '+' + repo.name
-          window.history.pushState(null, title, queryString)
+          state.queryObject['repo'] = repo.owner + '+' + repo.name
         }
         if (payload.gitURL) {
-          queryString += '?git=' + window.btoa(repo.gitURL)
-          window.history.pushState(null, 'Git Analysis - Augur', queryString)
+          state.queryObject['git'] = window.btoa(repo.gitURL)
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
+        window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
+        console.log('adasdsa')
         // if (!payload.keepCompared) {
         //   state.comparedRepos = []
         // }
@@ -97,13 +97,11 @@ export default function Augur () {
           window.history.pushState(null, title, queryString)
         }
         if (payload.gitURL) {
-          let queryString = '?git=' + window.btoa(repo.gitURL)
-          window.history.pushState(null, 'Git Analysis - Augur', queryString)
+          let queryString = '&git=' + window.btoa(repo.gitURL)
+          window.history.pushState(null, 'Git Analysis - Augur', window.location.search + queryString)
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
-
-
       },
       setDates (state, payload) {
         if (payload.startDate) {
