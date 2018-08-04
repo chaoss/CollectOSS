@@ -134,8 +134,8 @@ export default class AugurAPI {
     if (repo.gitURL) {
       if (repo.gitURL.includes('github.com')) {
         let splitURL = repo.gitURL.split('/')
-        repo.owner = splitURL[3]
-        repo.name = splitURL[4].split('.')[0]
+        repo.owner = splitURL[1]
+        repo.name = splitURL[2].split('.')[0]
       }
     }
 
@@ -218,7 +218,6 @@ export default class AugurAPI {
     }
 
     if (repo.owner && repo.name) {
-
       // DIVERSITY AND INCLUSION
 
       // GROWTH, MATURITY, AND DECLINE

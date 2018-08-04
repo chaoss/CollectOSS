@@ -56,6 +56,7 @@ class Facade(object):
             SELECT git as url, status FROM repos;
         """)
         results = pd.read_sql(repoSQL, self.db)
+        results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
         return results
 
     @annotate(metric_name='lines-changed-minus-whitespace', group='experimental')
@@ -70,11 +71,11 @@ class Facade(object):
         repoSQL = s.sql.text("""
             SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
             FROM analysis_data
-            WHERE repos_id = (SELECT id FROM repos WHERE git = :repourl)
+            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl)
             GROUP BY repos_id, author_date, author_affiliation, author_email
             ORDER BY author_date ASC;
         """)
-        results = pd.read_sql(repoSQL, self.db, params={"repourl": repo_url})
+        results = pd.read_sql(repoSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
         return results
 
     

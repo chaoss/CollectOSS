@@ -498,8 +498,8 @@ var AugurAPI = function () {
       if (repo.gitURL) {
         if (repo.gitURL.includes('github.com')) {
           var _splitURL = repo.gitURL.split('/');
-          repo.owner = _splitURL[3];
-          repo.name = _splitURL[4].split('.')[0];
+          repo.owner = _splitURL[1];
+          repo.name = _splitURL[2].split('.')[0];
         }
       }
 
@@ -584,7 +584,6 @@ var AugurAPI = function () {
       };
 
       if (repo.owner && repo.name) {
-
         // DIVERSITY AND INCLUSION
 
         // GROWTH, MATURITY, AND DECLINE
