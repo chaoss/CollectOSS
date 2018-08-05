@@ -1,6 +1,7 @@
 <template>
   <div ref="holder">
     <div class="spacing"></div>
+    <div class="error hidden"><br>Data is missing or unavailable</div>
     <div class="spinner loader"></div>
     <div class="hidefirst invis">
       <vega-lite :spec="spec" :data="values"></vega-lite>
@@ -712,6 +713,7 @@ export default {
             $(this.$el).find('.spinner').removeClass('loader')
             $(this.$el).find('.spacing').addClass('hidden')
 
+
             //this.mgConfig.legend_target = this.$refs.legend
             this.renderChart()
 
@@ -735,7 +737,8 @@ export default {
       var load = setTimeout(() => {
         if(this.values.length == 0){
           $(this.$el).find('.spinner').removeClass('loader')
-          $(this.$el).find('.spinner').addClass('error')
+          // $(this.$el).find('.spinner').addClass('error')
+          $(this.$el).find('.error').removeClass('hidden')
         }
       }, 10000);
 
