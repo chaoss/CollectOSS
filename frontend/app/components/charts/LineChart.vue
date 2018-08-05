@@ -1,9 +1,13 @@
 <template>
   <div ref="holder">
-    <div class="hidefirst invis linechart">
+    <div class="spacing"></div>
+    <div class="spinner loader"></div>
+    <div class="hidefirst invis">
       <vega-lite :spec="spec" :data="values"></vega-lite>
+
       <p> {{ chart }} </p>
     </div>
+
 
     <div class="row below-chart">
       <div class="col col-5"><cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite></div>
@@ -489,15 +493,15 @@ export default {
 
       //push the area to general spec
       if(this.showArea) {
-        config.vconcat[0].layer.push(getArea("Rolling"))
+        config.vconcat[0].layer.push(getArea(""))
         if(comparedTo){
-          config.vconcat[0].layer.push(getArea("ComparedRolling"))
+          config.vconcat[0].layer.push(getArea("Compared"))
         }
       }
       else {
         //if user doesn't want area mark, then set layers to og
         for(var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if(config.vconcat[0].layer[x] == getArea("valueRolling")) {
+          if(config.vconcat[0].layer[x] == getArea("")) {
             buildMetric()
           }
         }
@@ -525,8 +529,8 @@ export default {
       let compare = this.compare
       let period = this.period
 
-      $(this.$el).find('.showme').addClass('invis')
-      $(this.$el).find('.linechart').addClass('loader')
+      //$(this.$el).find('.showme').addClass('invis')
+      //$(this.$el).find('.linechart').addClass('loader')
       /*
        * Takes a string like "commits,lines_changed:additions+deletions"
        * and makes it into an array of endpoints:
@@ -703,33 +707,37 @@ export default {
 
             //config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
 
-            $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-            $(this.$el).find('.linechart').removeClass('loader')
-            this.loading = false
+            //$(this.$el).find('.showme, .hidefirst').removeClass('loader')
+            $(this.$el).find('.hidefirst').removeClass('invis')
+            $(this.$el).find('.spinner').removeClass('loader')
+            $(this.$el).find('.spacing').addClass('hidden')
+
             //this.mgConfig.legend_target = this.$refs.legend
             this.renderChart()
+
+
 
           }
       }
 
       if (this.data) {
-        processData(this.data).then(() => this.loading = false)
+        processData(this.data)
       } else {
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
-          this.loading = false
-          if (data.length == 0) {
-            $(this.$el).find('.linechart').addClass('error')
-            this.renderError()
-          }
         }, () => {
           this.missing_text = 'Data is missing or unavaliable'
 
-          this.renderError()
+          //this.renderError()
         }) // end batch request
       }
 
-
+      var load = setTimeout(() => {
+        if(this.values.length == 0){
+          $(this.$el).find('.spinner').removeClass('loader')
+          $(this.$el).find('.spinner').addClass('error')
+        }
+      }, 10000);
 
       //return '<div class="loader deleteme">' + this.title + '...</div>'
       return config

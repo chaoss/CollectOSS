@@ -65,7 +65,6 @@ export default function Augur () {
           state.gitRepo = repo.gitURL
         }
         window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
-        console.log('adasdsa')
         // if (!payload.keepCompared) {
         //   state.comparedRepos = []
         // }

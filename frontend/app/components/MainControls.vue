@@ -5,13 +5,48 @@
 
 
       <div class="topic">
-        <div class="date"  @click="toggleCollapsation">Configuration options &#9663</div>
-        <p></p>
+        <div class="container">
+          <div class="row justify-content-md-center">
+            <div class="col col-4" align="center">
+              <div class="col col-12" v-show="isCollapsed"><small class="warn"> - These options affect performance</small></div>
+            </div>
+            <div id="collapse" class="col col-4" align="center" @click="toggleCollapsation">&#9663 Configuration options &#9663</div>
+            <div class="col col-4" v-show="isCollapsed"><small>1. Line charts show a rolling average over a {{ info.days }}-day period with data points at each {{ info.points }}-day interval</small></div>
+            <div class="col col-1"></div>
+          </div>
+        </div>
         <div class="row gutters" v-show="isCollapsed">
-          <div class="col col-12">
-            <h5>Compare repository</h5>
-            <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
-            <p></p>
+          <div class="col col-5">
+            <div class="col col-11">
+              <h5>Compare repository</h5>
+              <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
+              <p></p>
+            </div>
+            <label>Line Charts
+            <div class="row">
+              <div class="col col-6">
+                <div class="form-item form-checkboxes">
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
+                </div>
+                <div class="form-item form-checkboxes">
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Standard deviation</label>
+                </div>
+              </div>
+              <div class="col col-6">
+                <div class="form-item form-checkboxes">
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip</label>
+                </div>
+                <div class="form-item form-checkboxes">
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onDetailChange">Enable detail</label>
+                </div>
+              </div>
+              <label>Bubble Charts
+              <div class="form-item form-checkboxes">
+                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
+              </div>
+              </label>
+            </div>
+            </label>
           </div>
           <div class="col col-7">
             <div class="row">
@@ -78,7 +113,7 @@
               <h6>Rendering</h6>
               <label>Line Charts<sup>1</sup><sup class="warn"></sup>
               <div class="append col col-10">
-                <input type="number" min="20" ref="info" id="averagetimespan" data-value="180" @change="onTrailingAverageChange" placeholder="180"><span>day average</span>
+                <input type="number" min="20" ref="info" id="averagetimespan" value="180" @change="onTrailingAverageChange" placeholder="180"><span>day average</span>
               </div>
               <p></p>
               <h6>Comparison Type</h6>
@@ -95,39 +130,6 @@
             </div>
 
           </div>
-
-
-        <div class="col col-5">
-          <label>Line Charts
-          <div class="row">
-            <div class="col col-6">
-              <div class="form-item form-checkboxes">
-                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
-              </div>
-              <div class="form-item form-checkboxes">
-                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Standard deviation</label>
-              </div>
-            </div>
-            <div class="col col-6">
-              <div class="form-item form-checkboxes">
-                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip</label>
-              </div>
-              <div class="form-item form-checkboxes">
-                <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onDetailChange">Enable detail</label>
-              </div>
-            </div>
-          </div>
-          </label>
-          <p></p>
-          <label>Bubble Charts
-          <div class="form-item form-checkboxes">
-            <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
-          </div>
-          </label>
-          <small class="warn"> - These options affect performance</small>
-          <br>
-          <small>1. Line charts show a rolling average over a {{ info.days }}-day period with data points at each {{ info.points }}-day interval</small>
-        </div>
 
         </div>
       </div>

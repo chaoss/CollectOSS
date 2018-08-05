@@ -161,7 +161,19 @@ cite.metric a
   color: #000
 
 .error
-  background: #ccc
+  justify-content: center
+  padding: 41px 0px 41px 60px
+  text-align: center
+  margin: auto
+
+.error:after
+  content: "\26A0"
+  font-size: 3em;
+  justify-content: center
+  padding: 50px 50px 50px 0px
+  text-align: center
+  margin: auto
+
 
 .marks
   padding: 10px 0px 0px 0px !important
@@ -204,13 +216,34 @@ cite.metric a
 .mg-baselines
   opacity: 0.5
 
-.loader
+#collapse {
+  padding: 0px 0px 20px 0px
+}
+
+.loader {
   width: 100%
   text-align: center
   line-height: 10
-  animation: outro 1s, loader 1.5s infinite
 
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
 
+  border: 16px solid #FF3647; /* our red */
+  border-top: 16px solid #4736FF; /* our Blue */
+  border-radius: 50%;
+  opacity: 0.7
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 @keyframes outro
   0%
@@ -234,10 +267,6 @@ cite.metric a
 .intro
   animation: intro 2s
 
-[v-cloak] {
-  animation: outro 1s, loader 1.5s infinite
-}
-
 @keyframes intro
   0%
     opacity: 0.2
@@ -260,7 +289,11 @@ cite.metric a
 .hidden, .hidden > *, .hidden > small
   display: none !important
 
+.spacing
+  height: 81px
+
 .invis, .invis > *, .invis > small
   z-index: -1;
   opacity: 0 !important;
+  max-height: 81px !important;
 

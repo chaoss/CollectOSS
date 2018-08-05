@@ -2715,7 +2715,18 @@ cite.metric a {
   color: #000;
 }
 .error {
-  background: #ccc;
+  justify-content: center;
+  padding: 41px 0px 41px 60px;
+  text-align: center;
+  margin: auto;
+}
+.error:after {
+  content: "\26A0";
+  font-size: 3em;
+  justify-content: center;
+  padding: 50px 50px 50px 0px;
+  text-align: center;
+  margin: auto;
 }
 .marks {
   padding: 10px 0px 0px 0px !important;
@@ -2755,17 +2766,28 @@ cite.metric a {
 .mg-baselines {
   opacity: 0.5;
 }
+#collapse {
+  padding: 0px 0px 20px 0px;
+}
 .loader {
   width: 100%;
   text-align: center;
   line-height: 10;
-  animation: outro 1s, loader 1.5s infinite;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 16px solid #ff3647; /* our red */
+  border-top: 16px solid #4736ff; /* our Blue */
+  border-radius: 50%;
+  opacity: 0.7;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
 }
 .intro {
   animation: intro 2s;
-}
-[v-cloak] {
-  animation: outro 1s, loader 1.5s infinite;
 }
 @media print {
   body {
@@ -2785,11 +2807,47 @@ cite.metric a {
 .hidden > small {
   display: none !important;
 }
+.spacing {
+  height: 81px;
+}
 .invis,
 .invis > *,
 .invis > small {
   z-index: -1;
   opacity: 0 !important;
+  max-height: 81px !important;
+}
+@-moz-keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 @-moz-keyframes outro {
   0% {
