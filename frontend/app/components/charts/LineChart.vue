@@ -632,7 +632,9 @@ export default {
               let d = defaultProcess(obj, key, field, count, false)
               let rolling = AugurStats.rollingAverage(d, 'value', period)
               normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', ""))
-              aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
+              //if we want stddev area available on raw weekly
+              //aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
+              aggregates.push(d)
               legend.push(field)
               if (!this.disableRollingAverage) { colors.push(window.AUGUR_CHART_STYLE.brightColors[count]) }
               if (!hideRaw || this.disableRollingAverage) { colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]) }
@@ -648,7 +650,9 @@ export default {
               }
               else rolling = AugurStats.rollingAverage(d, 'value', period)
               normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', ""))
-              aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
+              //if we want stddev area available on raw weekly
+              //aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
+              aggregates.push(d)
               legend.push(this.comparedTo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.dullColors[count])
             }, false)
@@ -663,7 +667,10 @@ export default {
               else rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
 
               normalized.push(AugurStats.standardDeviationLines(rolling, 'comparedValueRolling', "Compared"))
-              aggregates.push(AugurStats.standardDeviationLines(d, 'comparedValue', "Compared"))
+
+              //if we want stddev area available on raw weekly
+              //aggregates.push(AugurStats.standardDeviationLines(d, 'comparedValue', "Compared"))
+              aggregates.push(d)
               legend.push(this.repo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
             }, true)

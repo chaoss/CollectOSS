@@ -7,14 +7,24 @@
       <div class="topic">
         <div class="container">
           <div class="row justify-content-md-center">
-            <div class="col col-4" align="center">
-              <div class="col col-12" v-show="isCollapsed"><small class="warn"> - These options affect performance</small></div>
+
+            <div class="col col-4">
+              <div class="row">
+                <div class="col col-1"></div>
+                <div class="col col-11" v-show="isCollapsed"><small>1. Line charts show a rolling mean over {{ info.days }} days with data points at each {{ info.points }}-day interval</small></div>
+              </div>
+
             </div>
-            <div id="collapse" class="col col-4" align="center" @click="toggleCollapsation">&#9663 Configuration options &#9663</div>
-            <div class="col col-4" v-show="isCollapsed"><small>1. Line charts show a rolling average over a {{ info.days }}-day period with data points at each {{ info.points }}-day interval</small></div>
-            <div class="col col-1"></div>
+            <div id="collapse" class="col col-4" align="center" @click="toggleCollapsation"><span id="optionheader">Configuration options</span></div>
+            <div class="col col-3">
+              <div class="col col-12" v-show="isCollapsed"><small class="warn"> - These options affect performance</small></div>
+
+            </div>
+            <div class="col col-1" align="right" v-show="isCollapsed" @click="toggleCollapsation">&#9662</div>
+            <div class="col col-1" align="right" v-show="!isCollapsed" @click="toggleCollapsation">&#9665</div>
           </div>
         </div>
+        <p v-show="isCollapsed"></p>
         <div class="row gutters" v-show="isCollapsed">
           <div class="col col-5">
             <div class="col col-11">
@@ -119,8 +129,8 @@
               <h6>Comparison Type</h6>
                   <label>
                   <div class="form-item form-checkboxes">
-                    <label class="checkbox"><input name="comparebaseline" value="zscore" checked type="radio" @change="onCompareChange">Z-score</label><br>
-                    <label class="checkbox"><input name="comparebaseline" value="baseline" type="radio" @change="onCompareChange">Baseline is compared</label>
+                    <label class="checkbox"><input name="comparebaseline" value="zscore" type="radio" @change="onCompareChange">Z-score</label><br>
+                    <label class="checkbox"><input name="comparebaseline" value="baseline" checked type="radio" @change="onCompareChange">Baseline is compared</label>
                   </div>
                   </label>
               </label>

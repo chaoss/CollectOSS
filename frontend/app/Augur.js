@@ -35,7 +35,7 @@ export default function Augur () {
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
-      compare: 'zscore',
+      compare: 'baseline',
       showBelowAverage: false,
       rawWeekly: false,
       showArea: false,

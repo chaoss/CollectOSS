@@ -2728,6 +2728,10 @@ cite.metric a {
   text-align: center;
   margin: auto;
 }
+#optionheader {
+  font-size: 1.1em;
+  font-weigth: 600;
+}
 .marks {
   padding: 10px 0px 0px 0px !important;
 }
