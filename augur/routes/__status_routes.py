@@ -5,10 +5,6 @@ import requests
 from flask import Response
 from augur.util import metric_metadata
 
-import ipdb
-import pprint
-pp = pprint.PrettyPrinter()
-
 class Metric(object):
 	def __init__(self):
 		self.ID = 'n/a'
@@ -59,6 +55,8 @@ def createImplementedMetric(metadata):
 
 	if 'metric_type' in metadata:
 		metric.metric_type = metadata['metric_type']
+	else:
+		metric.metric_type = 'metric'
 
 	if metric.tag in defined_tags:
 		metric.setUrl()
@@ -147,11 +145,11 @@ def createMetric(raw_name, group):
 def getDefinedMetricTags():
 
 	# TODO: FIX GITHUB AUTH
-	# activity_files = requests.get("https://api.github.com/repos/{}/contents/activity-metrics".format(activity_repo_remote), auth=('user', server.augur_app.githubapi().GITHUB_API_KEY)).json()
+	activity_files = requests.get("https://api.github.com/repos/{}/contents/activity-metrics".format(activity_repo_remote)).json()
 	defined_tags = []
 
-	# for file in activity_files:
-	# 	defined_tags.append(re.sub(".md", '', file['name']))
+	for file in activity_files:
+		defined_tags.append(re.sub(".md", '', file['name']))
 
 	return defined_tags
 
@@ -240,25 +238,20 @@ def getAllMetricsStatus():
 
 		return metrics_status
 
+all_metrics_status_json = getAllMetricsStatus()
+
 def create_routes(server):
 	@server.app.route("/{}/metrics/status".format(server.api_version))
-	def metrics_status():
-
-		return Response(response=json.dumps(getAllMetricsStatus()),
+	def all_metrics_status():
+		return Response(response=json.dumps(all_metrics_status_json),
 						status=200,
 						mimetype="application/json")
 
-	@server.app.route("/{}/metrics/status/<tag>/".format(server.api_version))
-	def individual_metrics_status(tag):
+	@server.app.route("/{}/metrics/status/<ID>/".format(server.api_version))
+	def individual_metrics_status(ID):
 
-		individual_metric = None
+		individual_metrics_status = next((metric for metric in all_metrics_status if metric['ID'] == ID), None)
 
-		for metric in getAllMetricsStatus():
-			if metric['tag'] == tag:
-				individual_metric = metric
-				break
-
-		return Response(response=json.dumps(individual_metric),
+		return Response(response=json.dumps(individual_metrics_status),
 						status=200,
 						mimetype="application/json")
-

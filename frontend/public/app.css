@@ -2591,7 +2591,7 @@ header .search {
 .content {
   margin: auto;
   width: 95%;
-  max-width: 1080px;
+  max-width: 1600px;
 }
 .tabs li.active a {
   color: #000;

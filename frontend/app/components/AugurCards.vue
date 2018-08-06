@@ -3,7 +3,7 @@
 
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
-     <!--  <section class="unmaterialized">
+      <section class="unmaterialized">
         <h3>Enter a GitHub URL to get started</h3>
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
       </section>
@@ -13,7 +13,7 @@
           <a :href="'?git=' + btoa(repo.url)" class="repolink">{{ repo.url }}</a> (status: {{ repo.status }})
         </div>
       </section>
- -->      <section class="unmaterialized">
+      <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
       </section>
     </div>

@@ -33,6 +33,8 @@ class Server(object):
         self.show_metadata = False
 
         create_all_datasource_routes(self)
+
+        # this needs to be the last route creation function called so that all the metrics have their metadata updated
         create_status_routes(self)
 
         #####################################
