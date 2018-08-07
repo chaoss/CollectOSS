@@ -7,31 +7,28 @@
       <div class="topic">
         <div class="container">
           <div class="row justify-content-md-center">
-
-            <div class="col col-4">
+            <div class="col col-9">
               <div class="row">
-                <div class="col col-1"></div>
-                <div class="col col-11" v-show="isCollapsed"><small>1. Line charts show a rolling mean over {{ info.days }} days with data points at each {{ info.points }}-day interval</small></div>
+                <div class="col col-3" align="center" id="comparetext"><h6>Compare Repository:</h6></div>
+
+                <div id="comparesearch" class="col col-9">
+                  <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
+                  <p></p>
+                </div>
               </div>
 
             </div>
-            <div id="collapse" class="col col-4" align="center" @click="toggleCollapsation"><span id="optionheader">Configuration options</span></div>
-            <div class="col col-3">
-              <div class="col col-12" v-show="isCollapsed"><small class="warn"> - These options affect performance</small></div>
 
+            <div id="collapse" class="col col-3">
+              <div class="col col-12 align-bottom" align="right" v-show="isCollapsed" @click="toggleCollapsation">Less configuration options &#9660</div>
+              <div class="col col-12 align-bottom" align="right" v-show="!isCollapsed" @click="toggleCollapsation">More configuration options &#9654</div>
             </div>
-            <div class="col col-1" align="right" v-show="isCollapsed" @click="toggleCollapsation">&#9662</div>
-            <div class="col col-1" align="right" v-show="!isCollapsed" @click="toggleCollapsation">&#9665</div>
+
           </div>
         </div>
         <p v-show="isCollapsed"></p>
-        <div class="row gutters" v-show="isCollapsed">
+        <div id="configuration" class="row gutters is-hidden" v-show="isCollapsed">
           <div class="col col-5">
-            <div class="col col-11">
-              <h5>Compare repository</h5>
-              <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
-              <p></p>
-            </div>
             <label>Line Charts
             <div class="row">
               <div class="col col-6">
@@ -55,6 +52,10 @@
                 <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
               </div>
               </label>
+
+              <div class="col col-12" v-show="isCollapsed"><small class="warn"> - These options affect performance</small></div>
+              <div class="col col-11" v-show="isCollapsed"><small>1. Line charts show a rolling mean over {{ info.days }} days with data points at each {{ info.points }}-day interval</small></div>
+
             </div>
             </label>
           </div>
@@ -169,6 +170,14 @@
     methods: {
       toggleCollapsation() {
         this.isCollapsed = !this.isCollapsed;
+        if (!this.isCollapsed){
+
+          $(this.$el).find('.collapse-box').addClass('hide')
+        }
+        else{
+
+          $(this.$el).find('.collapse-box').removeClass('hide')
+        }
       },
       onStartDateChange (e) {
         console.log(e)

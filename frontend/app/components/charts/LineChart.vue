@@ -3,7 +3,7 @@
     <div class="spacing"></div>
     <div class="error hidden"><br>Data is missing or unavailable</div>
     <div class="spinner loader"></div>
-    <div class="hidefirst invis">
+    <div class="hidefirst invis linechart">
       <vega-lite :spec="spec" :data="values"></vega-lite>
 
       <p> {{ chart }} </p>
@@ -735,21 +735,9 @@ export default {
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
         }, () => {
-          this.missing_text = 'Data is missing or unavaliable'
-
-          //this.renderError()
+          this.renderError()
         }) // end batch request
       }
-
-      var load = setTimeout(() => {
-        if(this.values.length == 0){
-          $(this.$el).find('.spinner').removeClass('loader')
-          // $(this.$el).find('.spinner').addClass('error')
-          $(this.$el).find('.error').removeClass('hidden')
-        }
-      }, 10000);
-
-      //return '<div class="loader deleteme">' + this.title + '...</div>'
       return config
     }
 
@@ -781,13 +769,15 @@ export default {
       //window.MG.data_graphic(this.mgConfig)
     },
     renderError () {
-      this.$refs.chart.className = 'linechart intro error'
-      window.$(this.$refs.holder).find('.deleteme').remove()
-      this.$refs.chartholder.innerHTML = ''
-      this.$refs.chartholder.appendChild(this.mgConfig.target)
-      //this.mgConfig.target.className = 'deleteme'
-      //this.mgConfig.chart_type = 'missing-data'
-      //window.MG.data_graphic(this.mgConfig)
+      $(this.$el).find('.spinner').removeClass('loader')
+      $(this.$el).find('.error').removeClass('hidden')
+      // this.$refs.chart.className = 'linechart intro error'
+      // window.$(this.$refs.holder).find('.deleteme').remove()
+      // this.$refs.chartholder.innerHTML = ''
+      // this.$refs.chartholder.appendChild(this.mgConfig.target)
+      // //this.mgConfig.target.className = 'deleteme'
+      // //this.mgConfig.chart_type = 'missing-data'
+      // //window.MG.data_graphic(this.mgConfig)
     }
   }// end methods
 }

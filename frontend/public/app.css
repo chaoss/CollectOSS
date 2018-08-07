@@ -2635,11 +2635,14 @@ section.unmaterialized {
   border-bottom: 1px solid #dedede;
 }
 #controls {
-  padding: 28px 36px 0px 36px;
+  padding: 18px 36px 5px 36px;
   background: #f0f0f0;
   border-right: 1px solid #dedede;
   border-bottom: 1px solid #dedede;
   margin-bottom: 20px;
+}
+#comparetext {
+  padding: 10px 0px 0px 0px;
 }
 .fixed {
   position: relative;
@@ -2683,7 +2686,8 @@ section.status {
   position: relative;
   z-index: 2;
   width: 100%;
-  margin: -10px 0 30px 0;
+  margin: -10px 0px 30px 0px;
+  padding: 0px 25px 0px 25px;
 }
 cite.metric {
   display: block;
@@ -2732,6 +2736,9 @@ cite.metric a {
   font-size: 1.1em;
   font-weigth: 600;
 }
+.comparesearch {
+  padding-bottom: 100px;
+}
 .marks {
   padding: 10px 0px 0px 0px !important;
 }
@@ -2771,7 +2778,10 @@ cite.metric a {
   opacity: 0.5;
 }
 #collapse {
-  padding: 0px 0px 20px 0px;
+  padding: 10px 0px 0px 0px;
+}
+.linechart {
+  padding: 0px 0px 0px 38px;
 }
 .loader {
   width: 100%;
