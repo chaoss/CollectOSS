@@ -96,6 +96,7 @@ class Application(object):
         self.__ghtorrent = None
         self.__ghtorrentplus = None
         self.__piper = None
+        self.__github_issues = None
         self.__githubapi = None
         self.__git = None
         self.__librariesio = None
@@ -123,6 +124,7 @@ class Application(object):
         self.publicwww()
         self.localcsv()   
         self.piper() 
+        self.github_issues()
 
     def read_config(self, section, name, environment_variable=None, default=None):
         value = None
@@ -209,12 +211,26 @@ class Application(object):
             )
         return self.__ghtorrent
     def piper(self):
-        from augur.PiperReader import PiperMail
-        path = self.read_config('PiperMail','mailing_lists')
+        from augur.piper_reader import PiperMail
+        path = "runtime/git_mailing_lists.csv"
         if self.__piper is None:
             logger.debug('Initializing PiperMail')
             self.__piper = PiperMail()
         return self.__piper,path
+
+    def github_issues(self):
+        from augur.ghtorrentplus import GHTorrentPlus
+        path = "runtime/git_repos.csv"
+        token = self.read_config('GitHub', 'apikey')
+        if self.__ghtorrentplus is None:
+            logger.debug('Initializing GHTorrentPlus')
+            user = self.read_config('GHTorrentPlus', 'user')
+            password = self.read_config('GHTorrentPlus', 'pass')
+            host = self.read_config('GHTorrentPlus', 'host')
+            port = self.read_config('GHTorrentPlus', 'port')
+            name = self.read_config('GHTorrentPlus', 'name')
+        list1 = [user,password,host,port,name,token]
+        return self.__ghtorrentplus,list1,path
 
 
     def ghtorrentplus(self):
