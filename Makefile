@@ -25,6 +25,7 @@ default:
 	@ echo "    dev-start              Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop               Stops the backgrounded commands"
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
+	@ echo "    server            	   Runs a single instance of the server (useful for debugging endpoints)"
 	@ echo "    test SOURCE={source}   Run pytest unit tests for the specified source file. Defaults to all"
 
 	@ echo "    build                  Builds documentation and frontend - use before pushing"
@@ -105,6 +106,9 @@ monitor:
 	@ tail -f logs/frontend.log -f logs/backend.log 2>/dev/null
 
 dev-restart: dev-stop dev-start
+
+server:
+	python -m augur.server
 
 frontend:
 	bash -c 'cd frontend; brunch build'

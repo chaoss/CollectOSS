@@ -1,4 +1,4 @@
-def create_routes(server):
+def create_routes(server):	
 
 	ghtorrent = server.augur_app.ghtorrent()
 

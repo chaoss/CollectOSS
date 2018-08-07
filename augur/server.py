@@ -33,6 +33,8 @@ class Server(object):
         self.show_metadata = False
 
         create_all_datasource_routes(self)
+
+        # this needs to be the last route creation function called so that all the metrics have their metadata updated
         create_status_routes(self)
 
         #####################################
@@ -250,6 +252,8 @@ class Server(object):
         else:
             result = json.dumps(func.metadata)
 
+        print(func.__name__)
+
         return result
 
     def flaskify(self, func, cache=True):
@@ -260,17 +264,17 @@ class Server(object):
         if cache:
             def generated_function(*args, **kwargs):
                 def heavy_lifting():
-                    return self.transform( func, args, kwargs, **request.args.to_dict())
+                    return self.transform(func, args, kwargs, **request.args.to_dict())
                 body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
                 return Response(response=body,
                                 status=200,
                                 mimetype="application/json")
-            generated_function.__name__ = func.__name__
+            generated_function.__name__ = func.__self__.__class__.__name__ + " _" + func.__name__
             return generated_function
         else:
             def generated_function(*args, **kwargs):
                 kwargs.update(request.args.to_dict())
-                return Response(response=self.transform( func, args, kwargs, **request.args.to_dict()),
+                return Response(response=self.transform(func, args, kwargs, **request.args.to_dict()),
                                 status=200,
                                 mimetype="application/json")
             generated_function.__name__ = func.__name__
@@ -303,9 +307,10 @@ class Server(object):
         # Get the unbound function from the bound function's class so that we can modify metadata
         # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
-        tag = re.sub("_", "-", function.__name__).lower()
         metric_name = re.sub('_', ' ', function.__name__).title()
-        annotate(metric_name=metric_name, endpoint=endpoint, escaped_endpoint=html.escape(endpoint), source=function.__self__.__class__.__name__, tag=tag, **kwargs)(real_func)
+        source = function.__self__.__class__.__name__
+        ID = "{}-{}".format(source.lower(), function.metadata['tag'])
+        annotate(ID=ID, metric_name=metric_name, endpoint=endpoint, source=source, **kwargs)(real_func)
 
 def run():
     server = Server()

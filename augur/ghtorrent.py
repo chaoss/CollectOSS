@@ -138,7 +138,7 @@ class GHTorrent(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
-    @annotate(metric_name='closed-issues', group='growth-maturity-decline')
+    @annotate(tag='closed-issues', group='growth-maturity-decline')
     def closed_issues(self, owner, repo=None):
         """
         Subgroup: Issue Resolution
@@ -160,7 +160,7 @@ class GHTorrent(object):
         """)
         return pd.read_sql(issuesClosedSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='code-commits', group='growth-maturity-decline')
+    @annotate(tag='code-commits', group='growth-maturity-decline')
     def code_commits(self, owner, repo=None, group_by="week"):        
         """
         Subgroup: Code Development
@@ -175,7 +175,7 @@ class GHTorrent(object):
         commitsSQL = s.sql.text(self.__single_table_count_by_date('commits', group_by=group_by))
         return pd.read_sql(commitsSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='code-review-iteration', group='growth-maturity-decline')
+    @annotate(tag='code-review-iteration', group='growth-maturity-decline')
     def code_review_iteration(self, owner, repo=None):
         """
         Subgroup: Code Development
@@ -211,7 +211,7 @@ class GHTorrent(object):
         df = pd.read_sql(codeReviewIterationSQL, self.db, params={"repoid": str(repoid)})
         return pd.DataFrame({'date': df['created_at'], 'iterations': df['iterations']})
 
-    @annotate(metric_name='contribution-acceptance', group='growth-maturity-decline')
+    @annotate(tag='contribution-acceptance', group='growth-maturity-decline')
     def contribution_acceptance(self, owner, repo=None):
         """
         Subgroup: Community Development
@@ -244,7 +244,7 @@ class GHTorrent(object):
         df = pd.read_sql(codeReviewIterationSQL, self.db, params={"repoid": str(repoid)})
         return df
 
-    @annotate(metric_name='contributing-github-organizations', group='growth-maturity-decline')
+    @annotate(tag='contributing-github-organizations', group='growth-maturity-decline')
     def contributing_github_organizations(self, owner, repo=None): #needs clarification about return value
         """
         Subgroup: Community Development
@@ -307,7 +307,7 @@ class GHTorrent(object):
         """)
         return pd.read_sql(contributingOrgSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='first-response-to-issue-duration', group='growth-maturity-decline')
+    @annotate(tag='first-response-to-issue-duration', group='growth-maturity-decline')
     def first_response_to_issue_duration(self, owner, repo): #needs clarification about return value
         """
         Subgroup: Issue Resolution
@@ -342,7 +342,7 @@ class GHTorrent(object):
         rs = pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
         return rs
 
-    @annotate(metric_name='forks', group='growth-maturity-decline')
+    @annotate(tag='forks', group='growth-maturity-decline')
     def forks(self, owner, repo=None, group_by="week"): 
         """
         Subgroup: Code Development
@@ -357,7 +357,7 @@ class GHTorrent(object):
         forksSQL = s.sql.text(self.__single_table_count_by_date('projects', 'forked_from', 'owner_id', group_by=group_by))
         return pd.read_sql(forksSQL, self.db, params={"repoid": str(repoid)}).drop(0)
 
-    @annotate(metric_name='maintainer-response-to-merge-request-duration', group='growth-maturity-decline')
+    @annotate(tag='maintainer-response-to-merge-request-duration', group='growth-maturity-decline')
     def maintainer_response_to_merge_request_duration(self, owner, repo=None): #needs clarification on return value
         """
         Subgroup: Code Development
@@ -390,7 +390,7 @@ class GHTorrent(object):
         df = pd.read_sql(maintainerResponseToMRSQL, self.db, params={"repoid": str(repoid)})
         return df.iloc[:, 0:2]
 
-    @annotate(metric_name='new-contributing-github-organizations', group='growth-maturity-decline')
+    @annotate(tag='new-contributing-github-organizations', group='growth-maturity-decline')
     def new_contributing_github_organizations(self, owner, repo=None): #needs clarification about return value
         """
         Subgroup: Community Growth
@@ -459,7 +459,7 @@ class GHTorrent(object):
             numOrgs = np.append(numOrgs, count)
         return pd.DataFrame({'date': df["date"], 'organizations': numOrgs})
 
-    @annotate(metric_name='open-issues', group='growth-maturity-decline')
+    @annotate(tag='open-issues', group='growth-maturity-decline')
     def open_issues(self, owner, repo=None, group_by="week"):
         """
         Subgroup: Individual Diversity
@@ -474,7 +474,7 @@ class GHTorrent(object):
         issuesSQL = s.sql.text(self.__single_table_count_by_date('issues', 'repo_id', 'reporter_id', group_by=group_by))
         return pd.read_sql(issuesSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='pull-request-comments', group='growth-maturity-decline')
+    @annotate(tag='pull-request-comments', group='growth-maturity-decline')
     def pull_request_comments(self, owner, repo=None):
         """
         Subgroup: Code Development
@@ -489,7 +489,7 @@ class GHTorrent(object):
         pullRequestCommentsSQL = s.sql.text(self.__sub_table_count_by_date("pull_requests", "pull_request_comments", "pullreq_id", "pull_request_id", "base_repo_id"))
         return pd.read_sql(pullRequestCommentsSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='pull-requests-open', group='growth-maturity-decline')
+    @annotate(tag='pull-requests-open', group='growth-maturity-decline')
     def pull_requests_open(self, owner, repo=None):
         """
         Subgroup: Code Development
@@ -527,7 +527,7 @@ class GHTorrent(object):
     ###           ACTIVITY            ###
     #####################################
 
-    @annotate(metric_name='issue-comments', group='activity')
+    @annotate(tag='issue-comments', group='activity')
     def issue_comments(self, owner, repo=None):
         """
         Timeseries of the count of new issue comments
@@ -540,7 +540,7 @@ class GHTorrent(object):
         issueCommentsSQL = s.sql.text(self.__sub_table_count_by_date("issues", "issue_comments", "issue_id", "issue_id", "repo_id"))
         return pd.read_sql(issueCommentsSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='pull-requests-made-closed', group='activity')
+    @annotate(tag='pull-requests-made-closed', group='activity')
     def pull_requests_made_closed(self, owner, repo=None):
         """
         Timeseries of the ratio of pull requests made/closed
@@ -569,7 +569,7 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullRequestsMadeClosedSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='watchers', group='activity')
+    @annotate(tag='watchers', group='activity')
     def watchers(self, owner, repo=None, group_by="week"):
         """
         Returns of the count of people who starred the repo on that date
@@ -589,7 +589,7 @@ class GHTorrent(object):
     #####################################
 
     # COMMIT RELATED
-    @annotate(metric_name='commits100', group='experimental')
+    @annotate(tag='commits100', group='experimental')
     def commits100(self, owner, repo=None, group_by="week"):
         """
         Timeseries of the count of commits, limited to the first 100 overall
@@ -604,7 +604,7 @@ class GHTorrent(object):
         tem = temp['commits'] > 100
         return temp[tem].reset_index(drop=True)
 
-    @annotate(metric_name='commit-comments', group='experimental')
+    @annotate(tag='commit-comments', group='experimental')
     def commit_comments(self, owner, repo=None, group_by="week"):
         """
         Timeseries of the count of new commit comments
@@ -617,7 +617,7 @@ class GHTorrent(object):
         commitCommentsSQL = s.sql.text(self.__sub_table_count_by_date("commits", "commit_comments", "id", "commit_id", "project_id"))
         return pd.read_sql(commitCommentsSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='committer-locations', group='experimental')
+    @annotate(tag='committer-locations', group='experimental')
     def committer_locations(self, owner, repo=None):
         """
         Returns committers and their locations
@@ -642,7 +642,7 @@ class GHTorrent(object):
         """)
         return pd.read_sql(rawContributionsSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='total-committers', group='experimental')
+    @annotate(tag='total-committers', group='experimental')
     def total_committers(self, owner, repo=None):
         """
         Timeseries of total committers as of each week
@@ -667,7 +667,7 @@ class GHTorrent(object):
         return df
 
     # ISSUE RELATED
-    @annotate(metric_name='issue-activity', group='experimental')
+    @annotate(tag='issue-activity', group='experimental')
     def issue_activity(self, owner, repo=None):
         """
         Timeseries of issue related activity: issues opened, closed, reopened, and currently open
@@ -711,7 +711,7 @@ class GHTorrent(object):
         return df4
 
     # PULL REQUEST RELATED
-    @annotate(metric_name='pull-request-acceptance-rate', group='experimental')
+    @annotate(tag='pull-request-acceptance-rate', group='experimental')
     def pull_request_acceptance_rate(self, owner, repo=None):
         """
         Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
@@ -741,7 +741,7 @@ class GHTorrent(object):
         return pd.read_sql(pullAcceptanceSQL, self.db, params={"repoid": str(repoid)})
 
     # COMMUNITY / CONRIBUTIONS
-    @annotate(metric_name='community-age', group='experimental')
+    @annotate(tag='community-age', group='experimental')
     def community_age(self, owner, repo=None):
         """
         Information helpful to determining a community's age
@@ -781,7 +781,7 @@ class GHTorrent(object):
 
         return pd.read_sql(communityAgeSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='community-engagement', group='experimental')
+    @annotate(tag='community-engagement', group='experimental')
     def community_engagement(self, owner, repo):
         """
         Timeseries with lots of information about issues and pull requests
@@ -879,7 +879,7 @@ class GHTorrent(object):
         counts['pull_requests_open'] = counts['pull_requests_delta'].cumsum()
         return counts
 
-    @annotate(metric_name='contributors', group='experimental')
+    @annotate(tag='contributors', group='experimental')
     def contributors(self, owner, repo=None):
         """
         All the contributors to a project and the counts of their contributions
@@ -914,7 +914,7 @@ class GHTorrent(object):
         """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(metric_name='contributions', group='experimental')
+    @annotate(tag='contributions', group='experimental')
     def contributions(self, owner, repo=None, userid=None):
         """
         Timeseries of all the contributions to a project, optionally limited to a specific user
@@ -1013,7 +1013,7 @@ class GHTorrent(object):
         roles = contributors.apply(classify, axis=1)
         return roles
 
-    @annotate(metric_name='project-age', group='experimental')
+    @annotate(tag='project-age', group='experimental')
     def project_age(self, owner, repo=None):
         """
         Date of the project's creation
@@ -1034,7 +1034,7 @@ class GHTorrent(object):
     # DEPENDENCY RELATED
 
     # OTHER
-    @annotate(metric_name='fakes', group='experimental')
+    @annotate(tag='fakes', group='experimental')
     def fakes(self, owner, repo=None): #should this be for users who contribute to the given repo?
         """
         Timeseries of new fake users per week

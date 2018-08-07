@@ -5,18 +5,16 @@ import requests
 from flask import Response
 from augur.util import metric_metadata
 
-import ipdb
-
 class Metric(object):
 	def __init__(self):
+		self.ID = 'n/a'
 		self.tag = 'n/a'
 		self.name = 'n/a'
 		self.group = 'n/a'
 		self.backend_status = 'undefined'
 		self.frontend_status = 'unimplemented'
 		self.endpoint = 'n/a'
-		self.escaped_endpoint = 'n/a'
-		self.source = 'n/a'
+		self.source = 'none'
 		self.metric_type = 'n/a'
 		self.url = '/'
 		self.is_defined = False
@@ -32,44 +30,45 @@ class Metric(object):
 
 # implemented metrics
 def copyImplementedMetrics():
+	# I'm sorry
 	# takes implemented metrics and copies their data to the appropriate metric object
 	implemented_metric_tags = [metric.tag for metric in implemented_metrics]
+	group = experimental_metrics
 	for group in metrics_by_group:
-		for grouped_metric in group:
-			if grouped_metric.tag in implemented_metric_tags:
-				metric_to_copy = (next((metric for metric in implemented_metrics if metric.tag == grouped_metric.tag)))
-				grouped_metric.__dict__ =  metric_to_copy.__dict__.copy()
+		if group is not experimental_metrics: #experimental metrics don't need to be copied, since they don't have a definition
+			for grouped_metric in group:
+				if grouped_metric.tag in implemented_metric_tags:
+					metric = next(metric for metric in implemented_metrics if metric.tag == grouped_metric.tag)
+					grouped_metric.__dict__ = metric.__dict__.copy()
 
 def createImplementedMetric(metadata):
 	metric = Metric()
-	metric.name = metadata['metric_name']
-	metric.setTag()
-	metric.backend_status = 'implemented'
-	metric.group = metadata['group']
 
-	if 'source' in metadata:
-		metric.source = metadata['source']
+	metric.ID = metadata['ID']
+	metric.tag = metadata['tag']
+	metric.name = metadata['metric_name']
+	metric.group = metadata['group']
+	metric.backend_status = 'implemented'
+	metric.frontend_status = frontendStatusExtractor.determineFrontendStatus(metric)
+	metric.endpoint = metadata['endpoint']
+	metric.source = metadata['source']
 
 	if 'metric_type' in metadata:
-	    metric.metric_type = metadata['metric_type']
-
-	if 'endpoint' in metadata:
-		metric.endpoint = metadata['endpoint']
-		metric.frontend_status = frontendStatusExtractor.determineFrontendStatus(metric)
-		metric.escaped_endpoint = metadata['escaped_endpoint']
+		metric.metric_type = metadata['metric_type']
+	else:
+		metric.metric_type = 'metric'
 
 	if metric.tag in defined_tags:
 		metric.setUrl()
+		metric.is_defined = True
 
 	return metric
 
 def buildImplementedMetrics():
 	implemented_metrics = []
 
-	# ipdb.set_trace()
-
-	for metadata in metric_metadata:
-		implemented_metrics.append(createImplementedMetric(metadata))
+	for metric in metric_metadata:
+		implemented_metrics.append(createImplementedMetric(metric))
 
 	return implemented_metrics
 
@@ -132,6 +131,7 @@ def createMetric(raw_name, group):
 	metric = Metric()
 	metric.setName(raw_name)
 	metric.setTag()
+	metric.ID = metric.source + '-' + metric.tag 
 	metric.group = group
 
 	if metric.tag in defined_tags:
@@ -145,7 +145,7 @@ def createMetric(raw_name, group):
 def getDefinedMetricTags():
 
 	# TODO: FIX GITHUB AUTH
-	# activity_files = requests.get("https://api.github.com/repos/{}/contents/activity-metrics".format(activity_repo_remote), auth=('user', server.augur_app.githubapi().GITHUB_API_KEY)).json()
+	activity_files = requests.get("https://api.github.com/repos/{}/contents/activity-metrics".format(activity_repo_remote)).json()
 	defined_tags = []
 
 	# for file in activity_files:
@@ -163,6 +163,9 @@ class FrontendStatusExtractor(object):
 		self.git_attributes = re.findall(r'(?:(GitEndpoint)\(repo, )\'(.*)\', \'(.*)\'', self.api_text)
 		
 	def determineFrontendStatus(self, metric):
+
+		attribute = ''
+
 		if '/api/unstable/<owner>/<repo>/timeseries/' in metric.endpoint:
 			endpoint_attributes = self.timeseries_attributes
 			attribute = [attribute[1] for attribute in endpoint_attributes if '/api/unstable/<owner>/<repo>/timeseries/' + attribute[2] == metric.endpoint]
@@ -226,16 +229,29 @@ metrics_by_group.append(experimental_metrics)
 
 copyImplementedMetrics()
 
-def create_routes(server):
-	@server.app.route("/{}/metrics/status".format(server.api_version))
-	def metrics_status():
-
+def getAllMetricsStatus():
 		metrics_status = []
 
 		for group in metrics_by_group:
 			for metric in group:
 				metrics_status.append(metric.__dict__)
-				
-		return Response(response=json.dumps(metrics_status),
+
+		return metrics_status
+
+all_metrics_status_json = getAllMetricsStatus()
+
+def create_routes(server):
+	@server.app.route("/{}/metrics/status".format(server.api_version))
+	def all_metrics_status():
+		return Response(response=json.dumps(all_metrics_status_json),
+						status=200,
+						mimetype="application/json")
+
+	@server.app.route("/{}/metrics/status/<ID>/".format(server.api_version))
+	def individual_metrics_status(ID):
+
+		individual_metrics_status = next((metric for metric in all_metrics_status if metric['ID'] == ID), None)
+
+		return Response(response=json.dumps(individual_metrics_status),
 						status=200,
 						mimetype="application/json")
