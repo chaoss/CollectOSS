@@ -74,6 +74,9 @@ class Server(object):
 
 
             """
+
+            self.show_metadata = False
+
             if request.method == 'GET':
                 """this will return sensible defaults in the future"""
                 return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
@@ -229,12 +232,13 @@ class Server(object):
 
         result = ''
 
-        if not args and not kwargs:
-            data = func()
-        else:
-            data = func(*args, **kwargs)
-
         if not self.show_metadata:
+
+            if not args and not kwargs:
+                data = func()
+            else:
+                data = func(*args, **kwargs)
+                
             if hasattr(data, 'to_json'):
                 if group_by is not None:
                     data = data.group_by(group_by).aggregate(aggregate)
@@ -252,8 +256,6 @@ class Server(object):
         else:
             result = json.dumps(func.metadata)
 
-        print(func.__name__)
-
         return result
 
     def flaskify(self, func, cache=True):
@@ -265,7 +267,13 @@ class Server(object):
             def generated_function(*args, **kwargs):
                 def heavy_lifting():
                     return self.transform(func, args, kwargs, **request.args.to_dict())
-                body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
+                body = ""
+
+                if self.show_metadata:
+                    body = heavy_lifting()
+                else:
+                    body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
+
                 return Response(response=body,
                                 status=200,
                                 mimetype="application/json")
