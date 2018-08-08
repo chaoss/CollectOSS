@@ -119,6 +119,7 @@ class MetricsStatus(object):
 		self.defined_tags = []
 		self.implemented_metrics = []
 
+	def create_metrics_status(self):
 		self.activity_repo_remote = "OSSHealth/wg-gmd"
 
 		self.getDefinedMetricTags()
@@ -139,10 +140,6 @@ class MetricsStatus(object):
 		self.metrics_by_group.append(self.experimental_metrics)
 
 		self.copyImplementedMetrics()
-
-	def applesauce(self):
-		apple = GroupedMetric("closed-issues", "growth-maturity-decline", self.defined_tags)
-		return json.dumps(apple.__dict__)
 
 	# implemented metrics
 	def copyImplementedMetrics(self):

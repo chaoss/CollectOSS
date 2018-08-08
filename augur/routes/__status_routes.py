@@ -4,6 +4,7 @@ import json
 def create_routes(server):
 
 	metrics_status = server.augur_app.metrics_status()
+	metrics_status.create_metrics_status()
 	all_metrics_status_response = metrics_status.getAllMetricsStatus()
 
 	@server.app.route("/{}/metrics/status".format(server.api_version))
