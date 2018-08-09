@@ -8,7 +8,7 @@ Local Installation (For Development)
 [*Also remember the database dependency in the README.md file*](http://ghtorrent.org/msr14.html)
 
 1. [Dependency Installation for Ubuntu](#Ubuntu) 
-1. [Dependency Installation for Ubuntu](#Fedora)
+1. [Dependency Installation for Fedora](#Fedora)
 1. [Dependency Installation for OS X](#MacOSX)
 
 ### 2. [Install Augur](#Install)
