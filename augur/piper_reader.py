@@ -1,6 +1,5 @@
 import json
 import pandas as pd
-#import mysql.connector
 from sqlalchemy import create_engine
 import sqlalchemy as s
 from augur import logger
@@ -11,23 +10,35 @@ from dateutil.parser import parse
 from datetime import datetime, timedelta
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
-#Count 2290
-#if(line[j:j+11]=="},\"unixfrom\"" or line[j:j+9] == "},\"origin\"" ):
-#9359610
-#1355 aaa-dev <CAGu-7A8CzjH8ch1YdyrZid=Zq7bsVThyE5_zKGLQ0hjxDSA8ZQ@mail.gmail.com>
-#<CAP3y0aZ=3eFxUbatK26H9qHV4xPJE6BdQxa=n2bqYqp45q=63A@mail.gmail.com>
-#alto
-#<CACeyj_GoMVd28FtDBVf83HoDQR8QaLgscabFHRraKdkTSibrCQ@mail.gmail.com>
-#<70006713F8B28D4F88E17B98E1459AB5A3B72866@nkgeml501-mbs.china.huawei.com>
-#428 alto-dev
-#Need to have pip install sqlalchemy-utils
-#PiperRead8 had all comments
 
 
 
 class PiperMail:
+	"""
+	Takes the emails downloaded using Perceval pipermail and parsed by the jupyter
+	notebook PiperMail and stores it in a pandas DataFrame format and uploads it to 
+	a SQL Database
+	"""
 	
 	def make(self,db,mail_check,archives,mail_lists,res,session,di,numb):
+		"""
+		First checks to see if the mail lists are in the SQL Database, if not creates a new
+		table called "mail_lists" and initializes it with a set of columns ('message_text','mailing_list' etc.)
+		After begins to count the number of lines in the 'mail_lists' if it's the first time will be 0, if not the column
+		'augurmsgID' will be set to the number of rows+1. Then begins adding the emails to 'mail_lists' table and
+		at the end adds the repositories downloaded to a table 'mailing_list_jobs' and the date of the last message
+		in the mailing list.
+
+		:param db:connection to database
+		:param mail_check:dictionary of mailing list and if it is 'new' or 'update'
+		:param archives:list of mailing list
+		:param res:Stores all the mailing lists that is in the SQL Table 'mailing_list_jobs'
+		:param session:Allows access to the SQL Tables and ability to change the table in python
+		:param di: messages in mailing list
+		:param numb:row number in SQL Table (would be 'augurmsgID' in SQL Table)
+		"""
+		
+
 		path = "/augur/data/"
 		db_name = "mail_lists"
 		db_name_csv = os.getcwd() + path + db_name
@@ -84,19 +95,11 @@ class PiperMail:
 				if(row>=( (k*5000))):
 					y+=1
 					df5.to_sql(name=db_name, con=db,if_exists='append',index=False)
-					df5.to_csv(db_name_csv + ".csv", mode='a')
 					val = True
 					y = True
 				df = pd.DataFrame(columns=columns1)
-				#data,r= self.read_json(x[j:])
-				#j+=r
-				#if(j==len(x)):
-				#	break
-				#di = json.loads(data)
 			if(val == False):
-				#print(df5)
 				df5.to_sql(name=db_name, con=db,if_exists='append',index=False)
-				df5.to_csv(db_name_csv + ".csv", mode='a')
 			temp_date = self.convert_date(di[j]['data']['Date'])
 			if(last_date < temp_date):
 				last_date = temp_date
@@ -116,13 +119,18 @@ class PiperMail:
 			print("File uploaded ",row)
 		if(new == True):
 			name = os.getcwd() + path + "mailing_list_jobs"
-			df_mail_list.to_csv(name + ".csv")
 			df_mail_list.to_sql(name='mailing_list_jobs',con=db,if_exists='append',index=False)
 			print("Mailing List Job uploaded")
 		print("Finished")
 		return numb,mail_lists
 	
 	def convert_date(self,di):
+		'''
+		Converts the date of the message in the email to a datetime object
+		to be uploaded to the SQL Database 'mail_lists'
+
+		param di: messages in mailing list
+		'''
 		split = di.split()
 		sign = split[5][0]
 		if sign == '-':
@@ -138,6 +146,20 @@ class PiperMail:
 		return date
 
 	def add_row_mess(self,columns1,df,di,row,archives,augurmsgID):
+
+		'''
+		Converts the messages in the mailing list to a format that could be uploaded
+		to the SQL Table 'mail_lists'. If the message is too long, it divides it into 
+		seperate parts that will be uploaded to the 'mail_lists'
+
+		param columns1: All the columns in the SQL Table 'mail_lists' (e.g. 'augurmsgID', 'message_id')
+		param df: Dataframe that holds the messages which is uploaded to 'mail_lists'
+		param di: Dictionary that holds the messages that will then be transfered to df
+		param row: The number of rows needed for the message (it would be more than 1 
+		           if the message is split into multiple parts)
+		param archives: List of mailing list
+		param augurmsgID: The current row number in 'mail_lists'
+		'''
 		temp = 	di['data']['body']['plain']
 		k = 1
 		val = False
@@ -183,6 +205,19 @@ class PiperMail:
 		return df,row,augurmsgID
 	
 	def add_row_mail_list(self,columns2,di,df_mail_list,archives,last_date,numb):
+		'''
+		Converts the details about the current mailing list in a format that could
+		be uploaded to the SQL Table 'mailing_list_jobs'. 
+
+		param columns2: All the columns in the SQL Table 'mailing_list_jobs'
+		                (e.g. 'augurlistID', 'mailing_list_url')
+		param di: Dictionary that holds the messages that will then be transfered to df_mail_list
+		param df_mail_list: Dataframe that holds the information which is uploaded to 'mailing_list_jobs'		
+		param archives: List of mailing list
+		param numb: The current row number in 'mailing_list_jobs'
+		param numb: The current row number in 'mailing_list_jobs'
+
+		'''
 		li = [[numb,di['backend_name'], di['origin'], archives,last_date]]
 		df = pd.DataFrame(li,columns=columns2)
 		df4 = df_mail_list.append(df)
