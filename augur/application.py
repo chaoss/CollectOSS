@@ -212,7 +212,7 @@ class Application(object):
         return self.__ghtorrent
     def piper(self):
         from augur.piper_reader import PiperMail
-        path = "runtime/git_mailing_lists.csv"
+        path = "runtime/mailing_lists.csv"
         if self.__piper is None:
             logger.debug('Initializing PiperMail')
             self.__piper = PiperMail()
