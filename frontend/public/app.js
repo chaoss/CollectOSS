@@ -364,7 +364,7 @@ var AugurAPI = function () {
 
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos');
     this.openRequests = 0;
-    this.getMetricsStatus = this.__EndpointFactory('metrics/status');
+    this.getRawMetricsStatus = this.__EndpointFactory('metrics/status/raw');
   }
 
   // __autobatcher (url, params, fireTimeout) {
@@ -961,11 +961,11 @@ exports.default = {
   },
 
   methods: {
-    getMetricsStatus: function getMetricsStatus() {
+    getRawMetricsStatus: function getRawMetricsStatus() {
       var _this = this;
 
       this.rawMetricsStatus = [];
-      window.AugurAPI.getMetricsStatus().then(function (data) {
+      window.AugurAPI.getRawMetricsStatus().then(function (data) {
         _this.rawMetricsStatus = data;
       });
     },
@@ -987,7 +987,7 @@ exports.default = {
     }
   },
   mounted: function mounted() {
-    this.getMetricsStatus();
+    this.getRawMetricsStatus();
   }
 };
 })()

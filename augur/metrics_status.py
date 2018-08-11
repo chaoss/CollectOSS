@@ -116,8 +116,14 @@ class MetricsStatus(object):
 	def __init__(self, githubapi):
 		self.__githubapi = githubapi.api
 
+		self.groups = []
+		self.sources = []
+		self.metric_types = []
+
 		self.defined_tags = []
 		self.implemented_metrics = []
+
+		self.raw_metrics_status = []
 
 	def create_metrics_status(self):
 		self.activity_repo_remote = "OSSHealth/wg-gmd"
@@ -140,6 +146,12 @@ class MetricsStatus(object):
 		self.metrics_by_group.append(self.experimental_metrics)
 
 		self.copyImplementedMetrics()
+
+		self.getRawMetricsStatus()
+
+		self.getMetricGroups()
+		self.getMetricSources()
+		self.getMetricTypes()
 
 	# implemented metrics
 	def copyImplementedMetrics(self):
@@ -219,12 +231,34 @@ class MetricsStatus(object):
 		for file in activity_files:
 			self.defined_tags.append(re.sub(".md", '', file.name))
 
-	def getAllMetricsStatus(self):
-			all_metrics_status = []
+	def getMetricGroups(self):
+		for group in [metric['group'] for metric in self.raw_metrics_status]:
+			group = group.lower()
+			if group not in self.groups and group != "none":
+				self.groups.append(group) 
 
-			for group in self.metrics_by_group:
-				for metric in group:
-					all_metrics_status.append(metric.__dict__)
+	def getMetricSources(self):
+		for source in [metric['source'] for metric in self.raw_metrics_status]:
+			source = source.lower()
+			if source not in self.sources and source != "none":
+				self.sources.append(source)
 
-			return all_metrics_status
+	def getMetricTypes(self):
+		for metric_type in [metric['metric_type'] for metric in self.raw_metrics_status]:
+			metric_type = metric_type.lower()
+			if metric_type not in self.metric_types and metric_type != "none":
+				self.metric_types.append(metric_type) 
+
+	def getRawMetricsStatus(self):
+		for group in self.metrics_by_group:
+			for metric in group:
+				self.raw_metrics_status.append(metric.__dict__)
+
+	def getMetricsStatus(self):
+		return json.dumps({
+		      "groups": json.dumps(self.groups),
+		      "sources": json.dumps(self.sources),
+		      "metric_types": json.dumps(self.metric_types),
+		      "metrics_status": json.dumps(self.raw_metrics_status)
+		})	
 

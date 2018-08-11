@@ -37,9 +37,9 @@ export default {
     }
   },
   methods: {
-      getMetricsStatus() {
+      getRawMetricsStatus() {
         this.rawMetricsStatus = []
-        window.AugurAPI.getMetricsStatus().then((data) => {
+        window.AugurAPI.getRawMetricsStatus().then((data) => {
           this.rawMetricsStatus = data
       })
     },
@@ -64,7 +64,7 @@ export default {
       },
     },
   mounted() {
-    this.getMetricsStatus()
+    this.getRawMetricsStatus()
   }
 }
 

@@ -20,5 +20,5 @@ def create_all_datasource_routes(server):
         module.create_routes(server)
 
 def create_status_routes(server):
-	module = importlib.import_module('.__status_routes', 'augur.routes')
+	module = importlib.import_module('.__metric_status_routes', 'augur.routes')
 	module.create_routes(server)
