@@ -1,4 +1,4 @@
-def create_routes(server):	
+def create_routes(server):
 
 	ghtorrent = server.augur_app.ghtorrent()
 
@@ -12,7 +12,7 @@ def create_routes(server):
 
 	"""
 	@api {get} /:owner/:repo/timeseries/issues/closed Closed Issues
-	@apiName closed-issues 
+	@apiName closed-issues
 	@apiGroup Growth-Maturity-Decline
 	@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-closed.md">CHAOSS Metric Definition</a>
 
@@ -102,11 +102,11 @@ def create_routes(server):
 	                        }
 	                    ]
 	"""
-	server.addTimeseries(ghtorrent.contribution_acceptance, 'contribution_acceptance')
+	server.addTimeseries(ghtorrent.contribution_acceptance, 'pulls/acceptance_rate')
 
 	"""
 	@api {get} /:owner/:repo/timeseries/contributing_github_organizations Contributing Github Organizations
-	@apiName contributing-github-organizations 
+	@apiName contributing-github-organizations
 	@apiGroup Growth-Maturity-Decline
 	@apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md">CHAOSS Metric Definition</a>
 
@@ -192,7 +192,7 @@ def create_routes(server):
 	                        }
 	                    ]
 	"""
-	server.addTimeseries(ghtorrent.forks, 'forks') 
+	server.addTimeseries(ghtorrent.forks, 'forks')
 
 	"""
 	@api {get} /:owner/:repo/pulls/maintainer_response_time Maintainer Response to Merge Request Duration
@@ -367,7 +367,7 @@ def create_routes(server):
 	                        }
 	                    ]
 	"""
-	server.addTimeseries(ghtorrent.watchers, 'watchers')	
+	server.addTimeseries(ghtorrent.watchers, 'watchers')
 
 	#####################################
 	###         EXPERIMENTAL          ###
