@@ -102,7 +102,7 @@ def create_routes(server):
 	                        }
 	                    ]
 	"""
-	server.addTimeseries(ghtorrent.contribution_acceptance, 'contribution_acceptance')
+	server.addTimeseries(ghtorrent.contribution_acceptance, 'pulls/acceptance_rate')
 
 	"""
 	@api {get} /:owner/:repo/timeseries/contributing_github_organizations Contributing Github Organizations
@@ -347,29 +347,6 @@ def create_routes(server):
 	server.addTimeseries(ghtorrent.issue_comments, 'issue/comments')
 
 	"""
-	@api {get} /:owner/:repo/timeseries/pulls/made-closed Pull Requests Made-Closed 
-	@apiName pull-requests-made-closed
-	@apiGroup Activity
-	@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-made-closed.md">CHAOSS Metric Definition</a>
-
-	@apiParam {String} owner Username of the owner of the GitHub repository
-	@apiParam {String} repo Name of the GitHub repository
-
-	@apiSuccessExample {json} Success-Response:
-	                    [
-	                        {
-	                            "date": "2010-09-11T00:00:00.000Z",
-	                            "rate": 0.3333
-	                        },
-	                        {
-	                            "date": "2010-09-13T00:00:00.000Z",
-	                            "rate": 0.3333
-	                        }
-	                    ]
-	"""
-	server.addTimeseries(ghtorrent.pull_requests_made_closed, 'pulls/made_closed')
-
-	"""
 	@api {get} /:owner/:repo/watchers Watchers
 	@apiName watchers
 	@apiGroup Activity
@@ -547,7 +524,8 @@ def create_routes(server):
 	server.addTimeseries(ghtorrent.issue_activity, 'issues/activity')
 
 	"""
-	@api {get} /:owner/:repo/timeseries/pulls/acceptance_rate Pull Request Acceptance Rate 
+	@api {get} /:owner/:repo/timeseries/pulls/acceptance_rate Pull Request Acceptance Rate
+	@apiDeprecated This endpoint was removed. Please use (#Experimental:community-engagement)
 	@apiName pull-request-acceptance-rate
 	@apiGroup Experimental
 	@apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
@@ -567,7 +545,6 @@ def create_routes(server):
 	                        }
 	                    ]
 	"""
-	server.addTimeseries(ghtorrent.pull_request_acceptance_rate, 'pulls/acceptance_rate')
 
 	"""
 	@api {get} /:owner/:repo/timeseries/community_age Community Age

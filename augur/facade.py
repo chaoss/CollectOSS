@@ -71,7 +71,7 @@ class Facade(object):
         repoSQL = s.sql.text("""
             SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
             FROM analysis_data
-            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl)
+            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
             GROUP BY repos_id, author_date, author_affiliation, author_email
             ORDER BY author_date ASC;
         """)
