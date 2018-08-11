@@ -48,7 +48,7 @@ class Metric(object):
 		self.source = 'none'
 		self.metric_type = 'none'
 		self.url = '/'
-		self.is_defined = False
+		self.is_defined = 'false'
 
 class GroupedMetric(Metric):
 	
@@ -60,7 +60,7 @@ class GroupedMetric(Metric):
 		self.group = group
 
 		if self.tag in defined_tags:
-			self.is_defined = True
+			self.is_defined = 'true'
 			self.url = 'activity-metrics/' + self.tag + '.md'
 			self.backend_status = 'unimplemented'
 
@@ -87,7 +87,7 @@ class ImplementedMetric(Metric):
 
 		if self.tag in defined_tags:
 			self.url = 'activity-metrics/' + self.tag + '.md'
-			self.is_defined = True
+			self.is_defined = 'true'
 
 class MetricsStatus(object):
 
@@ -124,6 +124,7 @@ class MetricsStatus(object):
 		self.implemented_metrics = []
 
 		self.raw_metrics_status = []
+		self.metrics_status_with_metadata = []
 
 	def create_metrics_status(self):
 		self.activity_repo_remote = "OSSHealth/wg-gmd"
@@ -148,6 +149,7 @@ class MetricsStatus(object):
 		self.copyImplementedMetrics()
 
 		self.getRawMetricsStatus()
+		self.getMetricsStatusWithMetadata()
 
 		self.getMetricGroups()
 		self.getMetricSources()
@@ -167,7 +169,8 @@ class MetricsStatus(object):
 
 	def buildImplementedMetrics(self):
 		for metric in metric_metadata:
-			self.implemented_metrics.append(ImplementedMetric(metric, self.defined_tags))
+			if "ID" in metric.keys():
+				self.implemented_metrics.append(ImplementedMetric(metric, self.defined_tags))
 
 	# grouped metrics
 	def extractGroupedMetricNamesFromRemoteFile(self, remote):
@@ -254,8 +257,8 @@ class MetricsStatus(object):
 			for metric in group:
 				self.raw_metrics_status.append(metric.__dict__)
 
-	def getMetricsStatus(self):
-		return json.dumps({
+	def getMetricsStatusWithMetadata(self):
+		self.metrics_status_with_metadata = json.dumps({
 		      "groups": json.dumps(self.groups),
 		      "sources": json.dumps(self.sources),
 		      "metric_types": json.dumps(self.metric_types),

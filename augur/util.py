@@ -48,5 +48,10 @@ def annotate(metadata=None, **kwargs):
             metric_metadata.append(func.metadata)
         func.metadata.update(metadata)
         func.metadata.update(dict(kwargs))
+
+        func.metadata['metric_name'] = re.sub('_', ' ', func.__name__).title()
+        func.metadata['source'] = re.sub(r'(.*\.)', '', func.__module__)
+        func.metadata['ID'] = "{}-{}".format(func.metadata['source'].lower(), func.metadata['tag'])
+
         return func
     return decorate

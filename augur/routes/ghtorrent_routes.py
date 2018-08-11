@@ -347,7 +347,7 @@ def create_routes(server):
 	server.addTimeseries(ghtorrent.issue_comments, 'issue/comments')
 
 	"""
-	@api {get} /:owner/:repo/timeseries/pulls/made-closed Pull Requests Made-Closed 
+	@api {get} /:owner/:repo/timeseries/pulls/made_closed Pull Requests Made/Closed
 	@apiName pull-requests-made-closed
 	@apiGroup Activity
 	@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-made-closed.md">CHAOSS Metric Definition</a>

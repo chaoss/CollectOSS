@@ -307,10 +307,7 @@ class Server(object):
         # Get the unbound function from the bound function's class so that we can modify metadata
         # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
-        metric_name = re.sub('_', ' ', function.__name__).title()
-        source = function.__self__.__class__.__name__
-        ID = "{}-{}".format(source.lower(), function.metadata['tag'])
-        annotate(ID=ID, metric_name=metric_name, endpoint=endpoint, source=source, **kwargs)(real_func)
+        annotate(endpoint=endpoint, **kwargs)(real_func)
 
 def run():
     server = Server()
