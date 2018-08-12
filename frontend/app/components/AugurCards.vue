@@ -2,7 +2,7 @@
   <div>
 
     <!-- content to show if app has no state yet -->
-    <div :class="{ hidden: hasState }">
+        <div :class="{ hidden: hasState }">
       <section class="unmaterialized">
         <h3>Enter a GitHub URL to get started</h3>
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
@@ -147,6 +147,7 @@ module.exports = {
       this.downloadedRepos = []
       window.AugurAPI.getDownloadedGitRepos().then((data) => {
         this.downloadedRepos = data
+        console.lot(this.downloadedRepos)
       })
     },
     getMetricsStatus() {
@@ -160,7 +161,7 @@ module.exports = {
     }
   },
   mounted() {
-    // this.getDownloadedRepos()
+    this.getDownloadedRepos()
   }
 }
 </script>

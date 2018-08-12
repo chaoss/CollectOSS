@@ -1175,6 +1175,7 @@ module.exports = {
       this.downloadedRepos = [];
       window.AugurAPI.getDownloadedGitRepos().then(function (data) {
         _this.downloadedRepos = data;
+        console.lot(_this.downloadedRepos);
       });
     },
     getMetricsStatus: function getMetricsStatus() {
@@ -1189,7 +1190,9 @@ module.exports = {
       return window.btoa(s);
     }
   },
-  mounted: function mounted() {}
+  mounted: function mounted() {
+    this.getDownloadedRepos();
+  }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default

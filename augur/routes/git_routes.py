@@ -1,3 +1,5 @@
+from flask import Response
+
 def create_routes(server):
 
 	git = server.augur_app.git()
@@ -33,7 +35,6 @@ def create_routes(server):
 						status=200,
 						mimetype="application/json")
 	server.updateMetricMetadata(function=git.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
-
 
 	"""
 	@api {get} /git/lines_changed_minus_whitespace/:git_repo_url Lines Changed Minus Whitespace
