@@ -2557,6 +2557,10 @@ tspan.mg-points-mono {
     font-size: 0.6rem;
 }
 
+h3 {
+  padding-top: 20px;
+  width: 100%;
+}
 body {
   background: #eaeaea;
   padding-bottom: 216px;

@@ -5,6 +5,7 @@ import requests
 from augur.util import metric_metadata
 
 class FrontendStatusExtractor(object):
+
 	def __init__(self):
 		self.api_text =  open("frontend/app/AugurAPI.js", 'r').read()
 		self.frontend_card_files = []
@@ -14,7 +15,6 @@ class FrontendStatusExtractor(object):
 		self.git_attributes = re.findall(r'(?:(GitEndpoint)\(repo, )\'(.*)\', \'(.*)\'', self.api_text)
 		
 	def determineFrontendStatus(self, endpoint):
-
 		attribute = ''
 
 		if '/api/unstable/<owner>/<repo>/timeseries/' in endpoint:
@@ -41,7 +41,7 @@ class Metric(object):
 		self.ID = 'none'
 		self.tag = 'none'
 		self.name = 'none'
-		self.group = 'none'
+		self.group = 'experimental'
 		self.backend_status = 'undefined'
 		self.frontend_status = 'unimplemented'
 		self.endpoint = 'none'
@@ -51,12 +51,12 @@ class Metric(object):
 		self.is_defined = 'false'
 
 class GroupedMetric(Metric):
-	
+
 	def __init__(self, raw_name, group, defined_tags):
 		Metric.__init__(self)	
 		self.name = re.sub('/', '-', re.sub(r'-$|\*', '', re.sub('-', ' ', raw_name).title()))
 		self.tag = re.sub(' ', '-', self.name).lower()
-		self.ID = self.source + '-' + self.tag 
+		self.ID = re.sub(r'-$|\*', '', self.source + '-' + self.tag)
 		self.group = group
 
 		if self.tag in defined_tags:
@@ -74,7 +74,6 @@ class ImplementedMetric(Metric):
 		self.ID = metadata['ID']
 		self.tag = metadata['tag']
 		self.name = metadata['metric_name']
-		self.group = metadata['group']
 		self.backend_status = 'implemented'
 		self.endpoint = metadata['endpoint']
 		self.frontend_status = self.frontend_status_extractor.determineFrontendStatus(self.endpoint)
@@ -102,7 +101,7 @@ class MetricsStatus(object):
 	]	
 
 	growth_maturity_decline_remotes = [
-		{ "remote_url": "https://raw.githubusercontent.com/OSSHealth/wg-gmd/master/2_Growth-Maturity-Decline.md", "has_links": True },
+		{ "remote_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/2_Growth-Maturity-Decline.md", "has_links": True },
 	]
 
 	risk_remotes = [
@@ -116,15 +115,24 @@ class MetricsStatus(object):
 	def __init__(self, githubapi):
 		self.__githubapi = githubapi.api
 
-		self.groups = []
+		self.groups = {
+	        "diversity-inclusion": "Diversity and Inclusion",
+	        "growth-maturity-decline": "Growth, Maturity, and Decline",
+	        "risk": "Risk",
+	        "value": "Value",
+	        "activity": "Activity",
+	        "experimental": "Experimental"
+	    },
+
 		self.sources = []
 		self.metric_types = []
+		self.tags = {}
 
 		self.defined_tags = []
 		self.implemented_metrics = []
 
 		self.raw_metrics_status = []
-		self.metrics_status_with_metadata = []
+		self.metadata = []
 
 	def create_metrics_status(self):
 		self.activity_repo_remote = "OSSHealth/wg-gmd"
@@ -149,11 +157,8 @@ class MetricsStatus(object):
 		self.copyImplementedMetrics()
 
 		self.getRawMetricsStatus()
-		self.getMetricsStatusWithMetadata()
 
-		self.getMetricGroups()
-		self.getMetricSources()
-		self.getMetricTypes()
+		self.getMetadata()
 
 	# implemented metrics
 	def copyImplementedMetrics(self):
@@ -165,7 +170,9 @@ class MetricsStatus(object):
 				for grouped_metric in group:
 					if grouped_metric.tag in implemented_metric_tags:
 						metric = next(metric for metric in self.implemented_metrics if metric.tag == grouped_metric.tag)
-						grouped_metric.__dict__ = metric.__dict__.copy()
+						for key in metric.__dict__.keys():
+							if key != 'group': #don't copy the group over, since the metrics are already grouped
+								grouped_metric.__dict__[key] = metric.__dict__[key]
 
 	def buildImplementedMetrics(self):
 		for metric in metric_metadata:
@@ -174,7 +181,6 @@ class MetricsStatus(object):
 
 	# grouped metrics
 	def extractGroupedMetricNamesFromRemoteFile(self, remote):
-
 		metric_file = requests.get(remote["remote_url"]).text
 
 		regEx = r'^(?!Name)(.*[^-])(?:\ \|)'
@@ -184,7 +190,6 @@ class MetricsStatus(object):
 		return re.findall(regEx, metric_file, re.M)
 
 	def createGroupedMetricsFromListOfRemotes(self, remotes_list, group):
-		
 		remote_names = []
 
 		for remote in remotes_list:
@@ -200,7 +205,6 @@ class MetricsStatus(object):
 
 	# activity metrics
 	def extractActivityMetricNames(self):
-
 		activity_metrics_raw_text = requests.get("https://raw.githubusercontent.com/{}/master/activity-metrics-list.md".format(self.activity_repo_remote)).text
 
 		raw_activity_names = re.findall(r'\|(?:\[|)(.*)\|(?:\]|)(?:\S| )', activity_metrics_raw_text)
@@ -208,7 +212,6 @@ class MetricsStatus(object):
 		return [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names if '---' not in name and 'Name' not in name]
 
 	def createActivityMetrics(self):
-
 		activity_names = self.extractActivityMetricNames()
 		activity_metrics = []
 
@@ -227,18 +230,11 @@ class MetricsStatus(object):
 
 	# other
 	def getDefinedMetricTags(self):
-
 		activity_files = self.__githubapi.get_repo(self.activity_repo_remote).get_dir_contents("activity-metrics")
 		self.defined_tags = []
 
 		for file in activity_files:
 			self.defined_tags.append(re.sub(".md", '', file.name))
-
-	def getMetricGroups(self):
-		for group in [metric['group'] for metric in self.raw_metrics_status]:
-			group = group.lower()
-			if group not in self.groups and group != "none":
-				self.groups.append(group) 
 
 	def getMetricSources(self):
 		for source in [metric['source'] for metric in self.raw_metrics_status]:
@@ -252,16 +248,27 @@ class MetricsStatus(object):
 			if metric_type not in self.metric_types and metric_type != "none":
 				self.metric_types.append(metric_type) 
 
+	def getMetricTags(self):
+		for tag in [(metric['tag'], metric['group']) for metric in self.raw_metrics_status]:
+			# tag[0] = tag[0].lower()
+			if tag[0] not in [tag[0] for tag in self.tags] and tag[0] != "none":
+				self.tags[tag[0]] = tag[1]
+
 	def getRawMetricsStatus(self):
 		for group in self.metrics_by_group:
 			for metric in group:
 				self.raw_metrics_status.append(metric.__dict__)
 
-	def getMetricsStatusWithMetadata(self):
-		self.metrics_status_with_metadata = json.dumps({
-		      "groups": json.dumps(self.groups),
-		      "sources": json.dumps(self.sources),
-		      "metric_types": json.dumps(self.metric_types),
-		      "metrics_status": json.dumps(self.raw_metrics_status)
-		})	
+	def getMetadata(self):
+
+		self.getMetricSources()
+		self.getMetricTypes()
+		self.getMetricTags()
+
+		self.metadata = {
+		      "groups": self.groups,
+		      "sources": self.sources,
+		      "metric_types": self.metric_types,
+		      "tags": self.tags
+		}
 

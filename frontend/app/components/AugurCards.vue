@@ -7,13 +7,13 @@
         <h3>Enter a GitHub URL to get started</h3>
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
       </section>
-      <section class="unmaterialized">
+<!--       <section class="unmaterialized">
         <h3>Downloaded Git repositories</h3>
         <div v-for="repo in downloadedRepos">
           <a :href="'?git=' + btoa(repo.url)" class="repolink">{{ repo.url }}</a> (status: {{ repo.status }})
         </div>
       </section>
-      <section class="unmaterialized">
+ -->      <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
       </section>
     </div>
@@ -155,7 +155,7 @@ module.exports = {
     }
   },
   mounted() {
-    this.getDownloadedRepos()
+    // this.getDownloadedRepos()
   }
 }
 </script>
