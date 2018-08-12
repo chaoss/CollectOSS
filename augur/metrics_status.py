@@ -61,7 +61,7 @@ class GroupedMetric(Metric):
 
 		if self.tag in defined_tags:
 			self.is_defined = 'true'
-			self.url = 'activity-metrics/' + self.tag + '.md'
+			self.url = "https://github.com/{}/blob/wg-gmd/activity-metrics/{}.md".format(MetricsStatus.activity_repo, self.tag)
 			self.backend_status = 'unimplemented'
 
 class ImplementedMetric(Metric):
@@ -87,32 +87,38 @@ class ImplementedMetric(Metric):
 			self.metric_type = 'metric'
 
 		if self.tag in defined_tags:
-			self.url = 'activity-metrics/' + self.tag + '.md'
+			self.url = "https://github.com/{}/blob/wg-gmd/activity-metrics/{}.md".format(MetricsStatus.activity_repo, self.tag)
 			self.is_defined = 'true'
 
 class MetricsStatus(object):
 
-	diversity_inclusion_remotes = [
-		{ "remote_url": "https://raw.githubusercontent.com/chaoss/wg-diversity-inclusion/master/goal_communication.md", "has_links": True },
-		{ "remote_url": "https://raw.githubusercontent.com/chaoss/wg-diversity-inclusion/master/goal_contribution.md", "has_links": True },
-		{ "remote_url": "https://raw.githubusercontent.com/chaoss/wg-diversity-inclusion/master/goal_events.md", "has_links": False },
-		{ "remote_url": "https://raw.githubusercontent.com/chaoss/wg-diversity-inclusion/master/goal_governance.md", "has_links": False },
-		{ "remote_url": "https://raw.githubusercontent.com/chaoss/wg-diversity-inclusion/master/goal_leadership.md", "has_links": False },
-		{ "remote_url": "https://raw.githubusercontent.com/chaoss/wg-diversity-inclusion/master/goal_project_places.md", "has_links": True },
-		{ "remote_url": "https://raw.githubusercontent.com/chaoss/wg-diversity-inclusion/master/goal_recognition.md", "has_links": False }
+	diversity_inclusion_urls = [
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_communication.md", "has_links": True },
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_contribution.md", "has_links": True },
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_events.md", "has_links": False },
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_governance.md", "has_links": False },
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_leadership.md", "has_links": False },
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_project_places.md", "has_links": True },
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_recognition.md", "has_links": False }
 	]	
 
-	growth_maturity_decline_remotes = [
-		{ "remote_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/2_Growth-Maturity-Decline.md", "has_links": True },
+	growth_maturity_decline_urls = [
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/2_Growth-Maturity-Decline.md", "has_links": True },
 	]
 
-	risk_remotes = [
-		{ "remote_url": "https://raw.githubusercontent.com/OSSHealth/wg-gmd/master/3_Risk.md", "has_links": False },
+	risk_urls = [
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/3_Risk.md", "has_links": False },
 	]
 
-	value_remotes = [
-		{ "remote_url": "https://raw.githubusercontent.com/OSSHealth/wg-gmd/master/4_Value.md", "has_links": False },
+	value_urls = [
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/4_Value.md", "has_links": False },
 	]
+
+	activity_urls = [
+		{ "raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/activity-metrics-list.md", "has_links": False },
+	]
+
+	activity_repo = "augurlabs/metrics"
 
 	def __init__(self, githubapi):
 		self.__githubapi = githubapi.api
@@ -137,16 +143,15 @@ class MetricsStatus(object):
 		self.metadata = []
 
 	def create_metrics_status(self):
-		self.activity_repo_remote = "OSSHealth/wg-gmd"
 
 		self.getDefinedMetricTags()
 
 		self.buildImplementedMetrics()
 
-		self.diversity_inclusion_metrics = self.createGroupedMetricsFromListOfRemotes(self.diversity_inclusion_remotes, "diversity-inclusion")
-		self.growth_maturity_decline_metrics = self.createGroupedMetricsFromListOfRemotes(self.growth_maturity_decline_remotes, "growth-maturity-decline")
-		self.risk_metrics = self.createGroupedMetricsFromListOfRemotes(self.risk_remotes, "risk")
-		self.value_metrics = self.createGroupedMetricsFromListOfRemotes(self.value_remotes, "value")
+		self.diversity_inclusion_metrics = self.createGroupedMetricsFromListOfRemotes(self.diversity_inclusion_urls, "diversity-inclusion")
+		self.growth_maturity_decline_metrics = self.createGroupedMetricsFromListOfRemotes(self.growth_maturity_decline_urls, "growth-maturity-decline")
+		self.risk_metrics = self.createGroupedMetricsFromListOfRemotes(self.risk_urls, "risk")
+		self.value_metrics = self.createGroupedMetricsFromListOfRemotes(self.value_urls, "value")
 
 		self.metrics_by_group = [self.diversity_inclusion_metrics, self.growth_maturity_decline_metrics, self.risk_metrics, self.value_metrics]
 
@@ -183,7 +188,7 @@ class MetricsStatus(object):
 
 	# grouped metrics
 	def extractGroupedMetricNamesFromRemoteFile(self, remote):
-		metric_file = requests.get(remote["remote_url"]).text
+		metric_file = requests.get(remote["raw_content_url"]).text
 
 		regEx = r'^(?!Name)(.*[^-])(?:\ \|)'
 		if remote["has_links"] == True:
@@ -204,17 +209,14 @@ class MetricsStatus(object):
 			remote_metrics.append(GroupedMetric(name, group, self.defined_tags))
 
 		return remote_metrics
-
-	# activity metrics
-	def extractActivityMetricNames(self):
-		activity_metrics_raw_text = requests.get("https://raw.githubusercontent.com/{}/master/activity-metrics-list.md".format(self.activity_repo_remote)).text
+		
+	def createActivityMetrics(self):
+		activity_metrics_raw_text = requests.get(self.activity_urls[0]["raw_content_url"]).text
 
 		raw_activity_names = re.findall(r'\|(?:\[|)(.*)\|(?:\]|)(?:\S| )', activity_metrics_raw_text)
 
-		return [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names if '---' not in name and 'Name' not in name]
+		activity_names = [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names if '---' not in name and 'Name' not in name]
 
-	def createActivityMetrics(self):
-		activity_names = self.extractActivityMetricNames()
 		activity_metrics = []
 
 		for raw_name in activity_names:
@@ -232,7 +234,7 @@ class MetricsStatus(object):
 
 	# other
 	def getDefinedMetricTags(self):
-		activity_files = self.__githubapi.get_repo(self.activity_repo_remote).get_dir_contents("activity-metrics")
+		activity_files = self.__githubapi.get_repo(self.activity_repo).get_dir_contents("activity-metrics")
 		self.defined_tags = []
 
 		for file in activity_files:
@@ -262,15 +264,21 @@ class MetricsStatus(object):
 				self.raw_metrics_status.append(metric.__dict__)
 
 	def getMetadata(self):
-
 		self.getMetricSources()
 		self.getMetricTypes()
 		self.getMetricTags()
 
 		self.metadata = {
-		      "groups": self.groups,
-		      "sources": self.sources,
-		      "metric_types": self.metric_types,
-		      "tags": self.tags
+			"remotes": {
+				"diversity_inclusion_urls": self.diversity_inclusion_urls,
+				"growth_maturity_decline_urls": self.growth_maturity_decline_urls,
+				"risk_urls": self.risk_urls,
+				"value_urls": self.value_urls,
+				"activity_repo_urls": self.activity_urls
+			},	
+			"groups": self.groups,
+			"sources": self.sources,
+			"metric_types": self.metric_types,
+			"tags": self.tags
 		}
 

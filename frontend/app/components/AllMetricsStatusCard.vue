@@ -15,7 +15,15 @@
         <tr v-for="metric in metricsStatus" v-if="metric.group == group">
           <td v-bind:style="{ color: getBackendStatusColor(metric) }">{{ metric.backend_status }}</td>
           <td v-bind:style="{ color: getFrontendStatusColor(metric) }">{{ metric.frontend_status }}</td>
+
+          <template v-if="metric.url != '/'" >
+          <td><a :href="metric.url">{{ metric.name }}</a></td>
+          </template>
+
+          <template v-else >
           <td>{{ metric.name }}</td>
+          </template>
+
           <td>{{ metric.group }}</td>
           <td>{{ metric.endpoint }}</td>
           <td>{{ metric.source }}</td>

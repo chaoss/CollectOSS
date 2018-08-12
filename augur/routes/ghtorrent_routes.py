@@ -102,7 +102,7 @@ def create_routes(server):
 	                        }
 	                    ]
 	"""
-	server.addTimeseries(ghtorrent.contribution_acceptance, 'pulls/acceptance_rate')
+	server.addTimeseries(ghtorrent.contribution_acceptance, 'contribution_acceptance')
 
 	"""
 	@api {get} /:owner/:repo/timeseries/contributing_github_organizations Contributing Github Organizations
