@@ -86,8 +86,8 @@ export default {
             "text": this.title,
             "offset": 15
             },
-            "width": 420,
-            "height": 200,
+            "width": 520,
+            "height": 250,
 
             "layer": []
           }
@@ -156,7 +156,7 @@ export default {
                 "empty": "none"
               }
             }
-        let size = 7
+        let size = 10
         if (this.rawWeekly || this.compareTo) size = 3
         if (selectionAdded) {
           selection = null

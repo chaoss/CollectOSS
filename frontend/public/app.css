@@ -2687,7 +2687,32 @@ section.status {
   z-index: 2;
   width: 100%;
   margin: -10px 0px 30px 0px;
-  padding: 0px 25px 0px 25px;
+  padding: 0px 10px 0px 25px;
+}
+.section {
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  height: auto;
+  max-height: 600px;
+  position: relative;
+}
+.section.collapsed {
+  max-height: 0;
+}
+.collapsible::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 40px;
+  background: -webkit-linear-gradient(rgba(250,250,250,0) 0%, #f0f0f0 100%);
+  background-image: -moz-linear-gradient(rgba(250,250,250,0) 0%, #f0f0f0 100%);
+  background-image: -o-linear-gradient(rgba(250,250,250,0) 0%, #f0f0f0 100%);
+  background-image: linear-gradient(rgba(250,250,250,0) 0%, #f0f0f0 100%);
+  background-image: -ms-linear-gradient(rgba(25,250,250,0) 0%, #f0f0f0 100%);
+}
+.section.showsome {
+  max-height: 100px;
 }
 cite.metric {
   display: block;
@@ -2736,9 +2761,6 @@ cite.metric a {
   font-size: 1.1em;
   font-weigth: 600;
 }
-.comparesearch {
-  padding-bottom: 100px;
-}
 .marks {
   padding: 10px 0px 0px 0px !important;
 }
@@ -2781,7 +2803,7 @@ cite.metric a {
   padding: 10px 0px 0px 0px;
 }
 .linechart {
-  padding: 0px 0px 0px 38px;
+  padding: 0px 0px 0px 18px;
 }
 .loader {
   width: 100%;

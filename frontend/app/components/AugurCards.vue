@@ -9,9 +9,13 @@
       </section>
       <section class="unmaterialized">
         <h3>Downloaded Git repositories</h3>
-        <div v-for="repo in downloadedRepos">
-          <a :href="'?git=' + btoa(repo.url)" class="repolink">{{ repo.url }}</a> (status: {{ repo.status }})
+        <div class="section collapsible showsome fade" @click="collapseText">
+          <div v-for="repo in downloadedRepos">
+            <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> (status: {{ repo.status }})
+          </div>
         </div>
+        <div v-show="!isCollapsed && downloadedRepos.length > 0" @click="collapseText"> Read more &#9654</div>
+        <div v-show="isCollapsed" @click="collapseText"> Read less &#9650</div>
       </section>
       <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
@@ -104,6 +108,7 @@ module.exports = {
   data() {
     return {
       downloadedRepos: [],
+      isCollapsed: false
     }
   },
   computed: {
@@ -124,6 +129,10 @@ module.exports = {
     },
   },
   methods: {
+    collapseText () {
+      this.isCollapsed = !this.isCollapsed;
+      document.querySelector('.section.collapsible').classList.toggle('showsome')
+    },
     onRepo (e) {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
