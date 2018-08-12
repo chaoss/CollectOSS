@@ -112,6 +112,7 @@ class Application(object):
         self.__downloads = None
         self.__publicwww = None
         self.__localCSV = None
+        self.__metrics_status = None
 
         # Load plugins
         import augur.plugins
@@ -159,6 +160,7 @@ class Application(object):
         self.downloads()
         self.publicwww()
         self.localcsv()        
+        self.metrics_status()
 
     def read_config(self, section, name, environment_variable=None, default=None):
         value = None
@@ -338,5 +340,13 @@ class Application(object):
             logger.debug('Initializing LocalCSV')
             self.__localCSV = LocalCSV()
         return self.__localCSV
+
+    def metrics_status(self):
+        from augur.metrics_status import MetricsStatus
+        if self.__metrics_status is None:
+            logger.debug('Initializing MetricsStatus')
+            self.__metrics_status = MetricsStatus(self.githubapi())
+        return self.__metrics_status
+
 
 Application.plugins = {}

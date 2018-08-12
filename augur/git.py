@@ -164,7 +164,7 @@ class Git(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-    @annotate(tag='downloaded-repos', group='experimental')
+    @annotate(tag='downloaded-repos')
     def downloaded_repos(self):
         """
         Get all downloaded repositories and the date they were last updated
@@ -186,7 +186,7 @@ class Git(object):
 
         return downloaded
 
-    @annotate(tag='lines-changed-minus-whitespace', group='experimental')
+    @annotate(tag='lines-changed-minus-whitespace')
     def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
@@ -252,7 +252,7 @@ class Git(object):
             results = new_results
         return results
 
-    @annotate(tag='lines-changed-by-author', group='experimental')
+    @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url, freq='M', rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos

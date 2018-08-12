@@ -363,7 +363,8 @@ var AugurAPI = function () {
 
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos');
     this.openRequests = 0;
-    this.getMetricsStatus = this.__EndpointFactory('metrics/status');
+    this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter');
+    this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata');
   }
 
   // __autobatcher (url, params, fireTimeout) {
@@ -941,7 +942,7 @@ exports.default = AugurStats;
 
 ;require.register("components/AllMetricsStatusCard.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -950,11 +951,12 @@ exports.default = {
 
   name: 'AllMetricsStatusCard',
 
-  props: ['grouping'],
-
   data: function data() {
     return {
-      rawMetricsStatus: []
+      metricsStatus: [],
+      metricsStatusMetadata: [],
+      metricGroups: [],
+      metricGroupNames: []
     };
   },
 
@@ -962,12 +964,20 @@ exports.default = {
     getMetricsStatus: function getMetricsStatus() {
       var _this = this;
 
-      this.rawMetricsStatus = [];
       window.AugurAPI.getMetricsStatus().then(function (data) {
-        _this.rawMetricsStatus = data;
+        _this.metricsStatus = data;
       });
     },
-    getBackendStatus: function getBackendStatus(metric) {
+    getMetricsStatusMetadata: function getMetricsStatusMetadata() {
+      var _this2 = this;
+
+      window.AugurAPI.getMetricsStatusMetadata().then(function (data) {
+        _this2.metricsStatusMetadata = data;
+        _this2.metricGroups = Object.keys(_this2.metricsStatusMetadata.groups[0]);
+        _this2.metricGroupNames = _this2.metricsStatusMetadata.groups[0];
+      });
+    },
+    getBackendStatusColor: function getBackendStatusColor(metric) {
       if (metric["backend_status"] == "unimplemented") {
         return "#c00";
       } else if (metric["backend_status"] == "undefined") {
@@ -976,7 +986,7 @@ exports.default = {
         return "#0c0";
       }
     },
-    getFrontendStatus: function getFrontendStatus(metric) {
+    getFrontendStatusColor: function getFrontendStatusColor(metric) {
       if (metric["frontend_status"] == "unimplemented") {
         return "#c00";
       } else if (metric["frontend_status"] == "implemented") {
@@ -986,13 +996,14 @@ exports.default = {
   },
   mounted: function mounted() {
     this.getMetricsStatus();
+    this.getMetricsStatusMetadata();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_c('table',{staticClass:"is-responsive"},[_vm._m(0),_vm._v(" "),_vm._l((_vm.rawMetricsStatus),function(metric){return _c('tr',[_c('td',{style:({ color: _vm.getBackendStatus(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatus(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])])})],2)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_vm._l((_vm.metricGroups),function(group){return [_c('h3',[_vm._v(_vm._s(_vm.metricGroupNames[group]))]),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return (metric.group == group)?_c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])]):_vm._e()})],2)]})],2)}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',[_c('td',[_vm._v("backend status")]),_vm._v(" "),_c('td',[_vm._v("frontend status")]),_vm._v(" "),_c('td',[_vm._v("name")]),_vm._v(" "),_c('td',[_vm._v("group")]),_vm._v(" "),_c('td',[_vm._v("endpoint")]),_vm._v(" "),_c('td',[_vm._v("source")]),_vm._v(" "),_c('td',[_vm._v("metric type")])])}]
 __vue__options__._scopeId = "data-v-17a4f8de"
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
@@ -1121,8 +1132,7 @@ module.exports = {
   },
   data: function data() {
     return {
-      downloadedRepos: [],
-      isCollapsed: false
+      downloadedRepos: []
     };
   },
 
@@ -1179,10 +1189,7 @@ module.exports = {
       return window.btoa(s);
     }
   },
-  mounted: function mounted() {
-    this.getDownloadedRepos();
-    this.getMetricsStatus();
-  }
+  mounted: function mounted() {}
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
@@ -1197,7 +1204,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.reload("data-v-78eb2940", __vue__options__)
+    hotAPI.rerender("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1747,7 +1754,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4eb76a08", __vue__options__)
+    hotAPI.reload("data-v-4eb76a08", __vue__options__)
   }
 })()}
 });

@@ -267,13 +267,7 @@ class Server(object):
             def generated_function(*args, **kwargs):
                 def heavy_lifting():
                     return self.transform(func, args, kwargs, **request.args.to_dict())
-                body = ""
-
-                if self.show_metadata:
-                    body = heavy_lifting()
-                else:
-                    body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
-
+                body = self.cache.get(key=str(request.url), createfunc=heavy_lifting)
                 return Response(response=body,
                                 status=200,
                                 mimetype="application/json")
@@ -285,7 +279,7 @@ class Server(object):
                 return Response(response=self.transform(func, args, kwargs, **request.args.to_dict()),
                                 status=200,
                                 mimetype="application/json")
-            generated_function.__name__ = func.__name__
+            generated_function.__name__ = func.__self__.__class__.__name__ + " _" + func.__name__
             return generated_function
 
     def addMetric(self, function, endpoint, cache=True, **kwargs):
@@ -315,10 +309,7 @@ class Server(object):
         # Get the unbound function from the bound function's class so that we can modify metadata
         # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
-        metric_name = re.sub('_', ' ', function.__name__).title()
-        source = function.__self__.__class__.__name__
-        ID = "{}-{}".format(source.lower(), function.metadata['tag'])
-        annotate(ID=ID, metric_name=metric_name, endpoint=endpoint, source=source, **kwargs)(real_func)
+        annotate(endpoint=endpoint, **kwargs)(real_func)
 
 def run():
     server = Server()

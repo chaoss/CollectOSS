@@ -50,7 +50,7 @@ class Facade(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-    @annotate(tag='downloaded-repos', group='experimental')
+    @annotate(tag='downloaded-repos')
     def downloaded_repos(self):
         repoSQL = s.sql.text("""
             SELECT git as url, status FROM repos;
@@ -59,11 +59,11 @@ class Facade(object):
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
         return results
 
-    @annotate(tag='lines-changed-minus-whitespace', group='experimental')
+    @annotate(tag='lines-changed-minus-whitespace')
     def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
         pass
 
-    @annotate(tag='lines-changed-by-author', group='experimental')
+    @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):
         """
         Makes sure the storageFolder contains updated versions of all the repos

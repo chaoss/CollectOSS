@@ -13,7 +13,8 @@ export default class AugurAPI {
 
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.openRequests = 0
-    this.getMetricsStatus = this.__EndpointFactory('metrics/status')
+    this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
+    this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
   }
 
   // __autobatcher (url, params, fireTimeout) {

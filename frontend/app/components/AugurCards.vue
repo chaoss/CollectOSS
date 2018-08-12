@@ -108,7 +108,6 @@ module.exports = {
   data() {
     return {
       downloadedRepos: [],
-      isCollapsed: false
     }
   },
   computed: {
@@ -161,8 +160,7 @@ module.exports = {
     }
   },
   mounted() {
-    this.getDownloadedRepos()
-    this.getMetricsStatus()
+    // this.getDownloadedRepos()
   }
 }
 </script>
