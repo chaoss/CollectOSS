@@ -397,17 +397,18 @@ var AugurAPI = function () {
       return function (params, callback) {
         var _this = this;
 
+        var cacheKey = window.btoa(url + JSON.stringify(params));
         this.openRequests++;
-        if (self.__cache[window.btoa(url)]) {
-          if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
+        if (self.__cache[cacheKey]) {
+          if (self.__cache[cacheKey].created_at > Date.now() - 1000 * 60) {
             return new Promise(function (resolve, reject) {
-              resolve(self.__cache[window.btoa(url)].data);
+              resolve(self.__cache[cacheKey].data);
             });
           }
         }
         return $.get(url, params).then(function (data) {
           _this.openRequests--;
-          self.__cache[window.btoa(url)] = {
+          self.__cache[cacheKey] = {
             created_at: Date.now(),
             data: data
           };
@@ -1013,7 +1014,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-17a4f8de", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-17a4f8de", __vue__options__)
+    hotAPI.reload("data-v-17a4f8de", __vue__options__)
   }
 })()}
 });
@@ -1750,40 +1751,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
     hotAPI.reload("data-v-4eb76a08", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/MetricStatusCard.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-
-  name: 'MetricsStatusCard',
-  props: ['metric'],
-  data: function data() {
-    return {};
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('ul',[_c('li',[_c('b',[_vm._v("Name: "+_vm._s(_vm.metric.name))])]),_vm._v(" "),_c('ul',[_c('li',[_vm._v("\n\t\t\t    Tag: "+_vm._s(_vm.metric.tag)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.url != '/')?_c('li',[_vm._v("\n\t\t\t    URL: "+_vm._s(_vm.metric.url)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tGroup: "+_vm._s(_vm.metric.group)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.endpoint != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tEndpoint: "+_vm._s(_vm.metric.endpoint)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),(_vm.metric.source != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tSource: "+_vm._s(_vm.metric.source)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tBackend Status: "+_vm._s(_vm.metric.backend_status)+"\n\t\t\t  ")]),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tFrontend Status: "+_vm._s(_vm.metric.frontend_status)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.metric_type != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tMetric Type: "+_vm._s(_vm.metric.metric_type)+"\n\t\t\t  ")]):_vm._e()])])}
-__vue__options__.staticRenderFns = []
-__vue__options__._scopeId = "data-v-e8c39942"
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-e8c39942", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-e8c39942", __vue__options__)
   }
 })()}
 });

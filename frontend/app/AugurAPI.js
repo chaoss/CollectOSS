@@ -42,17 +42,18 @@ export default class AugurAPI {
   __URLFunctionFactory (url) {
     var self = this
     return function (params, callback) {
+      var cacheKey = window.btoa(url + JSON.stringify(params))
       this.openRequests++
-      if (self.__cache[window.btoa(url)]) {
-        if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
+      if (self.__cache[cacheKey]) {
+        if (self.__cache[cacheKey].created_at > Date.now() - 1000 * 60) {
           return new Promise((resolve, reject) => {
-            resolve(self.__cache[window.btoa(url)].data)
+            resolve(self.__cache[cacheKey].data)
           })
         }
       }
       return $.get(url, params).then((data) => {
         this.openRequests--
-        self.__cache[window.btoa(url)] = {
+        self.__cache[cacheKey] = {
           created_at: Date.now(),
           data: data
         }
