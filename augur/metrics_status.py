@@ -129,7 +129,8 @@ class MetricsStatus(object):
 	        "risk": "Risk",
 	        "value": "Value",
 	        "activity": "Activity",
-	        "experimental": "Experimental"
+	        "experimental": "Experimental",
+	        "all": "All"
 	    },
 
 		self.sources = []
@@ -245,12 +246,14 @@ class MetricsStatus(object):
 			source = source.lower()
 			if source not in self.sources and source != "none":
 				self.sources.append(source)
+			self.sources.append("all")
 
 	def getMetricTypes(self):
 		for metric_type in [metric['metric_type'] for metric in self.raw_metrics_status]:
 			metric_type = metric_type.lower()
 			if metric_type not in self.metric_types and metric_type != "none":
 				self.metric_types.append(metric_type) 
+			self.metric_types.append("all")
 
 	def getMetricTags(self):
 		for tag in [(metric['tag'], metric['group']) for metric in self.raw_metrics_status]:

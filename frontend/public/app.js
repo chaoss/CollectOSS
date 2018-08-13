@@ -942,7 +942,7 @@ exports.default = AugurStats;
 
 ;require.register("components/AllMetricsStatusCard.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -954,17 +954,19 @@ exports.default = {
   data: function data() {
     return {
       metricsStatus: [],
-      metricsStatusMetadata: [],
+      metricStatusMetadata: [],
       metricGroups: [],
-      metricGroupNames: []
+      metricGroupNames: [],
+      selected_group: ''
     };
   },
 
   methods: {
-    getMetricsStatus: function getMetricsStatus() {
+    getMetricsStatus: function getMetricsStatus(selected_group) {
       var _this = this;
 
-      window.AugurAPI.getMetricsStatus().then(function (data) {
+      console.log(selected_group);
+      window.AugurAPI.getMetricsStatus("group=" + selected_group).then(function (data) {
         _this.metricsStatus = data;
       });
     },
@@ -972,11 +974,12 @@ exports.default = {
       var _this2 = this;
 
       window.AugurAPI.getMetricsStatusMetadata().then(function (data) {
-        _this2.metricsStatusMetadata = data;
-        _this2.metricGroups = Object.keys(_this2.metricsStatusMetadata.groups[0]);
-        _this2.metricGroupNames = _this2.metricsStatusMetadata.groups[0];
+        _this2.metricStatusMetadata = data;
+        _this2.metricGroups = Object.keys(data.groups[0]);
+        _this2.metricGroupNames = data.groups[0];
       });
     },
+    setGroup: function setGroup() {},
     getBackendStatusColor: function getBackendStatusColor(metric) {
       if (metric["backend_status"] == "unimplemented") {
         return "#c00";
@@ -995,7 +998,6 @@ exports.default = {
     }
   },
   mounted: function mounted() {
-    this.getMetricsStatus();
     this.getMetricsStatusMetadata();
   }
 };
@@ -1003,7 +1005,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_vm._l((_vm.metricGroups),function(group){return [_c('h3',{staticStyle:{"padding-top":"30px","width":"100%"}},[_vm._v(_vm._s(_vm.metricGroupNames[group]))]),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return (metric.group == group)?_c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2):_vm._e()})],2)]})],2)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_c('label',[_vm._v("Group:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_group),expression:"selected_group"}],attrs:{"id":"metric_group"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_group=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus(_vm.selected_group)}]}},_vm._l((_vm.metricGroups),function(group){return _c('option',{domProps:{"value":group}},[_vm._v("\n      "+_vm._s(_vm.metricGroupNames[group])+" \n     ")])})),_vm._v(" "),[_c('h3',[_vm._v("Metrics Status")]),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(0),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return _c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2)})],2)]],2)}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',[_c('td',[_vm._v("backend status")]),_vm._v(" "),_c('td',[_vm._v("frontend status")]),_vm._v(" "),_c('td',[_vm._v("name")]),_vm._v(" "),_c('td',[_vm._v("group")]),_vm._v(" "),_c('td',[_vm._v("endpoint")]),_vm._v(" "),_c('td',[_vm._v("source")]),_vm._v(" "),_c('td',[_vm._v("metric type")])])}]
 __vue__options__._scopeId = "data-v-17a4f8de"
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
@@ -1013,7 +1015,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-17a4f8de", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-17a4f8de", __vue__options__)
+    hotAPI.reload("data-v-17a4f8de", __vue__options__)
   }
 })()}
 });
@@ -1525,7 +1527,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1750,40 +1752,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
     hotAPI.reload("data-v-4eb76a08", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/MetricStatusCard.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-
-  name: 'MetricsStatusCard',
-  props: ['metric'],
-  data: function data() {
-    return {};
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('ul',[_c('li',[_c('b',[_vm._v("Name: "+_vm._s(_vm.metric.name))])]),_vm._v(" "),_c('ul',[_c('li',[_vm._v("\n\t\t\t    Tag: "+_vm._s(_vm.metric.tag)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.url != '/')?_c('li',[_vm._v("\n\t\t\t    URL: "+_vm._s(_vm.metric.url)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tGroup: "+_vm._s(_vm.metric.group)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.endpoint != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tEndpoint: "+_vm._s(_vm.metric.endpoint)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),(_vm.metric.source != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tSource: "+_vm._s(_vm.metric.source)+"\n\t\t\t  ")]):_vm._e(),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tBackend Status: "+_vm._s(_vm.metric.backend_status)+"\n\t\t\t  ")]),_vm._v(" "),_c('li',[_vm._v("\n\t \t\t\tFrontend Status: "+_vm._s(_vm.metric.frontend_status)+"\n\t\t\t  ")]),_vm._v(" "),(_vm.metric.metric_type != 'n/a')?_c('li',[_vm._v("\n\t \t\t\tMetric Type: "+_vm._s(_vm.metric.metric_type)+"\n\t\t\t  ")]):_vm._e()])])}
-__vue__options__.staticRenderFns = []
-__vue__options__._scopeId = "data-v-e8c39942"
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-e8c39942", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-e8c39942", __vue__options__)
   }
 })()}
 });

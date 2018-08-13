@@ -236,6 +236,8 @@ class Server(object):
 
             if not args and not kwargs:
                 data = func()
+            elif args and not kwargs:
+                data = func(*args)
             else:
                 data = func(*args, **kwargs)
                 

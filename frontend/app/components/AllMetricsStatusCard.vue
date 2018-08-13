@@ -1,7 +1,18 @@
 <template>
   <div class="is-table-container">
-    <template v-for="group in metricGroups">
+
+    <label>Group:</label>
+    <select id="metric_group" @change="getMetricsStatus(selected_group)" v-model='selected_group'>
+     <option v-for="group in metricGroups" v-bind:value="group">
+      {{ metricGroupNames[group] }} 
+     </option> 
+    </select> 
+
+<!--     <template v-for="group in metricGroups">
       <h3 style="padding-top: 30px; width: 100%">{{ metricGroupNames[group] }}</h3>
+ -->      
+      <template>
+        <h3>Metrics Status</h3>
       <table class="is-responsive">
         <tr>
           <td>backend status</td>
@@ -12,14 +23,13 @@
           <td>source</td>
           <td>metric type</td>
         </tr>
-        <tr v-for="metric in metricsStatus" v-if="metric.group == group">
+        <tr v-for="metric in metricsStatus">
           <td v-bind:style="{ color: getBackendStatusColor(metric) }">{{ metric.backend_status }}</td>
           <td v-bind:style="{ color: getFrontendStatusColor(metric) }">{{ metric.frontend_status }}</td>
 
           <template v-if="metric.url != '/'" >
           <td><a :href="metric.url">{{ metric.name }}</a></td>
           </template>
-
           <template v-else >
           <td>{{ metric.name }}</td>
           </template>
@@ -43,24 +53,29 @@ export default {
   data () {
     return {
       metricsStatus: [],
-      metricsStatusMetadata: [],
+      metricStatusMetadata: [],
       metricGroups: [],
-      metricGroupNames: []
+      metricGroupNames: [],
+      selected_group: ''
     }
   },
   methods: {
-      getMetricsStatus() {
-          window.AugurAPI.getMetricsStatus().then((data) => {
+      getMetricsStatus(selected_group) {
+          console.log(selected_group)
+          window.AugurAPI.getMetricsStatus("group=" + selected_group).then((data) => {
             this.metricsStatus = data
         })
       },
       getMetricsStatusMetadata() {
         window.AugurAPI.getMetricsStatusMetadata().then((data) => {
-          this.metricsStatusMetadata = data
-          this.metricGroups = Object.keys(this.metricsStatusMetadata.groups[0])
-          this.metricGroupNames = this.metricsStatusMetadata.groups[0]
+          this.metricStatusMetadata = data
+          this.metricGroups = Object.keys(data.groups[0])
+          this.metricGroupNames = data.groups[0]
 
         })
+      },
+      setGroup() {
+        // console.log(this.selected_group)
       },
       getBackendStatusColor(metric) {
         if (metric["backend_status"] == "unimplemented") {
@@ -83,7 +98,7 @@ export default {
       },
     },
   mounted() {
-    this.getMetricsStatus()
+    // this.getMetricsStatus()
     this.getMetricsStatusMetadata()
   }
 }
