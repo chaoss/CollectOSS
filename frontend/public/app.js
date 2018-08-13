@@ -1132,7 +1132,8 @@ module.exports = {
   },
   data: function data() {
     return {
-      downloadedRepos: []
+      downloadedRepos: [],
+      isCollapsed: false
     };
   },
 
@@ -1175,15 +1176,6 @@ module.exports = {
       this.downloadedRepos = [];
       window.AugurAPI.getDownloadedGitRepos().then(function (data) {
         _this.downloadedRepos = data;
-        console.lot(_this.downloadedRepos);
-      });
-    },
-    getMetricsStatus: function getMetricsStatus() {
-      var _this2 = this;
-
-      this.metricsStatus = [];
-      window.AugurAPI.getMetricsStatus().then(function (data) {
-        _this2.metricsStatus = data;
       });
     },
     btoa: function btoa(s) {
