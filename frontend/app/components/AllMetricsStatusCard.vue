@@ -1,7 +1,7 @@
 <template>
   <div class="is-table-container">
     <template v-for="group in metricGroups">
-      <h3>{{ metricGroupNames[group] }}</h3>
+      <h3 style="padding-top: 30px; width: 100%">{{ metricGroupNames[group] }}</h3>
       <table class="is-responsive">
         <tr>
           <td>backend status</td>

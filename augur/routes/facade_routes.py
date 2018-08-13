@@ -28,13 +28,13 @@ def create_routes(server):
     ###         EXPERIMENTAL          ###
     #####################################   
 
-    # @server.app.route('/{}/git/repos'.format(server.api_version))
-    # def facade_downloaded_repos(): #TODO: make this name automatic - wrapper?
-    #     drs = server.transform(facade.downloaded_repos)
-    #     return Response(response=drs,
-    #                     status=200,
-    #                     mimetype="application/json")
-    # server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
+    @server.app.route('/{}/git/repos'.format(server.api_version))
+    def facade_downloaded_repos(): #TODO: make this name automatic - wrapper?
+        drs = server.transform(facade.downloaded_repos)
+        return Response(response=drs,
+                        status=200,
+                        mimetype="application/json")
+    server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
 
     """
     @api {get} /git/lines_changed/:git_repo_url Lines Changed by Author

@@ -1003,7 +1003,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_vm._l((_vm.metricGroups),function(group){return [_c('h3',[_vm._v(_vm._s(_vm.metricGroupNames[group]))]),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return (metric.group == group)?_c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2):_vm._e()})],2)]})],2)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_vm._l((_vm.metricGroups),function(group){return [_c('h3',{staticStyle:{"padding-top":"30px","width":"100%"}},[_vm._v(_vm._s(_vm.metricGroupNames[group]))]),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return (metric.group == group)?_c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2):_vm._e()})],2)]})],2)}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',[_c('td',[_vm._v("backend status")]),_vm._v(" "),_c('td',[_vm._v("frontend status")]),_vm._v(" "),_c('td',[_vm._v("name")]),_vm._v(" "),_c('td',[_vm._v("group")]),_vm._v(" "),_c('td',[_vm._v("endpoint")]),_vm._v(" "),_c('td',[_vm._v("source")]),_vm._v(" "),_c('td',[_vm._v("metric type")])])}]
 __vue__options__._scopeId = "data-v-17a4f8de"
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
@@ -1013,7 +1013,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-17a4f8de", __vue__options__)
   } else {
-    hotAPI.reload("data-v-17a4f8de", __vue__options__)
+    hotAPI.rerender("data-v-17a4f8de", __vue__options__)
   }
 })()}
 });
