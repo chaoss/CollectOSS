@@ -397,17 +397,18 @@ var AugurAPI = function () {
       return function (params, callback) {
         var _this = this;
 
+        var cacheKey = window.btoa(url + JSON.stringify(params));
         this.openRequests++;
-        if (self.__cache[window.btoa(url)]) {
-          if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
+        if (self.__cache[cacheKey]) {
+          if (self.__cache[cacheKey].created_at > Date.now() - 1000 * 60) {
             return new Promise(function (resolve, reject) {
-              resolve(self.__cache[window.btoa(url)].data);
+              resolve(self.__cache[cacheKey].data);
             });
           }
         }
         return $.get(url, params).then(function (data) {
           _this.openRequests--;
-          self.__cache[window.btoa(url)] = {
+          self.__cache[cacheKey] = {
             created_at: Date.now(),
             data: data
           };
@@ -954,19 +955,30 @@ exports.default = {
   data: function data() {
     return {
       metricsStatus: [],
-      metricStatusMetadata: [],
-      metricGroups: [],
-      metricGroupNames: [],
-      selected_group: ''
+      metadata: {
+        metricStatusMetadata: [],
+        groups: [],
+        sources: [],
+        metric_types: []
+      },
+      filters: {
+        selected_group: 'all',
+        selected_source: 'all',
+        selected_metric_type: 'all',
+        selected_backend_status: 'all',
+        selected_frontend_status: 'all',
+        seletec_is_defined: 'all'
+      }
     };
   },
 
   methods: {
-    getMetricsStatus: function getMetricsStatus(selected_group) {
+    getMetricsStatus: function getMetricsStatus() {
       var _this = this;
 
-      console.log(selected_group);
-      window.AugurAPI.getMetricsStatus("group=" + selected_group).then(function (data) {
+      var query_string = "group=" + this.selected_group + "&source=" + this.selected_source + "&metric_type=" + this.selected_metric_type + "&backend_status=" + this.selected_backend_status + "&frontend_status=" + this.selected_frontend_status + "&is_defined=" + this.selected_is_defined;
+
+      window.AugurAPI.getMetricsStatus(query_string).then(function (data) {
         _this.metricsStatus = data;
       });
     },
@@ -974,12 +986,15 @@ exports.default = {
       var _this2 = this;
 
       window.AugurAPI.getMetricsStatusMetadata().then(function (data) {
-        _this2.metricStatusMetadata = data;
-        _this2.metricGroups = Object.keys(data.groups[0]);
-        _this2.metricGroupNames = data.groups[0];
+        _this2.metadata['metricStatusMetadata'] = data;
+
+        _this2.metadata['groups'] = Object.keys(data.groups[0]);
+
+        _this2.metadata['sources'] = data.sources;
+
+        _this2.metadata['metric_types'] = data.metric_types;
       });
     },
-    setGroup: function setGroup() {},
     getBackendStatusColor: function getBackendStatusColor(metric) {
       if (metric["backend_status"] == "unimplemented") {
         return "#c00";
@@ -998,6 +1013,13 @@ exports.default = {
     }
   },
   mounted: function mounted() {
+    this.selected_group = 'all';
+    this.selected_source = 'all';
+    this.selected_metric_type = 'all';
+    this.selected_backend_status = 'all';
+    this.selected_frontend_status = 'all';
+    this.selected_is_defined = 'all';
+    this.getMetricsStatus();
     this.getMetricsStatusMetadata();
   }
 };
@@ -1005,7 +1027,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_c('label',[_vm._v("Group:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_group),expression:"selected_group"}],attrs:{"id":"metric_group"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_group=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus(_vm.selected_group)}]}},_vm._l((_vm.metricGroups),function(group){return _c('option',{domProps:{"value":group}},[_vm._v("\n      "+_vm._s(_vm.metricGroupNames[group])+" \n     ")])})),_vm._v(" "),[_c('h3',[_vm._v("Metrics Status")]),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(0),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return _c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2)})],2)]],2)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_c('h3',{staticStyle:{"padding-top":"30px","width":"100%"}},[_vm._v("Metrics Status")]),_vm._v(" "),_c('label',[_vm._v("Group:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_group),expression:"selected_group"}],attrs:{"id":"metric_group"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_group=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['groups']),function(group){return _c('option',{domProps:{"value":group}},[_vm._v("\n    "+_vm._s(group)+" \n   ")])})),_vm._v(" "),_c('label',[_vm._v("Source:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_source),expression:"selected_source"}],attrs:{"id":"metric_source"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_source=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['sources']),function(source){return _c('option',{domProps:{"value":source}},[_vm._v("\n    "+_vm._s(source)+" \n   ")])})),_vm._v(" "),_c('label',[_vm._v("Metric Type:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_metric_type),expression:"selected_metric_type"}],attrs:{"id":"metric_type"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_metric_type=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['metric_types']),function(metric_type){return _c('option',{domProps:{"value":metric_type}},[_vm._v("\n    "+_vm._s(metric_type)+" \n   ")])})),_vm._v(" "),_c('label',[_vm._v("Backend Status:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_backend_status),expression:"selected_backend_status"}],attrs:{"id":"metric_backend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_backend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"undefined"}},[_vm._v("undefined")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])]),_vm._v(" "),_c('label',[_vm._v("Frontend Status:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_frontend_status),expression:"selected_frontend_status"}],attrs:{"id":"metric_frontend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_frontend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])]),_vm._v(" "),_c('label',[_vm._v("Defined:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_is_defined),expression:"selected_is_defined"}],attrs:{"id":"metric_is_defined"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_is_defined=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"true"}},[_vm._v("true")]),_vm._v(" "),_c('option',{attrs:{"value":"false"}},[_vm._v("false")])]),_vm._v(" "),[_c('table',{staticClass:"is-responsive"},[_vm._m(0),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return _c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2)})],2)]],2)}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',[_c('td',[_vm._v("backend status")]),_vm._v(" "),_c('td',[_vm._v("frontend status")]),_vm._v(" "),_c('td',[_vm._v("name")]),_vm._v(" "),_c('td',[_vm._v("group")]),_vm._v(" "),_c('td',[_vm._v("endpoint")]),_vm._v(" "),_c('td',[_vm._v("source")]),_vm._v(" "),_c('td',[_vm._v("metric type")])])}]
 __vue__options__._scopeId = "data-v-17a4f8de"
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
@@ -1015,7 +1037,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-17a4f8de", __vue__options__)
   } else {
-    hotAPI.reload("data-v-17a4f8de", __vue__options__)
+    hotAPI.rerender("data-v-17a4f8de", __vue__options__)
   }
 })()}
 });

@@ -3,12 +3,10 @@ from augur.metrics_status import Metric
 import json
 
 def filterBy(status, key, value):
-	if value == "all" or value is None:
+	if value == "all" or value == '' or value is None:
 		return status
 	elif value is not None:
 		return [metric for metric in status if metric[key].lower() == value.lower()]
-	# elif value is None:
-	# 	return status
 
 def create_routes(server):
 
