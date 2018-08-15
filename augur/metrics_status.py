@@ -160,10 +160,7 @@ class MetricsStatus(object):
 		self.activity_metrics = self.createActivityMetrics()
 		self.metrics_by_group.append(self.activity_metrics)
 
-		self.removeImplementedExperimentalMetrics()
-		# print([metric.tag for metric in self.implemented_metrics])
-
-		self.experimental_metrics = [metric for metric in self.implemented_metrics if metric.group == "experimental"]
+		self.createExperimentalMetrics()
 		self.metrics_by_group.append(self.experimental_metrics)
 
 		self.copyImplementedMetrics()
@@ -186,17 +183,13 @@ class MetricsStatus(object):
 							if key != 'group': #don't copy the group over, since the metrics are already grouped
 								grouped_metric.__dict__[key] = metric.__dict__[key]
 
-	def removeImplementedExperimentalMetrics(self):
+	def createExperimentalMetrics(self):
 		tags = []
 		for group in self.metrics_by_group:
 			for metric in group:
 				tags.append(metric.tag)
 
-		for metric in self.implemented_metrics:
-			if metric.tag in tags:
-				print(metric.tag)
-
-		self.implemented_metrics = [metric for metric in self.implemented_metrics if metric.tag not in tags]
+		self.experimental_metrics = [metric for metric in self.implemented_metrics if metric.tag not in tags]
 
 	def buildImplementedMetrics(self):
 		for metric in metric_metadata:
