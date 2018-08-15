@@ -16,7 +16,8 @@
         <line-chart source="totalCommitters"
                     title="Committers"
                     cite-url=""
-                    cite-text="Total Commiters">
+                    cite-text="Total Commiters"
+                    disable-rolling-average=1>
         </line-chart>
       </div>
 

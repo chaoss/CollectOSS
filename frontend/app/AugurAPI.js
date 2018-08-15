@@ -244,7 +244,7 @@ export default class AugurAPI {
       // VALUE
 
       // ACTIVITY
-      Timeseries(repo, 'issueComments', 'issue/comments')
+      Timeseries(repo, 'issueComments', 'issue_comments')
       Timeseries(repo, 'pullRequestsMadeClosed', 'pulls/made_closed')
       Timeseries(repo, 'watchers', 'watchers')
 

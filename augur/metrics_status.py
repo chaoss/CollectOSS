@@ -41,7 +41,7 @@ class Metric(object):
 		self.ID = 'none'
 		self.tag = 'none'
 		self.name = 'none'
-		self.group = 'experimental'
+		self.group = 'none'
 		self.backend_status = 'undefined'
 		self.frontend_status = 'unimplemented'
 		self.endpoint = 'none'
@@ -76,6 +76,7 @@ class ImplementedMetric(Metric):
 		self.name = metadata['metric_name']
 		self.backend_status = 'implemented'
 		self.source = metadata['source']
+		self.group = 'experimental'
 
 		if 'endpoint' in metadata:
 			self.endpoint = metadata['endpoint']
@@ -176,10 +177,11 @@ class MetricsStatus(object):
 			if group is not self.experimental_metrics: #experimental metrics don't need to be copied, since they don't have a definition
 				for grouped_metric in group:
 					if grouped_metric.tag in implemented_metric_tags:
-						metric = next(metric for metric in self.implemented_metrics if metric.tag == grouped_metric.tag)
-						for key in metric.__dict__.keys():
+						metric_to_copy = next(metric for metric in self.implemented_metrics if metric.tag == grouped_metric.tag)
+						for key in metric_to_copy.__dict__.keys():
 							if key != 'group': #don't copy the group over, since the metrics are already grouped
-								grouped_metric.__dict__[key] = metric.__dict__[key]
+								grouped_metric.__dict__[key] = metric_to_copy.__dict__[key]
+						self.implemented_metrics = [metric for metric in self.implemented_metrics if metric.ID != metric_to_copy.ID]
 
 	def buildImplementedMetrics(self):
 		for metric in metric_metadata:

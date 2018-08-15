@@ -1,3 +1,6 @@
+from flask import request, Response
+
+
 def create_routes(server):	
 
 	ghtorrent = server.augur_app.ghtorrent()
@@ -724,8 +727,7 @@ def create_routes(server):
 	def contributions(owner, repo):
 	    repoid = ghtorrent.repoid(owner, repo)
 	    user = request.args.get('user')
-	    contribs = ghtorrent.contributions(owner, repo)
-	    transformed_contributors = server.transform(contribs, orient=request.args.get('orient'))
+	    transformed_contributors = server.transform(ghtorrent.contributions, args=(owner, repo), orient=request.args.get('orient'))
 	    return Response(response=transformed_contributors,
 	                    status=200,
 	                    mimetype="application/json")

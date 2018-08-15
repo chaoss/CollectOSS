@@ -609,7 +609,7 @@ var AugurAPI = function () {
         // VALUE
 
         // ACTIVITY
-        Timeseries(repo, 'issueComments', 'issue/comments');
+        Timeseries(repo, 'issueComments', 'issue_comments');
         Timeseries(repo, 'pullRequestsMadeClosed', 'pulls/made_closed');
         Timeseries(repo, 'watchers', 'watchers');
 
@@ -1526,7 +1526,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1535,7 +1535,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-b05646f6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-b05646f6", __vue__options__)
+    hotAPI.rerender("data-v-b05646f6", __vue__options__)
   }
 })()}
 });

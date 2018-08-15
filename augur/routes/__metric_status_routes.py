@@ -118,7 +118,6 @@ def create_routes(server):
 						status=200,
 						mimetype="application/json")
 
-
 	"""
 	@api {get} metrics/status/filter?ID=:ID&tag=:tag&group=:group&backend_status=:backend_status&frontend_status=:frontend_status&source=:source&metric_type=:metric_type&is_defined=:is_defined Filtered Metrics Status 
 	@apiName filter-metrics-status
