@@ -41,7 +41,7 @@ class Metric(object):
 		self.ID = 'none'
 		self.tag = 'none'
 		self.name = 'none'
-		self.group = 'experimental'
+		self.group = 'none'
 		self.backend_status = 'undefined'
 		self.frontend_status = 'unimplemented'
 		self.endpoint = 'none'
@@ -76,6 +76,7 @@ class ImplementedMetric(Metric):
 		self.name = metadata['metric_name']
 		self.backend_status = 'implemented'
 		self.source = metadata['source']
+		self.group = "experimental"
 
 		if 'endpoint' in metadata:
 			self.endpoint = metadata['endpoint']
@@ -159,6 +160,9 @@ class MetricsStatus(object):
 		self.activity_metrics = self.createActivityMetrics()
 		self.metrics_by_group.append(self.activity_metrics)
 
+		self.removeImplementedExperimentalMetrics()
+		# print([metric.tag for metric in self.implemented_metrics])
+
 		self.experimental_metrics = [metric for metric in self.implemented_metrics if metric.group == "experimental"]
 		self.metrics_by_group.append(self.experimental_metrics)
 
@@ -181,6 +185,18 @@ class MetricsStatus(object):
 						for key in metric.__dict__.keys():
 							if key != 'group': #don't copy the group over, since the metrics are already grouped
 								grouped_metric.__dict__[key] = metric.__dict__[key]
+
+	def removeImplementedExperimentalMetrics(self):
+		tags = []
+		for group in self.metrics_by_group:
+			for metric in group:
+				tags.append(metric.tag)
+
+		for metric in self.implemented_metrics:
+			if metric.tag in tags:
+				print(metric.tag)
+
+		self.implemented_metrics = [metric for metric in self.implemented_metrics if metric.tag not in tags]
 
 	def buildImplementedMetrics(self):
 		for metric in metric_metadata:
