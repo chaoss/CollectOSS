@@ -22,10 +22,10 @@
       </div>
 
       <div class="col col-6">
-        <line-chart source="pullsAcceptanceRate"
-                    title="Pull Acceptance Rate"
+        <line-chart source="contributionAcceptance"
+                    title="Contribution Acceptance Rate"
                     cite-url=""
-                    cite-text="Total Commiters">
+                    cite-text="Contribution Acceptance">
         </line-chart>
       </div>
 

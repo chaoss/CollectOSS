@@ -16,7 +16,7 @@
         <line-chart source="pullRequestsMadeClosed" 
                     title="Pull Requests Made/ Closed per Week " 
                     cite-url="https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/pull-requests-made-closed.md"
-                    cite-text="Issue Comments"> 
+                    cite-text="Pull Requests Made/Closed"> 
         </line-chart>
       </div>
 
