@@ -344,7 +344,7 @@ def create_routes(server):
 	                        }
 	                    ]
 	"""
-	server.addTimeseries(ghtorrent.issue_comments, 'issue/comments')
+	server.addTimeseries(ghtorrent.issue_comments, 'issue_comments')
 
 	"""
 	@api {get} /:owner/:repo/timeseries/pulls/made_closed Pull Requests Made/Closed
@@ -370,7 +370,7 @@ def create_routes(server):
 	server.addTimeseries(ghtorrent.pull_requests_made_closed, 'pulls/made_closed')
 
 	"""
-	@api {get} /:owner/:repo/watchers Watchers
+	@api {get} /:owner/:repo/timeseries/watchers Watchers
 	@apiName watchers
 	@apiGroup Activity
 	@apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/activity-metrics-list.md">CHAOSS Metric Definition</a>
@@ -570,7 +570,7 @@ def create_routes(server):
 	"""
 
 	"""
-	@api {get} /:owner/:repo/timeseries/community_age Community Age
+	@api {get} /:owner/:repo/community_age Community Age
 	@apiName community-age
 	@apiGroup Experimental
 	@apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
@@ -732,7 +732,7 @@ def create_routes(server):
 	server.updateMetricMetadata(ghtorrent.contributions, '/api/unstable/<owner>/<repo>/timeseries/contributions')
 
 	"""
-	@api {get} /:owner/:repo/timeseries/project_age Project Age
+	@api {get} /:owner/:repo/project_age Project Age
 	@apiName project-age
 	@apiGroup Experimental
 	@apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
