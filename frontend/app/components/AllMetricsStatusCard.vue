@@ -1,7 +1,53 @@
 <template>
   <div class="is-table-container">
-    <template v-for="group in metricGroups">
-      <h3 style="padding-top: 30px; width: 100%">{{ metricGroupNames[group] }}</h3>
+
+    <h3 style="padding-top: 30px; width: 100%">Metrics Status</h3>
+
+    <label>Group:</label>
+    <select id="metric_group" @change="getMetricsStatus()" v-model='selected_group'>
+     <option v-for="group in metadata['groups']" v-bind:value="group">
+      <!-- {{ metadata["groupNames"][group] }}  -->
+      {{ group }} 
+     </option> 
+    </select> 
+
+    <label>Source:</label>
+    <select id="metric_source" @change="getMetricsStatus()" v-model='selected_source'>
+     <option v-for="source in metadata['sources']" v-bind:value="source">
+      {{ source }} 
+     </option> 
+    </select> 
+
+    <label>Metric Type:</label>
+    <select id="metric_type" @change="getMetricsStatus()" v-model='selected_metric_type'>
+     <option v-for="metric_type in metadata['metric_types']" v-bind:value="metric_type">
+      {{ metric_type }} 
+     </option> 
+    </select> 
+
+    <label>Backend Status:</label>
+    <select id="metric_backend_status" @change="getMetricsStatus()" v-model='selected_backend_status'>
+     <option value="all">all</option> 
+     <option value="undefined">undefined</option> 
+     <option value="unimplemented">unimplemented</option> 
+     <option value="implemented">implemented</option> 
+    </select> 
+
+    <label>Frontend Status:</label>
+    <select id="metric_frontend_status" @change="getMetricsStatus()" v-model='selected_frontend_status'>
+     <option value="all">all</option> 
+     <option value="unimplemented">unimplemented</option> 
+     <option value="implemented">implemented</option> 
+    </select> 
+
+    <label>Defined:</label>
+    <select id="metric_is_defined" @change="getMetricsStatus()" v-model='selected_is_defined'>
+     <option value="all">all</option> 
+     <option value="true">true</option> 
+     <option value="false">false</option> 
+    </select> 
+
+      <template>
       <table class="is-responsive">
         <tr>
           <td>backend status</td>
@@ -12,14 +58,13 @@
           <td>source</td>
           <td>metric type</td>
         </tr>
-        <tr v-for="metric in metricsStatus" v-if="metric.group == group">
+        <tr v-for="metric in metricsStatus">
           <td v-bind:style="{ color: getBackendStatusColor(metric) }">{{ metric.backend_status }}</td>
           <td v-bind:style="{ color: getFrontendStatusColor(metric) }">{{ metric.frontend_status }}</td>
 
           <template v-if="metric.url != '/'" >
           <td><a :href="metric.url">{{ metric.name }}</a></td>
           </template>
-
           <template v-else >
           <td>{{ metric.name }}</td>
           </template>
@@ -43,22 +88,45 @@ export default {
   data () {
     return {
       metricsStatus: [],
-      metricsStatusMetadata: [],
-      metricGroups: [],
-      metricGroupNames: []
+      metadata: {
+        metricStatusMetadata: [],
+        groups: [],
+        sources: [],
+        metric_types: []
+      },
+      filters: {
+        selected_group: 'all',
+        selected_source: 'all',
+        selected_metric_type: 'all',
+        selected_backend_status: 'all',
+        selected_frontend_status: 'all',
+        seletec_is_defined: 'all'
+      }
     }
   },
   methods: {
       getMetricsStatus() {
-          window.AugurAPI.getMetricsStatus().then((data) => {
+        var query_string = "group=" + this.selected_group + 
+                           "&source=" + this.selected_source + 
+                           "&metric_type=" + this.selected_metric_type + 
+                           "&backend_status=" + this.selected_backend_status +
+                           "&frontend_status=" + this.selected_frontend_status +
+                           "&is_defined=" + this.selected_is_defined
+
+          window.AugurAPI.getMetricsStatus(query_string).then((data) => {
             this.metricsStatus = data
         })
       },
       getMetricsStatusMetadata() {
         window.AugurAPI.getMetricsStatusMetadata().then((data) => {
-          this.metricsStatusMetadata = data
-          this.metricGroups = Object.keys(this.metricsStatusMetadata.groups[0])
-          this.metricGroupNames = this.metricsStatusMetadata.groups[0]
+          this.metadata['metricStatusMetadata'] = data
+
+          this.metadata['groups'] = Object.keys(data.groups[0])
+
+          this.metadata['sources'] = data.sources
+
+          this.metadata['metric_types'] = data.metric_types
+
 
         })
       },
@@ -83,6 +151,12 @@ export default {
       },
     },
   mounted() {
+    this.selected_group = 'all'
+    this.selected_source = 'all'
+    this.selected_metric_type = 'all'
+    this.selected_backend_status = 'all'
+    this.selected_frontend_status = 'all'
+    this.selected_is_defined = 'all'
     this.getMetricsStatus()
     this.getMetricsStatusMetadata()
   }

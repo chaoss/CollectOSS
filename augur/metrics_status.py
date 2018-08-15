@@ -76,7 +76,7 @@ class ImplementedMetric(Metric):
 		self.name = metadata['metric_name']
 		self.backend_status = 'implemented'
 		self.source = metadata['source']
-		self.group = 'experimental'
+		self.group = "experimental"
 
 		if 'endpoint' in metadata:
 			self.endpoint = metadata['endpoint']
@@ -130,7 +130,8 @@ class MetricsStatus(object):
 	        "risk": "Risk",
 	        "value": "Value",
 	        "activity": "Activity",
-	        "experimental": "Experimental"
+	        "experimental": "Experimental",
+	        "all": "All"
 	    },
 
 		self.sources = []
@@ -159,7 +160,7 @@ class MetricsStatus(object):
 		self.activity_metrics = self.createActivityMetrics()
 		self.metrics_by_group.append(self.activity_metrics)
 
-		self.experimental_metrics = [metric for metric in self.implemented_metrics if metric.group == "experimental"]
+		self.createExperimentalMetrics()
 		self.metrics_by_group.append(self.experimental_metrics)
 
 		self.copyImplementedMetrics()
@@ -177,11 +178,18 @@ class MetricsStatus(object):
 			if group is not self.experimental_metrics: #experimental metrics don't need to be copied, since they don't have a definition
 				for grouped_metric in group:
 					if grouped_metric.tag in implemented_metric_tags:
-						metric_to_copy = next(metric for metric in self.implemented_metrics if metric.tag == grouped_metric.tag)
-						for key in metric_to_copy.__dict__.keys():
+						metric = next(metric for metric in self.implemented_metrics if metric.tag == grouped_metric.tag)
+						for key in metric.__dict__.keys():
 							if key != 'group': #don't copy the group over, since the metrics are already grouped
-								grouped_metric.__dict__[key] = metric_to_copy.__dict__[key]
-						self.implemented_metrics = [metric for metric in self.implemented_metrics if metric.ID != metric_to_copy.ID]
+								grouped_metric.__dict__[key] = metric.__dict__[key]
+
+	def createExperimentalMetrics(self):
+		tags = []
+		for group in self.metrics_by_group:
+			for metric in group:
+				tags.append(metric.tag)
+
+		self.experimental_metrics = [metric for metric in self.implemented_metrics if metric.tag not in tags]
 
 	def buildImplementedMetrics(self):
 		for metric in metric_metadata:
@@ -247,12 +255,14 @@ class MetricsStatus(object):
 			source = source.lower()
 			if source not in self.sources and source != "none":
 				self.sources.append(source)
+		self.sources.append("all")
 
 	def getMetricTypes(self):
 		for metric_type in [metric['metric_type'] for metric in self.raw_metrics_status]:
 			metric_type = metric_type.lower()
 			if metric_type not in self.metric_types and metric_type != "none":
 				self.metric_types.append(metric_type) 
+		self.metric_types.append("all")
 
 	def getMetricTags(self):
 		for tag in [(metric['tag'], metric['group']) for metric in self.raw_metrics_status]:
@@ -283,4 +293,3 @@ class MetricsStatus(object):
 			"metric_types": self.metric_types,
 			"tags": self.tags
 		}
-

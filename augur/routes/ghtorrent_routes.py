@@ -1,6 +1,5 @@
 from flask import request, Response
 
-
 def create_routes(server):	
 
 	ghtorrent = server.augur_app.ghtorrent()

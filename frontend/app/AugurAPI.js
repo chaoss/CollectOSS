@@ -259,9 +259,6 @@ export default class AugurAPI {
       // Issue Related
       Timeseries(repo, 'issueActivity', 'issues/activity')
 
-      // Pull Request Related
-      Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate')
-
       // Community / Contributions
       Endpoint(repo, 'communityAge', 'community_age')
       Timeseries(repo, 'communityEngagement', 'community_engagement')

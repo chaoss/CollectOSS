@@ -624,9 +624,6 @@ var AugurAPI = function () {
         // Issue Related
         Timeseries(repo, 'issueActivity', 'issues/activity');
 
-        // Pull Request Related
-        Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate');
-
         // Community / Contributions
         Endpoint(repo, 'communityAge', 'community_age');
         Timeseries(repo, 'communityEngagement', 'community_engagement');
@@ -943,7 +940,7 @@ exports.default = AugurStats;
 
 ;require.register("components/AllMetricsStatusCard.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -955,9 +952,20 @@ exports.default = {
   data: function data() {
     return {
       metricsStatus: [],
-      metricsStatusMetadata: [],
-      metricGroups: [],
-      metricGroupNames: []
+      metadata: {
+        metricStatusMetadata: [],
+        groups: [],
+        sources: [],
+        metric_types: []
+      },
+      filters: {
+        selected_group: 'all',
+        selected_source: 'all',
+        selected_metric_type: 'all',
+        selected_backend_status: 'all',
+        selected_frontend_status: 'all',
+        seletec_is_defined: 'all'
+      }
     };
   },
 
@@ -965,7 +973,9 @@ exports.default = {
     getMetricsStatus: function getMetricsStatus() {
       var _this = this;
 
-      window.AugurAPI.getMetricsStatus().then(function (data) {
+      var query_string = "group=" + this.selected_group + "&source=" + this.selected_source + "&metric_type=" + this.selected_metric_type + "&backend_status=" + this.selected_backend_status + "&frontend_status=" + this.selected_frontend_status + "&is_defined=" + this.selected_is_defined;
+
+      window.AugurAPI.getMetricsStatus(query_string).then(function (data) {
         _this.metricsStatus = data;
       });
     },
@@ -973,9 +983,13 @@ exports.default = {
       var _this2 = this;
 
       window.AugurAPI.getMetricsStatusMetadata().then(function (data) {
-        _this2.metricsStatusMetadata = data;
-        _this2.metricGroups = Object.keys(_this2.metricsStatusMetadata.groups[0]);
-        _this2.metricGroupNames = _this2.metricsStatusMetadata.groups[0];
+        _this2.metadata['metricStatusMetadata'] = data;
+
+        _this2.metadata['groups'] = Object.keys(data.groups[0]);
+
+        _this2.metadata['sources'] = data.sources;
+
+        _this2.metadata['metric_types'] = data.metric_types;
       });
     },
     getBackendStatusColor: function getBackendStatusColor(metric) {
@@ -996,6 +1010,12 @@ exports.default = {
     }
   },
   mounted: function mounted() {
+    this.selected_group = 'all';
+    this.selected_source = 'all';
+    this.selected_metric_type = 'all';
+    this.selected_backend_status = 'all';
+    this.selected_frontend_status = 'all';
+    this.selected_is_defined = 'all';
     this.getMetricsStatus();
     this.getMetricsStatusMetadata();
   }
@@ -1004,7 +1024,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_vm._l((_vm.metricGroups),function(group){return [_c('h3',{staticStyle:{"padding-top":"30px","width":"100%"}},[_vm._v(_vm._s(_vm.metricGroupNames[group]))]),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return (metric.group == group)?_c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2):_vm._e()})],2)]})],2)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_c('h3',{staticStyle:{"padding-top":"30px","width":"100%"}},[_vm._v("Metrics Status")]),_vm._v(" "),_c('label',[_vm._v("Group:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_group),expression:"selected_group"}],attrs:{"id":"metric_group"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_group=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['groups']),function(group){return _c('option',{domProps:{"value":group}},[_vm._v("\n    "+_vm._s(group)+" \n   ")])})),_vm._v(" "),_c('label',[_vm._v("Source:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_source),expression:"selected_source"}],attrs:{"id":"metric_source"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_source=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['sources']),function(source){return _c('option',{domProps:{"value":source}},[_vm._v("\n    "+_vm._s(source)+" \n   ")])})),_vm._v(" "),_c('label',[_vm._v("Metric Type:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_metric_type),expression:"selected_metric_type"}],attrs:{"id":"metric_type"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_metric_type=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['metric_types']),function(metric_type){return _c('option',{domProps:{"value":metric_type}},[_vm._v("\n    "+_vm._s(metric_type)+" \n   ")])})),_vm._v(" "),_c('label',[_vm._v("Backend Status:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_backend_status),expression:"selected_backend_status"}],attrs:{"id":"metric_backend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_backend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"undefined"}},[_vm._v("undefined")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])]),_vm._v(" "),_c('label',[_vm._v("Frontend Status:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_frontend_status),expression:"selected_frontend_status"}],attrs:{"id":"metric_frontend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_frontend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])]),_vm._v(" "),_c('label',[_vm._v("Defined:")]),_vm._v(" "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_is_defined),expression:"selected_is_defined"}],attrs:{"id":"metric_is_defined"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_is_defined=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"true"}},[_vm._v("true")]),_vm._v(" "),_c('option',{attrs:{"value":"false"}},[_vm._v("false")])]),_vm._v(" "),[_c('table',{staticClass:"is-responsive"},[_vm._m(0),_vm._v(" "),_vm._l((_vm.metricsStatus),function(metric){return _c('tr',[_c('td',{style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',[_c('a',{attrs:{"href":metric.url}},[_vm._v(_vm._s(metric.name))])])]:[_c('td',[_vm._v(_vm._s(metric.name))])],_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.source))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(metric.metric_type))])],2)})],2)]],2)}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('tr',[_c('td',[_vm._v("backend status")]),_vm._v(" "),_c('td',[_vm._v("frontend status")]),_vm._v(" "),_c('td',[_vm._v("name")]),_vm._v(" "),_c('td',[_vm._v("group")]),_vm._v(" "),_c('td',[_vm._v("endpoint")]),_vm._v(" "),_c('td',[_vm._v("source")]),_vm._v(" "),_c('td',[_vm._v("metric type")])])}]
 __vue__options__._scopeId = "data-v-17a4f8de"
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
@@ -1265,7 +1285,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Activity")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/issue-comments.md","cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullRequestsMadeClosed","title":"Pull Requests Made/ Closed per Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/pull-requests-made-closed.md","cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"watchers","title":"Watchers / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/watchers.md","cite-text":"Watchers"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Activity")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"issueComments","title":"Issue Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/issue-comments.md","cite-text":"Issue Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullRequestsMadeClosed","title":"Pull Requests Made/ Closed per Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/pull-requests-made-closed.md","cite-text":"Pull Requests Made/Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"watchers","title":"Watchers / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/watchers.md","cite-text":"Watchers"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1526,7 +1546,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullsAcceptanceRate","title":"Pull Acceptance Rate","cite-url":"","cite-text":"Total Commiters"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance Rate","cite-url":"","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
