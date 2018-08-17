@@ -16,5 +16,7 @@ matrix:
       language: node_js
       node_js: 
         - "8.2.1"
+      notifications: 
+        slack: "augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS"
       script: 
-        - "node_modules/.bin/newman run tests/bitcoinz.postman_collection.json -e tests/tests.postman_environment.json"
+        - "node_modules/.bin/newman run test/Augur.postman_collection.json -e test/dev-unstable-rails.postman_environment.json"
