@@ -20,4 +20,4 @@ matrix:
       notifications: 
         slack: "augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS"
       script: 
-        - "node_modules/.bin/newman run test/Augur.postman_collection.json -e test/dev-unstable-rails.postman_environment.json"
+        - "node_modules/.bin/newman run https://api.getpostman.com/collections/4566755-ec950b0b-a5e9-4fe3-b1a5-ad4f49c209f9?apikey=$POSTMAN_API_KEY -e https://api.getpostman.com/environments/4566755-2eb8f02c-642f-4f12-892f-d75f4c5faa24?apikey=$POSTMAN_API_KEY"
