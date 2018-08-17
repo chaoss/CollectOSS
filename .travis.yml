@@ -3,7 +3,7 @@ matrix:
     - 
       install: "pip install ."
       language: python
-      python: "3.7"
+      python: "3.6"
       notifications: 
         slack: "augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS"
       script: "python -m pytest ./test"
