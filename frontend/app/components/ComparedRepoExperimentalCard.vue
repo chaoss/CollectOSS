@@ -23,11 +23,11 @@
       </div>
 
       <div class="col col-6">
-        <line-chart source="pullsAcceptanceRate"
-                    title="Pull Acceptance Rate"
+        <line-chart source="contributionAcceptance"
+                    title="Contribution Acceptance Rate"
                     cite-url=""
-                    v-bind:compared-to="comparedTo"
-                    cite-text="Total Commiters">
+                    cite-text="Contribution Acceptance"
+                    v-bind:compared-to="comparedTo">
         </line-chart>
       </div>
 
