@@ -27,6 +27,7 @@ default:
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
 	@ echo "    server            	   Runs a single instance of the server (useful for debugging endpoints)"
 	@ echo "    test SOURCE={source}   Run pytest unit tests for the specified source file. Defaults to all"
+	@ echo "    test-api   			   Run API tests locally using newman"
 
 	@ echo "    build                  Builds documentation and frontend - use before pushing"
 	@ echo "    frontend               Builds frontend with Brunch"
@@ -132,6 +133,11 @@ build: frontend docs
 
 test:
 	bash -c '$(CONDAACTIVATE) python -m pytest test/test_${SOURCE}.py'
+
+test-api:
+	make dev-start
+	python test/test_api.py
+	make dev-stop
 
 .PHONY: unlock
 unlock:
