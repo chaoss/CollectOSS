@@ -1,25 +1,27 @@
-language: python
-python:
-  - "3.6"
-# command to install dependencies
-install: "pip install ."
-# command to run tests
-script: "python -m pytest ./test"
+matrix:
+  include:
+    - language: python
+    python:
+      - "3.6"
+     # command to install dependencies
+     install: "pip install ."
+     # command to run tests
+     script: "python -m pytest ./test"
 
- notifications:
-    slack: augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS
+      notifications:
+          slack: augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS
 
-language: node_js
-node_js:
-  - "8.2.1"
+    - language: node_js
+      node_js:
+       - "8.2.1"
 
-install:
-  - npm install newman
+      install:
+        - npm install newman
 
-before_script:
-  - node --version
-  - npm --version
-  - node_modules/.bin/newman --version
+      before_script:
+       - node --version
+       - npm --version
+       - node_modules/.bin/newman --version
 
-script:
-  - node_modules/.bin/newman run tests/bitcoinz.postman_collection.json -e tests/tests.postman_environment.json
+      script:
+        - node_modules/.bin/newman run tests/bitcoinz.postman_collection.json -e tests/tests.postman_environment.json
