@@ -115,15 +115,10 @@ frontend:
 	bash -c 'cd frontend; brunch build'
 
 python-docs:
-	cd docs/python   \
-	&& rm -rf _build \
-	&& make html \
-	&& open build/html/index.html
+	@ bash -c '$(CONDAACTIVATE) cd docs/python && rm -rf _build && make html'
 
 api-docs:
-	cd docs \
-	&& apidoc --debug -f "\.py" -i ../augur/ -o api/ \
-	&& open api/index.html
+	@ bash -c '$(CONDAACTIVATE) cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/'
 
 docs: api-docs python-docs
 

@@ -1,77 +1,87 @@
 <template>
   <div class="is-table-container">
 
-    <h3 style="padding-top: 30px; width: 100%">Metrics Status</h3>
+    <h3>CHAOSS Metrics Implementation Status</h3>
 
-    <div class="row">
+    <div class="row gutters">
       <div class="col col-4">
-        <label>Group:</label>
+        <label>Group:
         <select id="metric_group" @change="getMetricsStatus()" v-model='selected_group'>
          <option v-for="group in metadata['groups']" v-bind:value="group">
           {{ group }} 
          </option> 
-        </select> 
+        </select>
+        </label>
       </div>
 
       <div class="col col-4">
-        <label>Source:</label>
+        <label>Source:
         <select id="metric_source" @change="getMetricsStatus()" v-model='selected_source'>
          <option v-for="source in metadata['sources']" v-bind:value="source">
           {{ source }} 
          </option> 
         </select> 
+        </label>
       </div>
 
       <div class="col col-4">
-        <label>Metric Type:</label>
+        <label>Metric Type:
         <select id="metric_type" @change="getMetricsStatus()" v-model='selected_metric_type'>
          <option v-for="metric_type in metadata['metric_types']" v-bind:value="metric_type">
           {{ metric_type }} 
          </option> 
-        </select> 
+        </select>
+        </label>
       </div>
-    </div>
 
-    <div class="row">
+      <div class="col col-12"><br></div>
+
       <div class="col col-4">
-        <label>Backend Status:</label>
+        <label>Backend Status:
         <select id="metric_backend_status" @change="getMetricsStatus()" v-model='selected_backend_status'>
          <option value="all">all</option> 
          <option value="undefined">undefined</option> 
          <option value="unimplemented">unimplemented</option> 
          <option value="implemented">implemented</option> 
-        </select> 
+        </select>
+        </label> 
       </div>
 
       <div class="col col-4">
-        <label>Frontend Status:</label>
+        <label>Frontend Status:
         <select id="metric_frontend_status" @change="getMetricsStatus()" v-model='selected_frontend_status'>
          <option value="all">all</option> 
          <option value="unimplemented">unimplemented</option> 
          <option value="implemented">implemented</option> 
         </select> 
+        </label>
       </div>
 
       <div class="col col-4">
-        <label>Defined:</label>
+        <label>Defined:
         <select id="metric_is_defined" @change="getMetricsStatus()" v-model='selected_is_defined'>
          <option value="all">all</option> 
          <option value="true">true</option> 
          <option value="false">false</option> 
         </select> 
+        </label>
       </div>
     </div>
 
+    <div class="col col-12"><br></div>
+
     <table class="is-responsive">
-      <tr>
-        <td>backend status</td>
-        <td>frontend status</td>
-        <td>name</td>
-        <td>group</td>
-        <td>endpoint</td>
-        <td>source</td>
-        <td>metric type</td>
-      </tr>
+      <thead>
+        <tr>
+          <th>Backend Status</th>
+          <th>Frontend Status</th>
+          <th>Name</th>
+          <th>Group</th>
+          <th>API Endpoint</th>
+          <th>Source</th>
+          <th>Type</th>
+        </tr>
+      </thead>
       <tr v-for="metric in metricsStatus">
         <td v-bind:style="{ color: getBackendStatusColor(metric) }">{{ metric.backend_status }}</td>
         <td v-bind:style="{ color: getFrontendStatusColor(metric) }">{{ metric.frontend_status }}</td>

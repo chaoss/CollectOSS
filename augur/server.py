@@ -8,7 +8,7 @@ from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
-from augur.util import annotate, metric_metadata
+from augur.util import annotate, metric_metadata, logger
 from augur.routes import create_all_datasource_routes, create_status_routes  
 
 AUGUR_API_VERSION = 'api/unstable'
@@ -97,6 +97,8 @@ class Server(object):
 
                 try:
 
+                    logger.debug('batch-internal-loop: %s %s' % (method, path))
+
                     with app.app_context():
                         with app.test_request_context(path,
                                                       method=method,
@@ -174,6 +176,8 @@ class Server(object):
                 body = req.get('body', None)
 
                 try:
+
+                    augur.logger.info('batch endpoint: ' + path)
 
                     with app.app_context():
                         with app.test_request_context(path,
