@@ -9,8 +9,7 @@
       </section>
       <section class="unmaterialized">
         <h3>Downloaded Git repositories</h3>
-        <div class="section collapsible showsome fade" @click="collapseText"
-        id="repo link list">
+        <div class="section collapsible showsome fade" @click="collapseText">
           <div v-for="repo in downloadedRepos">
             <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> (status: {{ repo.status }})
           </div>
@@ -131,15 +130,6 @@ module.exports = {
   },
   methods: {
     collapseText () {
-      let list = document.getElementById("repo link list")
-      
-      if (this.isCollapsed) {
-        list.style = "overflow-y:none"
-        list.scrollTop = 0
-      }else {
-        list.style = "overflow-y:auto"
-      }
-      
       this.isCollapsed = !this.isCollapsed;
       document.querySelector('.section.collapsible').classList.toggle('showsome')
     },
