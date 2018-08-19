@@ -53,7 +53,10 @@ class Facade(object):
     @annotate(tag='downloaded-repos')
     def downloaded_repos(self):
         repoSQL = s.sql.text("""
-            SELECT git as url, status FROM repos;
+            SELECT git AS url, status, projects.name as project_name
+            FROM repos
+            JOIN projects
+            ON repos.projects_id = projects.id
         """)
         results = pd.read_sql(repoSQL, self.db)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])

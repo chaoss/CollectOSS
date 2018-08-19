@@ -2714,6 +2714,15 @@ section.status {
 .section.showsome {
   max-height: 100px;
 }
+.repo-link-holder {
+  background: #eaeaea;
+  padding: 10px;
+  height: 300px;
+  overflow-y: scroll;
+}
+.repo-link-table-body {
+  background: #eaeaea;
+}
 th,
 td {
   padding: 0;

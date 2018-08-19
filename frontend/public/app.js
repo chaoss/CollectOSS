@@ -1138,6 +1138,10 @@ var _ComparedRepoExperimentalCard = require('./ComparedRepoExperimentalCard');
 
 var _ComparedRepoExperimentalCard2 = _interopRequireDefault(_ComparedRepoExperimentalCard);
 
+var _DownloadedReposCard = require('./DownloadedReposCard');
+
+var _DownloadedReposCard2 = _interopRequireDefault(_DownloadedReposCard);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
@@ -1154,7 +1158,8 @@ module.exports = {
     DiversityInclusionCard: _DiversityInclusionCard2.default,
     GitCard: _GitCard2.default,
     ExperimentalCard: _ExperimentalCard2.default,
-    ComparedRepoExperimentalCard: _ComparedRepoExperimentalCard2.default
+    ComparedRepoExperimentalCard: _ComparedRepoExperimentalCard2.default,
+    DownloadedReposCard: _DownloadedReposCard2.default
   },
   data: function data() {
     return {
@@ -1205,27 +1210,16 @@ module.exports = {
       });
       e.preventDefault();
     },
-    getDownloadedRepos: function getDownloadedRepos() {
-      var _this = this;
-
-      this.downloadedRepos = [];
-      window.AugurAPI.getDownloadedGitRepos().then(function (data) {
-        _this.downloadedRepos = data;
-      });
-    },
     btoa: function btoa(s) {
       return window.btoa(s);
     }
-  },
-  mounted: function mounted() {
-    this.getDownloadedRepos();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git repositories")]),_vm._v(" "),_c('div',{staticClass:"section collapsible showsome fade",attrs:{"id":"repo link list"},on:{"click":_vm.collapseText}},_vm._l((_vm.downloadedRepos),function(repo){return _c('div',[_c('a',{staticClass:"repolink fade",attrs:{"href":'?git=' + _vm.btoa(repo.url)}},[_vm._v(_vm._s(repo.url))]),_vm._v(" (status: "+_vm._s(repo.status)+")\n        ")])})),_vm._v(" "),_c('button',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed && _vm.downloadedRepos.length > 0),expression:"!isCollapsed && downloadedRepos.length > 0"}],on:{"click":_vm.collapseText}},[_vm._v(" Read more ▶")]),_vm._v(" "),_c('button',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],on:{"click":_vm.collapseText}},[_vm._v(" Read less ▲")])]),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('all-metrics-status-card')],1)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e()],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Enter a GitHub URL to get started")]),_vm._v(" "),_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})]),_vm._v(" "),_c('downloaded-repos-card'),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('all-metrics-status-card')],1)],1),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e()],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1234,7 +1228,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.reload("data-v-78eb2940", __vue__options__)
+    hotAPI.rerender("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1527,6 +1521,59 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-3ae426c0", __vue__options__)
   } else {
     hotAPI.reload("data-v-3ae426c0", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/DownloadedReposCard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+module.exports = {
+  data: function data() {
+    return {
+      repos: {},
+      projects: []
+    };
+  },
+
+  methods: {
+    onRepo: function onRepo(e) {
+      this.$store.commit('setRepo', {
+        githubURL: e.target.value
+      });
+    },
+    getDownloadedRepos: function getDownloadedRepos() {
+      var _this = this;
+
+      this.downloadedRepos = [];
+      window.AugurAPI.getDownloadedGitRepos().then(function (data) {
+        _this.repos = window._.groupBy(data, 'project_name');
+        _this.projects = Object.keys(_this.repos);
+      });
+    },
+    btoa: function btoa(s) {
+      return window.btoa(s);
+    }
+  },
+  mounted: function mounted() {
+    this.getDownloadedRepos();
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git Repos")]),_vm._v(" "),_c('hr'),_vm._v(" "),_c('div',{staticClass:"row"},_vm._l((_vm.projects),function(project){return _c('div',{staticClass:"col-6"},[_c('h4',[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"repo-link-holder"},[_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_c('tbody',{staticClass:"repo-link-table repo-link-table-body"},_vm._l((_vm.repos[project]),function(repo){return _c('tr',[_c('td',[_c('a',{staticClass:"repolink fade",attrs:{"href":'?git=' + _vm.btoa(repo.url)}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.status))])])}))])])])}))])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticClass:"repo-link-table repo-link-table-body"},[_c('tr',[_c('th',[_vm._v("URL")]),_vm._v(" "),_c('th',[_vm._v("Status")])])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-1825962d", __vue__options__)
+  } else {
+    hotAPI.rerender("data-v-1825962d", __vue__options__)
   }
 })()}
 });

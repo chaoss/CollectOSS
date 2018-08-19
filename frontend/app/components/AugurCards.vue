@@ -7,17 +7,7 @@
         <h3>Enter a GitHub URL to get started</h3>
         <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
       </section>
-      <section class="unmaterialized">
-        <h3>Downloaded Git repositories</h3>
-        <div class="section collapsible showsome fade" @click="collapseText"
-        id="repo link list">
-          <div v-for="repo in downloadedRepos">
-            <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> (status: {{ repo.status }})
-          </div>
-        </div>
-        <button v-show="!isCollapsed && downloadedRepos.length > 0" @click="collapseText"> Read more &#9654</button>
-        <button v-show="isCollapsed" @click="collapseText"> Read less &#9650</button>
-      </section>
+      <downloaded-repos-card></downloaded-repos-card>
       <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
       </section>
@@ -89,6 +79,7 @@ import DiversityInclusionCard from './DiversityInclusionCard'
 import GitCard from './GitCard'
 import ExperimentalCard from './ExperimentalCard'
 import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
+import DownloadedReposCard from './DownloadedReposCard'
 
 module.exports = {
   components: {
@@ -104,7 +95,8 @@ module.exports = {
     DiversityInclusionCard,
     GitCard,
     ExperimentalCard,
-    ComparedRepoExperimentalCard
+    ComparedRepoExperimentalCard,
+    DownloadedReposCard
   },
   data() {
     return {
@@ -154,18 +146,9 @@ module.exports = {
       })
       e.preventDefault();
     },
-    getDownloadedRepos() {
-      this.downloadedRepos = []
-      window.AugurAPI.getDownloadedGitRepos().then((data) => {
-        this.downloadedRepos = data
-      })
-    },
     btoa(s) {
       return window.btoa(s)
     }
-  },
-  mounted() {
-    this.getDownloadedRepos()
   }
 }
 </script>
