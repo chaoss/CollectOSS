@@ -1,4 +1,4 @@
-<template>
+ <template>
   <div class="is-table-container">
 
     <h3>CHAOSS Metrics Implementation Status</h3>
@@ -81,7 +81,7 @@
           <th>Type</th>
         </tr>
       </thead>
-      <tr v-for="metric in metricsStatus">
+      <tr class="tablerow" v-for="metric in metricsStatus">
         <td v-bind:style="{ color: getImplementationStatusColor(metric, 'backend_status') }">{{ metric.backend_status }}</td>
         <td v-bind:style="{ color: getImplementationStatusColor(metric, 'frontend_status') }">{{ metric.frontend_status }}</td>
 
@@ -191,6 +191,4 @@ export default {
 }
 
 </script>
-
-<style lang="css" scoped>
 </style>

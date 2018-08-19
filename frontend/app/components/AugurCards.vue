@@ -15,8 +15,8 @@
             <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> (status: {{ repo.status }})
           </div>
         </div>
-        <div v-show="!isCollapsed && downloadedRepos.length > 0" @click="collapseText"> Read more &#9654</div>
-        <div v-show="isCollapsed" @click="collapseText"> Read less &#9650</div>
+        <button v-show="!isCollapsed && downloadedRepos.length > 0" @click="collapseText"> Read more &#9654</button>
+        <button v-show="isCollapsed" @click="collapseText"> Read less &#9650</button>
       </section>
       <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
@@ -141,6 +141,7 @@ module.exports = {
       }
       this.isCollapsed = !this.isCollapsed;
       document.querySelector('.section.collapsible').classList.toggle('showsome')
+      document.querySelector('.section.collapsible').classList.toggle('fade')
     },
     onRepo (e) {
       this.$store.commit('setRepo', {
