@@ -2714,6 +2714,10 @@ section.status {
 .section.showsome {
   max-height: 100px;
 }
+th,
+td {
+  padding: 0;
+}
 cite.metric {
   display: block;
   width: 100%;

@@ -8,8 +8,8 @@
         <label>Group:
         <select id="metric_group" @change="getMetricsStatus()" v-model='selected_group'>
          <option v-for="group in metadata['groups']" v-bind:value="group">
-          {{ group }} 
-         </option> 
+          {{ group }}
+         </option>
         </select>
         </label>
       </div>
@@ -18,9 +18,9 @@
         <label>Source:
         <select id="metric_source" @change="getMetricsStatus()" v-model='selected_source'>
          <option v-for="source in metadata['sources']" v-bind:value="source">
-          {{ source }} 
-         </option> 
-        </select> 
+          {{ source }}
+         </option>
+        </select>
         </label>
       </div>
 
@@ -28,8 +28,8 @@
         <label>Metric Type:
         <select id="metric_type" @change="getMetricsStatus()" v-model='selected_metric_type'>
          <option v-for="metric_type in metadata['metric_types']" v-bind:value="metric_type">
-          {{ metric_type }} 
-         </option> 
+          {{ metric_type }}
+         </option>
         </select>
         </label>
       </div>
@@ -39,66 +39,70 @@
       <div class="col col-4">
         <label>Backend Status:
         <select id="metric_backend_status" @change="getMetricsStatus()" v-model='selected_backend_status'>
-         <option value="all">all</option> 
-         <option value="unimplemented">unimplemented</option> 
-         <option value="implemented">implemented</option> 
+         <option value="all">all</option>
+         <option value="unimplemented">unimplemented</option>
+         <option value="implemented">implemented</option>
         </select>
-        </label> 
+        </label>
       </div>
 
       <div class="col col-4">
         <label>Frontend Status:
         <select id="metric_frontend_status" @change="getMetricsStatus()" v-model='selected_frontend_status'>
-         <option value="all">all</option> 
-         <option value="unimplemented">unimplemented</option> 
-         <option value="implemented">implemented</option> 
-        </select> 
+         <option value="all">all</option>
+         <option value="unimplemented">unimplemented</option>
+         <option value="implemented">implemented</option>
+        </select>
         </label>
       </div>
 
       <div class="col col-4">
         <label>Defined:
         <select id="metric_is_defined" @change="getMetricsStatus()" v-model='selected_is_defined'>
-         <option value="all">all</option> 
-         <option value="true">true</option> 
-         <option value="false">false</option> 
-        </select> 
+         <option value="all">all</option>
+         <option value="true">true</option>
+         <option value="false">false</option>
+        </select>
         </label>
       </div>
     </div>
-
-    <div class="col col-12"><br></div>
-
-    <table class="is-responsive">
-      <thead>
-        <tr>
-          <th>Backend Status</th>
-          <th>Frontend Status</th>
-          <th>Name</th>
-          <th>Group</th>
-          <th>API Endpoint</th>
-          <th>Source</th>
-          <th>Type</th>
+    <p></p>
+    <table class="is-responsive" >
+      <thead style="display:block;">
+        <tr style="font-weight: 600; text-align: center">
+          <td style="width: 119px !important">Backend Status</td>
+          <td style="width: 135px !important">Frontend Status</td>
+          <td style="width: 170px !important">Name</td>
+          <td style="width: 121px !important">Group</td>
+          <td style="width: 569px !important">Endpoint</td>
+          <td style="width: 120px !important">Source</td>
+          <td style="width: 85px !important">Metric Type</td>
         </tr>
       </thead>
-      <tr class="tablerow" v-for="metric in metricsStatus">
-        <td v-bind:style="{ color: getImplementationStatusColor(metric, 'backend_status') }">{{ metric.backend_status }}</td>
-        <td v-bind:style="{ color: getImplementationStatusColor(metric, 'frontend_status') }">{{ metric.frontend_status }}</td>
 
-        <template v-if="metric.is_defined == 'true'" >
-        <td><a :href="metric.url">{{ metric.name }}</a></td>
-        </template>
-        <template v-else >
-        <td>{{ metric.name }}</td>
-        </template>
+      <tbody style="display:block; height: 400px; overflow-y: scroll; text-align: center; background: #eaeaea">
+        <tr v-for="metric in metricsStatus">
+          <div style="overflow: hidden">
+            <td v-bind:style="{ color: getBackendStatusColor(metric) }" style="width: 119px !important">{{ metric.backend_status }}</td>
+            <td v-bind:style="{ color: getFrontendStatusColor(metric) }" style="width: 135px !important">{{ metric.frontend_status }}</td>
 
-        <td>{{ metric.group }}</td>
-        <td>{{ metric.endpoint }}</td>
-        <td>{{ metric.source }}</td>
-        <td>{{ metric.metric_type }}</td>
-      </tr>
+            <template v-if="metric.url != '/'" >
+              <td style="width: 170px !important"><a :href="metric.url">{{ metric.name }}</a></td>
+            </template>
+            <template v-else >
+            <td style="width: 170px !important">{{ metric.name }}</td>
+            </template>
+
+            <td style="width: 121px !important">{{ metric.group }}</td>
+            <td style="width: 569px !important">{{ metric.endpoint }}</td>
+            <td style="width: 120px !important">{{ metric.source }}</td>
+            <td style="width: 85px !important">{{ metric.metric_type }}</td>
+          </div>
+        </tr>
+      </tbody>
+
     </table>
-    
+
   </div>
 </template>
 
@@ -124,14 +128,14 @@ export default {
         selected_backend_status: 'all',
         selected_frontend_status: 'all',
         seletec_is_defined: 'all'
-      },
+      }
     }
   },
   methods: {
       getMetricsStatus() {
-        var query_string = "group=" + this.selected_group + 
-                           "&source=" + this.selected_source + 
-                           "&metric_type=" + this.selected_metric_type + 
+        var query_string = "group=" + this.selected_group +
+                           "&source=" + this.selected_source +
+                           "&metric_type=" + this.selected_metric_type +
                            "&backend_status=" + this.selected_backend_status +
                            "&frontend_status=" + this.selected_frontend_status +
                            "&is_defined=" + this.selected_is_defined
@@ -156,7 +160,7 @@ export default {
       getImplementationStatusColor(metric, location) {
         if (metric[location] == "unimplemented") {
           return "#c00"
-        } 
+        }
         else if (metric[location] == "implemented") {
           return "#0c0"
         }
@@ -164,7 +168,7 @@ export default {
       getBackendStatusColor(metric) {
         if (metric["backend_status"] == "unimplemented") {
           return "#c00"
-        } 
+        }
         else if (metric["backend_status"] == "implemented") {
           return "#0c0"
         }
@@ -172,10 +176,10 @@ export default {
       getFrontendStatusColor(metric) {
         if (metric["frontend_status"] == "unimplemented") {
           return "#c00"
-        }   
+        }
         else if (metric["frontend_status"] == "implemented") {
           return "#0c0"
-        }   
+        }
       },
     },
   mounted() {
@@ -191,4 +195,6 @@ export default {
 }
 
 </script>
+
+<style lang="css" scoped>
 </style>
