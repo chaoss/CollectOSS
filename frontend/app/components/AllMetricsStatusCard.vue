@@ -40,7 +40,6 @@
         <label>Backend Status:
         <select id="metric_backend_status" @change="getMetricsStatus()" v-model='selected_backend_status'>
          <option value="all">all</option> 
-         <option value="undefined">undefined</option> 
          <option value="unimplemented">unimplemented</option> 
          <option value="implemented">implemented</option> 
         </select>
@@ -83,10 +82,10 @@
         </tr>
       </thead>
       <tr v-for="metric in metricsStatus">
-        <td v-bind:style="{ color: getBackendStatusColor(metric) }">{{ metric.backend_status }}</td>
-        <td v-bind:style="{ color: getFrontendStatusColor(metric) }">{{ metric.frontend_status }}</td>
+        <td v-bind:style="{ color: getImplementationStatusColor(metric, 'backend_status') }">{{ metric.backend_status }}</td>
+        <td v-bind:style="{ color: getImplementationStatusColor(metric, 'frontend_status') }">{{ metric.frontend_status }}</td>
 
-        <template v-if="metric.url != '/'" >
+        <template v-if="metric.is_defined == 'true'" >
         <td><a :href="metric.url">{{ metric.name }}</a></td>
         </template>
         <template v-else >
@@ -125,7 +124,7 @@ export default {
         selected_backend_status: 'all',
         selected_frontend_status: 'all',
         seletec_is_defined: 'all'
-      }
+      },
     }
   },
   methods: {
@@ -154,12 +153,17 @@ export default {
 
         })
       },
+      getImplementationStatusColor(metric, location) {
+        if (metric[location] == "unimplemented") {
+          return "#c00"
+        } 
+        else if (metric[location] == "implemented") {
+          return "#0c0"
+        }
+      },
       getBackendStatusColor(metric) {
         if (metric["backend_status"] == "unimplemented") {
           return "#c00"
-        } 
-        else if (metric["backend_status"] == "undefined") {
-          return "#cc0"
         } 
         else if (metric["backend_status"] == "implemented") {
           return "#0c0"
