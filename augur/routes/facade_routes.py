@@ -63,31 +63,3 @@ def create_routes(server):
     """
     server.addGitMetric(facade.lines_changed_by_author, 'changes_by_author')
 
-    """
-    @api {get} /git/lines_changed/:git_repo_url Lines Changed (minus whitespace)
-    @apiName lines-changed-minus-whitespace 
-    @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
-
-    @apiParam {String} owner Username of the owner of the GitHub repository
-    @apiParam {String} repo Name of the GitHub repository
-
-    @apiSuccessExample {json} Success-Response:
-                        [
-                            {
-                                "additions":2,
-                                "author_date":"2018-05-14 10:09:57 -0500",
-                                "author_email":"s@goggins.com",
-                                "author_name":"Sean P. Goggins",
-                                "commit_date":"2018-05-16 10:12:22 -0500",
-                                "committer_email":"derek@howderek.com",
-                                "committer_name":"Derek Howard",
-                                "deletions":0,
-                                "hash":"77e603a",
-                                "message":"merge dev",
-                                "parents":"b8ec0ed"
-                            }
-                        ]
-    """
-    server.addGitMetric(facade.lines_changed_minus_whitespace, 'lines_changed')
-
