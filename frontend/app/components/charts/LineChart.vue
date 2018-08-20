@@ -396,7 +396,7 @@ export default {
           color = "#4736FF"
         }
         return {
-            "width": 420,
+            "width": 520,
             "height": 60,
             "mark": "line",
             "title": {
