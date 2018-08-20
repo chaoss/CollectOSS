@@ -2851,6 +2851,7 @@ exports.default = {
           fields[split[0]] = split[1].split('+');
         }
       });
+      if (fields[endpoints[0]] != null) console.log("THIS ONE BITCH" + fields[endpoints[0]]);
 
       var repos = [];
       if (this.repo) {
@@ -2868,6 +2869,7 @@ exports.default = {
 
         var defaultProcess = function defaultProcess(obj, key, field, count, compared) {
           var d = null;
+          if (typeof field == "string") field = [field];
           if (compared) {
             d = _AugurStats2.default.convertComparedKey(obj[key], field);
           } else {
@@ -3263,9 +3265,7 @@ exports.default = {
             if (obj.hasOwnProperty(key)) {
               if (fields[key]) {
                 fields[key].forEach(function (field) {
-                  console.log(field);
                   onCreateData(obj, key, field, count);
-                  console.log(field);
                   count++;
                 });
               } else {
@@ -3295,7 +3295,6 @@ exports.default = {
             normalized[i].forEach(function (d) {
               values.push(d);
             });
-            console.log("VAL" + values);
           }
         }
 

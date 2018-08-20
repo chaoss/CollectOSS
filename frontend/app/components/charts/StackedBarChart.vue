@@ -88,9 +88,7 @@ export default {
             if (obj.hasOwnProperty(key)) {
               if (fields[key]) {
                 fields[key].forEach((field) => {
-                  console.log(field)
                   onCreateData(obj, key, field, count)
-                  console.log(field)
                   count++
                 })
               } else {
@@ -123,7 +121,6 @@ export default {
                 //d.color = colors[i]
                 values.push(d);
               })
-              console.log("VAL" + values)
             }
           }
 

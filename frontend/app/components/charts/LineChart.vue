@@ -553,7 +553,7 @@ export default {
           fields[split[0]] = split[1].split('+')
         }
       })
-
+      if (fields[endpoints[0]] != null) console.log("THIS ONE BITCH" + fields[endpoints[0]])
       // Get the repos we need
       let repos = []
       if (this.repo) {
@@ -574,6 +574,7 @@ export default {
           // We usually want to limit dates and convert the key to being vega-lite friendly
           let defaultProcess = (obj, key, field, count, compared) => {
             let d = null
+            if (typeof(field) == "string") field = [field]
             if(compared) {
               d = AugurStats.convertComparedKey(obj[key], field)
             }
