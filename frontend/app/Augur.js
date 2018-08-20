@@ -38,8 +38,8 @@ export default function Augur () {
       compare: 'baseline',
       showBelowAverage: false,
       rawWeekly: false,
-      showArea: false,
-      showDetail: false,
+      showArea: true,
+      showDetail: true,
       showTooltip: true,
       byDate: false
     },

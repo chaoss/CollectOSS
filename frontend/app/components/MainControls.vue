@@ -35,7 +35,7 @@
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
                 </div>
                 <div class="form-item form-checkboxes">
-                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onAreaChange">Standard deviation</label>
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" checked @change="onAreaChange">Standard deviation</label>
                 </div>
               </div>
               <div class="col col-6">
@@ -43,7 +43,7 @@
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip</label>
                 </div>
                 <div class="form-item form-checkboxes">
-                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onDetailChange">Enable detail</label>
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" checked @change="onDetailChange">Enable detail</label>
                 </div>
               </div>
               <label>Bubble Charts
