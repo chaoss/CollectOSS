@@ -2784,6 +2784,19 @@ exports.default = {
         if (config.vconcat[1]) config.vconcat.pop();
       }
 
+      if (this.showArea) {
+        config.vconcat[0].layer.push(getArea(""));
+        if (comparedTo) {
+          config.vconcat[0].layer.push(getArea("Compared"));
+        }
+      } else {
+        for (var x = 0; x < config.vconcat[0].layer.length; x++) {
+          if (config.vconcat[0].layer[x] == getArea("")) {
+            buildMetric();
+          }
+        }
+      }
+
       if (this.showTooltip) {
         if (this.rawWeekly) {
           buildTooltip("value");
@@ -2805,19 +2818,6 @@ exports.default = {
       }
 
       buildMetric();
-
-      if (this.showArea) {
-        config.vconcat[0].layer.push(getArea(""));
-        if (comparedTo) {
-          config.vconcat[0].layer.push(getArea("Compared"));
-        }
-      } else {
-        for (var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if (config.vconcat[0].layer[x] == getArea("")) {
-            buildMetric();
-          }
-        }
-      }
 
       if (this.showDetail) {
         config.vconcat[1].encoding.x["scale"] = {

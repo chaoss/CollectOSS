@@ -467,6 +467,22 @@ export default {
         if (config.vconcat[1]) config.vconcat.pop()
       }
 
+      //push the area to general spec
+      if(this.showArea) {
+        config.vconcat[0].layer.push(getArea(""))
+        if(comparedTo){
+          config.vconcat[0].layer.push(getArea("Compared"))
+        }
+      }
+      else {
+        //if user doesn't want area mark, then set layers to og
+        for(var x = 0; x < config.vconcat[0].layer.length; x++) {
+          if(config.vconcat[0].layer[x] == getArea("")) {
+            buildMetric()
+          }
+        }
+      }
+
       //push the tooltip to general spec
       if(this.showTooltip) {
         if(this.rawWeekly){
@@ -490,23 +506,10 @@ export default {
         }
       }
 
+
       buildMetric()
 
-      //push the area to general spec
-      if(this.showArea) {
-        config.vconcat[0].layer.push(getArea(""))
-        if(comparedTo){
-          config.vconcat[0].layer.push(getArea("Compared"))
-        }
-      }
-      else {
-        //if user doesn't want area mark, then set layers to og
-        for(var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if(config.vconcat[0].layer[x] == getArea("")) {
-            buildMetric()
-          }
-        }
-      }
+
 
 
 
