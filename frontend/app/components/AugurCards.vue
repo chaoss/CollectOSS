@@ -3,7 +3,14 @@
 
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
-      <downloaded-repos-card></downloaded-repos-card>
+      <section class="unmaterialized">
+        <div id="collapse">
+          <h3 v-if="isCollapsed" @click="collapseText">Downloaded Git Repos by Project  &#9660</h3>
+          <h3 v-else @click="collapseText">Downloaded Git Repos by Project  &#9654</h3>
+        </div>
+        <downloaded-repos-card></downloaded-repos-card>
+      </section>
+      
       <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
       </section>
@@ -118,18 +125,12 @@ module.exports = {
     },
   },
   methods: {
-    collapseText () {
-      let list = document.getElementById("repo link list")
-      
-      if (this.isCollapsed) {
-        list.style = "overflow-y:none"
-        list.scrollTop = 0
-      }else {
-        list.style = "overflow-y:auto"
-      }
+    collapseText (){
       this.isCollapsed = !this.isCollapsed;
-      document.querySelector('.section.collapsible').classList.toggle('showsome')
-      document.querySelector('.section.collapsible').classList.toggle('fade')
+      if(!this.isCollapsed) {
+        $(this.$el).find('.section').addClass('collapsed')
+      }
+      else $(this.$el).find('.section').removeClass('collapsed')
     },
     onRepo (e) {
       this.$store.commit('setRepo', {
