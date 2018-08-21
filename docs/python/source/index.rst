@@ -22,9 +22,6 @@ Augur
 .. automodule:: librariesio
    :members:
 
-.. automodule:: publicwww
-   :members:
-
 .. automodule:: downloads
    :members:
 

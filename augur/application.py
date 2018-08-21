@@ -110,7 +110,6 @@ class Application(object):
         self.__facade = None
         self.__librariesio = None
         self.__downloads = None
-        self.__publicwww = None
         self.__localCSV = None
         self.__metrics_status = None
 
@@ -158,7 +157,6 @@ class Application(object):
         self.facade()
         self.librariesio()
         self.downloads()
-        self.publicwww()
         self.localcsv()        
         self.metrics_status()
 
@@ -327,13 +325,6 @@ class Application(object):
             logger.debug('Initializing Downloads')
             self.__downloads = Downloads(self.githubapi())
         return self.__downloads
-
-    def publicwww(self):
-        from augur.publicwww import PublicWWW
-        if self.__publicwww is None:
-            logger.debug('Initializing PublicWWW')
-            self.__publicwww = PublicWWW(api_key=self.read_config('PublicWWW', 'apikey', 'AUGUR_PUBLIC_WWW_API_KEY', 'None'))
-        return self.__publicwww
 
     def localcsv(self):
         from augur.localcsv import LocalCSV
