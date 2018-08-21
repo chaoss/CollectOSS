@@ -10,7 +10,7 @@ from augur.util import annotate
 class Facade(object):
     """Queries Facade"""
 
-    def __init__(self, user, password, host, port, dbname, buildMode="auto"):
+    def __init__(self, user, password, host, port, dbname, projects=None):
         """
         Connect to the database
 
@@ -21,6 +21,7 @@ class Facade(object):
         )
         logger.debug('Facade: Connecting to {}:{}/{} as {}'.format(host, port, dbname, user))
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool)
+        self.projects = projects
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###
@@ -60,6 +61,8 @@ class Facade(object):
         """)
         results = pd.read_sql(repoSQL, self.db)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
+        if self.projects:
+            results = results[results.project_name.isin(self.projects)]
         return results
 
     @annotate(tag='lines-changed-minus-whitespace')

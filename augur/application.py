@@ -261,7 +261,8 @@ class Application(object):
                 password=self.read_config('Facade', 'pass', 'AUGUR_FACADE_DB_PASS', ''),
                 host=self.read_config('Facade', 'host', 'AUGUR_FACADE_DB_HOST', '127.0.0.1'),
                 port=self.read_config('Facade', 'port', 'AUGUR_FACADE_DB_PORT', '3306'),
-                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade')
+                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade'),
+                projects=self.read_config('Facade', 'projects', None, [])
             )
         return self.__facade
 
