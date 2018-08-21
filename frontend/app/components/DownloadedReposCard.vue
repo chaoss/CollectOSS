@@ -1,7 +1,7 @@
 <template>
   <div>
     <section class="unmaterialized">
-      <h3>Downloaded Git Repos</h3>
+      <h3>Downloaded Git Repos by Project</h3>
       <hr>
       <div class="row">
         <div v-for="project in projects" class="col-6">

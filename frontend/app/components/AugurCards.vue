@@ -3,10 +3,6 @@
 
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
-      <section class="unmaterialized">
-        <h3>Enter a GitHub URL to get started</h3>
-        <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
-      </section>
       <downloaded-repos-card></downloaded-repos-card>
       <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
