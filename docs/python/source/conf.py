@@ -32,6 +32,7 @@ sys.path.insert(0, os.path.abspath('../../../augur'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -85,7 +86,7 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-
+html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'] }
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -163,6 +164,8 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+
+autosummary_generate = True
 
 
 

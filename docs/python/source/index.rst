@@ -6,24 +6,37 @@
 Augur
 ==================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
 
-.. automodule:: ghtorrent
-   :members:
+Data Source Modules
+---------------------------------
+.. currentmodule:: augur
 
-.. automodule:: ghtorrentplus
-   :members:
+.. autosummary::
+   :nosignatures:
+   :toctree: datasources
 
-.. automodule:: githubapi
-   :members:
+   ghtorrent
+   githubapi
+   facade
+   git
+   librariesio
+   localcsv
+   downloads
 
-.. automodule:: librariesio
-   :members:
 
-.. automodule:: downloads
-   :members:
+Application Modules
+---------------------------------
+.. currentmodule:: augur
+
+.. autosummary::
+   :nosignatures:
+   :toctree: application
+
+   application
+   augurplugin
+   server
+   runtime
+   util
 
    
 Indices and tables
