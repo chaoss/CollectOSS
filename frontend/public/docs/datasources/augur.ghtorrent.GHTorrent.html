@@ -1,0 +1,235 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.ghtorrent.GHTorrent &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="augur.githubapi.GitHubAPI" href="augur.githubapi.GitHubAPI.html" />
+    <link rel="prev" title="Augur Python Library" href="../python.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="augur-ghtorrent-ghtorrent">
+<h1>augur.ghtorrent.GHTorrent<a class="headerlink" href="#augur-ghtorrent-ghtorrent" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="augur.ghtorrent.GHTorrent">
+<em class="property">class </em><code class="descclassname">augur.ghtorrent.</code><code class="descname">GHTorrent</code><span class="sig-paren">(</span><em>user</em>, <em>password</em>, <em>host</em>, <em>port</em>, <em>dbname</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/ghtorrent.html#GHTorrent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.ghtorrent.GHTorrent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators</p>
+<dl class="method">
+<dt id="augur.ghtorrent.GHTorrent.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>user</em>, <em>password</em>, <em>host</em>, <em>port</em>, <em>dbname</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/ghtorrent.html#GHTorrent.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.ghtorrent.GHTorrent.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to GHTorrent</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dbstr</strong> – The [database string](<a class="reference external" href="http://docs.sqlalchemy.org/en/latest/core/engines.html">http://docs.sqlalchemy.org/en/latest/core/engines.html</a>) to connect to the GHTorrent database</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#augur.ghtorrent.GHTorrent.__init__" title="augur.ghtorrent.GHTorrent.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(user,&nbsp;password,&nbsp;host,&nbsp;port,&nbsp;dbname)</td>
+<td>Connect to GHTorrent</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_contributors</span></code>(owner[,&nbsp;repo])</td>
+<td>Classify everyone who has interacted with a repo into   - user   - tester   - rejected_contributor   - contributor   - major_contributor   - maintainer</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">closed_issues</span></code>(owner[,&nbsp;repo])</td>
+<td>Subgroup: Issue Resolution</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">code_commits</span></code>(owner[,&nbsp;repo,&nbsp;group_by])</td>
+<td>Subgroup: Code Development</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">code_review_iteration</span></code>(owner[,&nbsp;repo])</td>
+<td>Subgroup: Code Development</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">commit_comments</span></code>(owner[,&nbsp;repo,&nbsp;group_by])</td>
+<td>Timeseries of the count of new commit comments</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">commits100</span></code>(owner[,&nbsp;repo,&nbsp;group_by])</td>
+<td>Timeseries of the count of commits, limited to the first 100 overall</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">committer_locations</span></code>(owner[,&nbsp;repo])</td>
+<td>Returns committers and their locations</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">community_age</span></code>(owner[,&nbsp;repo])</td>
+<td>Information helpful to determining a community’s age</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">community_engagement</span></code>(owner,&nbsp;repo)</td>
+<td>Timeseries with lots of information about issues and pull requests</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributing_github_organizations</span></code>(owner[,&nbsp;repo])</td>
+<td>Subgroup: Community Development</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contribution_acceptance</span></code>(owner[,&nbsp;repo])</td>
+<td>Subgroup: Community Development</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributions</span></code>(owner[,&nbsp;repo,&nbsp;userid])</td>
+<td>Timeseries of all the contributions to a project, optionally limited to a specific user</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributors</span></code>(owner[,&nbsp;repo])</td>
+<td>All the contributors to a project and the counts of their contributions</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">fakes</span></code>(owner[,&nbsp;repo])</td>
+<td>Timeseries of new fake users per week</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_response_to_issue_duration</span></code>(owner,&nbsp;repo)</td>
+<td>Subgroup: Issue Resolution</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">forks</span></code>(owner[,&nbsp;repo,&nbsp;group_by])</td>
+<td>Subgroup: Code Development</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">issue_activity</span></code>(owner[,&nbsp;repo])</td>
+<td>Timeseries of issue related activity: issues opened, closed, reopened, and currently open</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">issue_comments</span></code>(owner[,&nbsp;repo])</td>
+<td>Timeseries of the count of new issue comments</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">maintainer_response_to_merge_request_duration</span></code>(owner)</td>
+<td>Subgroup: Code Development</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_contributing_github_organizations</span></code>(owner)</td>
+<td>Subgroup: Community Growth</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">open_issues</span></code>(owner[,&nbsp;repo,&nbsp;group_by])</td>
+<td>Subgroup: Individual Diversity</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_age</span></code>(owner[,&nbsp;repo])</td>
+<td>Date of the project’s creation</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">pull_request_acceptance_rate</span></code>(owner[,&nbsp;repo])</td>
+<td>Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">pull_request_comments</span></code>(owner[,&nbsp;repo])</td>
+<td>Subgroup: Code Development</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">pull_requests_made_closed</span></code>(owner[,&nbsp;repo])</td>
+<td>Timeseries of the ratio of pull requests made/closed</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">pull_requests_open</span></code>(owner[,&nbsp;repo])</td>
+<td>Subgroup: Code Development</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">repoid</span></code>(owner_or_repoid[,&nbsp;repo])</td>
+<td>Returns a repository’s ID as it appears in the GHTorrent projects table github.com/[owner]/[project]</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">total_committers</span></code>(owner[,&nbsp;repo])</td>
+<td>Timeseries of total committers as of each week</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">userid</span></code>(username)</td>
+<td>Returns the userid given a username</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">watchers</span></code>(owner[,&nbsp;repo,&nbsp;group_by])</td>
+<td>Returns of the count of people who starred the repo on that date</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../python.html#data-source-modules">Data Source Modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">augur.ghtorrent.GHTorrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.githubapi.GitHubAPI.html">augur.githubapi.GitHubAPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.facade.Facade.html">augur.facade.Facade</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.git.Git.html">augur.git.Git</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.librariesio.LibrariesIO.html">augur.librariesio.LibrariesIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.localcsv.LocalCSV.html">augur.localcsv.LocalCSV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.downloads.Downloads.html">augur.downloads.Downloads</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#application-modules">Application Modules</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../python.html">Augur Python Library</a><ul>
+      <li>Previous: <a href="../python.html" title="previous chapter">Augur Python Library</a></li>
+      <li>Next: <a href="augur.githubapi.GitHubAPI.html" title="next chapter">augur.githubapi.GitHubAPI</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/datasources/augur.ghtorrent.GHTorrent.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/datasources/augur.ghtorrent.GHTorrent.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

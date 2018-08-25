@@ -31,7 +31,12 @@
           <div class="body" role="main">
             
   <h1>Source code for augur.ghtorrent</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data source that uses the GHTorrent relational database of GitHub activity. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">s</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">re</span>

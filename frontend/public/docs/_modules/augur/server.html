@@ -31,7 +31,10 @@
           <div class="body" role="main">
             
   <h1>Source code for augur.server</h1><div class="highlight"><pre>
-<span></span><span class="c1">#spdx-license-identifier: mit</span>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Creates a WSGI server that serves the Augur REST API</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">json</span>
@@ -46,8 +49,8 @@
 
 <span class="n">AUGUR_API_VERSION</span> <span class="o">=</span> <span class="s1">&#39;api/unstable&#39;</span>
 
-<div class="viewcode-block" id="Server"><a class="viewcode-back" href="../../datasources/augur.server.Server.html#augur.server.Server">[docs]</a><span class="k">class</span> <span class="nc">Server</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<div class="viewcode-block" id="Server.__init__"><a class="viewcode-back" href="../../datasources/augur.server.Server.html#augur.server.Server.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Server"><a class="viewcode-back" href="../../application/augur.server.Server.html#augur.server.Server">[docs]</a><span class="k">class</span> <span class="nc">Server</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Server.__init__"><a class="viewcode-back" href="../../application/augur.server.Server.html#augur.server.Server.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Create Flask application</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">api_version</span> <span class="o">=</span> <span class="n">AUGUR_API_VERSION</span>

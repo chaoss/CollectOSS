@@ -12,13 +12,13 @@ Data Source Modules
    :nosignatures:
    :toctree: datasources
 
-   ghtorrent
-   githubapi
-   facade
-   git
-   librariesio
-   localcsv
-   downloads
+   ghtorrent.GHTorrent
+   githubapi.GitHubAPI
+   facade.Facade
+   git.Git
+   librariesio.LibrariesIO
+   localcsv.LocalCSV
+   downloads.Downloads
 
 
 Application Modules
@@ -29,8 +29,8 @@ Application Modules
    :nosignatures:
    :toctree: application
 
-   application
-   augurplugin
-   server
+   application.Application
+   augurplugin.AugurPlugin
+   server.Server
    runtime
    util

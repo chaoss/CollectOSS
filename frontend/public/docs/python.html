@@ -16,7 +16,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="augur.ghtorrent" href="datasources/augur.ghtorrent.html" />
+    <link rel="next" title="augur.ghtorrent.GHTorrent" href="datasources/augur.ghtorrent.GHTorrent.html" />
     <link rel="prev" title="What is Augur?" href="whatisaugur.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -43,26 +43,26 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.ghtorrent.html#module-augur.ghtorrent" title="augur.ghtorrent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrent</span></code></a></td>
-<td>Data source that uses the GHTorrent relational database of GitHub activity.</td>
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.ghtorrent.GHTorrent.html#augur.ghtorrent.GHTorrent" title="augur.ghtorrent.GHTorrent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrent.GHTorrent</span></code></a></td>
+<td>Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="datasources/augur.githubapi.html#module-augur.githubapi" title="augur.githubapi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">githubapi</span></code></a></td>
-<td>Data source that uses the GitHub API</td>
+<tr class="row-even"><td><a class="reference internal" href="datasources/augur.githubapi.GitHubAPI.html#augur.githubapi.GitHubAPI" title="augur.githubapi.GitHubAPI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">githubapi.GitHubAPI</span></code></a></td>
+<td>GitHubAPI is a class for getting metrics from the GitHub API</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.facade.html#module-augur.facade" title="augur.facade"><code class="xref py py-obj docutils literal notranslate"><span class="pre">facade</span></code></a></td>
-<td>Data source that uses Facade’s tables</td>
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.facade.Facade.html#augur.facade.Facade" title="augur.facade.Facade"><code class="xref py py-obj docutils literal notranslate"><span class="pre">facade.Facade</span></code></a></td>
+<td>Queries Facade</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="datasources/augur.git.html#module-augur.git" title="augur.git"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git</span></code></a></td>
-<td>Analyzes Git repos directly using git</td>
+<tr class="row-even"><td><a class="reference internal" href="datasources/augur.git.Git.html#augur.git.Git" title="augur.git.Git"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git.Git</span></code></a></td>
+<td>Analyzes Git repos directly using dulwich</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.librariesio.html#module-augur.librariesio" title="augur.librariesio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">librariesio</span></code></a></td>
-<td>Data source that uses the LibrariesIO dependency data</td>
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.librariesio.LibrariesIO.html#augur.librariesio.LibrariesIO" title="augur.librariesio.LibrariesIO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">librariesio.LibrariesIO</span></code></a></td>
+<td>Handles interaction with <a class="reference external" href="https://libraries.io/api">https://libraries.io/api</a> to get dependency data</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="datasources/augur.localcsv.html#module-augur.localcsv" title="augur.localcsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">localcsv</span></code></a></td>
-<td>Loads small included datasets</td>
+<tr class="row-even"><td><a class="reference internal" href="datasources/augur.localcsv.LocalCSV.html#augur.localcsv.LocalCSV" title="augur.localcsv.LocalCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">localcsv.LocalCSV</span></code></a></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.downloads.html#module-augur.downloads" title="augur.downloads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloads</span></code></a></td>
-<td>Data source that gathers download stats from package managers</td>
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.downloads.Downloads.html#augur.downloads.Downloads" title="augur.downloads.Downloads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloads.Downloads</span></code></a></td>
+<td>Class for retrieveing download information using APIs and web scrapers</td>
 </tr>
 </tbody>
 </table>
@@ -75,14 +75,14 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="application/augur.application.html#module-augur.application" title="augur.application"><code class="xref py py-obj docutils literal notranslate"><span class="pre">application</span></code></a></td>
-<td>Handles global context, I/O, and configuration</td>
+<tr class="row-odd"><td><a class="reference internal" href="application/augur.application.Application.html#augur.application.Application" title="augur.application.Application"><code class="xref py py-obj docutils literal notranslate"><span class="pre">application.Application</span></code></a></td>
+<td>Initalizes all classes form Augur using a config file or environment variables</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="application/augur.augurplugin.html#module-augur.augurplugin" title="augur.augurplugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">augurplugin</span></code></a></td>
-<td>Provides a class that can be used to extend Augur</td>
+<tr class="row-even"><td><a class="reference internal" href="application/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin" title="augur.augurplugin.AugurPlugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">augurplugin.AugurPlugin</span></code></a></td>
+<td>Defines a base class for Augur plugins to implement</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="application/augur.server.html#module-augur.server" title="augur.server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">server</span></code></a></td>
-<td>Creates a WSGI server that serves the Augur REST API</td>
+<tr class="row-odd"><td><a class="reference internal" href="application/augur.server.Server.html#augur.server.Server" title="augur.server.Server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">server.Server</span></code></a></td>
+<td></td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="application/augur.runtime.html#module-augur.runtime" title="augur.runtime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtime</span></code></a></td>
 <td>Runs Augur with Gunicorn when called</td>
@@ -106,19 +106,19 @@
 <li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Augur Python Library</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#data-source-modules">Data Source Modules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="datasources/augur.ghtorrent.html">augur.ghtorrent</a></li>
-<li class="toctree-l3"><a class="reference internal" href="datasources/augur.githubapi.html">augur.githubapi</a></li>
-<li class="toctree-l3"><a class="reference internal" href="datasources/augur.facade.html">augur.facade</a></li>
-<li class="toctree-l3"><a class="reference internal" href="datasources/augur.git.html">augur.git</a></li>
-<li class="toctree-l3"><a class="reference internal" href="datasources/augur.librariesio.html">augur.librariesio</a></li>
-<li class="toctree-l3"><a class="reference internal" href="datasources/augur.localcsv.html">augur.localcsv</a></li>
-<li class="toctree-l3"><a class="reference internal" href="datasources/augur.downloads.html">augur.downloads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.ghtorrent.GHTorrent.html">augur.ghtorrent.GHTorrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.githubapi.GitHubAPI.html">augur.githubapi.GitHubAPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.facade.Facade.html">augur.facade.Facade</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.git.Git.html">augur.git.Git</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.librariesio.LibrariesIO.html">augur.librariesio.LibrariesIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.localcsv.LocalCSV.html">augur.localcsv.LocalCSV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.downloads.Downloads.html">augur.downloads.Downloads</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#application-modules">Application Modules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="application/augur.application.html">augur.application</a></li>
-<li class="toctree-l3"><a class="reference internal" href="application/augur.augurplugin.html">augur.augurplugin</a></li>
-<li class="toctree-l3"><a class="reference internal" href="application/augur.server.html">augur.server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.application.Application.html">augur.application.Application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.augurplugin.AugurPlugin.html">augur.augurplugin.AugurPlugin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.server.Server.html">augur.server.Server</a></li>
 <li class="toctree-l3"><a class="reference internal" href="application/augur.runtime.html">augur.runtime</a></li>
 <li class="toctree-l3"><a class="reference internal" href="application/augur.util.html">augur.util</a></li>
 </ul>
@@ -131,7 +131,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="whatisaugur.html" title="previous chapter">What is Augur?</a></li>
-      <li>Next: <a href="datasources/augur.ghtorrent.html" title="next chapter">augur.ghtorrent</a></li>
+      <li>Next: <a href="datasources/augur.ghtorrent.GHTorrent.html" title="next chapter">augur.ghtorrent.GHTorrent</a></li>
   </ul></li>
 </ul>
 </div>

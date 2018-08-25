@@ -31,9 +31,14 @@
           <div class="body" role="main">
             
   <h1>Source code for augur.augurplugin</h1><div class="highlight"><pre>
-<div class="viewcode-block" id="AugurPlugin"><a class="viewcode-back" href="../../datasources/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin">[docs]</a><span></span><span class="k">class</span> <span class="nc">AugurPlugin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides a class that can be used to extend Augur</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AugurPlugin"><a class="viewcode-back" href="../../application/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin">[docs]</a><span class="k">class</span> <span class="nc">AugurPlugin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Defines a base class for Augur plugins to implement&quot;&quot;&quot;</span>
-<div class="viewcode-block" id="AugurPlugin.__init__"><a class="viewcode-back" href="../../datasources/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<div class="viewcode-block" id="AugurPlugin.__init__"><a class="viewcode-back" href="../../application/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span></div>
 
     <span class="nd">@classmethod</span>
