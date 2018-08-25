@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Handles global context, I/O, and configuration
+"""
+
 import os
 import time
 import multiprocessing as mp

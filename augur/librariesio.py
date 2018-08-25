@@ -1,3 +1,7 @@
+"""
+Data source that uses the LibrariesIO dependency data
+"""
+
 import requests
 import pandas as pd
 import numpy as np

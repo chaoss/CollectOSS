@@ -1,0 +1,177 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Augur Python Library &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="augur.ghtorrent" href="datasources/augur.ghtorrent.html" />
+    <link rel="prev" title="What is Augur?" href="whatisaugur.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="augur-python-library">
+<h1>Augur Python Library<a class="headerlink" href="#augur-python-library" title="Permalink to this headline">¶</a></h1>
+<p>This documentation is for using Augur as a Python library.</p>
+<div class="section" id="data-source-modules">
+<h2>Data Source Modules<a class="headerlink" href="#data-source-modules" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.ghtorrent.html#module-augur.ghtorrent" title="augur.ghtorrent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrent</span></code></a></td>
+<td>Data source that uses the GHTorrent relational database of GitHub activity.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="datasources/augur.githubapi.html#module-augur.githubapi" title="augur.githubapi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">githubapi</span></code></a></td>
+<td>Data source that uses the GitHub API</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.facade.html#module-augur.facade" title="augur.facade"><code class="xref py py-obj docutils literal notranslate"><span class="pre">facade</span></code></a></td>
+<td>Data source that uses Facade’s tables</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="datasources/augur.git.html#module-augur.git" title="augur.git"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git</span></code></a></td>
+<td>Analyzes Git repos directly using git</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.librariesio.html#module-augur.librariesio" title="augur.librariesio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">librariesio</span></code></a></td>
+<td>Data source that uses the LibrariesIO dependency data</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="datasources/augur.localcsv.html#module-augur.localcsv" title="augur.localcsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">localcsv</span></code></a></td>
+<td>Loads small included datasets</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="datasources/augur.downloads.html#module-augur.downloads" title="augur.downloads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloads</span></code></a></td>
+<td>Data source that gathers download stats from package managers</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="application-modules">
+<h2>Application Modules<a class="headerlink" href="#application-modules" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="application/augur.application.html#module-augur.application" title="augur.application"><code class="xref py py-obj docutils literal notranslate"><span class="pre">application</span></code></a></td>
+<td>Handles global context, I/O, and configuration</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="application/augur.augurplugin.html#module-augur.augurplugin" title="augur.augurplugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">augurplugin</span></code></a></td>
+<td>Provides a class that can be used to extend Augur</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="application/augur.server.html#module-augur.server" title="augur.server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">server</span></code></a></td>
+<td>Creates a WSGI server that serves the Augur REST API</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="application/augur.runtime.html#module-augur.runtime" title="augur.runtime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtime</span></code></a></td>
+<td>Runs Augur with Gunicorn when called</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="application/augur.util.html#module-augur.util" title="augur.util"><code class="xref py py-obj docutils literal notranslate"><span class="pre">util</span></code></a></td>
+<td>Provides shared functions that do not fit in a class of their own</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Augur Python Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-source-modules">Data Source Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.ghtorrent.html">augur.ghtorrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.githubapi.html">augur.githubapi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.facade.html">augur.facade</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.git.html">augur.git</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.librariesio.html">augur.librariesio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.localcsv.html">augur.localcsv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasources/augur.downloads.html">augur.downloads</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#application-modules">Application Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.application.html">augur.application</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.augurplugin.html">augur.augurplugin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.server.html">augur.server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.runtime.html">augur.runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application/augur.util.html">augur.util</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="whatisaugur.html" title="previous chapter">What is Augur?</a></li>
+      <li>Next: <a href="datasources/augur.ghtorrent.html" title="next chapter">augur.ghtorrent</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/python.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/python.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Data source that extends GHTorrent with summary tables
+"""
+
 import pandas as pd
 import sqlalchemy as s
 import numpy as np

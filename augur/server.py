@@ -1,4 +1,7 @@
-#spdx-license-identifier: mit
+#SPDX-License-Identifier: MIT
+"""
+Creates a WSGI server that serves the Augur REST API
+"""
 import os
 import sys
 import json

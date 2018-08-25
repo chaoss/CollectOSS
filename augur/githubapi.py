@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Data source that uses the GitHub API
+"""
+
 from augur.localcsv import LocalCSV
 import json
 import re

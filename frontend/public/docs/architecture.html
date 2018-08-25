@@ -33,29 +33,52 @@
   <div class="section" id="architecture">
 <h1>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h1>
 <p>Augur’s architecture consists of 4 primary pieces:</p>
-<p>Backend: 1. Python classes that know how to produce metrics from a given
-datasource (augur.GHTorrent, augur.Git, etc.) 2. A main class that knows
-how instantiate the datasource classes from configuration
-(augur.Application) 3. A WSGI server that exposes the datasources as a
-REST API (augur.Server, augur.runtime)</p>
-<p>Frontend: 4. Vue frontend, compiled with Brunch - visualizations
-(usually made with Vega-Lite) for the metrics exposed by the backend</p>
-<div class="section" id="technologies">
-<h2>Technologies<a class="headerlink" href="#technologies" title="Permalink to this headline">¶</a></h2>
-<p>Backend: - <a class="reference external" href="https://docs.python.org/3/index.html">Python</a> -
-<a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/">Pandas</a> -
-<a class="reference external" href="http://flask.pocoo.org/">Flask</a> -
-<a class="reference external" href="http://docs.python-requests.org/en/master/">Requests</a> -
-<a class="reference external" href="https://dev.mysql.com/doc/refman/8.0/en/select.html">MySQL</a> -
-<a class="reference external" href="http://docs.gunicorn.org/en/stable/">Gunicorn</a> -
-<a class="reference external" href="https://docs.docker.com/">Docker</a> -
-<a class="reference external" href="https://docs.pytest.org/en/latest/">pytest</a></p>
-<p>Frontend: - <a class="reference external" href="https://vuejs.org/v2/guide/">VueJS</a> -
-<a class="reference external" href="https://vega.github.io/vega-lite/">Vega-Lite</a> -
-<a class="reference external" href="https://brunch.io/">Brunch</a> - <a class="reference external" href="http://stylus-lang.com/">Stylus</a> -
-<a class="reference external" href="https://babeljs.io/docs/setup/">Babel</a></p>
-<p>Documentation: - <a class="reference external" href="http://www.sphinx-doc.org/en/master/">Sphinx</a> -
-<a class="reference external" href="http://apidocjs.com/">apidocjs</a></p>
+<dl class="docutils">
+<dt>Backend:</dt>
+<dd><ol class="first last arabic simple">
+<li>Python classes that know how to produce metrics from a given datasource (augur.GHTorrent, augur.Git, etc.)</li>
+<li>A main class (<a class="reference internal" href="application/augur.application.html"><span class="doc">augur.application</span></a>) that knows how instantiate the datasource classes from configuration</li>
+<li>A WSGI server (<a class="reference internal" href="application/augur.server.html"><span class="doc">augur.server</span></a>) that exposes the datasources as a REST API</li>
+</ol>
+</dd>
+<dt>Frontend:</dt>
+<dd><ol class="first last arabic simple" start="4">
+<li>Vue frontend, compiled with Brunch - visualizations</li>
+</ol>
+</dd>
+</dl>
+<p>(usually made with Vega-Lite) for the metrics exposed by the backend</p>
+<div class="section" id="technology">
+<h2>Technology<a class="headerlink" href="#technology" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Backend:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="https://docs.python.org/3/index.html">Python</a></li>
+<li><a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/">Pandas</a></li>
+<li><a class="reference external" href="http://flask.pocoo.org/">Flask</a></li>
+<li><a class="reference external" href="http://docs.python-requests.org/en/master/">Requests</a></li>
+<li><a class="reference external" href="https://dev.mysql.com/doc/refman/8.0/en/select.html">MySQL</a></li>
+<li><a class="reference external" href="http://docs.gunicorn.org/en/stable/">Gunicorn</a></li>
+<li><a class="reference external" href="https://docs.docker.com/">Docker</a></li>
+<li><a class="reference external" href="https://docs.pytest.org/en/latest/">pytest</a></li>
+</ul>
+</dd>
+<dt>Frontend:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="https://vuejs.org/v2/guide/">VueJS</a></li>
+<li><a class="reference external" href="https://vega.github.io/vega-lite/">Vega-Lite</a></li>
+<li><a class="reference external" href="https://brunch.io/">Brunch</a></li>
+<li><a class="reference external" href="http://stylus-lang.com/">Stylus</a></li>
+<li><a class="reference external" href="https://babeljs.io/docs/setup/">Babel</a></li>
+</ul>
+</dd>
+<dt>Documentation:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference external" href="http://www.sphinx-doc.org/en/master/">Sphinx</a></li>
+<li><a class="reference external" href="http://apidocjs.com/">apidocjs</a></li>
+</ul>
+</dd>
+</dl>
 </div>
 </div>
 
@@ -67,20 +90,8 @@ REST API (augur.Server, augur.runtime)</p>
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="datasources/augur.ghtorrent.html">augur.ghtorrent</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasources/augur.githubapi.html">augur.githubapi</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasources/augur.facade.html">augur.facade</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasources/augur.git.html">augur.git</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasources/augur.librariesio.html">augur.librariesio</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasources/augur.localcsv.html">augur.localcsv</a></li>
-<li class="toctree-l1"><a class="reference internal" href="datasources/augur.downloads.html">augur.downloads</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="application/augur.application.html">augur.application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="application/augur.augurplugin.html">augur.augurplugin</a></li>
-<li class="toctree-l1"><a class="reference internal" href="application/augur.server.html">augur.server</a></li>
-<li class="toctree-l1"><a class="reference internal" href="application/augur.runtime.html">augur.runtime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="application/augur.util.html">augur.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Augur Python Library</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

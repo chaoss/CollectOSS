@@ -6,42 +6,10 @@
 Augur
 ==================================
 
+Augur is a software suite that provides open source health and sustainability metrics through a web app, REST API, and Python library. See :doc:`whatisaugur` for more information about our philosophy and :doc:`architecture` for more information about our architecture.
 
-Data Source Modules
----------------------------------
-.. currentmodule:: augur
+.. toctree::
+   :maxdepth: 3
 
-.. autosummary::
-   :nosignatures:
-   :toctree: datasources
-
-   ghtorrent
-   githubapi
-   facade
-   git
-   librariesio
-   localcsv
-   downloads
-
-
-Application Modules
----------------------------------
-.. currentmodule:: augur
-
-.. autosummary::
-   :nosignatures:
-   :toctree: application
-
-   application
-   augurplugin
-   server
-   runtime
-   util
-
-   
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   whatisaugur
+   python
