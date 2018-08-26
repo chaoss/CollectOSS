@@ -1,0 +1,1133 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.ghtorrent &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for augur.ghtorrent</h1><div class="highlight"><pre>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data source that uses the GHTorrent relational database of GitHub activity. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">s</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
+
+<div class="viewcode-block" id="GHTorrent"><a class="viewcode-back" href="../../datasources/augur.ghtorrent.GHTorrent.html#augur.ghtorrent.GHTorrent">[docs]</a><span class="k">class</span> <span class="nc">GHTorrent</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="GHTorrent.__init__"><a class="viewcode-back" href="../../datasources/augur.ghtorrent.GHTorrent.html#augur.ghtorrent.GHTorrent.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Connect to GHTorrent</span>
+
+<span class="sd">        :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DB_STR</span> <span class="o">=</span> <span class="s1">&#39;mysql+pymysql://</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">@</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GHTorrent: Connecting to </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1"> as </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">,</span> <span class="n">user</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DB_STR</span><span class="p">,</span> <span class="n">poolclass</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">NullPool</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">userid</span><span class="p">(</span><span class="s1">&#39;howderek&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not connect to GHTorrent database. Error: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__single_table_count_by_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">repo_col</span><span class="o">=</span><span class="s1">&#39;project_id&#39;</span><span class="p">,</span> <span class="n">user_col</span><span class="o">=</span><span class="s1">&#39;author_id&#39;</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates query string to count occurances of rows per date for a given table.</span>
+<span class="sd">        External input must never be sent to this function, it is for internal use only.</span>
+
+<span class="sd">        :param table: The table in GHTorrent to generate the string for</span>
+<span class="sd">        :param repo_col: The column in that table with the project ids</span>
+<span class="sd">        :param user_col: The column in that table with the user ids</span>
+<span class="sd">        :param group_by: Default week; Options raw, day, week, month, year; Selects period of time to be grouped by</span>
+<span class="sd">        :return: Query string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">group_by</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT date(created_at) AS &quot;date&quot;, </span><span class="si">{2}</span><span class="s2"> AS &quot;user_id&quot;</span>
+<span class="s2">                FROM </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">                WHERE </span><span class="si">{1}</span><span class="s2"> = :repoid</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">repo_col</span><span class="p">,</span> <span class="n">user_col</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">group_by</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT date(created_at) AS &quot;date&quot;, COUNT(*) AS &quot;</span><span class="si">{0}</span><span class="s2">&quot;</span>
+<span class="s2">                FROM </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">                FROM </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">                WHERE </span><span class="si">{1}</span><span class="s2"> = :repoid</span>
+<span class="s2">                GROUP BY DATE(created_at)</span>
+<span class="s2">                ORDER BY DATE(created_at) DESC&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">repo_col</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">group_by</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT date(created_at) AS &quot;date&quot;, COUNT(*) AS &quot;</span><span class="si">{0}</span><span class="s2">&quot;</span>
+<span class="s2">                FROM </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">                WHERE </span><span class="si">{1}</span><span class="s2"> = :repoid</span>
+<span class="s2">                GROUP BY YEARWEEK(created_at)</span>
+<span class="s2">                ORDER BY DATE(created_at) DESC&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">repo_col</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">group_by</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT date(created_at) AS &quot;date&quot;, COUNT(*) AS &quot;</span><span class="si">{0}</span><span class="s2">&quot;</span>
+<span class="s2">                FROM </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">                WHERE </span><span class="si">{1}</span><span class="s2"> = :repoid</span>
+<span class="s2">                GROUP BY MONTH(created_at), YEAR(created_at)</span>
+<span class="s2">                ORDER BY DATE(created_at) DESC&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">repo_col</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">group_by</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT date(created_at) AS &quot;date&quot;, COUNT(*) AS &quot;</span><span class="si">{0}</span><span class="s2">&quot;</span>
+<span class="s2">                FROM </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">                WHERE </span><span class="si">{1}</span><span class="s2"> = :repoid</span>
+<span class="s2">                GROUP BY YEAR(created_at)</span>
+<span class="s2">                ORDER BY DATE(created_at) DESC&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">repo_col</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__sub_table_count_by_date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_table</span><span class="p">,</span> <span class="n">sub_table</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">sub_id</span><span class="p">,</span> <span class="n">project_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates query string to count occurances of rows per date for a given query sub-table.</span>
+<span class="sd">        A query sub-table is a table that describes in more detail a specfic asset of another query table-</span>
+<span class="sd">        for example, the table &quot;pull_request_comments&quot; is a sub table of &quot;pull_request&quot;, where the query is pull requests.</span>
+<span class="sd">        External input must never be sent to this function, it is for internal use only.</span>
+
+<span class="sd">        :param parent_table: The table in GHTorrent that holds the related project_id and parent_id</span>
+<span class="sd">        :param sub_table: The table in GHTorrent to generate the string for</span>
+<span class="sd">        :param parent_id: The column in parent_table with the query id</span>
+<span class="sd">        :param sub_id: The column in sub_id with the query id</span>
+<span class="sd">        :param project_id: the column in parent_table that holds the repoid</span>
+<span class="sd">        :return: Query string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT date(</span><span class="si">{1}</span><span class="s2">.created_at) AS &quot;date&quot;, COUNT(*) AS counter</span>
+<span class="s2">            FROM </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">            WHERE </span><span class="si">{1}</span><span class="s2">.</span><span class="si">{3}</span><span class="s2"> = </span><span class="si">{0}</span><span class="s2">.</span><span class="si">{2}</span><span class="s2"></span>
+<span class="s2">            AND </span><span class="si">{0}</span><span class="s2">.</span><span class="si">{4}</span><span class="s2"> = :repoid</span>
+<span class="s2">            GROUP BY YEARWEEK(</span><span class="si">{1}</span><span class="s2">.created_at)&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parent_table</span><span class="p">,</span> <span class="n">sub_table</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">sub_id</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">repoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner_or_repoid</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a repository&#39;s ID as it appears in the GHTorrent projects table</span>
+<span class="sd">        github.com/[owner]/[project]</span>
+
+<span class="sd">        :param owner: The username of a project&#39;s owner</span>
+<span class="sd">        :param repo: The name of the repository</span>
+<span class="sd">        :return: The repository&#39;s ID as it appears in the GHTorrent projects table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repoid</span> <span class="o">=</span> <span class="n">owner_or_repoid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reposql</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39;SELECT projects.id FROM projects INNER JOIN users ON projects.owner_id = users.id WHERE projects.name = :repo AND users.login = :repoowner&#39;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">reposql</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span> <span class="n">repoowner</span><span class="o">=</span><span class="n">owner_or_repoid</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                <span class="n">repoid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">repoid</span>
+
+    <span class="k">def</span> <span class="nf">userid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the userid given a username</span>
+
+<span class="sd">        :param username: GitHub username to be matched against the login table in GHTorrent</span>
+<span class="sd">        :return: The id from the users table in GHTorrent</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reposql</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39;SELECT users.id FROM users WHERE users.login = :username&#39;</span><span class="p">)</span>
+        <span class="n">userid</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">reposql</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">userid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">userid</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###    DIVERSITY AND INCLUSION    ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;closed-issues&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">closed_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Issue Resolution</span>
+
+<span class="sd">        Timeseries of the count of the number of issues closed per week</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with newly closed issues/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">issuesClosedSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT date(issue_events.created_at) as &quot;date&quot;, COUNT(*) as issues_closed</span>
+<span class="s2">            FROM issue_events, issues</span>
+<span class="s2">            WHERE issue_events.issue_id = issues.id</span>
+<span class="s2">            AND issue_events.action = &quot;closed&quot;</span>
+<span class="s2">            AND issues.repo_id = :repoid</span>
+<span class="s2">            GROUP BY YEARWEEK(issue_events.created_at)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">issuesClosedSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;code-commits&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">code_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Code Development</span>
+
+<span class="sd">        Timeseries of the count of commits</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new commits/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">commitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__single_table_count_by_date</span><span class="p">(</span><span class="s1">&#39;commits&#39;</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="n">group_by</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">commitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;code-review-iteration&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">code_review_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Code Development</span>
+
+<span class="sd">        Timeseries of the count of iterations (being closed and reopened) that a merge request (code review) goes through until it is finally merged</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with iterations/issue for each issue that week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+
+        <span class="n">codeReviewIterationSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            DATE(issues.created_at) AS &quot;created_at&quot;,</span>
+<span class="s2">            DATE(pull_request_history.created_at) AS &quot;merged_at&quot;,</span>
+<span class="s2">            issues.issue_id AS &quot;issue_id&quot;,</span>
+<span class="s2">            pull_request_history.pull_request_id AS &quot;pull_request_id&quot;,</span>
+<span class="s2">            pull_request_history.action AS &quot;action&quot;,</span>
+<span class="s2">            COUNT(CASE WHEN action = &quot;closed&quot; THEN 1 ELSE NULL END) AS &quot;iterations&quot;</span>
+<span class="s2">        FROM issues, pull_request_history</span>
+<span class="s2">        WHERE find_in_set(pull_request_history.action, &quot;closed,merged&quot;)&gt;0</span>
+<span class="s2">        AND pull_request_history.pull_request_id IN(</span>
+<span class="s2">            SELECT pull_request_id</span>
+<span class="s2">            FROM pull_request_history</span>
+<span class="s2">            WHERE pull_request_history.action = &quot;closed&quot;)   #go by reopened or closed??? (min: completed 1 iteration and has started another OR min: completed 1 iteration)</span>
+<span class="s2">        AND pull_request_history.pull_request_id = issues.issue_id</span>
+<span class="s2">        AND issues.pull_request = 1</span>
+<span class="s2">        AND issues.repo_id = :repoid</span>
+<span class="s2">        GROUP BY YEARWEEK(issues.created_at) #YEARWEEK to get (iterations (all PRs in repo) / week) instead of (iterations / PR)?</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">codeReviewIterationSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;created_at&#39;</span><span class="p">],</span> <span class="s1">&#39;iterations&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;contribution-acceptance&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">contribution_acceptance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Community Development</span>
+
+<span class="sd">        Timeseries of the rolling ratio between merged pull requests over unmerged pull requests</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with ratio/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_engagement</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_df</span><span class="p">[</span><span class="s1">&#39;pull_requests_merged_rate_this_week&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;contributing-github-organizations&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">contributing_github_organizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#needs clarification about return value</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Community Development</span>
+
+<span class="sd">        Returns of all the contributing organizations to a project and the counts of each organization&#39;s contributions</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with each organization&#39;s information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">contributingOrgSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT id AS contributing_org, SUM(commits) AS commits, SUM(issues) AS issues,</span>
+<span class="s2">                               SUM(commit_comments) AS commit_comments, SUM(issue_comments) AS issue_comments,</span>
+<span class="s2">                               SUM(pull_requests) AS pull_requests, SUM(pull_request_comments) AS pull_request_comments,</span>
+<span class="s2">                  SUM(contribution_fields.commits + contribution_fields.issues + contribution_fields.commit_comments + contribution_fields.issue_comments + contribution_fields.pull_requests + contribution_fields.pull_request_comments) AS total, COUNT(DISTINCT contribution_fields.user) AS distinct_users</span>
+<span class="s2">            FROM</span>
+<span class="s2">            (</span>
+<span class="s2">                (SELECT organization_members.org_id AS id, commits.author_id AS user, COUNT(*) AS commits, 0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments FROM organization_members, projects, commits</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND commits.project_id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND commits.author_id = organization_members.user_id GROUP BY commits.committer_id)</span>
+<span class="s2">                UNION ALL</span>
+<span class="s2">                (SELECT organization_members.org_id AS id, reporter_id AS user, 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0, 0 FROM organization_members, projects, issues</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND issues.repo_id = :repoid</span>
+<span class="s2">                    AND pull_request = 0</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)</span>
+<span class="s2">                UNION ALL</span>
+<span class="s2">                (SELECT organization_members.org_id AS id, commit_comments.user_id AS user, 0 AS commits, 0 AS commit_comments, COUNT(*) AS commit_comments, 0 AS issue_comments, 0 , 0 FROM organization_members, projects, commit_comments JOIN commits ON commits.id = commit_comments.commit_id</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND commits.project_id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND commit_comments.user_id = organization_members.user_id GROUP BY commit_comments.user_id)</span>
+<span class="s2">                 UNION ALL</span>
+<span class="s2">                 (SELECT organization_members.org_id AS id, issue_comments.user_id AS user, 0 AS commits, 0 AS commit_comments, 0 AS commit_comments, COUNT(*) AS issue_comments, 0 , 0 FROM organization_members, projects, issue_comments JOIN issues ON issues.id = issue_comments.issue_id</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND issues.repo_id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND issue_comments.user_id = organization_members.user_id GROUP BY id)</span>
+<span class="s2">                 UNION ALL</span>
+<span class="s2">                 (SELECT organization_members.org_id AS id, reporter_id AS user, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM organization_members, projects, issues</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND issues.repo_id = :repoid</span>
+<span class="s2">                    AND pull_request = 1</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)</span>
+<span class="s2">                 UNION ALL</span>
+<span class="s2">                 (SELECT organization_members.org_id AS id, pull_request_comments.user_id AS user, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM organization_members, projects, pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id</span>
+<span class="s2">                    WHERE pull_requests.base_repo_id = :repoid</span>
+<span class="s2">                    AND projects.id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND pull_request_comments.user_id = organization_members.user_id GROUP BY pull_request_comments.user_id)</span>
+<span class="s2">            ) contribution_fields</span>
+<span class="s2">            group by id</span>
+<span class="s2">            having distinct_users &gt; 1</span>
+<span class="s2">            ORDER BY total DESC</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">contributingOrgSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;first-response-to-issue-duration&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">first_response_to_issue_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span> <span class="c1">#needs clarification about return value</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Issue Resolution</span>
+
+<span class="sd">        Timeseries of the time to first comment by issue</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame of issues with their response information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">issueCommentsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT *, TIMESTAMPDIFF(MINUTE, opened, first_commented) AS minutes_to_comment FROM (</span>
+
+<span class="s2">                SELECT issues.id AS id, issues.created_at AS opened, MIN(issue_comments.created_at) AS first_commented, 0 AS pull_request</span>
+<span class="s2">                FROM issues</span>
+<span class="s2">                LEFT JOIN issue_comments</span>
+<span class="s2">                ON issues.id = issue_comments.issue_id</span>
+<span class="s2">                WHERE issues.pull_request = 0 AND issues.repo_id = :repoid</span>
+<span class="s2">                GROUP BY id</span>
+
+<span class="s2">                UNION ALL</span>
+
+<span class="s2">                SELECT issues.id AS id, issues.created_at AS opened, MIN(pull_request_comments.created_at) AS first_commented, 1 AS pull_request</span>
+<span class="s2">                FROM issues</span>
+<span class="s2">                LEFT JOIN pull_request_comments</span>
+<span class="s2">                ON issues.pull_request_id = pull_request_comments.pull_request_id</span>
+<span class="s2">                WHERE issues.pull_request = 1 AND issues.repo_id = :repoid</span>
+<span class="s2">                GROUP BY id</span>
+<span class="s2">             ) a</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">rs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">issueCommentsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">rs</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;forks&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">forks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Code Development</span>
+
+<span class="sd">        Timeseries of when a repo&#39;s forks were created</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new forks/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">forksSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__single_table_count_by_date</span><span class="p">(</span><span class="s1">&#39;projects&#39;</span><span class="p">,</span> <span class="s1">&#39;forked_from&#39;</span><span class="p">,</span> <span class="s1">&#39;owner_id&#39;</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="n">group_by</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">forksSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;maintainer-response-to-merge-request-duration&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">maintainer_response_to_merge_request_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#needs clarification on return value</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Code Development</span>
+
+<span class="sd">        Timeseries of duration of time between a merge request being created and a maintainer commenting on that request</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with each row being a week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">maintainerResponseToMRSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT DATE(issues.created_at) AS date, TIMESTAMPDIFF(DAY, issues.created_at, pull_request_comments.created_at) as days, pull_request_comments.created_at AS pull_request_comment_created_at, issues.id AS issue_id, pull_request_comments.user_id AS user_id, pull_request_comments.comment_id as pull_request_comment_id</span>
+<span class="s2">            FROM issues</span>
+<span class="s2">            JOIN pull_request_comments</span>
+<span class="s2">            ON issues.pull_request_id = pull_request_comments.pull_request_id</span>
+<span class="s2">            JOIN</span>
+<span class="s2">                (SELECT DISTINCT actor_id</span>
+<span class="s2">                FROM pull_request_history</span>
+<span class="s2">                JOIN pull_requests</span>
+<span class="s2">                ON pull_request_history.pull_request_id = pull_requests.pullreq_id</span>
+<span class="s2">                WHERE action = &quot;merged&quot;</span>
+<span class="s2">                AND base_repo_id = :repoid</span>
+<span class="s2">                ORDER BY actor_id) a</span>
+<span class="s2">            ON a.actor_id = user_id</span>
+<span class="s2">            WHERE issues.pull_request = 1</span>
+<span class="s2">            AND issues.repo_id = :repoid</span>
+<span class="s2">            GROUP BY YEARWEEK(date)</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">maintainerResponseToMRSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;new-contributing-github-organizations&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">new_contributing_github_organizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#needs clarification about return value</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Community Growth</span>
+
+<span class="sd">        Timeseries of information about new contributing organizations on a certain date</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with each organization&#39;s information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+
+        <span class="n">contributingOrgSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            fields.date AS &quot;date&quot;,</span>
+<span class="s2">            fields.id AS &quot;contributing_org&quot;,</span>
+<span class="s2">            count(DISTINCT fields.user) AS distinct_users</span>
+<span class="s2">        FROM (</span>
+<span class="s2">                (SELECT organization_members.org_id AS id, commits.created_at AS date, commits.author_id AS user FROM organization_members, projects, commits</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND commits.project_id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND commits.author_id = organization_members.user_id GROUP BY commits.committer_id)</span>
+<span class="s2">                UNION ALL</span>
+<span class="s2">                (SELECT organization_members.org_id AS id, issues.created_at AS date, issues.reporter_id AS user FROM organization_members, projects, issues</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND issues.repo_id = :repoid</span>
+<span class="s2">                    AND pull_request = 0</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)</span>
+<span class="s2">                UNION ALL</span>
+<span class="s2">                (SELECT organization_members.org_id AS id, commit_comments.created_at AS date, commit_comments.user_id as user FROM organization_members, projects, commit_comments JOIN commits ON commits.id = commit_comments.commit_id</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND commits.project_id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND commit_comments.user_id = organization_members.user_id GROUP BY commit_comments.user_id)</span>
+<span class="s2">                 UNION ALL</span>
+<span class="s2">                 (SELECT organization_members.org_id AS id, issue_comments.created_at AS date, issue_comments.user_id AS user FROM organization_members, projects, issue_comments JOIN issues ON issues.id = issue_comments.issue_id</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND issues.repo_id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND issue_comments.user_id = organization_members.user_id GROUP BY id)</span>
+<span class="s2">                 UNION ALL</span>
+<span class="s2">                 (SELECT organization_members.org_id AS id, issues.created_at AS date, issues.reporter_id AS user FROM organization_members, projects, issues</span>
+<span class="s2">                    WHERE projects.id = :repoid</span>
+<span class="s2">                    AND issues.repo_id = :repoid</span>
+<span class="s2">                    AND pull_request = 1</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND reporter_id = organization_members.user_id GROUP BY issues.reporter_id)</span>
+<span class="s2">                 UNION ALL</span>
+<span class="s2">                 (SELECT organization_members.org_id AS id, pull_request_comments.created_at AS date, pull_request_comments.user_id AS user FROM organization_members, projects, pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id</span>
+<span class="s2">                    WHERE pull_requests.base_repo_id = :repoid</span>
+<span class="s2">                    AND projects.id = :repoid</span>
+<span class="s2">                    AND projects.owner_id &lt;&gt; organization_members.org_id</span>
+<span class="s2">                    AND pull_request_comments.user_id = organization_members.user_id GROUP BY pull_request_comments.user_id)) fields</span>
+
+<span class="s2">        Group BY contributing_org</span>
+<span class="s2">        HAVING distinct_users &gt; 1</span>
+<span class="s2">        ORDER BY YEARWEEK(date)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">contributingOrgSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="n">numOrgs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">numOrgs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numOrgs</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">],</span> <span class="s1">&#39;organizations&#39;</span><span class="p">:</span> <span class="n">numOrgs</span><span class="p">})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;open-issues&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">open_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Individual Diversity</span>
+
+<span class="sd">        Timeseries of the count of newly issues opened per week</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with opened issues/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">issuesSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__single_table_count_by_date</span><span class="p">(</span><span class="s1">&#39;issues&#39;</span><span class="p">,</span> <span class="s1">&#39;repo_id&#39;</span><span class="p">,</span> <span class="s1">&#39;reporter_id&#39;</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="n">group_by</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">issuesSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull-request-comments&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pull_request_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Code Development</span>
+
+<span class="sd">        Timeseries of the count of new pull request comments</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new pull request comments/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">pullRequestCommentsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__sub_table_count_by_date</span><span class="p">(</span><span class="s2">&quot;pull_requests&quot;</span><span class="p">,</span> <span class="s2">&quot;pull_request_comments&quot;</span><span class="p">,</span> <span class="s2">&quot;pullreq_id&quot;</span><span class="p">,</span> <span class="s2">&quot;pull_request_id&quot;</span><span class="p">,</span> <span class="s2">&quot;base_repo_id&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">pullRequestCommentsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull-requests-open&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pull_requests_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subgroup: Code Development</span>
+
+<span class="sd">        Timeseries of pull requests creation and their associated activity</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with pull request information/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">pullsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT date(pull_request_history.created_at) AS &quot;date&quot;,</span>
+<span class="s2">            COUNT(pull_requests.id) AS &quot;pull_requests&quot;</span>
+<span class="s2">            FROM pull_request_history</span>
+<span class="s2">            INNER JOIN pull_requests</span>
+<span class="s2">            ON pull_request_history.pull_request_id = pull_requests.id</span>
+<span class="s2">            WHERE pull_requests.head_repo_id = :repoid</span>
+<span class="s2">            AND pull_request_history.action = &quot;merged&quot;</span>
+<span class="s2">            GROUP BY WEEK(pull_request_history.created_at)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">pullsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            RISK               ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            VALUE              ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###           ACTIVITY            ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;issue-comments&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">issue_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the count of new issue comments</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new issue comments/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">issueCommentsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__sub_table_count_by_date</span><span class="p">(</span><span class="s2">&quot;issues&quot;</span><span class="p">,</span> <span class="s2">&quot;issue_comments&quot;</span><span class="p">,</span> <span class="s2">&quot;issue_id&quot;</span><span class="p">,</span> <span class="s2">&quot;issue_id&quot;</span><span class="p">,</span> <span class="s2">&quot;repo_id&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">issueCommentsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull-requests-made-closed&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pull_requests_made_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the ratio of pull requests made/closed</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with the ratio of pull requests made/closed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">pullRequestsMadeClosedSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT DATE(closed_on) AS &quot;date&quot;, CAST(num_opened AS DECIMAL)/CAST(num_closed AS DECIMAL) AS &quot;rate&quot;</span>
+<span class="s2">                FROM</span>
+<span class="s2">                    (SELECT COUNT(DISTINCT pull_request_id) AS num_opened, DATE(pull_request_history.created_at) AS opened_on</span>
+<span class="s2">                    FROM pull_request_history</span>
+<span class="s2">                    JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id</span>
+<span class="s2">                    WHERE action = &#39;opened&#39; AND pull_requests.base_repo_id = :repoid</span>
+<span class="s2">                    GROUP BY opened_on) opened</span>
+<span class="s2">                JOIN</span>
+<span class="s2">                    (SELECT count(distinct pull_request_id) AS num_closed, DATE(pull_request_history.created_at) AS closed_on</span>
+<span class="s2">                    FROM pull_request_history</span>
+<span class="s2">                    JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id</span>
+<span class="s2">                    WHERE action = &#39;closed&#39;</span>
+<span class="s2">                    AND pull_requests.base_repo_id = :repoid</span>
+<span class="s2">                    GROUP BY closed_on) closed</span>
+<span class="s2">                ON closed.closed_on = opened.opened_on</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">pullRequestsMadeClosedSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;watchers&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">watchers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns of the count of people who starred the repo on that date</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new stargazers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">stargazersSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__single_table_count_by_date</span><span class="p">(</span><span class="s1">&#39;watchers&#39;</span><span class="p">,</span> <span class="s1">&#39;repo_id&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="n">group_by</span><span class="p">))</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">stargazersSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###         EXPERIMENTAL          ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="c1"># COMMIT RELATED</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;commits100&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">commits100</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the count of commits, limited to the first 100 overall</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with commits/day</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">commitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__single_table_count_by_date</span><span class="p">(</span><span class="s1">&#39;commits&#39;</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="n">group_by</span><span class="p">))</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">commitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="n">tem</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span>
+        <span class="k">return</span> <span class="n">temp</span><span class="p">[</span><span class="n">tem</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;commit-comments&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">commit_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the count of new commit comments</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new by week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">commitCommentsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__sub_table_count_by_date</span><span class="p">(</span><span class="s2">&quot;commits&quot;</span><span class="p">,</span> <span class="s2">&quot;commit_comments&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;commit_id&quot;</span><span class="p">,</span> <span class="s2">&quot;project_id&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">commitCommentsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;committer-locations&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">committer_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns committers and their locations</span>
+
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.</span>
+<span class="sd">        :param repo: The name of the repo.</span>
+<span class="sd">        :return: DataFrame with users and locations sorted by descending count of commits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: Group by country code instead of users, needs the new schema</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">rawContributionsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT users.login, users.location, COUNT(*) AS &quot;commits&quot;</span>
+<span class="s2">            FROM commits</span>
+<span class="s2">            JOIN project_commits</span>
+<span class="s2">            ON commits.id = project_commits.commit_id</span>
+<span class="s2">            JOIN users</span>
+<span class="s2">            ON users.id = commits.author_id</span>
+<span class="s2">            WHERE project_commits.project_id = :repoid</span>
+<span class="s2">            GROUP BY users.id</span>
+<span class="s2">            ORDER BY commits DESC</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">rawContributionsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;total-committers&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">total_committers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of total committers as of each week</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with total committers/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">totalCommittersSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT total_committers.created_at AS &quot;date&quot;, COUNT(total_committers.author_id) total_total_committers</span>
+<span class="s2">        FROM (</span>
+<span class="s2">            SELECT author_id, MIN(DATE(created_at)) created_at</span>
+<span class="s2">            FROM commits</span>
+<span class="s2">            WHERE project_id = :repoid</span>
+<span class="s2">            GROUP BY author_id</span>
+<span class="s2">            ORDER BY created_at ASC) AS total_committers</span>
+<span class="s2">        GROUP BY YEARWEEK(total_committers.created_at)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">totalCommittersSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_total_committers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_total_committers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="c1"># ISSUE RELATED</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;issue-activity&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">issue_activity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of issue related activity: issues opened, closed, reopened, and currently open</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with total committers/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">issueActivity</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT Date(issues.created_at) as &#39;date&#39;, COUNT(issues.id) as &#39;issues_opened&#39;, SUM(CASE WHEN issue_events.action = &#39;closed&#39; THEN 1 ELSE 0 END) as &#39;issues_closed&#39;, SUM(CASE WHEN issue_events.action = &#39;reopened&#39; THEN 1 ELSE 0 END) as &#39;issues_reopened&#39;</span>
+<span class="s2">                FROM issues</span>
+<span class="s2">                JOIN issue_events ON issues.id = issue_events.issue_id</span>
+<span class="s2">                WHERE issues.repo_id = :repoid</span>
+<span class="s2">                GROUP BY YEARWEEK(issues.created_at)</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="c1">#TODO: clean this up</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">issueActivity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">issues_open</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">globalIssuesOpened</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;issues_open&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;issues_opened&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;issues_closed&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;issues_reopened&quot;</span><span class="p">]</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">issueActivityCount</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">issuesAction</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+                <span class="n">dates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">])</span>
+            <span class="n">issueActivityCount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issueActivityCount</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;issues_closed&quot;</span><span class="p">])</span>
+            <span class="n">issuesAction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issuesAction</span><span class="p">,</span> <span class="s2">&quot;closed&quot;</span><span class="p">)</span>
+            <span class="n">issueActivityCount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issueActivityCount</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;issues_opened&quot;</span><span class="p">])</span>
+            <span class="n">issuesAction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issuesAction</span><span class="p">,</span> <span class="s2">&quot;opened&quot;</span><span class="p">)</span>
+            <span class="n">issueActivityCount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issueActivityCount</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;issues_reopened&quot;</span><span class="p">])</span>
+            <span class="n">issuesAction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issuesAction</span><span class="p">,</span> <span class="s2">&quot;reopened&quot;</span><span class="p">)</span>
+            <span class="n">issueActivityCount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issueActivityCount</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;issues_open&quot;</span><span class="p">])</span>
+            <span class="n">issuesAction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">issuesAction</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">)</span>
+
+        <span class="n">df1</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">])</span>
+        <span class="n">df2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">issueActivityCount</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">])</span>
+        <span class="n">df3</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">issuesAction</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">])</span>
+        <span class="n">df4</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df2</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df4</span>
+
+    <span class="c1"># PULL REQUEST RELATED</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull-request-acceptance-rate&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pull_request_acceptance_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with ratio/day</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">pullAcceptanceSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT DATE(date_created) AS &quot;date&quot;, CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS &quot;rate&quot;</span>
+<span class="s2">        FROM</span>
+<span class="s2">            (SELECT COUNT(DISTINCT pull_request_id) AS num_approved, DATE(pull_request_history.created_at) AS accepted_on</span>
+<span class="s2">            FROM pull_request_history</span>
+<span class="s2">            JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id</span>
+<span class="s2">            WHERE action = &#39;merged&#39; AND pull_requests.base_repo_id = :repoid</span>
+<span class="s2">            GROUP BY accepted_on) accepted</span>
+<span class="s2">        JOIN</span>
+<span class="s2">            (SELECT count(distinct pull_request_id) AS num_open, DATE(pull_request_history.created_at) AS date_created</span>
+<span class="s2">            FROM pull_request_history</span>
+<span class="s2">            JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id</span>
+<span class="s2">            WHERE action = &#39;opened&#39;</span>
+<span class="s2">            AND pull_requests.base_repo_id = :repoid</span>
+<span class="s2">            GROUP BY date_created) opened</span>
+<span class="s2">        ON opened.date_created = accepted.accepted_on</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">pullAcceptanceSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="c1"># COMMUNITY / CONRIBUTIONS</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;community-age&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">community_age</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Information helpful to determining a community&#39;s age</span>
+
+<span class="sd">        (Currently broken)</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with the first event of each type (commits, fork, ...)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">communityAgeSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT DATE(proj.created_at) AS &quot;project&quot;,</span>
+<span class="s2">               DATE(commits.created_at) AS &quot;commit&quot;,</span>
+<span class="s2">               DATE(frk.created_at) AS &quot;fork&quot;,</span>
+<span class="s2">               DATE(iss.created_at) AS &quot;issue&quot;,</span>
+<span class="s2">               DATE(pr.created_at) AS &quot;pull_request&quot;</span>
+
+<span class="s2">        FROM commits</span>
+
+<span class="s2">        LEFT JOIN (SELECT forked_from_id AS &quot;repo_id&quot;, created_at AS &quot;created_at&quot; FROM forks WHERE forks.forked_from_id = :repoid ORDER BY created_at DESC LIMIT 1) AS frk</span>
+<span class="s2">        ON frk.repo_id = commits.project_id</span>
+
+<span class="s2">        LEFT JOIN (SELECT repo_id AS &quot;repo_id&quot;, created_at AS &quot;created_at&quot; FROM issues WHERE issues.repo_id = :repoid ORDER BY created_at DESC LIMIT 1) AS iss</span>
+<span class="s2">        ON iss.repo_id = commits.project_id</span>
+
+<span class="s2">        LEFT JOIN (SELECT pull_request_history.created_at AS &quot;created_at&quot;, pull_requests.base_repo_id AS &quot;repo_id&quot; FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = &#39;merged&#39; ORDER BY pull_request_history.created_at DESC LIMIT 1) AS pr</span>
+<span class="s2">        ON pr.repo_id = commits.project_id</span>
+
+<span class="s2">        LEFT JOIN (SELECT projects.id AS &quot;repo_id&quot;, created_at AS &quot;created_at&quot; FROM projects WHERE projects.id = :repoid) AS proj</span>
+<span class="s2">        ON proj.repo_id = commits.project_id</span>
+
+<span class="s2">        WHERE commits.project_id = :repoid</span>
+<span class="s2">        ORDER BY commits.created_at DESC</span>
+<span class="s2">        LIMIT 1</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">communityAgeSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;community-engagement&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">community_engagement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries with lots of information about issues and pull requests</span>
+
+<span class="sd">        DataFrame returns these columns:</span>
+<span class="sd">        date</span>
+<span class="sd">        issues_opened</span>
+<span class="sd">        issues_closed</span>
+<span class="sd">        pull_requests_opened</span>
+<span class="sd">        pull_requests_merged</span>
+<span class="sd">        pull_requests_closed</span>
+<span class="sd">        issues_opened_total</span>
+<span class="sd">        issues_closed_total</span>
+<span class="sd">        issues_closed_rate_this_window</span>
+<span class="sd">        issues_closed_rate_total</span>
+<span class="sd">        issues_delta</span>
+<span class="sd">        issues_open</span>
+<span class="sd">        pull_requests_opened_total</span>
+<span class="sd">        pull_requests_closed_total</span>
+<span class="sd">        pull_requests_closed_rate_this_window</span>
+<span class="sd">        pull_requests_closed_rate_total</span>
+<span class="sd">        pull_requests_delta</span>
+<span class="sd">        pull_requests</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with the associated information about a repo&#39;s activity on that specific date</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">issuesFullSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT STR_TO_DATE(CONCAT(YEARWEEK(DATE,0),&#39; Sunday&#39;), &#39;</span><span class="si">%X</span><span class="s2">%V %W&#39;) as &quot;date&quot;,</span>
+<span class="s2">               SUM(issues_opened) AS &quot;issues_opened&quot;,</span>
+<span class="s2">               SUM(issues_closed) AS &quot;issues_closed&quot;,</span>
+<span class="s2">               SUM(pull_requests_opened) AS &quot;pull_requests_opened&quot;,</span>
+<span class="s2">               SUM(pull_requests_merged) AS &quot;pull_requests_merged&quot;,</span>
+<span class="s2">               SUM(pull_requests_closed) AS &quot;pull_requests_closed&quot;</span>
+
+<span class="s2">        FROM (</span>
+
+<span class="s2">            SELECT  STR_TO_DATE(CONCAT(YEARWEEK(issue_events.created_at,0),&#39; Sunday&#39;), &#39;</span><span class="si">%X</span><span class="s2">%V %W&#39;) as &quot;date&quot;,</span>
+<span class="s2">                   issue_events.action = &quot;closed&quot; AND issues.pull_request = 0   AS issues_closed,</span>
+<span class="s2">                   0 AS pull_requests_closed,</span>
+<span class="s2">                   0 AS pull_requests_merged,</span>
+<span class="s2">                   issue_events.action = &quot;reopened&quot; AND issues.pull_request = 0 AS issues_opened,</span>
+<span class="s2">                   0 AS pull_requests_opened</span>
+<span class="s2">            FROM issues</span>
+<span class="s2">            LEFT JOIN issue_events</span>
+<span class="s2">            ON issue_events.issue_id = issues.id</span>
+<span class="s2">            LEFT JOIN pull_request_history</span>
+<span class="s2">            ON pull_request_history.pull_request_id = issues.pull_request_id</span>
+<span class="s2">            WHERE issues.repo_id = :repoid</span>
+<span class="s2">            AND issue_events.action IN (&#39;closed&#39;, &#39;reopened&#39;)</span>
+
+<span class="s2">            UNION ALL</span>
+
+<span class="s2">            SELECT STR_TO_DATE(CONCAT(YEARWEEK(pull_request_history.created_at,0),&#39; Sunday&#39;), &#39;</span><span class="si">%X</span><span class="s2">%V %W&#39;) as &quot;date&quot;,</span>
+<span class="s2">                   0 AS issues_closed,</span>
+<span class="s2">                   pull_request_history.action = &quot;closed&quot; AND issues.pull_request = 1   AS pull_requests_closed,</span>
+<span class="s2">                   pull_request_history.action = &quot;merged&quot; AND issues.pull_request = 1   AS pull_requests_merged,</span>
+<span class="s2">                   0 AS issues_opened,</span>
+<span class="s2">                   pull_request_history.action = &quot;reopened&quot; AND issues.pull_request = 1 AS pull_requests_opened</span>
+<span class="s2">            FROM issues</span>
+<span class="s2">            LEFT JOIN pull_request_history</span>
+<span class="s2">            ON pull_request_history.pull_request_id = issues.pull_request_id</span>
+<span class="s2">            WHERE issues.repo_id = :repoid</span>
+<span class="s2">            AND pull_request_history.action IN (&#39;closed&#39;, &#39;merged&#39;, &#39;reopened&#39;)</span>
+
+<span class="s2">            UNION ALL</span>
+
+<span class="s2">            SELECT STR_TO_DATE(CONCAT(YEARWEEK(issues.created_at ,0),&#39; Sunday&#39;), &#39;</span><span class="si">%X</span><span class="s2">%V %W&#39;) as &quot;date&quot;,</span>
+<span class="s2">                   0 AS issues_closed,</span>
+<span class="s2">                   0 AS pull_requests_closed,</span>
+<span class="s2">                   0 AS pull_requests_merged,</span>
+<span class="s2">                   issues.pull_request = 0 AS issues_opened,</span>
+<span class="s2">                   issues.pull_request AS pull_requests_opened</span>
+
+<span class="s2">            FROM issues</span>
+<span class="s2">            WHERE issues.repo_id = :repoid</span>
+
+<span class="s2">        ) summary</span>
+
+<span class="s2">        GROUP BY YEARWEEK(date, 1)</span>
+
+
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">issuesFullSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="n">counts</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;issues_opened_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_opened</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;issues_closed_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_closed</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;issues_closed_rate_this_week&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_closed</span> <span class="o">/</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_opened</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;issues_closed_rate_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_closed_total</span> <span class="o">/</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_opened_total</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;issues_delta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_opened</span> <span class="o">-</span> <span class="n">counts</span><span class="o">.</span><span class="n">issues_closed</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;issues_open&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;issues_delta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_opened_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_opened</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_closed_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_closed</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_merged_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_merged</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_closed_rate_this_week&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_closed</span> <span class="o">/</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_opened</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_merged_rate_this_week&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_merged</span> <span class="o">/</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_opened</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_closed_rate_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_closed_total</span> <span class="o">/</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_opened_total</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_merged_rate_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_merged_total</span> <span class="o">/</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_opened_total</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_delta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_opened</span> <span class="o">-</span> <span class="n">counts</span><span class="o">.</span><span class="n">pull_requests_closed</span>
+        <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_open&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;pull_requests_delta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">counts</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;contributors&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">contributors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        All the contributors to a project and the counts of their contributions</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with user&#39;s id and contributions by type, separated by user</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">contributorsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT users.login as name, a.id AS user, SUM(commits) AS commits, SUM(issues) AS issues,</span>
+<span class="s2">                               SUM(commit_comments) AS commit_comments, SUM(issue_comments) AS issue_comments,</span>
+<span class="s2">                               SUM(pull_requests) AS pull_requests, SUM(pull_request_comments) AS pull_request_comments,</span>
+<span class="s2">                  SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total</span>
+<span class="s2">            FROM</span>
+<span class="s2">            (</span>
+<span class="s2">               (SELECT committer_id AS id, COUNT(*) AS commits, 0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid GROUP BY commits.committer_id)</span>
+<span class="s2">               UNION ALL</span>
+<span class="s2">               (SELECT reporter_id AS id, 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0, 0 FROM issues WHERE issues.repo_id = :repoid GROUP BY issues.reporter_id)</span>
+<span class="s2">               UNION ALL</span>
+<span class="s2">               (SELECT commit_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, COUNT(*) AS commit_comments, 0 AS issue_comments, 0 , 0 FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid GROUP BY commit_comments.user_id)</span>
+<span class="s2">               UNION ALL</span>
+<span class="s2">               (SELECT issue_comments.user_id AS id, 0 AS commits, 0 AS commit_comments, 0 AS issue_comments, COUNT(*) AS issue_comments, 0, 0 FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid GROUP BY issue_comments.user_id)</span>
+<span class="s2">               UNION ALL</span>
+<span class="s2">               (SELECT actor_id AS id, 0, 0, 0, 0, COUNT(*) AS pull_requests, 0 FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.id WHERE pull_request_history.action = &#39;opened&#39; AND pull_requests.`base_repo_id` = :repoid GROUP BY actor_id)</span>
+<span class="s2">               UNION ALL</span>
+<span class="s2">               (SELECT user_id AS id, 0, 0, 0, 0, 0, COUNT(*) AS pull_request_comments FROM pull_request_comments JOIN pull_requests ON pull_requests.base_commit_id = pull_request_comments.commit_id WHERE pull_requests.base_repo_id = :repoid GROUP BY user_id)</span>
+<span class="s2">            ) a JOIN users ON users.id = a.id</span>
+<span class="s2">            WHERE a.id IS NOT NULL</span>
+<span class="s2">            GROUP BY a.id</span>
+<span class="s2">            ORDER BY total DESC;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">contributorsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;contributions&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">contributions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">userid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of all the contributions to a project, optionally limited to a specific user</span>
+
+<span class="sd">        DataFrame has these columns:</span>
+<span class="sd">        date</span>
+<span class="sd">        commits</span>
+<span class="sd">        pull_requests</span>
+<span class="sd">        issues</span>
+<span class="sd">        commit_comments</span>
+<span class="sd">        pull_request_comments</span>
+<span class="sd">        issue_comments</span>
+<span class="sd">        tota</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :param userid: The id of user if you want to limit the contributions to a specific user.</span>
+<span class="sd">        :return: DataFrame with all of the contributions separated by day</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">rawContributionsSQL</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT  DATE(coms.created_at) as &quot;date&quot;,</span>
+<span class="s2">                    coms.count            as &quot;commits&quot;,</span>
+<span class="s2">                    pulls.count           as &quot;pull_requests&quot;,</span>
+<span class="s2">                    iss.count             as &quot;issues&quot;,</span>
+<span class="s2">                    comcoms.count         as &quot;commit_comments&quot;,</span>
+<span class="s2">                    pullscoms.count       as &quot;pull_request_comments&quot;,</span>
+<span class="s2">                    isscoms.count         as &quot;issue_comments&quot;,</span>
+<span class="s2">                    coms.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as &quot;total&quot;</span>
+
+<span class="s2">            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(created_at)) coms</span>
+
+<span class="s2">            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = &#39;merged&#39;[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(created_at)) AS pulls</span>
+<span class="s2">            ON DATE(pulls.created_at) = DATE(coms.created_at)</span>
+
+<span class="s2">            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(created_at)) AS iss</span>
+<span class="s2">            ON DATE(iss.created_at) = DATE(coms.created_at)</span>
+
+<span class="s2">            LEFT JOIN (SELECT commit_comments.created_at AS created_at, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid[[ AND commit_comments.user_id = :userid]] GROUP BY DATE(commit_comments.created_at)) AS comcoms</span>
+<span class="s2">            ON DATE(comcoms.created_at) = DATE(coms.created_at)</span>
+
+<span class="s2">            LEFT JOIN (SELECT pull_request_comments.created_at AS created_at, COUNT(*) AS count FROM pull_request_comments JOIN pull_requests ON pull_request_comments.pull_request_id = pull_requests.id WHERE pull_requests.base_repo_id = :repoid[[ AND pull_request_comments.user_id = :userid]] GROUP BY DATE(pull_request_comments.created_at)) AS pullscoms</span>
+<span class="s2">            ON DATE(pullscoms.created_at) = DATE(coms.created_at)</span>
+
+<span class="s2">            LEFT JOIN (SELECT issue_comments.created_at AS created_at, COUNT(*) AS count FROM issue_comments JOIN issues ON issue_comments.issue_id = issues.id WHERE issues.repo_id = :repoid[[ AND issue_comments.user_id = :userid]] GROUP BY DATE(issue_comments.created_at)) AS isscoms</span>
+<span class="s2">            ON DATE(isscoms.created_at) = DATE(coms.created_at)</span>
+
+<span class="s2">            GROUP BY YEARWEEK(coms.created_at)</span>
+<span class="s2">            ORDER BY DATE(coms.created_at)</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">userid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">userid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">rawContributionsSQL</span> <span class="o">=</span> <span class="n">rawContributionsSQL</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[[&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">rawContributionsSQL</span> <span class="o">=</span> <span class="n">rawContributionsSQL</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;]]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">parameterized</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">rawContributionsSQL</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">parameterized</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">),</span> <span class="s2">&quot;userid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">userid</span><span class="p">)})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rawContributionsSQL</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\[\[.+?\]\]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">rawContributionsSQL</span><span class="p">)</span>
+            <span class="n">parameterized</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">rawContributionsSQL</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">parameterized</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="k">def</span> <span class="nf">classify_contributors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Classify everyone who has interacted with a repo into</span>
+<span class="sd">          - user</span>
+<span class="sd">          - tester</span>
+<span class="sd">          - rejected_contributor</span>
+<span class="sd">          - contributor</span>
+<span class="sd">          - major_contributor</span>
+<span class="sd">          - maintainer</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with the id and role of contributors</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">contributors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contributors</span><span class="p">(</span><span class="n">repoid</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">sums</span> <span class="o">=</span> <span class="n">contributors</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">classify</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+            <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;user&#39;</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">row</span> <span class="o">/</span> <span class="n">sums</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ratio</span><span class="p">[</span><span class="s1">&#39;issue_comments&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">):</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;tester&#39;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;pull_requests&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;rejected_contributor&#39;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;pull_requests&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;contributor&#39;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ratio</span><span class="p">[</span><span class="s1">&#39;pull_requests&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.10</span> <span class="ow">or</span> <span class="n">ratio</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">):</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;major_contributor&#39;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ratio</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.02</span> <span class="ow">or</span> <span class="n">ratio</span><span class="p">[</span><span class="s1">&#39;pull_request_comments&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.15</span><span class="p">):</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;maintainer&#39;</span>
+
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s1">&#39;user&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">],</span> <span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="n">role</span><span class="p">})</span>
+
+        <span class="n">roles</span> <span class="o">=</span> <span class="n">contributors</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">classify</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">roles</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;project-age&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">project_age</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Date of the project&#39;s creation</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with the date of the project&#39;s creation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">projectAgeSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT date(created_at) AS &quot;date&quot;, COUNT(*) AS &quot;</span><span class="si">{0}</span><span class="s2">&quot;</span>
+<span class="s2">                FROM projects</span>
+<span class="s2">                WHERE id = :repoid</span>
+<span class="s2">                GROUP BY YEARWEEK(created_at)</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">projectAgeSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="c1"># DEPENDENCY RELATED</span>
+
+    <span class="c1"># OTHER</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;fakes&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">fakes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#should this be for users who contribute to the given repo?</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of new fake users per week</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new fake users/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">contributorsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT date(created_at) AS &quot;date&quot;, COUNT(*) AS fakes</span>
+<span class="s2">            FROM users</span>
+<span class="s2">            WHERE fake = true</span>
+<span class="s2">            GROUP BY YEARWEEK(date)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">contributorsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,176 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.facade &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for augur.facade</h1><div class="highlight"><pre>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data source that uses Facade&#39;s tables</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">s</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
+<span class="c1"># end imports</span>
+<span class="c1"># (don&#39;t remove the above line, it&#39;s for a script)</span>
+
+<div class="viewcode-block" id="Facade"><a class="viewcode-back" href="../../datasources/augur.facade.Facade.html#augur.facade.Facade">[docs]</a><span class="k">class</span> <span class="nc">Facade</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Queries Facade&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Facade.__init__"><a class="viewcode-back" href="../../datasources/augur.facade.Facade.html#augur.facade.Facade.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">,</span> <span class="n">projects</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Connect to the database</span>
+
+<span class="sd">        :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DB_STR</span> <span class="o">=</span> <span class="s1">&#39;mysql+pymysql://</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">@</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Facade: Connecting to </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1"> as </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">,</span> <span class="n">user</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DB_STR</span><span class="p">,</span> <span class="n">poolclass</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">NullPool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projects</span> <span class="o">=</span> <span class="n">projects</span></div>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###    DIVERSITY AND INCLUSION    ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
+    <span class="c1">#####################################</span>
+
+    
+    <span class="c1">#####################################</span>
+    <span class="c1">###            RISK               ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            VALUE              ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###           ACTIVITY            ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###         EXPERIMENTAL          ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;downloaded-repos&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">downloaded_repos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repoSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT git AS url, status, projects.name as project_name</span>
+<span class="s2">            FROM repos</span>
+<span class="s2">            JOIN projects</span>
+<span class="s2">            ON repos.projects_id = projects.id</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">repoSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">datum</span><span class="p">:</span> <span class="n">datum</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;//&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">project_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-minus-whitespace&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_changed_minus_whitespace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">from_commit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rebuild_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-by-author&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_changed_by_author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes sure the storageFolder contains updated versions of all the repos</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace</span>
+<span class="s2">            FROM analysis_data</span>
+<span class="s2">            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">            GROUP BY repos_id, author_date, author_affiliation, author_email</span>
+<span class="s2">            ORDER BY author_date ASC;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">repoSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

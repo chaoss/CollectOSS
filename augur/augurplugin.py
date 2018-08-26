@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Provides a class that can be used to extend Augur
+"""
+
 class AugurPlugin(object):
     """Defines a base class for Augur plugins to implement"""
     def __init__(self, config):

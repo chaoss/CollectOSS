@@ -1,0 +1,260 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Augur Development Guide: Making Contributions &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="augur-development-guide-making-contributions">
+<h1>Augur Development Guide: Making Contributions<a class="headerlink" href="#augur-development-guide-making-contributions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>See our <a class="reference external" href="/CONTRIBUTING.md">Contributing to Augur</a> guide for specifics
+on how we review pull requests. tl;dr: Fork our repo. Make a change. Use
+the mailing list for
+<a class="reference external" href="https://lists.linuxfoundation.org/mailman/listinfo/oss-health-metrics">CHAOSS</a>,
+Submit a pull request.</p>
+</div>
+<div class="section" id="building-changes">
+<h2>Building Changes<a class="headerlink" href="#building-changes" title="Permalink to this headline">¶</a></h2>
+<p>After making your changes, run</p>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">build</span>
+</pre></div>
+</div>
+<p>to update the docs and frontend before adding them to your staging area.</p>
+</div>
+<div class="section" id="augur-development-overview">
+<h2>Augur Development Overview<a class="headerlink" href="#augur-development-overview" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tl-dr">
+<h3>tl;dr<a class="headerlink" href="#tl-dr" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first"><a class="reference external" href="/docs/dev-guide-pt1.md">Back End Development Guide</a></p>
+</li>
+<li><p class="first rubric" id="front-end-development-guide"><a class="reference external" href="/docs/dev-guide-pt2.md">Front End Development Guide</a></p>
+</li>
+</ol>
+</div>
+<div class="section" id="augur-s-design-value-system">
+<h3>Augur’s Design Value System<a class="headerlink" href="#augur-s-design-value-system" title="Permalink to this headline">¶</a></h3>
+<p>Augur’s architecture is designed with an eye toward fulfilling its
+primary missions of rapid open source software metric prototyping and
+using data visualization to facilitate discussions among folks who
+manage open source communities.</p>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>Core aims: ** 1. Rapid metrics prototyping 2. Using data visualization
+to support discussion</p>
+<p><strong>Our visualization design follows two principles:</strong> 1. Allow
+comparisons across projects 2. Where logical, show trends over time on a
+metric</p>
+<p>Project comparison helps people understand what a metric tells them. If
+I show you total commits in a month or a year, what does that tell you
+about the health of an open source project? If you are able to compare a
+project you are managing with a project or two in the same space that
+you are familiar with, is that helpful? In most cases the answers are
+yes. We aim to produce not only metrics, but enough information for
+consumers of Augur to construct meaning. Which then helps the CHAOSS
+community build better, more useful metrics.</p>
+<p>Time is, in effect, a project focused type of comparison. If you can see
+the changes in different metrics on your project over time, its easier
+to maintain awareness of how metrics compare with results.</p>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="augur-s-architecture">
+<h2>Augur’s Architecture<a class="headerlink" href="#augur-s-architecture" title="Permalink to this headline">¶</a></h2>
+<p>In our aspiration to implement our value system for metrics in software,
+we seperate concerns pragmatically. Any metrics dashboard system has to
+do 4 things: 1) Ingest data, 2) store data, 3) reshape data for analysis
+and 4) present data. Of course, these “dashboard requirements” can be
+interpreted and circumvented. For example, if robust API’s are
+available, like the <a class="reference external" href="https://developer.github.com/v4/">GitHub Version 4
+API</a>, persistence can be considered
+optional.</p>
+<p>Right now, Augur satisfies the enumerated dashboard system requirements
+in concrete ways we describe in the following four sections.</p>
+<div class="section" id="augur-data-ingestion">
+<h3>Augur Data Ingestion<a class="headerlink" href="#augur-data-ingestion" title="Permalink to this headline">¶</a></h3>
+<p>We use the GHTorrent database, or its MSR14 little brother to help you
+get up and running quickly. You may find this dataset insufficient for a
+particular metric you want to build. API’s available from a number of
+places can be accessed from Augur.</p>
+<p>Inside your Augur system root directory there is another directory named
+Augur. This is where the Python files that you can modify live. Each one
+of these files should correspond to a different data source.</p>
+<ol class="arabic simple">
+<li><strong>downloads.py</strong> : gathers download statistics for github
+repositories. Currently configured for npm and ruby gems download
+data.</li>
+<li><strong>ghtorrent.py</strong> : reads the ghtorrent database you installed. There
+are two functions at the top of this file that allow you to do counts
+on the GHTorrent Schema tables quickly using Python.<ul>
+<li>def __single_table_count_by_date(self, table,
+repo_col=’project_id’, user_col=’author_id’,
+group_by=”week”): Generates query string to count occurances of
+rows per date for a given table.</li>
+<li>def __sub_table_count_by_date(self, parent_table,
+sub_table, parent_id, sub_id, project_id): Generates query
+string to count occurances of rows per date for a given query
+sub-table. A query sub-table is a table that describes in more
+detail a specfic asset of another query table-for example, the
+table “pull_request_comments” is a sub table of “pull_request”,
+where the query is pull requests.</li>
+</ul>
+</li>
+<li><strong>ghtorrentplus.py</strong> : Accesses the aggregate tables Augur creates
+for GHTorrent.</li>
+<li><strong>githubapi.py</strong> : Pulls data from the GitHub API</li>
+<li><strong>librariesio.py</strong> : Pulls data from the libraries.io API (Package
+manager download data)</li>
+<li><strong>localcsv.py</strong> : Pulls data from a .csv file you persist.</li>
+<li><strong>publicwww.py</strong> : Pulls download data from the <a class="reference external" href="https://publicwww.com">https://publicwww.com</a>
+website.</li>
+</ol>
+<p>If you want to ingest substantial amounts of new data, you may want to
+contribute to the
+<a class="reference external" href="https://github.com/OSSHealth/augur-ossifragae">Augur-OSSifragae</a>
+project, which focuses on systematic, structured ingestion of open
+source respository data from heterogeneous sources. (Note: an
+<a class="reference external" href="https://en.wikipedia.org/wiki/Bearded_Vulture">Ossifragae</a> is a
+bearded vulture that is one of a handful of birds said to yield valid
+signs for ancient Roman Augurs (visionaries) to follow. We think the
+existance of “OSS” at the beginning of the birds name is a sign. We took
+it.)</p>
+</div>
+<div class="section" id="augur-data-storage">
+<h3>Augur Data Storage<a class="headerlink" href="#augur-data-storage" title="Permalink to this headline">¶</a></h3>
+<p>The database system that you built with GHTorrent or MSR14 is our
+principle data storage environment right now. We have added a few small
+details to the GHTorrent database in a seperate schema called
+GHTorrent_Plus. This schema is built on deployment, and supports
+aggregations of the GHTorrent Schema information so that metrics can be
+generated more quickly in a few cases.</p>
+</div>
+<div class="section" id="augur-data-reshaping-for-analysis">
+<h3>Augur Data Reshaping for Analysis<a class="headerlink" href="#augur-data-reshaping-for-analysis" title="Permalink to this headline">¶</a></h3>
+<p>Now that you understand the basic structure of Augur, our <a class="reference external" href="/docs/dev-guide-pt1.md">Back End
+Development Guide</a> will be the place to start
+for reshaping data and building out analysis endpoints. The end result
+of new back end code is a <strong>REST API Endpoint.</strong></p>
+</div>
+<div class="section" id="augur-data-presentation">
+<h3>Augur Data Presentation<a class="headerlink" href="#augur-data-presentation" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="once-you-have-a-rest-api-endpoint-you-can-stop-and-say-i-have-built-an-endpoint-here-is-my-pull-request-or-you-can-build-front-end-visualizations-for-those-endpoints-following-our-front-end-development-guide">
+<h2>Once you have a <strong>REST API Endpoint</strong>, you can stop and say, “I have built an endpoint. Here is my pull request”. OR, you can build front end visualizations for those endpoints, following our <a class="reference external" href="/docs/dev-guide-pt2.md">Front End Development Guide</a>.<a class="headerlink" href="#once-you-have-a-rest-api-endpoint-you-can-stop-and-say-i-have-built-an-endpoint-here-is-my-pull-request-or-you-can-build-front-end-visualizations-for-those-endpoints-following-our-front-end-development-guide" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="important-notes-about-contributing-metrics">
+<h2>Important notes about contributing metrics<a class="headerlink" href="#important-notes-about-contributing-metrics" title="Permalink to this headline">¶</a></h2>
+<p>Before we start, there are a few things we would like to go over. Please
+take the time to read this section carefully; not only will it will make
+your life much easier, but also the lives of all the other conributors!</p>
+<p>When contributing a new metric, please reference <a class="reference external" href="https://github.com/OSSHealth/augur/blob/dev/docs/scratchpad/master-metrics-order.md">this
+list</a>
+in order to make sure you are putting the metric in the correct spot in
+the code. With the amount of metrics we have already implemented and the
+ones we plan to implement, <strong>it is imperative that you stick to this
+order</strong>, as this helps contributors both new and old maintain clarity
+and order when working with metrics.</p>
+<p>Some of the metrics we develop are defined more formally by metrics
+committees and working groups; some are not. Should you choose to work
+on implementing any of these metrics that are formally defined, they
+should be placed under their respective category.</p>
+<p>If you are adding a new metric that does <strong>not</strong> fall under one of these
+categories, it should be placed in the Experimental group in the correct
+sub-category. If you would like to add a new Experimental sub-category,
+please open a pull request with your proposed addition. In addition,
+please update the file mentioned above to include your new metric: it
+can be found at <code class="docutils literal notranslate"><span class="pre">augur/docs/scratchpad/master-metrics-order.md</span></code>.</p>
+<p>This order is followed across the project. Data source files, test
+files, <code class="docutils literal notranslate"><span class="pre">server.py</span></code>, <code class="docutils literal notranslate"><span class="pre">AugurAPI.js</span></code>, frontend cards, and other places
+that metrics appear in should adhere to this order for maximum
+uniformity (In <code class="docutils literal notranslate"><span class="pre">AugurAPI.js</span></code>, Git metrics have their own section).</p>
+<p>Files where metrics appear should include a header for every group, even
+if there are no relevant metrics in that group. The exception to the
+rule are the frontend tab cards; these are already grouped.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dev-guide/dev-guide-overview.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/dev-guide/dev-guide-overview.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,194 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.downloads &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for augur.downloads</h1><div class="highlight"><pre>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data source that gathers download stats from package managers</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
+
+<span class="c1"># end imports</span>
+<span class="c1"># (don&#39;t remove the above line, it&#39;s for a script)</span>
+
+<div class="viewcode-block" id="Downloads"><a class="viewcode-back" href="../../datasources/augur.downloads.Downloads.html#augur.downloads.Downloads">[docs]</a><span class="k">class</span> <span class="nc">Downloads</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for retrieveing download information using APIs and web scrapers&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Downloads.__init__"><a class="viewcode-back" href="../../datasources/augur.downloads.Downloads.html#augur.downloads.Downloads.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">githubapi</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span> <span class="o">=</span> <span class="n">githubapi</span><span class="o">.</span><span class="n">api</span></div>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###    DIVERSITY AND INCLUSION    ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            RISK               ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            VALUE              ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###           ACTIVITY            ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###         EXPERIMENTAL          ###</span>
+    <span class="c1">#####################################</span>
+        
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;downloads&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">downloads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries that returns package file and calls the correct function to the create download statistics</span>
+
+<span class="sd">        :param owner: repo owner username</span>
+<span class="sd">        :param repo: repo name</span>
+<span class="sd">        :return: DataFrame with all downloads for that day</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">root_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span><span class="o">.</span><span class="n">get_repo</span><span class="p">((</span><span class="n">owner</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">repo</span><span class="p">))</span><span class="o">.</span><span class="n">get_dir_contents</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">root_dir</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;Gemfile&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ruby_downloads</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;package.json&quot;</span><span class="p">:</span>
+                <span class="n">contents</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+                <span class="n">contents</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">npm_downloads</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">contents</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">ruby_downloads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of daily downloads for ruby gems from bestgems.org API</span>
+
+<span class="sd">        :param repo: repo name</span>
+<span class="sd">        :return: DataFrame with count of ruby downloads</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;http://bestgems.org/api/v1/gems/</span><span class="si">%s</span><span class="s2">/daily_downloads.json&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">repo</span><span class="p">))</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">raw</span><span class="p">))))</span>
+        
+        <span class="n">columnsTitles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">,</span><span class="s2">&quot;daily_downloads&quot;</span><span class="p">]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span> <span class="n">columnsTitles</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span> <span class="p">{</span><span class="s2">&quot;daily_downloads&quot;</span> <span class="p">:</span> <span class="s2">&quot;downloads&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="k">def</span> <span class="nf">npm_downloads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">contents</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns daily downloads for ruby gems from bestgems.org API</span>
+
+<span class="sd">        :param repo: repo name</span>
+<span class="sd">        :param contents: contents of package.json</span>
+<span class="sd">        :return: DataFrame with count of npm downloads</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">contents</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">contents</span><span class="p">)))</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">contents</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.npmjs.org/downloads/range/0:</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">),</span> <span class="n">name</span><span class="p">))</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">raw</span><span class="p">)))</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s2">&quot;downloads&quot;</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span> <span class="p">{</span><span class="s2">&quot;day&quot;</span> <span class="p">:</span> <span class="s2">&quot;date&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;downloads&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

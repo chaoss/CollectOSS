@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Handles global context, I/O, and configuration
+"""
+
 import os
 import time
 import multiprocessing as mp
@@ -110,7 +115,6 @@ class Application(object):
         self.__facade = None
         self.__librariesio = None
         self.__downloads = None
-        self.__publicwww = None
         self.__localCSV = None
         self.__metrics_status = None
 
@@ -158,7 +162,6 @@ class Application(object):
         self.facade()
         self.librariesio()
         self.downloads()
-        self.publicwww()
         self.localcsv()        
         self.metrics_status()
 
@@ -261,7 +264,8 @@ class Application(object):
                 password=self.read_config('Facade', 'pass', 'AUGUR_FACADE_DB_PASS', ''),
                 host=self.read_config('Facade', 'host', 'AUGUR_FACADE_DB_HOST', '127.0.0.1'),
                 port=self.read_config('Facade', 'port', 'AUGUR_FACADE_DB_PORT', '3306'),
-                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade')
+                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade'),
+                projects=self.read_config('Facade', 'projects', None, [])
             )
         return self.__facade
 
@@ -326,13 +330,6 @@ class Application(object):
             logger.debug('Initializing Downloads')
             self.__downloads = Downloads(self.githubapi())
         return self.__downloads
-
-    def publicwww(self):
-        from augur.publicwww import PublicWWW
-        if self.__publicwww is None:
-            logger.debug('Initializing PublicWWW')
-            self.__publicwww = PublicWWW(api_key=self.read_config('PublicWWW', 'apikey', 'AUGUR_PUBLIC_WWW_API_KEY', 'None'))
-        return self.__publicwww
 
     def localcsv(self):
         from augur.localcsv import LocalCSV

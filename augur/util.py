@@ -1,4 +1,7 @@
 #SPDX-License-Identifier: MIT
+"""
+Provides shared functions that do not fit in a class of their own
+"""
 import pandas as pd
 import os
 import re

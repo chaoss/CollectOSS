@@ -1,3 +1,5 @@
+#SPDX-License-Identifier: MIT
+
 # Metadata
 from .metadata import __version__
 

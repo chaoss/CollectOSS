@@ -1,0 +1,433 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.application &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for augur.application</h1><div class="highlight"><pre>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Handles global context, I/O, and configuration</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">configparser</span> <span class="k">as</span> <span class="nn">configparser</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">import</span> <span class="nn">pkgutil</span>
+<span class="kn">import</span> <span class="nn">coloredlogs</span>
+<span class="kn">from</span> <span class="nn">beaker.cache</span> <span class="k">import</span> <span class="n">CacheManager</span>
+<span class="kn">from</span> <span class="nn">beaker.util</span> <span class="k">import</span> <span class="n">parse_cache_config_options</span>
+<span class="kn">from</span> <span class="nn">lockfile</span> <span class="k">import</span> <span class="n">LockFile</span>
+<span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="k">def</span> <span class="nf">updater_process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">delay</span><span class="p">):</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Spawned </span><span class="si">{}</span><span class="s1"> updater process with PID </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">Application</span><span class="p">()</span>
+    <span class="n">datasource</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">name</span><span class="p">)()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="n">datasource</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span>
+
+<span class="k">def</span> <span class="nf">load_plugins</span><span class="p">():</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">load_plugins</span><span class="p">,</span> <span class="s1">&#39;already_loaded&#39;</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">augur.plugins</span>
+    <span class="n">load_plugins</span><span class="o">.</span><span class="n">already_loaded</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initalizes all classes form Augur using a config file or environment variables&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Application.__init__"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="s1">&#39;augur.config.json&#39;</span><span class="p">,</span> <span class="n">no_config_file</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Augur application&#39;</span><span class="p">):</span>
+
+        <span class="c1"># Command line arguments</span>
+        <span class="c1"># TODO: make this useful</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">()</span>
+
+        <span class="c1"># Open the config file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__already_exported</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__default_config</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;Plugins&#39;</span><span class="p">:</span> <span class="p">[]</span> <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__using_config_file</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__config_bad</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_CONFIG_FILE&#39;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_location</span> <span class="o">=</span> <span class="s1">&#39;runtime/&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__export_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_ENV_EXPORT&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_ENV_ONLY&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;1&#39;</span> <span class="ow">and</span> <span class="n">no_config_file</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Couldn</span><span class="se">\&#39;</span><span class="s1">t open </span><span class="si">{}</span><span class="s1">, attempting to create. If you have a augur.cfg, you can convert it to a json file using &quot;make to-json&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_file</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__config_bad</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># Options to export the loaded configuration as environment variables for Docker</span>
+           
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__export_env</span><span class="p">:</span>
+                <span class="n">export_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_ENV_EXPORT_FILE&#39;</span><span class="p">,</span> <span class="s1">&#39;augur.cfg.sh&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__export_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_filename</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Exporting </span><span class="si">{}</span><span class="s1"> to environment variable export statements in </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">export_filename</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__export_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;#!/bin/bash</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Load the config file</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">config_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">config_text</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config_bad</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__using_config_file</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">__config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__default_config</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__using_config_file</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__default_config</span>
+
+        <span class="c1"># List of data sources that can do periodic updates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Create cache</span>
+        <span class="n">cache_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;cache.type&#39;</span><span class="p">:</span> <span class="s1">&#39;file&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cache.data_dir&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="s1">&#39;$(RUNTIME)/cache/&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;cache.lock_dir&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="s1">&#39;$(RUNTIME)/cache/&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">cache_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Cache&#39;</span><span class="p">,</span> <span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache_config</span><span class="p">))</span>
+        <span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.data_dir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.data_dir&#39;</span><span class="p">])</span>
+        <span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.lock_dir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.lock_dir&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.data_dir&#39;</span><span class="p">]):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.data_dir&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.lock_dir&#39;</span><span class="p">]):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">cache_config</span><span class="p">[</span><span class="s1">&#39;cache.lock_dir&#39;</span><span class="p">])</span>
+        <span class="n">cache_parsed</span> <span class="o">=</span> <span class="n">parse_cache_config_options</span><span class="p">(</span><span class="n">cache_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">CacheManager</span><span class="p">(</span><span class="o">**</span><span class="n">cache_parsed</span><span class="p">)</span>
+
+        <span class="c1"># Initalize all objects to None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Load plugins</span>
+        <span class="kn">import</span> <span class="nn">augur.plugins</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">register_plugin</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">plugin</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">plugin</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> didn&#39;t have a name&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="n">plugin</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">plugin</span>
+
+    <span class="k">def</span> <span class="nf">replace_config_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">variable_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;AUGUR&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span><span class="p">,</span>
+            <span class="s1">&#39;RUNTIME&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_location</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">variable</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">variable_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">reverse</span><span class="p">:</span>
+                <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;$(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variable</span><span class="p">),</span> <span class="n">source</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;$(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variable</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">string</span>
+
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace_config_variables</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">__updater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">updates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">updates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span>
+        <span class="k">for</span> <span class="n">update</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;started&#39;</span> <span class="ow">in</span> <span class="n">update</span><span class="p">:</span>
+                <span class="n">up</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">updater_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">update</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">update</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">]),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">up</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">up</span><span class="p">)</span>
+                <span class="n">update</span><span class="p">[</span><span class="s1">&#39;started&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">init_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ghtorrent</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ghtorrentplus</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">git</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">facade</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">librariesio</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downloads</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">localcsv</span><span class="p">()</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics_status</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">read_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">environment_variable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">environment_variable</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">default</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">section</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__using_config_file</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__config_bad</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">environment_variable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__export_env</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__already_exported</span><span class="p">,</span> <span class="n">environment_variable</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__export_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;export &#39;</span> <span class="o">+</span> <span class="n">environment_variable</span> <span class="o">+</span> <span class="s1">&#39;=&quot;&#39;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s1">&#39;&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__already_exported</span><span class="p">[</span><span class="n">environment_variable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_DEBUG_LOG_ENV&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span> 
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1"> = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">read_config_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">set_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">section</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">finalize_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Parse args with help</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">()</span>
+        <span class="c1"># Close files and save config</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config_bad</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Regenerating config with missing values...&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">config_text</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">config_text</span> <span class="o">=</span> <span class="n">config_text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span><span class="p">,</span> <span class="s1">&#39;$(AUGUR)&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">config_text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__export_env</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__export_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">path_relative_to_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">update_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">updatable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">updatable</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
+            <span class="n">updatable</span><span class="p">[</span><span class="s1">&#39;update&#39;</span><span class="p">]()</span>
+
+    <span class="k">def</span> <span class="nf">schedule_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># don&#39;t use this, </span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Scheduling updates...&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updater</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">join_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Join to the update processes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="p">:</span>
+            <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">shutdown_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="p">:</span>
+            <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">ghtorrent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.ghtorrent</span> <span class="k">import</span> <span class="n">GHTorrent</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing GHTorrent&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span> <span class="o">=</span> <span class="n">GHTorrent</span><span class="p">(</span>
+                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_USER&#39;</span><span class="p">,</span> <span class="s1">&#39;root&#39;</span><span class="p">),</span>
+                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_PASS&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">),</span>
+                <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">),</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;3306&#39;</span><span class="p">),</span>
+                <span class="n">dbname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;msr14&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span>
+
+    <span class="k">def</span> <span class="nf">facade</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.facade</span> <span class="k">import</span> <span class="n">Facade</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Facade&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span> <span class="o">=</span> <span class="n">Facade</span><span class="p">(</span>
+                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_USER&#39;</span><span class="p">,</span> <span class="s1">&#39;root&#39;</span><span class="p">),</span>
+                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_PASS&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">),</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;3306&#39;</span><span class="p">),</span>
+                <span class="n">dbname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;facade&#39;</span><span class="p">),</span>
+                <span class="n">projects</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;projects&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span>
+
+    <span class="k">def</span> <span class="nf">ghtorrentplus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.ghtorrentplus</span> <span class="k">import</span> <span class="n">GHTorrentPlus</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing GHTorrentPlus&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span> <span class="o">=</span> <span class="n">GHTorrentPlus</span><span class="p">(</span>
+                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_USER&#39;</span><span class="p">,</span> <span class="s1">&#39;root&#39;</span><span class="p">),</span>
+                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_PASS&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">),</span>
+                <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">),</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;3306&#39;</span><span class="p">),</span>
+                <span class="n">dbname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;ghtorrentplus&#39;</span><span class="p">)</span>
+            <span class="p">,</span> <span class="n">ghtorrent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ghtorrent</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span>
+
+    <span class="k">def</span> <span class="nf">git</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.git</span> <span class="k">import</span> <span class="n">Git</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_relative_to_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_config_path</span><span class="p">(</span><span class="s1">&#39;Git&#39;</span><span class="p">,</span> <span class="s1">&#39;storage&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GIT_STORAGE&#39;</span><span class="p">,</span> <span class="s1">&#39;$(RUNTIME)/git_repos/&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">repolist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Git&#39;</span><span class="p">,</span> <span class="s1">&#39;repositories&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Git&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="o">=</span> <span class="n">Git</span><span class="p">(</span>
+                <span class="n">list_of_repositories</span><span class="o">=</span><span class="n">repolist</span><span class="p">,</span>
+                <span class="n">storage_folder</span><span class="o">=</span><span class="n">storage</span><span class="p">,</span>
+                <span class="n">csv</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">localcsv</span><span class="p">(),</span>
+                <span class="n">cache</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;git&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;delay&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Git&#39;</span><span class="p">,</span> <span class="s1">&#39;refresh&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GIT_REFRESH&#39;</span><span class="p">,</span> <span class="s1">&#39;3600&#39;</span><span class="p">)),</span>
+                <span class="s1">&#39;update&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span><span class="o">.</span><span class="n">update</span>
+            <span class="p">})</span>
+        <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__git</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span>
+
+
+    <span class="k">def</span> <span class="nf">githubapi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.githubapi</span> <span class="k">import</span> <span class="n">GitHubAPI</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing GitHub API&#39;</span><span class="p">)</span>
+            <span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GitHub&#39;</span><span class="p">,</span> <span class="s1">&#39;apikey&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GITHUB_API_KEY&#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span> <span class="o">=</span> <span class="n">GitHubAPI</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span>
+
+    <span class="k">def</span> <span class="nf">librariesio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.librariesio</span> <span class="k">import</span> <span class="n">LibrariesIO</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing LibrariesIO&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span> <span class="o">=</span> <span class="n">LibrariesIO</span><span class="p">(</span>
+                <span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;LibrariesIO&#39;</span><span class="p">,</span> <span class="s1">&#39;apikey&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_LIBRARIESIO_API_KEY&#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">),</span> 
+                <span class="n">githubapi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">()</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span>
+
+    <span class="k">def</span> <span class="nf">downloads</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.downloads</span> <span class="k">import</span> <span class="n">Downloads</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Downloads&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span> <span class="o">=</span> <span class="n">Downloads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span>
+
+    <span class="k">def</span> <span class="nf">localcsv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.localcsv</span> <span class="k">import</span> <span class="n">LocalCSV</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing LocalCSV&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span> <span class="o">=</span> <span class="n">LocalCSV</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span>
+
+    <span class="k">def</span> <span class="nf">metrics_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">augur.metrics_status</span> <span class="k">import</span> <span class="n">MetricsStatus</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing MetricsStatus&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="n">MetricsStatus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span></div>
+
+
+<span class="n">Application</span><span class="o">.</span><span class="n">plugins</span> <span class="o">=</span> <span class="p">{}</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

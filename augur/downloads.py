@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Data source that gathers download stats from package managers
+"""
+
 import json
 import pandas as pd
 import requests

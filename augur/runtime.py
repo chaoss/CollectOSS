@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Runs Augur with Gunicorn when called
+"""
+
 import multiprocessing as mp
 import sched
 import os

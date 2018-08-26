@@ -1,0 +1,128 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Overview for creating a brand new metric &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="overview-for-creating-a-brand-new-metric">
+<h1>Overview for creating a brand new metric<a class="headerlink" href="#overview-for-creating-a-brand-new-metric" title="Permalink to this headline">¶</a></h1>
+<ol class="arabic simple">
+<li>Look at metric definitions at <a class="reference external" href="http://www.github.com/CHAOSS/metrics">http://www.github.com/CHAOSS/metrics</a></li>
+<li>Once you have identified a metric that you want to implement</li>
+</ol>
+<ul class="simple">
+<li>Determine the data sources available for generating that metric</li>
+<li>Collect your metrics dataset in a Jupyter Notebook so that you are
+confident the metric you deploy represents what you intend it to.</li>
+<li>We have an example Jupyter Notebook you can copy from under the
+jupyter directory in docs: augur/docs/jupyter</li>
+</ul>
+<ol class="arabic simple" start="3">
+<li>Move the Python code into the appropriate file under the Augur
+directory. For example, if you are using GHTorrent, it would go in
+the GHTorrent.py file.</li>
+<li>Add the API definition and documentation to Server.py</li>
+<li>Write tests for your API Endpoint</li>
+<li>Run Tests</li>
+<li>Deploy your code</li>
+<li>Check your local API docs to see if its deployed as you intend</li>
+<li><em>note</em>: At this point you could issue a pull request for the end
+point alone if you are not interested in building the front end
+visualization.</li>
+<li>Begin Front end development by adding yoru metric to</li>
+</ol>
+<ul class="simple">
+<li>AugurAPI.js</li>
+<li>Modify a card (Risk, Value, Etc.) to include your metric</li>
+<li>Create a line chart that points to your new metric (What if its not a
+line chart type of metric? We should have examples for both)</li>
+</ul>
+<ol class="arabic simple" start="10">
+<li>Deploy your new metric visualization</li>
+</ol>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dev-guide/dev-example.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/dev-guide/dev-example.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

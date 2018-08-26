@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Data source that uses the GHTorrent relational database of GitHub activity. 
+"""
+
 import pandas as pd
 import sqlalchemy as s
 import numpy as np

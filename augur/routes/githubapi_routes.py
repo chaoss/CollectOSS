@@ -58,6 +58,7 @@ def create_routes(server):
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
+    @apiParam {Int} threshold Percentage used to determine how many lost people would kill the project
 
     @apiSuccessExample {json} Success-Response:
                         [

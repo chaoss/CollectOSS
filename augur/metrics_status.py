@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Analyzes Augur source and CHAOSS repos to determine metric implementation status
+"""
+
 import re
 import json
 import glob

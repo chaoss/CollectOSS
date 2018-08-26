@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Analyzes Git repos directly using dulwich
+Analyzes Git repos directly using git
 """
 
 import os
