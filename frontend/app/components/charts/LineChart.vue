@@ -32,7 +32,11 @@ export default {
   data() {
     return {
       legendLabels: [],
-      values: []
+      values: [],
+      status: {
+        base: true,
+        compared: true
+      }
     }
   },
   computed: {
@@ -75,10 +79,10 @@ export default {
                 "grid": false
               },
               "legend": {
-                "offset": 0,
+                "offset": -505,
                 "titleFontSize": 0,
                 "titlePadding": 10
-              }
+              },
             },
         "vconcat": [
           {
@@ -88,7 +92,6 @@ export default {
             },
             "width": 520,
             "height": 250,
-
             "layer": []
           }
         ]
@@ -131,7 +134,10 @@ export default {
                 }
               },
               "color": {
-                "value": color
+                "field": "name",
+                "type": "nominal",
+                "scale": { "range": ['#FF3647', '#4736FF'] }
+                // "value": color
               },
               "opacity": {
                 "value": opacity
@@ -156,8 +162,12 @@ export default {
                 "empty": "none"
               }
             }
-        let size = 10
-        if (this.rawWeekly || this.compareTo) size = 3
+        let size = 17
+
+        var timeDiff = Math.abs(this.latest.getTime() - this.earliest.getTime());
+        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        size = diffDays / 150
+        if (this.rawWeekly) size = 3
         if (selectionAdded) {
           selection = null
         }
@@ -187,7 +197,7 @@ export default {
           }
       }
 
-      let getStandardPoint = function (key) {
+      let getStandardPoint = (key) => {
         let selection = {
               "tooltip": {
                 "type": "interval",
@@ -205,12 +215,12 @@ export default {
         selectionAdded = true
         let raw = true
         if(key.substring(key.length - 7) == "Rolling") raw = false
-        let color = "#FF3647"
-        if (key != "valueRolling"){
-          if (raw) {
-            color = "gray"
-          }
-          else color = "#4736FF"
+        let range = ['#FF3647', '#4736FF']
+        if (!this.status.base){
+          range = ['#7d7d7d', '#4736FF']
+        }
+        if (!this.status.compared){
+          range = ['#7d7d7d', '#4736FF']
         }
         return {
             "transform": [
@@ -233,7 +243,10 @@ export default {
                 }
               },
               "color": {
-                "value": color
+                "field": "name",
+                "type": "nominal",
+                "scale": { "range": range }
+                // "value": color
               },
               "opacity": {
                 "condition": {
@@ -283,7 +296,7 @@ export default {
                   "color": {
                     "value": "green"
                   },
-                  "opacity": {"value": 0.2}
+                  "opacity": {"value": 0.14}
                 }
       }
     }
@@ -459,7 +472,11 @@ export default {
       }
 
       if(this.showDetail) {
-        config.vconcat[1] = (getDetail("valueRolling"))
+        if (this.comparedTo && !this.status.compared)
+          config.vconcat[1] = (getDetail("comparedValueRolling"))
+        else
+          config.vconcat[1] = (getDetail("valueRolling"))
+
         //if (this.comparedTo) config.vconcat[1] = (getDetail("comparedValueRolling"))
       }
       else {
@@ -506,12 +523,7 @@ export default {
         }
       }
 
-
       buildMetric()
-
-
-
-
 
       //set dates from main control options
       if(this.showDetail) {
@@ -556,7 +568,7 @@ export default {
           fields[split[0]] = split[1].split('+')
         }
       })
-      if (fields[endpoints[0]] != null) console.log("THIS ONE BITCH" + fields[endpoints[0]])
+
       // Get the repos we need
       let repos = []
       if (this.repo) {
@@ -617,7 +629,10 @@ export default {
                     onCreateData(obj, key, field, count)
                     count++
                   } else {
+                    if(!compared)this.status.base = false
+                    else this.status.compared = false
                     this.renderError()
+
                     return
                   }
                 }
@@ -659,7 +674,7 @@ export default {
               aggregates.push(d)
               legend.push(this.comparedTo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.dullColors[count])
-            }, false)
+            }, true)
             buildLines(data[this.repo], (obj, key, field, count) => {
               let d = defaultProcess(obj, key, field, count, true)
               //let rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
@@ -677,7 +692,7 @@ export default {
               aggregates.push(d)
               legend.push(this.repo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
-            }, true)
+            }, false)
           } else if (this.comparedTo) {
             // Build chart compared to baseline
             //this.mgConfig.baselines = [{value: 1, label: this.repo}]
@@ -694,14 +709,16 @@ export default {
           }
 
           if (normalized.length == 0) {
-            this.renderError()
+            // this.renderError()
           } else {
             values = []
+
             for(var i = 0; i < legend.length; i++){
               normalized[i].forEach(d => {
                 d.name = legend[i]
                 d.color = colors[i]
                 values.push(d);
+
               })
             }
             if (!hideRaw) {
@@ -713,11 +730,27 @@ export default {
                 })
               }
             }
+            if(!this.status.base) {
+              let temp = JSON.parse(JSON.stringify(values))
+              temp = temp.map((datum) => {
+                datum.name = "data n/a for " + this.repo
+                return datum
+              })
+              values.unshift.apply(values, temp)
+            }
+            if(!this.status.compared) {
+              let temp = JSON.parse(JSON.stringify(values))
+              temp = temp.map((datum) => {
+                datum.name = "data n/a for " + this.comparedTo
+                return datum
+              })
+              values.unshift.apply(values, temp)
+            }
 
             this.legendLabels = legend
             this.values = values
 
-            //config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
+            // config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
 
             //$(this.$el).find('.showme, .hidefirst').removeClass('loader')
             $(this.$el).find('.hidefirst').removeClass('invis')
@@ -773,8 +806,15 @@ export default {
       //window.MG.data_graphic(this.mgConfig)
     },
     renderError () {
-      $(this.$el).find('.spinner').removeClass('loader')
-      $(this.$el).find('.error').removeClass('hidden')
+      if (!this.comparedTo || (this.status.base == false && this.status.compared == false)) {
+        $(this.$el).find('.spinner').removeClass('loader')
+        $(this.$el).find('.error').removeClass('hidden')
+      } else if (this.status.base == false){
+        console.log("base failed")
+      } else if (this.status.compared == false) {
+        console.log("compared failed")
+      }
+
       // this.$refs.chart.className = 'linechart intro error'
       // window.$(this.$refs.holder).find('.deleteme').remove()
       // this.$refs.chartholder.innerHTML = ''

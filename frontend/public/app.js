@@ -1221,7 +1221,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-78eb2940", __vue__options__)
+    hotAPI.reload("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1252,7 +1252,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-6becaf40", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-6becaf40", __vue__options__)
+    hotAPI.reload("data-v-6becaf40", __vue__options__)
   }
 })()}
 });
@@ -1566,7 +1566,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-1825962d", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-1825962d", __vue__options__)
+    hotAPI.reload("data-v-1825962d", __vue__options__)
   }
 })()}
 });
@@ -1824,7 +1824,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4eb76a08", __vue__options__)
+    hotAPI.reload("data-v-4eb76a08", __vue__options__)
   }
 })()}
 });
@@ -2379,7 +2379,11 @@ exports.default = {
   data: function data() {
     return {
       legendLabels: [],
-      values: []
+      values: [],
+      status: {
+        base: true,
+        compared: true
+      }
     };
   },
 
@@ -2424,7 +2428,7 @@ exports.default = {
             "grid": false
           },
           "legend": {
-            "offset": 0,
+            "offset": -505,
             "titleFontSize": 0,
             "titlePadding": 10
           }
@@ -2436,7 +2440,6 @@ exports.default = {
           },
           "width": 520,
           "height": 250,
-
           "layer": []
         }]
       };
@@ -2474,7 +2477,9 @@ exports.default = {
               }
             },
             "color": {
-              "value": color
+              "field": "name",
+              "type": "nominal",
+              "scale": { "range": ['#FF3647', '#4736FF'] }
             },
             "opacity": {
               "value": opacity
@@ -2497,8 +2502,12 @@ exports.default = {
             "empty": "none"
           }
         };
-        var size = 10;
-        if (_this.rawWeekly || _this.compareTo) size = 3;
+        var size = 17;
+
+        var timeDiff = Math.abs(_this.latest.getTime() - _this.earliest.getTime());
+        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        size = diffDays / 150;
+        if (_this.rawWeekly) size = 3;
         if (selectionAdded) {
           selection = null;
         }
@@ -2542,11 +2551,12 @@ exports.default = {
         selectionAdded = true;
         var raw = true;
         if (key.substring(key.length - 7) == "Rolling") raw = false;
-        var color = "#FF3647";
-        if (key != "valueRolling") {
-          if (raw) {
-            color = "gray";
-          } else color = "#4736FF";
+        var range = ['#FF3647', '#4736FF'];
+        if (!_this.status.base) {
+          range = ['#7d7d7d', '#4736FF'];
+        }
+        if (!_this.status.compared) {
+          range = ['#7d7d7d', '#4736FF'];
         }
         return {
           "transform": [brush],
@@ -2567,7 +2577,9 @@ exports.default = {
               }
             },
             "color": {
-              "value": color
+              "field": "name",
+              "type": "nominal",
+              "scale": { "range": range }
             },
             "opacity": {
               "condition": {
@@ -2615,7 +2627,7 @@ exports.default = {
             "color": {
               "value": "green"
             },
-            "opacity": { "value": 0.2 }
+            "opacity": { "value": 0.14 }
           }
         };
       };
@@ -2779,7 +2791,7 @@ exports.default = {
       };
 
       if (this.showDetail) {
-        config.vconcat[1] = getDetail("valueRolling");
+        if (this.comparedTo && !this.status.compared) config.vconcat[1] = getDetail("comparedValueRolling");else config.vconcat[1] = getDetail("valueRolling");
       } else {
         if (config.vconcat[1]) config.vconcat.pop();
       }
@@ -2844,7 +2856,6 @@ exports.default = {
           fields[split[0]] = split[1].split('+');
         }
       });
-      if (fields[endpoints[0]] != null) console.log("THIS ONE BITCH" + fields[endpoints[0]]);
 
       var repos = [];
       if (this.repo) {
@@ -2899,7 +2910,9 @@ exports.default = {
                   onCreateData(obj, key, field, count);
                   count++;
                 } else {
+                  if (!compared) _this.status.base = false;else _this.status.compared = false;
                   _this.renderError();
+
                   return;
                 }
               }
@@ -2937,7 +2950,7 @@ exports.default = {
             aggregates.push(d);
             legend.push(_this.comparedTo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-          }, false);
+          }, true);
           buildLines(data[_this.repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count, true);
 
@@ -2952,7 +2965,7 @@ exports.default = {
             aggregates.push(d);
             legend.push(_this.repo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          }, true);
+          }, false);
         } else if (_this.comparedTo) {
           buildLines(data[_this.comparedTo], function (obj, key, field, count) {
             normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
@@ -2966,10 +2979,9 @@ exports.default = {
           }, true);
         }
 
-        if (normalized.length == 0) {
-          _this.renderError();
-        } else {
+        if (normalized.length == 0) {} else {
           values = [];
+
           for (var i = 0; i < legend.length; i++) {
             normalized[i].forEach(function (d) {
               d.name = legend[i];
@@ -2985,6 +2997,22 @@ exports.default = {
                 values.push(d);
               });
             }
+          }
+          if (!_this.status.base) {
+            var temp = JSON.parse(JSON.stringify(values));
+            temp = temp.map(function (datum) {
+              datum.name = "data n/a for " + _this.repo;
+              return datum;
+            });
+            values.unshift.apply(values, temp);
+          }
+          if (!_this.status.compared) {
+            var _temp = JSON.parse(JSON.stringify(values));
+            _temp = _temp.map(function (datum) {
+              datum.name = "data n/a for " + _this.comparedTo;
+              return datum;
+            });
+            values.unshift.apply(values, _temp);
           }
 
           _this.legendLabels = legend;
@@ -3031,8 +3059,14 @@ exports.default = {
       this.$refs.chartholder.appendChild(this.mgConfig.target);
     },
     renderError: function renderError() {
-      $(this.$el).find('.spinner').removeClass('loader');
-      $(this.$el).find('.error').removeClass('hidden');
+      if (!this.comparedTo || this.status.base == false && this.status.compared == false) {
+        $(this.$el).find('.spinner').removeClass('loader');
+        $(this.$el).find('.error').removeClass('hidden');
+      } else if (this.status.base == false) {
+        console.log("base failed");
+      } else if (this.status.compared == false) {
+        console.log("compared failed");
+      }
     }
   } };
 })()
