@@ -1221,7 +1221,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-78eb2940", __vue__options__)
+    hotAPI.reload("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -2626,7 +2626,7 @@ exports.default = {
               }
             },
             "color": {
-              "value": "green"
+              "value": "gray"
             },
             "opacity": { "value": 0.14 }
           }

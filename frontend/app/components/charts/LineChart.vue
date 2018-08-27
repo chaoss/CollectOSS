@@ -296,7 +296,7 @@ export default {
                     }
                   },
                   "color": {
-                    "value": "green"
+                    "value": "gray"
                   },
                   "opacity": {"value": 0.14}
                 }

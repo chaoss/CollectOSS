@@ -2827,8 +2827,8 @@ cite.metric a {
   position: relative;
   top: 50%;
   transform: translateY(-50%);
-  border: 16px solid #ff3647; /* our red */
-  border-top: 16px solid #4736ff; /* our Blue */
+  border: 16px solid #7d7d7d; /* our red */
+  border-top: 16px solid #ff3647; /* our gray */
   border-radius: 50%;
   opacity: 0.7;
   width: 120px;
