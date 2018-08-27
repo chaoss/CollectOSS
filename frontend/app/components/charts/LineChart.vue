@@ -3,11 +3,13 @@
     <div class="spacing"></div>
     <div class="error hidden"><br>Data is missing or unavailable</div>
     <div class="spinner loader"></div>
-    <div class="hidefirst invis linechart">
+    <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
       <vega-lite :spec="spec" :data="values"></vega-lite>
 
       <p> {{ chart }} </p>
     </div>
+
+
 
 
     <div class="row below-chart">
@@ -36,7 +38,8 @@ export default {
       status: {
         base: true,
         compared: true
-      }
+      },
+      detail: this.$store.state.showDetail
     }
   },
   computed: {
@@ -404,7 +407,7 @@ export default {
 
       let getDetail = (key) => {
         let color = '#FF3647'
-        if (!this.status.compared) color = '#4736FF'
+        if (!this.status.compared || !this.status.base) color = '#4736FF'
         return {
             "width": 520,
             "height": 60,
@@ -535,6 +538,17 @@ export default {
             {
               "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
             }
+        }
+      }
+
+      if ((!this.status.base && !this.comparedTo) || (!this.status.compared && !this.status.base)) {
+        if(!this.showDetail){
+          window.$(this.$refs.holder).find('.hidefirst').removeClass('invisDet')
+          window.$(this.$refs.holder).find('.hidefirst').addClass('invis')
+        } else {
+          window.$(this.$refs.holder).find('.hidefirst').removeClass('invis')
+          window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet')
+
         }
       }
 
@@ -751,6 +765,7 @@ export default {
 
             //$(this.$el).find('.showme, .hidefirst').removeClass('loader')
             $(this.$el).find('.hidefirst').removeClass('invis')
+            $(this.$el).find('.hidefirst').removeClass('invisDet')
             $(this.$el).find('.spinner').removeClass('loader')
             $(this.$el).find('.spacing').addClass('hidden')
 
@@ -772,6 +787,7 @@ export default {
           this.renderError()
         }) // end batch request
       }
+
       return config
     }
 
@@ -791,6 +807,8 @@ export default {
       this.$refs.chart.className = 'linechart intro'
       window.$(this.$refs.holder).find('.hideme').removeClass('invis')
       window.$(this.$refs.holder).find('.showme').removeClass('invis')
+      window.$(this.$refs.holder).find('.hideme').removeClass('invisDet')
+      window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
       window.$(this.$refs.holder).find('.deleteme').remove()
       // window.$(this.mgConfig.target).hover((onEnterEvent) => {
       //   window.$(this.$refs.legend).hide()

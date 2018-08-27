@@ -5,12 +5,12 @@
     <div :class="{ hidden: hasState }">
       <section class="unmaterialized">
         <div id="collapse">
-          <h3 v-if="isCollapsed" @click="collapseText">Downloaded Git Repos by Project  &#9660</h3>
-          <h3 v-else @click="collapseText">Downloaded Git Repos by Project  &#9654</h3>
+          <h3 v-if="isCollapsed" @click="collapseText">Downloaded Git Repos by Project  <span style="font-size:16px">&#9660</span></h3>
+          <h3 v-else @click="collapseText">Downloaded Git Repos by Project  <span style="font-size:16px">&#9654</span></h3>
         </div>
         <downloaded-repos-card></downloaded-repos-card>
       </section>
-      
+
       <section class="unmaterialized">
         <all-metrics-status-card></all-metrics-status-card>
       </section>

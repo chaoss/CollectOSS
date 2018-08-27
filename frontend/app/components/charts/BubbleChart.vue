@@ -17,7 +17,7 @@ let spec = {
   "spec": {
     "hconcat": [{
       "title": "Code Engagement",
-      "width": 375,
+      "width": 475,
       "height": 300,
       "mark": {
         "type": "circle",
@@ -74,7 +74,7 @@ let spec = {
       }
     }, {
       "title": "Community Engagement",
-      "width": 375,
+      "width": 475,
       "height": 300,
       "mark": {
         "type": "circle",
