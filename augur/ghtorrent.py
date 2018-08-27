@@ -95,7 +95,7 @@ class GHTorrent(object):
         :return: Query string
         """
         return """
-            SELECT date({1}.created_at) AS "date", COUNT(*) AS counter
+            SELECT date({1}.created_at) AS "date", COUNT(*) AS {1}
             FROM {1}, {0}
             WHERE {1}.{3} = {0}.{2}
             AND {0}.{4} = :repoid
@@ -230,7 +230,7 @@ class GHTorrent(object):
         source_df = self.community_engagement(owner, repo)
         df = pd.DataFrame()
         df['date'] = source_df['date']
-        df['rate'] = source_df['pull_requests_merged_rate_this_week']
+        df['acceptance_rate'] = source_df['pull_requests_merged_rate_this_week']
         return df
 
     @annotate(tag='contributing-github-organizations')
@@ -642,7 +642,7 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         totalCommittersSQL = s.sql.text("""
-        SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_total_committers
+        SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_committers
         FROM (
             SELECT author_id, MIN(DATE(created_at)) created_at
             FROM commits
