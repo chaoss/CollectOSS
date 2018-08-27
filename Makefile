@@ -27,8 +27,7 @@ default:
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
 	@ echo "    server            	   Runs a single instance of the server (useful for debugging endpoints)"
 	@ echo "    test SOURCE={source}   Run pytest unit tests for the specified source file. Defaults to all"
-	@ echo "    test-api   			   Run API tests locally using newman"
-
+	@ echo "    test-api   			       Run API tests locally using newman"
 	@ echo "    build                  Builds documentation and frontend - use before pushing"
 	@ echo "    frontend               Builds frontend with Brunch"
 	@ echo "    update-deps            Generates updated requirements.txt and environment.yml"
