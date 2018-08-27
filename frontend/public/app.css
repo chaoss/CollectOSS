@@ -2775,7 +2775,7 @@ cite.metric a {
   font-weigth: 600;
 }
 .marks {
-  padding: 10px 0px 0px 0px !important;
+  padding: 10px 0px 0px 24px !important;
 }
 .role-title > text {
   font-size: 20px !important;
