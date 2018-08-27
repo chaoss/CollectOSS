@@ -652,7 +652,7 @@ class GHTorrent(object):
         GROUP BY YEARWEEK(total_committers.created_at)
         """)
         df = pd.read_sql(totalCommittersSQL, self.db, params={"repoid": str(repoid)})
-        df['total_total_committers'] = df['total_total_committers'].cumsum()
+        df['total_committers'] = df['total_committers'].cumsum()
         return df
 
     # ISSUE RELATED
