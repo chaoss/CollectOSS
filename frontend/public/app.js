@@ -2453,12 +2453,12 @@ exports.default = {
         var raw = true;
         var opacity = 1;
         if (key.substring(key.length - 7) == "Rolling") raw = false;
-        var color = "#FF3647";
-        if (key != "valueRolling") {
-          if (raw) {
-            color = "gray";
-            opacity = .5;
-          } else color = "#4736FF";
+        var range = ['#FF3647', '#4736FF'];
+        if (!_this.status.base) {
+          range = ['#7d7d7d', '#4736FF'];
+        }
+        if (!_this.status.compared) {
+          range = ['#7d7d7d', '#4736FF'];
         }
         selectionAdded = true;
         return {
@@ -2479,7 +2479,7 @@ exports.default = {
             "color": {
               "field": "name",
               "type": "nominal",
-              "scale": { "range": ['#FF3647', '#4736FF'] }
+              "scale": { "range": range }
             },
             "opacity": {
               "value": opacity
@@ -2728,10 +2728,8 @@ exports.default = {
       };
 
       var getDetail = function getDetail(key) {
-        var color = "#FF3647";
-        if (key != "valueRolling") {
-          color = "#4736FF";
-        }
+        var color = '#FF3647';
+        if (!_this.status.compared) color = '#4736FF';
         return {
           "width": 520,
           "height": 60,

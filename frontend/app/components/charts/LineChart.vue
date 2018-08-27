@@ -103,17 +103,16 @@ export default {
       //cannot have duplicate selection, so keep track if it has already been added
       let selectionAdded = false
 
-      let getStandardLine = function (key) {
+      let getStandardLine = (key) => {
         let raw = true
         let opacity = 1
         if(key.substring(key.length - 7) == "Rolling") raw = false
-        let color = "#FF3647"
-        if (key != "valueRolling"){
-          if (raw) {
-            color = "gray"
-            opacity = .5
-          }
-          else color = "#4736FF"
+        let range = ['#FF3647', '#4736FF']
+        if (!this.status.base){
+          range = ['#7d7d7d', '#4736FF']
+        }
+        if (!this.status.compared){
+          range = ['#7d7d7d', '#4736FF']
         }
         selectionAdded = true
         return {
@@ -136,7 +135,7 @@ export default {
               "color": {
                 "field": "name",
                 "type": "nominal",
-                "scale": { "range": ['#FF3647', '#4736FF'] }
+                "scale": { "range": range }
                 // "value": color
               },
               "opacity": {
@@ -403,11 +402,9 @@ export default {
         }
       }
 
-      let getDetail = function (key) {
-        let color = "#FF3647"
-        if (key != "valueRolling"){
-          color = "#4736FF"
-        }
+      let getDetail = (key) => {
+        let color = '#FF3647'
+        if (!this.status.compared) color = '#4736FF'
         return {
             "width": 520,
             "height": 60,
