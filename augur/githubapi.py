@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Data source that uses the GitHub API
+"""
+
 from augur.localcsv import LocalCSV
 import json
 import re
@@ -8,6 +13,7 @@ import numpy as np
 import datetime
 import requests
 from augur import logger
+from augur.util import annotate
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -33,14 +39,14 @@ class GitHubAPI(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
+    @annotate(tag='lines-of-code-changed')
     def lines_of_code_changed(self, owner, repo=None): 
         """
-        chaoss-metric: lines-of-code-changed
-        Additions and deletions each week
+        Timeseries of the count of lines added, deleted, and the net change each week
 
         :param owner: The name of the project owner
         :param repo: The name of the repo
-        :return: DataFrame with each row being am issue
+        :return: DataFrame with the associated lines changed information/week
         """
         # get the data we need from the GitHub API
         # see <project_root>/augur/githubapi.py for examples using the GraphQL API
@@ -76,81 +82,91 @@ class GitHubAPI(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-    def bus_factor(self, owner, repo, filename=None, start=None, end=None, threshold=50):
+    @annotate(tag='bus-factor')
+    def bus_factor(self, owner, repo, threshold=50):
         """
-        augur-metric: bus-factor
-
         Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold
 
         :param owner: repo owner username
         :param repo: repo name
-        :param filename: optional; file or directory for function to run on
-        :param start: optional; start time for analysis
-        :param end: optional; end time for analysis
         :param threshold: Default 50;
         """
+        cursor = ""
+        url = "https://api.github.com/graphql"
+        commit_count = []
+        hasNextPage = True
+        threshold = threshold / 100
+        while hasNextPage:
+            query = {"query" :
+                     """
+                        query{
+                          repository(name: "%s", owner: "%s") {
+                            ref(qualifiedName: "master") {
+                              target {
+                                ... on Commit {
+                                  id
+                                  history(first: 100%s) {
+                                    pageInfo {
+                                      hasNextPage
+                                    }
+                                    edges {
+                                      cursor
+                                      node {
+                                        author {
+                                          email
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }            
+                        """ % (repo, owner, cursor)
+            }
+            r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
+            raw = r.text
+            data = json.loads(json.loads(json.dumps(raw)))
+            hasNextPage = data['data']['repository']['ref']['target']['history']['pageInfo']['hasNextPage']
+            commits = data['data']['repository']['ref']['target']['history']['edges']
+            for i in commits:
+                commit_count.append({'email' : i['node']['author']['email']})
+            cursor = ", after: \"%s\"" % (commits[-1]['cursor'])
 
-        if start != None:
-            start = parse(start)
-        else:
-            start = github.GithubObject.NotSet
 
-        if end != None:
-            end = parse(end)
-        else:
-            end = github.GithubObject.NotSet
+        df = pd.DataFrame(commit_count)
 
-        commits = self.api.get_repo((owner + "/" + repo)).get_commits(since=start, until=end)
+        total = df.email.count()
 
-        if filename != None:
-            self.api.get_repo((owner + "/" + repo)).get_contents(filename)
-
-        df = []
-
-        if filename != None:
-            for commit in commits:
-                for file in commit.files:
-                    if file.filename == filename:
-                        try:
-                            df.append({'userid': commit.author.id})
-                        except AttributeError:
-                            pass
-                        break
-        else:
-            for commit in commits:
-                try:
-                    df.append({'userid': commit.author.id})
-                except AttributeError:
-                    pass
-
-        df = pd.DataFrame(df)
-
-        df = df.groupby(['userid']).userid.count() / df.groupby(['userid']).userid.count().sum() * 100
+        df = df.groupby(['email']).email.count() / df.groupby(['email']).email.count().sum() * 100
 
         i = 0
-        for num in df.cumsum():
+        for num in df.sort_values(ascending=False).cumsum():
             i = i + 1
             if num >= threshold:
-                worst = i
                 break
+        worst = i
 
-        i = 0
+        j = 0
         for num in df.sort_values(ascending=True).cumsum():
-            i = i + 1
+            j = j + 1
             if num >= threshold:
-                best = i
                 break
+        best = j    
 
         bus_factor = [{'worst': worst, 'best' : best}]
 
         return pd.DataFrame(bus_factor)
 
+    @annotate(tag='major-tags')
     def major_tags(self, owner, repo):
         """
-        Returns dates and names of major version (according to semver) tags. May return blank if no major versions
+        Timeseries of the dates and names of major version (according to semver) tags. May return blank if no major versions
 
         :param owner: repo owner username
         :param repo: repo name
+        :return: DataFrame with major versions and their release date
         """
         cursor = "null"
         tags_list = []
@@ -205,13 +221,15 @@ class GitHubAPI(object):
 
         return pd.DataFrame(major_versions)
 
+    @annotate(tag='tags')
     def tags(self, owner, repo, raw=False):
         """
-        Returns dates and names of tags
+        Timeseries of the dates and names of tags
 
         :param owner: repo owner username
         :param repo: repo name
         :param raw: Default False; Returns list of dicts
+        :return: DataFrame with all tags and their release date
         """
 
         cursor = "null"

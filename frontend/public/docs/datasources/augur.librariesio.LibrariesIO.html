@@ -1,0 +1,146 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.librariesio.LibrariesIO &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="augur.localcsv.LocalCSV" href="augur.localcsv.LocalCSV.html" />
+    <link rel="prev" title="augur.git.Git" href="augur.git.Git.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="augur-librariesio-librariesio">
+<h1>augur.librariesio.LibrariesIO<a class="headerlink" href="#augur-librariesio-librariesio" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="augur.librariesio.LibrariesIO">
+<em class="property">class </em><code class="descclassname">augur.librariesio.</code><code class="descname">LibrariesIO</code><span class="sig-paren">(</span><em>api_key</em>, <em>githubapi</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/librariesio.html#LibrariesIO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.librariesio.LibrariesIO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles interaction with <a class="reference external" href="https://libraries.io/api">https://libraries.io/api</a> to get dependency data</p>
+<dl class="method">
+<dt id="augur.librariesio.LibrariesIO.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>api_key</em>, <em>githubapi</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/librariesio.html#LibrariesIO.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.librariesio.LibrariesIO.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#augur.librariesio.LibrariesIO.__init__" title="augur.librariesio.LibrariesIO.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(api_key,&nbsp;githubapi)</td>
+<td>Initialize self.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">dependencies</span></code>(owner,&nbsp;repo)</td>
+<td>Finds the packages that a project depends on</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">dependency_stats</span></code>(owner,&nbsp;repo)</td>
+<td>Finds the number of dependencies, dependant projects, and dependent repos by scrapping it off of the libraries.io website</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">dependents</span></code>(owner,&nbsp;repo)</td>
+<td>Finds the packages depend on this repository</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../python.html#data-source-modules">Data Source Modules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="augur.ghtorrent.GHTorrent.html">augur.ghtorrent.GHTorrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.githubapi.GitHubAPI.html">augur.githubapi.GitHubAPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.facade.Facade.html">augur.facade.Facade</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.git.Git.html">augur.git.Git</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">augur.librariesio.LibrariesIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.localcsv.LocalCSV.html">augur.localcsv.LocalCSV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="augur.downloads.Downloads.html">augur.downloads.Downloads</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../python.html#application-modules">Application Modules</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../python.html">Augur Python Library</a><ul>
+      <li>Previous: <a href="augur.git.Git.html" title="previous chapter">augur.git.Git</a></li>
+      <li>Next: <a href="augur.localcsv.LocalCSV.html" title="next chapter">augur.localcsv.LocalCSV</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/datasources/augur.librariesio.LibrariesIO.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/datasources/augur.librariesio.LibrariesIO.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

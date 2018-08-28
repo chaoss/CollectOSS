@@ -1,8 +1,10 @@
 .PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop 
-.PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade 
-.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status update-upsteam version
+.PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
+.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
 
 SERVECOMMAND=augur
+CONDAUPDATE=if ! source activate augur; then conda env create -n=augur -f=environment.yml && source activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
+CONDAACTIVATE=source activate augur;
 CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda activate augur; then conda env create -n=augur -f=environment.yml && conda activate augur; else conda env update -n=augur -f=environment.yml && conda activate augur; fi;
 CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
 OLDVERSION="null"
@@ -15,7 +17,6 @@ default:
 	@ echo "    install-e              Installs augur in editable mode (pip -e)"
 	@ echo "    install-dev            Installs augur's developer dependencies (requires npm and pip)"
 	@ echo "    install-msr            Installs MSR14 dataset"
-	@ echo "    update-upsteam         Updates git submodules"
 	@ echo "    upgrade                Pulls newest version, installs, performs migrations"
 	@ echo "    version                Print the currently installed version"
 	@ echo
@@ -24,8 +25,9 @@ default:
 	@ echo "    dev-start              Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop               Stops the backgrounded commands"
 	@ echo "    dev-restart            Runs dev-stop then dev-restart"
-	@ echo "    test                   Run pytest unit tests"
-	@ echo "    test-source SOURCE={source}   Run pytest unit tests for the specified data source (name only, no extension)"
+	@ echo "    server            	   Runs a single instance of the server (useful for debugging endpoints)"
+	@ echo "    test SOURCE={source}   Run pytest unit tests for the specified source file. Defaults to all"
+	@ echo "    test-api   			       Run API tests locally using newman"
 	@ echo "    build                  Builds documentation and frontend - use before pushing"
 	@ echo "    frontend               Builds frontend with Brunch"
 	@ echo "    update-deps            Generates updated requirements.txt and environment.yml"
@@ -34,8 +36,6 @@ default:
 	@ echo "    docs                   Generates all documentation"
 	@ echo
 	@ echo "Prototyping:"
-	@ echo "    metrics-status         Shows the implementation status of CHAOSS metrics"
-	@ echo "    edit-metrics-status    Edits the JSON file that tracks CHAOSS metrics implementation status"
 	@ echo "    jupyter                Launches the jupyter"
 	@ echo "    create-jupyter-env     Creates a jupyter environment for Augur"
 	@ echo 
@@ -67,10 +67,7 @@ version:
 download-upgrade:
 	git pull
 
-update-upsteam: 
-	git submodule update --init --recursive --remote
-
-upgrade: version download-upgrade update-upsteam install-dev
+upgrade: version download-upgrade install-dev
 	@ python util/post-upgrade.py $(OLDVERSION)
 	@ echo "Upgraded from $(OLDVERSION) to $(shell python util/print-version.py)."
 
@@ -110,27 +107,31 @@ monitor:
 
 dev-restart: dev-stop dev-start
 
+server:
+	python -m augur.server
+
 frontend:
 	bash -c 'cd frontend; brunch build'
 
 python-docs:
-	cd docs/python   \
-	&& rm -rf _build \
-	&& make html
+	@ bash -c '$(CONDAACTIVATE) cd docs/python && rm -rf _build && make html; rm -rf ../../frontend/public/docs; mv build/html ../../frontend/public/docs'
 
 api-docs:
-	cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/
+	@ bash -c '$(CONDAACTIVATE) cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
 
 docs: api-docs python-docs
 
 build: frontend docs
-	cd augur/static/ && brunch build --production
+	cd augur/static/ \
+	&& brunch build --production
 
 test:
-	bash -c '$(CONDAACTIVATE) python -m pytest ./test'
-
-test-source:
 	bash -c '$(CONDAACTIVATE) python -m pytest test/test_${SOURCE}.py'
+
+test-api:
+	make dev-start
+	python test/test_api.py
+	make dev-stop
 
 .PHONY: unlock
 unlock:
@@ -146,12 +147,6 @@ update-deps:
 # 
 #  Prototyping
 #
-metrics-status: update-upsteam
-	@ bash -c '$(CONDAACTIVATE) cd docs/metrics/ && python status.py'
-
-edit-metrics-status:
-	$(EDITOR) docs/metrics/status.json
-
 jupyter:
 		@ bash -c '$(CONDAACTIVATE) cd notebooks; jupyter notebook'
 

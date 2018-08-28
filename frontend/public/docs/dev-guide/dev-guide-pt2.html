@@ -1,0 +1,248 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Developer Guide Part 2 - The Frontend &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="developer-guide-part-2-the-frontend">
+<h1>Developer Guide Part 2 - The Frontend<a class="headerlink" href="#developer-guide-part-2-the-frontend" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>Augur uses Vue.js, MetricsGraphics, and Kube for its frontend. The
+frontend is stored in the <code class="docutils literal notranslate"><span class="pre">frontend</span></code> directory, but the parts that are
+relevant to adding new metrics are in the <code class="docutils literal notranslate"><span class="pre">frontend/app/</span></code> directory,
+which contains the following parts: * <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurAPI.js</span></code>
+which interfaces with the backend * <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurStats.js</span></code>
+which performs statistical operations on the data *
+<code class="docutils literal notranslate"><span class="pre">frontend/app/Augur.js</span></code> which renders the page *
+<code class="docutils literal notranslate"><span class="pre">frontend/app/assets/</span></code> which contains the assets, such as images, for
+the frontend * <code class="docutils literal notranslate"><span class="pre">frontend/app/include/</span></code> which contains the Kube and
+MetricsGraphics resources * <code class="docutils literal notranslate"><span class="pre">frontend/styles/</span></code> which contains the
+stylesheet for Augur * <code class="docutils literal notranslate"><span class="pre">frontend/components/</span></code> which contains the
+Vue.js components (referred to a ‘Cards’*) *
+<code class="docutils literal notranslate"><span class="pre">frontend/components/charts/</span></code> contains the different chart templetes
+* <code class="docutils literal notranslate"><span class="pre">frontend/components/BaseRepoActivityCard.vue</span></code> contains the repo
+activity time series charts</p>
+<p>* The Cards that have the name of a metric grouping are each their own
+separate tab; pay attention to which card you are adding your graph to!</p>
+</div>
+<div class="section" id="how-to-add-a-new-timeseries-metric">
+<h2>How to add a new timeseries metric<a class="headerlink" href="#how-to-add-a-new-timeseries-metric" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurAPI.js</span></code>, add an attribute to the repo class that
+holds a timeseries object at the end of the file like this:</p>
+<div class="code javascript highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Timeseries</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">endpointName</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">endpoint_name</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So if your endpoint name is <code class="docutils literal notranslate"><span class="pre">foo_bar</span></code> then the attribute would be:</p>
+<div class="code javascript highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Timeseries</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s1">&#39;fooBar&#39;</span><span class="p">,</span> <span class="s1">&#39;foo_bar&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="how-to-add-a-new-nontimeseries-metric">
+<h2>How to add a new nontimeseries metric<a class="headerlink" href="#how-to-add-a-new-nontimeseries-metric" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurAPI.js</span></code>, add an attribute to the repo class that
+holds an endpoint object at the end of the file like this:</p>
+<div class="code javascript highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Endpoint</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">endpointName</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">endpoint_name</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So if your endpoint name is <code class="docutils literal notranslate"><span class="pre">foo_bar</span></code> then the attribute would be:</p>
+<div class="code javascript highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Endpoint</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s1">&#39;fooBar&#39;</span><span class="p">,</span> <span class="s1">&#39;foo_bar&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-a-chart">
+<h2>Adding a chart<a class="headerlink" href="#adding-a-chart" title="Permalink to this headline">¶</a></h2>
+<p><strong>This process is exactly the same whether your metric is a timeseries
+or not.</strong></p>
+<p>If your metric is a new Growth-Maturity-Decline metric, in
+<code class="docutils literal notranslate"><span class="pre">frontend/app/components/GrowthMaturityDeclineCard.vue</span></code>, in the
+template in the section tag, add a div like this:</p>
+<div class="code html highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;row&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;col col-&#39;width&#39;&gt;</span>
+    <span class="o">&lt;</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;endpointName&quot;</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chart title&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;Optional link to explanation&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Optional link title&quot;</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span><span class="o">&gt;</span>
+  <span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>(Note the <code class="docutils literal notranslate"><span class="pre">source</span></code> attribute; this is the <code class="docutils literal notranslate"><span class="pre">endpointName</span></code> you defined
+in the previous step. So, if your <code class="docutils literal notranslate"><span class="pre">endpointName</span></code> was <code class="docutils literal notranslate"><span class="pre">fooBar</span></code>, the
+source attribute would look like <code class="docutils literal notranslate"><span class="pre">source=&quot;fooBar&quot;</span></code> - don’t forget the
+quotes! )</p>
+<p>The recommended width is 6 for half width and 12 for full width. So if I
+wanted to add the <code class="docutils literal notranslate"><span class="pre">foo_bar</span></code>chart, it would look like this:</p>
+<div class="code html highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;row&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;col col-12&gt;</span>
+    <span class="o">&lt;</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;fooBar&quot;</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Foo Bar&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://foobar.com&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Link to foo bar explanation&quot;</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span><span class="o">&gt;</span>
+  <span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-comparison-functionality">
+<h2>Adding Comparison Functionality<a class="headerlink" href="#adding-comparison-functionality" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">frontend/app/components/BaseRepoActivityCard.vue</span></code>, in the template
+in the section tag, add a div like this:</p>
+<div class="code html highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;row&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;col col-&#39;width&#39;&gt;</span>
+    <span class="o">&lt;</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;endpointName&quot;</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chart title&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;Optional link to explanation&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Optional link title&quot;</span>
+                <span class="n">v</span><span class="o">-</span><span class="n">bind</span><span class="p">:</span><span class="n">compared</span><span class="o">-</span><span class="n">to</span><span class="o">=</span><span class="s2">&quot;comparedTo&quot;</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span><span class="o">&gt;</span>
+  <span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>The recommended width is 6 for half width and 12 for full width. So if I
+wanted to add the <code class="docutils literal notranslate"><span class="pre">foo_bar</span></code>chart, it would look like this:</p>
+<div class="code html highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;row&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;col col-12&gt;</span>
+    <span class="o">&lt;</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;fooBar&quot;</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Foo Bar&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://foobar.com&quot;</span>
+                <span class="n">cite</span><span class="o">-</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Link to foo bar explination&quot;</span>
+                <span class="n">v</span><span class="o">-</span><span class="n">bind</span><span class="p">:</span><span class="n">compared</span><span class="o">-</span><span class="n">to</span><span class="o">=</span><span class="s2">&quot;comparedTo&quot;</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">line</span><span class="o">-</span><span class="n">chart</span><span class="o">&gt;</span>
+  <span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-a-chart-type">
+<h2>Adding a chart type<a class="headerlink" href="#adding-a-chart-type" title="Permalink to this headline">¶</a></h2>
+<p>In the <code class="docutils literal notranslate"><span class="pre">frontend/app/components/charts</span></code> directory, define a new chart
+for the metric.</p>
+<p>In the appropriate Card, import the chart at the bottom and then export
+it so that Vue can use it.</p>
+<p>In the same file, in the template in the section tag, add a div like
+this:</p>
+<div class="code html highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;row&quot;</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;col col-&#39;width&#39;&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">chart</span><span class="o">-</span><span class="nb">type</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;attributeName&quot;</span>
+                    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chart title&quot;</span>
+                    <span class="n">cite</span><span class="o">-</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;Optional link to explanation&quot;</span>
+                    <span class="n">cite</span><span class="o">-</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Optional link title&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;/</span><span class="n">chart</span><span class="o">-</span><span class="nb">type</span><span class="o">&gt;</span>
+      <span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="o">...</span>
+<span class="kn">import</span> <span class="nn">ChartType</span> <span class="kn">from</span> <span class="s1">&#39;./charts/ChartType&#39;</span>
+
+<span class="n">module</span><span class="o">.</span><span class="n">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="n">components</span><span class="p">:</span> <span class="p">{</span>
+    <span class="n">ChartType</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The recommended width is 6 for half width and 12 for full width. So if I
+wanted to add the <code class="docutils literal notranslate"><span class="pre">foo_bar</span></code> chart, it would look like this</p>
+<div class="code html highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;row&quot;</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">=</span><span class="s2">&quot;col col-12&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">foo</span><span class="o">-</span><span class="n">bar</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;fooBar&quot;</span>
+                    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Foo Bar&quot;</span>
+                    <span class="n">cite</span><span class="o">-</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://foobar.com&quot;</span>
+                    <span class="n">cite</span><span class="o">-</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Link to foo bar explanation&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;/</span><span class="n">foo</span><span class="o">-</span><span class="n">bar</span><span class="o">&gt;</span>
+      <span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="o">...</span>
+<span class="kn">import</span> <span class="nn">FooBar</span> <span class="kn">from</span> <span class="s1">&#39;./charts/FooBar&#39;</span>
+
+<span class="n">module</span><span class="o">.</span><span class="n">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="n">components</span><span class="p">:</span> <span class="p">{</span>
+    <span class="n">FooBar</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dev-guide/dev-guide-pt2.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/dev-guide/dev-guide-pt2.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

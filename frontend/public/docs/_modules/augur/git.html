@@ -1,0 +1,355 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.git &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for augur.git</h1><div class="highlight"><pre>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Analyzes Git repos directly using git</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">git</span>
+<span class="kn">from</span> <span class="nn">lockfile</span> <span class="k">import</span> <span class="n">LockFile</span><span class="p">,</span> <span class="n">AlreadyLocked</span>
+<span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">logger</span><span class="p">,</span> <span class="n">get_cache</span><span class="p">,</span> <span class="n">annotate</span>
+
+<span class="c1"># end imports</span>
+<span class="c1"># (don&#39;t remove the above line, it&#39;s for a script</span>
+
+<span class="k">class</span> <span class="nc">Repo</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to deal with the metadata surrounding a Git repository</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">repo_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">folder_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">repo_url</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">repo_folder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">folder_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span><span class="p">,</span> <span class="s1">&#39;repo&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lockfile_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span><span class="p">,</span> <span class="s1">&#39;lock&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">LockFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lockfile_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span><span class="p">,</span> <span class="s1">&#39;metadata.json&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update context</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Git: Updating </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Cloning </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+            <span class="n">git</span><span class="o">.</span><span class="n">Git</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">repo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">git</span><span class="p">(</span><span class="n">is_updater</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Pulling </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+                <span class="n">repo</span><span class="o">.</span><span class="n">git</span><span class="o">.</span><span class="n">pull</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Re-Cloning </span><span class="si">%s</span><span class="s1"> because </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+                <span class="n">git</span><span class="o">.</span><span class="n">Git</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">containing_folder</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="c1"># Save the updated time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;last_updated&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Git: Update completed for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">break_lock</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">git</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_updater</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">is_locked</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">is_updater</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_updater</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AlreadyLocked</span><span class="p">(</span><span class="s1">&#39;This repository is being updated, if you can see this message delete </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lockfile_path</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">is_updater</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="o">=</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span>
+
+
+<div class="viewcode-block" id="Git"><a class="viewcode-back" href="../../datasources/augur.git.Git.html#augur.git.Git">[docs]</a><span class="k">class</span> <span class="nc">Git</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyzes Git repos directly using dulwich</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Git.__init__"><a class="viewcode-back" href="../../datasources/augur.git.Git.html#augur.git.Git.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_repositories</span><span class="p">,</span> <span class="n">storage_folder</span><span class="p">,</span> <span class="n">csv</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new GitHub instance</span>
+
+<span class="sd">        :param listOfRepositories: List of URLs to Git repos to analyze</span>
+<span class="sd">        :param storageFolder: Folder to download the repositories to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">storage_folder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder</span><span class="p">,</span> <span class="s1">&#39;repos&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_csv</span> <span class="o">=</span> <span class="n">csv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__cache</span> <span class="o">=</span> <span class="n">get_cache</span><span class="p">(</span><span class="s1">&#39;augur-git&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_repo_urls</span> <span class="o">=</span> <span class="n">list_of_repositories</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_git_repos</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repo_folder</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repo_folder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder</span><span class="p">,</span> <span class="s1">&#39;git_log.txt&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_location</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_updater</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">get_repo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a repo object from the given url</span>
+
+<span class="sd">        :param repo_url: URL of the repository</span>
+<span class="sd">        :return: a Repo obeject</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">repo_url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_git_repos</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_git_repos</span><span class="p">[</span><span class="n">repo_url</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">repo</span> <span class="o">=</span> <span class="n">Repo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_git_repos</span><span class="p">[</span><span class="n">repo_url</span><span class="p">]</span> <span class="o">=</span> <span class="n">repo</span>
+            <span class="k">return</span> <span class="n">repo</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes sure the storage_folder contains updated versions of all the repos</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lock</span> <span class="o">=</span> <span class="n">LockFile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repo_folder</span><span class="p">,</span> <span class="s1">&#39;update_lock&#39;</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_updater</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">repo_url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repo_urls</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_repo</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)</span> <span class="k">as</span> <span class="n">repo</span><span class="p">:</span>           
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Git: Calculating metrics for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">repo</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>    
+                        <span class="c1"># Do slow functions and rebuild their caches</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lines_changed_minus_whitespace</span><span class="p">(</span><span class="n">repo</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">rebuild_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">changes_by_author</span><span class="p">(</span><span class="n">repo</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">rebuild_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Git: Update failed for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">repo</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Git: Reason for failure: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                    <span class="k">pass</span>
+                   
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_updater</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###    DIVERSITY AND INCLUSION    ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            RISK               ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            VALUE              ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###           ACTIVITY            ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###         EXPERIMENTAL          ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;downloaded-repos&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">downloaded_repos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all downloaded repositories and the date they were last updated</span>
+<span class="sd">        :return: a JSON object with the URL and date of last update for all downloaded repos        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">downloaded</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">repo_url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repo_urls</span><span class="p">:</span>
+            <span class="n">repo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_repo</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)</span>
+            <span class="n">updated</span> <span class="o">=</span> <span class="s1">&#39;never&#39;</span>
+            <span class="k">if</span> <span class="n">repo</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">is_locked</span><span class="p">():</span>
+                <span class="n">updated</span> <span class="o">=</span> <span class="s1">&#39;now&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;last_updated&#39;</span> <span class="ow">in</span> <span class="n">repo</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                    <span class="n">updated</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;last_updated&#39;</span><span class="p">]</span>
+            <span class="n">downloaded</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">repo_url</span><span class="p">,</span>
+                <span class="s1">&#39;updated&#39;</span><span class="p">:</span> <span class="n">updated</span>
+            <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">downloaded</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-minus-whitespace&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_changed_minus_whitespace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">from_commit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rebuild_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes sure the storageFolder contains updated versions of all the repos</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">heavy_lifting</span><span class="p">():</span>
+            <span class="k">nonlocal</span> <span class="n">df</span>
+            <span class="n">from_commit</span> <span class="o">=</span> <span class="kc">None</span>
+            
+            <span class="n">repo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_repo</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)</span>
+            <span class="n">git_repo</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">git</span><span class="p">()</span>
+            
+            <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+                <span class="n">from_commit</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;hash&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Run a Git log command that returns each entry into 3 parts:</span>
+<span class="sd">                1. JSON of the metadata</span>
+<span class="sd">                2. Commit message</span>
+<span class="sd">                3. Diffs</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">arg_array</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-p&#39;</span><span class="p">,</span> <span class="s1">&#39;-w&#39;</span><span class="p">,</span> <span class="s1">&#39;-m&#39;</span><span class="p">,</span> <span class="s1">&#39;--full-history&#39;</span><span class="p">,</span> <span class="s1">&#39;--reverse&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;--pretty=format:&#39;[START ENTRY]%n{%n&quot;hash&quot;:&quot;%h&quot;,%n&quot;author_name&quot;:&quot;%an&quot;,%n&quot;author_email&quot;:&quot;%ae&quot;,%n&quot;author_date&quot;:&quot;%ai&quot;,%n&quot;committer_name&quot;: &quot;</span><span class="si">%c</span><span class="s2">n&quot;,%n&quot;committer_email&quot;:&quot;</span><span class="si">%c</span><span class="s2">e&quot;,%n&quot;commit_date&quot;:&quot;</span><span class="si">%c</span><span class="s2">i&quot;,%n&quot;parents&quot;:&quot;%p&quot;%n}%n#####SPLIT#####</span><span class="si">%s</span><span class="s2">#####SPLIT#####&#39;&quot;&quot;&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">from_commit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">arg_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">..&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">from_commit</span><span class="p">))</span>
+            <span class="n">history</span> <span class="o">=</span> <span class="n">git_repo</span><span class="o">.</span><span class="n">git</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">*</span><span class="n">arg_array</span><span class="p">)</span>
+            <span class="c1"># Split the message into individual entries</span>
+            <span class="n">entries</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;[START ENTRY]&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+                <span class="n">splits</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;#####SPLIT#####&#39;</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">splits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">):</span>
+                    <span class="n">diffs</span> <span class="o">=</span> <span class="n">splits</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;diff --git&#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">diffs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                        <span class="k">if</span> <span class="s1">&#39;+&#39;</span> <span class="ow">in</span> <span class="n">diff</span><span class="p">:</span>
+                            <span class="n">file_search</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;b(\/.+)&#39;</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">file_search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">filename</span> <span class="o">=</span> <span class="n">file_search</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                                <span class="c1"># Find all the lines that begin with a plus or minus to count added</span>
+                                <span class="c1"># Minus one to account the file matches</span>
+                                <span class="n">additions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">\+[ </span><span class="se">\t</span><span class="s1">]*[^\s]&#39;</span><span class="p">,</span> <span class="n">diff</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+                                <span class="n">deletions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">-[ </span><span class="se">\t</span><span class="s1">]*[^\s]&#39;</span><span class="p">,</span> <span class="n">diff</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+                                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;additions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">additions</span>
+                                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;deletions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deletions</span>
+                                <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hash&#39;</span><span class="p">]))</span>
+
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">):</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+            <span class="n">df</span><span class="p">[</span><span class="s1">&#39;author_affiliation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv</span><span class="o">.</span><span class="n">classify_emails</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;author_email&#39;</span><span class="p">])</span>
+            <span class="n">df</span><span class="p">[</span><span class="s1">&#39;committer_affiliation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv</span><span class="o">.</span><span class="n">classify_emails</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;committer_email&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">df</span>
+        
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;lc-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="n">createfunc</span><span class="o">=</span><span class="n">heavy_lifting</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rebuild_cache</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__cache</span><span class="o">.</span><span class="n">remove_value</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;lc-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">))</span>
+            <span class="n">new_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines_changed_minus_whitespace</span><span class="p">(</span><span class="n">repo_url</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">results</span><span class="p">,</span> <span class="n">rebuild_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Git: Added commits from </span><span class="si">%s</span><span class="s1"> to </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;hash&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">new_results</span><span class="p">[</span><span class="s1">&#39;hash&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">new_results</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-by-author&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_changed_by_author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s1">&#39;M&#39;</span><span class="p">,</span> <span class="n">rebuild_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes sure the storageFolder contains updated versions of all the repos</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">heavy_lifting</span><span class="p">():</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines_changed_minus_whitespace</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)</span>
+            <span class="n">df</span><span class="p">[</span><span class="s1">&#39;author_date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;author_date&#39;</span><span class="p">])</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;author_date&#39;</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;author_email&#39;</span><span class="p">,</span> <span class="s1">&#39;author_name&#39;</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="n">freq</span><span class="p">)])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;additions&#39;</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">df</span><span class="p">[</span><span class="s1">&#39;affiliation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv</span><span class="o">.</span><span class="n">classify_emails</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s1">&#39;author_email&#39;</span><span class="p">))</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">df</span>
+        <span class="k">if</span> <span class="n">rebuild_cache</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__cache</span><span class="o">.</span><span class="n">remove_value</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;cba-</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">))</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;cba-</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">),</span> <span class="n">createfunc</span><span class="o">=</span><span class="n">heavy_lifting</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result5</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

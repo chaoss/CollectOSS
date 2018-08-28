@@ -1,6 +1,11 @@
 #SPDX-License-Identifier: MIT
+"""
+Provides shared functions that do not fit in a class of their own
+"""
 import pandas as pd
 import os
+import re
+import json
 import logging
 import coloredlogs
 import beaker
@@ -12,6 +17,8 @@ logger = logging.getLogger('augur')
 # end imports
 # (don't remove the above line, it's for a script)
 
+def getFileID(path):
+    return os.path.splitext(os.path.basename(path))[0]
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
@@ -31,7 +38,7 @@ def get_cache(namespace, cache_manager=None):
         cache_manager = __memory_cache
     return cache_manager.get_cache(namespace)
 
-metrics = []
+metric_metadata = []
 def annotate(metadata=None, **kwargs):
     """
     Decorate a function as being a metric
@@ -41,8 +48,13 @@ def annotate(metadata=None, **kwargs):
     def decorate(func):
         if not hasattr(func, 'metadata'):
             func.metadata = {}
-            metrics.append(func.metadata)
+            metric_metadata.append(func.metadata)
         func.metadata.update(metadata)
         func.metadata.update(dict(kwargs))
+
+        func.metadata['metric_name'] = re.sub('_', ' ', func.__name__).title()
+        func.metadata['source'] = re.sub(r'(.*\.)', '', func.__module__)
+        func.metadata['ID'] = "{}-{}".format(func.metadata['source'].lower(), func.metadata['tag'])
+
         return func
     return decorate

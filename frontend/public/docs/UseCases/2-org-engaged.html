@@ -1,0 +1,177 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Title: 2-org-engaged &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="title-2-org-engaged">
+<h1>Title: 2-org-engaged<a class="headerlink" href="#title-2-org-engaged" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="background">
+<h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
+<p>Organizations that engage with open source communities or use open
+source software want to evaluate the value and long-term sustainability
+of this engagement. Depending on the context, organizations may want to
+assess the engagement level of its employees in the community, identify
+early warn signals about deteriorating community health, or the
+emergence of risk factors over time.</p>
+</div>
+<div class="section" id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>The user (employee) provides a URL to a GitHub repository for a
+community that she wants to evaluate. The software returns
+<a class="reference external" href="https://wiki.linuxfoundation.org/oss-health-metrics/metrics">metrics</a>
+that indicate the health and sustainability of the repository.</p>
+</div>
+<div class="section" id="triggers-what-prompts-the-use-case-to-start">
+<h2>Triggers (What prompts the use case to start?)<a class="headerlink" href="#triggers-what-prompts-the-use-case-to-start" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>A user (employee) seeks to assess the value of engaging with an open
+source community and the long-term sustainability to justify
+continued engagement with the community.</li>
+</ol>
+</div>
+<div class="section" id="actors-who-is-involved">
+<h2>Actors (Who is involved?)<a class="headerlink" href="#actors-who-is-involved" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>User</li>
+</ol>
+</div>
+<div class="section" id="preconditions-this-includes-things-like-data-loaded-or-project-is-flagged-as-of-interest-etc">
+<h2>Preconditions (This includes things like “data loaded”. Or, project is flagged as “of interest”; etc.)<a class="headerlink" href="#preconditions-this-includes-things-like-data-loaded-or-project-is-flagged-as-of-interest-etc" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>User provides URL to a GitHub repository</li>
+</ol>
+</div>
+<div class="section" id="main-success-scenario">
+<h2>Main Success Scenario<a class="headerlink" href="#main-success-scenario" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>All metrics that can be computed from the provided repository are
+displayed.</li>
+</ol>
+</div>
+<div class="section" id="alternate-success-scenarios">
+<h2>Alternate Success Scenarios<a class="headerlink" href="#alternate-success-scenarios" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>N/A</li>
+</ol>
+</div>
+<div class="section" id="failed-end-condition">
+<h2>Failed End Condition<a class="headerlink" href="#failed-end-condition" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>The provided URL points to a non-existent GitHub repository, metrics
+cannot be calculated, and an error message explaining the condition
+is shown to user.</li>
+</ol>
+</div>
+<div class="section" id="extensions">
+<h2>Extensions<a class="headerlink" href="#extensions" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Compare metrics between repositories.</li>
+</ol>
+</div>
+<div class="section" id="steps-of-execution-requirements">
+<h2>Steps of Execution (Requirements)<a class="headerlink" href="#steps-of-execution-requirements" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>The use enters and submits the URL to a GitHub repository.</li>
+<li>Metrics computed from the provided repository are displayed.</li>
+</ol>
+</div>
+<div class="section" id="dependent-use-cases">
+<h2>Dependent Use Cases<a class="headerlink" href="#dependent-use-cases" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>N/A</li>
+</ol>
+</div>
+<div class="section" id="a-use-case-diagram-following-the-uml-standard-for-expressing-use-cases">
+<h2>A use case diagram, following the UML Standard for expressing use cases.<a class="headerlink" href="#a-use-case-diagram-following-the-uml-standard-for-expressing-use-cases" title="Permalink to this headline">¶</a></h2>
+<div class="figure" id="id1">
+<img alt="use case diagram" src="UseCases/./diagram/ViewMetrics.png" />
+<p class="caption"><span class="caption-text">use case diagram</span></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/UseCases/2-org-engaged.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/UseCases/2-org-engaged.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

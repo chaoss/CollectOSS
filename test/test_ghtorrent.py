@@ -1,7 +1,7 @@
 import os
 import pytest
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def ghtorrent():
     import augur
     augurApp = augur.Application()
@@ -28,9 +28,6 @@ The tests check if a value is anywhere in the dataframe
 # *** GROWTH, MATURITY, AND DECLINE *** #
 def test_closed_issues(ghtorrent):
     assert ghtorrent.closed_issues('cashmusic', 'platform').isin(["2012-11-09T00:00:00.000Z"]).any
-
-def test_closed_issue_resolution_duration(ghtorrent):
-    assert ghtorrent.closed_issue_resolution_duration('mopidy', 'mopidy').isin(["2012-11-10T09:51:19.000Z"]).any
 
 def test_code_commits(ghtorrent):
     assert ghtorrent.code_commits('facebook', 'folly').isin(["2013-01-07"]).any
@@ -114,10 +111,6 @@ def test_project_age(ghtorrent):
 
 def test_fakes(ghtorrent):
     assert ghtorrent.fakes('rails', 'rails').isin(["2008-09-24T00:00:00.000Z"]).any
-
-def test_ghtorrent_range(ghtorrent):
-    assert ghtorrent.ghtorrent_range().isin(["0000-00-00"]).any
-
 
 
 

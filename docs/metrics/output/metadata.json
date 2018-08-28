@@ -1,0 +1,358 @@
+[
+    {
+        "metric_name": "Closed Issues",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/issues/closed",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/issues/closed",
+        "source": "GHTorrent",
+        "tag": "closed-issues",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Code Commits",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/commits",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/commits",
+        "source": "GHTorrent",
+        "tag": "code-commits",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Code Review Iteration",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/code_review_iteration",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/code_review_iteration",
+        "source": "GHTorrent",
+        "tag": "code-review-iteration",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Contribution Acceptance",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/contribution_acceptance",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/contribution_acceptance",
+        "source": "GHTorrent",
+        "tag": "contribution-acceptance",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Contributing Github Organizations",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/contributing_github_organizations",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/contributing_github_organizations",
+        "source": "GHTorrent",
+        "tag": "contributing-github-organizations"
+    },
+    {
+        "metric_name": "First Response To Issue Duration",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/issues/response_time",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/issues/response_time",
+        "source": "GHTorrent",
+        "tag": "first-response-to-issue-duration",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Forks",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/forks",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/forks",
+        "source": "GHTorrent",
+        "tag": "forks",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Maintainer Response To Merge Request Duration",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls/maintainer_response_time",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls/maintainer_response_time",
+        "source": "GHTorrent",
+        "tag": "maintainer-response-to-merge-request-duration",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "New Contributing Github Organizations",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/new_contributing_github_organizations",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/new_contributing_github_organizations",
+        "source": "GHTorrent",
+        "tag": "new-contributing-github-organizations",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Open Issues",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/issues",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/issues",
+        "source": "GHTorrent",
+        "tag": "open-issues",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Pull Request Comments",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls/comments",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls/comments",
+        "source": "GHTorrent",
+        "tag": "pull-request-comments",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Pull Requests Open",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls",
+        "source": "GHTorrent",
+        "tag": "pull-requests-open",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Issue Comments",
+        "group": "activity",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/issue/comments",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/issue/comments",
+        "source": "GHTorrent",
+        "tag": "issue-comments",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Pull Requests Made Closed",
+        "group": "activity",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls/made_closed",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls/made_closed",
+        "source": "GHTorrent",
+        "tag": "pull-requests-made-closed",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Watchers",
+        "group": "activity",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/watchers",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/watchers",
+        "source": "GHTorrent",
+        "tag": "watchers",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Commits100",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/commits100",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/commits100",
+        "source": "GHTorrent",
+        "tag": "commits100",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Commit Comments",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/commits/comments",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/commits/comments",
+        "source": "GHTorrent",
+        "tag": "commit-comments",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Committer Locations",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/committer_locations",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/committer_locations",
+        "source": "GHTorrent",
+        "tag": "committer-locations"
+    },
+    {
+        "metric_name": "Total Committers",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/total_committers",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/total_committers",
+        "source": "GHTorrent",
+        "tag": "total-committers",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Issue Activity",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/issues/activity",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/issues/activity",
+        "source": "GHTorrent",
+        "tag": "issue-activity",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Pull Request Acceptance Rate",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/pulls/acceptance_rate",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/pulls/acceptance_rate",
+        "source": "GHTorrent",
+        "tag": "pull-request-acceptance-rate",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Community Age",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/community_age",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/community_age",
+        "source": "GHTorrent",
+        "tag": "community-age"
+    },
+    {
+        "metric_name": "Community Engagement",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/community_engagement",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/community_engagement",
+        "source": "GHTorrent",
+        "tag": "community-engagement",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Contributors",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/contributors",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/contributors",
+        "source": "GHTorrent",
+        "tag": "contributors"
+    },
+    {
+        "metric_name": "Contributions",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/contributions",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/contributions",
+        "source": "GHTorrent",
+        "tag": "contributions"
+    },
+    {
+        "metric_name": "Project Age",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/project_age",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/project_age",
+        "source": "GHTorrent",
+        "tag": "project-age"
+    },
+    {
+        "metric_name": "Fakes",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/fakes",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/fakes",
+        "source": "GHTorrent",
+        "tag": "fakes",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "closed-issue-resolution-duration",
+        "group": "growth-maturity-decline"
+    },
+    {
+        "metric_name": "Lines Of Code Changed",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/lines_changed",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/lines_changed",
+        "source": "GitHubAPI",
+        "tag": "lines-of-code-changed",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Bus Factor",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/bus_factor",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/bus_factor",
+        "source": "GitHubAPI",
+        "tag": "bus-factor"
+    },
+    {
+        "metric_name": "Major Tags",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/tags/major",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/tags/major",
+        "source": "GitHubAPI",
+        "tag": "major-tags",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Tags",
+        "group": "growth-maturity-decline",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/tags",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/tags",
+        "source": "GitHubAPI",
+        "tag": "tags",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "downloaded-repos",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "lines-changed-minus-whitespace",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "lines-changed-by-author",
+        "group": "experimental"
+    },
+    {
+        "metric_name": "Downloaded Repos",
+        "group": "experimental",
+        "endpoint": "/api/unstable/git/repos",
+        "escaped_endpoint": "/api/unstable/git/repos",
+        "source": "Facade",
+        "tag": "downloaded-repos",
+        "metric_type": "git"
+    },
+    {
+        "metric_name": "Lines Changed Minus Whitespace",
+        "group": "experimental",
+        "endpoint": "/api/unstable/git/lines_changed/<path:repo_url>/",
+        "escaped_endpoint": "/api/unstable/git/lines_changed/&lt;path:repo_url&gt;/",
+        "source": "Facade",
+        "tag": "lines-changed-minus-whitespace",
+        "metric_type": "git"
+    },
+    {
+        "metric_name": "Lines Changed By Author",
+        "group": "experimental",
+        "endpoint": "/api/unstable/git/changes_by_author/<path:repo_url>/",
+        "escaped_endpoint": "/api/unstable/git/changes_by_author/&lt;path:repo_url&gt;/",
+        "source": "Facade",
+        "tag": "lines-changed-by-author",
+        "metric_type": "git"
+    },
+    {
+        "metric_name": "Dependencies",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/dependencies",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/dependencies",
+        "source": "LibrariesIO",
+        "tag": "dependencies"
+    },
+    {
+        "metric_name": "Dependency Stats",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/dependency_stats",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/dependency_stats",
+        "source": "LibrariesIO",
+        "tag": "dependency-stats"
+    },
+    {
+        "metric_name": "Dependents",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/dependents",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/dependents",
+        "source": "LibrariesIO",
+        "tag": "dependents"
+    },
+    {
+        "metric_name": "Downloads",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/timeseries/downloads",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/timeseries/downloads",
+        "source": "Downloads",
+        "tag": "downloads",
+        "metric_type": "timeseries"
+    },
+    {
+        "metric_name": "Linking Websites",
+        "group": "experimental",
+        "endpoint": "/api/unstable/<owner>/<repo>/linking_websites",
+        "escaped_endpoint": "/api/unstable/&lt;owner&gt;/&lt;repo&gt;/linking_websites",
+        "source": "PublicWWW",
+        "tag": "linking-websites"
+    }
+]

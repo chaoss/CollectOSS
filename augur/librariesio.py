@@ -1,8 +1,14 @@
+"""
+Data source that uses the LibrariesIO dependency data
+"""
+
 import requests
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
 from augur import logger
+from augur.util import annotate
+
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -41,10 +47,9 @@ class LibrariesIO(object):
     ###         EXPERIMENTAL          ###
     #####################################
 
-
+    @annotate(tag='dependencies')
     def dependencies(self, owner, repo):
         """
-
         Finds the packages that a project depends on
 
         :param owner: GitHub username of the owner of the repo
@@ -55,6 +60,7 @@ class LibrariesIO(object):
         r = requests.get(url, params={"api_key": self.API_KEY})
         return r.json()
 
+    @annotate(tag='dependency-stats')
     def dependency_stats(self, owner, repo):
         """
         Finds the number of dependencies, dependant projects, and dependent repos by scrapping it off of the libraries.io website
@@ -110,9 +116,9 @@ class LibrariesIO(object):
 
         return final_data
 
+    @annotate(tag='dependents')
     def dependents(self, owner, repo):
         """   
-
         Finds the packages depend on this repository
 
         :param owner: GitHub username of the owner of the repo

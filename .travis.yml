@@ -1,7 +1,23 @@
-language: python
-python:
-  - "3.6"
-# command to install dependencies
-install: "pip install ."
-# command to run tests
-script: "python -m pytest ./test"
+matrix: 
+  include: 
+    - 
+      install: "pip install ."
+      language: python
+      python: "3.6"
+      notifications: 
+        slack: "augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS"
+      script: "python -m pytest ./test"
+    # - 
+    #   before_script: 
+    #     - "node --version"
+    #     - "npm --version"
+    #     - "node_modules/.bin/newman --version"
+    #   install: 
+    #     - "npm install newman"
+    #   language: node_js
+    #   node_js: 
+    #     - "8.2.1"
+    #   notifications: 
+    #     slack: "augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS"
+    #   script: 
+    #     - "node_modules/.bin/newman run https://api.getpostman.com/collections/4566755-ec950b0b-a5e9-4fe3-b1a5-ad4f49c209f9?apikey=$POSTMAN_API_KEY -e https://api.getpostman.com/environments/4566755-392a724a-6e59-4dc9-b70f-50221adf4847?apikey=$POSTMAN_API_KEY"

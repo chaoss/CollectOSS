@@ -12,3 +12,5 @@ gevent==1.2.1
 GitPython==2.1.3
 PyGithub==1.34
 mysql_connector_repackaged==0.3.1
+re==2.2.1
+coloredlogs==10.0.0

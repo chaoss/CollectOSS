@@ -1,9 +1,16 @@
+#SPDX-License-Identifier: MIT
+"""
+Handles global context, I/O, and configuration
+"""
+
 import os
 import time
 import multiprocessing as mp
 import logging
 import configparser as configparser
 import json
+import importlib
+import pkgutil
 import coloredlogs
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
@@ -25,6 +32,11 @@ def updater_process(name, delay):
     except:
         raise
 
+def load_plugins():
+    if not hasattr(load_plugins, 'already_loaded'):
+        import augur.plugins
+    load_plugins.already_loaded = True
+
 class Application(object):
     """Initalizes all classes form Augur using a config file or environment variables"""
 
@@ -42,6 +54,7 @@ class Application(object):
         self.__config_bad = False
         self.__config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
         self.__config_location = os.path.dirname(self.__config_file_path)
+        self.__runtime_location = 'runtime/'
         self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
         if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
             try:
@@ -63,7 +76,6 @@ class Application(object):
             # Load the config file
             try:
                 config_text = self.__config_file.read()
-                config_text = config_text.replace('$(AUGUR)', self.__config_location)
                 self.__config = json.loads(config_text)
             except json.decoder.JSONDecodeError as e:
                 if not self.__config_bad:
@@ -80,11 +92,14 @@ class Application(object):
         self.__processes = []
 
         # Create cache
-        cache_config = self.read_config('Cache', 'config', None, {
+        cache_config = {
             'cache.type': 'file',
-            'cache.data_dir': 'runtime/cache/',
-            'cache.lock_dir': 'runtime/cache/'
-        })
+            'cache.data_dir': self.path('$(RUNTIME)/cache/'),
+            'cache.lock_dir': self.path('$(RUNTIME)/cache/')
+        }
+        cache_config.update(self.read_config('Cache', 'config', None, cache_config))
+        cache_config['cache.data_dir'] = self.path(cache_config['cache.data_dir'])
+        cache_config['cache.lock_dir'] = self.path(cache_config['cache.lock_dir'])
         if not os.path.exists(cache_config['cache.data_dir']):
             os.makedirs(cache_config['cache.data_dir'])
         if not os.path.exists(cache_config['cache.lock_dir']):
@@ -97,10 +112,37 @@ class Application(object):
         self.__ghtorrentplus = None
         self.__githubapi = None
         self.__git = None
+        self.__facade = None
         self.__librariesio = None
         self.__downloads = None
-        self.__publicwww = None
         self.__localCSV = None
+        self.__metrics_status = None
+
+        # Load plugins
+        import augur.plugins
+
+    @classmethod
+    def register_plugin(cls, plugin):
+        if not hasattr(plugin, 'name'):
+            raise NameError("{} didn't have a name")
+        cls.plugins[plugin.name] = plugin
+
+    def replace_config_variables(self, string, reverse=False):
+        variable_map = {
+            'AUGUR': self.__config_location,
+            'RUNTIME': self.__runtime_location
+        }
+        for variable, source in variable_map.items():
+            if not reverse:
+                string = string.replace('$({})'.format(variable), source)
+            else:
+                string = string.replace(source, '$({})'.format(variable))
+        return string
+
+    def path(self, path):
+        path = self.replace_config_variables(path)
+        path = os.path.abspath(os.path.expanduser(path))
+        return path
 
     def __updater(self, updates=None):
         if updates is None:
@@ -117,10 +159,11 @@ class Application(object):
         self.ghtorrentplus()
         self.githubapi()
         self.git()
+        self.facade()
         self.librariesio()
         self.downloads()
-        self.publicwww()
         self.localcsv()        
+        self.metrics_status()
 
     def read_config(self, section, name, environment_variable=None, default=None):
         value = None
@@ -145,6 +188,11 @@ class Application(object):
         if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1': 
             logger.debug('{}:{} = {}'.format(section, name, value))
         return value
+
+    def read_config_path(self, section, name, environment_variable=None, default=None):
+        path = self.read_config(section, name, environment_variable, default)
+        path = self.path(path)
+        return path
 
     def set_config(self, section, name, value):
         if not section in self.__config:
@@ -207,6 +255,20 @@ class Application(object):
             )
         return self.__ghtorrent
 
+    def facade(self):
+        from augur.facade import Facade
+        if self.__facade is None:
+            logger.debug('Initializing Facade')
+            self.__facade = Facade(
+                user=self.read_config('Facade', 'user', 'AUGUR_FACADE_DB_USER', 'root'),
+                password=self.read_config('Facade', 'pass', 'AUGUR_FACADE_DB_PASS', ''),
+                host=self.read_config('Facade', 'host', 'AUGUR_FACADE_DB_HOST', '127.0.0.1'),
+                port=self.read_config('Facade', 'port', 'AUGUR_FACADE_DB_PORT', '3306'),
+                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade'),
+                projects=self.read_config('Facade', 'projects', None, [])
+            )
+        return self.__facade
+
     def ghtorrentplus(self):
         from augur.ghtorrentplus import GHTorrentPlus
         if self.__ghtorrentplus is None:
@@ -223,7 +285,7 @@ class Application(object):
     def git(self, update=False):
         from augur.git import Git
         storage = self.path_relative_to_config(
-            self.read_config('Git', 'storage', 'AUGUR_GIT_STORAGE', 'runtime/git_repos/')
+            self.read_config_path('Git', 'storage', 'AUGUR_GIT_STORAGE', '$(RUNTIME)/git_repos/')
         )
         repolist = self.read_config('Git', 'repositories', None, [])
         if self.__git is None:
@@ -269,13 +331,6 @@ class Application(object):
             self.__downloads = Downloads(self.githubapi())
         return self.__downloads
 
-    def publicwww(self):
-        from augur.publicwww import PublicWWW
-        if self.__publicwww is None:
-            logger.debug('Initializing PublicWWW')
-            self.__publicwww = PublicWWW(api_key=self.read_config('PublicWWW', 'apikey', 'AUGUR_PUBLIC_WWW_API_KEY', 'None'))
-        return self.__publicwww
-
     def localcsv(self):
         from augur.localcsv import LocalCSV
         if self.__localCSV is None:
@@ -283,4 +338,12 @@ class Application(object):
             self.__localCSV = LocalCSV()
         return self.__localCSV
 
+    def metrics_status(self):
+        from augur.metrics_status import MetricsStatus
+        if self.__metrics_status is None:
+            logger.debug('Initializing MetricsStatus')
+            self.__metrics_status = MetricsStatus(self.githubapi())
+        return self.__metrics_status
 
+
+Application.plugins = {}

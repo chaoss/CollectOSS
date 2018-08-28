@@ -13,6 +13,8 @@ export default class AugurAPI {
 
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.openRequests = 0
+    this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
+    this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
   }
 
   // __autobatcher (url, params, fireTimeout) {
@@ -40,17 +42,18 @@ export default class AugurAPI {
   __URLFunctionFactory (url) {
     var self = this
     return function (params, callback) {
+      var cacheKey = window.btoa(url + JSON.stringify(params))
       this.openRequests++
-      if (self.__cache[window.btoa(url)]) {
-        if (self.__cache[window.btoa(url)].created_at > Date.now() - 1000 * 60) {
+      if (self.__cache[cacheKey]) {
+        if (self.__cache[cacheKey].created_at > Date.now() - 1000 * 60) {
           return new Promise((resolve, reject) => {
-            resolve(self.__cache[window.btoa(url)].data)
+            resolve(self.__cache[cacheKey].data)
           })
         }
       }
       return $.get(url, params).then((data) => {
         this.openRequests--
-        self.__cache[window.btoa(url)] = {
+        self.__cache[cacheKey] = {
           created_at: Date.now(),
           data: data
         }
@@ -133,8 +136,8 @@ export default class AugurAPI {
     if (repo.gitURL) {
       if (repo.gitURL.includes('github.com')) {
         let splitURL = repo.gitURL.split('/')
-        repo.owner = splitURL[3]
-        repo.name = splitURL[4].split('.')[0]
+        repo.owner = splitURL[1]
+        repo.name = splitURL[2].split('.')[0]
       }
     }
 
@@ -217,7 +220,6 @@ export default class AugurAPI {
     }
 
     if (repo.owner && repo.name) {
-
       // DIVERSITY AND INCLUSION
 
       // GROWTH, MATURITY, AND DECLINE
@@ -242,8 +244,9 @@ export default class AugurAPI {
       // VALUE
 
       // ACTIVITY
-      Timeseries(repo, 'issueComments', 'issue/comments')
-      Endpoint(repo, 'watchers', 'watchers')
+      Timeseries(repo, 'issueComments', 'issue_comments')
+      Timeseries(repo, 'pullRequestsMadeClosed', 'pulls/made_closed')
+      Timeseries(repo, 'watchers', 'watchers')
 
       // EXPERIMENTAL
 
@@ -255,9 +258,6 @@ export default class AugurAPI {
 
       // Issue Related
       Timeseries(repo, 'issueActivity', 'issues/activity')
-
-      // Pull Request Related
-      Timeseries(repo, 'pullsAcceptanceRate', 'pulls/acceptance_rate')
 
       // Community / Contributions
       Endpoint(repo, 'communityAge', 'community_age')

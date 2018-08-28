@@ -1,9 +1,16 @@
+#SPDX-License-Identifier: MIT
+"""
+Data source that gathers download stats from package managers
+"""
+
 import json
 import pandas as pd
 import requests
 import datetime
 import base64
 from augur import logger
+from augur.util import annotate
+
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -11,14 +18,44 @@ class Downloads(object):
     """Class for retrieveing download information using APIs and web scrapers"""
     def __init__(self, githubapi):
         self.__githubapi = githubapi.api
-        
 
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
+
+
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
+        
+    @annotate(tag='downloads')
     def downloads(self, owner, repo):
         """
-        Detects package file and calls correct function for download statistics
+        Timeseries that returns package file and calls the correct function to the create download statistics
 
         :param owner: repo owner username
         :param repo: repo name
+        :return: DataFrame with all downloads for that day
         """
         root_dir = self.__githubapi.get_repo((owner + "/" + repo)).get_dir_contents("/")
 
@@ -32,9 +69,10 @@ class Downloads(object):
 
     def ruby_downloads(self, repo):
         """
-        Returns daily downloads for ruby gems from bestgems.org API
+        Timeseries of daily downloads for ruby gems from bestgems.org API
 
         :param repo: repo name
+        :return: DataFrame with count of ruby downloads
         """
         r = requests.get("http://bestgems.org/api/v1/gems/%s/daily_downloads.json" % (repo))
         raw = r.text
@@ -52,6 +90,7 @@ class Downloads(object):
 
         :param repo: repo name
         :param contents: contents of package.json
+        :return: DataFrame with count of npm downloads
         """
         contents = json.loads(json.loads(json.dumps(contents)))
         name = contents["name"]

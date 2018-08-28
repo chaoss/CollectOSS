@@ -6,15 +6,15 @@
 
       <div class="col col-6">
         <line-chart source="closedIssues"
-                    title="Closed Issues / Week" 
+                    title="Closed Issues / Week"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md"
                     cite-text="Issues Closed">
         </line-chart>
       </div>
 
-<!--       <div class="col col-6">
+      <!-- <div class="col col-6">
         <line-chart source="closedIssueResolutionDuration"
-                    title="Time to Close for Issue / Week" 
+                    title="Time to Close for Issue / Week"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md"
                     cite-text="Issues Closed">
         </line-chart>
@@ -22,7 +22,7 @@
 
       <div class="col col-6">
         <line-chart source="codeCommits"
-                    title="Code Commits / Week" 
+                    title="Code Commits / Week"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md"
                     cite-text="Commits">
         </line-chart>
@@ -48,7 +48,7 @@
 
 <!--       <div class="col col-6">
         <line-chart source="firstResponseToIssueDuration"
-                    title="Issue Response Time" 
+                    title="Issue Response Time"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/issue-response-time.md"
                     cite-text="Issue Response Time">
         </line-chart>
@@ -56,7 +56,7 @@
  -->
       <div class="col col-6">
         <line-chart source="forks"
-                    title="Forks / Week" 
+                    title="Forks / Week"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md"
                     cite-text="Forks">
         </line-chart>
@@ -64,12 +64,12 @@
 
 <!--       <div class="col col-6">
         <line-chart source="linesOfCodeChanged"
-                    title="Lines Of Code Changed / Week" 
+                    title="Lines Of Code Changed / Week"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/lines-of-code-changed.md"
                     cite-text="Lines Of Code Changed">
         </line-chart>
-      </div> -->
-
+      </div>
+ -->
       <div class="col col-6">
         <line-chart source="maintainerResponseToMergeRequestDuration"
                       title="Time to First Maintainer Response to Merge Request"
@@ -99,23 +99,23 @@
 
       <div class="col col-6">
         <line-chart source="openIssues"
-                    title="Open Issues / Week" 
+                    title="Open Issues / Week"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md"
                     cite-text="Issues Open">
         </line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="pullRequestComments" 
-                    title="Pull Request Comments / Week " 
+        <line-chart source="pullRequestComments"
+                    title="Pull Request Comments / Week "
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md"
-                    cite-text="Pull Request Comments"> 
+                    cite-text="Pull Request Comments">
         </line-chart>
       </div>
 
       <div class="col col-6">
         <line-chart source="pullRequestsOpen"
-                    title="Pull Requests Open / Week" 
+                    title="Pull Requests Open / Week"
                     cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md"
                     cite-text="Open Pull Requests">
         </line-chart>
@@ -131,7 +131,7 @@
       </div>
 
     </div>
-    
+
     <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> <span class="ghtorrent-version"></span> and the <a href="https://developer.github.com/">GitHub API</a></small>
   </section>
 </template>

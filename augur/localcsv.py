@@ -1,4 +1,7 @@
 #SPDX-License-Identifier: MIT
+"""
+Loads small included datasets
+"""
 import pandas as pd
 import tldextract
 from urllib.parse import urlparse

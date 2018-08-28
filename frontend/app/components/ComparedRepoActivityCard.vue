@@ -7,109 +7,35 @@
 
       <div class="row">
 
-        <div class="col col-6">
-        <line-chart source="commits"
-                    title="Commits / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Community Activty"
-                    v-bind:compared-to="comparedTo">
-        </line-chart>
-      </div>
-
       <div class="col col-6">
-        <line-chart source="forks"
-                    title="Forks / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Community Activty"
-                    v-bind:compared-to="comparedTo">
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="issues"
-                    title="Issues / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Community Activty"
-                    v-bind:compared-to="comparedTo">
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="issueComments" 
-                    title="Issue Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"
-                    v-bind:compared-to="comparedTo"> 
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="commitComments" 
-                    title="Commit Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"
-                    v-bind:compared-to="comparedTo"> 
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="pullReqComments" 
-                    title="Pull Request Comments / Week " 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"
-                    v-bind:compared-to="comparedTo"> 
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="pullsAcceptanceRate" 
-                    title="Pull Acceptance Rate" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"
-                    v-bind:compared-to="comparedTo"> 
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="pulls" 
-                    title="Pulls Requests / Week" 
+        <line-chart source="issueComments"
+                    title="Issue Comments / Week "
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Contributors"
                     v-bind:compared-to="comparedTo">
         </line-chart>
       </div>
 
-      <div class="col col-6">
-        <line-chart source="issuesClosed" 
-                    title="Issues Closed / Week" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"
-                    v-bind:compared-to="comparedTo"> 
-        </line-chart>
-      </div>
-
-      <div class="col col-6">
-        <line-chart source="totalCommitters" 
-                    title="Total Committers" 
-                    cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                    cite-text="Contributors"
-                    disableRollingAverage=1
+       <div class="col col-6">
+        <line-chart source="pullRequestsMadeClosed" 
+                    title="Pull Requests Made/ Closed per Week " 
+                    cite-url="https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/pull-requests-made-closed.md"
+                    cite-text="Pull Requests Made/Closed"
                     v-bind:compared-to="comparedTo">
         </line-chart>
       </div>
 
-      <div class="col col-12">
-        <bubble-chart source="contributions"
-                      title="Contributior Overview"
-                      size="total"
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
-                      cite-text="Community Activty"
-                      v-bind:compared-to="comparedTo">
-        </bubble-chart>
+      <div class="col col-6">
+        <line-chart source="watchers" 
+                    title="Watchers / Week " 
+                    cite-url="https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/watchers.md"
+                    cite-text="Watchers"
+                    v-bind:compared-to="comparedTo">
+        </line-chart>
       </div>
 
       </div>
-      
+
       <small>Data provided by <a href="http://ghtorrent.org/msr14.html">GHTorrent</a> <span class="ghtorrent-version"></span> and the <a href="https://developer.github.com/">GitHub API</a></small>
     </div>
   </section>

@@ -4,14 +4,15 @@
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
       <section class="unmaterialized">
-        <h3>Enter a GitHub URL to get started</h3>
-        <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onRepo"/>
-      </section>
-      <section class="unmaterialized">
-        <h3>Downloaded Git repositories</h3>
-        <div v-for="repo in downloadedRepos">
-          <a :href="'?git=' + btoa(repo.url)" class="repolink">{{ repo.url }}</a> (updated: {{ repo.updated }})
+        <div id="collapse">
+          <h3 v-if="isCollapsed" @click="collapseText">Downloaded Git Repos by Project  <span style="font-size:16px">&#9660</span></h3>
+          <h3 v-else @click="collapseText">Downloaded Git Repos by Project  <span style="font-size:16px">&#9654</span></h3>
         </div>
+        <downloaded-repos-card></downloaded-repos-card>
+      </section>
+
+      <section class="unmaterialized">
+        <all-metrics-status-card></all-metrics-status-card>
       </section>
     </div>
 
@@ -27,11 +28,15 @@
           <li :class="{ active: (currentTab == 'experimental'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li>
           <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li>
         </ul>
-      </nav>  
+      </nav>
 
       <div ref="cards">
+        <main-controls></main-controls>
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
           <growth-maturity-decline-card></growth-maturity-decline-card>
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+            <compared-repo-growth-maturity-decline-card :comparedTo="repo"></compared-repo-growth-maturity-decline-card>
+          </div>
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
           <diversity-inclusion-card></diversity-inclusion-card>
@@ -51,15 +56,13 @@
         </div>
         <div v-if="(baseRepo && (currentTab == 'experimental'))">
           <experimental-card></experimental-card>
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+            <compared-repo-experimental-card :comparedTo="repo"></compared-repo-experimental-card>
+          </div>
         </div>
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
         </div>
-        <section class="unmaterialized" v-if="(baseRepo && (currentTab == 'activity'))">
-          <h3>Compare repository</h3>
-          <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
-        </section>
-        <main-controls></main-controls>
       </div>
     </div>
   </div>
@@ -67,32 +70,41 @@
 
 <script>
 import MainControls from './MainControls'
+import AllMetricsStatusCard from './AllMetricsStatusCard'
 import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
 import GrowthMaturityDeclineCard from './GrowthMaturityDeclineCard'
+import ComparedRepoGrowthMaturityDeclineCard from './ComparedRepoGrowthMaturityDeclineCard'
 import RiskCard from './RiskCard'
 import ValueCard from './ValueCard'
 import DiversityInclusionCard from './DiversityInclusionCard'
 import GitCard from './GitCard'
 import ExperimentalCard from './ExperimentalCard'
+import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
+import DownloadedReposCard from './DownloadedReposCard'
 
 module.exports = {
   components: {
     MainControls,
+    AllMetricsStatusCard,
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
     ComparedRepoActivityCard,
     GrowthMaturityDeclineCard,
+    ComparedRepoGrowthMaturityDeclineCard,
     RiskCard,
     ValueCard,
     DiversityInclusionCard,
     GitCard,
-    ExperimentalCard
+    ExperimentalCard,
+    ComparedRepoExperimentalCard,
+    DownloadedReposCard
   },
   data() {
     return {
-      downloadedRepos: []
+      downloadedRepos: [],
+      isCollapsed: false
     }
   },
   computed: {
@@ -110,17 +122,19 @@ module.exports = {
     },
     currentTab() {
       return this.$store.state.tab
-    }, 
+    },
   },
   methods: {
+    collapseText (){
+      this.isCollapsed = !this.isCollapsed;
+      if(!this.isCollapsed) {
+        $(this.$el).find('.section').addClass('collapsed')
+      }
+      else $(this.$el).find('.section').removeClass('collapsed')
+    },
     onRepo (e) {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
-      })
-    },
-    onCompare (e) {
-      this.$store.commit('addComparedRepo', {
-        url: e.target.value
       })
     },
     changeTab (e) {
@@ -129,18 +143,9 @@ module.exports = {
       })
       e.preventDefault();
     },
-    getDownloadedRepos() {
-      this.downloadedRepos = []
-      window.AugurAPI.getDownloadedGitRepos().then((data) => {
-        this.downloadedRepos = data
-      })
-    },
     btoa(s) {
       return window.btoa(s)
     }
-  },
-  mounted () {
-    this.getDownloadedRepos()
   }
 }
 </script>

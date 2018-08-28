@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Analyzes Git repos directly using dulwich
+Analyzes Git repos directly using git
 """
 
 import os
@@ -11,7 +11,7 @@ import datetime
 import pandas as pd
 import git
 from lockfile import LockFile, AlreadyLocked
-from augur.util import logger, get_cache
+from augur.util import logger, get_cache, annotate
 
 # end imports
 # (don't remove the above line, it's for a script
@@ -101,6 +101,12 @@ class Git(object):
         self.is_updater = False
 
     def get_repo(self, repo_url):
+        """
+        Create a repo object from the given url
+
+        :param repo_url: URL of the repository
+        :return: a Repo obeject
+        """
         if repo_url in self._git_repos:
             return self._git_repos[repo_url]
         else:
@@ -129,9 +135,41 @@ class Git(object):
                    
             self.is_updater = False
 
+    #####################################
+    ###    DIVERSITY AND INCLUSION    ###
+    #####################################
 
 
+    #####################################
+    ### GROWTH, MATURITY, AND DECLINE ###
+    #####################################
+
+
+    #####################################
+    ###            RISK               ###
+    #####################################
+
+
+    #####################################
+    ###            VALUE              ###
+    #####################################
+
+
+    #####################################
+    ###           ACTIVITY            ###
+    #####################################
+
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    #####################################
+
+    @annotate(tag='downloaded-repos')
     def downloaded_repos(self):
+        """
+        Get all downloaded repositories and the date they were last updated
+        :return: a JSON object with the URL and date of last update for all downloaded repos        
+        """
         downloaded = []
         for repo_url in self._repo_urls:
             repo = self.get_repo(repo_url)
@@ -148,7 +186,7 @@ class Git(object):
 
         return downloaded
 
-
+    @annotate(tag='lines-changed-minus-whitespace')
     def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
@@ -214,7 +252,8 @@ class Git(object):
             results = new_results
         return results
 
-    def changes_by_author(self, repo_url, freq='M', rebuild_cache=False):
+    @annotate(tag='lines-changed-by-author')
+    def lines_changed_by_author(self, repo_url, freq='M', rebuild_cache=False):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
@@ -229,4 +268,4 @@ class Git(object):
         if rebuild_cache:
             self.__cache.remove_value(key='cba-{}-{}'.format(freq, repo_url))
         results = self.__cache.get(key='cba-{}-{}'.format(freq, repo_url), createfunc=heavy_lifting)
-        return results
+        return result5

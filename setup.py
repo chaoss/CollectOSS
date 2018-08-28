@@ -26,8 +26,7 @@ setup(
     url='https://github.com/OSSHealth/augur',
     author='Derek Howard',
     author_email='derek@howderek.com',
-    packages=['augur'],
-    package_dir={'augur': 'augur'},
+    packages=['augur', 'augur.plugins', 'augur.routes'],
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -40,8 +39,7 @@ setup(
     install_requires=[
         'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
         'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'GitPython',
-        'pyevent', 'gunicorn', 'datetime', 'traitlets', 'coloredlogs', 'tldextract', 'python-daemon', 'beaker',
-        'lockfile'],
+        'gunicorn', 'traitlets', 'coloredlogs', 'tldextract', 'beaker', 'lockfile'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],

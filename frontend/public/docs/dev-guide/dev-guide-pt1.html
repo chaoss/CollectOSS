@@ -1,0 +1,264 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Developer Guide Part 1 - The Backend &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="developer-guide-part-1-the-backend">
+<h1>Developer Guide Part 1 - The Backend<a class="headerlink" href="#developer-guide-part-1-the-backend" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="structure-of-the-backend">
+<h2>Structure of the Backend<a class="headerlink" href="#structure-of-the-backend" title="Permalink to this headline">¶</a></h2>
+<p>Augur uses the Flask framework for its backend, which is stored in the
+directory <code class="docutils literal notranslate"><span class="pre">augur</span></code>. <code class="docutils literal notranslate"><span class="pre">augur/__init__.py</span></code>, <code class="docutils literal notranslate"><span class="pre">augur/server.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">augur/deploy.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">augur/util.py</span></code> contain the components. The
+other <code class="docutils literal notranslate"><span class="pre">augur/*.py</span></code>files contain Python funtions that return
+dataframes to be serialzed into JSON by the functions in
+<code class="docutils literal notranslate"><span class="pre">augur/server.py</span></code>. The titles of those files are the data sources the
+metrics use.</p>
+</div>
+<div class="section" id="setting-up-your-environment">
+<h2>Setting up your environment<a class="headerlink" href="#setting-up-your-environment" title="Permalink to this headline">¶</a></h2>
+<p>Before you begin, make sure to activate the augur Anaconda environment
+by running <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">augur</span></code>. If this environment doesn’t exist,
+try running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-dev</span></code> again and watch out for any errors.</p>
+</div>
+<div class="section" id="writing-a-function-for-augur">
+<h2>Writing a Function for Augur<a class="headerlink" href="#writing-a-function-for-augur" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="should-i-create-a-new-py-file">
+<h3>Should I create a new .py file?<a class="headerlink" href="#should-i-create-a-new-py-file" title="Permalink to this headline">¶</a></h3>
+<p>If your Python function uses a new data source, create a new Python
+file. If you use an already implemented data source, create your new
+functions under that file. For instance, if you were to create a metric
+using data from the GitHub API, you would write a function in
+<code class="docutils literal notranslate"><span class="pre">`augur/githubapi.py</span></code> &lt;<a class="reference external" href="https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py">https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py</a>&gt;`__</p>
+<div class="section" id="creating-a-new-data-source">
+<h4>Creating a new data source<a class="headerlink" href="#creating-a-new-data-source" title="Permalink to this headline">¶</a></h4>
+<p>In the file, create a class to put your functions into, then in
+<code class="docutils literal notranslate"><span class="pre">augur/application.py</span></code> add a line with the following format. If the
+class was called <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code>, the line would look like this:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>And then add an initializer function with the same name as the
+datasource, which might look something like this:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">chaoss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">augur.chaoss</span> <span class="k">import</span> <span class="n">Chaoss</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing CHAOSS&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span> <span class="o">=</span> <span class="n">Chaoss</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="writing-a-function">
+<h3>Writing a function<a class="headerlink" href="#writing-a-function" title="Permalink to this headline">¶</a></h3>
+<p>In Augur there are metrics and timeseries metrics. For all metrics, the
+function should return a Dataframe that can be serialized into JSON. For
+timeseries metrics, the Dataframe needs to have a column named <code class="docutils literal notranslate"><span class="pre">date</span></code>
+that holds timestamps.</p>
+<div class="section" id="annotation">
+<h4>Annotation<a class="headerlink" href="#annotation" title="Permalink to this headline">¶</a></h4>
+<p>If this new function is a new metric that will have an endpoint, it
+needs to be annotated so that its metadata is updated. Right above the
+function definition, call the <code class="docutils literal notranslate"><span class="pre">&#64;annotate</span></code> decorator as follows:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@annotate</span><span class="p">(</span><span class="n">metric_name</span><span class="o">=</span><span class="s1">&#39;closed-issues&#39;</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s1">&#39;growth-maturity-decline&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">closed_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>It is currently standard practice to pass in the <code class="docutils literal notranslate"><span class="pre">metric_name</span></code>, as
+well as the group (see <a class="reference external" href="https://github.com/OSSHealth/augur/blob/dev/docs/scratchpad/master-metrics-order.md">this
+list</a>
+for a current list of groupings). The metric name should be all
+lowercase, with dashes filling the whitespace between words. This is
+also sometimes referred to as the metric’s ‘tag.’</p>
+<p>Later on, when you add the endpoint to <code class="docutils literal notranslate"><span class="pre">augur/server.py</span></code>, the rest of
+the metadata, including the endpoint, source, and URL, will be generated
+for you.</p>
+</div>
+<div class="section" id="documentation">
+<h4>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h4>
+<p>When writing a new Python function, include a docstring as the first
+thing after the function definition. The docstring should look something
+like this:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Subgroup: &lt;the metric&#39;s subgroup, if it has one&gt;</span>
+
+<span class="sd">&lt;generic description of what the function does; usually, a general idea of the metric&#39;s definition&gt;</span>
+
+<span class="sd">:param &lt;parameter_name&gt;:&lt;parameter_description&gt;</span>
+<span class="sd">:return: &lt;description of the function&#39;s return value&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-dependencies">
+<h4>Adding dependencies<a class="headerlink" href="#adding-dependencies" title="Permalink to this headline">¶</a></h4>
+<p>If you need to add a dependency to Augur for your function, simply add
+the import statment to the file as usual, then in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> add the
+dependency to the <code class="docutils literal notranslate"><span class="pre">install_requires</span></code> list. For example, if my new
+function uses a package called <code class="docutils literal notranslate"><span class="pre">mizzou</span></code>, I would find the
+<code class="docutils literal notranslate"><span class="pre">install_requires</span></code> list:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">install_requires</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;beautifulsoup4&#39;</span><span class="p">,</span> <span class="s1">&#39;flask&#39;</span><span class="p">,</span> <span class="s1">&#39;flask-cors&#39;</span><span class="p">,</span> <span class="s1">&#39;PyMySQL&#39;</span><span class="p">,</span> <span class="s1">&#39;requests&#39;</span><span class="p">,</span> <span class="s1">&#39;python-dateutil&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlalchemy&#39;</span><span class="p">,</span> <span class="s1">&#39;pandas&#39;</span><span class="p">,</span> <span class="s1">&#39;pytest&#39;</span><span class="p">,</span> <span class="s1">&#39;PyGithub&#39;</span><span class="p">,</span> <span class="s1">&#39;pyevent&#39;</span><span class="p">,</span> <span class="s1">&#39;gunicorn&#39;</span><span class="p">],</span>
+</pre></div>
+</div>
+<p>and add <code class="docutils literal notranslate"><span class="pre">mizzou</span></code> as such:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">install_requires</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;beautifulsoup4&#39;</span><span class="p">,</span> <span class="s1">&#39;flask&#39;</span><span class="p">,</span> <span class="s1">&#39;flask-cors&#39;</span><span class="p">,</span> <span class="s1">&#39;PyMySQL&#39;</span><span class="p">,</span> <span class="s1">&#39;requests&#39;</span><span class="p">,</span> <span class="s1">&#39;python-dateutil&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlalchemy&#39;</span><span class="p">,</span> <span class="s1">&#39;pandas&#39;</span><span class="p">,</span> <span class="s1">&#39;pytest&#39;</span><span class="p">,</span> <span class="s1">&#39;PyGithub&#39;</span><span class="p">,</span> <span class="s1">&#39;pyevent&#39;</span><span class="p">,</span> <span class="s1">&#39;gunicorn&#39;</span><span class="p">,</span> <span class="s1">&#39;mizzou&#39;</span><span class="p">],</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-tests">
+<h4>Adding tests<a class="headerlink" href="#adding-tests" title="Permalink to this headline">¶</a></h4>
+<p>Augur uses pytest for tests. Tests are in the <code class="docutils literal notranslate"><span class="pre">test</span></code> directory. If you
+created a new file for your data source, you will also need to create a
+new file to test it. You can use pytest fixtures and environment
+variables to pass data to tests.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span> <span class="nf">chaoss</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">augur</span>
+    <span class="n">chaossServer</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;CHAOSS_TEST_URL&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">chaossServer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">chaossServer</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">8</span>
+    <span class="k">return</span> <span class="n">augur</span><span class="o">.</span><span class="n">Chaoss</span><span class="p">(</span><span class="n">chaossServer</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now any test that tests functions in the Chaoss class will be able to
+access an instance of the class</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_data_source</span><span class="p">(</span><span class="n">chaoss</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">chaoss</span><span class="o">.</span><span class="n">data_source</span><span class="p">(</span><span class="s1">&#39;argument&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;expected_value&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">any</span>
+</pre></div>
+</div>
+<p>Make sure every function you write has a test.</p>
+</div>
+</div>
+</div>
+<div class="section" id="creating-an-endpoint-for-a-function">
+<h2>Creating an endpoint for a function<a class="headerlink" href="#creating-an-endpoint-for-a-function" title="Permalink to this headline">¶</a></h2>
+<p>If you created a new data source, you need to add a new file to
+<code class="docutils literal notranslate"><span class="pre">augur/routes/</span></code> called <code class="docutils literal notranslate"><span class="pre">&lt;data_source&gt;routes.py</span></code>. Then, define a
+function called <code class="docutils literal notranslate"><span class="pre">create_routes</span></code> that takes one argument, <code class="docutils literal notranslate"><span class="pre">server</span></code>;
+inside this function is where you will put your endpoints.</p>
+<p>To create an endpoint for a function, in
+<code class="docutils literal notranslate"><span class="pre">augur/routes/&lt;data_source&gt;.py</span></code>, call <code class="docutils literal notranslate"><span class="pre">server.addMetric()</span></code> or
+<code class="docutils literal notranslate"><span class="pre">server.addTimeseries()</span></code> like so:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">server</span><span class="o">.</span><span class="n">addTimeseries</span><span class="p">(</span><span class="n">file_name</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span> <span class="s1">&#39;endpoint&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So if you created a data source <code class="docutils literal notranslate"><span class="pre">bar</span></code> that had a function <code class="docutils literal notranslate"><span class="pre">foo()</span></code>,
+inside the file <code class="docutils literal notranslate"><span class="pre">augur/routes/barroutes.py</span></code> you would place the
+following:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">server</span><span class="o">.</span><span class="n">addTimeseries</span><span class="p">(</span><span class="n">bar</span><span class="o">.</span><span class="n">foo</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the metric is not a timeseries metric, replace <code class="docutils literal notranslate"><span class="pre">AddTimeseries()</span></code>
+with <code class="docutils literal notranslate"><span class="pre">AddMetric()</span></code></p>
+<ul class="simple">
+<li>Later, once you have finalized the metric, go back and add
+documentation. Follow the format already outlined to build your
+documentation.</li>
+</ul>
+</div>
+<div class="section" id="using-the-python-debugger">
+<h2>Using the Python Debugger<a class="headerlink" href="#using-the-python-debugger" title="Permalink to this headline">¶</a></h2>
+<p>If you want to use an iPython shell to test your functions during
+development, in the root directory, first execute <code class="docutils literal notranslate"><span class="pre">ipython</span></code>, which
+will drop you into an iPython shell. Then, execute
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">augur;</span> <span class="pre">app.augur.Application()</span></code>, which will create an Augur
+application for you.</p>
+<p>You can then test your function by first creating a new instance of that
+class, and then running your function. For example:
+<code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">=</span> <span class="pre">app.ghtorrent();</span> <span class="pre">gh.closed_issues('rails',</span> <span class="pre">'rails')</span></code> will let
+you test the closed_issues function without actually having to run the
+server.</p>
+<p>However, it is recommended that you test your function in a Jupyter
+notebook, which takes care of that setup for you. Accessing
+preconfigured Jupyter notebooks is done by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">jupyter</span></code> in
+the root directory of the project (make sure to create a jupyter
+enviroment by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">create-jupyter-env</span></code> first).</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dev-guide/dev-guide-pt1.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/dev-guide/dev-guide-pt1.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

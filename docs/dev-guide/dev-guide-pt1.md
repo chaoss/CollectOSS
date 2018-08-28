@@ -2,7 +2,7 @@
 
 ## Structure of the Backend
 
-Augur uses the Flask framework for its backend, which is stored in the directory `augur`. `augur/__init__.py`, `augur/server.py`, `augur/deploy.py`, and `augur/util.py` contain the components. The other `augur/*.py`files contain python funtions that return dataframes to be serialzed into json by the functions in `augur/server.py`. The titles of those files are the data sources the metrics use.
+Augur uses the Flask framework for its backend, which is stored in the directory `augur`. `augur/__init__.py`, `augur/server.py`, `augur/deploy.py`, and `augur/util.py` contain the components. The other `augur/*.py`files contain Python funtions that return dataframes to be serialzed into JSON by the functions in `augur/server.py`. The titles of those files are the data sources the metrics use.
 
 ## Setting up your environment
 
@@ -12,24 +12,56 @@ Before you begin, make sure to activate the augur Anaconda environment by runnin
 
 ### Should I create a new .py file?
 
-If your python function uses a new data source, create a new Python file. If you use an already implemented data source, create your new functions under that file. For instance, if you were to create a metric using data from the GitHub API, you would write a function in [`augur/githubapi.py`](https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py)
+If your Python function uses a new data source, create a new Python file. If you use an already implemented data source, create your new functions under that file. For instance, if you were to create a metric using data from the GitHub API, you would write a function in [`augur/githubapi.py`](https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py)
 
-#### Adding a new .py file
+#### Creating a new data source
 
-In the file, create a class to put your functions into, then in `augur/__init__.py` add a line with the following format
+In the file, create a class to put your functions into, then in `augur/application.py` add a line with the following format. If the class was called `Chaoss`, the line would look like this:
 
 ```python
-from .file_name import Class
+self.__chaoss = None
 ```
-For example if I added a file named `augur/chaoss.py` that contains the class `Chaoss` the addition to `augur/__init__.py` would be
+And then add an initializer function with the same name as the datasource, which might look something like this:
 
 ```python
-from .choass import Chaoss
+    def chaoss(self):
+        from augur.chaoss import Chaoss
+        if self.__chaoss is None:
+            logger.debug('Initializing CHAOSS')
+            self.__chaoss = Chaoss()
+        return self.__chaoss
 ```
 
 ### Writing a function
 
-In Augur there are metrics and timeseries metrics. For all metrics, the function should return a Dataframe that can be serialized into json. For timeseries metrics, the Dataframe needs to have a column named `date` that holds timestamps.
+In Augur there are metrics and timeseries metrics. For all metrics, the function should return a Dataframe that can be serialized into JSON. For timeseries metrics, the Dataframe needs to have a column named `date` that holds timestamps.
+
+#### Annotation
+If this new function is a new metric that will have an endpoint, it needs to be annotated so that its metadata is updated. Right above the function definition, call the `@annotate` decorator as follows:
+
+```python
+@annotate(metric_name='closed-issues', group='growth-maturity-decline')
+def closed_issues(self, owner, repo=None):
+...
+```
+
+It is currently standard practice to pass in the `metric_name`, as well as the group (see [this list](https://github.com/OSSHealth/augur/blob/dev/docs/scratchpad/master-metrics-order.md) for a current list of groupings). The metric name should be all lowercase, with dashes filling the whitespace between words. This is also sometimes referred to as the metric's 'tag.'
+
+Later on, when you add the endpoint to `augur/server.py`, the rest of the metadata, including the endpoint, source, and URL, will be generated for you.
+
+#### Documentation
+
+When writing a new Python function, include a docstring as the first thing after the function definition. The docstring should look something like this:
+```python
+"""
+Subgroup: <the metric's subgroup, if it has one>
+
+<generic description of what the function does; usually, a general idea of the metric's definition>
+
+:param <parameter_name>:<parameter_description>
+:return: <description of the function's return value> 
+"""
+```
 
 #### Adding dependencies
 
@@ -69,33 +101,27 @@ Make sure every function you write has a test.
 
 ## Creating an endpoint for a function
 
-If you created a new data source, make sure you create an instance of your class, loading any configuration you need with the `read_config` function.
+If you created a new data source, you need to add a new file to `augur/routes/` called `<data_source>routes.py`. Then, define a function called `create_routes` that takes one argument, `server`; inside this function is where you will put your endpoints.
 
-To create an endpoint for a function, in [`augur/server.py`](https://github.com/OSSHealth/augur/blob/master/augur/server.py), call  `addMetric()` or `addTimeseries()`
+To create an endpoint for a function, in `augur/routes/<data_source>.py`, call  `server.addMetric()` or `server.addTimeseries()` like so:
 
 ```python
-addTimeseries(app, file_name.function_name, 'function_name')
+server.addTimeseries(file_name.function_name, 'endpoint')
 ```
-for a function `foo()` in `augur/bar.py`
+So if you created a data source `bar` that had a function `foo()`, inside the file `augur/routes/barroutes.py` you would place the following:
 
 ```python
-addTimeseries(app, bar.foo, 'foo')
+server.addTimeseries(bar.foo, 'foo')
 ```
 If the metric is not a timeseries metric, replace `AddTimeseries()` with `AddMetric()`
 
-```bash
+* Later, once you have finalized the metric, go back and add documentation. Follow the format already outlined to build your documentation.
 
 ## Using the Python Debugger
 
-The server in Augur has a built-in IPython debugger to make testing your functions easier during development.
+If you want to use an iPython shell to test your functions during development, in the root directory, first execute `ipython`, which will drop you into an iPython shell. Then, execute `import augur; app.augur.Application()`, which will create an Augur application for you. 
 
-After you have added an instance of your class to server.py, you can test it by running:
+You can then test your function by first creating a new instance of that class, and then running your function. For example: `gh = app.ghtorrent(); gh.closed_issues('rails', 'rails')` will let you test the closed_issues function without actually having to run the server. 
 
-```bash
-export AUGUR_INTERACTIVE=1
-augur
-````
-
-Augur will load configuration and create instances of all the classes, but will drop down to IPDB shell instead of running the Flask server.
-
-To disable the IPDB shell, simply export ```bash export AUGUR_INTERACTIVE=0``` and run `augur`.
+However, it is recommended that you test your function in a Jupyter notebook, which takes care of that setup for you. 
+Accessing preconfigured Jupyter notebooks is done by running `make jupyter` in the root directory of the project (make sure to create a jupyter enviroment by running `make create-jupyter-env` first). 

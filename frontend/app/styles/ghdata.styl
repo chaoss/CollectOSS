@@ -16,22 +16,33 @@ header
 header .search
   width: 100%
   margin-top: 25px
-  
+
+.header-nav
+  margin-top: 25px
+  display: block
+
+.header-nav-item
+  padding: 10px 10px
+  display: inline-block
+  float: right
+  text-decoration: none
+  color: #777
+
 #logo
   display: inline-block
   margin-top: 0px
   max-width: 250px
-  
+
 .content
   margin: auto
   width: 95%
-  max-width: 1080px
+  max-width: 1600px
 
 .tabs li.active a
   color: #000
   background: #eaeaea
   border-bottom: 1px solid #eaeaea
-  
+
 
 section#landing h1
   font-size: 25px
@@ -70,14 +81,22 @@ section.unmaterialized
   border-bottom: 1px solid (background - 5%)
 
 #controls
-  padding: 36px
+  padding: 18px 36px 5px 36px
   background: (foreground - 4%)
   border-right: 1px solid (background - 5%)
   border-bottom: 1px solid (background - 5%)
   margin-bottom: 20px
 
+#comparetext
+  padding: 10px 0px 0px 0px
+
 .fixed
   position: relative
+
+section.status
+  box-shadow: 0 0 0 0
+  background: (foreground - 4%)
+  padding: 24px 24px 48px 24px
 
 @media (min-width: 1230px)
   #cards
@@ -85,19 +104,19 @@ section.unmaterialized
     padding-bottom: 100px
     position: relative
     z-index: 9
-  
+
   section
     z-index: 10
-  
+
   #landing
     width:100%
-    
+
   .fixed-container
     z-index: 0
     position: absolute
     top: 245px
     left: calc(50% - (540px))
-  
+
   .fixed
     position: fixed !important
     top: 25px
@@ -112,7 +131,63 @@ section.unmaterialized
   position: relative
   z-index: 2
   width: 100%;
-  margin: -50px 0 60px 0;
+  margin: -10px 0px 30px 0px;
+  padding: 0px 30px 0px 25px
+
+.section {
+  overflow:hidden;
+  transition:max-height 0.3s ease-out; // transitioning max-height, not height
+  height:auto;
+  max-height:600px;
+  position: relative
+}
+.section.collapsed {
+  max-height:0;
+}
+
+.collapsible.fade::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background: -webkit-linear-gradient(
+                    rgba(250, 250, 250, 0) 0%,
+                    (foreground - 4%) 100%
+            );
+            background-image: -moz-linear-gradient(
+                    rgba(250, 250, 250, 0) 0%,
+                    (foreground - 4%) 100%
+            );
+            background-image: -o-linear-gradient(
+                    rgba(250, 250, 250, 0) 0%,
+                    (foreground - 4%) 100%
+            );
+            background-image: linear-gradient(
+                    rgba(250, 250, 250, 0) 0%,
+                    (foreground - 4%) 100%
+            );
+            background-image: -ms-linear-gradient(
+                    rgba(25, 250, 250, 0) 0%,
+                    (foreground - 4%) 100%
+            );
+        }
+
+.section.showsome
+  max-height: 100px
+
+.repo-link-holder
+  background: rgb(234, 234, 234)
+  padding: 10px
+  height: 300px
+  overflow-y: scroll
+
+.repo-link-table-body
+  background: rgb(234, 234, 234)
+
+th, td {
+    padding: 0;
+}
 
 cite.metric
   display: block;
@@ -128,7 +203,7 @@ cite.metric
 cite.metric a
   color: #aaa
   text-decoration: underline;
-  
+
 .graph-download
   background: 0
   color: #ccc
@@ -138,16 +213,31 @@ cite.metric a
   float: right
   margin: -7px 7px 0 0 !important;
   padding: 3px !important;
-  
+
 .graph-download:hover
   background: #eee;
   color: #000
 
-.linechart
-  position: relative
-  z-index: 1
-  height: 210px
-  margin-bottom: 30px
+.error
+  justify-content: center
+  padding: 30px 0px 31px 20px
+  text-align: center
+  margin: auto
+
+.error:before
+  content: "\26A0"
+  font-size: 3em;
+  justify-content: center
+  padding: 50px 50px 50px 50px
+  text-align: center
+  margin: auto
+
+#optionheader
+  font-size: 1.1em;
+  font-weigth: 600
+
+.marks
+  padding: 10px 0px 0px 24px !important
 
 .role-title > text
   font-size: 20px !important
@@ -173,7 +263,7 @@ cite.metric a
 .mg-line-legend
   display: none
 
-.legend 
+.legend
   position: relative
   margin: 0
   padding: 0
@@ -187,13 +277,38 @@ cite.metric a
 .mg-baselines
   opacity: 0.5
 
-.loader
+#collapse {
+  padding: 10px 0px 0px 0px
+}
+
+.linechart
+  padding: 0px 0px 0px 18px
+
+
+.loader {
   width: 100%
   text-align: center
   line-height: 10
-  animation: outro 1s, loader 1.5s infinite
 
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
 
+  border: 16px solid #7d7d7d; /* our red */
+  border-top: 16px solid #FF3647; /* our gray */
+  border-radius: 50%;
+  opacity: 0.7
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 @keyframes outro
   0%
@@ -201,8 +316,8 @@ cite.metric a
     filter: grayscale(0%)
   100%
     opacity: 0.2
-    filter: grayscale(100%) 
-    
+    filter: grayscale(100%)
+
 @keyframes loader
   0%
     opacity: 0.2
@@ -216,7 +331,7 @@ cite.metric a
 
 .intro
   animation: intro 2s
-    
+
 @keyframes intro
   0%
     opacity: 0.2
@@ -237,9 +352,28 @@ cite.metric a
     display: none
 
 .hidden, .hidden > *, .hidden > small
-  display: none !important 
+  display: none !important
+
+.spacing
+  height: 96px
 
 .invis, .invis > *, .invis > small
   z-index: -1;
   opacity: 0 !important;
+  max-height: 116px !important;
 
+.invisDet, .invisDet > *, .invisDet > small
+  z-index: -1;
+  opacity: 0 !important;
+  max-height: 221px !important;
+
+.shrunk
+  max-height: 0px !important
+
+.lines-of-code-table th, .lines-of-code-table td
+  padding: 0.5rem
+
+.clickable-header
+  cursor: pointer
+  text-decoration: underline
+  color: #3794de

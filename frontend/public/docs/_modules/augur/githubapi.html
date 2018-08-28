@@ -1,0 +1,437 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.githubapi &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for augur.githubapi</h1><div class="highlight"><pre>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data source that uses the GitHub API</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">augur.localcsv</span> <span class="k">import</span> <span class="n">LocalCSV</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="k">import</span> <span class="n">parse</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">github</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
+<span class="c1"># end imports</span>
+<span class="c1"># (don&#39;t remove the above line, it&#39;s for a script)</span>
+
+<div class="viewcode-block" id="GitHubAPI"><a class="viewcode-back" href="../../datasources/augur.githubapi.GitHubAPI.html#augur.githubapi.GitHubAPI">[docs]</a><span class="k">class</span> <span class="nc">GitHubAPI</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    GitHubAPI is a class for getting metrics from the GitHub API</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="GitHubAPI.__init__"><a class="viewcode-back" href="../../datasources/augur.githubapi.GitHubAPI.html#augur.githubapi.GitHubAPI.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new GitHub instance</span>
+
+<span class="sd">        :param api_key: GitHub API key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Github</span><span class="p">(</span><span class="n">api_key</span><span class="p">)</span></div>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###    DIVERSITY AND INCLUSION    ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-of-code-changed&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_of_code_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the count of lines added, deleted, and the net change each week</span>
+
+<span class="sd">        :param owner: The name of the project owner</span>
+<span class="sd">        :param repo: The name of the repo</span>
+<span class="sd">        :return: DataFrame with the associated lines changed information/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get the data we need from the GitHub API</span>
+        <span class="c1"># see &lt;project_root&gt;/augur/githubapi.py for examples using the GraphQL API</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/repos/</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">/stats/code_frequency&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">))</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="c1"># get our data into a dataframe</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">json</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;additions&#39;</span><span class="p">,</span> <span class="s1">&#39;deletions&#39;</span><span class="p">])</span>
+        <span class="c1"># all timeseries metrics need a &#39;date&#39; column</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">],</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">infer_datetime_format</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># normalize our data and create useful aggregates</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;deletions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;deletions&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;delta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;additions&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;deletions&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;delta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="c1"># return the dataframe</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            RISK               ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            VALUE              ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###           ACTIVITY            ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###         EXPERIMENTAL          ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;bus-factor&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">bus_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold</span>
+
+<span class="sd">        :param owner: repo owner username</span>
+<span class="sd">        :param repo: repo name</span>
+<span class="sd">        :param threshold: Default 50;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/graphql&quot;</span>
+        <span class="n">commit_count</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">hasNextPage</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span> <span class="o">/</span> <span class="mi">100</span>
+        <span class="k">while</span> <span class="n">hasNextPage</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span> <span class="p">:</span>
+                     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                        query{</span>
+<span class="sd">                          repository(name: &quot;%s&quot;, owner: &quot;%s&quot;) {</span>
+<span class="sd">                            ref(qualifiedName: &quot;master&quot;) {</span>
+<span class="sd">                              target {</span>
+<span class="sd">                                ... on Commit {</span>
+<span class="sd">                                  id</span>
+<span class="sd">                                  history(first: 100%s) {</span>
+<span class="sd">                                    pageInfo {</span>
+<span class="sd">                                      hasNextPage</span>
+<span class="sd">                                    }</span>
+<span class="sd">                                    edges {</span>
+<span class="sd">                                      cursor</span>
+<span class="sd">                                      node {</span>
+<span class="sd">                                        author {</span>
+<span class="sd">                                          email</span>
+<span class="sd">                                        }</span>
+<span class="sd">                                      }</span>
+<span class="sd">                                    }</span>
+<span class="sd">                                  }</span>
+<span class="sd">                                }</span>
+<span class="sd">                              }</span>
+<span class="sd">                            }</span>
+<span class="sd">                          }</span>
+<span class="sd">                        }            </span>
+<span class="sd">                        &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">cursor</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">requests</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">),</span> <span class="n">json</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">raw</span><span class="p">)))</span>
+            <span class="n">hasNextPage</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;ref&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;history&#39;</span><span class="p">][</span><span class="s1">&#39;pageInfo&#39;</span><span class="p">][</span><span class="s1">&#39;hasNextPage&#39;</span><span class="p">]</span>
+            <span class="n">commits</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;ref&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;history&#39;</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">commits</span><span class="p">:</span>
+                <span class="n">commit_count</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;email&#39;</span> <span class="p">:</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;node&#39;</span><span class="p">][</span><span class="s1">&#39;author&#39;</span><span class="p">][</span><span class="s1">&#39;email&#39;</span><span class="p">]})</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="s2">&quot;, after: </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">commits</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;cursor&#39;</span><span class="p">])</span>
+
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">commit_count</span><span class="p">)</span>
+
+        <span class="n">total</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;email&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">/</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;email&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">100</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">():</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">worst</span> <span class="o">=</span> <span class="n">i</span>
+
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">():</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="n">j</span>    
+
+        <span class="n">bus_factor</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;worst&#39;</span><span class="p">:</span> <span class="n">worst</span><span class="p">,</span> <span class="s1">&#39;best&#39;</span> <span class="p">:</span> <span class="n">best</span><span class="p">}]</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">bus_factor</span><span class="p">)</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;major-tags&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">major_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the dates and names of major version (according to semver) tags. May return blank if no major versions</span>
+
+<span class="sd">        :param owner: repo owner username</span>
+<span class="sd">        :param repo: repo name</span>
+<span class="sd">        :return: DataFrame with major versions and their release date</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="s2">&quot;null&quot;</span>
+        <span class="n">tags_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/graphql&quot;</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span> <span class="p">:</span>
+                     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    query {</span>
+<span class="sd">                      repository(owner: &quot;%s&quot;, name: &quot;%s&quot;) {</span>
+<span class="sd">                        tags: refs(refPrefix: &quot;refs/tags/&quot;, first: 100, after: &quot;%s&quot;) {</span>
+<span class="sd">                          edges {</span>
+<span class="sd">                            cursor</span>
+<span class="sd">                            tag: node {</span>
+<span class="sd">                              name</span>
+<span class="sd">                              target {</span>
+<span class="sd">                                ... on Tag {</span>
+<span class="sd">                                  tagger {</span>
+<span class="sd">                                    date</span>
+<span class="sd">                                  }</span>
+<span class="sd">                                }</span>
+<span class="sd">                              }</span>
+<span class="sd">                            }</span>
+<span class="sd">                          }</span>
+<span class="sd">                        }</span>
+<span class="sd">                      }</span>
+<span class="sd">                    }</span>
+<span class="sd">            &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">cursor</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">requests</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">),</span> <span class="n">json</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">raw</span><span class="p">)))</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;tags&#39;</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">tags_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;date&#39;</span> <span class="p">:</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;tagger&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span> <span class="s1">&#39;release&#39;</span> <span class="p">:</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]})</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;tags&#39;</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]:</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cursor</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;tags&#39;</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;cursor&#39;</span><span class="p">]</span>
+
+        <span class="n">major_versions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;[0-9]+\.[0]+\.[0]+$&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tags_list</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="s2">&quot;release&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">major_versions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">major_versions</span><span class="p">)</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the dates and names of tags</span>
+
+<span class="sd">        :param owner: repo owner username</span>
+<span class="sd">        :param repo: repo name</span>
+<span class="sd">        :param raw: Default False; Returns list of dicts</span>
+<span class="sd">        :return: DataFrame with all tags and their release date</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cursor</span> <span class="o">=</span> <span class="s2">&quot;null&quot;</span>
+        <span class="n">tags_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/graphql&quot;</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span> <span class="p">:</span>
+                     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    query {</span>
+<span class="sd">                      repository(owner: &quot;%s&quot;, name: &quot;%s&quot;) {</span>
+<span class="sd">                        tags: refs(refPrefix: &quot;refs/tags/&quot;, first: 100, after: &quot;%s&quot;) {</span>
+<span class="sd">                          edges {</span>
+<span class="sd">                            cursor</span>
+<span class="sd">                            tag: node {</span>
+<span class="sd">                              name</span>
+<span class="sd">                              target {</span>
+<span class="sd">                                ... on Tag {</span>
+<span class="sd">                                  tagger {</span>
+<span class="sd">                                    date</span>
+<span class="sd">                                  }</span>
+<span class="sd">                                }</span>
+<span class="sd">                              }</span>
+<span class="sd">                            }</span>
+<span class="sd">                          }</span>
+<span class="sd">                        }</span>
+<span class="sd">                      }</span>
+<span class="sd">                    }</span>
+<span class="sd">            &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">cursor</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">requests</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">),</span> <span class="n">json</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">raw</span><span class="p">)))</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;tags&#39;</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">tags_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;date&#39;</span> <span class="p">:</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;tagger&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span> <span class="s1">&#39;release&#39;</span> <span class="p">:</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]})</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;tags&#39;</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]:</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cursor</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;tags&#39;</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;cursor&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">tags_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">contributors_gender</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">contributors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">get_repo</span><span class="p">((</span><span class="n">owner</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">repo</span><span class="p">))</span><span class="o">.</span><span class="n">get_contributors</span><span class="p">()</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">contributor</span> <span class="ow">in</span> <span class="n">contributors</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">contributor</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">contributor</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">genderized</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">LocalCSV</span><span class="o">.</span><span class="n">name_gender</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">genderized</span></div>
+
+    <span class="c1"># def code_reviews(self, owner, repo=None):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Number of code reviews (merge requests) for a project</span>
+
+    <span class="c1">#     :param owner: The name of the project owner</span>
+    <span class="c1">#     :param repo: The name of the repo</span>
+    <span class="c1">#     :return: DataFrame with each row being a merge request&#39;s creation date</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="c1">#     url = &#39;https://api.github.com/graphql&#39;</span>
+    <span class="c1">#     headers = {&#39;Authorization&#39;: &#39;token %s&#39; % self.GITHUB_API_KEY}</span>
+    <span class="c1">#     cursor = &quot;null&quot;</span>
+    <span class="c1">#     pullReqTime = []</span>
+    <span class="c1">#     numReviews = []</span>
+    <span class="c1">#     count = 0</span>
+
+    <span class="c1">#     while count &lt; 100:</span>
+
+    <span class="c1">#         query = &quot;&quot;&quot;</span>
+    <span class="c1">#         {</span>
+    <span class="c1">#           repository(owner: &quot;%s&quot;, name: &quot;%s&quot;) {</span>
+    <span class="c1">#                  pullRequests(first: 100, after: %s) {</span>
+    <span class="c1">#                     edges {</span>
+    <span class="c1">#                         cursor</span>
+    <span class="c1">#                         node {</span>
+    <span class="c1">#                           number</span>
+    <span class="c1">#                           createdAt</span>
+    <span class="c1">#                           reviews(first: 100) {</span>
+    <span class="c1">#                             edges {</span>
+    <span class="c1">#                               node {</span>
+    <span class="c1">#                                 createdAt</span>
+    <span class="c1">#                                 author {</span>
+    <span class="c1">#                                   login</span>
+    <span class="c1">#                                 }</span>
+    <span class="c1">#                                 createdAt</span>
+    <span class="c1">#                               }</span>
+    <span class="c1">#                             }</span>
+    <span class="c1">#                           }</span>
+    <span class="c1">#                         }</span>
+    <span class="c1">#                         cursor</span>
+    <span class="c1">#                     }</span>
+    <span class="c1">#                 }</span>
+    <span class="c1">#             }</span>
+    <span class="c1">#         }</span>
+    <span class="c1">#         &quot;&quot;&quot; % (owner, repo, cursor)</span>
+
+    <span class="c1">#         request = requests.post(url, json={&#39;query&#39;: query}, headers=headers)</span>
+    <span class="c1">#         if request.status_code == 200:</span>
+    <span class="c1">#             data = request.json()</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             raise Exception(&quot;Query failed to run by returning code of {}. {}&quot;.format(request.status_code, query))</span>
+
+    <span class="c1">#         pullReqs = data[&#39;data&#39;][&#39;repository&#39;][&#39;pullRequests&#39;][&#39;edges&#39;]</span>
+    <span class="c1">#         count += 1</span>
+    <span class="c1">#         for i in pullReqs:</span>
+    <span class="c1">#             pullReqTime = np.append(pullReqTime, i[&#39;node&#39;][&#39;createdAt&#39;])</span>
+    <span class="c1">#             numReviews = np.append(numReviews, len(i[&#39;node&#39;][&#39;reviews&#39;][&#39;edges&#39;]))</span>
+    <span class="c1">#         if len(data[&#39;data&#39;][&#39;repository&#39;][&#39;pullRequests&#39;][&#39;edges&#39;]) &lt; 100:</span>
+    <span class="c1">#             break</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             cursor = &#39;&quot;{}&quot;&#39;.format(data[&#39;data&#39;][&#39;repository&#39;][&#39;pullRequests&#39;][&#39;edges&#39;][-1][&#39;cursor&#39;])</span>
+
+    <span class="c1">#     return pd.DataFrame({&#39;date&#39;: pullReqTime, &#39;code_reviews&#39;: numReviews})</span>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

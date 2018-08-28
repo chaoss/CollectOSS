@@ -22,6 +22,7 @@
 *.rar
 *.tar
 *.zip
+.vagrant
 
 # Logs and databases #
 ######################
@@ -45,6 +46,16 @@ Thumbs.db
 *.cache
 *.pyc
 *.swp
+*.un~
+
+# Git #
+#######
+*.orig
+
+# Git #
+#######
+*.orig
+*.un~
 
 # Python junk #
 ###############
@@ -62,6 +73,7 @@ yarn.lock
 # Augur #
 #########
 runtime/
+augur/plugins/
 *.repolist.txt
 *.config.*
 *.cfg.*
