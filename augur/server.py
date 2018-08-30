@@ -23,6 +23,7 @@ class Server(object):
         self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
+        app.url_map.strict_slashes = False
 
         # Create Augur application
         self.augur_app = augur.Application()
