@@ -7,6 +7,7 @@ import sys
 import json
 import re
 import html
+import base64
 from flask import Flask, request, Response, send_from_directory
 from flask_cors import CORS
 import pandas as pd
@@ -232,7 +233,7 @@ class Server(object):
                             mimetype="application/json")
 
 
-    def transform(self, func, args=None, kwargs=None, orient='records', 
+    def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records', 
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
 
         if orient is None:
@@ -241,6 +242,10 @@ class Server(object):
         result = ''
 
         if not self.show_metadata:
+
+            if repo_url_base:
+                kwargs['repo_url'] = str(base64.b64decode(repo_url_base).decode())
+                print(kwargs['repo_url'])
 
             if not args and not kwargs:
                 data = func()
@@ -300,7 +305,7 @@ class Server(object):
 
     def addGitMetric(self, function, endpoint, cache=True):
         """Simplifies adding routes that accept"""
-        endpoint = '/{}/git/{}/<path:repo_url>/'.format(self.api_version, endpoint)
+        endpoint = '/{}/git/{}/'.format(self.api_version, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
         self.updateMetricMetadata(function, endpoint=endpoint, metric_type='git')
 

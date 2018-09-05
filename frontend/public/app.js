@@ -554,7 +554,7 @@ var AugurAPI = function () {
       };
 
       var GitEndpoint = function GitEndpoint(r, jsName, endpoint) {
-        var url = _this3.__endpointURL('git/' + endpoint + '/' + r.gitURL);
+        var url = _this3.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL));
         return __Endpoint(r, jsName, url);
       };
 

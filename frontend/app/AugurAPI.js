@@ -191,7 +191,7 @@ export default class AugurAPI {
     }
 
     var GitEndpoint = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('git/' + endpoint + '/' + r.gitURL)
+      var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL))
       return __Endpoint(r, jsName, url)
     }
 
