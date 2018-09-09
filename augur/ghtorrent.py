@@ -751,7 +751,7 @@ class GHTorrent(object):
 
         FROM commits
 
-        LEFT JOIN (SELECT forked_from_id AS "repo_id", created_at AS "created_at" FROM forks WHERE forks.forked_from_id = :repoid ORDER BY created_at DESC LIMIT 1) AS frk
+        LEFT JOIN (SELECT forked_from AS "repo_id", created_at AS "created_at" FROM projects WHERE projects.forked_from = :repoid ORDER BY created_at DESC LIMIT 1) AS frk
         ON frk.repo_id = commits.project_id
 
         LEFT JOIN (SELECT repo_id AS "repo_id", created_at AS "created_at" FROM issues WHERE issues.repo_id = :repoid ORDER BY created_at DESC LIMIT 1) AS iss
