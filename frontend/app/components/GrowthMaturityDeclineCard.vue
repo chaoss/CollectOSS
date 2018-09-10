@@ -140,11 +140,13 @@
 import LineChart from './charts/LineChart'
 import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
+import CrossHighlightChart from './charts/CrossHighlightChart'
 module.exports = {
   components: {
     LineChart,
     BubbleChart,
-    StackedBarChart
+    StackedBarChart,
+    CrossHighlightChart
   }
 };
 </script>

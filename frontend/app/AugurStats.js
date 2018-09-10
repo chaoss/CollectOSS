@@ -20,26 +20,29 @@ export default class AugurStats {
     return data
   }
 
-  static convertKey (data, key) {
+  static convertKey (data, key, newName) {
+    newName = newName || "value"
     if (Array.isArray(data[0])) {
       data = data.map((datum) => {
         return AugurStats.convertKey(datum, key)
       })
     } else if (key.length > 1){
       return data.map((d) => {
-        return {
+        let obj = {
           date: d.date,
-          value: d[key[0]],
           field: d[key[1]]
         }
+        obj[newName] = d[key[0]]
+        return obj
       })
     }
     else{
       return data.map((d) => {
-        return {
+        let obj = {
           date: d.date,
-          value: d[key]
         }
+        obj[newName] = d[key]
+        return obj
       })
     }
     return data

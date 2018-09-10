@@ -75,6 +75,17 @@ export default {
     },
     spec() {
 
+      let range = (this.comparedTo ? (!this.status.compared ? ("d".charCodeAt(0) < this.repo.charCodeAt(0) ? ['#7d7d7d','#FF3647'] : ['#FF3647', '#7d7d7d']) : (!this.status.base ? ("d".charCodeAt(0) < this.comparedTo.charCodeAt(0) ? ['#7d7d7d','#FF3647'] : ['#FF3647', '#7d7d7d']) : (this.comparedTo.charCodeAt(0) < this.repo.charCodeAt(0) ? ['#4736FF', '#FF3647'] : ['#FF3647', '#4736FF']))) : ['#FF3647'])
+      // let range = ['#FF3647', '#4736FF']
+      // if (this.comparedTo && this.comparedTo.charCodeAt(0) < this.repo.charCodeAt(0)) range = ['#4736FF', '#FF3647']
+      // if (this.comparedTo && !this.status.compared){
+      //   if("d".charCodeAt(0) < this.repo.charCodeAt(0)) range = ['#7d7d7d','#FF3647']
+      //   else range = ['#FF3647', '#7d7d7d']
+      // }
+      // if (this.comparedTo && !this.status.base){
+      //   if("d".charCodeAt(0) < this.comparedTo.charCodeAt(0)) range = ['#7d7d7d','#FF3647']
+      //   else range = ['#FF3647', '#7d7d7d']
+      // }
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "config":{
@@ -95,7 +106,29 @@ export default {
             },
             "width": 520,
             "height": 250,
-            "layer": []
+            "layer": [
+              {
+                "mark": "rule",
+                "encoding":{
+                  "x": {
+                    "field": "date",
+                    "type": "temporal",
+                    "axis": {
+                      "labels": false
+                    }
+                  },
+                  "color": {
+                    "field": "name",
+                    "type": "nominal",
+                    "scale": { "range": range}
+                  },
+                  "opacity":{
+                    "value": 0
+                  }
+                }
+
+              }
+            ]
           }
         ]
       }
@@ -107,16 +140,8 @@ export default {
       let selectionAdded = false
 
       let getStandardLine = (key) => {
-        let raw = true
-        let opacity = 1
-        if(key.substring(key.length - 7) == "Rolling") raw = false
-        let range = ['#FF3647', '#4736FF']
-        if (!this.status.base){
-          range = ['#7d7d7d', '#4736FF']
-        }
-        if (!this.status.compared){
-          range = ['#7d7d7d', '#4736FF']
-        }
+        let raw = (key.substring(key.length - 7) == "Rolling" ? false : true)
+        let color = (key == "comparedValueRolling" ? '#4736FF' : '#FF3647')
         selectionAdded = true
         return {
             "transform": [
@@ -136,13 +161,7 @@ export default {
                 }
               },
               "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale": { "range": range }
-                // "value": color
-              },
-              "opacity": {
-                "value": opacity
+                "value": color
               }
             },
             "mark": {
@@ -154,7 +173,7 @@ export default {
       }
 
       let getToolPoint = (key) => {
-        let selection = {
+        let selection = (!selectionAdded ? {
               "tooltip": {
                 "type": "single",
                 "on": "mouseover",
@@ -163,16 +182,12 @@ export default {
                 ],
                 "empty": "none"
               }
-            }
+            } : null)
         let size = 17
-
         var timeDiff = Math.abs(this.latest.getTime() - this.earliest.getTime());
         var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
         size = diffDays / 150
         if (this.rawWeekly) size = 3
-        if (selectionAdded) {
-          selection = null
-        }
         selectionAdded = true
         return {
             "transform": [
@@ -200,30 +215,19 @@ export default {
       }
 
       let getStandardPoint = (key) => {
-        let selection = {
+        let selection = (!selectionAdded ? {
               "tooltip": {
-                "type": "interval",
-                "nearest": true,
+                "type": "single",
                 "on": "mouseover",
                 "encodings": [
                   "x"
                 ],
                 "empty": "none"
               }
-            }
-        if (selectionAdded) {
-          selection = null
-        }
+            } : null)
         selectionAdded = true
-        let raw = true
-        if(key.substring(key.length - 7) == "Rolling") raw = false
-        let range = ['#FF3647', '#4736FF']
-        if (!this.status.base){
-          range = ['#7d7d7d', '#4736FF']
-        }
-        if (!this.status.compared){
-          range = ['#7d7d7d', '#4736FF']
-        }
+        let raw = (key.substring(key.length - 7) == "Rolling" ? false : true)
+        let color = (key == "comparedValueRolling" ? '#4736FF' : '#FF3647')
         return {
             "transform": [
               brush
@@ -245,10 +249,7 @@ export default {
                 }
               },
               "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale": { "range": range }
-                // "value": color
+                "value": color
               },
               "opacity": {
                 "condition": {
@@ -406,8 +407,7 @@ export default {
       }
 
       let getDetail = (key) => {
-        let color = '#FF3647'
-        if (!this.status.compared || !this.status.base) color = '#4736FF'
+        let color = (this.comparedTo && this.status.compared ? '#4736FF' : '#FF3647')
         return {
             "width": 520,
             "height": 60,
@@ -443,10 +443,6 @@ export default {
           }
       }
 
-      //so we can reference these props inside of functions
-      let comparedTo = this.comparedTo
-      let rawWeekly = this.rawWeekly
-
       let buildMetric = () => {
         //build lines and points for initial repo
         buildLines("valueRolling")
@@ -455,7 +451,7 @@ export default {
         if(this.comparedTo) buildLines("comparedValueRolling")
         if(this.rawWeekly) {
           buildLines("value")
-          if(comparedTo) buildLines("comparedValue")
+          if(this.comparedTo) buildLines("comparedValue")
         }
 
       }
@@ -471,46 +467,30 @@ export default {
         config.vconcat[0].layer.push(getDateText(key))
       }
 
+      // if user doesn't want detail, then set vconcat to og
       if(this.showDetail) {
-        if (this.comparedTo && !this.status.compared)
-          config.vconcat[1] = (getDetail("comparedValueRolling"))
-        else
-          config.vconcat[1] = (getDetail("valueRolling"))
-
-        //if (this.comparedTo) config.vconcat[1] = (getDetail("comparedValueRolling"))
-      }
-      else {
-        //if user doesn't want detail, then set vconcat to og
-        if (config.vconcat[1]) config.vconcat.pop()
-      }
+        config.vconcat[1] = (this.comparedTo && this.status.compared ? getDetail("comparedValueRolling") : getDetail("valueRolling"))
+      } else if (config.vconcat[1]) config.vconcat.pop()
 
       //push the area to general spec
       if(this.showArea) {
         config.vconcat[0].layer.push(getArea(""))
-        if(comparedTo){
-          config.vconcat[0].layer.push(getArea("Compared"))
-        }
+        if (this.comparedTo) config.vconcat[0].layer.push(getArea("Compared"))
       }
-      else {
-        //if user doesn't want area mark, then set layers to og
-        for(var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if(config.vconcat[0].layer[x] == getArea("")) {
-            buildMetric()
-          }
-        }
+      else { //if user doesn't want area mark, then set layers to og
+        for(var x = 0; x < config.vconcat[0].layer.length; x++)
+          if (config.vconcat[0].layer[x] == getArea("")) buildMetric()
       }
 
       //push the tooltip to general spec
       if(this.showTooltip) {
-        if(this.rawWeekly){
-          buildTooltip("value")
-        } else buildTooltip("valueRolling")
+        let key = (this.rawWeekly ? "value" : "valueRolling")
+        buildTooltip(key)
 
         //push parts of layer that use "comparedValue" key if there is a comparedRepo
         if(this.comparedTo){
-          if(this.rawWeekly){
-            buildTooltip("comparedValue")
-          } else buildTooltip("comparedValueRolling")
+          let key = (this.rawWeekly ? "comparedValue" : "comparedValueRolling")
+          buildTooltip(key)
           config.vconcat[0].layer.push(rule)
         }
       } else {
@@ -552,12 +532,6 @@ export default {
         }
       }
 
-      let hideRaw = !this.rawWeekly
-      let compare = this.compare
-      let period = this.period
-
-      //$(this.$el).find('.showme').addClass('invis')
-      //$(this.$el).find('.linechart').addClass('loader')
       /*
        * Takes a string like "commits,lines_changed:additions+deletions"
        * and makes it into an array of endpoints:
@@ -609,6 +583,7 @@ export default {
             }
 
             d = AugurStats.convertDates(d, this.earliest, this.latest)
+
             return d
           }
 
@@ -640,8 +615,8 @@ export default {
                     onCreateData(obj, key, field, count)
                     count++
                   } else {
-                    if(!compared)this.status.base = false
-                    else this.status.compared = false
+                    if(compared)this.status.compared = false
+                    else this.status.base = false
                     this.renderError()
 
                     return
@@ -660,50 +635,51 @@ export default {
             buildLines(data[this.repo], (obj, key, field, count) => {
               // Build basic chart using rolling averages
               let d = defaultProcess(obj, key, field, count, false)
-              let rolling = AugurStats.rollingAverage(d, 'value', period)
+              let rolling = AugurStats.rollingAverage(d, 'value', this.period)
               normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', ""))
               //if we want stddev area available on raw weekly
               //aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
               aggregates.push(d)
               legend.push(field)
               if (!this.disableRollingAverage) { colors.push(window.AUGUR_CHART_STYLE.brightColors[count]) }
-              if (!hideRaw || this.disableRollingAverage) { colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]) }
+              if (this.rawWeekly || this.disableRollingAverage) { colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]) }
             }, false)
-          } else if (compare == 'zscore' || compare == 'baseline' && this.comparedTo) {
+          } else if (this.compare == 'zscore' || this.compare == 'baseline' && this.comparedTo) {
             // Build comparison using z-scores
-            buildLines(data[this.comparedTo], (obj, key, field, count) => {
+            buildLines(data[this.repo], (obj, key, field, count) => {
               let d = defaultProcess(obj, key, field, count, false)
               let rolling = null
-              if (compare == 'zscore') {
-                rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', period)
+              if (this.compare == 'zscore') {
+                rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period)
                 d = AugurStats.zscores(d, 'value')
               }
-              else rolling = AugurStats.rollingAverage(d, 'value', period)
+              else rolling = AugurStats.rollingAverage(d, 'value', this.period)
               normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', ""))
               //if we want stddev area available on raw weekly
               //aggregates.push(AugurStats.standardDeviationLines(d, 'value', ""))
               aggregates.push(d)
-              legend.push(this.comparedTo + ' ' + field)
+              legend.push(this.repo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.dullColors[count])
-            }, true)
-            buildLines(data[this.repo], (obj, key, field, count) => {
+            }, false)
+            buildLines(data[this.comparedTo], (obj, key, field, count) => {
               let d = defaultProcess(obj, key, field, count, true)
-              //let rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
               let rolling = null
-              if (compare == 'zscore') {
-                rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', period)
+              if (this.compare == 'zscore') {
+                rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'comparedValue'), 'comparedValue', this.period)
                 d = AugurStats.zscores(d, 'comparedValue')
               }
-              else rolling = AugurStats.rollingAverage(d, 'comparedValue', period)
+              else rolling = AugurStats.rollingAverage(d, 'comparedValue', this.period)
 
               normalized.push(AugurStats.standardDeviationLines(rolling, 'comparedValueRolling', "Compared"))
 
               //if we want stddev area available on raw weekly
               //aggregates.push(AugurStats.standardDeviationLines(d, 'comparedValue', "Compared"))
               aggregates.push(d)
-              legend.push(this.repo + ' ' + field)
+              legend.push(this.comparedTo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
-            }, false)
+
+            }, true)
+
           } else if (this.comparedTo) {
             // Build chart compared to baseline
             //this.mgConfig.baselines = [{value: 1, label: this.repo}]
@@ -712,7 +688,7 @@ export default {
                 earliest: this.earliest,
                 latest: this.latest,
                 byDate: true,
-                period: period
+                period: this.period
               }))
               legend.push(this.comparedTo + ' ' + field)
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
@@ -732,7 +708,7 @@ export default {
 
               })
             }
-            if (!hideRaw) {
+            if (this.rawWeekly) {
               for(var i = 0; i < legend.length; i++){
                 aggregates[i].forEach(d => {
                   d.name = "raw " + legend[i]
@@ -741,21 +717,25 @@ export default {
                 })
               }
             }
-            if(!this.status.base) {
+            if(!this.status.base && this.comparedTo) {
               let temp = JSON.parse(JSON.stringify(values))
               temp = temp.map((datum) => {
                 datum.name = "data n/a for " + this.repo
+                // datum.valueRolling = datum.comparedValueRolling
+
                 return datum
               })
-              values.unshift.apply(values, temp)
+              values.push.apply(values, temp)
             }
-            if(!this.status.compared) {
+            if(!this.status.compared && this.comparedTo) {
               let temp = JSON.parse(JSON.stringify(values))
               temp = temp.map((datum) => {
                 datum.name = "data n/a for " + this.comparedTo
+                // datum.comparedValueRolling = datum.valueRolling
                 return datum
               })
-              values.unshift.apply(values, temp)
+
+              values.push.apply(values, temp)
             }
 
             this.legendLabels = legend
@@ -810,33 +790,14 @@ export default {
       window.$(this.$refs.holder).find('.hideme').removeClass('invisDet')
       window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
       window.$(this.$refs.holder).find('.deleteme').remove()
-      // window.$(this.mgConfig.target).hover((onEnterEvent) => {
-      //   window.$(this.$refs.legend).hide()
-      // }, (onLeaveEvent) => {
-      //   window.$(this.$refs.legend).show()
-      // })
       this.$refs.chartholder.innerHTML = ''
       this.$refs.chartholder.appendChild(this.mgConfig.target)
-      //this.mgConfig.target.className = 'deleteme'
-      //window.MG.data_graphic(this.mgConfig)
     },
     renderError () {
       if (!this.comparedTo || (this.status.base == false && this.status.compared == false)) {
         $(this.$el).find('.spinner').removeClass('loader')
         $(this.$el).find('.error').removeClass('hidden')
-      } else if (this.status.base == false){
-        console.log("base failed")
-      } else if (this.status.compared == false) {
-        console.log("compared failed")
       }
-
-      // this.$refs.chart.className = 'linechart intro error'
-      // window.$(this.$refs.holder).find('.deleteme').remove()
-      // this.$refs.chartholder.innerHTML = ''
-      // this.$refs.chartholder.appendChild(this.mgConfig.target)
-      // //this.mgConfig.target.className = 'deleteme'
-      // //this.mgConfig.chart_type = 'missing-data'
-      // //window.MG.data_graphic(this.mgConfig)
     }
   }// end methods
 }

@@ -701,25 +701,28 @@ var AugurStats = function () {
     }
   }, {
     key: 'convertKey',
-    value: function convertKey(data, key) {
+    value: function convertKey(data, key, newName) {
+      newName = newName || "value";
       if (Array.isArray(data[0])) {
         data = data.map(function (datum) {
           return AugurStats.convertKey(datum, key);
         });
       } else if (key.length > 1) {
         return data.map(function (d) {
-          return {
+          var obj = {
             date: d.date,
-            value: d[key[0]],
             field: d[key[1]]
           };
+          obj[newName] = d[key[0]];
+          return obj;
         });
       } else {
         return data.map(function (d) {
-          return {
-            date: d.date,
-            value: d[key]
+          var obj = {
+            date: d.date
           };
+          obj[newName] = d[key];
+          return obj;
         });
       }
       return data;
@@ -1668,13 +1671,18 @@ var _StackedBarChart = require('./charts/StackedBarChart');
 
 var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
 
+var _CrossHighlightChart = require('./charts/CrossHighlightChart');
+
+var _CrossHighlightChart2 = _interopRequireDefault(_CrossHighlightChart);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
   components: {
     LineChart: _LineChart2.default,
     BubbleChart: _BubbleChart2.default,
-    StackedBarChart: _StackedBarChart2.default
+    StackedBarChart: _StackedBarChart2.default,
+    CrossHighlightChart: _CrossHighlightChart2.default
   }
 };
 })()
@@ -1690,7 +1698,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.reload("data-v-429b02f1", __vue__options__)
+    hotAPI.rerender("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -2081,7 +2089,6 @@ exports.default = {
       var _this = this;
 
       var removeBelowAverageContributors = !this.showBelowAverage;
-      console.log(removeBelowAverageContributors);
       $(this.$el).find('.showme').addClass('invis');
       $(this.$el).find('.bubblechart').addClass('loader');
       var shared = {};
@@ -2223,6 +2230,235 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-410e1f3c", __vue__options__)
   } else {
     hotAPI.reload("data-v-410e1f3c", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/CrossHighlightChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'variables'],
+  data: function data() {
+    return {
+      values: []
+    };
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    spec: function spec() {
+      var _this = this;
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "spacing": 15,
+        "bounds": "flush",
+        "vconcat": [{
+          "mark": "bar",
+          "height": 60,
+          "encoding": {
+            "x": {
+              "bin": true,
+              "field": "primary",
+              "type": "quantitative",
+              "axis": null
+            },
+            "y": {
+              "aggregate": "secondary",
+              "type": "quantitative",
+              "scale": {
+                "domain": [0, 1000]
+              },
+              "title": ""
+            }
+          }
+        }, {
+          "spacing": 15,
+          "bounds": "flush",
+          "hconcat": [{
+            "mark": "rect",
+            "encoding": {
+              "x": {
+                "bin": true,
+                "field": "primary",
+                "type": "quantitative"
+              },
+              "y": {
+                "bin": true,
+                "field": "secondary",
+                "type": "quantitative"
+              },
+              "color": {
+                "aggregate": "name",
+                "type": "quantitative"
+              }
+            }
+          }, {
+            "mark": "bar",
+            "width": 60,
+            "encoding": {
+              "y": {
+                "bin": true,
+                "field": "primary",
+                "type": "quantitative",
+                "axis": null
+              },
+              "x": {
+                "aggregate": "secondary",
+                "type": "quantitative",
+                "scale": {
+                  "domain": [0, 1000]
+                },
+                "title": ""
+              }
+            }
+          }]
+        }],
+        "config": {
+          "range": {
+            "heatmap": {
+              "scheme": "greenblue"
+            }
+          },
+          "view": {
+            "stroke": "transparent"
+          }
+        }
+      };
+
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
+
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      var split = this.variables.split(':');
+      var primary = split[0];
+      var secondary = split[1];
+
+      var repos = [];
+      if (this.repo) {
+        repos.push(window.AugurRepos[this.repo]);
+      }
+
+      var processData = function processData(data) {
+        var defaultProcess = function defaultProcess(obj, key, field, count, name) {
+          var d = _AugurStats2.default.convertKey(obj[key], field, name);
+          console.log(d);
+          return d;
+        };
+
+        var normalized = [];
+        var buildLines = function buildLines(obj, onCreateData, name) {
+          if (!obj) {
+            return;
+          }
+
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              var d = defaultProcess(obj, key, field, count);
+
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+
+                fields[key].forEach(function (field) {
+                  onCreateData(obj, key, field, count);
+                  count++;
+                });
+              } else {
+
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+
+                  onCreateData(obj, key, name, count);
+                  count++;
+                } else {
+                  _this.renderError();
+                  return;
+                }
+              }
+            }
+          }
+        };
+
+        var values = [];
+
+        buildLines(data[_this.repo], function (obj, key, field, count) {
+          console.log(obj, key, field, count, primary);
+          if (!Array.isArray(field)) field = [field];
+          normalized.push(defaultProcess(obj, key, field, count, primary));
+        }, "primary");
+
+        console.log("here " + data[_this.repo]);
+
+        if (normalized.length == 0) {
+          _this.renderError();
+        } else {
+          for (var i = 0; i < normalized.length; i++) {
+            normalized[i].forEach(function (d) {
+              values.push(d);
+            });
+          }
+        }
+
+        $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+        $(_this.$el).find('.stackedbarchart').removeClass('loader');
+        _this.values = values;
+      };
+
+      if (this.data) {
+        processData(this.data);
+      } else {
+        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+          processData(data);
+        });
+      }
+
+      return config;
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"stackedbarchart hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-9d3b3dc6", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-9d3b3dc6", __vue__options__)
   }
 })()}
 });
@@ -2422,6 +2658,8 @@ exports.default = {
     spec: function spec() {
       var _this = this;
 
+      var range = this.comparedTo ? !this.status.compared ? "d".charCodeAt(0) < this.repo.charCodeAt(0) ? ['#7d7d7d', '#FF3647'] : ['#FF3647', '#7d7d7d'] : !this.status.base ? "d".charCodeAt(0) < this.comparedTo.charCodeAt(0) ? ['#7d7d7d', '#FF3647'] : ['#FF3647', '#7d7d7d'] : this.comparedTo.charCodeAt(0) < this.repo.charCodeAt(0) ? ['#4736FF', '#FF3647'] : ['#FF3647', '#4736FF'] : ['#FF3647'];
+
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "config": {
@@ -2441,7 +2679,27 @@ exports.default = {
           },
           "width": 520,
           "height": 250,
-          "layer": []
+          "layer": [{
+            "mark": "rule",
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "axis": {
+                  "labels": false
+                }
+              },
+              "color": {
+                "field": "name",
+                "type": "nominal",
+                "scale": { "range": range }
+              },
+              "opacity": {
+                "value": 0
+              }
+            }
+
+          }]
         }]
       };
 
@@ -2451,16 +2709,8 @@ exports.default = {
       var selectionAdded = false;
 
       var getStandardLine = function getStandardLine(key) {
-        var raw = true;
-        var opacity = 1;
-        if (key.substring(key.length - 7) == "Rolling") raw = false;
-        var range = ['#FF3647', '#4736FF'];
-        if (!_this.status.base) {
-          range = ['#7d7d7d', '#4736FF'];
-        }
-        if (!_this.status.compared) {
-          range = ['#7d7d7d', '#4736FF'];
-        }
+        var raw = key.substring(key.length - 7) == "Rolling" ? false : true;
+        var color = key == "comparedValueRolling" ? '#4736FF' : '#FF3647';
         selectionAdded = true;
         return {
           "transform": [brush],
@@ -2478,12 +2728,7 @@ exports.default = {
               }
             },
             "color": {
-              "field": "name",
-              "type": "nominal",
-              "scale": { "range": range }
-            },
-            "opacity": {
-              "value": opacity
+              "value": color
             }
           },
           "mark": {
@@ -2495,23 +2740,19 @@ exports.default = {
       };
 
       var getToolPoint = function getToolPoint(key) {
-        var selection = {
+        var selection = !selectionAdded ? {
           "tooltip": {
             "type": "single",
             "on": "mouseover",
             "encodings": ["x"],
             "empty": "none"
           }
-        };
+        } : null;
         var size = 17;
-
         var timeDiff = Math.abs(_this.latest.getTime() - _this.earliest.getTime());
         var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
         size = diffDays / 150;
         if (_this.rawWeekly) size = 3;
-        if (selectionAdded) {
-          selection = null;
-        }
         selectionAdded = true;
         return {
           "transform": [brush],
@@ -2537,28 +2778,17 @@ exports.default = {
       };
 
       var getStandardPoint = function getStandardPoint(key) {
-        var selection = {
+        var selection = !selectionAdded ? {
           "tooltip": {
-            "type": "interval",
-            "nearest": true,
+            "type": "single",
             "on": "mouseover",
             "encodings": ["x"],
             "empty": "none"
           }
-        };
-        if (selectionAdded) {
-          selection = null;
-        }
+        } : null;
         selectionAdded = true;
-        var raw = true;
-        if (key.substring(key.length - 7) == "Rolling") raw = false;
-        var range = ['#FF3647', '#4736FF'];
-        if (!_this.status.base) {
-          range = ['#7d7d7d', '#4736FF'];
-        }
-        if (!_this.status.compared) {
-          range = ['#7d7d7d', '#4736FF'];
-        }
+        var raw = key.substring(key.length - 7) == "Rolling" ? false : true;
+        var color = key == "comparedValueRolling" ? '#4736FF' : '#FF3647';
         return {
           "transform": [brush],
           "encoding": {
@@ -2578,9 +2808,7 @@ exports.default = {
               }
             },
             "color": {
-              "field": "name",
-              "type": "nominal",
-              "scale": { "range": range }
+              "value": color
             },
             "opacity": {
               "condition": {
@@ -2729,8 +2957,7 @@ exports.default = {
       };
 
       var getDetail = function getDetail(key) {
-        var color = '#FF3647';
-        if (!_this.status.compared || !_this.status.base) color = '#4736FF';
+        var color = _this.comparedTo && _this.status.compared ? '#4736FF' : '#FF3647';
         return {
           "width": 520,
           "height": 60,
@@ -2765,16 +2992,13 @@ exports.default = {
         };
       };
 
-      var comparedTo = this.comparedTo;
-      var rawWeekly = this.rawWeekly;
-
       var buildMetric = function buildMetric() {
         buildLines("valueRolling");
 
         if (_this.comparedTo) buildLines("comparedValueRolling");
         if (_this.rawWeekly) {
           buildLines("value");
-          if (comparedTo) buildLines("comparedValue");
+          if (_this.comparedTo) buildLines("comparedValue");
         }
       };
 
@@ -2790,33 +3014,25 @@ exports.default = {
       };
 
       if (this.showDetail) {
-        if (this.comparedTo && !this.status.compared) config.vconcat[1] = getDetail("comparedValueRolling");else config.vconcat[1] = getDetail("valueRolling");
-      } else {
-        if (config.vconcat[1]) config.vconcat.pop();
-      }
+        config.vconcat[1] = this.comparedTo && this.status.compared ? getDetail("comparedValueRolling") : getDetail("valueRolling");
+      } else if (config.vconcat[1]) config.vconcat.pop();
 
       if (this.showArea) {
         config.vconcat[0].layer.push(getArea(""));
-        if (comparedTo) {
-          config.vconcat[0].layer.push(getArea("Compared"));
-        }
+        if (this.comparedTo) config.vconcat[0].layer.push(getArea("Compared"));
       } else {
         for (var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if (config.vconcat[0].layer[x] == getArea("")) {
-            buildMetric();
-          }
+          if (config.vconcat[0].layer[x] == getArea("")) buildMetric();
         }
       }
 
       if (this.showTooltip) {
-        if (this.rawWeekly) {
-          buildTooltip("value");
-        } else buildTooltip("valueRolling");
+        var key = this.rawWeekly ? "value" : "valueRolling";
+        buildTooltip(key);
 
         if (this.comparedTo) {
-          if (this.rawWeekly) {
-            buildTooltip("comparedValue");
-          } else buildTooltip("comparedValueRolling");
+          var _key = this.rawWeekly ? "comparedValue" : "comparedValueRolling";
+          buildTooltip(_key);
           config.vconcat[0].layer.push(rule);
         }
       } else {
@@ -2852,10 +3068,6 @@ exports.default = {
         }
       }
 
-      var hideRaw = !this.rawWeekly;
-      var compare = this.compare;
-      var period = this.period;
-
       var endpoints = [];
       var fields = {};
       this.source.split(',').forEach(function (endpointAndFields) {
@@ -2890,6 +3102,7 @@ exports.default = {
           }
 
           d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+
           return d;
         };
 
@@ -2919,7 +3132,7 @@ exports.default = {
                   onCreateData(obj, key, field, count);
                   count++;
                 } else {
-                  if (!compared) _this.status.base = false;else _this.status.compared = false;
+                  if (compared) _this.status.compared = false;else _this.status.base = false;
                   _this.renderError();
 
                   return;
@@ -2934,7 +3147,7 @@ exports.default = {
         if (!_this.comparedTo) {
           buildLines(data[_this.repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count, false);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'value', period);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
             normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling', ""));
 
             aggregates.push(d);
@@ -2942,46 +3155,45 @@ exports.default = {
             if (!_this.disableRollingAverage) {
               colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
             }
-            if (!hideRaw || _this.disableRollingAverage) {
+            if (_this.rawWeekly || _this.disableRollingAverage) {
               colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
             }
           }, false);
-        } else if (compare == 'zscore' || compare == 'baseline' && _this.comparedTo) {
-          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
+        } else if (_this.compare == 'zscore' || _this.compare == 'baseline' && _this.comparedTo) {
+          buildLines(data[_this.repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count, false);
             var rolling = null;
-            if (compare == 'zscore') {
-              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', period);
+            if (_this.compare == 'zscore') {
+              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period);
               d = _AugurStats2.default.zscores(d, 'value');
-            } else rolling = _AugurStats2.default.rollingAverage(d, 'value', period);
+            } else rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period);
             normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling', ""));
 
             aggregates.push(d);
-            legend.push(_this.comparedTo + ' ' + field);
+            legend.push(_this.repo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.dullColors[count]);
-          }, true);
-          buildLines(data[_this.repo], function (obj, key, field, count) {
+          }, false);
+          buildLines(data[_this.comparedTo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count, true);
-
             var rolling = null;
-            if (compare == 'zscore') {
-              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'comparedValue'), 'comparedValue', period);
+            if (_this.compare == 'zscore') {
+              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'comparedValue'), 'comparedValue', _this.period);
               d = _AugurStats2.default.zscores(d, 'comparedValue');
-            } else rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', period);
+            } else rolling = _AugurStats2.default.rollingAverage(d, 'comparedValue', _this.period);
 
             normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'comparedValueRolling', "Compared"));
 
             aggregates.push(d);
-            legend.push(_this.repo + ' ' + field);
+            legend.push(_this.comparedTo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          }, false);
+          }, true);
         } else if (_this.comparedTo) {
           buildLines(data[_this.comparedTo], function (obj, key, field, count) {
             normalized.push(_AugurStats2.default.makeRelative(obj[key], data[_this.repo][key], field, {
               earliest: _this.earliest,
               latest: _this.latest,
               byDate: true,
-              period: period
+              period: _this.period
             }));
             legend.push(_this.comparedTo + ' ' + field);
             colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
@@ -2998,7 +3210,7 @@ exports.default = {
               values.push(d);
             });
           }
-          if (!hideRaw) {
+          if (_this.rawWeekly) {
             for (var i = 0; i < legend.length; i++) {
               aggregates[i].forEach(function (d) {
                 d.name = "raw " + legend[i];
@@ -3007,21 +3219,25 @@ exports.default = {
               });
             }
           }
-          if (!_this.status.base) {
+          if (!_this.status.base && _this.comparedTo) {
             var temp = JSON.parse(JSON.stringify(values));
             temp = temp.map(function (datum) {
               datum.name = "data n/a for " + _this.repo;
+
+
               return datum;
             });
-            values.unshift.apply(values, temp);
+            values.push.apply(values, temp);
           }
-          if (!_this.status.compared) {
+          if (!_this.status.compared && _this.comparedTo) {
             var _temp = JSON.parse(JSON.stringify(values));
             _temp = _temp.map(function (datum) {
               datum.name = "data n/a for " + _this.comparedTo;
+
               return datum;
             });
-            values.unshift.apply(values, _temp);
+
+            values.push.apply(values, _temp);
           }
 
           _this.legendLabels = legend;
@@ -3067,7 +3283,6 @@ exports.default = {
       window.$(this.$refs.holder).find('.hideme').removeClass('invisDet');
       window.$(this.$refs.holder).find('.showme').removeClass('invisDet');
       window.$(this.$refs.holder).find('.deleteme').remove();
-
       this.$refs.chartholder.innerHTML = '';
       this.$refs.chartholder.appendChild(this.mgConfig.target);
     },
@@ -3075,10 +3290,6 @@ exports.default = {
       if (!this.comparedTo || this.status.base == false && this.status.compared == false) {
         $(this.$el).find('.spinner').removeClass('loader');
         $(this.$el).find('.error').removeClass('hidden');
-      } else if (this.status.base == false) {
-        console.log("base failed");
-      } else if (this.status.compared == false) {
-        console.log("compared failed");
       }
     }
   } };
