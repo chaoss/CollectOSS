@@ -1047,3 +1047,21 @@ class GHTorrent(object):
             GROUP BY YEARWEEK(date)
         """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
+
+    @annotate(tag='new-watchers')
+    def new_watchers(self, owner, repo=None): 
+        """
+        Timeseries of new watchers per week
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with new watchers/week
+        """
+        repoid = self.repoid(owner, repo)
+        newWatchersSQL = s.sql.text("""
+            SELECT date(created_at) as "date", COUNT(*) as "watchers"
+            FROM watchers
+            WHERE repo_id = :repoid
+            GROUP BY YEARWEEK(created_at)
+        """)
+        return pd.read_sql(newWatchersSQL, self.db, params={"repoid": str(repoid)})

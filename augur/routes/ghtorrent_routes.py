@@ -776,6 +776,29 @@ def create_routes(server):
 	server.addTimeseries(ghtorrent.fakes, 'fakes')
 
 	"""
+	@api {get} /:owner/:repo/timeseries/new_watchers Fakes
+	@apiName new_watchers
+	@apiGroup Experimental
+	@apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+	@apiParam {String} owner Username of the owner of the GitHub repository
+	@apiParam {String} repo Name of the GitHub repository
+
+	@apiSuccessExample {json} Success-Response:
+	                    [
+	                        {
+	                            "date": "2010-04-09T00:00:00.000Z",
+	                            "new_watchers": 1
+	                        },
+	                        {
+	                            "date": "2010-04-27T00:00:00.000Z",
+	                            "new_watchers": 2
+	                        }
+	                    ]
+	"""
+	server.addTimeseries(ghtorrent.new_watchers, 'new_watchers')
+
+	"""
 	@api {get} /ghtorrent_range GHTorrent Date Range
 	@apiName GhtorrentRange
 	@apiGroup Utility

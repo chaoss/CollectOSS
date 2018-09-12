@@ -277,6 +277,7 @@ export default class AugurAPI {
       Timeseries(repo, 'fakes', 'fakes')
       Endpoint(repo, 'linkingWebsites', 'linking_websites')
       Timeseries(repo, 'majorTags', 'tags/major')
+      Timeseries(repo, 'newWatchers', 'new_watchers')
       Timeseries(repo, 'tags', 'tags')
     }
 

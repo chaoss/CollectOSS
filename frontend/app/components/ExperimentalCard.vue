@@ -56,6 +56,14 @@
         </line-chart>
       </div>
 
+      <div class="col col-6">
+        <line-chart source="newWatchers"
+                    title="New Watchers / Week"
+                    cite-url=""
+                    cite-text="New Watchers">
+        </line-chart>
+      </div>
+
       <div class="col col-12">
         <stacked-bar-chart source="issueActivity"
                     title="Issue Activity"
