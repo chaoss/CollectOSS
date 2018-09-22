@@ -3,6 +3,7 @@
 
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
+      <login-form></login-form>
       <section class="unmaterialized">
         <div id="collapse">
           <h3 v-if="isCollapsed" @click="collapseText">Downloaded Git Repos by Project  <span style="font-size:16px">&#9660</span></h3>
@@ -83,6 +84,7 @@ import GitCard from './GitCard'
 import ExperimentalCard from './ExperimentalCard'
 import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
 import DownloadedReposCard from './DownloadedReposCard'
+import LoginForm from './LoginForm'
 
 module.exports = {
   components: {
@@ -99,7 +101,8 @@ module.exports = {
     GitCard,
     ExperimentalCard,
     ComparedRepoExperimentalCard,
-    DownloadedReposCard
+    DownloadedReposCard,
+    LoginForm
   },
   data() {
     return {
