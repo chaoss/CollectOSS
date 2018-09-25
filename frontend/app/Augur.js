@@ -64,7 +64,9 @@ export default function Augur () {
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
-        window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
+        if (!payload.fromURL){
+          window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
+        }
         // if (!payload.keepCompared) {
         //   state.comparedRepos = []
         // }

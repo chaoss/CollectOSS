@@ -221,10 +221,9 @@ function Augur() {
           state.tab = 'git';
           state.gitRepo = repo.gitURL;
         }
-        window.history.pushState(null, 'Augur', '?' + queryString.stringify(state.queryObject, { encode: false }));
-        // if (!payload.keepCompared) {
-        //   state.comparedRepos = []
-        // }
+        if (!payload.fromURL) {
+          window.history.pushState(null, 'Augur', '?' + queryString.stringify(state.queryObject, { encode: false }));
+        }
       },
       addComparedRepo: function addComparedRepo(state, payload) {
         // //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
