@@ -58,13 +58,13 @@ class Facade(object):
 
     @annotate(tag='downloaded-repos')
     def downloaded_repos(self):
-        repoSQL = s.sql.text("""
+        downloadedReposSQL = s.sql.text("""
             SELECT git AS url, status, projects.name as project_name
             FROM repos
             JOIN projects
             ON repos.projects_id = projects.id
         """)
-        results = pd.read_sql(repoSQL, self.db)
+        results = pd.read_sql(downloadedReposSQL, self.db)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
         if self.projects:
             results = results[results.project_name.isin(self.projects)]
@@ -79,14 +79,30 @@ class Facade(object):
         """
         Makes sure the storageFolder contains updated versions of all the repos
         """
-        repoSQL = s.sql.text("""
+        linesChangedByAuthorSQL = s.sql.text("""
             SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
             FROM analysis_data
             WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
             GROUP BY repos_id, author_date, author_affiliation, author_email
             ORDER BY author_date ASC;
         """)
-        results = pd.read_sql(repoSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
+        results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
         return results
+
+    @annotate(tag='lines-changed-by-week')
+    def lines_changed_by_week(self, repo_url):
+        """
+        Makes sure the storageFolder contains updated versions of all the repos
+        """
+        linesChangedByWeekSQL = s.sql.text("""
+            SELECT date(author_date) as date, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
+            FROM analysis_data
+            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
+            GROUP BY YEARWEEK(author_date) 
+            ORDER BY YEARWEEK(author_date) ASC
+        """)
+        results = pd.read_sql(linesChangedByWeekSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
+        return results
+
 
     

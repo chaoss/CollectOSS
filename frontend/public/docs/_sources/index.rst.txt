@@ -11,5 +11,7 @@ Augur is a software suite that provides open source health and sustainability me
 .. toctree::
    :maxdepth: 3
 
+   
    whatisaugur
+   architecture
    python
