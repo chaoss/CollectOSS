@@ -2,7 +2,6 @@
 """
 Data source that uses the GitHub API
 """
-
 from augur.datasources.localcsv.localcsv import LocalCSV
 import json
 import re

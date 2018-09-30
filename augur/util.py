@@ -44,7 +44,7 @@ def annotate(metadata=None, **kwargs):
     Decorate a function as being a metric
     """
     if metadata is None:
-        metadata ={}
+        metadata = {}
     def decorate(func):
         if not hasattr(func, 'metadata'):
             func.metadata = {}
