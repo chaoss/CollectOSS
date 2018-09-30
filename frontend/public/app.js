@@ -1702,7 +1702,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
     hotAPI.reload("data-v-429b02f1", __vue__options__)
-<<<<<<< HEAD
   }
 })()}
 });
@@ -1732,9 +1731,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-6fde6fb0", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-6fde6fb0", __vue__options__)
-=======
->>>>>>> 488829ffdf71bb214a6a1d76f54f87e97933c108
+    hotAPI.reload("data-v-6fde6fb0", __vue__options__)
   }
 })()}
 });
