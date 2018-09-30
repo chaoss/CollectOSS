@@ -3,7 +3,7 @@
 
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
-      <login-form></login-form>
+      <!-- <login-form></login-form> -->
       <section class="unmaterialized">
         <div id="collapse">
           <h3 v-if="isCollapsed" @click="collapseText">Downloaded Git Repos by Project  <span style="font-size:16px">&#9660</span></h3>
