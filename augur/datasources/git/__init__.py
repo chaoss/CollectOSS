@@ -27,7 +27,7 @@ class GitPlugin(AugurPlugin):
             )
         return self.__git
 
-    def add_routes(self, flask_app):
+    def create_routes(self, flask_app):
         """
         Responsible for adding this plugin's data sources to the API
         """
@@ -37,6 +37,6 @@ class GitPlugin(AugurPlugin):
 
 GitPlugin.register({
     'name': 'git'
-})
+}, datasource=True)
 
 __all__ = ['GitPlugin']

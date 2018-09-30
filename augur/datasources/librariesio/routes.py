@@ -1,6 +1,6 @@
 def create_routes(server):
 
-    librariesio = server._augur.librariesio()
+    librariesio = server._augur['librariesio']()
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###

@@ -42,7 +42,7 @@ def run():
         help="Do not start the Gunicorn server, only run update threads.")
     args, unknown_args = app.arg_parser.parse_known_args()
     logger.info('Loading...')
-    app.init_all()
+    # app.init_all()
     app.finalize_config()
     app.schedule_updates()
     master = None

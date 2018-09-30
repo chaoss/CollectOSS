@@ -25,7 +25,7 @@ class FacadePlugin(AugurPlugin):
             )
         return self.__facade
 
-    def add_routes(self, flask_app):
+    def create_routes(self, flask_app):
         """
         Responsible for adding this plugin's data sources to the API
         """
@@ -35,6 +35,6 @@ class FacadePlugin(AugurPlugin):
 
 FacadePlugin.register({
     'name': 'facade'
-})
+}, datasource=True)
 
 __all__ = ['FacadePlugin']

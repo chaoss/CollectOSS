@@ -10,8 +10,9 @@ def filterBy(status, key, value):
 
 def create_routes(server):
 
-	metrics_status = server.augur_app.metrics_status()
+	metrics_status = server._augur.init_metrics_status()
 	metrics_status.create_metrics_status()
+	
 	metrics_status_URL = "metrics/status"
 
 	"""

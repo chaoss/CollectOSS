@@ -6,7 +6,7 @@ import pandas
 def librariesio():
     import augur
     augurApp = augur.Application()
-    return augurApp.librariesio()
+    return augurApp['librariesio']()
 
 # *** DIVERSITY AND INCLUSION *** #
 

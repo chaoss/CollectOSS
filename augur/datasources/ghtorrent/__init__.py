@@ -24,7 +24,7 @@ class GHTorrentPlugin(AugurPlugin):
             )
         return self.__ghtorrent
 
-    def add_routes(self, flask_app):
+    def create_routes(self, flask_app):
         """
         Responsible for adding this plugin's data sources to the API
         """
@@ -34,6 +34,6 @@ class GHTorrentPlugin(AugurPlugin):
 
 GHTorrentPlugin.register({
     'name': 'ghtorrent'
-})
+}, datasource=True)
 
 __all__ = ['GHTorrentPlugin']

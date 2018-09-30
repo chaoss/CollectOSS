@@ -102,7 +102,11 @@ class Application(object):
             self.session = self.__Session()
 
         # Initalize all objects to None
+        self.__metrics_status = None
         self._loaded_plugins = {}
+
+        for plugin_name in Application.default_plugins:
+            self[plugin_name]
 
     def __getitem__(self, plugin_name):
         if plugin_name not in self._loaded_plugins:
@@ -134,7 +138,7 @@ class Application(object):
     @classmethod
     def register_datasource(cls, plugin):
         cls.register_plugin(plugin)
-
+        Application.default_plugins.append(plugin.augur_plugin_meta['name'])
 
     def replace_config_variables(self, string, reverse=False):
         variable_map = {
@@ -255,75 +259,11 @@ class Application(object):
         for process in self.__processes:
             process.terminate()
 
-    def ghtorrent(self):
-        from augur.ghtorrent import GHTorrent
-        if self.__ghtorrent is None:
-            logger.debug('Initializing GHTorrent')
-            self.__ghtorrent = GHTorrent(
-                user=self.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-                password=self.read_config('Database', 'pass', 'AUGUR_DB_PASS', 'password'),
-                host=self.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-                port=self.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-                dbname=self.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
-            )
-        return self.__ghtorrent
-
-    def facade(self):
-        from augur.facade import Facade
-        if self.__facade is None:
-            logger.debug('Initializing Facade')
-            self.__facade = Facade(
-                user=self.read_config('Facade', 'user', 'AUGUR_FACADE_DB_USER', 'root'),
-                password=self.read_config('Facade', 'pass', 'AUGUR_FACADE_DB_PASS', ''),
-                host=self.read_config('Facade', 'host', 'AUGUR_FACADE_DB_HOST', '127.0.0.1'),
-                port=self.read_config('Facade', 'port', 'AUGUR_FACADE_DB_PORT', '3306'),
-                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade'),
-                projects=self.read_config('Facade', 'projects', None, [])
-            )
-        return self.__facade
-
-    def ghtorrentplus(self):
-        from augur.ghtorrentplus import GHTorrentPlus
-        if self.__ghtorrentplus is None:
-            logger.debug('Initializing GHTorrentPlus')
-            self.__ghtorrentplus = GHTorrentPlus(
-                user=self.read_config('GHTorrentPlus', 'user', 'AUGUR_GHTORRENT_PLUS_USER', 'root'),
-                password=self.read_config('GHTorrentPlus', 'pass', 'AUGUR_GHTORRENT_PLUS_PASS', 'password'),
-                host=self.read_config('GHTorrentPlus', 'host', 'AUGUR_GHTORRENT_PLUS_HOST', '127.0.0.1'),
-                port=self.read_config('GHTorrentPlus', 'port', 'AUGUR_GHTORRENT_PLUS_PORT', '3306'),
-                dbname=self.read_config('GHTorrentPlus', 'name', 'AUGUR_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
-            , ghtorrent=self.ghtorrent())
-        return self.__ghtorrentplus
-
-    def librariesio(self):
-        from augur.librariesio import LibrariesIO
-        if self.__librariesio is None:
-            logger.debug('Initializing LibrariesIO')
-            self.__librariesio = LibrariesIO(
-                api_key=self.read_config('LibrariesIO', 'apikey', 'AUGUR_LIBRARIESIO_API_KEY', 'None'), 
-                githubapi=self.githubapi()
-            )
-        return self.__librariesio
-
-    def downloads(self):
-        from augur.downloads import Downloads
-        if self.__downloads is None:
-            logger.debug('Initializing Downloads')
-            self.__downloads = Downloads(self.githubapi())
-        return self.__downloads
-
-    def localcsv(self):
-        from augur.localcsv import LocalCSV
-        if self.__localCSV is None:
-            logger.debug('Initializing LocalCSV')
-            self.__localCSV = LocalCSV()
-        return self.__localCSV
-
-    def metrics_status(self):
+    def init_metrics_status(self):
         from augur.metrics_status import MetricsStatus
         if self.__metrics_status is None:
             logger.debug('Initializing MetricsStatus')
-            self.__metrics_status = MetricsStatus(self.githubapi())
+            self.__metrics_status = MetricsStatus(self['githubapi']())
         return self.__metrics_status
 
 Application.plugins = {}

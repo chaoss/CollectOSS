@@ -3,7 +3,7 @@
 Data source that uses the GitHub API
 """
 
-from augur.localcsv import LocalCSV
+from augur.datasources.localcsv.localcsv import LocalCSV
 import json
 import re
 from dateutil.parser import parse

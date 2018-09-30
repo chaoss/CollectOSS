@@ -62,24 +62,3 @@ def create_routes(server):
                         ]
     """
     server.addGitMetric(git.lines_changed_by_author, 'changes_by_author')
-
-    """
-    @api {get} /git/lines_changed_by_week/:git_repo_url Lines Changed by Week
-    @apiName lines-changed-by-week
-    @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
-
-    @apiParam {String} owner Username of the owner of the GitHub repository
-    @apiParam {String} repo Name of the GitHub repository
-
-    @apiSuccessExample {json} Success-Response:
-                        [
-                            {
-                                "date": "2014-11-07T00:00:00.000Z",
-                                "additions": 1263564,
-                                "deletions": 1834,
-                                "whitespace": 27375
-                            }
-                        ]
-    """
-    server.addGitMetric(git.lines_changed_by_week, 'lines_changed_by_week')

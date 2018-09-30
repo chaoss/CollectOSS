@@ -6,7 +6,7 @@ import pandas
 def github():
     import augur
     augurApp = augur.Application()
-    return augurApp.githubapi()
+    return augurApp['githubapi']()
 
 """
 Pandas testing format

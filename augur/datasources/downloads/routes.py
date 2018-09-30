@@ -1,6 +1,6 @@
 def create_routes(server):
 
-    downloads = server.augur_app.downloads()
+    downloads = server._augur['downloads']()
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###

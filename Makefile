@@ -124,7 +124,7 @@ build: frontend docs
 	&& brunch build --production
 
 test:
-	bash -c '$(CONDAACTIVATE) python -m pytest test/test_${SOURCE}.py'
+	bash -c '$(CONDAACTIVATE) python -m pytest augur/'
 
 test-api:
 	make dev-start

@@ -19,7 +19,7 @@ class GitHubAPIPlugin(AugurPlugin):
             self.__githubapi = GitHubAPI(api_key=api_key)
         return self.__githubapi
 
-    def add_routes(self, flask_app):
+    def create_routes(self, flask_app):
         """
         Responsible for adding this plugin's data sources to the API
         """
@@ -29,6 +29,6 @@ class GitHubAPIPlugin(AugurPlugin):
 
 GitHubAPIPlugin.register({
     'name': 'githubapi'
-})
+}, datasource=True)
 
 __all__ = ['GitHubAPIPlugin']

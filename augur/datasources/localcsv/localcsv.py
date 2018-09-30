@@ -5,7 +5,7 @@ Loads small included datasets
 import pandas as pd
 import tldextract
 from urllib.parse import urlparse
-from .util import get_data_path
+from augur.util import get_data_path
 # end imports
 # (don't remove the above line, it's for a script)
 

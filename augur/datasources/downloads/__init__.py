@@ -15,10 +15,10 @@ class DownloadsPlugin(AugurPlugin):
         from .downloads import Downloads
         if self.__downloads is None:
             logger.debug('Initializing Downloads')
-            self.__downloads = Downloads(self.githubapi())
+            self.__downloads = Downloads(self._augur['githubapi']())
         return self.__downloads
 
-    def add_routes(self, flask_app):
+    def create_routes(self, flask_app):
         """
         Responsible for adding this plugin's data sources to the API
         """
@@ -28,6 +28,6 @@ class DownloadsPlugin(AugurPlugin):
 
 DownloadsPlugin.register({
     'name': 'downloads'
-})
+}, datasource=True)
 
 __all__ = ['DownloadsPlugin']

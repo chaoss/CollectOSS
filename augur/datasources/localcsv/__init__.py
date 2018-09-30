@@ -18,7 +18,7 @@ class LocalCSVPlugin(AugurPlugin):
             self.__localCSV = LocalCSV()
         return self.__localCSV
 
-    def add_routes(self, flask_app):
+    def create_routes(self, flask_app):
         """
         Responsible for adding this plugin's data sources to the API
         """
@@ -28,6 +28,6 @@ class LocalCSVPlugin(AugurPlugin):
 
 LocalCSVPlugin.register({
     'name': 'localcsv'
-})
+}, datasource=True)
 
 __all__ = ['LocalCSVPlugin']

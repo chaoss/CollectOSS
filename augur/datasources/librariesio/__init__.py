@@ -24,7 +24,7 @@ class LibrariesIOPlugin(AugurPlugin):
             )
         return self.__librariesio
 
-    def add_routes(self, flask_app):
+    def create_routes(self, flask_app):
         """
         Responsible for adding this plugin's data sources to the API
         """
@@ -33,6 +33,6 @@ class LibrariesIOPlugin(AugurPlugin):
 
 LibrariesIOPlugin.register({
     'name': 'librariesio'
-})
+}, datasource=True)
 
 __all__ = ['LibrariesIOPlugin']
