@@ -15,32 +15,18 @@ import coloredlogs
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
 from lockfile import LockFile
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from augur import logger
+import augur.plugins
+import augur.datasources
 import argparse
 
-def updater_process(name, delay):
-    logger.info('Spawned {} updater process with PID {}'.format(name, os.getpid()))
-    app = Application()
-    datasource = getattr(app, name)()
-    try:
-        while True:
-            logger.info('Updating {}...'.format(name))
-            datasource.update()
-            time.sleep(delay)
-    except KeyboardInterrupt:
-        os._exit(0)
-    except:
-        raise
-
-def load_plugins():
-    if not hasattr(load_plugins, 'already_loaded'):
-        import augur.plugins
-    load_plugins.already_loaded = True
 
 class Application(object):
     """Initalizes all classes form Augur using a config file or environment variables"""
 
-    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application'):
+    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application', db_str='sqlite:///:memory:'):
 
         # Command line arguments
         # TODO: make this useful
@@ -107,25 +93,48 @@ class Application(object):
         cache_parsed = parse_cache_config_options(cache_config)
         self.cache = CacheManager(**cache_parsed)
 
-        # Initalize all objects to None
-        self.__ghtorrent = None
-        self.__ghtorrentplus = None
-        self.__githubapi = None
-        self.__git = None
-        self.__facade = None
-        self.__librariesio = None
-        self.__downloads = None
-        self.__localCSV = None
-        self.__metrics_status = None
+        # Create DB Session
+        self.db = None
+        self.session = None
+        if db_str:
+            self.db = create_engine(db_str)
+            self.__Session = sessionmaker(bind=self.db)
+            self.session = self.__Session()
 
-        # Load plugins
-        import augur.plugins
+        # Initalize all objects to None
+        self._loaded_plugins = {}
+
+    def __getitem__(self, plugin_name):
+        if plugin_name not in self._loaded_plugins:
+            if plugin_name not in Application.plugins:
+                raise ValueError('Plugin %s not found.' % plugin_name)
+            self._loaded_plugins[plugin_name] = Application.plugins[plugin_name](self)
+            logger.debug(f'{plugin_name} plugin loaded')
+        return self._loaded_plugins[plugin_name]
+
+    @classmethod
+    def import_plugins(cls):
+        if not hasattr(cls, 'plugins'):
+            setattr(cls, 'plugins', {})
+        for module in [augur.plugins, augur.datasources]:
+            for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
+                if ispkg:
+                    try:
+                        importer.find_module(modname).load_module(modname)
+                    except Exception as e:
+                        logger.warn(f'Error when loading plugin {module.__name__}.{modname}:')
+                        logger.exception(e)
 
     @classmethod
     def register_plugin(cls, plugin):
-        if not hasattr(plugin, 'name'):
+        if 'name' not in plugin.augur_plugin_meta:
             raise NameError("{} didn't have a name")
-        cls.plugins[plugin.name] = plugin
+        cls.plugins[plugin.augur_plugin_meta['name']] = plugin
+
+    @classmethod
+    def register_datasource(cls, plugin):
+        cls.register_plugin(plugin)
+
 
     def replace_config_variables(self, string, reverse=False):
         variable_map = {
@@ -144,26 +153,30 @@ class Application(object):
         path = os.path.abspath(os.path.expanduser(path))
         return path
 
+    @staticmethod
+    def updater_process(name, delay, shared):
+        logger.info('Spawned {} updater process with PID {}'.format(name, os.getpid()))
+        app = Application()
+        datasource = getattr(app, name)()
+        try:
+            while True:
+                logger.info('Updating {}...'.format(name))
+                datasource.update(shared)
+                time.sleep(delay)
+        except KeyboardInterrupt:
+            os._exit(0)
+        except:
+            raise
+
     def __updater(self, updates=None):
         if updates is None:
             updates = self.__updatable
         for update in updates:
             if not 'started' in update:
-                up = mp.Process(target=updater_process, args=(update['name'], update['delay']), daemon=True)
+                up = mp.Process(target=Application.updater_process, args=(update['name'], update['delay']), daemon=True)
                 up.start()
                 self.__processes.append(up)
                 update['started'] = True
-
-    def init_all(self):
-        self.ghtorrent()
-        self.ghtorrentplus()
-        self.githubapi()
-        self.git()
-        self.facade()
-        self.librariesio()
-        self.downloads()
-        self.localcsv()        
-        self.metrics_status()
 
     def read_config(self, section, name, environment_variable=None, default=None):
         value = None
@@ -282,38 +295,6 @@ class Application(object):
             , ghtorrent=self.ghtorrent())
         return self.__ghtorrentplus
 
-    def git(self, update=False):
-        from augur.git import Git
-        storage = self.path_relative_to_config(
-            self.read_config_path('Git', 'storage', 'AUGUR_GIT_STORAGE', '$(RUNTIME)/git_repos/')
-        )
-        repolist = self.read_config('Git', 'repositories', None, [])
-        if self.__git is None:
-            logger.debug('Initializing Git')
-            self.__git = Git(
-                list_of_repositories=repolist,
-                storage_folder=storage,
-                csv=self.localcsv(),
-                cache=self.cache
-            )
-            self.__updatable.append({
-                'name': 'git',
-                'delay': int(self.read_config('Git', 'refresh', 'AUGUR_GIT_REFRESH', '3600')),
-                'update': self.__git.update
-            })
-        if update:
-            self.__git.update()
-        return self.__git
-
-
-    def githubapi(self):
-        from augur.githubapi import GitHubAPI
-        if self.__githubapi is None:
-            logger.debug('Initializing GitHub API')
-            api_key=self.read_config('GitHub', 'apikey', 'AUGUR_GITHUB_API_KEY', 'None')
-            self.__githubapi = GitHubAPI(api_key=api_key)
-        return self.__githubapi
-
     def librariesio(self):
         from augur.librariesio import LibrariesIO
         if self.__librariesio is None:
@@ -345,5 +326,6 @@ class Application(object):
             self.__metrics_status = MetricsStatus(self.githubapi())
         return self.__metrics_status
 
-
 Application.plugins = {}
+Application.default_plugins = []
+Application.import_plugins()

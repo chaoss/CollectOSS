@@ -1,6 +1,6 @@
 def create_routes(server):
 
-    github = server.augur_app.githubapi()
+    github = server._augur['githubapi']()
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###

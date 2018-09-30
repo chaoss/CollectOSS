@@ -27,8 +27,8 @@ class Server(object):
         app.url_map.strict_slashes = False
 
         # Create Augur application
-        self.augur_app = augur.Application()
-        augur_app = self.augur_app
+        self._augur = augur.Application()
+        augur_app = self._augur
 
         # Initialize cache
         expire = int(augur_app.read_config('Server', 'cache_expire', 'AUGUR_CACHE_EXPIRE', 3600))

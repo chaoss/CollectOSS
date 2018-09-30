@@ -8,7 +8,7 @@ import json
 import re
 from dateutil.parser import parse
 import pandas as pd
-import github
+from github import Github
 import numpy as np
 import datetime
 import requests
@@ -28,7 +28,7 @@ class GitHubAPI(object):
         :param api_key: GitHub API key
         """
         self.GITHUB_API_KEY = api_key
-        self.api = github.Github(api_key)
+        self.api = Github(api_key)
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###

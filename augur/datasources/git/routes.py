@@ -2,7 +2,7 @@ from flask import Response
 
 def create_routes(server):
 
-    facade = server.augur_app.facade()
+    git = server._augur['git']()
 
     #####################################
     ###    DIVERSITY AND INCLUSION    ###
@@ -29,12 +29,12 @@ def create_routes(server):
     #####################################   
 
     @server.app.route('/{}/git/repos'.format(server.api_version))
-    def facade_downloaded_repos(): #TODO: make this name automatic - wrapper?
-        drs = server.transform(facade.downloaded_repos)
+    def git_downloaded_repos(): #TODO: make this name automatic - wrapper?
+        drs = server.transform(git.downloaded_repos)
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
-    server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
+    server.updateMetricMetadata(function=git.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
 
     """
     @api {get} /git/lines_changed/:git_repo_url Lines Changed by Author
@@ -61,7 +61,7 @@ def create_routes(server):
                             }
                         ]
     """
-    server.addGitMetric(facade.lines_changed_by_author, 'changes_by_author')
+    server.addGitMetric(git.lines_changed_by_author, 'changes_by_author')
 
     """
     @api {get} /git/lines_changed_by_week/:git_repo_url Lines Changed by Week
@@ -82,4 +82,4 @@ def create_routes(server):
                             }
                         ]
     """
-    server.addGitMetric(facade.lines_changed_by_week, 'lines_changed_by_week')
+    server.addGitMetric(git.lines_changed_by_week, 'lines_changed_by_week')
