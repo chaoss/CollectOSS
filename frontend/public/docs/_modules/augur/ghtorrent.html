@@ -128,7 +128,7 @@
 <span class="sd">        :return: Query string</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            SELECT date(</span><span class="si">{1}</span><span class="s2">.created_at) AS &quot;date&quot;, COUNT(*) AS counter</span>
+<span class="s2">            SELECT date(</span><span class="si">{1}</span><span class="s2">.created_at) AS &quot;date&quot;, COUNT(*) AS </span><span class="si">{1}</span><span class="s2"></span>
 <span class="s2">            FROM </span><span class="si">{1}</span><span class="s2">, </span><span class="si">{0}</span><span class="s2"></span>
 <span class="s2">            WHERE </span><span class="si">{1}</span><span class="s2">.</span><span class="si">{3}</span><span class="s2"> = </span><span class="si">{0}</span><span class="s2">.</span><span class="si">{2}</span><span class="s2"></span>
 <span class="s2">            AND </span><span class="si">{0}</span><span class="s2">.</span><span class="si">{4}</span><span class="s2"> = :repoid</span>
@@ -263,7 +263,7 @@
         <span class="n">source_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_engagement</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="n">df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
-        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_df</span><span class="p">[</span><span class="s1">&#39;pull_requests_merged_rate_this_week&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;acceptance_rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_df</span><span class="p">[</span><span class="s1">&#39;pull_requests_merged_rate_this_week&#39;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;contributing-github-organizations&#39;</span><span class="p">)</span>
@@ -675,7 +675,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
         <span class="n">totalCommittersSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        SELECT total_committers.created_at AS &quot;date&quot;, COUNT(total_committers.author_id) total_total_committers</span>
+<span class="s2">        SELECT total_committers.created_at AS &quot;date&quot;, COUNT(total_committers.author_id) total_committers</span>
 <span class="s2">        FROM (</span>
 <span class="s2">            SELECT author_id, MIN(DATE(created_at)) created_at</span>
 <span class="s2">            FROM commits</span>
@@ -685,7 +685,7 @@
 <span class="s2">        GROUP BY YEARWEEK(total_committers.created_at)</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">totalCommittersSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
-        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_total_committers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_total_committers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_committers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_committers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="c1"># ISSUE RELATED</span>
@@ -784,7 +784,7 @@
 
 <span class="s2">        FROM commits</span>
 
-<span class="s2">        LEFT JOIN (SELECT forked_from_id AS &quot;repo_id&quot;, created_at AS &quot;created_at&quot; FROM forks WHERE forks.forked_from_id = :repoid ORDER BY created_at DESC LIMIT 1) AS frk</span>
+<span class="s2">        LEFT JOIN (SELECT forked_from AS &quot;repo_id&quot;, created_at AS &quot;created_at&quot; FROM projects WHERE projects.forked_from = :repoid ORDER BY created_at DESC LIMIT 1) AS frk</span>
 <span class="s2">        ON frk.repo_id = commits.project_id</span>
 
 <span class="s2">        LEFT JOIN (SELECT repo_id AS &quot;repo_id&quot;, created_at AS &quot;created_at&quot; FROM issues WHERE issues.repo_id = :repoid ORDER BY created_at DESC LIMIT 1) AS iss</span>
@@ -1079,7 +1079,25 @@
 <span class="s2">            WHERE fake = true</span>
 <span class="s2">            GROUP BY YEARWEEK(date)</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">contributorsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span></div>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">contributorsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;new-watchers&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">new_watchers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of new watchers per week</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with new watchers/week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">newWatchersSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT date(created_at) as &quot;date&quot;, COUNT(*) as &quot;watchers&quot;</span>
+<span class="s2">            FROM watchers</span>
+<span class="s2">            WHERE repo_id = :repoid</span>
+<span class="s2">            GROUP BY YEARWEEK(created_at)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">newWatchersSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span></div>
 </pre></div>
 
           </div>
@@ -1090,6 +1108,7 @@
 <h3><a href="../../index.html">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
 </ul>
 <div class="relations">
