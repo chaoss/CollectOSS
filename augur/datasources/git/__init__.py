@@ -19,13 +19,13 @@ class GitPlugin(AugurPlugin):
         repolist = self._augur.read_config('Git', 'repositories', None, [])
         if self.__git is None:
             logger.debug('Initializing Git')
-            self._augur.__git = Git(
+            self.__git = Git(
                 list_of_repositories=repolist,
                 storage_folder=storage,
                 csv=None,
                 cache=self._augur.cache
             )
-        return self._augur.__git
+        return self.__git
 
     def add_routes(self, flask_app):
         """
