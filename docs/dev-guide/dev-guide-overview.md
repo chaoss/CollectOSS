@@ -15,8 +15,8 @@ to update the docs and frontend before adding them to your staging area.
 ## Augur Development Overview
 
 ### tl;dr
-  1. [Back End Development Guide](/docs/dev-guide-pt1.md) 
-  2. [Front End Development Guide](/docs/dev-guide-pt2.md)
+  1. [Back End Development Guide](/docs/dev-guide/dev-guide-pt1.md) 
+  2. [Front End Development Guide](/docs/dev-guide/dev-guide-pt2.md)
 ---------------------
 
 ### Augur's Design Value System
