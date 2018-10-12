@@ -94,9 +94,7 @@ git clone https://github.com/OSSHealth/augur/
 
 ## Assume you are in the root from which you cloned augur
 
-cd augur  ## To get into the project directory root
-
-cd augur ## To get into the augur directory under the augur root, where the make files live
+cd augur  ## To get into the project directory root, where the make files live.
 
 # If you are going to do active development, please use the dev branch
 git checkout dev
