@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
 
@@ -32,8 +33,10 @@ class GHTorrentPlugin(AugurPlugin):
         create_routes(flask_app)
 
 
-GHTorrentPlugin.register({
-    'name': 'ghtorrent'
-}, datasource=True)
+GHTorrentPlugin.augur_plugin_meta = {
+    'name': 'ghtorrent',
+    'datasource': True
+}
+Application.register_plugin(GHTorrentPlugin)
 
 __all__ = ['GHTorrentPlugin']

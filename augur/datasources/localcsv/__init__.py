@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
 
@@ -26,8 +27,10 @@ class LocalCSVPlugin(AugurPlugin):
         create_routes(flask_app)
 
 
-LocalCSVPlugin.register({
-    'name': 'localcsv'
-}, datasource=True)
+LocalCSVPlugin.augur_plugin_meta = {
+    'name': 'localcsv',
+    'datasource': True
+}
+Application.register_plugin(LocalCSVPlugin)
 
 __all__ = ['LocalCSVPlugin']

@@ -134,11 +134,8 @@ class Application(object):
         if 'name' not in plugin.augur_plugin_meta:
             raise NameError("{} didn't have a name")
         cls.plugins[plugin.augur_plugin_meta['name']] = plugin
-
-    @classmethod
-    def register_datasource(cls, plugin):
-        cls.register_plugin(plugin)
-        Application.default_plugins.append(plugin.augur_plugin_meta['name'])
+        if plugin.augur_plugin_meta.get('datasource'):
+            Application.default_plugins.append(plugin.augur_plugin_meta['name'])
 
     def replace_config_variables(self, string, reverse=False):
         variable_map = {

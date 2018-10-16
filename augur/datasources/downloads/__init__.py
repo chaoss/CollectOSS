@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
 
@@ -26,8 +27,10 @@ class DownloadsPlugin(AugurPlugin):
         create_routes(flask_app)
 
 
-DownloadsPlugin.register({
-    'name': 'downloads'
-}, datasource=True)
+DownloadsPlugin.augur_plugin_meta = {
+    'name': 'downloads',
+    'datasource': True
+}
+Application.register_plugin(DownloadsPlugin)
 
 __all__ = ['DownloadsPlugin']

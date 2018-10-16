@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
 
@@ -27,8 +28,10 @@ class GitHubAPIPlugin(AugurPlugin):
         create_routes(flask_app)
 
 
-GitHubAPIPlugin.register({
-    'name': 'githubapi'
-}, datasource=True)
+GitHubAPIPlugin.augur_plugin_meta = {
+    'datasource': True,
+    'name': 'githubapi',
+}
+Application.register_plugin(GitHubAPIPlugin)
 
 __all__ = ['GitHubAPIPlugin']

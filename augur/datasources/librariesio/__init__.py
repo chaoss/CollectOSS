@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
 
@@ -31,8 +32,10 @@ class LibrariesIOPlugin(AugurPlugin):
         from .routes import create_routes
         create_routes(flask_app)
 
-LibrariesIOPlugin.register({
+LibrariesIOPlugin.augur_plugin_meta = {
+    'datasource': True,
     'name': 'librariesio'
-}, datasource=True)
+}
+Application.register_plugin(LibrariesIOPlugin)
 
 __all__ = ['LibrariesIOPlugin']

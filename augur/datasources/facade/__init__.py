@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
 
@@ -32,9 +33,10 @@ class FacadePlugin(AugurPlugin):
         from .routes import create_routes
         create_routes(flask_app)
 
-
-FacadePlugin.register({
-    'name': 'facade'
-}, datasource=True)
+FacadePlugin.augur_plugin_meta = {
+    'name': 'facade',
+    'datasource': True
+}
+Application.register_plugin(FacadePlugin)
 
 __all__ = ['FacadePlugin']
