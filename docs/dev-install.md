@@ -94,11 +94,10 @@ git clone https://github.com/OSSHealth/augur/
 
 ## Assume you are in the root from which you cloned augur
 
-cd augur  ## To get into the project directory root, where the make files live.
+cd augur ## To get to augur root, where the make files live
 
 # If you are going to do active development, please use the dev branch
 git checkout dev
-
 
 # Install the Python and Node tools and libraries needed
 make install-dev-admin # some libraries require a root install.  
@@ -117,14 +116,14 @@ CREATE DATABASE augur;
 GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
 ```
 
-**Augur runs in an Anaconda environment. To get started, you need to run 'augur' to create the augur.cfg file**
+**Augur runs in an Anaconda environment. To get started, you need to run 'augur' to create the augur.config.json file**
 
 ```bash
 conda activate augur
 augur
 ```
 
-Edit the augur.cfg file with the the required information for database and API connections. 
+Edit the augur.config.json file with the the required information for database and API connections. 
 
 For all the API's and visualiazations to work, you will need to include: 
 
