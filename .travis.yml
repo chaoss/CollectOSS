@@ -6,7 +6,8 @@ matrix:
       python: "3.6"
       notifications: 
         slack: "augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS"
-      script: "python -m pytest ./test"
+      script: "python datasources/**/test_*.py
+"
     # - 
     #   before_script: 
     #     - "node --version"

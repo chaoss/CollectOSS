@@ -128,7 +128,7 @@ test:
 
 test-api:
 	make dev-start
-	python test/test_api.py
+	python datasources/**/test_*.py
 	make dev-stop
 
 .PHONY: unlock
