@@ -124,11 +124,12 @@ build: frontend docs
 	&& brunch build --production
 
 test:
-	bash -c '$(CONDAACTIVATE) python -m pytest augur/'
+	bash -c '$(CONDAACTIVATE) python -m pytest augur/datasources/**/test_**.py'
+	test_api
 
 test-api:
 	make dev-start
-	python datasources/**/test_*.py
+	python test/test_api.py
 	make dev-stop
 
 .PHONY: unlock
