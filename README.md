@@ -11,16 +11,18 @@ master | [![Build Status](https://travis-ci.org/OSSHealth/augur.svg?branch=maste
 
 Augur is focused on prototyping open source software metrics. 
 
-Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/CHAOSS/metrics). Technically, Augur is a [Flask Web Application](http://augurlabs.io), [Python library](https://osshealth.github.io/augur/python/build/html/index.html) and [REST server](https://osshealth.github.io/augur/api/index.html) that presents metrics on open source software development project health and sustainability. Hosting the Augur project requires 
+Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/CHAOSS/metrics). Technically, Augur is a [Flask Web Application](http://augurlabs.io), [Python library](https://chaoss.github.io/augur/python/build/html/index.html) and [REST server](https://chaoss.github.io/augur/api/index.html) that presents metrics on open source software development project health and sustainability. Hosting the Augur project requires 
 
 
 
 ## Installing Augur 
 
 #### Dependencies
+ - Python 3.6 or higher
  - The [GHTorrent database](http://ghtorrent.org/downloads.html). 
     - You can use the *much* smaller [MSR14 dataset](http://ghtorrent.org/msr14.html) for a quick look or to perform development.
  - A [GitHub Access Token (no write access required)](https://github.com/settings/tokens)
+
 
 #### Docker Installation
 To get Augur up and running quickly, [install our Docker image](./docs/docker-install.md).
