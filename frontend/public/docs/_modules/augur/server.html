@@ -46,7 +46,7 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">augur</span>
 <span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span><span class="p">,</span> <span class="n">metric_metadata</span><span class="p">,</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">augur.routes</span> <span class="k">import</span> <span class="n">create_all_datasource_routes</span><span class="p">,</span> <span class="n">create_status_routes</span>  
+<span class="kn">from</span> <span class="nn">augur.routes</span> <span class="k">import</span> <span class="n">create_plugin_routes</span><span class="p">,</span> <span class="n">create_metrics_status_routes</span>  
 
 <span class="n">AUGUR_API_VERSION</span> <span class="o">=</span> <span class="s1">&#39;api/unstable&#39;</span>
 
@@ -60,8 +60,8 @@
         <span class="n">app</span><span class="o">.</span><span class="n">url_map</span><span class="o">.</span><span class="n">strict_slashes</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="c1"># Create Augur application</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">augur_app</span> <span class="o">=</span> <span class="n">augur</span><span class="o">.</span><span class="n">Application</span><span class="p">()</span>
-        <span class="n">augur_app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">augur_app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_augur</span> <span class="o">=</span> <span class="n">augur</span><span class="o">.</span><span class="n">Application</span><span class="p">()</span>
+        <span class="n">augur_app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augur</span>
 
         <span class="c1"># Initialize cache</span>
         <span class="n">expire</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">augur_app</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;cache_expire&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_CACHE_EXPIRE&#39;</span><span class="p">,</span> <span class="mi">3600</span><span class="p">))</span>
@@ -70,10 +70,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">show_metadata</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="n">create_all_datasource_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">create_plugin_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c1"># this needs to be the last route creation function called so that all the metrics have their metadata updated</span>
-        <span class="n">create_status_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">create_metrics_status_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c1">#####################################</span>
         <span class="c1">###          UTILITY              ###</span>
@@ -361,8 +361,8 @@
 
 <span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
     <span class="n">server</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span>
-    <span class="n">host</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">augur_app</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;0.0.0.0&#39;</span><span class="p">)</span>
-    <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">augur_app</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;5000&#39;</span><span class="p">)</span>
+    <span class="n">host</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;0.0.0.0&#39;</span><span class="p">)</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;5000&#39;</span><span class="p">)</span>
     <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">))</span>
 
 <span class="n">wsgi_app</span> <span class="o">=</span> <span class="kc">None</span>

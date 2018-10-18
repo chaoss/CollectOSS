@@ -34,57 +34,6 @@
             
   <div class="section" id="augur-git-git">
 <h1>augur.git.Git<a class="headerlink" href="#augur-git-git" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="augur.git.Git">
-<em class="property">class </em><code class="descclassname">augur.git.</code><code class="descname">Git</code><span class="sig-paren">(</span><em>list_of_repositories</em>, <em>storage_folder</em>, <em>csv</em>, <em>cache=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/git.html#Git"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.git.Git" title="Permalink to this definition">¶</a></dt>
-<dd><p>Analyzes Git repos directly using dulwich</p>
-<dl class="method">
-<dt id="augur.git.Git.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>list_of_repositories</em>, <em>storage_folder</em>, <em>csv</em>, <em>cache=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/git.html#Git.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.git.Git.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new GitHub instance</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>listOfRepositories</strong> – List of URLs to Git repos to analyze</li>
-<li><strong>storageFolder</strong> – Folder to download the repositories to</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#augur.git.Git.__init__" title="augur.git.Git.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(list_of_repositories,&nbsp;…[,&nbsp;cache])</td>
-<td>Creates a new GitHub instance</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloaded_repos</span></code>()</td>
-<td>Get all downloaded repositories and the date they were last updated :return: a JSON object with the URL and date of last update for all downloaded repos</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_repo</span></code>(repo_url)</td>
-<td>Create a repo object from the given url</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_changed_by_author</span></code>(repo_url[,&nbsp;freq,&nbsp;…])</td>
-<td>Makes sure the storageFolder contains updated versions of all the repos</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_changed_minus_whitespace</span></code>(repo_url[,&nbsp;…])</td>
-<td>Makes sure the storageFolder contains updated versions of all the repos</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>()</td>
-<td>Makes sure the storage_folder contains updated versions of all the repos</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 
 

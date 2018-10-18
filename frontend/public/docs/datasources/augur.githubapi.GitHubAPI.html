@@ -34,53 +34,6 @@
             
   <div class="section" id="augur-githubapi-githubapi">
 <h1>augur.githubapi.GitHubAPI<a class="headerlink" href="#augur-githubapi-githubapi" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="augur.githubapi.GitHubAPI">
-<em class="property">class </em><code class="descclassname">augur.githubapi.</code><code class="descname">GitHubAPI</code><span class="sig-paren">(</span><em>api_key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/githubapi.html#GitHubAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.githubapi.GitHubAPI" title="Permalink to this definition">¶</a></dt>
-<dd><p>GitHubAPI is a class for getting metrics from the GitHub API</p>
-<dl class="method">
-<dt id="augur.githubapi.GitHubAPI.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>api_key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/githubapi.html#GitHubAPI.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.githubapi.GitHubAPI.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new GitHub instance</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>api_key</strong> – GitHub API key</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#augur.githubapi.GitHubAPI.__init__" title="augur.githubapi.GitHubAPI.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(api_key)</td>
-<td>Creates a new GitHub instance</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">bus_factor</span></code>(owner,&nbsp;repo[,&nbsp;threshold])</td>
-<td>Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributors_gender</span></code>(owner[,&nbsp;repo])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_of_code_changed</span></code>(owner[,&nbsp;repo])</td>
-<td>Timeseries of the count of lines added, deleted, and the net change each week</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">major_tags</span></code>(owner,&nbsp;repo)</td>
-<td>Timeseries of the dates and names of major version (according to semver) tags.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code>(owner,&nbsp;repo[,&nbsp;raw])</td>
-<td>Timeseries of the dates and names of tags</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 
 

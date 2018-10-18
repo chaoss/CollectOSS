@@ -53,8 +53,8 @@ class GHTorrent(object):
                 FROM {0}
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY DATE(created_at)
-                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
+                GROUP BY DATE(YEARWEEK(created_at))
+                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
 
         if group_by == "week":
             return """
@@ -62,7 +62,7 @@ class GHTorrent(object):
                 FROM {0}
                 WHERE {1} = :repoid
                 GROUP BY YEARWEEK(created_at)
-                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
+                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
 
         if group_by == "month":
             return """
@@ -70,7 +70,7 @@ class GHTorrent(object):
                 FROM {0}
                 WHERE {1} = :repoid
                 GROUP BY MONTH(created_at), YEAR(created_at)
-                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
+                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
 
         if group_by == "year":
             return """
@@ -78,7 +78,7 @@ class GHTorrent(object):
                 FROM {0}
                 WHERE {1} = :repoid
                 GROUP BY YEAR(created_at)
-                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
+                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
 
     def __sub_table_count_by_date(self, parent_table, sub_table, parent_id, sub_id, project_id):
         """
@@ -498,7 +498,7 @@ class GHTorrent(object):
             ON pull_request_history.pull_request_id = pull_requests.id
             WHERE pull_requests.head_repo_id = :repoid
             AND pull_request_history.action = "merged"
-            GROUP BY WEEK(pull_request_history.created_at)
+            GROUP BY YEARWEEK(DATE(pull_request_history.created_at))
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
 
@@ -644,7 +644,7 @@ class GHTorrent(object):
         totalCommittersSQL = s.sql.text("""
         SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_committers
         FROM (
-            SELECT author_id, MIN(DATE(created_at)) created_at
+            SELECT author_id, MIN(DATE(YEARWEEK(created_at))) created_at
             FROM commits
             WHERE project_id = :repoid
             GROUP BY author_id
@@ -941,12 +941,12 @@ class GHTorrent(object):
                     isscoms.count         as "issue_comments",
                     coms.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as "total"
 
-            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(created_at)) coms
+            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(YEARWEEK(created_at))) coms
 
-            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged'[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(created_at)) AS pulls
+            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged'[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(YEARWEEK(created_at))) AS pulls
             ON DATE(pulls.created_at) = DATE(coms.created_at)
 
-            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(created_at)) AS iss
+            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(YEARWEEK(created_at))) AS iss
             ON DATE(iss.created_at) = DATE(coms.created_at)
 
             LEFT JOIN (SELECT commit_comments.created_at AS created_at, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid[[ AND commit_comments.user_id = :userid]] GROUP BY DATE(commit_comments.created_at)) AS comcoms

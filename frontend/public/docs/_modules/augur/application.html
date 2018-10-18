@@ -48,32 +48,18 @@
 <span class="kn">from</span> <span class="nn">beaker.cache</span> <span class="k">import</span> <span class="n">CacheManager</span>
 <span class="kn">from</span> <span class="nn">beaker.util</span> <span class="k">import</span> <span class="n">parse_cache_config_options</span>
 <span class="kn">from</span> <span class="nn">lockfile</span> <span class="k">import</span> <span class="n">LockFile</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">create_engine</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">sessionmaker</span>
 <span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">import</span> <span class="nn">augur.plugins</span>
+<span class="kn">import</span> <span class="nn">augur.datasources</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="k">def</span> <span class="nf">updater_process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">delay</span><span class="p">):</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Spawned </span><span class="si">{}</span><span class="s1"> updater process with PID </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
-    <span class="n">app</span> <span class="o">=</span> <span class="n">Application</span><span class="p">()</span>
-    <span class="n">datasource</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">name</span><span class="p">)()</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
-            <span class="n">datasource</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="k">raise</span>
-
-<span class="k">def</span> <span class="nf">load_plugins</span><span class="p">():</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">load_plugins</span><span class="p">,</span> <span class="s1">&#39;already_loaded&#39;</span><span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">augur.plugins</span>
-    <span class="n">load_plugins</span><span class="o">.</span><span class="n">already_loaded</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initalizes all classes form Augur using a config file or environment variables&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Application.__init__"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="s1">&#39;augur.config.json&#39;</span><span class="p">,</span> <span class="n">no_config_file</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Augur application&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="Application.__init__"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="s1">&#39;augur.config.json&#39;</span><span class="p">,</span> <span class="n">no_config_file</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Augur application&#39;</span><span class="p">,</span> <span class="n">db_str</span><span class="o">=</span><span class="s1">&#39;sqlite:///:memory:&#39;</span><span class="p">):</span>
 
         <span class="c1"># Command line arguments</span>
         <span class="c1"># TODO: make this useful</span>
@@ -140,25 +126,49 @@
         <span class="n">cache_parsed</span> <span class="o">=</span> <span class="n">parse_cache_config_options</span><span class="p">(</span><span class="n">cache_config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">CacheManager</span><span class="p">(</span><span class="o">**</span><span class="n">cache_parsed</span><span class="p">)</span>
 
-        <span class="c1"># Initalize all objects to None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Create DB Session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">db_str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">db_str</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span><span class="p">()</span>
 
-        <span class="c1"># Load plugins</span>
-        <span class="kn">import</span> <span class="nn">augur.plugins</span></div>
+        <span class="c1"># Initalize all objects to None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Plugin </span><span class="si">%s</span><span class="s1"> not found.&#39;</span> <span class="o">%</span> <span class="n">plugin_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{plugin_name}</span><span class="s1"> plugin loaded&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_plugins</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">[</span><span class="n">augur</span><span class="o">.</span><span class="n">plugins</span><span class="p">,</span> <span class="n">augur</span><span class="o">.</span><span class="n">datasources</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">importer</span><span class="p">,</span> <span class="n">modname</span><span class="p">,</span> <span class="n">ispkg</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">__path__</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">ispkg</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">importer</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">modname</span><span class="p">)</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">modname</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Error when loading plugin </span><span class="si">{module.__name__}</span><span class="s1">.</span><span class="si">{modname}</span><span class="s1">:&#39;</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">register_plugin</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">plugin</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">plugin</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> didn&#39;t have a name&quot;</span><span class="p">)</span>
-        <span class="bp">cls</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="n">plugin</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">plugin</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">plugin</span>
+        <span class="k">if</span> <span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;datasource&#39;</span><span class="p">):</span>
+            <span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">replace_config_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">variable_map</span> <span class="o">=</span> <span class="p">{</span>
@@ -177,26 +187,30 @@
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">path</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">updater_process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">delay</span><span class="p">,</span> <span class="n">shared</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Spawned </span><span class="si">{}</span><span class="s1"> updater process with PID </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="n">Application</span><span class="p">()</span>
+        <span class="n">datasource</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">name</span><span class="p">)()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                <span class="n">datasource</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">shared</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span>
+
     <span class="k">def</span> <span class="nf">__updater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">updates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">updates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span>
         <span class="k">for</span> <span class="n">update</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;started&#39;</span> <span class="ow">in</span> <span class="n">update</span><span class="p">:</span>
-                <span class="n">up</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">updater_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">update</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">update</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">]),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">up</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">Application</span><span class="o">.</span><span class="n">updater_process</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">update</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">update</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">]),</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="n">up</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">up</span><span class="p">)</span>
                 <span class="n">update</span><span class="p">[</span><span class="s1">&#39;started&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="k">def</span> <span class="nf">init_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ghtorrent</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ghtorrentplus</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">git</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">facade</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">librariesio</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">downloads</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">localcsv</span><span class="p">()</span>        
-        <span class="bp">self</span><span class="o">.</span><span class="n">metrics_status</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">read_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
@@ -275,111 +289,16 @@
         <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="p">:</span>
             <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">ghtorrent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.ghtorrent</span> <span class="k">import</span> <span class="n">GHTorrent</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing GHTorrent&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span> <span class="o">=</span> <span class="n">GHTorrent</span><span class="p">(</span>
-                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_USER&#39;</span><span class="p">,</span> <span class="s1">&#39;root&#39;</span><span class="p">),</span>
-                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_PASS&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">),</span>
-                <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">),</span>
-                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;3306&#39;</span><span class="p">),</span>
-                <span class="n">dbname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DB_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;msr14&#39;</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrent</span>
-
-    <span class="k">def</span> <span class="nf">facade</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.facade</span> <span class="k">import</span> <span class="n">Facade</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Facade&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span> <span class="o">=</span> <span class="n">Facade</span><span class="p">(</span>
-                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_USER&#39;</span><span class="p">,</span> <span class="s1">&#39;root&#39;</span><span class="p">),</span>
-                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_PASS&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
-                <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">),</span>
-                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;3306&#39;</span><span class="p">),</span>
-                <span class="n">dbname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_FACADE_DB_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;facade&#39;</span><span class="p">),</span>
-                <span class="n">projects</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Facade&#39;</span><span class="p">,</span> <span class="s1">&#39;projects&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[])</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__facade</span>
-
-    <span class="k">def</span> <span class="nf">ghtorrentplus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.ghtorrentplus</span> <span class="k">import</span> <span class="n">GHTorrentPlus</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing GHTorrentPlus&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span> <span class="o">=</span> <span class="n">GHTorrentPlus</span><span class="p">(</span>
-                <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_USER&#39;</span><span class="p">,</span> <span class="s1">&#39;root&#39;</span><span class="p">),</span>
-                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_PASS&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">),</span>
-                <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">),</span>
-                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;3306&#39;</span><span class="p">),</span>
-                <span class="n">dbname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GHTorrentPlus&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GHTORRENT_PLUS_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;ghtorrentplus&#39;</span><span class="p">)</span>
-            <span class="p">,</span> <span class="n">ghtorrent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ghtorrent</span><span class="p">())</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ghtorrentplus</span>
-
-    <span class="k">def</span> <span class="nf">git</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.git</span> <span class="k">import</span> <span class="n">Git</span>
-        <span class="n">storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_relative_to_config</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">read_config_path</span><span class="p">(</span><span class="s1">&#39;Git&#39;</span><span class="p">,</span> <span class="s1">&#39;storage&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GIT_STORAGE&#39;</span><span class="p">,</span> <span class="s1">&#39;$(RUNTIME)/git_repos/&#39;</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">repolist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Git&#39;</span><span class="p">,</span> <span class="s1">&#39;repositories&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[])</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Git&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__git</span> <span class="o">=</span> <span class="n">Git</span><span class="p">(</span>
-                <span class="n">list_of_repositories</span><span class="o">=</span><span class="n">repolist</span><span class="p">,</span>
-                <span class="n">storage_folder</span><span class="o">=</span><span class="n">storage</span><span class="p">,</span>
-                <span class="n">csv</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">localcsv</span><span class="p">(),</span>
-                <span class="n">cache</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;git&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;delay&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Git&#39;</span><span class="p">,</span> <span class="s1">&#39;refresh&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GIT_REFRESH&#39;</span><span class="p">,</span> <span class="s1">&#39;3600&#39;</span><span class="p">)),</span>
-                <span class="s1">&#39;update&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span><span class="o">.</span><span class="n">update</span>
-            <span class="p">})</span>
-        <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__git</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__git</span>
-
-
-    <span class="k">def</span> <span class="nf">githubapi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.githubapi</span> <span class="k">import</span> <span class="n">GitHubAPI</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing GitHub API&#39;</span><span class="p">)</span>
-            <span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;GitHub&#39;</span><span class="p">,</span> <span class="s1">&#39;apikey&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_GITHUB_API_KEY&#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span> <span class="o">=</span> <span class="n">GitHubAPI</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__githubapi</span>
-
-    <span class="k">def</span> <span class="nf">librariesio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.librariesio</span> <span class="k">import</span> <span class="n">LibrariesIO</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing LibrariesIO&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span> <span class="o">=</span> <span class="n">LibrariesIO</span><span class="p">(</span>
-                <span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;LibrariesIO&#39;</span><span class="p">,</span> <span class="s1">&#39;apikey&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_LIBRARIESIO_API_KEY&#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">),</span> 
-                <span class="n">githubapi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">()</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__librariesio</span>
-
-    <span class="k">def</span> <span class="nf">downloads</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.downloads</span> <span class="k">import</span> <span class="n">Downloads</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Downloads&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span> <span class="o">=</span> <span class="n">Downloads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">())</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__downloads</span>
-
-    <span class="k">def</span> <span class="nf">localcsv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.localcsv</span> <span class="k">import</span> <span class="n">LocalCSV</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing LocalCSV&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span> <span class="o">=</span> <span class="n">LocalCSV</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__localCSV</span>
-
-    <span class="k">def</span> <span class="nf">metrics_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">init_metrics_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">augur.metrics_status</span> <span class="k">import</span> <span class="n">MetricsStatus</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing MetricsStatus&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="n">MetricsStatus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">githubapi</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="n">MetricsStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;githubapi&#39;</span><span class="p">]())</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span></div>
 
-
 <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">Application</span><span class="o">.</span><span class="n">import_plugins</span><span class="p">()</span>
 </pre></div>
 
           </div>

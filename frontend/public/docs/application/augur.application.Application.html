@@ -36,11 +36,11 @@
 <h1>augur.application.Application<a class="headerlink" href="#augur-application-application" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="augur.application.Application">
-<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initalizes all classes form Augur using a config file or environment variables</p>
 <dl class="method">
 <dt id="augur.application.Application.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -54,40 +54,40 @@
 <tr class="row-odd"><td><a class="reference internal" href="#augur.application.Application.__init__" title="augur.application.Application.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([config_file,&nbsp;no_config_file,&nbsp;…])</td>
 <td>Initialize self.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloads</span></code>()</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.downloads</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">facade</span></code>()</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.facade</span></code></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize_config</span></code>()</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrent</span></code>()</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.ghtorrent</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrentplus</span></code>()</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.ghtorrentplus</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">git</span></code>([update])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.git</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">githubapi</span></code>()</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.githubapi</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_all</span></code>()</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.init_all</span></code></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">join_updates</span></code>()</td>
 <td>Join to the update processes</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">librariesio</span></code>()</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.librariesio</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">localcsv</span></code>()</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.localcsv</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics_status</span></code>()</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Application.metrics_status</span></code></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path</span></code>(path)</td>

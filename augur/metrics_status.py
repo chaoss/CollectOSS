@@ -42,23 +42,23 @@ class Metric(object):
 	def __init__(self):
 		self.ID = 'none'
 		self.tag = 'none'
-		self.name = 'none'
+		self.display_name = 'none'
 		self.group = 'none'
 		self.backend_status = 'unimplemented'
 		self.frontend_status = 'unimplemented'
 		self.endpoint = 'none'
-		self.source = 'none'
+		self.data_source = 'none'
 		self.metric_type = 'none'
-		self.url = '/'
+		self.documentation_url = '/'
 		self.is_defined = 'false'
 
 class GroupedMetric(Metric):
 
 	def __init__(self, raw_name, group):
 		Metric.__init__(self)	
-		self.name = re.sub('/', '-', re.sub(r'-$|\*', '', re.sub('-', ' ', raw_name).title()))
-		self.tag = re.sub(' ', '-', self.name).lower()
-		self.ID = re.sub(r'-$|\*', '', self.source + '-' + self.tag)
+		self.display_name = re.sub('/', '-', re.sub(r'-$|\*', '', re.sub('-', ' ', raw_name).title()))
+		self.tag = re.sub(' ', '-', self.display_name).lower()
+		self.ID = re.sub(r'-$|\*', '', self.data_source + '-' + self.tag)
 		self.group = group
 
 class ImplementedMetric(Metric):
@@ -68,9 +68,9 @@ class ImplementedMetric(Metric):
 
 		self.ID = metadata['ID']
 		self.tag = metadata['tag']
-		self.name = metadata['metric_name']
+		self.display_name = metadata['metric_name']
 		self.backend_status = 'implemented'
-		self.source = metadata['source']
+		self.data_source = metadata['source']
 		self.group = "experimental"
 
 		if 'metric_type' in metadata:
@@ -125,7 +125,7 @@ class MetricsStatus(object):
 	        "all": "All"
 	    },
 
-		self.sources = []
+		self.data_sources = []
 		self.metric_types = []
 		self.tags = {}
 
@@ -239,7 +239,7 @@ class MetricsStatus(object):
 			for metric in group:
 				if metric.tag in defined_tags:
 					metric.is_defined = 'true'
-					metric.url = "https://github.com/{}/blob/wg-gmd/activity-metrics/{}.md".format(MetricsStatus.activity_repo, metric.tag)
+					metric.documentation_url = "https://github.com/{}/blob/wg-gmd/activity-metrics/{}.md".format(MetricsStatus.activity_repo, metric.tag)
 
 	def get_raw_metrics_status(self):
 		for group in self.metrics_by_group:
@@ -260,17 +260,17 @@ class MetricsStatus(object):
 				"activity_repo_urls": self.activity_urls
 			},	
 			"groups": self.groups,
-			"sources": self.sources,
+			"data_sources": self.data_sources,
 			"metric_types": self.metric_types,
 			"tags": self.tags
 		}
 
 	def get_metric_sources(self):
-		for source in [metric['source'] for metric in self.raw_metrics_status]:
-			source = source.lower()
-			if source not in self.sources and source != "none":
-				self.sources.append(source)
-		self.sources.append("all")
+		for data_source in [metric['data_source'] for metric in self.raw_metrics_status]:
+			data_source = data_source.lower()
+			if data_source not in self.data_sources and data_source != "none":
+				self.data_sources.append(data_source)
+		self.data_sources.append("all")
 
 	def get_metric_types(self):
 		for metric_type in [metric['metric_type'] for metric in self.raw_metrics_status]:

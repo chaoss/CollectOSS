@@ -29,8 +29,8 @@ Augur Development Overview
 tl;dr
 ~~~~~
 
-1. `Back End Development Guide </docs/dev-guide-pt1.md>`__
-2. .. rubric:: `Front End Development Guide </docs/dev-guide-pt2.md>`__
+1. `Back End Development Guide </docs/backend.md>`__
+2. .. rubric:: `Front End Development Guide </docs/frontend.md>`__
       :name: front-end-development-guide
 
 Augur's Design Value System
@@ -143,14 +143,14 @@ Augur Data Reshaping for Analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that you understand the basic structure of Augur, our `Back End
-Development Guide </docs/dev-guide-pt1.md>`__ will be the place to start
+Development Guide </docs/backend.md>`__ will be the place to start
 for reshaping data and building out analysis endpoints. The end result
 of new back end code is a **REST API Endpoint.**
 
 Augur Data Presentation
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Once you have a **REST API Endpoint**, you can stop and say, "I have built an endpoint. Here is my pull request". OR, you can build front end visualizations for those endpoints, following our `Front End Development Guide </docs/dev-guide-pt2.md>`__.
+Once you have a **REST API Endpoint**, you can stop and say, "I have built an endpoint. Here is my pull request". OR, you can build front end visualizations for those endpoints, following our `Front End Development Guide </docs/frontend.md>`__.
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Important notes about contributing metrics
