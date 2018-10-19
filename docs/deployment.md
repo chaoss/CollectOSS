@@ -62,7 +62,7 @@ Make sure to replace `$HOME/anaconda/bin` with the location you installed anacon
 
 First, login as your augur user (`su augur` if you are root) and download the repo:
 ```bash
-git clone https://github.com/OSSHealth/augur
+git clone https://github.com/chaoss/augur
 cd augur
 ```
 

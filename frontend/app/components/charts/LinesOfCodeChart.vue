@@ -131,7 +131,7 @@ export default {
         this.organizations = flattenAndSort(organizations, 'name', 'additions')
             
 
-        console.log(this.contributors)
+        // console.log(this.contributors)
       })
     }
   },

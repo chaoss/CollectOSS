@@ -32,6 +32,8 @@ default:
 	@ echo "    python-docs            Generates new Sphinx documentation"
 	@ echo "    api-docs               Generates new apidocjs documentation"
 	@ echo "    docs                   Generates all documentation"
+	@ echo "Git commands"
+	@ echo "    update                 Pull the latest version of your current branch"
 	@ echo
 	@ echo "Prototyping:"
 	@ echo "    jupyter                Launches the jupyter"
@@ -124,12 +126,15 @@ build: frontend docs
 	&& brunch build --production
 
 test:
+	test-plugins
+	test-api
+
+test-plugins:
 	bash -c '$(CONDAACTIVATE) python -m pytest augur/datasources/**/test_**.py'
-	test_api
 
 test-api:
 	make dev-start
-	python test/test_api.py
+	python test/api/test_api.py
 	make dev-stop
 
 .PHONY: unlock
@@ -141,6 +146,14 @@ update-deps:
 	pipreqs ./augur/
 	bash -c "$(CONDAACTIVATE) conda env export > environment.yml"
 
+
+#
+# Git
+#
+update:
+	git stash
+	git pull
+	git stash pop
 
 
 # 

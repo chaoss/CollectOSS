@@ -90,7 +90,7 @@ open Anaconda3-5.1.0-MacOSX-x86_64.pkg
 Clone the repo and install the libraries and tools needed by Augur
 
 ```bash
-git clone https://github.com/OSSHealth/augur/
+git clone https://github.com/chaoss/augur/
 
 ## Assume you are in the root from which you cloned augur
 

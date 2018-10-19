@@ -63,7 +63,7 @@ Inside your Augur system root directory there is another directory named `augur`
 5. **librariesio** : Pulls data from the libraries.io API (Package manager download data)
 6. **localcsv** : Pulls data from a .csv file you persist. 
 
-If you want to ingest substantial amounts of new data, you may want to contribute to the [Augur-OSSifragae](https://github.com/OSSHealth/augur-ossifragae) project, which focuses on systematic, structured ingestion of open source respository data from heterogeneous sources. (Note: an [Ossifragae](https://en.wikipedia.org/wiki/Bearded_Vulture) is a bearded vulture that is one of a handful of birds said to yield valid signs for ancient Roman Augurs (visionaries) to follow. We think the existance of "OSS" at the beginning of the birds name is a sign. We took it.)
+If you want to ingest substantial amounts of new data, you may want to contribute to the [Augur-OSSifragae](https://github.com/chaoss/augur-ossifragae) project, which focuses on systematic, structured ingestion of open source respository data from heterogeneous sources. (Note: an [Ossifragae](https://en.wikipedia.org/wiki/Bearded_Vulture) is a bearded vulture that is one of a handful of birds said to yield valid signs for ancient Roman Augurs (visionaries) to follow. We think the existance of "OSS" at the beginning of the birds name is a sign. We took it.)
 
 ### Augur Data Storage
 The database system that you built with GHTorrent or MSR14 is our principle data storage environment right now. We have added a few small details to the GHTorrent database in a seperate schema called GHTorrent_Plus.  This schema is built on deployment, and supports aggregations of the GHTorrent Schema information so that metrics can be generated more quickly in a few cases. 

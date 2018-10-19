@@ -13,7 +13,7 @@
           </div>
         </div>
         <nav class="col col-4 header-nav">
-          <a class="header-nav-item" href="https://github.com/OSSHealth/augur">GitHub</a>
+          <a class="header-nav-item" href="https://github.com/chaoss/augur">GitHub</a>
           <a class="header-nav-item" href="static/docs">Python Docs</a>
           <a class="header-nav-item" href="static/api_docs">API Docs</a>
         </nav>

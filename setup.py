@@ -23,7 +23,7 @@ setup(
     include_package_data=True,
     description='Library/Server for data related to the health and sustainability of OSS',
     long_description=long_description,
-    url='https://github.com/OSSHealth/augur',
+    url='https://github.com/chaoss/augur',
     author='Derek Howard',
     author_email='derek@howderek.com',
     packages=find_packages(),

@@ -97,7 +97,7 @@ Clone the repo and install the libraries and tools needed by Augur
 
 .. code:: bash
 
-    git clone https://github.com/OSSHealth/augur/
+    git clone https://github.com/chaoss/augur/
 
     ## Assume you are in the root from which you cloned augur
 

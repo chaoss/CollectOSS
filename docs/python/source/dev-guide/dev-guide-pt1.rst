@@ -29,7 +29,7 @@ If your Python function uses a new data source, create a new Python
 file. If you use an already implemented data source, create your new
 functions under that file. For instance, if you were to create a metric
 using data from the GitHub API, you would write a function in
-```augur/githubapi.py`` <https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py>`__
+```augur/githubapi.py`` <https://github.com/chaoss/augur/blob/master/augur/githubapi.py>`__
 
 Creating a new data source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -77,7 +77,7 @@ function definition, call the ``@annotate`` decorator as follows:
 
 It is currently standard practice to pass in the ``metric_name``, as
 well as the group (see `this
-list <https://github.com/OSSHealth/augur/blob/dev/docs/scratchpad/master-metrics-order.md>`__
+list <https://github.com/chaoss/augur/blob/dev/docs/scratchpad/master-metrics-order.md>`__
 for a current list of groupings). The metric name should be all
 lowercase, with dashes filling the whitespace between words. This is
 also sometimes referred to as the metric's 'tag.'

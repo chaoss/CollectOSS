@@ -56,7 +56,7 @@ try running <code class="docutils literal notranslate"><span class="pre">make</s
 file. If you use an already implemented data source, create your new
 functions under that file. For instance, if you were to create a metric
 using data from the GitHub API, you would write a function in
-<code class="docutils literal notranslate"><span class="pre">`augur/githubapi.py</span></code> &lt;<a class="reference external" href="https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py">https://github.com/OSSHealth/augur/blob/master/augur/githubapi.py</a>&gt;`__</p>
+<code class="docutils literal notranslate"><span class="pre">`augur/githubapi.py</span></code> &lt;<a class="reference external" href="https://github.com/chaoss/augur/blob/master/augur/githubapi.py">https://github.com/chaoss/augur/blob/master/augur/githubapi.py</a>&gt;`__</p>
 <div class="section" id="creating-a-new-data-source">
 <h4>Creating a new data source<a class="headerlink" href="#creating-a-new-data-source" title="Permalink to this headline">¶</a></h4>
 <p>In the file, create a class to put your functions into, then in
@@ -94,7 +94,7 @@ function definition, call the <code class="docutils literal notranslate"><span c
 </pre></div>
 </div>
 <p>It is currently standard practice to pass in the <code class="docutils literal notranslate"><span class="pre">metric_name</span></code>, as
-well as the group (see <a class="reference external" href="https://github.com/OSSHealth/augur/blob/dev/docs/scratchpad/master-metrics-order.md">this
+well as the group (see <a class="reference external" href="https://github.com/chaoss/augur/blob/dev/docs/scratchpad/master-metrics-order.md">this
 list</a>
 for a current list of groupings). The metric name should be all
 lowercase, with dashes filling the whitespace between words. This is

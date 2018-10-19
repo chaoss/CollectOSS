@@ -63,7 +63,7 @@ download the repo:
 
 .. code:: bash
 
-    git clone https://github.com/OSSHealth/augur
+    git clone https://github.com/chaoss/augur
     cd augur
 
 Then, install Augur using ``make install``. If you want to help develop

@@ -9,7 +9,7 @@ Now, to install:
 1.  Clone the repo and enter its directory:
 
 ```bash
-git clone https://github.com/OSSHealth/augur
+git clone https://github.com/chaoss/augur
 cd augur
 ```
 

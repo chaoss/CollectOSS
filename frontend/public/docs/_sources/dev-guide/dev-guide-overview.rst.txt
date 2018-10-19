@@ -120,7 +120,7 @@ of these files should correspond to a different data source.
 
 If you want to ingest substantial amounts of new data, you may want to
 contribute to the
-`Augur-OSSifragae <https://github.com/OSSHealth/augur-ossifragae>`__
+`Augur-OSSifragae <https://github.com/chaoss/augur-ossifragae>`__
 project, which focuses on systematic, structured ingestion of open
 source respository data from heterogeneous sources. (Note: an
 `Ossifragae <https://en.wikipedia.org/wiki/Bearded_Vulture>`__ is a
@@ -161,7 +161,7 @@ take the time to read this section carefully; not only will it will make
 your life much easier, but also the lives of all the other conributors!
 
 When contributing a new metric, please reference `this
-list <https://github.com/OSSHealth/augur/blob/dev/docs/scratchpad/master-metrics-order.md>`__
+list <https://github.com/chaoss/augur/blob/dev/docs/scratchpad/master-metrics-order.md>`__
 in order to make sure you are putting the metric in the correct spot in
 the code. With the amount of metrics we have already implemented and the
 ones we plan to implement, **it is imperative that you stick to this
