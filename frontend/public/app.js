@@ -224,6 +224,9 @@ function Augur() {
         if (!payload.fromURL) {
           window.history.pushState(null, 'Augur', '?' + queryString.stringify(state.queryObject, { encode: false }));
         }
+        // if (!payload.keepCompared) {
+        //   state.comparedRepos = []
+        // }
       },
       addComparedRepo: function addComparedRepo(state, payload) {
         // //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
@@ -238,24 +241,28 @@ function Augur() {
         // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         // window.history.pushState(null, title, queryString)
         var repo = window.AugurAPI.Repo(payload);
-        if (!window.AugurRepos[repo.toString()]) {
-          window.AugurRepos[repo.toString()] = repo;
-        } else {
-          repo = window.AugurRepos[repo.toString()];
-        }
-        state.hasState = true;
-        if (repo.owner && repo.name) {
-          state.comparedRepos.push(repo.toString());
-          var title = repo.owner + '/' + repo.name + '- Augur';
-          state.tab = 'gmd';
-          var _queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
-          window.history.pushState(null, title, _queryString);
-        }
-        if (payload.gitURL) {
-          var _queryString2 = '&git=' + window.btoa(repo.gitURL);
-          window.history.pushState(null, 'Git Analysis - Augur', window.location.search + _queryString2);
-          state.tab = 'git';
-          state.gitRepo = repo.gitURL;
+        if (!state.comparedRepos.includes(repo.toString())) {
+          console.log("FUCK", repo.toString());
+          if (!window.AugurRepos[repo.toString()]) {
+
+            window.AugurRepos[repo.toString()] = repo;
+          } else {
+            repo = window.AugurRepos[repo.toString()];
+          }
+          state.hasState = true;
+          if (repo.owner && repo.name) {
+            state.comparedRepos.push(repo.toString());
+            var title = repo.owner + '/' + repo.name + '- Augur';
+            state.tab = 'gmd';
+            var _queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
+            window.history.pushState(null, title, _queryString);
+          }
+          if (payload.gitURL) {
+            var _queryString2 = '&git=' + window.btoa(repo.gitURL);
+            window.history.pushState(null, 'Git Analysis - Augur', window.location.search + _queryString2);
+            state.tab = 'git';
+            state.gitRepo = repo.gitURL;
+          }
         }
       },
       setDates: function setDates(state, payload) {
@@ -700,25 +707,28 @@ var AugurStats = function () {
     }
   }, {
     key: 'convertKey',
-    value: function convertKey(data, key) {
+    value: function convertKey(data, key, newName) {
+      newName = newName || "value";
       if (Array.isArray(data[0])) {
         data = data.map(function (datum) {
           return AugurStats.convertKey(datum, key);
         });
       } else if (key.length > 1) {
         return data.map(function (d) {
-          return {
+          var obj = {
             date: d.date,
-            value: d[key[0]],
             field: d[key[1]]
           };
+          obj[newName] = d[key[0]];
+          return obj;
         });
       } else {
         return data.map(function (d) {
-          return {
-            date: d.date,
-            value: d[key]
+          var obj = {
+            date: d.date
           };
+          obj[newName] = d[key];
+          return obj;
         });
       }
       return data;
@@ -779,7 +789,7 @@ var AugurStats = function () {
         var newObj = {};
         if (e.date) {
           newObj.date = new Date(e.date);
-          newObj[key] = e[key];
+          newObj[key + extension] = e[key];
         }
         newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances));
         newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances));
@@ -1211,7 +1221,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('div',{attrs:{"id":"collapse"}},[(_vm.isCollapsed)?_c('h3',{on:{"click":_vm.collapseText}},[_vm._v("Downloaded Git Repos by Project  "),_c('span',{staticStyle:{"font-size":"16px"}},[_vm._v("▼")])]):_c('h3',{on:{"click":_vm.collapseText}},[_vm._v("Downloaded Git Repos by Project  "),_c('span',{staticStyle:{"font-size":"16px"}},[_vm._v("▶")])])]),_vm._v(" "),_c('downloaded-repos-card')],1),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('all-metrics-status-card')],1)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-growth-maturity-decline-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e()],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_c('div',{attrs:{"id":"collapse"}},[(_vm.isCollapsed)?_c('h3',{on:{"click":_vm.collapseText}},[_vm._v("Downloaded Git Repos by Project  "),_c('span',{staticStyle:{"font-size":"16px"}},[_vm._v("▼")])]):_c('h3',{on:{"click":_vm.collapseText}},[_vm._v("Downloaded Git Repos by Project  "),_c('span',{staticStyle:{"font-size":"16px"}},[_vm._v("▶")])])]),_vm._v(" "),_c('downloaded-repos-card')],1),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_c('all-metrics-status-card')],1)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-activity-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card'),_vm._v(" "),_vm._l((_vm.comparedRepos),function(repo){return _c('div',{class:{ hidden: !_vm.comparedRepos.length },attrs:{"id":"comparisonCards"}},[_c('compared-repo-experimental-card',{attrs:{"comparedTo":repo}})],1)})],2):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e()],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1617,9 +1627,9 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
-var _LineChart = require('./charts/LineChart');
+var _TickChart = require('./charts/TickChart');
 
-var _LineChart2 = _interopRequireDefault(_LineChart);
+var _TickChart2 = _interopRequireDefault(_TickChart);
 
 var _LinesOfCodeChart = require('./charts/LinesOfCodeChart');
 
@@ -1629,7 +1639,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 module.exports = {
   components: {
-    LineChart: _LineChart2.default,
+    TickChart: _TickChart2.default,
     LinesOfCodeChart: _LinesOfCodeChart2.default
   }
 };
@@ -1637,7 +1647,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Git Metrics")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Git Metrics")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1667,20 +1677,25 @@ var _StackedBarChart = require('./charts/StackedBarChart');
 
 var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
 
+var _DynamicLineChart = require('./charts/DynamicLineChart');
+
+var _DynamicLineChart2 = _interopRequireDefault(_DynamicLineChart);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
   components: {
     LineChart: _LineChart2.default,
     BubbleChart: _BubbleChart2.default,
-    StackedBarChart: _StackedBarChart2.default
+    StackedBarChart: _StackedBarChart2.default,
+    DynamicLineChart: _DynamicLineChart2.default
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"closedIssues","title":"Closed Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"codeCommits","title":"Code Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"maintainerResponseToMergeRequestDuration","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"openIssues","title":"Open Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullRequestComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('line-chart',{attrs:{"source":"pullRequestsOpen","title":"Pull Requests Open / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Growth, Maturity, and Decline")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting"},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"closedIssues","title":"Closed Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeCommits","title":"Code Commits / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"maintainerResponseToMergeRequestDuration","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"openIssues","title":"Open Issues / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestsOpen","title":"Pull Requests Open / Week","cite-url":"https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1698,18 +1713,42 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
+var _vueMultiselect = require('vue-multiselect');
+
+var _vueMultiselect2 = _interopRequireDefault(_vueMultiselect);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 module.exports = {
+  components: {
+    Multiselect: _vueMultiselect2.default
+  },
   data: function data() {
     return {
       info: {
         days: 180,
         points: 45
       },
-      isCollapsed: false
-
+      isCollapsed: false,
+      project: "Select project",
+      values: [],
+      options: [],
+      repos: {},
+      projects: [],
+      disabled: false
     };
   },
 
+  watch: {
+    project: function project() {
+      var _this = this;
+
+      this.options = [];
+      this.repos[this.project].forEach(function (repo) {
+        _this.options.push(repo.url.slice(11));
+      });
+    }
+  },
   methods: {
     collapseText: function collapseText() {
       this.isCollapsed = !this.isCollapsed;
@@ -1718,7 +1757,7 @@ module.exports = {
       } else $(this.$el).find('.section').removeClass('collapsed');
     },
     onStartDateChange: function onStartDateChange(e) {
-      var _this = this;
+      var _this2 = this;
 
       console.log(e);
       var date = Date.parse(this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value);
@@ -1728,13 +1767,13 @@ module.exports = {
       }
       this.startDateTimeout = setTimeout(function () {
         console.log(date);
-        _this.$store.commit('setDates', {
+        _this2.$store.commit('setDates', {
           startDate: date
         });
       }, 500);
     },
     onEndDateChange: function onEndDateChange(e) {
-      var _this2 = this;
+      var _this3 = this;
 
       var date = Date.parse(this.$refs.endMonth.value + "/01/" + this.$refs.endYear.value);
       if (this.endDateTimeout) {
@@ -1743,7 +1782,7 @@ module.exports = {
       }
       this.endDateTimeout = setTimeout(function () {
         console.log(date);
-        _this2.$store.commit('setDates', {
+        _this3.$store.commit('setDates', {
           endDate: date
         });
       }, 500);
@@ -1785,9 +1824,32 @@ module.exports = {
         githubURL: e.target.value
       });
     },
+    onArrayCompare: function onArrayCompare() {
+      var _this4 = this;
+
+      this.values.forEach(function (url) {
+        var link = url;
+        var end = url.slice(url.length - 4);
+        console.log("here", end, link);
+        if (end == ".git") link = link.substring(0, url.length - 4);
+        console.log("LINK", link);
+        _this4.$store.commit('addComparedRepo', {
+          githubURL: link
+        });
+      });
+    },
     onDetailChange: function onDetailChange(e) {
       this.$store.commit('setVizOptions', {
         showDetail: e.target.checked
+      });
+    },
+    getDownloadedRepos: function getDownloadedRepos() {
+      var _this5 = this;
+
+      this.downloadedRepos = [];
+      window.AugurAPI.getDownloadedGitRepos().then(function (data) {
+        _this5.repos = window._.groupBy(data, 'project_name');
+        _this5.projects = Object.keys(_this5.repos);
       });
     }
   },
@@ -1808,14 +1870,20 @@ module.exports = {
       }
       return yearArray;
     }
+  },
+  mounted: function mounted() {
+    this.getDownloadedRepos();
+    window.$(this.$el).find('.multiselect__input').addClass('search');
+    window.$(this.$el).find('.multiselect__input').addClass('reposearch');
+    if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-9"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-3",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":_vm.collapseText}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":_vm.collapseText}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_vm._v("Line Charts\n            "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n              "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3",attrs:{"align":"center","id":"comparetext"}},[_c('h6',[_vm._v("Compare Repository:")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-12"},[_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('multiselect',{attrs:{"options":_vm.projects,"placeholder":_vm.project},model:{value:(_vm.project),callback:function ($$v) {_vm.project=$$v},expression:"project"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('multiselect',{staticClass:"search reposearch",attrs:{"options":_vm.options,"multiple":true,"group-label":"url","placeholder":"Select repos"},model:{value:(_vm.values),callback:function ($$v) {_vm.values=$$v},expression:"values"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Apply"},on:{"click":_vm.onArrayCompare}})]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Search other GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-3",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":_vm.collapseText}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":_vm.collapseText}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_vm._v("Line Charts\n            "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":_vm.disabled,"checked":""},domProps:{"checked":!_vm.disabled},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":_vm.disabled,"checked":""},domProps:{"checked":!_vm.disabled},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n              "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == 2010}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":month.value == _vm.thisMonth}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":year == _vm.thisYear}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","checked":"","type":"radio"},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3",attrs:{"align":"center","id":"comparetext"}},[_c('h6',[_vm._v("Compare from your repos:")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-12"},[_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -2300,6 +2368,699 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-210450fe", __vue__options__)
   } else {
     hotAPI.reload("data-v-210450fe", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/DynamicLineChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
+  data: function data() {
+    return {
+      legendLabels: [],
+      values: [],
+      status: {},
+      detail: this.$store.state.showDetail,
+      compRepos: this.$store.state.comparedRepos
+
+    };
+  },
+
+  watch: {
+    compRepos: function compRepos() {
+      var allFalse = true;
+      for (var key in this.status) {
+        if (this.status[key]) allFalse = false;
+      }if (allFalse) {
+        $(this.$el).find('.spinner').addClass('loader');
+        $(this.$el).find('.error').addClass('hidden');
+      }
+
+      $(this.$el).find('.hidefirst').addClass('invis');
+      $(this.$el).find('.hidefirst').addClass('invisDet');
+      $(this.$el).find('.spinner').addClass('loader');
+      $(this.$el).find('.spacing').removeClass('hidden');
+    }
+  },
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    period: function period() {
+      return this.$store.state.trailingAverage;
+    },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
+    compare: function compare() {
+      return this.$store.state.compare;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    },
+    rawWeekly: function rawWeekly() {
+      return this.$store.state.rawWeekly;
+    },
+    showArea: function showArea() {
+      return this.$store.state.showArea;
+    },
+    showTooltip: function showTooltip() {
+      return this.$store.state.showTooltip;
+    },
+    showDetail: function showDetail() {
+      return this.$store.state.showDetail;
+    },
+    spec: function spec() {
+      var _this = this;
+
+      var repos = [];
+      if (this.repo) {
+        repos.push(window.AugurRepos[this.repo]);
+      }
+      this.comparedRepos.forEach(function (repo) {
+        repos.push(window.AugurRepos[repo]);
+      });
+
+      repos.forEach(function (repo) {
+        _this.status[repo] = true;
+      });
+
+      var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "config": {
+          "axis": {
+            "grid": false
+          },
+          "legend": {
+            "offset": -505,
+            "titleFontSize": 0,
+            "titlePadding": 10
+          }
+        },
+        "vconcat": [{
+          "title": {
+            "text": this.title,
+            "offset": 15
+          },
+          "width": 520,
+          "height": 250,
+          "layer": []
+        }]
+      };
+
+      var brush = { "filter": { "selection": "brush" } };
+      if (!this.showDetail) brush = { "filter": "datum.date > 0" };
+
+      var selectionAdded = false;
+
+      var getStandardLine = function getStandardLine(key, color) {
+        var raw = key.substring(key.length - 7) == "Rolling" ? false : true;
+        return {
+          "transform": [brush],
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": {
+                "labels": !_this.showDetail,
+                "format": "%b %Y", "title": " " }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "value": color
+            }
+          },
+          "mark": {
+            "type": "line",
+
+            "clip": true
+          }
+        };
+      };
+
+      var getToolPoint = function getToolPoint(key) {
+        var selection = !selectionAdded ? {
+          "tooltip": {
+            "type": "single",
+            "on": "mouseover",
+            "encodings": ["x"],
+            "empty": "none"
+          }
+        } : null;
+        var size = 17;
+        var timeDiff = Math.abs(_this.latest.getTime() - _this.earliest.getTime());
+        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        size = diffDays / 150;
+        if (_this.rawWeekly) size = 3;
+        selectionAdded = true;
+        return {
+          "transform": [brush],
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": { "format": "%b %Y", "title": " " }
+            },
+            "opacity": {
+              "value": 0
+            },
+            "color": {
+              "field": "name",
+              "type": "nominal",
+              "scale": { "range": colors }
+            },
+            "size": {
+              "value": size
+            }
+          },
+          "mark": {
+            "type": "rule",
+            "clip": true
+          },
+          "selection": selection
+        };
+      };
+
+      var getStandardPoint = function getStandardPoint(key, color) {
+        var selection = !selectionAdded ? {
+          "tooltip": {
+            "type": "single",
+            "on": "mouseover",
+            "encodings": ["x"],
+            "empty": "none"
+          }
+        } : null;
+        selectionAdded = true;
+        var raw = key.substring(key.length - 7) == "Rolling" ? false : true;
+        return {
+          "transform": [brush],
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": {
+                "title": " ",
+                "format": "%b %Y"
+              }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "value": color
+            },
+            "opacity": {
+              "condition": {
+                "selection": "tooltip",
+                "value": 1
+              },
+              "value": 0
+            }
+          },
+          "mark": {
+            "type": "point"
+          },
+          "selection": selection
+        };
+      };
+
+      var getArea = function getArea(extension) {
+        return {
+          "transform": [brush],
+          "mark": {
+            "type": "area",
+            "interpolate": "basis",
+            "clip": true
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": { "format": "%b %Y", "title": " " }
+            },
+            "y": {
+              "field": "lower" + extension,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "y2": {
+              "field": "upper" + extension,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "value": "gray"
+            },
+            "opacity": { "value": 0.14 }
+          }
+        };
+      };
+
+      var rule = {
+        "transform": [{
+          "filter": {
+            "selection": "tooltip"
+          }
+        }, brush],
+        "mark": "rule",
+        "encoding": {
+          "x": {
+            "type": "temporal",
+            "field": "date",
+            "axis": { "format": "%b %Y", "title": " " }
+          },
+          "color": {
+            "value": "black"
+          }
+        }
+      };
+
+      var getValueText = function getValueText(key) {
+        return {
+
+          "transform": [{
+            "filter": {
+              "selection": "tooltip"
+            }
+          }, brush],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -5
+          },
+          "encoding": {
+            "text": {
+              "type": "quantitative",
+              "field": key
+            },
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": { "format": "%b %Y", "title": " " }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "value": "green"
+            }
+          }
+        };
+      };
+
+      var getDateText = function getDateText(key) {
+        return {
+
+          "transform": [{
+            "filter": {
+              "selection": "tooltip"
+            }
+          }, brush],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 5,
+            "dy": -15
+          },
+          "encoding": {
+            "text": {
+              "type": "temporal",
+              "field": "date"
+            },
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": { "format": "%b %Y", "title": " " }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "value": "black"
+            }
+          }
+        };
+      };
+
+      var getDetail = function getDetail(key) {
+        var color = _this.comparedTo && _this.status.compared ? '#4736FF' : '#FF3647';
+        return {
+          "width": 520,
+          "height": 60,
+          "mark": "line",
+          "title": {
+            "text": " "
+          },
+          "selection": {
+            "brush": { "type": "interval", "encodings": ["x"] }
+          },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": { "format": "%b %Y", "title": " " }
+            },
+            "y": {
+              "field": key,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "opacity": {
+              "value": 0.5
+            },
+            "color": {
+              "value": color
+            }
+          }
+
+        };
+      };
+
+      if (this.showArea && repos.length < 3) {
+        repos.forEach(function (repo) {
+          config.vconcat[0].layer.push(getArea(repo));
+        });
+      } else {
+        repos.forEach(function (repo) {
+          for (var x = 0; x < config.vconcat[0].layer.length; x++) {
+            if (config.vconcat[0].layer[x] == getArea(repo)) {
+              config.vconcat[0].layer[x] = {};
+              buildMetric();
+            }
+          }
+        });
+      }
+
+      var buildMetric = function buildMetric() {
+
+        var color = 0;
+        repos.forEach(function (repo) {
+
+          buildLines("valueRolling" + repo, colors[color]);
+
+          if (_this.rawWeekly) {
+            buildLines("value" + repo, colors[color]);
+          }
+
+          if (_this.showDetail) {
+            config.vconcat[1] = getDetail("valueRolling" + _this.repo);
+          } else if (config.vconcat[1]) config.vconcat.pop();
+
+          color++;
+        });
+      };
+
+      var buildLines = function buildLines(key, color) {
+        config.vconcat[0].layer.push(getStandardLine(key, color));
+      };
+
+      var buildTooltip = function buildTooltip(key) {
+        if (repos.length < 3) {
+          config.vconcat[0].layer.push(getToolPoint(key));
+
+          var col = -1;
+          repos.forEach(function (repo) {
+            config.vconcat[0].layer.push(getStandardPoint(key, colors[col]));
+            col++;
+          });
+
+          config.vconcat[0].layer.push(getValueText(key));
+          config.vconcat[0].layer.push(getDateText(key));
+
+          if (repos.length > 1) {
+            config.vconcat[0].layer.push(rule);
+          }
+        }
+      };
+
+      if (this.showTooltip) {
+        var key = this.rawWeekly ? "value" + this.repo : "valueRolling" + this.repo;
+        buildTooltip(key);
+      } else {
+        for (var x = 0; x < config.vconcat[0].layer.length; x++) {
+          if (config.vconcat[0].layer[x] == getValueText("valueRolling" + this.repo)) {
+            config.vconcat[0].layer[x] = {};
+            buildMetric();
+          }
+        }
+      }
+
+      buildMetric();
+      console.log("lines built");
+
+      if (this.showDetail) {
+        config.vconcat[1].encoding.x["scale"] = {
+          "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
+        };
+      } else {
+        for (var i = 0; i < config.vconcat[0].layer.length; i++) {
+          config.vconcat[0].layer[i].encoding.x["scale"] = {
+            "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
+          };
+        }
+      }
+
+      if (!this.status.base && !this.comparedTo || !this.status.compared && !this.status.base) {
+        if (!this.showDetail) {
+          window.$(this.$refs.holder).find('.hidefirst').removeClass('invisDet');
+          window.$(this.$refs.holder).find('.hidefirst').addClass('invis');
+        } else {
+          window.$(this.$refs.holder).find('.hidefirst').removeClass('invis');
+          window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet');
+        }
+      }
+
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      var processData = function processData(data) {
+        _this.__download_data = data;
+        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+        _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
+        _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
+
+        var defaultProcess = function defaultProcess(obj, key, field, count) {
+          var d = null;
+          if (typeof field == "string") field = [field];
+
+          d = _AugurStats2.default.convertKey(obj[key], field);
+
+          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+
+          return d;
+        };
+
+        var normalized = [];
+        var aggregates = [];
+        var buildLines = function buildLines(obj, onCreateData, repo) {
+          if (!obj) {
+            return;
+          }
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
+
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach(function (field) {
+                  onCreateData(obj, key, field, count);
+                  count++;
+                });
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  var field = Object.keys(obj[key][0]).splice(1);
+                  onCreateData(obj, key, field, count);
+                  count++;
+                } else {
+                  _this.status[repo] = false;
+                  _this.renderError();
+                }
+              }
+            }
+          }
+        };
+        var legend = [];
+        var values = [];
+        var colors = [];
+
+        repos.forEach(function (repo) {
+          console.log("adding repo: " + repo);
+          buildLines(data[repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
+            console.log(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling' + repo, repo));
+            normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling', repo));
+
+            aggregates.push(d);
+            legend.push(repo + " " + field);
+            if (!_this.disableRollingAverage) {
+              colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+            }
+            if (_this.rawWeekly || _this.disableRollingAverage) {
+              colors.push(_this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]);
+            }
+          }, repo);
+        });
+
+        if (normalized.length == 0) {} else {
+          values = [];
+
+          for (var i = 0; i < legend.length; i++) {
+            normalized[i].forEach(function (d) {
+              d.name = legend[i];
+              d.color = colors[i];
+              values.push(d);
+            });
+          }
+          if (_this.rawWeekly) {
+            for (var i = 0; i < legend.length; i++) {
+              aggregates[i].forEach(function (d) {
+                d.name = "raw " + legend[i];
+                d.color = colors[i];
+                values.push(d);
+              });
+            }
+          }
+
+          repos.forEach(function (repo) {
+            if (!_this.status[repo]) {
+              var temp = JSON.parse(JSON.stringify(values));
+              temp = temp.map(function (datum) {
+                datum.name = repo + ": data n/a";
+
+
+                return datum;
+              });
+              values.push.apply(values, temp);
+            }
+          });
+
+          _this.legendLabels = legend;
+          _this.values = values;
+
+          var allFalse = true;
+          for (var key in _this.status) {
+            if (_this.status[key]) allFalse = false;
+          }if (!allFalse) $(_this.$el).find('.error').addClass('hidden');
+
+          $(_this.$el).find('.hidefirst').removeClass('invis');
+          $(_this.$el).find('.hidefirst').removeClass('invisDet');
+          $(_this.$el).find('.spinner').removeClass('loader');
+          $(_this.$el).find('.spacing').addClass('hidden');
+
+          _this.renderChart();
+        }
+      };
+
+      if (this.data) {
+        processData(this.data);
+      } else {
+
+        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+          processData(data);
+        }, function () {});
+      }
+
+      return config;
+    }
+  },
+  methods: {
+    downloadSVG: function downloadSVG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      svgsaver.asSvg(svg, this.__download_file + '.svg');
+    },
+    downloadPNG: function downloadPNG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      svgsaver.asPng(svg, this.__download_file + '.png');
+    },
+    renderChart: function renderChart() {
+      this.$refs.chart.className = 'linechart intro';
+      window.$(this.$refs.holder).find('.hideme').removeClass('invis');
+      window.$(this.$refs.holder).find('.showme').removeClass('invis');
+      window.$(this.$refs.holder).find('.hideme').removeClass('invisDet');
+      window.$(this.$refs.holder).find('.showme').removeClass('invisDet');
+      window.$(this.$refs.holder).find('.deleteme').remove();
+      this.$refs.chartholder.innerHTML = '';
+      this.$refs.chartholder.appendChild(this.mgConfig.target);
+    },
+    renderError: function renderError() {
+
+      $(this.$el).find('.spinner').removeClass('loader');
+      $(this.$el).find('.error').removeClass('hidden');
+    }
+  } };
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"spacing"}),_vm._v(" "),_vm._m(0),_vm._v(" "),_c('div',{staticClass:"spinner loader"}),_vm._v(" "),_c('div',{staticClass:"hidefirst linechart",class:{ invis: !_vm.detail, invisDet: _vm.detail }},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-5"},[_c('cite',{staticClass:"metric"},[_vm._v("Metric: "),_c('a',{attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_vm._v(_vm._s(_vm.citeText))])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"error hidden"},[_c('br'),_vm._v("Data is missing or unavailable")])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-869af3b0", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-869af3b0", __vue__options__)
   }
 })()}
 });
@@ -3368,6 +4129,173 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-6c07ac85", __vue__options__)
   } else {
     hotAPI.reload("data-v-6c07ac85", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/TickChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
+  data: function data() {
+    var years = [];
+    for (var i = 9; i >= 0; i--) {
+      years.push(new Date().getFullYear() - i);
+    }
+    var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var monthDecimals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    return {
+      values: values,
+      contributors: [],
+      organizations: [],
+      view: 'year',
+      monthNames: monthNames,
+      monthDecimals: monthDecimals,
+      years: years,
+      setYear: 0
+    };
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.gitRepo;
+    },
+    spec: function spec() {
+      var _this = this;
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "data": { "url": "data/cars.json" },
+        "mark": "tick",
+        "encoding": {
+          "x": { "field": "additions", "type": "quantitative" },
+          "y": { "field": "author_email", "type": "nominal" }
+        }
+      };
+
+      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var contributors = {};
+      var organizations = {};
+
+      var addChanges = function addChanges(dest, src) {
+        if (dest && src) {
+          if ((typeof dest === 'undefined' ? 'undefined' : _typeof(dest)) !== 'object') {
+            dest['additions'] = 0;
+            dest['deletions'] = 0;
+          }
+          dest['additions'] += src['additions'] || 0;
+          dest['deletions'] += src['deletions'] || 0;
+        }
+      };
+
+      var group = function group(obj, name, change, filter) {
+        if (filter(change)) {
+          var year = new Date(change.author_date).getFullYear();
+          var month = new Date(change.author_date).getMonth();
+          obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]], change);
+          obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]][year], change);
+          obj[change[name]][year + '-' + month] = obj[change[name]][year + '-' + month] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]][year + '-' + month], change);
+        }
+      };
+
+      var flattenAndSort = function flattenAndSort(obj, keyName, sortField) {
+        return Object.keys(obj).map(function (key) {
+          var d = obj[key];
+          d[keyName] = key;
+          return d;
+        }).sort(function (a, b) {
+          return b[sortField] - a[sortField];
+        });
+      };
+
+      var filterDates = function filterDates(change) {
+        return new Date(change.author_date).getFullYear() > _this.years[0];
+      };
+
+      repo.changesByAuthor().then(function (changes) {
+        changes.forEach(function (change) {
+          if (isFinite(change.additions) && isFinite(change.deletions)) {
+            group(contributors, 'author_email', change, filterDates);
+            if (change.author_affiliation !== 'Unknown') {
+              group(organizations, 'affiliation', change, filterDates);
+            }
+          }
+        });
+        _this.values = flattenAndSort(contributors, 'author_email', 'additions');
+        _this.organizations = flattenAndSort(organizations, 'name', 'additions');
+      });
+
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
+
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      var repos = [];
+      if (this.repo) {
+        repos.push(window.AugurRepos[this.repo]);
+      }
+
+      var processData = function processData(data) {
+
+        $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
+        $(_this.$el).find('.stackedbarchart').removeClass('loader');
+        _this.values = values;
+      };
+
+      if (this.data) {
+        processData(this.data);
+      } else {
+        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+          processData(data);
+        });
+      }
+
+      return config;
+    }
+  }
+
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"stackedbarchart hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-083303b4", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-083303b4", __vue__options__)
   }
 })()}
 });
