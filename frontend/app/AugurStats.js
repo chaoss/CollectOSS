@@ -20,29 +20,26 @@ export default class AugurStats {
     return data
   }
 
-  static convertKey (data, key, newName) {
-    newName = newName || "value"
+  static convertKey (data, key) {
     if (Array.isArray(data[0])) {
       data = data.map((datum) => {
         return AugurStats.convertKey(datum, key)
       })
     } else if (key.length > 1){
       return data.map((d) => {
-        let obj = {
+        return {
           date: d.date,
+          value: d[key[0]],
           field: d[key[1]]
         }
-        obj[newName] = d[key[0]]
-        return obj
       })
     }
     else{
       return data.map((d) => {
-        let obj = {
+        return {
           date: d.date,
+          value: d[key]
         }
-        obj[newName] = d[key]
-        return obj
       })
     }
     return data
@@ -95,7 +92,7 @@ export default class AugurStats {
       let newObj = {}
       if (e.date) {
         newObj.date = new Date(e.date)
-        newObj[key + extension] = e[key]
+        newObj[key] = e[key]
       }
       newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances))
       newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances))

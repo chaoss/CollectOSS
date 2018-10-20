@@ -34,9 +34,9 @@
         <main-controls></main-controls>
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
           <growth-maturity-decline-card></growth-maturity-decline-card>
-          <!-- <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
             <compared-repo-growth-maturity-decline-card :comparedTo="repo"></compared-repo-growth-maturity-decline-card>
-          </div> -->
+          </div>
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
           <diversity-inclusion-card></diversity-inclusion-card>

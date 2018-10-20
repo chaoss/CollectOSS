@@ -41,7 +41,6 @@ module.exports = {
       window.AugurAPI.getDownloadedGitRepos().then((data) => {
         this.repos = window._.groupBy(data, 'project_name')
         this.projects = Object.keys(this.repos)
-
       })
     },
     btoa(s) {
@@ -50,7 +49,7 @@ module.exports = {
   },
   mounted() {
     this.getDownloadedRepos()
-  }
+  } 
 };
 
 </script>

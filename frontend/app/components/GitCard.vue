@@ -2,7 +2,6 @@
   <section>
     <h1>Git Metrics</h1>
     <h2>{{ $store.state.gitRepo }}</h2>
-      <tick-chart></tick-chart>
       <div class="row">
         <lines-of-code-chart></lines-of-code-chart>
       </div>
@@ -12,12 +11,12 @@
 
 <script>
 
-import TickChart from './charts/TickChart'
+import LineChart from './charts/LineChart'
 import LinesOfCodeChart from './charts/LinesOfCodeChart'
 
 module.exports = {
   components: {
-    TickChart,
+    LineChart,
     LinesOfCodeChart
   }
 }

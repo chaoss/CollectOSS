@@ -40,7 +40,6 @@
     "vega-lite": "^2.6.0",
     "vue": "^2.5.16",
     "vue-loader": "^15.2.4",
-    "vue-multiselect": "^2.1.2",
     "vue-table-component": "^1.9.1",
     "vue-template-compiler": "^2.5.16",
     "vue-vega": "^1.0.0-alpha.13",
