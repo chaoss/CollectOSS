@@ -32,7 +32,7 @@ def create_routes(server):
                             }
                         ]
     """
-    server.addTimeseries(github.lines_of_code_changed, 'lines_changed')
+    server.addMetric(github.lines_of_code_changed, 'lines_changed')
 
     #####################################
     ###            RISK               ###
