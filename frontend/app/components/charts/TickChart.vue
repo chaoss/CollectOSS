@@ -96,15 +96,15 @@ export default {
       }
 
       repo.changesByAuthor().then((changes) => {
-        // changes.forEach((change) => {
-        //   if (isFinite(change.additions) && isFinite(change.deletions)) {
-        //     group(contributors, 'author_email', change, filterDates)
-        //     if (change.author_affiliation !== 'Unknown') {
-        //       group(organizations, 'affiliation', change, filterDates)
-        //     }
-        //   }
-        // })
-        console.log(contributors)
+        changes.forEach((change) => {
+          if (isFinite(change.additions) && isFinite(change.deletions)) {
+            group(contributors, 'author_email', change, filterDates)
+            if (change.author_affiliation !== 'Unknown') {
+              group(organizations, 'affiliation', change, filterDates)
+            }
+          }
+        })
+        console.log(contributors, changes)
 
         this.values = flattenAndSort(contributors, 'author_email', 'additions')
         this.organizations = flattenAndSort(organizations, 'name', 'additions')

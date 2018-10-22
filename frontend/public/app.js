@@ -3977,7 +3977,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-2b1e04b8", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-2b1e04b8", __vue__options__)
+    hotAPI.reload("data-v-2b1e04b8", __vue__options__)
   }
 })()}
 });
@@ -4238,7 +4238,15 @@ exports.default = {
       };
 
       repo.changesByAuthor().then(function (changes) {
-        console.log(contributors);
+        changes.forEach(function (change) {
+          if (isFinite(change.additions) && isFinite(change.deletions)) {
+            group(contributors, 'author_email', change, filterDates);
+            if (change.author_affiliation !== 'Unknown') {
+              group(organizations, 'affiliation', change, filterDates);
+            }
+          }
+        });
+        console.log(contributors, changes);
 
         _this.values = flattenAndSort(contributors, 'author_email', 'additions');
         _this.organizations = flattenAndSort(organizations, 'name', 'additions');
