@@ -104,5 +104,21 @@ class Facade(object):
         results = pd.read_sql(linesChangedByWeekSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
         return results
 
+    @annotate(tag='lines-changed-by-month')
+    def lines_changed_by_month(self, repo_url):
+        """
+        Makes sure the storageFolder contains updated versions of all the repos
+        """
+        linesChangedByMonthSQL = s.sql.text("""
+            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
+            FROM repo_monthly_cache 
+            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
+            GROUP BY email, month, year
+            ORDER BY year, month, email ASC
+        """)
+        results = pd.read_sql(linesChangedByMonthSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
+        return results
+
+
 
     
