@@ -9,10 +9,25 @@
           <div class="row justify-content-md-center">
             <div class="col col-9">
               <div class="row">
-                <div class="col col-3" align="center" id="comparetext"><h6>Compare Repository:</h6></div>
+                <div class="col col-3" align="center" id="comparetext"><h6>Compare from your repos:</h6></div>
+                <div class="col col-2">
+                  <multiselect v-model="project" :options="projects" :placeholder="project"></multiselect>
+                </div>
 
-                <div class="col col-9">
-                  <input type="text" class="search reposearch" placeholder="GitHub URL" @change="onCompare"/>
+                <div class="col col-2">
+                  <multiselect 
+                    v-model="values" 
+                    :options="options"
+                    :multiple="true"
+                    group-label="url"
+                    placeholder="Select repos"
+                    class="search reposearch"
+                    >
+                  </multiselect>
+                </div>
+                <div class="col col-1"><input type="button" @click="onArrayCompare" value="Apply" style="max-width:69.9px"></div>
+                <div class="col col-4">
+                  <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare"/>
                   <p></p>
                 </div>
               </div>
@@ -35,12 +50,12 @@
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
                 </div>
                 <div class="form-item form-checkboxes">
-                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" checked @change="onAreaChange">Standard deviation</label>
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" :disabled="disabled" :checked="!disabled" checked @change="onAreaChange">Standard deviation</label>
                 </div>
               </div>
               <div class="col col-6">
                 <div class="form-item form-checkboxes">
-                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" checked>Show tooltip</label>
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" :disabled="disabled" :checked="!disabled" checked>Show tooltip</label>
                 </div>
                 <div class="form-item form-checkboxes">
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" checked @change="onDetailChange">Enable detail</label>
@@ -154,16 +169,35 @@
 </div>
 </template>
 
+
+
 <script>
+  import Multiselect from 'vue-multiselect'
   module.exports = {
+    components: {
+      Multiselect
+    },
     data() {
       return {
         info: {
           days: 180,
           points: 45
         },
-        isCollapsed: false
-
+        isCollapsed: false,
+        project: "Select project",
+        values: [],
+        options: [],
+        repos: {},
+        projects: [],
+        disabled: false
+      }
+    },
+    watch: {
+      project: function(){
+        this.options = []
+        this.repos[this.project].forEach(
+          (repo) => {this.options.push(repo.url.slice(11))}
+        )
       }
     },
     methods: {
@@ -238,10 +272,32 @@
         this.$store.commit('addComparedRepo', {
           githubURL: e.target.value
         })
+      }, 
+      onArrayCompare () {
+        this.values.forEach(
+          (url) => {
+            let link = url
+            let end = url.slice(url.length - 4)
+            console.log("here", end, link)
+            if (end == ".git")
+              link = link.substring(0, url.length - 4)
+              console.log("LINK", link)
+            this.$store.commit('addComparedRepo', {
+              githubURL: link
+            })
+          }
+        )
       },
       onDetailChange (e) {
         this.$store.commit('setVizOptions', {
           showDetail: e.target.checked
+        })
+      },
+      getDownloadedRepos() {
+        this.downloadedRepos = []
+        window.AugurAPI.getDownloadedGitRepos().then((data) => {
+          this.repos = window._.groupBy(data, 'project_name')
+          this.projects = Object.keys(this.repos)
         })
       }
     },
@@ -269,7 +325,14 @@
         }
         return yearArray;
       }
+    },
+    mounted() {
+      this.getDownloadedRepos()
+      window.$(this.$el).find('.multiselect__input').addClass('search')
+      window.$(this.$el).find('.multiselect__input').addClass('reposearch')
+      if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
     }
+
   }
 
 </script>

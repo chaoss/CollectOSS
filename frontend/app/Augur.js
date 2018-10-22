@@ -84,24 +84,28 @@ export default function Augur () {
         // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         // window.history.pushState(null, title, queryString)
         let repo = window.AugurAPI.Repo(payload)
-        if (!window.AugurRepos[repo.toString()]) {
-          window.AugurRepos[repo.toString()] = repo
-        } else {
-          repo = window.AugurRepos[repo.toString()]
-        }
-        state.hasState = true
-        if (repo.owner && repo.name) {
-          state.comparedRepos.push(repo.toString())
-          let title = repo.owner + '/' + repo.name + '- Augur'
-          state.tab = 'gmd'
-          let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
-          window.history.pushState(null, title, queryString)
-        }
-        if (payload.gitURL) {
-          let queryString = '&git=' + window.btoa(repo.gitURL)
-          window.history.pushState(null, 'Git Analysis - Augur', window.location.search + queryString)
-          state.tab = 'git'
-          state.gitRepo = repo.gitURL
+        if(!state.comparedRepos.includes(repo.toString())){
+          console.log("FUCK", repo.toString())
+          if (!window.AugurRepos[repo.toString()]) {
+            
+            window.AugurRepos[repo.toString()] = repo
+          } else {
+            repo = window.AugurRepos[repo.toString()]
+          }
+          state.hasState = true
+          if (repo.owner && repo.name) {
+            state.comparedRepos.push(repo.toString())
+            let title = repo.owner + '/' + repo.name + '- Augur'
+            state.tab = 'gmd'
+            let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
+            window.history.pushState(null, title, queryString)
+          }
+          if (payload.gitURL) {
+            let queryString = '&git=' + window.btoa(repo.gitURL)
+            window.history.pushState(null, 'Git Analysis - Augur', window.location.search + queryString)
+            state.tab = 'git'
+            state.gitRepo = repo.gitURL
+          }
         }
       },
       setDates (state, payload) {
