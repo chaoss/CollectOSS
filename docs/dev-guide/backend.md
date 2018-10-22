@@ -210,7 +210,7 @@ Make sure every function you write has a test.
 
 ### Using the Python Debugger
 
-If you want to use an iPython shell to test your functions during development, in the root directory, first execute `ipython`, which will drop you into an iPython shell. Then, execute `import augur; app.augur.Application()`, which will create an Augur application for you. 
+If you want to use an iPython shell to test your functions during development, in the root directory, first execute `ipython`, which will drop you into an iPython shell. Then, execute `import augur; app = augur.Application()`, which will create an Augur application for you. 
 
 You can then test your function by first creating a new instance of that class, and then running your function. For example: `gh = app.ghtorrent(); gh.closed_issues('rails', 'rails')` will let you test the `closed_issues` function without actually having to run the server. 
 

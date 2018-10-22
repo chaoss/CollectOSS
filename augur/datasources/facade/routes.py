@@ -42,8 +42,7 @@ def create_routes(server):
     @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
-    @apiParam {String} owner Username of the owner of the GitHub repository
-    @apiParam {String} repo Name of the GitHub repository
+    @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
     @apiSuccessExample {json} Success-Response:
                         [
@@ -69,8 +68,7 @@ def create_routes(server):
     @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
 
-    @apiParam {String} owner Username of the owner of the GitHub repository
-    @apiParam {String} repo Name of the GitHub repository
+    @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
     @apiSuccessExample {json} Success-Response:
                         [
@@ -83,3 +81,35 @@ def create_routes(server):
                         ]
     """
     server.addGitMetric(facade.lines_changed_by_week, 'lines_changed_by_week')
+
+    """
+    @api {get} /facade/lines_changed_by_month/:facade_repo_url Lines Changed by Month
+    @apiName lines-changed-by-month
+    @apiGroup Experimental
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+    @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "author_email": "agiammarchi@twitter.com",
+                                "affiliation": "Twitter",
+                                "month": 11,
+                                "year": 2014,
+                                "additions": 5477,
+                                "deletions": 50511,
+                                "whitespace": 37
+                            },
+                            {
+                                "author_email": "andrea.giammarchi@gmail.com",
+                                "affiliation": "(Unknown)",
+                                "month": 11,
+                                "year": 2014,
+                                "additions": 0,
+                                "deletions": 0,
+                                "whitespace": 0
+                            }
+                        ]
+    """
+    server.addGitMetric(facade.lines_changed_by_month, 'lines_changed_by_month')

@@ -125,9 +125,7 @@ build: frontend docs
 	cd augur/static/ \
 	&& brunch build --production
 
-test:
-	test-plugins
-	test-api
+test:test-plugins test-api
 
 test-plugins:
 	bash -c '$(CONDAACTIVATE) python -m pytest augur/datasources/**/test_**.py'
