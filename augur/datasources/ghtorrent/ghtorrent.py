@@ -42,43 +42,42 @@ class GHTorrent(object):
         """
         if group_by == "raw":
             return """
-                SELECT date(created_at) AS "date", {2} AS "user_id"
+                SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) AS "date", {2} AS "user_id"
                 FROM {0}
                 WHERE {1} = :repoid
                 """.format(table, repo_col, user_col)
 
         if group_by == "day":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
-                FROM {0}
+                SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
-                GROUP BY DATE(YEARWEEK(created_at))
-                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
+                GROUP BY DATE(created_at)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
         if group_by == "week":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
+                SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
                 GROUP BY YEARWEEK(created_at)
-                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
         if group_by == "month":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
+                SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
                 GROUP BY MONTH(created_at), YEAR(created_at)
-                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
         if group_by == "year":
             return """
-                SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
+                SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) AS "date", COUNT(*) AS "{0}"
                 FROM {0}
                 WHERE {1} = :repoid
                 GROUP BY YEAR(created_at)
-                ORDER BY DATE(YEARWEEK(created_at)) DESC""".format(table, repo_col)
+                ORDER BY DATE(created_at) DESC""".format(table, repo_col)
 
     def __sub_table_count_by_date(self, parent_table, sub_table, parent_id, sub_id, project_id):
         """
@@ -156,7 +155,8 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         issuesClosedSQL = s.sql.text("""
-        SELECT date(issue_events.created_at) as "date", COUNT(*) as issues_closed
+        SELECT SUBDATE(DATE(issue_events.created_at), WEEKDAY(DATE(issue_events.created_at))) AS "date",
+               COUNT(*) as issues_closed
             FROM issue_events, issues
             WHERE issue_events.issue_id = issues.id
             AND issue_events.action = "closed"
@@ -394,7 +394,7 @@ class GHTorrent(object):
 
         contributingOrgSQL = s.sql.text("""
         SELECT
-            fields.date AS "date",
+            SUBDATE(DATE(fields.date), WEEKDAY(DATE(fields.date))) AS "date",
             fields.id AS "contributing_org",
             count(DISTINCT fields.user) AS distinct_users
         FROM (
@@ -491,7 +491,7 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         pullsSQL = s.sql.text("""
-            SELECT date(pull_request_history.created_at) AS "date",
+            SELECT SUBDATE(DATE(pull_request_history.created_at), WEEKDAY(DATE(pull_request_history.created_at))) AS "date",
             COUNT(pull_requests.id) AS "pull_requests"
             FROM pull_request_history
             INNER JOIN pull_requests
@@ -644,7 +644,7 @@ class GHTorrent(object):
         totalCommittersSQL = s.sql.text("""
         SELECT total_committers.created_at AS "date", COUNT(total_committers.author_id) total_committers
         FROM (
-            SELECT author_id, MIN(DATE(YEARWEEK(created_at))) created_at
+            SELECT author_id, MIN(DATE(created_at)) created_at
             FROM commits
             WHERE project_id = :repoid
             GROUP BY author_id
@@ -941,12 +941,12 @@ class GHTorrent(object):
                     isscoms.count         as "issue_comments",
                     coms.count + pulls.count + iss.count + comcoms.count + pullscoms.count + isscoms.count as "total"
 
-            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(YEARWEEK(created_at))) coms
+            FROM (SELECT created_at AS created_at, COUNT(*) AS count FROM commits INNER JOIN project_commits ON project_commits.commit_id = commits.id WHERE project_commits.project_id = :repoid[[ AND commits.author_id = :userid]] GROUP BY DATE(created_at)) coms
 
-            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged'[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(YEARWEEK(created_at))) AS pulls
+            LEFT JOIN (SELECT pull_request_history.created_at AS created_at, COUNT(*) AS count FROM pull_request_history JOIN pull_requests ON pull_requests.id = pull_request_history.pull_request_id WHERE pull_requests.base_repo_id = :repoid AND pull_request_history.action = 'merged'[[ AND pull_request_history.actor_id = :userid]] GROUP BY DATE(created_at)) AS pulls
             ON DATE(pulls.created_at) = DATE(coms.created_at)
 
-            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(YEARWEEK(created_at))) AS iss
+            LEFT JOIN (SELECT issues.created_at AS created_at, COUNT(*) AS count FROM issues WHERE issues.repo_id = :repoid[[ AND issues.reporter_id = :userid]] GROUP BY DATE(created_at)) AS iss
             ON DATE(iss.created_at) = DATE(coms.created_at)
 
             LEFT JOIN (SELECT commit_comments.created_at AS created_at, COUNT(*) AS count FROM commit_comments JOIN project_commits ON project_commits.commit_id = commit_comments.commit_id WHERE project_commits.project_id = :repoid[[ AND commit_comments.user_id = :userid]] GROUP BY DATE(commit_comments.created_at)) AS comcoms
@@ -1020,7 +1020,7 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         projectAgeSQL = s.sql.text("""
-            SELECT date(created_at) AS "date", COUNT(*) AS "{0}"
+            SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) AS "date", COUNT(*) AS "{0}"
                 FROM projects
                 WHERE id = :repoid
                 GROUP BY YEARWEEK(created_at)
@@ -1041,7 +1041,7 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         contributorsSQL = s.sql.text("""
-            SELECT date(created_at) AS "date", COUNT(*) AS fakes
+            SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) AS "date", COUNT(*) AS fakes
             FROM users
             WHERE fake = true
             GROUP BY YEARWEEK(date)
@@ -1059,7 +1059,7 @@ class GHTorrent(object):
         """
         repoid = self.repoid(owner, repo)
         newWatchersSQL = s.sql.text("""
-            SELECT date(created_at) as "date", COUNT(*) as "watchers"
+            SELECT SUBDATE(DATE(created_at), WEEKDAY(DATE(created_at))) as "date", COUNT(*) as "watchers"
             FROM watchers
             WHERE repo_id = :repoid
             GROUP BY YEARWEEK(created_at)
