@@ -997,7 +997,7 @@ exports.default = {
 
         _this2.metadata['groups'] = Object.keys(data.groups[0]);
 
-        _this2.metadata['data_sources'] = data.sources;
+        _this2.metadata['data_sources'] = data.data_sources;
 
         _this2.metadata['metric_types'] = data.metric_types;
       });

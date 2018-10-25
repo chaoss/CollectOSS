@@ -70,9 +70,9 @@ class Facade(object):
             results = results[results.project_name.isin(self.projects)]
         return results
 
-    @annotate(tag='lines-changed-minus-whitespace')
-    def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
-        pass
+    # @annotate(tag='lines-changed-minus-whitespace')
+    # def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
+    #     pass
 
     @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):

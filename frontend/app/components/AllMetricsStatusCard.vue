@@ -150,10 +150,9 @@ export default {
 
           this.metadata['groups'] = Object.keys(data.groups[0])
 
-          this.metadata['data_sources'] = data.sources
+          this.metadata['data_sources'] = data.data_sources
 
           this.metadata['metric_types'] = data.metric_types
-
 
         })
       },
