@@ -40,7 +40,7 @@ class Server(object):
         create_plugin_routes(self)
 
         # this needs to be the last route creation function called so that all the metrics have their metadata updated
-        create_metrics_status_routes(self)
+        # create_metrics_status_routes(self)
 
         #####################################
         ###          UTILITY              ###
