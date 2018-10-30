@@ -2792,6 +2792,11 @@ cite.metric a {
   width: 100%;
   margin-bottom: 30px;
 }
+.tickchart * {
+  overflow: visible !important;
+  width: 100%;
+  margin-bottom: 30px;
+}
 .bubblechart svg {
   width: 100%;
 }
@@ -3440,6 +3445,81 @@ textarea:-ms-input-placeholder {
   height: 100% !important;
   width: 100% !important;
   animation: slide 60s linear infinite !important;
+}
+.inputGroup {
+  top: 30%;
+  display: inline;
+  margin: 10px 20px 0px 0px;
+  position: relative;
+  width: 300px;
+  height: 100%;
+}
+.inputGroup label {
+  padding: 18px 80px 18px 18px;
+  width: 100px;
+  height: 100%;
+  display: inline;
+  text-align: left;
+  color: #3c454c;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  transition: color 200ms ease-in;
+  overflow: hidden;
+}
+.inputGroup label:after {
+  width: 32px;
+  height: 32px;
+  content: '';
+  border: 2px solid #d1d7dc;
+  background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.414 11L4 12.414l5.414 5.414L20.828 6.414 19.414 5l-10 10z' fill='%23fff' fill-rule='nonzero'/%3E%3C/svg%3E ");
+  background-repeat: no-repeat;
+  background-position: 2px 3px;
+  border-radius: 50%;
+  z-index: 2;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: all 200ms ease-in;
+}
+.inputGroup input:checked ~ label:before {
+  transform: translate(-50%, -50%) scale3d(56, 56, 1);
+  opacity: 1;
+}
+.inputGroup input:checked ~ label:after {
+  background-color: #54e0c7;
+  border-color: #54e0c7;
+}
+.inputGroup input {
+  width: 32px;
+  height: 32px;
+  padding-left: 10px;
+  order: 1;
+  z-index: 20000;
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  visibility: hidden;
+}
+.inputGroup *,
+.inputGroup *::before,
+.inputGroup *::after {
+  box-sizing: inherit;
+}
+.inputGroup html {
+  box-sizing: border-box;
+}
+.inputGroup code {
+  background-color: #9aa3ac;
+  padding: 0 8px;
+}
+.tickradios {
+  text-align: center;
+  height: 60px;
 }
 @-moz-keyframes spin {
   0% {

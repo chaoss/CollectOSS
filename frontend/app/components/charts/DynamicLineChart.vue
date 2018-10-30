@@ -195,7 +195,7 @@ export default {
           }
       }
 
-      let getToolPoint = (key) => {
+      let getToolPoint = (key) => { 
         let selection = (!selectionAdded ? {
               "tooltip": {
                 "type": "single",

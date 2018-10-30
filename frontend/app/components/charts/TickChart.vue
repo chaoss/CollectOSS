@@ -1,6 +1,24 @@
 <template>
   <div ref="holder">
-    <div class="stackedbarchart ">
+    <div class="tickchart ">
+      <div class="form-item form-checkboxes tickradios">
+
+
+          <div class="inputGroup ">
+            <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
+            <label id="front" for="circradio">Circle</label>
+          </div>
+          <div class="inputGroup ">
+            <input id="tickradio"name="comparebaseline" value="1" type="radio" v-model="tick">
+            <label id="front" for="tickradio">Tick</label>
+          </div>
+          <div class="inputGroup ">
+            <input id="rectradio"name="comparebaseline" value="2" type="radio" v-model="tick">
+            <label id="front" for="rectradio">Rect</label>
+          </div>
+
+        
+      </div>
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
     </div>
@@ -29,24 +47,150 @@ export default {
       monthNames: monthNames,
       monthDecimals: monthDecimals,
       years: years,
-      setYear: 0
+      setYear: 0,
+      tick: 0
     }
   },
   computed: {
     repo() {
       return this.$store.state.gitRepo
     },
+    earliest () {
+      return this.$store.state.startDate
+    },
+    latest () {
+      return this.$store.state.endDate
+    },
     spec() {
+
+      // let init = () => {
+      //   let type;
+      //   switch(this.tick) {
+      //     case 0: //circle
+      //       type = "circle"
+      //       // bin = false
+      //       // size = {
+      //       //         "field": "total",
+      //       //         "type": "quantitative",
+      //       //         "min": "15"
+      //       //       }
+      //       break
+      //     case 1: //tick
+      //       type = "tick"
+      //       // bin = false
+      //       // size = {}
+      //       break
+      //     case 2: //rect
+      //       type = "rect"
+      //       // bin = {"maxbins": 40}
+      //       // size = {}
+      //     default:
+      //       break
+      //   }
+      //   return type
+      // }
+      
+      let type = null, bin = null, size = null;
+
+      if(this.tick == 0) {
+        type = "circle"
+        bin = false
+        size = {
+                "field": "total",
+                "type": "quantitative",
+                "min": "15"
+              }
+      }
+      if (this.tick == 1) {
+        type = "tick"
+            bin = false
+            size = {}
+      }
+      if (this.tick == 2) {
+        type = "rect"
+            bin = {"maxbins": 40}
+            size = {}
+      }
+
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "mark": "tick",
-        "width": 400,
+        "width": 800,
         "height": 300,
-        "encoding": {
-          "x": {"field": "additions", "type": "quantitative"},
-          "y": {"field": "author_email", "type": "nominal"}
-        }
+        "config": {
+          "tick": {
+            "thickness": 8,
+            "bandSize": 23
+          },
+          "axis":{
+                "grid": false
+              },
+              "legend": {
+               // "offset": -505,
+                "titleFontSize": 0,
+                "titlePadding": 10
+              }
+        },
+        "layer": [
+          {
+            "transform": [
+             
+              {
+                "calculate": "(datum.additions > datum.deletions) ? 'more' : 'less'",
+                "as": "opac"
+              },
+              {
+                "calculate": "(datum.additions - datum.deletions)",
+                "as": "net"
+              },
+              {
+                "calculate": "(datum.additions + datum.deletions)",
+                "as": "total"
+              },
+            ],
+            "mark": type,
+            "encoding": {
+              "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
+              "y": {"field": "author_email", "type": "nominal"},
+              "color": {
+                "field": "opac",
+                "type": "nominal",
+                "scale": { "range": ["red", "green"]}
+              },
+              "size": size,
+              "opacity":{
+                "field": "net",
+                "type": "quantitative",
+                "min": ".5"
+              },
+
+            },
+            
+          },
+          // {
+          //   "transform": [
+          //     // {"window": [{"op": "sum", "field": "amount", "as": "sum"}]},
+          //     // {"window": [{"op": "lead", "field": "label", "as": "lead"}]},
+          //     {
+          //       "calculate": "datum.additions < datum.deletions ? 1 : 0",
+          //       "as": "opac"
+          //     }
+          //   ],
+          //   "mark": "tick",
+          //   "encoding": {
+          //     "x": {"field": "author_date", "type": "temporal"},
+          //     "y": {"field": "author_email", "type": "nominal"},
+          //     "color": {
+          //       "value": "red"
+          //     },
+          //     "opacity": {
+          //       "value": "opac"
+          //     }
+          //   }
+          // }
+
+        ]
+        
       }
 
 
@@ -86,9 +230,9 @@ export default {
               d[keyName] = key
               return d
             })
-            // .sort((a, b) => {
-            //   return b[sortField] - a[sortField]
-            // })
+            .sort((a, b) => {
+              return b[sortField] - a[sortField]
+            })
       }
 
       let filterDates = (change) => {
@@ -97,6 +241,10 @@ export default {
 
       repo.changesByAuthor().then((changes) => {
         changes.forEach((change) => {
+          change.author_date = new Date(change.author_date)
+        })
+
+        changes.forEach((change) => {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
             group(contributors, 'author_email', change, filterDates)
             if (change.author_affiliation !== 'Unknown') {
@@ -104,11 +252,40 @@ export default {
             }
           }
         })
-        console.log(contributors, changes)
+        
 
-        this.values = flattenAndSort(contributors, 'author_email', 'additions')
-        this.organizations = flattenAndSort(organizations, 'name', 'additions')
+        //this.values = flattenAndSort(contributors, 'author_email', 'additions')
+        //this.organizations = flattenAndSort(organizations, 'name', 'additions')
+        this.contributors = flattenAndSort(contributors, 'author_email', 'additions')
+        var careabout = []
+        this.contributors.slice(0,10).forEach((obj) => {
+          careabout.push(obj["author_email"])
+        })
 
+
+
+        let findObjectByKey = (array, key, value) => {
+            let ary = []
+            for (var i = 0; i < array.length; i++) {
+                if (array[i][key] == value) {
+                    ary.push(array[i]);
+                }
+            }
+            return ary;
+        }
+
+
+        var ary = []
+        
+        careabout.forEach((name) => {
+          findObjectByKey(changes, "author_email", name).forEach((obj) => {
+            ary.push(obj)
+          })
+          // changes.find(obj => obj.author_email == name))
+        })
+      
+        console.log(ary)
+        this.values = ary
 
       })
         
@@ -199,9 +376,9 @@ export default {
         //     }
         //   }
 
-        $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-        $(this.$el).find('.stackedbarchart').removeClass('loader')
-        this.values = values
+        // $(this.$el).find('.showme, .hidefirst').removeClass('invis')
+        // $(this.$el).find('.stackedbarchart').removeClass('loader')
+        // this.values = values
       }
 
       // if (this.data) {

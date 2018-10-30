@@ -4175,7 +4175,8 @@ exports.default = {
       monthNames: monthNames,
       monthDecimals: monthDecimals,
       years: years,
-      setYear: 0
+      setYear: 0,
+      tick: 0
     };
   },
 
@@ -4183,18 +4184,87 @@ exports.default = {
     repo: function repo() {
       return this.$store.state.gitRepo;
     },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
     spec: function spec() {
       var _this = this;
 
+      var type = null,
+          bin = null,
+          size = null;
+
+      if (this.tick == 0) {
+        type = "circle";
+        bin = false;
+        size = {
+          "field": "total",
+          "type": "quantitative",
+          "min": "15"
+        };
+      }
+      if (this.tick == 1) {
+        type = "tick";
+        bin = false;
+        size = {};
+      }
+      if (this.tick == 2) {
+        type = "rect";
+        bin = { "maxbins": 40 };
+        size = {};
+      }
+
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "mark": "tick",
-        "width": 400,
+        "width": 800,
         "height": 300,
-        "encoding": {
-          "x": { "field": "additions", "type": "quantitative" },
-          "y": { "field": "author_email", "type": "nominal" }
-        }
+        "config": {
+          "tick": {
+            "thickness": 8,
+            "bandSize": 23
+          },
+          "axis": {
+            "grid": false
+          },
+          "legend": {
+            "titleFontSize": 0,
+            "titlePadding": 10
+          }
+        },
+        "layer": [{
+          "transform": [{
+            "calculate": "(datum.additions > datum.deletions) ? 'more' : 'less'",
+            "as": "opac"
+          }, {
+            "calculate": "(datum.additions - datum.deletions)",
+            "as": "net"
+          }, {
+            "calculate": "(datum.additions + datum.deletions)",
+            "as": "total"
+          }],
+          "mark": type,
+          "encoding": {
+            "x": { "field": "author_date", "type": "temporal", "bin": bin, "axis": { "format": "%b %Y", "title": " " } },
+            "y": { "field": "author_email", "type": "nominal" },
+            "color": {
+              "field": "opac",
+              "type": "nominal",
+              "scale": { "range": ["red", "green"] }
+            },
+            "size": size,
+            "opacity": {
+              "field": "net",
+              "type": "quantitative",
+              "min": ".5"
+            }
+
+          }
+
+        }]
+
       };
 
       var repo = window.AugurAPI.Repo({ gitURL: this.repo });
@@ -4230,6 +4300,8 @@ exports.default = {
           var d = obj[key];
           d[keyName] = key;
           return d;
+        }).sort(function (a, b) {
+          return b[sortField] - a[sortField];
         });
       };
 
@@ -4239,6 +4311,10 @@ exports.default = {
 
       repo.changesByAuthor().then(function (changes) {
         changes.forEach(function (change) {
+          change.author_date = new Date(change.author_date);
+        });
+
+        changes.forEach(function (change) {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
             group(contributors, 'author_email', change, filterDates);
             if (change.author_affiliation !== 'Unknown') {
@@ -4246,10 +4322,33 @@ exports.default = {
             }
           }
         });
-        console.log(contributors, changes);
 
-        _this.values = flattenAndSort(contributors, 'author_email', 'additions');
-        _this.organizations = flattenAndSort(organizations, 'name', 'additions');
+        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+        var careabout = [];
+        _this.contributors.slice(0, 10).forEach(function (obj) {
+          careabout.push(obj["author_email"]);
+        });
+
+        var findObjectByKey = function findObjectByKey(array, key, value) {
+          var ary = [];
+          for (var i = 0; i < array.length; i++) {
+            if (array[i][key] == value) {
+              ary.push(array[i]);
+            }
+          }
+          return ary;
+        };
+
+        var ary = [];
+
+        careabout.forEach(function (name) {
+          findObjectByKey(changes, "author_email", name).forEach(function (obj) {
+            ary.push(obj);
+          });
+        });
+
+        console.log(ary);
+        _this.values = ary;
       });
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
@@ -4260,12 +4359,7 @@ exports.default = {
         repos.push(window.AugurRepos[this.repo]);
       }
 
-      var processData = function processData(data) {
-
-        $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-        $(_this.$el).find('.stackedbarchart').removeClass('loader');
-        _this.values = values;
-      };
+      var processData = function processData(data) {};
 
       return config;
     }
@@ -4276,7 +4370,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"stackedbarchart "},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rect")])])]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
