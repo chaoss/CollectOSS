@@ -256,13 +256,6 @@ class Application(object):
         for process in self.__processes:
             process.terminate()
 
-    def init_metrics_status(self):
-        from augur.metrics_status import MetricsStatus
-        if self.__metrics_status is None:
-            logger.debug('Initializing MetricsStatus')
-            self.__metrics_status = MetricsStatus(self['githubapi']())
-        return self.__metrics_status
-
 Application.plugins = {}
 Application.default_plugins = []
 Application.import_plugins()

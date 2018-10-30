@@ -287,14 +287,7 @@
 
     <span class="k">def</span> <span class="nf">shutdown_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="p">:</span>
-            <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">init_metrics_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">augur.metrics_status</span> <span class="k">import</span> <span class="n">MetricsStatus</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing MetricsStatus&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="n">MetricsStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;githubapi&#39;</span><span class="p">]())</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span></div>
+            <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span></div>
 
 <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span> <span class="o">=</span> <span class="p">[]</span>

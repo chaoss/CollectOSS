@@ -138,9 +138,6 @@ You **CAN** get off the ground without those API keys though.
  make dev
  ```
 
-
-
-
 ## macOS High Sierra (and possibly older OS X Versions) Errata:
 
 1. If you check the logs/frontend.log and find that "brunch" was not found: 

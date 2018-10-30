@@ -17,8 +17,9 @@ make docs
 
 ### tl;dr
 
-  1. [Back End Development Guide](/docs/dev-guide/backend.md) 
-  2. [Front End Development Guide](/docs/dev-guide/frontend.md)
+  1. [Installation](2-3-backend.md) 
+  2. [Back End Development Guide](3-3-backend.md) 
+  3. [Front End Development Guide](4-frontend.md)
 ---------------------
 
 ### Augur's Design Value System
@@ -54,7 +55,7 @@ Right now, Augur satisfies the enumerated dashboard system requirements in concr
 ### Augur Data Ingestion
 We use the GHTorrent database, or its MSR14 little brother to help you get up and running quickly. You may find this dataset insufficient for a particular metric you want to build. API's available from a number of places can be accessed from Augur. 
 
-Inside your Augur system root directory there is another directory named `augur`. This is where the Python library lives, including the data source plugins (in `datasources`) and the web API (in `server.py`). Below is the list of default data sources shipped with Augur: 
+Inside your Augur system root directory there is another directory named `augur`. This is where the Python library lives, including the data source plugins (in `datasources`), functionality plugins (in `plugins`), and the web API (in `server.py`). Below is the list of default data sources shipped with Augur: 
 
 1. **ghtorrent** : reads the ghtorrent database you installed
 2. **facade**	 : reads a copy of the Facade database, developed by Brian Warner
@@ -69,11 +70,11 @@ If you want to ingest substantial amounts of new data, you may want to contribut
 The database system that you built with GHTorrent or MSR14 is our principle data storage environment right now. We have added a few small details to the GHTorrent database in a seperate schema called GHTorrent_Plus.  This schema is built on deployment, and supports aggregations of the GHTorrent Schema information so that metrics can be generated more quickly in a few cases. 
 
 ### Augur Data Reshaping for Analysis
-Now that you understand the basic structure of Augur, our [Back End Development Guide](/docs/backend.md) will be the place to start for reshaping data and building out analysis endpoints. The end result of new back end code is a **REST API Endpoint.**
+Now that you understand the basic structure of Augur, our [Back End Development Guide](3-backend.md) will be the place to start for reshaping data and building out analysis endpoints. The end result of new back end code is a **REST API Endpoint.**
 
 ### Augur Data Presentation
 
-Once you have a **REST API Endpoint**, you can stop and say, "I have built an endpoint. Here is my pull request".  OR, you can build front end visualizations for those endpoints, following our [Front End Development Guide](/docs/frontend.md).
+Once you have a **REST API Endpoint**, you can stop and say, "I have built an endpoint. Here is my pull request".  OR, you can build front end visualizations for those endpoints, following our [Front End Development Guide](4-frontend.md).
 
 ---------------------
 ## Important notes about contributing metrics

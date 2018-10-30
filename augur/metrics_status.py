@@ -134,9 +134,11 @@ class MetricsStatus(object):
 		self.raw_metrics_status = []
 		self.metadata = []
 
+		self.create_metrics_status()
+
 	def create_metrics_status(self):
 
-		self.build_implemented_metrics()
+		self.__build_implemented_metrics()
 
 		self.diversity_inclusion_metrics = self.create_grouped_metrics(self.diversity_inclusion_urls, "diversity-inclusion")
 		self.growth_maturity_decline_metrics = self.create_grouped_metrics(self.growth_maturity_decline_urls, "growth-maturity-decline")
@@ -145,21 +147,21 @@ class MetricsStatus(object):
 
 		self.metrics_by_group = [self.diversity_inclusion_metrics, self.growth_maturity_decline_metrics, self.risk_metrics, self.value_metrics]
 
-		self.activity_metrics = self.create_activity_metrics()
+		self.activity_metrics = self.__create_activity_metrics()
 		self.metrics_by_group.append(self.activity_metrics)
 
-		self.create_experimental_metrics()
+		self.__create_experimental_metrics()
 		self.metrics_by_group.append(self.experimental_metrics)
 
-		self.copy_implemented_metrics()
+		self.__copy_implemented_metrics()
 
-		self.find_defined_metrics()
+		self.__find_defined_metrics()
 
-		self.get_raw_metrics_status()
+		self.__get_raw_metrics_status()
 
 		self.get_metadata()
 
-	def build_implemented_metrics(self):
+	def __build_implemented_metrics(self):
 		frontend_status_extractor = FrontendStatusExtractor()
 		for metric in metric_metadata:
 			if "ID" in metric.keys():
@@ -188,7 +190,7 @@ class MetricsStatus(object):
 
 		return remote_metrics
 
-	def create_activity_metrics(self):
+	def __create_activity_metrics(self):
 		activity_metrics_raw_text = requests.get(self.activity_urls[0]["raw_content_url"]).text
 
 		raw_activity_names = re.findall(r'\|(?:\[|)(.*)\|(?:\]|)(?:\S| )', activity_metrics_raw_text)
@@ -210,7 +212,7 @@ class MetricsStatus(object):
 
 		return activity_metrics
 
-	def create_experimental_metrics(self):
+	def __create_experimental_metrics(self):
 		tags = []
 		for group in self.metrics_by_group:
 			for metric in group:
@@ -218,7 +220,7 @@ class MetricsStatus(object):
 
 		self.experimental_metrics = [metric for metric in self.implemented_metrics if metric.tag not in tags]
 
-	def copy_implemented_metrics(self):
+	def __copy_implemented_metrics(self):
 		# takes implemented metrics and copies their data to the appropriate metric object
 		# I'm sorry
 		implemented_metric_tags = [metric.tag for metric in self.implemented_metrics]
@@ -231,7 +233,7 @@ class MetricsStatus(object):
 							if key != 'group': #don't copy the group over, since the metrics are already grouped
 								grouped_metric.__dict__[key] = metric.__dict__[key]
 
-	def find_defined_metrics(self):
+	def __find_defined_metrics(self):
 		activity_files = self.__githubapi.get_repo(self.activity_repo).get_dir_contents("activity-metrics")
 		defined_tags = [re.sub(".md", '', file.name) for file in activity_files]
 
@@ -241,7 +243,7 @@ class MetricsStatus(object):
 					metric.is_defined = 'true'
 					metric.documentation_url = "https://github.com/{}/blob/wg-gmd/activity-metrics/{}.md".format(MetricsStatus.activity_repo, metric.tag)
 
-	def get_raw_metrics_status(self):
+	def __get_raw_metrics_status(self):
 		for group in self.metrics_by_group:
 			for metric in group:
 				self.raw_metrics_status.append(metric.__dict__)
