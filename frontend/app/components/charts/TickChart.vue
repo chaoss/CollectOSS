@@ -96,9 +96,10 @@ export default {
         type = "circle"
         bin = false
         size = {
-                "field": "total",
+                "field": "Net lines added",
                 "type": "quantitative",
-                "min": "15"
+                "min": "15",
+                "scale": {"minSize": 30, "maxSize": 31}
               }
       }
       if (this.tick == 1) {
@@ -127,25 +128,25 @@ export default {
               },
               "legend": {
                // "offset": -505,
-                "titleFontSize": 0,
+                "titleFontSize": 10,
                 "titlePadding": 10
-              }
+              },"scale": {"minSize": 100, "maxSize": 500}
         },
         "layer": [
           {
             "transform": [
              
               {
-                "calculate": "(datum.additions > datum.deletions) ? 'more' : 'less'",
-                "as": "opac"
+                "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+                "as": "Majority type of changes"
               },
               {
                 "calculate": "(datum.additions - datum.deletions)",
-                "as": "net"
+                "as": "Net lines added"
               },
               {
                 "calculate": "(datum.additions + datum.deletions)",
-                "as": "total"
+                "as": "Total lines changed"
               },
             ],
             "mark": type,
@@ -153,42 +154,20 @@ export default {
               "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
               "y": {"field": "author_email", "type": "nominal"},
               "color": {
-                "field": "opac",
+                "field": "Majority type of changes",
                 "type": "nominal",
                 "scale": { "range": ["red", "green"]}
               },
               "size": size,
               "opacity":{
-                "field": "net",
+                "field": "Total lines changed",
                 "type": "quantitative",
                 "min": ".5"
               },
 
             },
             
-          },
-          // {
-          //   "transform": [
-          //     // {"window": [{"op": "sum", "field": "amount", "as": "sum"}]},
-          //     // {"window": [{"op": "lead", "field": "label", "as": "lead"}]},
-          //     {
-          //       "calculate": "datum.additions < datum.deletions ? 1 : 0",
-          //       "as": "opac"
-          //     }
-          //   ],
-          //   "mark": "tick",
-          //   "encoding": {
-          //     "x": {"field": "author_date", "type": "temporal"},
-          //     "y": {"field": "author_email", "type": "nominal"},
-          //     "color": {
-          //       "value": "red"
-          //     },
-          //     "opacity": {
-          //       "value": "opac"
-          //     }
-          //   }
-          // }
-
+          }
         ]
         
       }

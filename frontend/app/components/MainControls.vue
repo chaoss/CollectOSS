@@ -2,7 +2,7 @@
 <div class="row" id="controls">
   <div class="col col-12">
     <div class="form">
-
+      
 
       <div class="topic">
         <div class="container">
@@ -11,7 +11,7 @@
               <div class="row">
                 <div class="col col-3" align="center" id="comparetext"><h6>Compare from your repos:</h6></div>
                 <div class="col col-2">
-                  <multiselect v-model="project" :options="projects" :placeholder="project"></multiselect>
+                  <multiselect class="" v-model="project" :options="projects" :placeholder="project"></multiselect>
                 </div>
 
                 <div class="col col-2">
@@ -21,12 +21,13 @@
                     :multiple="true"
                     group-label="url"
                     placeholder="Select repos"
-                    class="search reposearch"
+                    class="search reposearch "
                     >
                   </multiselect>
                 </div>
                 <div class="col col-1"><input type="button" @click="onArrayCompare" value="Apply" style="max-width:69.9px"></div>
-                <div class="col col-4">
+                <div class="col col-1"><input type="button" @click="onClear" value="Clear" style="max-width:69.9px"></div>
+                <div class="col col-3">
                   <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare"/>
                   <p></p>
                 </div>
@@ -287,6 +288,9 @@
             })
           }
         )
+      },
+      onClear () {
+        this.values = []
       },
       onDetailChange (e) {
         this.$store.commit('setVizOptions', {
