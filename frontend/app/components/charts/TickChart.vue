@@ -1,6 +1,9 @@
 <template>
   <div ref="holder">
     <div class="tickchart ">
+      <h3>Lines of code added by the top 10 authors vizualized</h3>
+      <vega-lite :spec="spec" :data="values"></vega-lite>
+      <p> {{ chart }} </p>
       <div class="form-item form-checkboxes tickradios">
 
 
@@ -19,8 +22,7 @@
 
         
       </div>
-      <vega-lite :spec="spec" :data="values"></vega-lite>
-      <p> {{ chart }} </p>
+      
     </div>
   </div>
 </template>

@@ -10,22 +10,23 @@
             <div class="col col-9">
               <div class="row">
                 <div class="col col-3" align="center" id="comparetext"><h6>Compare from your repos:</h6></div>
-                <div class="col col-2">
+                <div class="col col-2" @click="keepSelecting">
                   <multiselect class="" v-model="project" :options="projects" :placeholder="project"></multiselect>
                 </div>
 
-                <div class="col col-2">
+                <div class="col col-2" @click="keepSelecting">
                   <multiselect 
                     v-model="values" 
                     :options="options"
                     :multiple="true"
                     group-label="url"
                     placeholder="Select repos"
-                    class="search reposearch "
+                    class="search reposearch special"
+                    
                     >
                   </multiselect>
                 </div>
-                <div class="col col-1"><input type="button" @click="onArrayCompare" value="Apply" style="max-width:69.9px"></div>
+                <div class="col col-1"><input type="button" @click="onArrayCompare(); stopSelecting()" value="Apply" style="max-width:69.9px"></div>
                 <div class="col col-1"><input type="button" @click="onClear" value="Clear" style="max-width:69.9px"></div>
                 <div class="col col-3">
                   <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare"/>
@@ -303,6 +304,12 @@
           this.repos = window._.groupBy(data, 'project_name')
           this.projects = Object.keys(this.repos)
         })
+      },
+      keepSelecting() {
+        $(this.$el).find('.multiselect__content-wrapper').addClass('selecting')
+      },
+      stopSelecting() {
+        $(this.$el).find('.multiselect__content-wrapper').removeClass('selecting')
       }
     },
     computed: {
@@ -332,6 +339,7 @@
     },
     mounted() {
       this.getDownloadedRepos()
+      // $(this.$el).find('.special').addClass('selecting')
       window.$(this.$el).find('.multiselect__input').addClass('search')
       window.$(this.$el).find('.multiselect__input').addClass('reposearch')
       if (this.$store.state.comparedRepos.length < 2) this.disabled = true;

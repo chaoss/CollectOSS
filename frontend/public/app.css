@@ -3521,6 +3521,15 @@ textarea:-ms-input-placeholder {
   text-align: center;
   height: 60px;
 }
+.multiselect__content-wrapper {
+  position: absolute !important;
+}
+.selecting {
+  display: block !important;
+}
+.multiselect__tags {
+  height: 40px !important;
+}
 @-moz-keyframes spin {
   0% {
     transform: rotate(0deg);

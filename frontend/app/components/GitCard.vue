@@ -2,7 +2,6 @@
   <section>
     <h1>Git Metrics</h1>
     <h2>{{ $store.state.gitRepo }}</h2>
-      <h3>Top ten authors</h3>
       <tick-chart></tick-chart>
       <div class="row">
         <lines-of-code-chart></lines-of-code-chart>
