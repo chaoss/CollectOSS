@@ -148,7 +148,7 @@ export default {
     }
   },
   components: {
-    'vega-interactive': window.VueVega.mapVegaLiteSpec(spec)
+    // 'vega-interactive': window.VueVega.mapVegaLiteSpec(spec)
   },
   computed: {
     repo() {

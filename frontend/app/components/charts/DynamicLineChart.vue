@@ -575,7 +575,6 @@ export default {
 
       buildMetric()
 
-
       //set dates from main control options
       if(this.showDetail) {
         config.vconcat[1].encoding.x["scale"] =
@@ -625,7 +624,7 @@ export default {
         }
       })
 
-
+      let compare = this.compare
       let processData = (data) => {
         // Make it so the user can save the data we are using
           this.__download_data = data
@@ -694,12 +693,15 @@ export default {
          
 
           repos.forEach((repo) => {
-              console.log("adding repo: " + repo)
+
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
-                let rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                console.log(AugurStats.standardDeviationLines(rolling, 'valueRolling' + repo, repo))
+                let rolling = null
+                if (compare == 'zscore') {
+                  rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
+                }
+                else rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
 
                 aggregates.push(d)
@@ -764,6 +766,7 @@ export default {
             $(this.$el).find('.hidefirst').removeClass('invisDet')
             $(this.$el).find('.spinner').removeClass('loader')
             $(this.$el).find('.spacing').addClass('hidden')
+            $(this.$el).find('.hidefirst').removeClass('invisDet')
 
 
             //this.mgConfig.legend_target = this.$refs.legend

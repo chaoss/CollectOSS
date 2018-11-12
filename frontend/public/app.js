@@ -170,6 +170,7 @@ function Augur() {
   window._ = require('lodash');
   window.d3 = require('d3');
   window.SvgSaver = require('svgsaver');
+  window.VueRouter = require('vue-router');
 
   window.AUGUR_CHART_STYLE = {
     brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
@@ -177,6 +178,9 @@ function Augur() {
   };
 
   var AugurApp = require('./components/AugurApp');
+
+  var VueRouter = require('vue-router');
+  var router = require('router');
 
   window.Vue.use(window.Vuex);
   window.Vue.use(window.VueVega);
@@ -224,6 +228,9 @@ function Augur() {
         if (!payload.fromURL) {
           window.history.pushState(null, 'Augur', '?' + queryString.stringify(state.queryObject, { encode: false }));
         }
+        //window.$router.push('reposf')
+
+
         // if (!payload.keepCompared) {
         //   state.comparedRepos = []
         // }
@@ -242,7 +249,6 @@ function Augur() {
         // window.history.pushState(null, title, queryString)
         var repo = window.AugurAPI.Repo(payload);
         if (!state.comparedRepos.includes(repo.toString())) {
-          console.log("FUCK", repo.toString());
           if (!window.AugurRepos[repo.toString()]) {
 
             window.AugurRepos[repo.toString()] = repo;
@@ -316,6 +322,15 @@ function Augur() {
   });
 
   AugurApp.store = window.augur;
+  // window.Vue.use(VueRouter)
+
+
+  // window.AugurApp = new window.Vue({
+
+  //   router,
+  //   render: h => h(AugurApp)
+  // }).$mount('#app')
+
   window.AugurApp = new window.Vue(AugurApp).$mount('#app');
 
   // Load state from query string
@@ -1087,7 +1102,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4cb2e45e", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4cb2e45e", __vue__options__)
+    hotAPI.rerender("data-v-4cb2e45e", __vue__options__)
   }
 })()}
 });
@@ -1159,6 +1174,7 @@ var _LoginForm2 = _interopRequireDefault(_LoginForm);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
+  name: 'AugurCards',
   components: {
     MainControls: _MainControls2.default,
     AllMetricsStatusCard: _AllMetricsStatusCard2.default,
@@ -1198,6 +1214,9 @@ module.exports = {
     },
     currentTab: function currentTab() {
       return this.$store.state.tab;
+    },
+    goBack: function goBack() {
+      window.history.length > 1 ? this.$router.go(-1) : this.$router.push('/');
     }
   },
   methods: {
@@ -2180,9 +2199,7 @@ exports.default = {
     };
   },
 
-  components: {
-    'vega-interactive': window.VueVega.mapVegaLiteSpec(spec)
-  },
+  components: {},
   computed: {
     repo: function repo() {
       return this.$store.state.baseRepo;
@@ -2929,6 +2946,7 @@ exports.default = {
         }
       });
 
+      var compare = this.compare;
       var processData = function processData(data) {
         _this.__download_data = data;
         _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
@@ -2984,11 +3002,13 @@ exports.default = {
         var colors = [];
 
         repos.forEach(function (repo) {
-          console.log("adding repo: " + repo);
+
           buildLines(data[repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count);
-            var rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
-            console.log(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling' + repo, repo));
+            var rolling = null;
+            if (compare == 'zscore') {
+              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
+            } else rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
             normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling', repo));
 
             aggregates.push(d);
@@ -3047,6 +3067,7 @@ exports.default = {
           $(_this.$el).find('.hidefirst').removeClass('invisDet');
           $(_this.$el).find('.spinner').removeClass('loader');
           $(_this.$el).find('.spacing').addClass('hidden');
+          $(_this.$el).find('.hidefirst').removeClass('invisDet');
 
           _this.renderChart();
         }
@@ -6691,7 +6712,27 @@ exports['default'] = SvgSaver;
 module.exports = exports['default'];
 });
 
-require.alias("buffer/index.js", "buffer");
+require.register("router.js", function(exports, require, module) {
+// import AugurApp from './components/AugurApp'
+// import GrowthMaturityDeclineCard from './components/GrowthMaturityDeclineCard'
+// import ExperimentalCard from './components/ExperimentalCard'
+// import VueRouter from 'vue-router'
+// import Vue from 'vue'
+
+// Vue.use(VueRouter)
+
+
+// export default new VueRouter({
+//   routes: [
+//       // {path: '/', component: AugurApp},
+//       {path: '/gmd', component: GrowthMaturityDeclineCard},
+//       {path: '/exp', component: ExperimentalCard}
+//     ]
+// })
+"use strict";
+});
+
+;require.alias("buffer/index.js", "buffer");
 require.alias("process/browser.js", "process");
 require.alias("vue/dist/vue.common.js", "vue");process = require('process');require.register("___globals___", function(exports, require, module) {
   

@@ -1,6 +1,6 @@
 <template>
+  
   <div>
-
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
       <!-- <login-form></login-form> -->
@@ -87,6 +87,7 @@ import DownloadedReposCard from './DownloadedReposCard'
 import LoginForm from './LoginForm'
 
 module.exports = {
+  name: 'AugurCards',
   components: {
     MainControls,
     AllMetricsStatusCard,
@@ -125,6 +126,11 @@ module.exports = {
     },
     currentTab() {
       return this.$store.state.tab
+    },
+    goBack () {
+      window.history.length > 1
+        ? this.$router.go(-1)
+        : this.$router.push('/')
     },
   },
   methods: {

@@ -307,9 +307,11 @@
       },
       keepSelecting() {
         $(this.$el).find('.multiselect__content-wrapper').addClass('selecting')
+
       },
       stopSelecting() {
         $(this.$el).find('.multiselect__content-wrapper').removeClass('selecting')
+        
       }
     },
     computed: {

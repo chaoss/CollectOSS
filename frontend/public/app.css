@@ -3089,54 +3089,6 @@ li {
 input:focus {
   border-color: transparent !important;
 }
-input:focus::-webkit-input-placeholder {
-  color: transparent;
-}
-input:focus:-moz-placeholder {
-  color: transparent;
-}
-input:focus::-moz-placeholder {
-  color: transparent;
-}
-input:focus:-ms-input-placeholder {
-  color: transparent;
-}
-textarea:focus::-webkit-input-placeholder {
-  color: transparent;
-}
-textarea:focus:-moz-placeholder {
-  color: transparent;
-}
-textarea:focus::-moz-placeholder {
-  color: transparent;
-}
-textarea:focus:-ms-input-placeholder {
-  color: transparent;
-}
-input::-webkit-input-placeholder {
-  color: #fff;
-}
-input:-moz-placeholder {
-  color: #fff;
-}
-input::-moz-placeholder {
-  color: #fff;
-}
-input:-ms-input-placeholder {
-  color: #fff;
-}
-textarea::-webkit-input-placeholder {
-  color: #fff;
-}
-textarea:-moz-placeholder {
-  color: #fff;
-}
-textarea::-moz-placeholder {
-  color: #fff;
-}
-textarea:-ms-input-placeholder {
-  color: #fff;
-}
 .limiter label {
   margin: 0;
   display: block;

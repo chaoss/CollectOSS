@@ -1,5 +1,9 @@
 const queryString = require('query-string')
 
+
+
+
+
 export default function Augur () {
   window.jQuery = require('jquery')
   window.Vue = require('vue')
@@ -13,6 +17,7 @@ export default function Augur () {
   window._ = require('lodash')
   window.d3 = require('d3')
   window.SvgSaver = require('svgsaver')
+  window.VueRouter = require('vue-router')
 
   window.AUGUR_CHART_STYLE = {
     brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
@@ -21,9 +26,23 @@ export default function Augur () {
 
   let AugurApp = require('./components/AugurApp')
 
+  let VueRouter = require('vue-router')
+  let router = require('router')
+
   window.Vue.use(window.Vuex)
   window.Vue.use(window.VueVega)
   window.Vue.config.productionTip = false
+
+
+
+ 
+
+ 
+  
+
+
+  
+
 
   window.augur = new window.Vuex.Store({
     state: {
@@ -66,7 +85,11 @@ export default function Augur () {
         }
         if (!payload.fromURL){
           window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
+          
         }
+        //window.$router.push('reposf')
+
+
         // if (!payload.keepCompared) {
         //   state.comparedRepos = []
         // }
@@ -85,7 +108,6 @@ export default function Augur () {
         // window.history.pushState(null, title, queryString)
         let repo = window.AugurAPI.Repo(payload)
         if(!state.comparedRepos.includes(repo.toString())){
-          console.log("FUCK", repo.toString())
           if (!window.AugurRepos[repo.toString()]) {
             
             window.AugurRepos[repo.toString()] = repo
@@ -158,7 +180,20 @@ export default function Augur () {
   })
 
   AugurApp.store = window.augur
+  // window.Vue.use(VueRouter)
+
+
+  
+  // window.AugurApp = new window.Vue({
+
+  //   router,
+  //   render: h => h(AugurApp)
+  // }).$mount('#app')
+
   window.AugurApp = new window.Vue(AugurApp).$mount('#app')
+
+
+
 
   // Load state from query string
   let parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' })

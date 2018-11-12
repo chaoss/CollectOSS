@@ -42,6 +42,7 @@
     "vue-loader": "^15.2.4",
     "vue-multiselect": "^2.1.2",
     "vue-table-component": "^1.9.1",
+    "vue-router": "^3.0.1",
     "vue-template-compiler": "^2.5.16",
     "vue-vega": "^1.0.0-alpha.13",
     "vueify": "^9.4.1",
