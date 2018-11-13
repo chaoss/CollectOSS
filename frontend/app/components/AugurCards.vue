@@ -13,7 +13,7 @@
       </section>
 
       <section class="unmaterialized">
-        <all-metrics-status-card></all-metrics-status-card>
+        <metrics-status-card></metrics-status-card>
       </section>
     </div>
 
@@ -71,7 +71,7 @@
 
 <script>
 import MainControls from './MainControls'
-import AllMetricsStatusCard from './AllMetricsStatusCard'
+import MetricsStatusCard from './MetricsStatusCard'
 import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
 import ComparedRepoActivityCard from './ComparedRepoActivityCard'
@@ -90,7 +90,7 @@ module.exports = {
   name: 'AugurCards',
   components: {
     MainControls,
-    AllMetricsStatusCard,
+    MetricsStatusCard,
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
     ComparedRepoActivityCard,
