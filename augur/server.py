@@ -13,7 +13,7 @@ from flask_cors import CORS
 import pandas as pd
 import augur
 from augur.util import annotate, metric_metadata, logger
-from augur.routes import create_plugin_routes, create_metrics_status_routes  
+from augur.routes import create_plugin_routes  
 
 AUGUR_API_VERSION = 'api/unstable'
 
@@ -38,9 +38,6 @@ class Server(object):
         self.show_metadata = False
 
         create_plugin_routes(self)
-
-        # this needs to be the last route creation function called so that all the metrics have their metadata updated
-        # create_metrics_status_routes(self)
 
         #####################################
         ###          UTILITY              ###

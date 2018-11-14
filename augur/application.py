@@ -19,7 +19,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from augur import logger
 import augur.plugins
-import augur.datasources
+import augur.plugins.core
 import argparse
 
 
@@ -120,7 +120,7 @@ class Application(object):
     def import_plugins(cls):
         if not hasattr(cls, 'plugins'):
             setattr(cls, 'plugins', {})
-        for module in [augur.plugins, augur.datasources]:
+        for module in [augur.plugins, augur.plugins.core]:
             for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
                 if ispkg:
                     try:
