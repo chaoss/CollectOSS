@@ -23,22 +23,11 @@
         "name": "name",
         "pass": "password",
         "port": "0000",
-        "user": "username"
-    },
-    "GHTorrentPlus": {
-        "host": "hostname.io",
-        "name": "name",
-        "pass": "password",
-        "port": "0000",
-        "user": "username"
-    },
-    "Git": {
-        "refresh": "3600",
-        "repositories": [
-            "https://github.com/*",
-            "https://github.com/*"
+        "projects": [
+            "project",
+            "project2",
         ],
-        "storage": "runtime/git_repos/"
+        "user": "username"
     },
     "GitHub": {
         "apikey": "0000000000000000000000000000000000"
@@ -47,9 +36,6 @@
         "apikey": ""
     },
     "Plugins": [],
-    "PublicWWW": {
-        "apikey": ""
-    },
     "Server": {
         "cache_expire": 3600,
         "host": "0.0.0.0",
