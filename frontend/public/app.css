@@ -3013,7 +3013,7 @@ div.checkbox_select .select_input {
   cursor: pointer;
 }
 .multiselect__content-wrapper ul li .multiselect__option:hover {
-  background-color: #0f0;
+  background-color: #eee;
   background-image: url("../images/hover.png");
   background-repeat: repeat-x;
 }
@@ -3027,11 +3027,8 @@ div.checkbox_select .select_input {
   margin: 0;
   width: 150px;
 }
-.multiselect__option--selected {
-  background-color: #0f0 !important;
-}
 .multiselect__option--selected:hover {
-  background-color: #f00 !important;
+  background-color: #0f0 !important;
 }
 .multiselect__tags-wrap {
   display: none;
