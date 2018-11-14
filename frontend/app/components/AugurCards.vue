@@ -87,7 +87,7 @@ import DownloadedReposCard from './DownloadedReposCard'
 import LoginForm from './LoginForm'
 
 module.exports = {
-  name: 'AugurCards',
+  name: 'augur-cards',
   components: {
     MainControls,
     MetricsStatusCard,

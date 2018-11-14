@@ -27,7 +27,7 @@
                   </multiselect>
                 </div>
                 <div class="col col-1"><input type="button" @click="onArrayCompare(); stopSelecting()" value="Apply" style="max-width:69.9px"></div>
-                <div class="col col-1"><input type="button" @click="onClear" value="Clear" style="max-width:69.9px"></div>
+                <div class="col col-1"><input type="button" @click="onClear; stopSelecting()" value="Reset" style="max-width:69.9px"></div>
                 <div class="col col-3">
                   <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare"/>
                   <p></p>
@@ -345,6 +345,7 @@
       window.$(this.$el).find('.multiselect__input').addClass('search')
       window.$(this.$el).find('.multiselect__input').addClass('reposearch')
       if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
+      if (this.projects.length() == 1) this.project = this.projects[0]
     }
 
   }

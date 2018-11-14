@@ -226,9 +226,10 @@ export default {
                 "value": 0
               },
               "color": {
-                    "field": "name",
-                    "type": "nominal",
-                    "scale": { "range": colors}
+                    // "field": "name",
+                    // "type": "nominal",
+                    // "scale": { "range": colors}
+                    "value": "black"
                   },
               "size": {
                 "value": size
@@ -276,7 +277,8 @@ export default {
                 }
               },
               "color": {
-                "value": color
+                // "value": color
+                "value": "black"
               },
               "opacity": {
                 "condition": {

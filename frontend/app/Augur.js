@@ -1,6 +1,7 @@
 const queryString = require('query-string')
 
-
+// import AugurApp from './components/AugurApp.vue'
+import router from './router'
 
 
 
@@ -33,6 +34,8 @@ export default function Augur () {
   window.Vue.use(window.VueVega)
   window.Vue.config.productionTip = false
 
+
+  Vue.use(VueRouter)
 
 
  
@@ -180,18 +183,22 @@ export default function Augur () {
   })
 
   AugurApp.store = window.augur
-  // window.Vue.use(VueRouter)
+  window.Vue.use(VueRouter)
 
-
+  // AugurApp.router = router
   
   // window.AugurApp = new window.Vue({
-
-  //   router,
+  //   components: { AugurApp },
+  //   // store: window.augur,
+  //   router: router,
   //   render: h => h(AugurApp)
   // }).$mount('#app')
 
-  window.AugurApp = new window.Vue(AugurApp).$mount('#app')
+  // AugurApp.router = router
+  // AugurApp.render = h => h(AugurApp)
 
+  window.AugurApp = new window.Vue(AugurApp).$mount('#app')
+  
 
 
 
