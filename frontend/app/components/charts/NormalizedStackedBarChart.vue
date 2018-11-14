@@ -1,28 +1,9 @@
 <template>
   <div ref="holder">
     <div class="tickchart ">
-      <h3>Lines of code added by the top 10 authors visualized</h3>
+      <!-- <h3>Lines of code added by the top 10 authors as Percentages - By Time Period</h3> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
-      <div class="form-item form-checkboxes tickradios">
-
-
-          <div class="inputGroup ">
-            <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
-            <label id="front" for="circradio">Circle</label>
-          </div>
-          <div class="inputGroup ">
-            <input id="tickradio"name="comparebaseline" value="1" type="radio" v-model="tick">
-            <label id="front" for="tickradio">Tick</label>
-          </div>
-          <div class="inputGroup ">
-            <input id="rectradio"name="comparebaseline" value="2" type="radio" v-model="tick">
-            <label id="front" for="rectradio">Rect</label>
-          </div>
-
-        
-      </div>
-      
     </div>
   </div>
 </template>
@@ -115,24 +96,32 @@ export default {
             size = {}
       }
 
-
+      var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": 800,
-        "height": 300,
+        "height": 380,
+        "title": {
+          "text": this.title,
+          "offset": 30
+        },
         "config": {
           "tick": {
             "thickness": 8,
             "bandSize": 23
           },
           "axis":{
-                "grid": false,
-                "title": null
+                "grid": false
               },
               "legend": {
-               // "offset": -505,
+                "offset": -20,
+                
+                // "orient": "right",
                 "titleFontSize": 10,
-                "titlePadding": 10
+                "titlePadding": 10,
+                "padding": 40,
+                "labelFontSize": 14,
+                "titleFontSize": 14
               },"scale": {"minSize": 100, "maxSize": 500}
         },
         "layer": [
@@ -151,30 +140,63 @@ export default {
                 "calculate": "(datum.additions + datum.deletions)",
                 "as": "Total lines changed"
               },
+              {
+                "calculate": "(datum.count * 100)",
+                "as": "percent"
+              },
             ],
-            "mark": type,
+            "mark": {
+              "type":"bar",
+              "tooltip": {"content": "data"}
+            },
             "encoding": {
-              "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
-              "y": {"field": "author_email", "type": "nominal"},
+              "x": {"field": "author_date", "type": "temporal", "bin": true, "axis": {"format": "%Y", "title": " "}},
+              "y": {"field": "count", "type": "quantitative","stack": "normalize", "axis": {"labels": false, "title": null}},
               "color": {
-                "field": "Majority type of changes",
+                "field": "author_email",
                 "type": "nominal",
-                "scale": { "range": ["red", "green"]}
+                "scale": { "range": colors},
+                "legend": {
+                  "direction": "horizontal",
+                }
               },
-              "size": size,
-              "opacity":{
-                "field": "Total lines changed",
-                "type": "quantitative",
-                "min": ".5"
-              },
+              // "size": size,
+              // "opacity":{
+              //   "field": "Total lines changed",
+              //   "type": "quantitative",
+              //   "min": ".5"
+              // },
 
             },
             
-          }
+            
+          },
+          // {
+          //   "mark": {
+          //     "type": "text",
+          //     "align": "left",
+          //     "dx": -5,
+          //     "dy": -15
+          //   },
+          //   "encoding": {
+          //     // "x": {"field": "author_date", "type": "temporal", "axis": {"format": "%b %Y", "title": " "}},
+          //     "x": {"field": "flag", "type": "quantitative","stack": "normalize"},
+          //     "color": {
+          //       "field": "author_email",
+          //       "type": "nominal",
+          //       // "scale": { "range": ["red", "green"]}
+          //     },
+          //     "text":{
+          //       "field": "flag",
+          //       "type": "nominal",
+
+          //     },
+
+          //   },
+          // }
         ]
         
       }
-
 
 
       let repo = window.AugurAPI.Repo({ gitURL: this.repo })
@@ -221,9 +243,14 @@ export default {
         return (new Date(change.author_date)).getFullYear() > this.years[0]
       }
 
+      let authors = []
+      let track = {"total": 0}
       repo.changesByAuthor().then((changes) => {
         changes.forEach((change) => {
           change.author_date = new Date(change.author_date)
+          change["count"] = change["count"] ? change["count"] + 1 : 1
+          track[change.author_email] = track[change.author_email] ? track[change.author_email] + 1 : 1
+          track["total"] += 1
         })
 
         changes.forEach((change) => {
@@ -233,6 +260,13 @@ export default {
               group(organizations, 'affiliation', change, filterDates)
             }
           }
+          if(!authors.includes(change["author_email"])) {
+            authors.push(change["author_email"])
+            change["flag"] = (track[change.author_email] / track["total"]).toFixed(4)
+            // console.log(change, track)
+          } //else change["flag"] = 100
+
+          
         })
         
 

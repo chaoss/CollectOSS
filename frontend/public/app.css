@@ -2797,6 +2797,10 @@ cite.metric a {
   width: 100%;
   margin-bottom: 30px;
 }
+.normalbar * {
+  overflow: visible !important;
+  width: 100%;
+}
 .bubblechart svg {
   width: 100%;
 }
@@ -3472,6 +3476,7 @@ input:focus {
 .tickradios {
   text-align: center;
   height: 60px;
+  margin-bottom: 0;
 }
 .multiselect__content-wrapper {
   position: absolute !important;
