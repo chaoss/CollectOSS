@@ -7,44 +7,42 @@ CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda acti
 CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
 OLDVERSION="null"
 EDITOR?="vi"
-PLUGIN=**
-CORE=**
+SOURCE=**
 
 default:
 	@ echo "Installation Commands:"
-	@ echo "    install                        Installs augur using pip"
-	@ echo "    install-e                      Installs augur in editable mode (pip -e)"
-	@ echo "    install-dev                    Installs augur's developer dependencies (requires npm and pip)"
-	@ echo "    install-msr                    Installs MSR14 dataset"
-	@ echo "    upgrade                        Pulls newest version, installs, performs migrations"
-	@ echo "    version                        Print the currently installed version"
+	@ echo "    install                    Installs augur using pip"
+	@ echo "    install-e                  Installs augur in editable mode (pip -e)"
+	@ echo "    install-dev                Installs augur's developer dependencies (requires npm and pip)"
+	@ echo "    install-msr                Installs MSR14 dataset"
+	@ echo "    upgrade                    Pulls newest version, installs, performs migrations"
+	@ echo "    version                    Print the currently installed version"
 	@ echo
 	@ echo "Development Commands:"
-	@ echo "    dev                            Starts the full stack and monitors the logs"
-	@ echo "    dev-start                      Runs 'make serve' and 'brunch w -s' in the background"
-	@ echo "    dev-stop                       Stops the backgrounded commands"
-	@ echo "    dev-restart                    Runs dev-stop then dev-restart"
-	@ echo "    server            	           Runs a single instance of the server (useful for debugging endpoints)"
-	@ echo "    test    			           Runs all pytest unit tests and API tests"
-	@ echo "    test-core CORE={core}          Run pytest unit tests for the specified core plugin. Defaults to all."
-	@ echo "    test-plugins PLUGIN={plugin}   Run pytest unit tests for the specified non-core plugin. Defaults to all."
-	@ echo "    test-api   			           Run API tests locally using newman"
-	@ echo "    build                          Builds documentation and frontend - use before pushing"
-	@ echo "    frontend                       Builds frontend with Brunch"
-	@ echo "    update-deps                    Generates updated requirements.txt and environment.yml"
-	@ echo "    python-docs                    Generates new Sphinx documentation"
-	@ echo "    api-docs                       Generates new apidocjs documentation"
-	@ echo "    docs                           Generates all documentation"
+	@ echo "    dev                        Starts the full stack and monitors the logs"
+	@ echo "    dev-start                  Runs 'make serve' and 'brunch w -s' in the background"
+	@ echo "    dev-stop                   Stops the backgrounded commands"
+	@ echo "    dev-restart                Runs dev-stop then dev-restart"
+	@ echo "    server            	       Runs a single instance of the server (useful for debugging endpoints)"
+	@ echo "    test    			       Runs all pytest unit tests and API tests"
+	@ echo "    test-ds SOURCE={source}    Run pytest unit tests for the specified data source. Defaults to all"
+	@ echo "    test-api   			       Run API tests locally using newman"
+	@ echo "    build                      Builds documentation and frontend - use before pushing"
+	@ echo "    frontend                   Builds frontend with Brunch"
+	@ echo "    update-deps                Generates updated requirements.txt and environment.yml"
+	@ echo "    python-docs                Generates new Sphinx documentation"
+	@ echo "    api-docs                   Generates new apidocjs documentation"
+	@ echo "    docs                       Generates all documentation"
 	@ echo "Git commands"
-	@ echo "    update                         Pull the latest version of your current branch"
+	@ echo "    update                     Pull the latest version of your current branch"
 	@ echo
 	@ echo "Prototyping:"
-	@ echo "    jupyter                        Launches the jupyter"
-	@ echo "    create-jupyter-env             Creates a jupyter environment for Augur"
+	@ echo "    jupyter                    Launches the jupyter"
+	@ echo "    create-jupyter-env         Creates a jupyter environment for Augur"
 	@ echo 
 	@ echo "Upgrade/Migration Helpers:"
-	@ echo "    to-json                        Converts old augur.cfg to new augur.config.json"
-	@ echo "    to-env                         Converts augur.config.json to a script that exports those values as environment variables"
+	@ echo "    to-json                    Converts old augur.cfg to new augur.config.json"
+	@ echo "    to-env                     Converts augur.config.json to a script that exports those values as environment variables"
 
 
 
@@ -111,7 +109,7 @@ monitor:
 dev-restart: dev-stop dev-start
 
 server:
-	@ python -m augur.server
+	python -m augur.server
 
 frontend:
 	bash -c 'cd frontend; brunch build'
@@ -128,18 +126,15 @@ build: frontend docs
 	cd augur/static/ \
 	&& brunch build --production
 
-test: test-core test-plugins test-api
+test:test-ds test-api
 
-test-core:
-	@ bash -c '$(CONDAACTIVATE) python -m pytest augur/plugins/core/$(CORE)/test_$(CORE).py'
-
-test-plugins:
-	@ bash -c '$(CONDAACTIVATE) python -m pytest augur/plugins/$(PLUGIN)/test_$(PLUGIN).py'
+test-ds:
+	bash -c '$(CONDAACTIVATE) python -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 
 test-api:
-	@ make dev-start
-	@ python test/api/test_api.py
-	@ make dev-stop
+	make dev-start
+	python test/api/test_api.py
+	make dev-stop
 
 .PHONY: unlock
 unlock:
@@ -149,6 +144,15 @@ update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
 	pipreqs ./augur/
 	bash -c "$(CONDAACTIVATE) conda env export > environment.yml"
+
+
+#
+# Git
+#
+update:
+	git stash
+	git pull
+	git stash pop
 
 
 # 
