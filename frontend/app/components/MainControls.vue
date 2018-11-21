@@ -345,7 +345,7 @@
       window.$(this.$el).find('.multiselect__input').addClass('search')
       window.$(this.$el).find('.multiselect__input').addClass('reposearch')
       if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
-      if (this.projects.length() == 1) this.project = this.projects[0]
+      if (this.projects.length == 1) this.project = this.projects[0]
     }
 
   }
