@@ -8,7 +8,7 @@ import json
 import re
 import html
 import base64
-from flask import Flask, request, Response, send_from_directory
+from flask import Flask, request, Response, send_from_directory, redirect, url_for
 from flask_cors import CORS
 import pandas as pd
 import augur
@@ -45,6 +45,11 @@ class Server(object):
         #####################################
         ###          UTILITY              ###
         #####################################
+
+        @app.route('/')
+        def redirect_to_status():
+            return redirect(url_for('status'))
+
         @app.route('/{}/'.format(self.api_version))
         def status():
             status = {
