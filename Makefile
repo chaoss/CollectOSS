@@ -109,7 +109,7 @@ monitor:
 dev-restart: dev-stop dev-start
 
 server:
-	python -m augur.server
+	@ python -m augur.server
 
 frontend:
 	bash -c 'cd frontend; brunch build'
