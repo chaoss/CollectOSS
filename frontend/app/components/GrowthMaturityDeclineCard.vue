@@ -148,11 +148,55 @@ import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
 import DynamicLineChart from './charts/DynamicLineChart'
 module.exports = {
+  
   components: {
     LineChart,
     BubbleChart,
     StackedBarChart,
     DynamicLineChart
+  },
+  data() {
+    return {
+      metricsData: [],
+      metadata: {
+        metricStatusMetadata: [],
+        groups: [],
+        sources: [],
+        metric_types: []
+      },
+      filters: {
+        selected_group: 'all',
+        selected_source: 'all',
+        selected_metric_type: 'all',
+        selected_backend_status: 'all',
+        selected_frontend_status: 'all',
+        seletec_is_defined: 'all'
+      }
+    }
+  },
+  methods: {
+    getMetricsStatus() {
+      var query_string = "group=" + this.selected_group +
+                         "&data_source=" + this.selected_source +
+                         "&metric_type=" + this.selected_metric_type +
+                         "&backend_status=" + this.selected_backend_status +
+                         "&frontend_status=" + this.selected_frontend_status +
+                         "&is_defined=" + this.selected_is_defined
+
+        window.AugurAPI.getMetricsStatus(query_string).then((data) => {
+          this.metricsData = data
+      })
+    },
+  },
+  mounted() {
+    this.selected_group = 'all'
+    this.selected_source = 'all'
+    this.selected_metric_type = 'all'
+    this.selected_backend_status = 'all'
+    this.selected_frontend_status = 'all'
+    this.selected_is_defined = 'all'
+    this.getMetricsStatus()
+
   }
 };
 </script>

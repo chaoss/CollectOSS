@@ -1644,11 +1644,52 @@ var _DynamicLineChart2 = _interopRequireDefault(_DynamicLineChart);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
+
   components: {
     LineChart: _LineChart2.default,
     BubbleChart: _BubbleChart2.default,
     StackedBarChart: _StackedBarChart2.default,
     DynamicLineChart: _DynamicLineChart2.default
+  },
+  data: function data() {
+    return {
+      metricsData: [],
+      metadata: {
+        metricStatusMetadata: [],
+        groups: [],
+        sources: [],
+        metric_types: []
+      },
+      filters: {
+        selected_group: 'all',
+        selected_source: 'all',
+        selected_metric_type: 'all',
+        selected_backend_status: 'all',
+        selected_frontend_status: 'all',
+        seletec_is_defined: 'all'
+      }
+    };
+  },
+
+  methods: {
+    getMetricsStatus: function getMetricsStatus() {
+      var _this = this;
+
+      var query_string = "group=" + this.selected_group + "&data_source=" + this.selected_source + "&metric_type=" + this.selected_metric_type + "&backend_status=" + this.selected_backend_status + "&frontend_status=" + this.selected_frontend_status + "&is_defined=" + this.selected_is_defined;
+
+      window.AugurAPI.getMetricsStatus(query_string).then(function (data) {
+        _this.metricsData = data;
+      });
+    }
+  },
+  mounted: function mounted() {
+    this.selected_group = 'all';
+    this.selected_source = 'all';
+    this.selected_metric_type = 'all';
+    this.selected_backend_status = 'all';
+    this.selected_frontend_status = 'all';
+    this.selected_is_defined = 'all';
+    this.getMetricsStatus();
   }
 };
 })()
