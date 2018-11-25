@@ -17,8 +17,8 @@
       <div class="col col-4">
         <label>Source:
         <select id="metric_source" @change="getMetricsStatus()" v-model='selected_source'>
-         <option v-for="source in metadata['data_sources']" v-bind:value="source">
-          {{ source }}
+         <option v-for="data_source in metadata['data_sources']" v-bind:value="data_source">
+          {{ data_source }}
          </option>
         </select>
         </label>
@@ -95,7 +95,7 @@
 
             <td style="width: 121px !important">{{ metric.group }}</td>
             <td style="width: 569px !important">{{ metric.endpoint }}</td>
-            <td style="width: 120px !important">{{ metric.source }}</td>
+            <td style="width: 120px !important">{{ metric.data_source }}</td>
             <td style="width: 85px !important">{{ metric.metric_type }}</td>
           </div>
         </tr>
@@ -153,7 +153,6 @@ export default {
           this.metadata['data_sources'] = data.data_sources
 
           this.metadata['metric_types'] = data.metric_types
-
         })
       },
       getImplementationStatusColor(metric, location) {
