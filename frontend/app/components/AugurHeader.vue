@@ -16,6 +16,7 @@
           <a class="header-nav-item" href="https://github.com/chaoss/augur">GitHub</a>
           <a class="header-nav-item" href="static/docs/">Python Docs</a>
           <a class="header-nav-item" href="static/api_docs/">API Docs</a>
+          <!-- <a class="header-nav-item" href="/metrics_status">Metrics Status</a> -->
         </nav>
       </div>
     </div>

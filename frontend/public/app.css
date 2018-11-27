@@ -2795,7 +2795,6 @@ cite.metric a {
 .tickchart * {
   overflow: visible !important;
   width: 100%;
-  margin-bottom: 30px;
 }
 .normalbar * {
   overflow: visible !important;
@@ -3486,6 +3485,12 @@ input:focus {
 }
 .relative {
   position: relative !important;
+}
+.note {
+  font-size: 10px;
+  opacity: 0.8;
+  margin: 0;
+  text-align: center;
 }
 @-moz-keyframes spin {
   0% {

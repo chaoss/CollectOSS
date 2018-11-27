@@ -4,6 +4,7 @@
       <h3>Lines of code added by the top 10 authors visualized</h3>
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
+      <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p>
       <div class="form-item form-checkboxes tickradios">
 
 
@@ -17,7 +18,7 @@
           </div>
           <div class="inputGroup ">
             <input id="rectradio"name="comparebaseline" value="2" type="radio" v-model="tick">
-            <label id="front" for="rectradio">Rect</label>
+            <label id="front" for="rectradio">Rectangle</label>
           </div>
 
         
@@ -92,27 +93,38 @@ export default {
       //   return type
       // }
       
-      let type = null, bin = null, size = null;
+      let type = null, bin = null, size = null, opacity = null;
 
       if(this.tick == 0) {
         type = "circle"
         bin = false
         size = {
-                "field": "Net lines added",
+                "field": "Total lines changed",
                 "type": "quantitative",
                 "min": "15",
                 "scale": {"minSize": 30, "maxSize": 31}
               }
+        opacity = {}
       }
       if (this.tick == 1) {
         type = "tick"
             bin = false
             size = {}
+        opacity = {
+                "field": "Total lines changed",
+                "type": "quantitative",
+                "min": ".5"
+              }
       }
       if (this.tick == 2) {
         type = "rect"
             bin = {"maxbins": 40}
             size = {}
+        opacity = {
+                "field": "Total lines changed",
+                "type": "quantitative",
+                "min": ".5"
+              }
       }
 
 
@@ -148,7 +160,7 @@ export default {
                 "as": "Net lines added"
               },
               {
-                "calculate": "(datum.additions + datum.deletions)",
+                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
                 "as": "Total lines changed"
               },
             ],
@@ -157,16 +169,12 @@ export default {
               "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
               "y": {"field": "author_email", "type": "nominal"},
               "color": {
-                "field": "Majority type of changes",
-                "type": "nominal",
+                "field": "Net lines added",
+                "type": "quantitative",
                 "scale": { "range": ["red", "green"]}
               },
               "size": size,
-              "opacity":{
-                "field": "Total lines changed",
-                "type": "quantitative",
-                "min": ".5"
-              },
+              "opacity": opacity
 
             },
             

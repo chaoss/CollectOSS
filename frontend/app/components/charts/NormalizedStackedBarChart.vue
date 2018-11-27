@@ -1,9 +1,24 @@
 <template>
   <div ref="holder">
-    <div class="tickchart ">
+    <div style="margin-bottom: 0 !important" class="tickchart ">
       <!-- <h3>Lines of code added by the top 10 authors as Percentages - By Time Period</h3> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
+      <div style="position: relative; top: -80px !important"class="form-item form-checkboxes tickradios">
+
+
+          <div class="inputGroup ">
+            <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
+            <label id="front" for="yearradio">Year</label>
+          </div>
+          <div class="inputGroup ">
+            <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
+            <label id="front" for="monthradio">Month</label>
+          </div>
+
+
+        
+      </div>
     </div>
   </div>
 </template>
@@ -31,7 +46,7 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      tick: 0
+      group: 0
     }
   },
   computed: {
@@ -73,9 +88,11 @@ export default {
       //   return type
       // }
       
-      let type = null, bin = null, size = null;
+      let type = null, bin = null, size = null, timeUnit = null, format = null;
 
-      if(this.tick == 0) {
+      if(this.group == 0) {
+        timeUnit = 'year'
+        format = '%Y'
         type = "circle"
         bin = false
         size = {
@@ -85,16 +102,14 @@ export default {
                 "scale": {"minSize": 30, "maxSize": 31}
               }
       }
-      if (this.tick == 1) {
+      if (this.group == 1) {
+        timeUnit = 'yearmonth'
+        format = '%Y %b'
         type = "tick"
             bin = false
             size = {}
       }
-      if (this.tick == 2) {
-        type = "rect"
-            bin = {"maxbins": 40}
-            size = {}
-      }
+
 
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
@@ -150,7 +165,13 @@ export default {
               "tooltip": {"content": "data"}
             },
             "encoding": {
-              "x": {"field": "author_date", "type": "temporal", "bin": true, "axis": {"format": "%Y", "title": " "}},
+              "x": {
+                "field": "author_date", 
+                "type": "temporal", 
+                "bin": true, 
+                "timeUnit": timeUnit, 
+                "axis": {"format": '%Y %b', "title": " ", "labelAngle": -35, "labelFlush": true}
+              },
               "y": {"field": "count", "type": "quantitative","stack": "normalize", "axis": {"labels": false, "title": null}},
               "color": {
                 "field": "author_email",

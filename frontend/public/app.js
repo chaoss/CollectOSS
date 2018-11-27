@@ -1209,7 +1209,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-6becaf40", __vue__options__)
   } else {
-    hotAPI.reload("data-v-6becaf40", __vue__options__)
+    hotAPI.rerender("data-v-6becaf40", __vue__options__)
   }
 })()}
 });
@@ -4132,7 +4132,7 @@ exports.default = {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      tick: 0
+      group: 0
     };
   },
 
@@ -4151,9 +4151,13 @@ exports.default = {
 
       var type = null,
           bin = null,
-          size = null;
+          size = null,
+          timeUnit = null,
+          format = null;
 
-      if (this.tick == 0) {
+      if (this.group == 0) {
+        timeUnit = 'year';
+        format = '%Y';
         type = "circle";
         bin = false;
         size = {
@@ -4163,14 +4167,11 @@ exports.default = {
           "scale": { "minSize": 30, "maxSize": 31 }
         };
       }
-      if (this.tick == 1) {
+      if (this.group == 1) {
+        timeUnit = 'yearmonth';
+        format = '%Y %b';
         type = "tick";
         bin = false;
-        size = {};
-      }
-      if (this.tick == 2) {
-        type = "rect";
-        bin = { "maxbins": 40 };
         size = {};
       }
 
@@ -4219,7 +4220,13 @@ exports.default = {
             "tooltip": { "content": "data" }
           },
           "encoding": {
-            "x": { "field": "author_date", "type": "temporal", "bin": true, "axis": { "format": "%Y", "title": " " } },
+            "x": {
+              "field": "author_date",
+              "type": "temporal",
+              "bin": true,
+              "timeUnit": timeUnit,
+              "axis": { "format": '%Y %b', "title": " ", "labelAngle": -35, "labelFlush": true }
+            },
             "y": { "field": "count", "type": "quantitative", "stack": "normalize", "axis": { "labels": false, "title": null } },
             "color": {
               "field": "author_email",
@@ -4346,7 +4353,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-80px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])])])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4833,27 +4840,39 @@ exports.default = {
 
       var type = null,
           bin = null,
-          size = null;
+          size = null,
+          opacity = null;
 
       if (this.tick == 0) {
         type = "circle";
         bin = false;
         size = {
-          "field": "Net lines added",
+          "field": "Total lines changed",
           "type": "quantitative",
           "min": "15",
           "scale": { "minSize": 30, "maxSize": 31 }
         };
+        opacity = {};
       }
       if (this.tick == 1) {
         type = "tick";
         bin = false;
         size = {};
+        opacity = {
+          "field": "Total lines changed",
+          "type": "quantitative",
+          "min": ".5"
+        };
       }
       if (this.tick == 2) {
         type = "rect";
         bin = { "maxbins": 40 };
         size = {};
+        opacity = {
+          "field": "Total lines changed",
+          "type": "quantitative",
+          "min": ".5"
+        };
       }
 
       var config = {
@@ -4882,7 +4901,7 @@ exports.default = {
             "calculate": "(datum.additions - datum.deletions)",
             "as": "Net lines added"
           }, {
-            "calculate": "(datum.additions + datum.deletions)",
+            "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
             "as": "Total lines changed"
           }],
           "mark": type,
@@ -4890,16 +4909,12 @@ exports.default = {
             "x": { "field": "author_date", "type": "temporal", "bin": bin, "axis": { "format": "%b %Y", "title": " " } },
             "y": { "field": "author_email", "type": "nominal" },
             "color": {
-              "field": "Majority type of changes",
-              "type": "nominal",
+              "field": "Net lines added",
+              "type": "quantitative",
               "scale": { "range": ["red", "green"] }
             },
             "size": size,
-            "opacity": {
-              "field": "Total lines changed",
-              "type": "quantitative",
-              "min": ".5"
-            }
+            "opacity": opacity
 
           }
 
@@ -5009,7 +5024,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rect")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('p',{staticClass:"note"},[_vm._v("*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -5018,7 +5033,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-083303b4", __vue__options__)
   } else {
-    hotAPI.reload("data-v-083303b4", __vue__options__)
+    hotAPI.rerender("data-v-083303b4", __vue__options__)
   }
 })()}
 });
@@ -7352,6 +7367,31 @@ _vue2.default.use(_vueRouter2.default);
 
 exports.default = new _vueRouter2.default({
     routes: [{ path: '/', component: _vue2.default.component('augur-cards', require('./components/AugurCards')) }]
+});
+});
+
+;require.register("router/router.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _vueRouter = require('vue-router');
+
+var _vueRouter2 = _interopRequireDefault(_vueRouter);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var routes = [{ path: '/', component: _vue2.default.component('augur-cards', require('../components/AugurCards')) }];
+_vue2.default.use(_vueRouter2.default);
+exports.default = new _vueRouter2.default({
+  routes: routes,
+  mode: 'history'
 });
 });
 
