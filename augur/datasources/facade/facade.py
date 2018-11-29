@@ -77,7 +77,7 @@ class Facade(object):
     @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):
         """
-        Makes sure the storageFolder contains updated versions of all the repos
+        TODO: docstring
         """
         linesChangedByAuthorSQL = s.sql.text("""
             SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
@@ -92,7 +92,7 @@ class Facade(object):
     @annotate(tag='lines-changed-by-week')
     def lines_changed_by_week(self, repo_url):
         """
-        Makes sure the storageFolder contains updated versions of all the repos
+        TODO: docstring
         """
         linesChangedByWeekSQL = s.sql.text("""
             SELECT date(author_date) as date, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
@@ -107,7 +107,7 @@ class Facade(object):
     @annotate(tag='lines-changed-by-month')
     def lines_changed_by_month(self, repo_url):
         """
-        Makes sure the storageFolder contains updated versions of all the repos
+        TODO: docstring
         """
         linesChangedByMonthSQL = s.sql.text("""
             SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace

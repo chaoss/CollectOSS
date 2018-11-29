@@ -115,7 +115,7 @@ def create_routes(server):
     """
     @server.app.route("/{}/{}/metadata".format(server.api_version, metrics_status_URL))
     def metrics_status_metadata_view():
-        return Response(response=json.dumps(metrics_status.metadata),
+        return Response(response=json.dumps([metrics_status.metadata]),
                         status=200,
                         mimetype="application/json")
 
