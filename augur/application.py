@@ -197,7 +197,7 @@ class Application(object):
                 and value is not None
                 and self.__export_env
                 and not hasattr(self.__already_exported, environment_variable)):
-            self.__export_file.write('export ' + environment_variable + '="' + value + '"\n')
+            self.__export_file.write('export ' + environment_variable + '="' + str(value) + '"\n')
             self.__already_exported[environment_variable] = True
         if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1': 
             logger.debug('{}:{} = {}'.format(section, name, value))
@@ -225,8 +225,6 @@ class Application(object):
             config_text = config_text.replace(self.__config_location, '$(AUGUR)')
             self.__config_file.write(config_text)
         self.__config_file.close()
-        if (self.__export_env):
-            self.__export_file.close()
 
     def path_relative_to_config(self, path):
         if not os.path.isabs(path):
