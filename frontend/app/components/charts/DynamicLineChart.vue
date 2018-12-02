@@ -15,7 +15,7 @@
     <div class="row below-chart">
       <div class="col col-1"></div>
       <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
-        <p style="font-size: 12px">Data source: GhTorrent</p>
+        <p style="font-size: 12px">Data source: GHTorrent</p>
       </div>
       <div class="col col-2" style="width:154px !important;height: 38px !important; position: relative; top: -12px !important;">
         <!-- <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite> -->

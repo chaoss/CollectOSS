@@ -3026,6 +3026,9 @@ div.checkbox_select .select_input {
   margin: 0;
   width: 150px;
 }
+.multiselect__option--selected {
+  background-color: #0f0 !important;
+}
 .multiselect__option--selected:hover {
   background-color: #0f0 !important;
 }

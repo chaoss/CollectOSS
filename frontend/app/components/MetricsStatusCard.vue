@@ -1,7 +1,11 @@
  <template>
+
   
+    
+
   <div class="is-table-container">
     <augur-header></augur-header>
+    <section>
     <h3>CHAOSS Metrics Implementation Status</h3>
 
     <div class="row gutters">
@@ -103,8 +107,9 @@
       </tbody>
 
     </table>
-
+  </section>
   </div>
+  
 </template>
 
 <script>

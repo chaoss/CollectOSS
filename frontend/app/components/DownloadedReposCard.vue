@@ -18,7 +18,7 @@
           <tbody class="repo-link-table repo-link-table-body">
             <tr v-for="repo in repos[project]">
               <td><!-- <router-link :to="'git/' + (repo.url).slice(11)" @click.prevent="onGitRepo(repo)" class="repolink fade">{{ repo.url }}</router-link> --><!-- <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> -->
-                <p @click="onGitRepo(repo)">{{ repo.url }}</p>
+                <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
               </td>
               <td>{{ repo.status }}</td>
             </tr>
@@ -43,7 +43,6 @@ module.exports = {
       })
     },
     onGitRepo (e) {
-
       console.log(e.url)
       this.$store.commit('setRepo', {
         gitURL: e.url
