@@ -13,8 +13,15 @@
 
 
     <div class="row below-chart">
-      <div class="col col-5"><cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite></div>
-      <div class="col col-6"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button><a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
+      <div class="col col-1"></div>
+      <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
+        <p style="font-size: 12px">Data source: GhTorrent</p>
+      </div>
+      <div class="col col-2" style="width:154px !important;height: 38px !important; position: relative; top: -12px !important;">
+        <!-- <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite> -->
+        <cite class="metric"><a style="width:100px !important;height: 38px !important; position: absolute;" v-bind:href="citeUrl" target="_blank"><img style="width:100px;position: relative;" src="https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png" alt="Chaoss-Definition-Logo" border="0"></a></cite>
+      </div>
+      <div class="col col-4" style="position: relative; top: -8px !important;"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button><a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
       <!-- <div class="form-item form-checkboxes">
         <label class="checkbox"><input name="hidearea" value="each" type="checkbox" v-model="ar">Individual area<sup class="warn"></sup></label><br>
       </div> -->
@@ -104,7 +111,7 @@ export default {
       })
 
       //COLORS TO PICK FOR EACH REPO
-      var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+      var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -127,30 +134,30 @@ export default {
             "width": 520,
             "height": 250,
             "layer": [
-              // {
-              //   // "transform": [
-              //   //     brush
-              //   // ],
-              //   "mark": "rule",
-              //   "encoding":{
-              //     "x": {
-              //       "field": "date",
-              //       "type": "temporal",
-              //       "axis": {
-              //         "labels": !this.showDetail
-              //       }
-              //     },
-              //     "color": {
-              //       "field": "name",
-              //       "type": "nominal",
-              //       "scale": { "range": colors}
-              //     },
-              //     "opacity":{
-              //       "value": 0
-              //     }
-              //   }
+              {
+                // "transform": [
+                //     brush
+                // ],
+                "mark": "rule",
+                "encoding":{
+                  "x": {
+                    "field": "date",
+                    "type": "temporal",
+                    "axis": {
+                      "labels": !this.showDetail
+                    }
+                  },
+                  "color": {
+                    "field": "name",
+                    "type": "nominal",
+                    "scale": { "range": colors}
+                  },
+                  "opacity":{
+                    "value": 0
+                  }
+                }
 
-              // }
+              }
             ]
           }
         ]
@@ -439,7 +446,7 @@ export default {
       }
 
       let getDetail = (key) => {
-        let color = (this.comparedTo && this.status.compared ? '#4736FF' : '#FF3647')
+        let color = (this.comparedTo && this.status.compared ? '#FF3647' : 'black')
         return {
             "width": 520,
             "height": 60,

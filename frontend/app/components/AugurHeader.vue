@@ -4,7 +4,7 @@
       <div class="row auto">
         <div class="col col-3">
           <a href="/">
-            <img src="static/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
+            <img src="/static/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
           </a>
         </div>
         <div class="col col-5">
@@ -16,7 +16,7 @@
           <a class="header-nav-item" href="https://github.com/chaoss/augur">GitHub</a>
           <a class="header-nav-item" href="static/docs/">Python Docs</a>
           <a class="header-nav-item" href="static/api_docs/">API Docs</a>
-          <!-- <a class="header-nav-item" href="/metrics_status">Metrics Status</a> -->
+          <router-link class="header-nav-item" to="/metrics_status">Metrics Status</router-link>
         </nav>
       </div>
     </div>
@@ -31,6 +31,11 @@ module.exports = {
     onRepo (e) {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
+      })
+      let link = '/gmd/' + (e.target.value)
+      this.$router.push({
+        path: link
+        // path: "/git"
       })
     }
   } 

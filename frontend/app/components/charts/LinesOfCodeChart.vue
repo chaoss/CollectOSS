@@ -116,6 +116,7 @@ export default {
       let filterDates = (change) => {
         return (new Date(change.author_date)).getFullYear() > this.years[0]
       }
+      console.log("fuck", repo)
 
       repo.changesByAuthor().then((changes) => {
         changes.forEach((change) => {

@@ -1,6 +1,7 @@
 <template>
   
   <div>
+    <augur-header></augur-header>
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
       <!-- <login-form></login-form> -->
@@ -13,9 +14,9 @@
         <downloaded-repos-card></downloaded-repos-card>
       </section>
 
-      <section class="unmaterialized">
+      <!-- <section class="unmaterialized">
         <metrics-status-card></metrics-status-card>
-      </section>
+      </section> -->
     </div>
 
     <!-- content to show if app does have a repo to show -->
@@ -72,6 +73,7 @@
 
 <script>
 import MainControls from './MainControls'
+import AugurHeader from './AugurHeader'
 import MetricsStatusCard from './MetricsStatusCard'
 import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
@@ -88,9 +90,10 @@ import DownloadedReposCard from './DownloadedReposCard'
 import LoginForm from './LoginForm'
 
 module.exports = {
-  name: 'augur-cards',
+  // name: 'augur-cards',
   components: {
     MainControls,
+    AugurHeader,
     MetricsStatusCard,
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
@@ -151,7 +154,12 @@ module.exports = {
       this.$store.commit('setTab', {
         tab: e.target.dataset['value']
       })
-      e.preventDefault();
+      
+      let link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo
+      this.$router.push({
+        path: link
+        // path: "/git"
+      })
     },
     btoa(s) {
       return window.btoa(s)

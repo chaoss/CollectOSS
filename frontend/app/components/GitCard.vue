@@ -1,5 +1,6 @@
 <template>
   <section>
+    <augur-header></augur-header>
     <h1>Git Metrics</h1>
     <h2>{{ $store.state.gitRepo }}</h2>
       <tick-chart></tick-chart>
@@ -26,6 +27,7 @@
 
 <script>
 
+import AugurHeader from './AugurHeader'
 import TickChart from './charts/TickChart'
 import LinesOfCodeChart from './charts/LinesOfCodeChart'
 import NormalizedStackedBarChart from './charts/NormalizedStackedBarChart'
@@ -33,6 +35,7 @@ import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChar
 
 module.exports = {
   components: {
+    AugurHeader,
     TickChart,
     LinesOfCodeChart,
     NormalizedStackedBarChart,

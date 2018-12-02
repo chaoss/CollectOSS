@@ -17,7 +17,9 @@
           </thead>
           <tbody class="repo-link-table repo-link-table-body">
             <tr v-for="repo in repos[project]">
-              <td><a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a></td>
+              <td><!-- <router-link :to="'git/' + (repo.url).slice(11)" @click.prevent="onGitRepo(repo)" class="repolink fade">{{ repo.url }}</router-link> --><!-- <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> -->
+                <p @click="onGitRepo(repo)">{{ repo.url }}</p>
+              </td>
               <td>{{ repo.status }}</td>
             </tr>
           </tbody>
@@ -40,6 +42,19 @@ module.exports = {
         githubURL: e.target.value
       })
     },
+    onGitRepo (e) {
+
+      console.log(e.url)
+      this.$store.commit('setRepo', {
+        gitURL: e.url
+      })
+
+      let link = '/git/' + (e.url).slice(11)
+      this.$router.push({
+        path: link
+        // path: "/git"
+      })
+    },
     getDownloadedRepos() {
       this.downloadedRepos = []
       window.AugurAPI.getDownloadedGitRepos().then((data) => {
@@ -47,7 +62,6 @@ module.exports = {
         $(this.$el).find('.spinner').removeClass('relative')
         this.repos = window._.groupBy(data, 'project_name')
         this.projects = Object.keys(this.repos)
-
       })
     },
     btoa(s) {

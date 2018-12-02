@@ -1,11 +1,11 @@
 <template>
   <section>
-    <h1>Growth, Maturity, and Decline</h1>
+    <!-- <h1>Growth, Maturity, and Decline</h1> -->
     <div style="display: inline-block;">
-      <h2 style="display: inline-block;">{{ $store.state.baseRepo }}</h2>
+      <h2 style="display: inline-block; color: black !important">{{ $store.state.baseRepo }}</h2>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
-      <h2 style="display: inline-block;" v-for="repo in $store.state.comparedRepos">
-        <span class="repolisting"> {{ repo }} </span> 
+      <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
+        <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
     <div class="row">
@@ -171,7 +171,8 @@ module.exports = {
         selected_backend_status: 'all',
         selected_frontend_status: 'all',
         seletec_is_defined: 'all'
-      }
+      },
+      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
     }
   },
   methods: {

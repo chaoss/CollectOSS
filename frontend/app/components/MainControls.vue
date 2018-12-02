@@ -52,12 +52,12 @@
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onRawWeeklyChange">Raw weekly values<sup class="warn"></sup></label>
                 </div>
                 <div class="form-item form-checkboxes">
-                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" :disabled="disabled" :checked="!disabled" checked @change="onAreaChange">Standard deviation</label>
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" :disabled="!disabled" :checked="disabled" checked @change="onAreaChange">Standard deviation</label>
                 </div>
               </div>
               <div class="col col-6">
                 <div class="form-item form-checkboxes">
-                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" :disabled="disabled" :checked="!disabled" checked>Show tooltip</label>
+                  <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onTooltipChange" :disabled="!disabled" :checked="disabled" checked>Show tooltip</label>
                 </div>
                 <div class="form-item form-checkboxes">
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" checked @change="onDetailChange">Enable detail</label>
@@ -146,8 +146,8 @@
               <h6>Comparison Type</h6>
                   <label>
                   <div class="form-item form-checkboxes">
-                    <label class="checkbox"><input name="comparebaseline" value="zscore" type="radio" @change="onCompareChange">Z-score</label><br>
-                    <label class="checkbox"><input name="comparebaseline" value="baseline" checked type="radio" @change="onCompareChange">Baseline is compared</label>
+                    <label class="checkbox"><input name="comparebaseline" value="zscore" :checked="compared" type="radio" @change="onCompareChange">Z-score</label><br>
+                    <label class="checkbox"><input name="comparebaseline" value="baseline" :checked="!compared" type="radio" @change="onCompareChange">Baseline is compared</label>
                   </div>
                   </label>
               </label>
@@ -167,8 +167,16 @@
       </div>
 
     </div>
+    <!-- <div style="display: inline-block;">
+      <h7 style="display: inline-block;">{{ $store.state.baseRepo }}</h7>
+      <h7 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h7>
+      <h7 style="display: inline-block;" v-for="repo in $store.state.comparedRepos">
+        <span class="repolisting"> {{ repo }} </span> 
+      </h7>
+    </div> -->
   </div>
-</div>
+  
+
 </template>
 
 
@@ -191,7 +199,9 @@
         options: [],
         repos: {},
         projects: [],
-        disabled: false
+        disabled: false,
+        compCount: 0,
+        compared: true
       }
     },
     watch: {
@@ -200,7 +210,12 @@
         this.repos[this.project].forEach(
           (repo) => {this.options.push(repo.url.slice(11))}
         )
+      },
+      compCount: function(){
+        if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
+        if (this.$store.state.comparedRepos.length == 1) this.compared = true
       }
+
     },
     methods: {
       collapseText (){
@@ -266,16 +281,19 @@
         })
       },
       onCompareChange (e) {
+
         this.$store.commit('setCompare', {
           compare: e.target.value
         })
       },
       onCompare (e) {
+        this.compCount++
         this.$store.commit('addComparedRepo', {
           githubURL: e.target.value
         })
       }, 
       onArrayCompare () {
+        this.compCount++
         this.values.forEach(
           (url) => {
             let link = url
@@ -344,7 +362,7 @@
       // $(this.$el).find('.special').addClass('selecting')
       window.$(this.$el).find('.multiselect__input').addClass('search')
       window.$(this.$el).find('.multiselect__input').addClass('reposearch')
-      if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
+      
       if (this.projects.length == 1) this.project = this.projects[0]
     }
 

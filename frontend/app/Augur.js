@@ -1,8 +1,8 @@
 const queryString = require('query-string')
 
 // import AugurApp from './components/AugurApp.vue'
-import router from './router'
-
+// import router from './router/router'
+// import AugurCards from './components/AugurCards.vue'
 
 
 export default function Augur () {
@@ -19,6 +19,8 @@ export default function Augur () {
   window.d3 = require('d3')
   window.SvgSaver = require('svgsaver')
   window.VueRouter = require('vue-router')
+  let router = require('./router/router').default
+
 
   window.AUGUR_CHART_STYLE = {
     brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
@@ -27,24 +29,11 @@ export default function Augur () {
 
   let AugurApp = require('./components/AugurApp')
 
-  let VueRouter = require('vue-router')
-  let router = require('router')
-
   window.Vue.use(window.Vuex)
   window.Vue.use(window.VueVega)
+  window.Vue.use(window.VueRouter)
   window.Vue.config.productionTip = false
 
-
-  Vue.use(VueRouter)
-
-
- 
-
- 
-  
-
-
-  
 
 
   window.augur = new window.Vuex.Store({
@@ -66,6 +55,10 @@ export default function Augur () {
       byDate: false
     },
     mutations: {
+      setGitRepo(state, payload) {
+        console.log("hi",payload)
+        state.gitRepo = payload.gitURL
+      },
       setRepo (state, payload) {
         let repo = window.AugurAPI.Repo(payload)
         if (!window.AugurRepos[repo.toString()]) {
@@ -79,18 +72,18 @@ export default function Augur () {
           state.baseRepo = repo.toString()
           let title = repo.owner + '/' + repo.name + '- Augur'
           state.tab = 'gmd'
-          state.queryObject['repo'] = repo.owner + '+' + repo.name
+          // state.queryObject['repo'] = repo.owner + '+' + repo.name
         }
         if (payload.gitURL) {
-          state.queryObject['git'] = window.btoa(repo.gitURL)
+          // state.queryObject['git'] = window.btoa(repo.gitURL)
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
         if (!payload.fromURL){
-          window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
+            // window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
           
         }
-        //window.$router.push('reposf')
+
 
 
         // if (!payload.keepCompared) {
@@ -109,6 +102,7 @@ export default function Augur () {
         // let title = 'Augur'
         // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         // window.history.pushState(null, title, queryString)
+        state.compare = 'zscore'
         let repo = window.AugurAPI.Repo(payload)
         if(!state.comparedRepos.includes(repo.toString())){
           if (!window.AugurRepos[repo.toString()]) {
@@ -183,43 +177,41 @@ export default function Augur () {
   })
 
   AugurApp.store = window.augur
-  window.Vue.use(VueRouter)
-
-  // AugurApp.router = router
   
-  // window.AugurApp = new window.Vue({
-  //   components: { AugurApp },
-  //   // store: window.augur,
-  //   router: router,
-  //   render: h => h(AugurApp)
-  // }).$mount('#app')
-
+  
+  
   // AugurApp.router = router
   // AugurApp.render = h => h(AugurApp)
 
-  window.AugurApp = new window.Vue(AugurApp).$mount('#app')
+  // window.AugurApp = new window.Vue(AugurApp).$mount('#app')
   
+  window.AugurApp = new window.Vue({
+    // components: { AugurApp },
+    // store: window.augur,
+    router,
+    render: h => h(AugurApp)
 
-
+  }).$mount('#app')
 
   // Load state from query string
-  let parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' })
-  let payload = { fromURL: true }
-  let hasState = 0
-  if (parsed.repo) {
-    payload.githubURL = parsed.repo.replace(' ', '/')
-    hasState = 1
-  }
-  if (parsed.git) {
-    payload.gitURL = window.atob(parsed.git)
-    hasState = 1
-  }
-  if (hasState) {
-    window.AugurApp.$store.commit('setRepo', payload)
-  }
-  if (parsed.comparedTo) {
-    parsed.comparedTo.forEach((repo) => {
-      window.AugurApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') })
-    })
-  }
+
+  // let parsed = queryString.parse(window.location.search, { arrayFormat: 'bracket' })
+  // let payload = { fromURL: true }
+  // let hasState = 0
+  // if (parsed.repo) {
+  //   payload.githubURL = parsed.repo.replace(' ', '/')
+  //   hasState = 1
+  // }
+  // if (parsed.git) {
+  //   payload.gitURL = window.atob(parsed.git)
+  //   hasState = 1
+  // }
+  // if (hasState) {
+  //   window.AugurApp.$store.commit('setRepo', payload)
+  // }
+  // if (parsed.comparedTo) {
+  //   parsed.comparedTo.forEach((repo) => {
+  //     window.AugurApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') })
+  //   })
+  // }
 }
