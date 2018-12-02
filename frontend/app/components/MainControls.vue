@@ -283,7 +283,7 @@
       onCompareChange (e) {
         this.$store.commit('setCompare', {
           compare: e.target.value
-        })
+        }) 
 
       },
       onCompare (e) {
