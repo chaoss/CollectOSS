@@ -281,32 +281,33 @@
         })
       },
       onCompareChange (e) {
-
         this.$store.commit('setCompare', {
           compare: e.target.value
         })
+
       },
       onCompare (e) {
         this.compCount++
         this.$store.commit('addComparedRepo', {
           githubURL: e.target.value
         })
+        
       }, 
       onArrayCompare () {
-        this.compCount++
+        this.compCount += this.values.length
+        
         this.values.forEach(
           (url) => {
             let link = url
             let end = url.slice(url.length - 4)
-            console.log("here", end, link)
             if (end == ".git")
               link = link.substring(0, url.length - 4)
-              console.log("LINK", link)
             this.$store.commit('addComparedRepo', {
               githubURL: link
             })
           }
         )
+        
       },
       onClear () {
         this.values = []

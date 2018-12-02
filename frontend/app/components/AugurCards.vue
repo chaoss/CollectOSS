@@ -155,7 +155,13 @@ module.exports = {
         tab: e.target.dataset['value']
       })
       
-      let link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo
+      let link = null
+      if (this.$store.state.comparedRepos.length == 1)
+        link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo + '/comparedto/' + this.$store.state.comparedRepos[0]
+      else if (this.$store.state.comparedRepos.length > 1)
+        link = '/' + e.target.dataset['value'] + '/groupid/-1'
+      else
+        link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo
       this.$router.push({
         path: link
         // path: "/git"

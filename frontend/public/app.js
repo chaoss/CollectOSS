@@ -253,8 +253,25 @@ function Augur() {
         // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         // window.history.pushState(null, title, queryString)
         state.compare = 'zscore';
+
         var repo = window.AugurAPI.Repo(payload);
-        if (!state.comparedRepos.includes(repo.toString())) {
+        console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString());
+        if (!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()) {
+          // if(false){
+          console.log("hiiiii", state.comparedRepos.length);
+          if (state.comparedRepos.length + 1 == 1) {
+            var link = router.app._route.path + '/comparedto/' + payload;
+            router.push({
+              path: link
+              // path: "/git"
+            });
+          } else {
+            var _link = '/' + state.tab + '/groupid/-1';
+            router.push({
+              path: _link
+              // path: "/git"
+            });
+          }
           if (!window.AugurRepos[repo.toString()]) {
 
             window.AugurRepos[repo.toString()] = repo;
@@ -265,16 +282,29 @@ function Augur() {
           if (repo.owner && repo.name) {
             state.comparedRepos.push(repo.toString());
             var title = repo.owner + '/' + repo.name + '- Augur';
-            state.tab = 'gmd';
-            var _queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name;
-            window.history.pushState(null, title, _queryString);
+            // state.tab = 'gmd'
+            // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
+            // window.history.pushState(null, title, queryString)
           }
           if (payload.gitURL) {
-            var _queryString2 = '&git=' + window.btoa(repo.gitURL);
-            window.history.pushState(null, 'Git Analysis - Augur', window.location.search + _queryString2);
-            state.tab = 'git';
+            // let queryString = '&git=' + window.btoa(repo.gitURL)
+            // window.history.pushState(null, 'Git Analysis - Augur', window.location.search + queryString)
+            // state.tab = 'git'
             state.gitRepo = repo.gitURL;
           }
+          // if (state.comparedRepos.length == 1) {
+          // let link = this.$router.currentRoute + '/comparedto/' + e.target.value
+          //   this.$router.push({
+          //     path: link
+          //     // path: "/git"
+          //   })
+          // } else {
+          //   let link = '/groupid/'
+          //   this.$router.push({
+          //     path: link
+          //     // path: "/git"
+          //   })
+          // }
         }
       },
       setDates: function setDates(state, payload) {
@@ -1160,7 +1190,8 @@ module.exports = {
         tab: e.target.dataset['value']
       });
 
-      var link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo;
+      var link = null;
+      if (this.$store.state.comparedRepos.length == 1) link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo + '/comparedto/' + this.$store.state.comparedRepos[0];else if (this.$store.state.comparedRepos.length > 1) link = '/' + e.target.dataset['value'] + '/groupid/-1';else link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo;
       this.$router.push({
         path: link
       });
@@ -1183,7 +1214,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-78eb2940", __vue__options__)
+    hotAPI.reload("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1546,7 +1577,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-1825962d", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-1825962d", __vue__options__)
+    hotAPI.reload("data-v-1825962d", __vue__options__)
   }
 })()}
 });
@@ -1633,7 +1664,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('augur-header'),_vm._v(" "),_c('h1',[_vm._v("Git Metrics")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"10px"}},[_c('div',{staticStyle:{"padding-top":"75px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}}),_vm._v(" "),_c('div',{staticStyle:{"padding-top":"15px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Git Metrics")]),_vm._v(" "),_c('h2',[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"10px"}},[_c('div',{staticStyle:{"padding-top":"75px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}}),_vm._v(" "),_c('div',{staticStyle:{"padding-top":"15px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1642,7 +1673,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-f66913b6", __vue__options__)
+    hotAPI.rerender("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -1880,7 +1911,6 @@ module.exports = {
       });
     },
     onCompareChange: function onCompareChange(e) {
-
       this.$store.commit('setCompare', {
         compare: e.target.value
       });
@@ -1894,13 +1924,12 @@ module.exports = {
     onArrayCompare: function onArrayCompare() {
       var _this4 = this;
 
-      this.compCount++;
+      this.compCount += this.values.length;
+
       this.values.forEach(function (url) {
         var link = url;
         var end = url.slice(url.length - 4);
-        console.log("here", end, link);
         if (end == ".git") link = link.substring(0, url.length - 4);
-        console.log("LINK", link);
         _this4.$store.commit('addComparedRepo', {
           githubURL: link
         });
@@ -1970,7 +1999,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4eb76a08", __vue__options__)
+    hotAPI.rerender("data-v-4eb76a08", __vue__options__)
   }
 })()}
 });

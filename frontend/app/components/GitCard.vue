@@ -1,6 +1,5 @@
 <template>
   <section>
-    <augur-header></augur-header>
     <h1>Git Metrics</h1>
     <h2>{{ $store.state.gitRepo }}</h2>
       <tick-chart></tick-chart>
