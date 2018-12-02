@@ -6,19 +6,18 @@ This documentation is for using Augur as a Python library.
 
 Data Source Modules
 ---------------------------------
-.. currentmodule:: augur
+.. currentmodule:: augur.datasources
 
 .. autosummary::
    :nosignatures:
    :toctree: datasources
 
-   ghtorrent.GHTorrent
-   githubapi.GitHubAPI
-   facade.Facade
-   git.Git
-   librariesio.LibrariesIO
-   localcsv.LocalCSV
-   downloads.Downloads
+   ghtorrent.ghtorrent.GHTorrent
+   githubapi.githubapi.GitHubAPI
+   facade.facade.Facade
+   librariesio.librariesio.LibrariesIO
+   localcsv.localcsv.LocalCSV
+   downloads.downloads.Downloads
 
 
 Application Modules
