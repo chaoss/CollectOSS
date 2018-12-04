@@ -9,9 +9,15 @@ Augur
 Augur is a software suite that provides open source health and sustainability metrics through a web app, REST API, and Python library. See :doc:`whatisaugur` for more information about our philosophy and :doc:`architecture` for more information about our architecture.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
-   
    whatisaugur
+   augurcontext
    architecture
    python
+   dev-guide-toc
+
+   docker-install
+   deployment
+   ghtorrent-restore
+   use-cases-toc

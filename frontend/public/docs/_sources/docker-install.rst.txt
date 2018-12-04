@@ -1,5 +1,5 @@
-Installation with Docker (easy to get up and running)
------------------------------------------------------
+Docker Installation
+==================================
 
 Before we begin, make sure you have everything you need installed:
 `Git <https://git-scm.com/downloads>`__,

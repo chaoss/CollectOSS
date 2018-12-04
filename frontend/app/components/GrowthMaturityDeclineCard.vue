@@ -187,7 +187,7 @@ module.exports = {
         window.AugurAPI.getMetricsStatus(query_string).then((data) => {
           this.metricsData = data
       })
-    },
+    }
   },
   mounted() {
     this.selected_group = 'all'
@@ -197,7 +197,6 @@ module.exports = {
     this.selected_frontend_status = 'all'
     this.selected_is_defined = 'all'
     this.getMetricsStatus()
-
   }
 };
 </script>

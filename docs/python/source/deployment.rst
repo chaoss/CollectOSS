@@ -1,7 +1,7 @@
-Production Installation Instructions
+Deployment Guide
 ====================================
 
-These instructions include commands for Ubuntu
+These instructions include commands for Ubuntu.
 
 Step 1 - Install dependencies
 -----------------------------
