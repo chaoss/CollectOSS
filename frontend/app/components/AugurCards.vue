@@ -1,5 +1,5 @@
 <template>
-  
+   
   <div>
     <augur-header></augur-header>
     <!-- content to show if app has no state yet -->
