@@ -212,6 +212,7 @@ function Augur() {
       setGitRepo: function setGitRepo(state, payload) {
         console.log("hi", payload);
         state.gitRepo = payload.gitURL;
+        state.hasState = true;
       },
       setRepo: function setRepo(state, payload) {
         var repo = window.AugurAPI.Repo(payload);
@@ -253,18 +254,22 @@ function Augur() {
         // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         // window.history.pushState(null, title, queryString)
         state.compare = 'zscore';
-
+        state.hasState = true;
         var repo = window.AugurAPI.Repo(payload);
         console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString());
         if (!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()) {
           // if(false){
-          console.log("hiiiii", state.comparedRepos.length);
+          console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, router);
+          //(!this.$route.params.comparedowner) {
           if (state.comparedRepos.length + 1 == 1) {
-            var link = router.app._route.path + '/comparedto/' + payload;
-            router.push({
-              path: link
-              // path: "/git"
-            });
+            if (!router.app._route.params.comparedowner) {
+              var link = router.app._route.path + '/comparedto/' + payload;
+
+              router.push({
+                path: link
+                // path: "/git"
+              });
+            }
           } else {
             var _link = '/' + state.tab + '/groupid/-1';
             router.push({
@@ -272,6 +277,7 @@ function Augur() {
               // path: "/git"
             });
           }
+
           if (!window.AugurRepos[repo.toString()]) {
 
             window.AugurRepos[repo.toString()] = repo;
@@ -320,6 +326,7 @@ function Augur() {
       },
       setTab: function setTab(state, payload) {
         state.tab = payload.tab;
+        state.hasState = true;
       },
       setVizOptions: function setVizOptions(state, payload) {
         if (payload.trailingAverage) {
@@ -1146,6 +1153,28 @@ module.exports = {
     DownloadedReposCard: _DownloadedReposCard2.default,
     LoginForm: _LoginForm2.default
   },
+  created: function created() {
+    console.log(this.$route.params.comparedowner);
+    if (this.$route.params.repo) {
+      if (this.$route.params.domain) {
+        this.$store.commit('setGitRepo', {
+          gitURL: this.$route.params.owner + '/' + this.$route.params.repo
+        });
+      }
+      this.$store.commit('setRepo', {
+        githubURL: this.$route.params.owner + '/' + this.$route.params.repo
+      });
+      this.$store.commit('setTab', {
+        tab: this.$route.params.tab
+      });
+      if (this.$route.params.comparedrepo) {
+
+        this.$store.commit('addComparedRepo', {
+          githubURL: this.$route.params.comparedowner + '/' + this.$route.params.comparedrepo
+        });
+      }
+    }
+  },
   data: function data() {
     return {
       downloadedRepos: [],
@@ -1191,7 +1220,8 @@ module.exports = {
       });
 
       var link = null;
-      if (this.$store.state.comparedRepos.length == 1) link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo + '/comparedto/' + this.$store.state.comparedRepos[0];else if (this.$store.state.comparedRepos.length > 1) link = '/' + e.target.dataset['value'] + '/groupid/-1';else link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo;
+      var repo = this.$store.state.gitRepo ? 'github/' + this.$store.state.baseRepo : this.$store.state.baseRepo;
+      if (this.$store.state.comparedRepos.length == 1) link = '/' + e.target.dataset['value'] + '/' + repo + '/comparedto/' + this.$store.state.comparedRepos[0];else if (this.$store.state.comparedRepos.length > 1) link = '/' + e.target.dataset['value'] + '/groupid/-1';else link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo;
       this.$router.push({
         path: link
       });
@@ -1517,7 +1547,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/DownloadedReposCard.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
 module.exports = {
   data: function data() {
@@ -1534,12 +1564,22 @@ module.exports = {
       });
     },
     onGitRepo: function onGitRepo(e) {
-      console.log(e.url);
+      var first = e.url.indexOf(".");
+      var last = e.url.lastIndexOf(".");
+      var domain = null;
+      var extension = false;
+
+      if (first == last) domain = e.url.substring(0, first);else if (e.url.slice(last) == '.git') {
+        domain = e.url.substring(0, first);
+        extension = true;
+      } else domain = e.url.substring(first + 1, last);
+      console.log("hi", domain);
       this.$store.commit('setRepo', {
         gitURL: e.url
       });
 
-      var link = '/git/' + e.url.slice(11);
+      var link = null;
+      if (extension) link = '/git/' + domain + '/' + e.url.substring(e.url.indexOf('/'), last);else link = '/git/' + domain + '/' + e.url.slice(e.url.indexOf('/'));
       this.$router.push({
         path: link
       });
@@ -1799,9 +1839,9 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/MainControls.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
-var _vueMultiselect = require('vue-multiselect');
+var _vueMultiselect = require("vue-multiselect");
 
 var _vueMultiselect2 = _interopRequireDefault(_vueMultiselect);
 
@@ -1835,7 +1875,14 @@ module.exports = {
 
       this.options = [];
       this.repos[this.project].forEach(function (repo) {
-        _this.options.push(repo.url.slice(11));
+        var url = repo.url;
+        var first = url.indexOf(".");
+        var last = url.lastIndexOf(".");
+
+        var option = null;
+
+        if (first == last) option = url.slice(url.indexOf('/') + 1);else if (e.url.slice(last) == '.git') option = url.slice(url.indexOf('/') + 1);else option = url.substring(first + 1, last) + repo.url.slice(url.indexOf('/'));
+        _this.options.push(option);
       });
     },
     compCount: function compCount() {
@@ -1926,6 +1973,7 @@ module.exports = {
       this.compCount += this.values.length;
 
       this.values.forEach(function (url) {
+
         var link = url;
         var end = url.slice(url.length - 4);
         if (end == ".git") link = link.substring(0, url.length - 4);
@@ -2716,7 +2764,8 @@ exports.default = {
               "color": {
                 "field": "name",
                 "type": "nominal",
-                "scale": { "range": colors }
+                "scale": { "range": colors },
+                "sort": false
               },
               "opacity": {
                 "value": 0
@@ -4153,7 +4202,6 @@ exports.default = {
       var filterDates = function filterDates(change) {
         return new Date(change.author_date).getFullYear() > _this.years[0];
       };
-      console.log("fuck", repo);
 
       repo.changesByAuthor().then(function (changes) {
         changes.forEach(function (change) {
@@ -4312,7 +4360,8 @@ exports.default = {
           }],
           "mark": {
             "type": "bar",
-            "tooltip": { "content": "data" }
+            "tooltip": { "content": "data" },
+            "binSpacing": 3
           },
           "encoding": {
             "x": {
@@ -7506,7 +7555,7 @@ var routes = [
 // {path: '/', component: Vue.component('augur-cards',require('../components/AugurCards'))},
 { path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default },
 // {path: '/git/:owner/:repo', component: GitCard},
-{ path: '/:tab/:owner/:repo', component: _AugurCards2.default }, { path: '/:tab/:owner/:repo/comparedto/:owner/:repo', component: _AugurCards2.default }, { path: '/:tab/groupid/:id', component: _AugurCards2.default }];
+{ path: '/:tab/:owner/:repo', component: _AugurCards2.default }, { path: '/:tab/:domain/:owner/:repo', component: _AugurCards2.default }, { path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default }, { path: '/:tab/:domain/:owner/:repo/comparedto/:domain/:comparedowner/:comparedrepo', component: _AugurCards2.default }, { path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default }, { path: '/:tab/groupid/:id', component: _AugurCards2.default }];
 var downloadedRepos = [],
     repos = [],
     projects = [];

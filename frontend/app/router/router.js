@@ -12,7 +12,10 @@ let routes = [
       {path: '/metrics_status', component: MetricsStatusCard},
       // {path: '/git/:owner/:repo', component: GitCard},
       {path: '/:tab/:owner/:repo', component: AugurCards},
-      {path: '/:tab/:owner/:repo/comparedto/:owner/:repo', component: AugurCards},
+      {path: '/:tab/:domain/:owner/:repo', component: AugurCards},
+      {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards},
+      {path: '/:tab/:domain/:owner/:repo/comparedto/:domain/:comparedowner/:comparedrepo', component: AugurCards},
+      {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards},
       {path: '/:tab/groupid/:id', component: AugurCards},
 ]
 let downloadedRepos = [], repos = [], projects = []

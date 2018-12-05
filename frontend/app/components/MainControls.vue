@@ -208,7 +208,24 @@
       project: function(){
         this.options = []
         this.repos[this.project].forEach(
-          (repo) => {this.options.push(repo.url.slice(11))}
+          (repo) => {
+            let url = repo.url
+            let first = url.indexOf(".")
+            let last = url.lastIndexOf(".")
+
+
+      
+
+            let option = null
+
+            if (first == last)
+              option = url.slice(url.indexOf('/') + 1)
+            else if (e.url.slice(last) == '.git')
+              option = url.slice(url.indexOf('/') + 1)
+            else
+              option = url.substring(first + 1, last) + repo.url.slice(url.indexOf('/'))
+            this.options.push(option)
+          }
         )
       },
       compCount: function(){
@@ -295,9 +312,13 @@
       }, 
       onArrayCompare () {
         this.compCount += this.values.length
+
+
         
         this.values.forEach(
           (url) => {
+
+
             let link = url
             let end = url.slice(url.length - 4)
             if (end == ".git")

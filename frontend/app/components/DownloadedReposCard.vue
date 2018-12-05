@@ -43,12 +43,29 @@ module.exports = {
       })
     },
     onGitRepo (e) {
-      console.log(e.url)
+      let first = e.url.indexOf(".")
+      let last = e.url.lastIndexOf(".")
+      let domain = null
+      let extension = false
+
+      if (first == last)
+        domain = e.url.substring(0, first)
+      else if (e.url.slice(last) == '.git'){
+        domain = e.url.substring(0, first)
+        extension = true
+      } 
+      else
+        domain = e.url.substring(first + 1, last)
+      console.log("hi", domain)
       this.$store.commit('setRepo', {
         gitURL: e.url
       })
 
-      let link = '/git/' + (e.url).slice(11)
+      let link = null
+      if(extension)
+        link = '/git/' + domain + '/' + (e.url).substring(e.url.indexOf('/'), last)
+      else
+        link = '/git/' + domain + '/' + (e.url).slice(e.url.indexOf('/'))
       this.$router.push({
         path: link
         // path: "/git"

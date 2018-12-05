@@ -109,6 +109,31 @@ module.exports = {
     DownloadedReposCard,
     LoginForm
   },
+  created() {
+    console.log(this.$route.params.comparedowner)
+    if(this.$route.params.repo){
+      if (this.$route.params.domain) {
+        this.$store.commit('setGitRepo', {
+          gitURL: this.$route.params.owner + '/' + this.$route.params.repo
+        })
+      }
+      this.$store.commit('setRepo', {
+          githubURL: this.$route.params.owner + '/' + this.$route.params.repo
+        })
+      this.$store.commit('setTab', {
+          tab: this.$route.params.tab
+        })
+      if(this.$route.params.comparedrepo) { 
+        
+          this.$store.commit('addComparedRepo', {
+            githubURL: this.$route.params.comparedowner + '/' + this.$route.params.comparedrepo
+          })
+      }
+    }
+    
+    
+  },
+
   data() {
     return {
       downloadedRepos: [],
@@ -156,8 +181,9 @@ module.exports = {
       })
       
       let link = null
+      let repo = this.$store.state.gitRepo ? 'github/' + this.$store.state.baseRepo : this.$store.state.baseRepo
       if (this.$store.state.comparedRepos.length == 1)
-        link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo + '/comparedto/' + this.$store.state.comparedRepos[0]
+        link = '/' + e.target.dataset['value'] + '/' + repo + '/comparedto/' + this.$store.state.comparedRepos[0]
       else if (this.$store.state.comparedRepos.length > 1)
         link = '/' + e.target.dataset['value'] + '/groupid/-1'
       else

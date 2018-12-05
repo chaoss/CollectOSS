@@ -58,6 +58,7 @@ export default function Augur () {
       setGitRepo(state, payload) {
         console.log("hi",payload)
         state.gitRepo = payload.gitURL
+        state.hasState = true
       },
       setRepo (state, payload) {
         let repo = window.AugurAPI.Repo(payload)
@@ -103,18 +104,22 @@ export default function Augur () {
         // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
         // window.history.pushState(null, title, queryString)
         state.compare = 'zscore'
-
+        state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
         console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString())
         if(!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()){
         // if(false){
-          console.log("hiiiii", state.comparedRepos.length)
+          console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, router)
+          //(!this.$route.params.comparedowner) {
           if (state.comparedRepos.length + 1 == 1) {
-            let link = router.app._route.path + '/comparedto/' + payload
-            router.push({
-              path: link
-              // path: "/git"
-            })
+            if (!router.app._route.params.comparedowner) {
+              let link = router.app._route.path + '/comparedto/' + payload
+
+              router.push({
+                path: link
+                // path: "/git"
+              })
+            }
           } else {
             let link = '/' + state.tab + '/groupid/-1'
             router.push({
@@ -122,6 +127,7 @@ export default function Augur () {
               // path: "/git"
             })
           }
+          
           if (!window.AugurRepos[repo.toString()]) {
             
             window.AugurRepos[repo.toString()] = repo
@@ -170,6 +176,7 @@ export default function Augur () {
       },
       setTab (state, payload) {
         state.tab = payload.tab
+        state.hasState = true
       },
       setVizOptions (state, payload) {
         if (payload.trailingAverage) {

@@ -162,7 +162,8 @@ export default {
             ],
             "mark": {
               "type":"bar",
-              "tooltip": {"content": "data"}
+              "tooltip": {"content": "data"},
+              "binSpacing": 3
             },
             "encoding": {
               "x": {

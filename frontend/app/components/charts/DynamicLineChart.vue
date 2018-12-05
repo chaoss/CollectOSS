@@ -150,7 +150,8 @@ export default {
                   "color": {
                     "field": "name",
                     "type": "nominal",
-                    "scale": { "range": colors}
+                    "scale": { "range": colors},
+                    "sort": false
                   },
                   "opacity":{
                     "value": 0
