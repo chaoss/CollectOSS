@@ -34,7 +34,7 @@ def create_routes(server):
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
-    server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/facade/repos'.format(server.api_version), metric_type='facade')
+    server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='facade')
 
     """
     @api {get} /facade/lines_changed/:facade_repo_url Lines Changed by Author

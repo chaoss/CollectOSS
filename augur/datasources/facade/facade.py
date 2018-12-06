@@ -3,14 +3,14 @@
 Data source that uses Facade's tables
 """
 
+import base64
 import pandas as pd
 import sqlalchemy as s
-import numpy as np
-import re
 from augur import logger
 from augur.util import annotate
 # end imports
 # (don't remove the above line, it's for a script)
+
 
 class Facade(object):
     """Queries Facade"""
@@ -68,11 +68,13 @@ class Facade(object):
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
         if self.projects:
             results = results[results.project_name.isin(self.projects)]
-        return results
 
-    # @annotate(tag='lines-changed-minus-whitespace')
-    # def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):
-    #     pass
+        b64_urls = []
+        for i in results.index:
+            b64_urls.append(base64.b64encode((results.at[i, 'url']).encode()))
+        results['base64_url'] = b64_urls
+
+        return results
 
     @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):

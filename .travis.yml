@@ -15,6 +15,7 @@ matrix:
       install: 
         - "pip install --process-dependency-links ."
         - "npm install newman"
+    - name: "API Tests"
       language: python
       python: "3.6"
       notifications: 
