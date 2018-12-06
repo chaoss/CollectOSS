@@ -1,5 +1,5 @@
 from flask import Response, request
-from augur.metrics_status import Metric
+from .metrics_status import Metric
 import json
 
 def filter_by(status, key, value):
@@ -13,7 +13,7 @@ def create_routes(server):
     metrics_status = server._augur['metrics_status']()
     metrics_status.create_metrics_status()
 
-    metrics_status_URL = "metrics/status"
+    metrics_status_url = "metrics/status"
 
     """
     @api {get} metrics/status Metrics Status
@@ -65,7 +65,7 @@ def create_routes(server):
                         }
                     ]
     """
-    @server.app.route("/{}/{}".format(server.api_version, metrics_status_URL))
+    @server.app.route("/{}/{}".format(server.api_version, metrics_status_url))
     def metrics_status_view():
         return Response(response=json.dumps(metrics_status.raw_metrics_status),
                         status=200,
@@ -113,7 +113,7 @@ def create_routes(server):
                         }
                     ]
     """
-    @server.app.route("/{}/{}/metadata".format(server.api_version, metrics_status_URL))
+    @server.app.route("/{}/{}/metadata".format(server.api_version, metrics_status_url))
     def metrics_status_metadata_view():
         return Response(response=json.dumps([metrics_status.metadata]),
                         status=200,
@@ -168,7 +168,7 @@ def create_routes(server):
                         }
                     ]
     """
-    @server.app.route("/{}/{}/filter".format(server.api_version, metrics_status_URL))
+    @server.app.route("/{}/{}/filter".format(server.api_version, metrics_status_url))
     def filtered_metrics_status_view():
 
         filtered_metrics_status = metrics_status.raw_metrics_status

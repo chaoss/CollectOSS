@@ -69,7 +69,7 @@
     <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
     <span class="c1">#####################################</span>
 
-    
+
     <span class="c1">#####################################</span>
     <span class="c1">###            RISK               ###</span>
     <span class="c1">#####################################</span>
@@ -143,13 +143,26 @@
 <span class="sd">        TODO: docstring</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">linesChangedByMonthSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace</span>
-<span class="s2">            FROM repo_monthly_cache </span>
+<span class="s2">            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace FROM repo_monthly_cache </span>
 <span class="s2">            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
 <span class="s2">            GROUP BY email, month, year</span>
 <span class="s2">            ORDER BY year, month, email ASC</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">linesChangedByMonthSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;commits-by-week&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">commits_by_week</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO: docstring</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">commitsByMonthSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT email AS author_email, affiliation, WEEK AS `week`, YEAR AS `year`, patches FROM repo_weekly_cache </span>
+<span class="s2">            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">            GROUP BY email, WEEK, YEAR</span>
+<span class="s2">            ORDER BY YEAR, WEEK, email ASC</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">commitsByMonthSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
 

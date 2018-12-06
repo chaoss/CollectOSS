@@ -36,7 +36,7 @@ class Facade(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
-    
+
     #####################################
     ###            RISK               ###
     #####################################
@@ -110,13 +110,26 @@ class Facade(object):
         TODO: docstring
         """
         linesChangedByMonthSQL = s.sql.text("""
-            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
-            FROM repo_monthly_cache 
+            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace FROM repo_monthly_cache 
             WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
             GROUP BY email, month, year
             ORDER BY year, month, email ASC
         """)
         results = pd.read_sql(linesChangedByMonthSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
+        return results
+
+    @annotate(tag='commits-by-week')
+    def commits_by_week(self, repo_url):
+        """
+        TODO: docstring
+        """
+        commitsByMonthSQL = s.sql.text("""
+            SELECT email AS author_email, affiliation, WEEK AS `week`, YEAR AS `year`, patches FROM repo_weekly_cache 
+            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
+            GROUP BY email, WEEK, YEAR
+            ORDER BY YEAR, WEEK, email ASC
+        """)
+        results = pd.read_sql(commitsByMonthSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
         return results
 
 

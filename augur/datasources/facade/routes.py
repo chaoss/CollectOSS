@@ -113,3 +113,31 @@ def create_routes(server):
                         ]
     """
     server.addGitMetric(facade.lines_changed_by_month, 'lines_changed_by_month')
+
+    """
+    @api {get} /git/commits_by_week/:facade_repo_url Commits By Week
+    @apiName commits-by-week
+    @apiGroup Experimental
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+
+    @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "author_email": "andrea.giammarchi@gmail.com",
+                                "affiliation": "(Unknown)",
+                                "week": 44,
+                                "year": 2014,
+                                "patches": 1
+                            },
+                            {
+                                "author_email": "caniszczyk@gmail.com",
+                                "affiliation": "(Unknown)",
+                                "week": 44,
+                                "year": 2014,
+                                "patches": 5
+                            }
+                        ]
+    """
+    server.addGitMetric(facade.commits_by_week, 'commits_by_week')
