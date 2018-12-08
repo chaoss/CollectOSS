@@ -42,6 +42,7 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
+      domain: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
@@ -58,6 +59,8 @@ export default function Augur () {
       setGitRepo(state, payload) {
         console.log("hi",payload)
         state.gitRepo = payload.gitURL
+        state.baseRepo = payload.gitURL
+        state.domain = payload.domain
         state.hasState = true
       },
       setRepo (state, payload) {
@@ -69,7 +72,7 @@ export default function Augur () {
         }
         state.queryObject = {}
         state.hasState = true
-        if (repo.owner && repo.name) {
+        if (repo.owner && repo.name && !state.gitRepo) {
           state.baseRepo = repo.toString()
           let title = repo.owner + '/' + repo.name + '- Augur'
           state.tab = 'gmd'
@@ -106,24 +109,33 @@ export default function Augur () {
         state.compare = 'zscore'
         state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
-        console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString())
+        // console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString())
         if(!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()){
         // if(false){
-          console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, router)
+          // console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, payload)
           //(!this.$route.params.comparedowner) {
           if (state.comparedRepos.length + 1 == 1) {
             if (!router.app._route.params.comparedowner) {
               let link = router.app._route.path + '/comparedto/' + payload
-
+              console.log("compared check", state.domain)
               router.push({
-                path: link
-                // path: "/git"
+                name: 'singlecompare',
+                params: {tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1), comparedowner: payload.owner, comparedrepo: payload.name}
               })
+              // router.push({
+              //   path: link
+              //   // path: "/git"
+              // })
             }
           } else {
-            let link = '/' + state.tab + '/groupid/-1'
+            console.log("GROUPING augur")
+            let link = '/' + state.tab + '/groupid/1'
             router.push({
-              path: link
+              name: 'group',
+              params: {
+                tab: state.tab,
+                groupid: 1
+              }
               // path: "/git"
             })
           }

@@ -88,9 +88,10 @@ import ExperimentalCard from './ExperimentalCard'
 import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
 import DownloadedReposCard from './DownloadedReposCard'
 import LoginForm from './LoginForm'
+import { mapState } from 'vuex'
 
 module.exports = {
-  // name: 'augur-cards',
+  props: ['tab', 'owner', 'repo', 'domain', 'comparedowner', 'comparedrepo', 'groupid'],
   components: {
     MainControls,
     AugurHeader,
@@ -109,38 +110,97 @@ module.exports = {
     DownloadedReposCard,
     LoginForm
   },
-  created() {
-    console.log(this.$route.params.comparedowner)
-    if(this.$route.params.repo){
-      if (this.$route.params.domain) {
-        this.$store.commit('setGitRepo', {
-          gitURL: this.$route.params.owner + '/' + this.$route.params.repo
-        })
-      }
-      this.$store.commit('setRepo', {
-          githubURL: this.$route.params.owner + '/' + this.$route.params.repo
-        })
-      this.$store.commit('setTab', {
-          tab: this.$route.params.tab
-        })
-      if(this.$route.params.comparedrepo) { 
-        
-          this.$store.commit('addComparedRepo', {
-            githubURL: this.$route.params.comparedowner + '/' + this.$route.params.comparedrepo
-          })
-      }
-    }
-    
-    
-  },
+  mounted() {
+    console.log("hiii!", this.$store.state.hasState,
+      this.tab,
+      this.repo,
+      this.owner,
+      this.comparedowner,
+      this.comparedrepo,
+      this.domain,
+      this.groupid)
 
+  },
+  created() {
+    console.log("first")
+
+    if(!this.groupid)
+      this.mapGroup[1] = this.$store.state.comparedRepos
+    if(this.repo){
+      if (this.domain)
+        this.$store.commit('setGitRepo', {
+          gitURL: this.owner + '/' + this.repo,
+          domain: this.domain
+        })
+      else{
+        console.log("ELSE")
+        this.$store.commit('setRepo', {
+          githubURL: this.owner + '/' + this.repo
+        })
+      }
+      this.$store.commit('setTab', {
+        tab: this.tab
+      })
+      if(this.comparedrepo) { 
+        this.$store.commit('addComparedRepo', {
+          githubURL: this.comparedowner + '/' + this.comparedrepo
+        })
+      }
+      if (localStorage.getItem('groupid')) {
+        console.log("OWNER",localStorage.getItem('owner'))
+        if (localStorage.getItem('domain'))
+          this.$store.commit('setGitRepo', {
+            gitURL: localStorage.getItem('owner') + '/' + localStorage.getItem('repo'),
+            domain: localStorage.getItem('domain')
+          })
+        else{
+          this.$store.commit('setRepo', {
+            githubURL: localStorage.getItem('owner') + '/' + localStorage.getItem('repo'),
+          })
+        }
+        JSON.parse(localStorage.getItem('group')).forEach((repo) => {
+          console.log("REPO HERE", repo)
+          this.$store.commit('addComparedRepo', {
+            githubURL: repo
+          })
+        })
+        
+      } 
+      
+    }
+  },
+  watch: {
+    comparedRepos: function(){
+      console.log(this.$store.state.comparedRepos.length, "second")
+      // if(comparedRepos.length > 1)
+      //   this.extra = true
+      // if (comparedRepos.length > 1){
+        console.log(this.groupid)
+        // this.mapGroup[1].push(this.$store.state.comparedRepos[this.$store.state.comparedRepos.length - 1])
+      // }
+      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
+      
+      if (this.domain)
+        localStorage.setItem('domain', this.domain)
+      
+      if(this.$store.state.comparedRepos.length > 1){
+        localStorage.setItem("groupid", this.groupid)
+        localStorage.setItem('repo', this.repo)
+        localStorage.setItem('owner', this.owner)
+      }
+      console.log("GROUP HERE", localStorage.getItem('owner'))
+    }
+  },
   data() {
     return {
       downloadedRepos: [],
-      isCollapsed: false
+      isCollapsed: false,
+      mapGroup: {1: this.$store.state.comparedRepos},
+      extra: false
     }
   },
   computed: {
+    // ...mapState()
     hasState() {
       return this.$store.state.hasState
     },
@@ -185,13 +245,26 @@ module.exports = {
       if (this.$store.state.comparedRepos.length == 1)
         link = '/' + e.target.dataset['value'] + '/' + repo + '/comparedto/' + this.$store.state.comparedRepos[0]
       else if (this.$store.state.comparedRepos.length > 1)
-        link = '/' + e.target.dataset['value'] + '/groupid/-1'
+        link = '/' + e.target.dataset['value'] + '/groupid/1'
       else
         link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo
-      this.$router.push({
-        path: link
-        // path: "/git"
-      })
+      if(this.$store.state.comparedRepos.length == 1){
+          this.$router.push({
+          name: 'singlecompare',
+          params: {tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo}
+        })        
+      } else if (this.$store.state.comparedRepos.length > 1){
+        this.$router.push({
+          name: 'group',
+          params: {tab: e.target.dataset['value'], groupid: 1}
+        })
+      } else {
+        this.$router.push({
+          name: 'single',
+          params: {tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo}
+        })
+      }
+      
     },
     btoa(s) {
       return window.btoa(s)

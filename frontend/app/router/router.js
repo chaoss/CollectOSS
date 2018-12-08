@@ -7,16 +7,14 @@ import ExperimentalCard from '../components/ExperimentalCard.vue'
 import GrowthMaturityDeclineCard from '../components/GrowthMaturityDeclineCard.vue'
 
 let routes = [
-  // {path: '/', component: Vue.component('augur-cards',require('../components/AugurCards'))},
   {path: '/', component: AugurCards},
       {path: '/metrics_status', component: MetricsStatusCard},
-      // {path: '/git/:owner/:repo', component: GitCard},
-      {path: '/:tab/:owner/:repo', component: AugurCards},
-      {path: '/:tab/:domain/:owner/:repo', component: AugurCards},
-      {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards},
-      {path: '/:tab/:domain/:owner/:repo/comparedto/:domain/:comparedowner/:comparedrepo', component: AugurCards},
-      {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards},
-      {path: '/:tab/groupid/:id', component: AugurCards},
+      // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
+      {path: '/:tab/:domain?/:owner/:repo', component: AugurCards, name: 'single', props: true},
+      // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
+      {path: '/:tab/:domain?/:owner/:repo/comparedto/:compareddomain?/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare', props: true},
+      // {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},
+      {path: '/:tab/groupid/:groupid', component: AugurCards, name: 'group', props: true},
 ]
 let downloadedRepos = [], repos = [], projects = []
 window.AugurAPI.getDownloadedGitRepos().then((data) => {

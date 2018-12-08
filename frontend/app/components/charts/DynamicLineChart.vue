@@ -101,6 +101,7 @@ export default {
       let repos = []
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo])
+        console.log(window.AugurRepos[this.repo])
       } // end if (this.$store.repo)
       this.comparedRepos.forEach(function(repo) {
           repos.push(window.AugurRepos[repo])
@@ -483,7 +484,6 @@ export default {
           }
       }
 
-
       //DONE WITH SPEC PORTION
 
       //push the area to general spec
@@ -503,36 +503,19 @@ export default {
         })
       }
 
-
       let buildMetric = () => {
-
-        
-
-
-
         var color = 0;
         repos.forEach((repo) => {
-
           buildLines("valueRolling" + repo, colors[color])
-
-          
-
-          if(this.rawWeekly) {
+          if(this.rawWeekly) 
             buildLines("value" + repo,colors[color])
-          }
-
           // if user doesn't want detail, then set vconcat to og
-          if(this.showDetail) {
+          if(this.showDetail) 
             config.vconcat[1] = getDetail("valueRolling" + this.repo)
-            //config.vconcat[1] = (this.comparedTo && this.status.compared ? getDetail("valueComparedRolling") : getDetail("valueRolling"))
-          } else if (config.vconcat[1]) config.vconcat.pop()
-
-          
-
+          else if (config.vconcat[1]) 
+            config.vconcat.pop()
           color++
         });
-
-
       }
 
 
@@ -542,17 +525,13 @@ export default {
 
 
       let buildTooltip = function (key) {
-        
-          config.vconcat[0].layer.push(getToolPoint(key))
+        config.vconcat[0].layer.push(getToolPoint(key))
         if (repos.length < 3) {
           var col = -1;
           repos.forEach((repo) => {
             config.vconcat[0].layer.push(getStandardPoint(key, colors[col]))
             col++
           });
-          
-
-
           config.vconcat[0].layer.push(getValueText(key))
           config.vconcat[0].layer.push(getDateText(key))
           //push parts of layer that use "valueCompared" key if there is a comparedRepo
@@ -565,19 +544,19 @@ export default {
       //push the tooltip to general spec
       //can change this.repo to whatever repo user wants tooltip on
       if(this.showTooltip) {
-        let key = (this.rawWeekly ? "value" + this.repo : "valueRolling" + this.repo)
-        buildTooltip(key)
-
-
-        
+        let temp = [this.repo]
+        temp.forEach((repo) => {
+          let key = (this.rawWeekly ? "value" + repo : "valueRolling" + repo)
+          buildTooltip(key)
+        })
       } else {
         //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
-        for(var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if(config.vconcat[0].layer[x] == getValueText("valueRolling" + this.repo)) {
-            config.vconcat[0].layer[x] = {}
-            buildMetric()
-          }
-        }
+        // for(var x = 0; x < config.vconcat[0].layer.length; x++) {
+          // if(config.vconcat[0].layer[x] == getValueText("valueRolling" + this.repo)) {
+          //   config.vconcat[0].layer[x] = {}
+            // buildMetric()
+          // }
+        // }
       }
 
       

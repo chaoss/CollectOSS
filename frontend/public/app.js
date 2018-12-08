@@ -196,6 +196,7 @@ function Augur() {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
+      domain: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
@@ -212,6 +213,8 @@ function Augur() {
       setGitRepo: function setGitRepo(state, payload) {
         console.log("hi", payload);
         state.gitRepo = payload.gitURL;
+        state.baseRepo = payload.gitURL;
+        state.domain = payload.domain;
         state.hasState = true;
       },
       setRepo: function setRepo(state, payload) {
@@ -223,7 +226,7 @@ function Augur() {
         }
         state.queryObject = {};
         state.hasState = true;
-        if (repo.owner && repo.name) {
+        if (repo.owner && repo.name && !state.gitRepo) {
           state.baseRepo = repo.toString();
           var title = repo.owner + '/' + repo.name + '- Augur';
           state.tab = 'gmd';
@@ -256,26 +259,34 @@ function Augur() {
         state.compare = 'zscore';
         state.hasState = true;
         var repo = window.AugurAPI.Repo(payload);
-        console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString());
+        // console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString())
         if (!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()) {
           // if(false){
-          console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, router);
+          // console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, payload)
           //(!this.$route.params.comparedowner) {
           if (state.comparedRepos.length + 1 == 1) {
             if (!router.app._route.params.comparedowner) {
               var link = router.app._route.path + '/comparedto/' + payload;
-
+              console.log("compared check", state.domain);
               router.push({
-                path: link
-                // path: "/git"
+                name: 'singlecompare',
+                params: { tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1), comparedowner: payload.owner, comparedrepo: payload.name }
               });
+              // router.push({
+              //   path: link
+              //   // path: "/git"
+              // })
             }
           } else {
-            var _link = '/' + state.tab + '/groupid/-1';
+            console.log("GROUPING augur");
+            var _link = '/' + state.tab + '/groupid/1';
             router.push({
-              path: _link
-              // path: "/git"
-            });
+              name: 'group',
+              params: {
+                tab: state.tab,
+                groupid: 1
+                // path: "/git"
+              } });
           }
 
           if (!window.AugurRepos[repo.toString()]) {
@@ -1059,7 +1070,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4cb2e45e", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4cb2e45e", __vue__options__)
+    hotAPI.rerender("data-v-4cb2e45e", __vue__options__)
   }
 })()}
 });
@@ -1132,9 +1143,12 @@ var _LoginForm = require('./LoginForm');
 
 var _LoginForm2 = _interopRequireDefault(_LoginForm);
 
+var _vuex = require('vuex');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
+  props: ['tab', 'owner', 'repo', 'domain', 'comparedowner', 'comparedrepo', 'groupid'],
   components: {
     MainControls: _MainControls2.default,
     AugurHeader: _AugurHeader2.default,
@@ -1153,32 +1167,77 @@ module.exports = {
     DownloadedReposCard: _DownloadedReposCard2.default,
     LoginForm: _LoginForm2.default
   },
+  mounted: function mounted() {
+    console.log("hiii!", this.$store.state.hasState, this.tab, this.repo, this.owner, this.comparedowner, this.comparedrepo, this.domain, this.groupid);
+  },
   created: function created() {
-    console.log(this.$route.params.comparedowner);
-    if (this.$route.params.repo) {
-      if (this.$route.params.domain) {
-        this.$store.commit('setGitRepo', {
-          gitURL: this.$route.params.owner + '/' + this.$route.params.repo
-        });
-      }
-      this.$store.commit('setRepo', {
-        githubURL: this.$route.params.owner + '/' + this.$route.params.repo
-      });
-      this.$store.commit('setTab', {
-        tab: this.$route.params.tab
-      });
-      if (this.$route.params.comparedrepo) {
+    var _this = this;
 
-        this.$store.commit('addComparedRepo', {
-          githubURL: this.$route.params.comparedowner + '/' + this.$route.params.comparedrepo
+    console.log("first");
+
+    if (!this.groupid) this.mapGroup[1] = this.$store.state.comparedRepos;
+    if (this.repo) {
+      if (this.domain) this.$store.commit('setGitRepo', {
+        gitURL: this.owner + '/' + this.repo,
+        domain: this.domain
+      });else {
+        console.log("ELSE");
+        this.$store.commit('setRepo', {
+          githubURL: this.owner + '/' + this.repo
         });
       }
+      this.$store.commit('setTab', {
+        tab: this.tab
+      });
+      if (this.comparedrepo) {
+        this.$store.commit('addComparedRepo', {
+          githubURL: this.comparedowner + '/' + this.comparedrepo
+        });
+      }
+      if (localStorage.getItem('groupid')) {
+        console.log("OWNER", localStorage.getItem('owner'));
+        if (localStorage.getItem('domain')) this.$store.commit('setGitRepo', {
+          gitURL: localStorage.getItem('owner') + '/' + localStorage.getItem('repo'),
+          domain: localStorage.getItem('domain')
+        });else {
+          this.$store.commit('setRepo', {
+            githubURL: localStorage.getItem('owner') + '/' + localStorage.getItem('repo')
+          });
+        }
+        JSON.parse(localStorage.getItem('group')).forEach(function (repo) {
+          console.log("REPO HERE", repo);
+          _this.$store.commit('addComparedRepo', {
+            githubURL: repo
+          });
+        });
+      }
+    }
+  },
+
+  watch: {
+    comparedRepos: function comparedRepos() {
+      console.log(this.$store.state.comparedRepos.length, "second");
+
+      console.log(this.groupid);
+
+      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
+
+      if (this.domain) localStorage.setItem('domain', this.domain);
+
+      if (this.$store.state.comparedRepos.length > 1) {
+        localStorage.setItem("groupid", this.groupid);
+        localStorage.setItem('repo', this.repo);
+        localStorage.setItem('owner', this.owner);
+      }
+      console.log("GROUP HERE", localStorage.getItem('owner'));
     }
   },
   data: function data() {
     return {
       downloadedRepos: [],
-      isCollapsed: false
+      isCollapsed: false,
+      mapGroup: { 1: this.$store.state.comparedRepos },
+      extra: false
     };
   },
 
@@ -1221,10 +1280,23 @@ module.exports = {
 
       var link = null;
       var repo = this.$store.state.gitRepo ? 'github/' + this.$store.state.baseRepo : this.$store.state.baseRepo;
-      if (this.$store.state.comparedRepos.length == 1) link = '/' + e.target.dataset['value'] + '/' + repo + '/comparedto/' + this.$store.state.comparedRepos[0];else if (this.$store.state.comparedRepos.length > 1) link = '/' + e.target.dataset['value'] + '/groupid/-1';else link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo;
-      this.$router.push({
-        path: link
-      });
+      if (this.$store.state.comparedRepos.length == 1) link = '/' + e.target.dataset['value'] + '/' + repo + '/comparedto/' + this.$store.state.comparedRepos[0];else if (this.$store.state.comparedRepos.length > 1) link = '/' + e.target.dataset['value'] + '/groupid/1';else link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo;
+      if (this.$store.state.comparedRepos.length == 1) {
+        this.$router.push({
+          name: 'singlecompare',
+          params: { tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo }
+        });
+      } else if (this.$store.state.comparedRepos.length > 1) {
+        this.$router.push({
+          name: 'group',
+          params: { tab: e.target.dataset['value'], groupid: 1 }
+        });
+      } else {
+        this.$router.push({
+          name: 'single',
+          params: { tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo }
+        });
+      }
     },
     btoa: function btoa(s) {
       return window.btoa(s);
@@ -1244,7 +1316,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.reload("data-v-78eb2940", __vue__options__)
+    hotAPI.rerender("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1567,21 +1639,35 @@ module.exports = {
       var first = e.url.indexOf(".");
       var last = e.url.lastIndexOf(".");
       var domain = null;
+      var owner = null;
+      var repo = null;
       var extension = false;
 
-      if (first == last) domain = e.url.substring(0, first);else if (e.url.slice(last) == '.git') {
+      if (first == last) {
+        console.log("github");
+        domain = e.url.substring(0, first);
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1);
+      } else if (e.url.slice(last) == '.git') {
+        console.log("github with ext");
         domain = e.url.substring(0, first);
         extension = true;
-      } else domain = e.url.substring(first + 1, last);
-      console.log("hi", domain);
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
+        repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4);
+      } else {
+        console.log("gluster");
+        domain = e.url.substring(first + 1, last);
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1);
+      }
+      console.log("hi", domain, owner, repo);
       this.$store.commit('setRepo', {
         gitURL: e.url
       });
 
-      var link = null;
-      if (extension) link = '/git/' + domain + '/' + e.url.substring(e.url.indexOf('/'), last);else link = '/git/' + domain + '/' + e.url.slice(e.url.indexOf('/'));
       this.$router.push({
-        path: link
+        name: 'single',
+        params: { tab: 'git', domain: domain, owner: owner, repo: repo }
       });
     },
     getDownloadedRepos: function getDownloadedRepos() {
@@ -1881,7 +1967,7 @@ module.exports = {
 
         var option = null;
 
-        if (first == last) option = url.slice(url.indexOf('/') + 1);else if (e.url.slice(last) == '.git') option = url.slice(url.indexOf('/') + 1);else option = url.substring(first + 1, last) + repo.url.slice(url.indexOf('/'));
+        if (first == last) option = url.slice(url.indexOf('/') + 1);else if (url.slice(last) == '.git') option = url.slice(url.indexOf('/') + 1);else option = url.substring(first + 1, last) + repo.url.slice(url.indexOf('/'));
         _this.options.push(option);
       });
     },
@@ -2721,6 +2807,7 @@ exports.default = {
       var repos = [];
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo]);
+        console.log(window.AugurRepos[this.repo]);
       }
       this.comparedRepos.forEach(function (repo) {
         repos.push(window.AugurRepos[repo]);
@@ -3083,20 +3170,12 @@ exports.default = {
       }
 
       var buildMetric = function buildMetric() {
-
         var color = 0;
         repos.forEach(function (repo) {
-
           buildLines("valueRolling" + repo, colors[color]);
+          if (_this.rawWeekly) buildLines("value" + repo, colors[color]);
 
-          if (_this.rawWeekly) {
-            buildLines("value" + repo, colors[color]);
-          }
-
-          if (_this.showDetail) {
-            config.vconcat[1] = getDetail("valueRolling" + _this.repo);
-          } else if (config.vconcat[1]) config.vconcat.pop();
-
+          if (_this.showDetail) config.vconcat[1] = getDetail("valueRolling" + _this.repo);else if (config.vconcat[1]) config.vconcat.pop();
           color++;
         });
       };
@@ -3106,7 +3185,6 @@ exports.default = {
       };
 
       var buildTooltip = function buildTooltip(key) {
-
         config.vconcat[0].layer.push(getToolPoint(key));
         if (repos.length < 3) {
           var col = -1;
@@ -3114,7 +3192,6 @@ exports.default = {
             config.vconcat[0].layer.push(getStandardPoint(key, colors[col]));
             col++;
           });
-
           config.vconcat[0].layer.push(getValueText(key));
           config.vconcat[0].layer.push(getDateText(key));
 
@@ -3125,16 +3202,12 @@ exports.default = {
       };
 
       if (this.showTooltip) {
-        var key = this.rawWeekly ? "value" + this.repo : "valueRolling" + this.repo;
-        buildTooltip(key);
-      } else {
-        for (var x = 0; x < config.vconcat[0].layer.length; x++) {
-          if (config.vconcat[0].layer[x] == getValueText("valueRolling" + this.repo)) {
-            config.vconcat[0].layer[x] = {};
-            buildMetric();
-          }
-        }
-      }
+        var temp = [this.repo];
+        temp.forEach(function (repo) {
+          var key = _this.rawWeekly ? "value" + repo : "valueRolling" + repo;
+          buildTooltip(key);
+        });
+      } else {}
 
       buildMetric();
 
@@ -3268,14 +3341,14 @@ exports.default = {
 
           repos.forEach(function (repo) {
             if (!_this.status[repo]) {
-              var temp = JSON.parse(JSON.stringify(values));
-              temp = temp.map(function (datum) {
+              var _temp = JSON.parse(JSON.stringify(values));
+              _temp = _temp.map(function (datum) {
                 datum.name = repo + ": data n/a";
 
 
                 return datum;
               });
-              values.push.apply(values, temp);
+              values.push.apply(values, _temp);
             }
           });
 
@@ -7551,11 +7624,13 @@ var _GrowthMaturityDeclineCard2 = _interopRequireDefault(_GrowthMaturityDeclineC
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var routes = [
-// {path: '/', component: Vue.component('augur-cards',require('../components/AugurCards'))},
-{ path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default },
-// {path: '/git/:owner/:repo', component: GitCard},
-{ path: '/:tab/:owner/:repo', component: _AugurCards2.default }, { path: '/:tab/:domain/:owner/:repo', component: _AugurCards2.default }, { path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default }, { path: '/:tab/:domain/:owner/:repo/comparedto/:domain/:comparedowner/:comparedrepo', component: _AugurCards2.default }, { path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default }, { path: '/:tab/groupid/:id', component: _AugurCards2.default }];
+var routes = [{ path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default },
+// {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
+{ path: '/:tab/:domain?/:owner/:repo', component: _AugurCards2.default, name: 'single', props: true },
+// {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
+{ path: '/:tab/:domain?/:owner/:repo/comparedto/:compareddomain?/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true },
+// {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},
+{ path: '/:tab/groupid/:groupid', component: _AugurCards2.default, name: 'group', props: true }];
 var downloadedRepos = [],
     repos = [],
     projects = [];

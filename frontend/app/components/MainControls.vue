@@ -213,14 +213,11 @@
             let first = url.indexOf(".")
             let last = url.lastIndexOf(".")
 
-
-      
-
             let option = null
 
             if (first == last)
               option = url.slice(url.indexOf('/') + 1)
-            else if (e.url.slice(last) == '.git')
+            else if (url.slice(last) == '.git')
               option = url.slice(url.indexOf('/') + 1)
             else
               option = url.substring(first + 1, last) + repo.url.slice(url.indexOf('/'))
