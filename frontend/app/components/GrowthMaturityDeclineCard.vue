@@ -157,21 +157,6 @@ module.exports = {
   },
   data() {
     return {
-      metricsData: [],
-      metadata: {
-        metricStatusMetadata: [],
-        groups: [],
-        sources: [],
-        metric_types: []
-      },
-      filters: {
-        selected_group: 'all',
-        selected_source: 'all',
-        selected_metric_type: 'all',
-        selected_backend_status: 'all',
-        selected_frontend_status: 'all',
-        seletec_is_defined: 'all'
-      },
       colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
     }
   },
