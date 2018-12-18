@@ -26,7 +26,7 @@
                     >
                   </multiselect>
                 </div>
-                <div class="col col-1"><input type="button" @click="onArrayCompare(); stopSelecting(); onClear()" value="Apply" style="max-width:69.9px"></div>
+                <div class="col col-1"><input type="button" @click="onArrayCompare(); stopSelecting(); onValuesClear()" value="Apply" style="max-width:69.9px"></div>
                 <div class="col col-1"><input type="button" @click="onClear(); stopSelecting()" value="Reset" style="max-width:69.9px"></div>
                 <div class="col col-3">
                   <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare"/>
@@ -320,15 +320,19 @@
             let end = url.slice(url.length - 4)
             if (end == ".git")
               link = link.substring(0, url.length - 4)
+            console.log("link: ", link)
             this.$store.commit('addComparedRepo', {
               githubURL: link
             })
           }
         )
-        
+      },
+      onValuesClear () {
+        this.values = []
       },
       onClear () {
         this.values = []
+        this.$store.commit('resetComparedRepos')
       },
       onDetailChange (e) {
         this.$store.commit('setVizOptions', {

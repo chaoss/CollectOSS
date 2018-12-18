@@ -115,9 +115,8 @@ export default function Augur () {
           // console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, payload)
           //(!this.$route.params.comparedowner) {
           if (state.comparedRepos.length + 1 == 1) {
-            if (!router.app._route.params.comparedowner) {
-              let link = router.app._route.path + '/comparedto/' + payload
-              console.log("compared check", state.domain)
+            if (!router.app._route.params.comparedrepo) {
+              console.log("should be here: ", payload.owner, payload.name)
               router.push({
                 name: 'singlecompare',
                 params: {tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1), comparedowner: payload.owner, comparedrepo: payload.name}
@@ -147,8 +146,11 @@ export default function Augur () {
             repo = window.AugurRepos[repo.toString()]
           }
           state.hasState = true
+          console.log("TO BE PUSHED", repo.owner, repo.name, repo)
           if (repo.owner && repo.name) {
+            console.log("before: ", state.comparedRepos)
             state.comparedRepos.push(repo.toString())
+            console.log("after: ", state.comparedRepos)
             let title = repo.owner + '/' + repo.name + '- Augur'
             // state.tab = 'gmd'
             // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
@@ -209,6 +211,13 @@ export default function Augur () {
         if (typeof payload.showDetail !== 'undefined') {
           state.showDetail = payload.showDetail
         }
+      },
+      resetComparedRepos (state) {
+        state.comparedRepos = []
+        router.push({
+          name: 'single',
+          params: {tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
+        })
       },
       reset (state) {
         state = {

@@ -97,33 +97,23 @@ module.exports = {
     DownloadedReposCard,
     LoginForm
   },
-  mounted() {
-    console.log("hiii!", this.$store.state.hasState,
-      this.tab,
-      this.repo,
-      this.owner,
-      this.comparedowner,
-      this.comparedrepo,
-      this.domain,
-      this.groupid)
-
-  },
   created() {
-    console.log("first")
-
     if(!this.groupid)
       this.mapGroup[1] = this.$store.state.comparedRepos
     if(this.repo){
-      if (this.domain)
+      if (this.domain){
+        console.log("if", this.owner, this.repo)
         this.$store.commit('setGitRepo', {
           gitURL: this.owner + '/' + this.repo,
           domain: this.domain
         })
+      }
       else{
-        console.log("ELSE")
+        console.log("ELSE", this.owner, this.repo)
         this.$store.commit('setRepo', {
           githubURL: this.owner + '/' + this.repo
         })
+
       }
       this.$store.commit('setTab', {
         tab: this.tab
@@ -134,7 +124,6 @@ module.exports = {
         })
       }
       if (localStorage.getItem('groupid')) {
-        console.log("OWNER",localStorage.getItem('owner'))
         if (localStorage.getItem('domain'))
           this.$store.commit('setGitRepo', {
             gitURL: localStorage.getItem('owner') + '/' + localStorage.getItem('repo'),
@@ -146,27 +135,19 @@ module.exports = {
           })
         }
         JSON.parse(localStorage.getItem('group')).forEach((repo) => {
-          console.log("REPO HERE", repo)
           this.$store.commit('addComparedRepo', {
             githubURL: repo
           })
         })
-        
       } 
-      
+      localStorage.clear()
     }
   },
   watch: {
     comparedRepos: function(){
       console.log(this.$store.state.comparedRepos.length, "second")
-      // if(comparedRepos.length > 1)
-      //   this.extra = true
-      // if (comparedRepos.length > 1){
-        console.log(this.groupid)
-        // this.mapGroup[1].push(this.$store.state.comparedRepos[this.$store.state.comparedRepos.length - 1])
-      // }
-      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
-      
+      console.log(this.groupid)
+      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));  
       if (this.domain)
         localStorage.setItem('domain', this.domain)
       
