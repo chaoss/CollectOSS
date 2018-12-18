@@ -13,10 +13,6 @@
         </div>
         <downloaded-repos-card></downloaded-repos-card>
       </section>
-
-      <!-- <section class="unmaterialized">
-        <metrics-status-card></metrics-status-card>
-      </section> -->
     </div>
 
     <!-- content to show if app does have a repo to show -->
@@ -37,9 +33,6 @@
         <main-controls></main-controls>
         <div v-if="(baseRepo && (currentTab == 'gmd'))">
           <growth-maturity-decline-card></growth-maturity-decline-card>
-          <!-- <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
-            <compared-repo-growth-maturity-decline-card :comparedTo="repo"></compared-repo-growth-maturity-decline-card>
-          </div> -->
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
           <diversity-inclusion-card></diversity-inclusion-card>
@@ -53,15 +46,9 @@
         <div v-if="(baseRepo && (currentTab == 'activity'))" id="activity">
           <base-repo-activity-card></base-repo-activity-card>
           <base-repo-ecosystem-card></base-repo-ecosystem-card>
-          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
-            <compared-repo-activity-card :comparedTo="repo"></compared-repo-activity-card>
-          </div>
         </div>
         <div v-if="(baseRepo && (currentTab == 'experimental'))">
           <experimental-card></experimental-card>
-          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
-            <compared-repo-experimental-card :comparedTo="repo"></compared-repo-experimental-card>
-          </div>
         </div>
         <div v-if="(gitRepo && (currentTab == 'git'))">
           <git-card></git-card>
@@ -223,7 +210,7 @@ module.exports = {
     },
   },
   methods: {
-    collapseText (){
+    collapseText () {
       this.isCollapsed = !this.isCollapsed;
       if(!this.isCollapsed) {
         $(this.$el).find('.section').addClass('collapsed')
@@ -253,7 +240,7 @@ module.exports = {
           name: 'singlecompare',
           params: {tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo}
         })        
-      } else if (this.$store.state.comparedRepos.length > 1){
+      } else if (this.$store.state.comparedRepos.length > 1) {
         this.$router.push({
           name: 'group',
           params: {tab: e.target.dataset['value'], groupid: 1}

@@ -769,7 +769,7 @@ export default {
       if (this.data) {
         processData(this.data)
       } else {
-
+        console.log("HERE", endpoints)
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
         }, () => {

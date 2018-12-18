@@ -29,16 +29,25 @@
 module.exports = {
   methods: {
     onRepo (e) {
-      this.$store.commit('setRepo', {
-        githubURL: e.target.value
-      })
-      let link = '/gmd/' + (e.target.value)
-      this.$router.push({
-        path: link
-        // path: "/git"
-      })
+      let repo = window.AugurAPI.Repo({
+          githubURL: e.target.value
+        })
+      console.log("check", repo.batch(['codeCommits'], true))
+      if(!repo.batch(['codeCommits'], true)[0]){
+        alert("The repo " + repo.githubURL + " could not be found. Please try again.")
+      } else {
+        this.$store.commit('setRepo', {
+          githubURL: e.target.value
+        })
+        let link = '/gmd/' + (e.target.value)
+        this.$router.push({
+          path: link
+          // path: "/git"
+        })
+      }
+      
     }
-  } 
+  }
 };
 
 </script>

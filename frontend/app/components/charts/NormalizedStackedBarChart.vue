@@ -169,18 +169,28 @@ export default {
               "x": {
                 "field": "author_date", 
                 "type": "temporal", 
-                "bin": true, 
-                "timeUnit": timeUnit, 
-                "axis": {"format": '%Y %b', "title": " ", "labelAngle": -35, "labelFlush": true}
+                // "bin": true, 
+                // "timeUnit": timeUnit, 
+                // "axis": {"format": '%Y %b', "title": " ", "labelAngle": -35, "labelFlush": true}
+                "timeUnit": "yearmonth",
+                "axis": {"domain": false, "format": "%Y", "tickSize": 0}
               },
-              "y": {"field": "count", "type": "quantitative","stack": "normalize", "axis": {"labels": false, "title": null}},
+              "y": {
+                "field": "count", 
+                "type": "quantitative",
+                // "stack": "normalize", 
+                // "axis": {"labels": false, "title": null},
+                "aggregate": "sum",
+                "stack": "center",
+                "axis": null,
+              },
               "color": {
                 "field": "author_email",
                 "type": "nominal",
-                "scale": { "range": colors},
-                "legend": {
-                  "direction": "horizontal",
-                }
+                "scale": {"scheme": "category20b"},
+                // "legend": {
+                //   "direction": "horizontal",
+                // }
               },
               // "size": size,
               // "opacity":{

@@ -241,14 +241,12 @@
         // document.querySelector('.section.collapsible').classList.toggle('collapsed')
       },
       onStartDateChange (e) {
-        console.log(e)
         var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
           delete this.startDateTimeout
         }
         this.startDateTimeout = setTimeout(() => {
-          console.log(date)
           this.$store.commit('setDates', {
             startDate: date
           })
@@ -261,7 +259,6 @@
           delete this.endDateTimeout
         }
         this.endDateTimeout = setTimeout(() => {
-          console.log(date)
           this.$store.commit('setDates', {
             endDate: date
           })
@@ -302,20 +299,23 @@
       },
       onCompare (e) {
         this.compCount++
-        this.$store.commit('addComparedRepo', {
-          githubURL: e.target.value
-        })
+        let repo = window.AugurAPI.Repo({
+            githubURL: e.target.value
+          })
+        console.log(window.AugurRepos)
+        if(!repo.batch(['codeCommits'], true)[0]){
+          alert("The repo " + repo.githubURL + " could not be found. Please try again.")
+        } else {
+          this.$store.commit('addComparedRepo', {
+            githubURL: e.target.value
+          })
+        }
         
       }, 
       onArrayCompare () {
         this.compCount += this.values.length
-
-
-        
         this.values.forEach(
           (url) => {
-
-
             let link = url
             let end = url.slice(url.length - 4)
             if (end == ".git")
