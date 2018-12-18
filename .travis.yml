@@ -4,7 +4,7 @@ matrix:
       install: "pip install ."
       language: python
       python: "3.6"
-      notifications: 
+      notifications:
         slack: "augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS"
       script: "python -m pytest augur/datasources/**/test_**.py"
 
