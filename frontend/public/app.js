@@ -216,6 +216,11 @@ function Augur() {
         state.baseRepo = payload.gitURL;
         state.domain = payload.domain;
         state.hasState = true;
+        if (!window.AugurRepos[repo.toString()]) {
+          window.AugurRepos[repo.toString()] = repo;
+        } else {
+          repo = window.AugurRepos[repo.toString()];
+        }
       },
       setRepo: function setRepo(state, payload) {
         var repo = window.AugurAPI.Repo(payload);
@@ -1683,9 +1688,9 @@ module.exports = {
         owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
         repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4);
       } else {
-        console.log("gluster");
+        console.log("gluster", e.url);
         domain = e.url.substring(first + 1, last);
-        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
+        owner = null;
         repo = e.url.slice(e.url.lastIndexOf('/') + 1);
       }
       console.log("hi", domain, owner, repo);
@@ -2074,7 +2079,7 @@ module.exports = {
       var repo = window.AugurAPI.Repo({
         githubURL: e.target.value
       });
-      console.log(window.AugurRepos);
+      console.log(repo.batch(['codeCommits'], true));
       if (!repo.batch(['codeCommits'], true)[0]) {
         alert("The repo " + repo.githubURL + " could not be found. Please try again.");
       } else {
@@ -2794,8 +2799,8 @@ exports.default = {
       values: [],
       status: {},
       detail: this.$store.state.showDetail,
-      compRepos: this.$store.state.comparedRepos
-
+      compRepos: this.$store.state.comparedRepos,
+      source: null
     };
   },
 
@@ -2852,7 +2857,6 @@ exports.default = {
       var repos = [];
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo]);
-        console.log(window.AugurRepos[this.repo]);
       }
       this.comparedRepos.forEach(function (repo) {
         repos.push(window.AugurRepos[repo]);
@@ -3418,8 +3422,9 @@ exports.default = {
       if (this.data) {
         processData(this.data);
       } else {
-        console.log("HERE", endpoints);
+
         window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+          console.log("REPOS: ", data);
           processData(data);
         }, function () {});
       }
@@ -3453,13 +3458,22 @@ exports.default = {
       $(this.$el).find('.spinner').removeClass('loader');
       $(this.$el).find('.error').removeClass('hidden');
     }
-  } };
+  }, created: function created() {
+    var selected_group = 'all';
+    var selected_source = 'all';
+    var selected_metric_type = 'all';
+    var selected_backend_status = 'all';
+    var selected_frontend_status = 'all';
+    var selected_is_defined = 'all';
+    var query_string = "group=" + selected_group + "&data_source=" + selected_source + "&metric_type=" + selected_metric_type + "&backend_status=" + selected_backend_status + "&frontend_status=" + selected_frontend_status + "&is_defined=" + selected_is_defined;
+  }
+};
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"spacing"}),_vm._v(" "),_vm._m(0),_vm._v(" "),_c('div',{staticClass:"spinner loader"}),_vm._v(" "),_c('div',{staticClass:"hidefirst linechart",class:{ invis: !_vm.detail, invisDet: _vm.detail }},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-1"}),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-2",staticStyle:{"width":"154px !important","height":"38px !important","position":"relative","top":"-12px !important"}},[_c('cite',{staticClass:"metric"},[_c('a',{staticStyle:{"width":"100px !important","height":"38px !important","position":"absolute"},attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_c('img',{staticStyle:{"width":"100px","position":"relative"},attrs:{"src":"https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png","alt":"Chaoss-Definition-Logo","border":"0"}})])])]),_vm._v(" "),_c('div',{staticClass:"col col-4",staticStyle:{"position":"relative","top":"-8px !important"}},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"error hidden"},[_c('br'),_vm._v("Data is missing or unavailable")])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3",staticStyle:{"padding-left":"10px","position":"relative","top":"-8px !important"}},[_c('p',{staticStyle:{"font-size":"12px"}},[_vm._v("Data source: GHTorrent")])])}]
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"error hidden"},[_c('br'),_vm._v("Data is missing or unavailable")])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3",staticStyle:{"padding-left":"10px","position":"relative","top":"-8px !important"}},[_c('span',{staticStyle:{"font-size":"12px"}},[_vm._v("Data source: ")]),_c('span',{staticStyle:{"font-size":"12px"}})])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -7675,9 +7689,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var routes = [{ path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default },
 // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
-{ path: '/:tab/:domain?/:owner/:repo', component: _AugurCards2.default, name: 'single', props: true },
+{ path: '/:tab/:domain?/:owner?/:repo', component: _AugurCards2.default, name: 'single', props: true },
 // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
-{ path: '/:tab/:domain?/:owner/:repo/comparedto/:compareddomain?/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true },
+{ path: '/:tab/:domain?/:owner?/:repo/comparedto/:compareddomain?/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true },
 // {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},
 { path: '/:tab/groupid/:groupid', component: _AugurCards2.default, name: 'group', props: true }];
 var downloadedRepos = [],

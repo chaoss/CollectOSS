@@ -10,9 +10,9 @@ let routes = [
   {path: '/', component: AugurCards},
       {path: '/metrics_status', component: MetricsStatusCard},
       // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
-      {path: '/:tab/:domain?/:owner/:repo', component: AugurCards, name: 'single', props: true},
+      {path: '/:tab/:domain?/:owner?/:repo', component: AugurCards, name: 'single', props: true},
       // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
-      {path: '/:tab/:domain?/:owner/:repo/comparedto/:compareddomain?/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare', props: true},
+      {path: '/:tab/:domain?/:owner?/:repo/comparedto/:compareddomain?/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare', props: true},
       // {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},
       {path: '/:tab/groupid/:groupid', component: AugurCards, name: 'group', props: true},
 ]

@@ -302,7 +302,7 @@
         let repo = window.AugurAPI.Repo({
             githubURL: e.target.value
           })
-        console.log(window.AugurRepos)
+        console.log(repo.batch(['codeCommits'], true))
         if(!repo.batch(['codeCommits'], true)[0]){
           alert("The repo " + repo.githubURL + " could not be found. Please try again.")
         } else {

@@ -64,9 +64,9 @@ module.exports = {
         repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4)
       } 
       else { //gluster
-        console.log("gluster")
+        console.log("gluster", e.url)
         domain = e.url.substring(first + 1, last)
-        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
+        owner = null//e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
         repo = e.url.slice(e.url.lastIndexOf('/') + 1)
       }
       console.log("hi", domain, owner, repo)

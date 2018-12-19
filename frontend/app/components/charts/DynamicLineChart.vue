@@ -5,7 +5,6 @@
     <div class="spinner loader"></div>
     <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
       <vega-lite :spec="spec" :data="values"></vega-lite>
-
       <p> {{ chart }} </p>
     </div>
 
@@ -15,7 +14,7 @@
     <div class="row below-chart">
       <div class="col col-1"></div>
       <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
-        <p style="font-size: 12px">Data source: GHTorrent</p>
+        <span style="font-size: 12px">Data source: </span><span style="font-size: 12px"></span>
       </div>
       <div class="col col-2" style="width:154px !important;height: 38px !important; position: relative; top: -12px !important;">
         <!-- <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite> -->
@@ -44,8 +43,8 @@ export default {
       values: [],
       status: {},
       detail: this.$store.state.showDetail,
-      compRepos: this.$store.state.comparedRepos
-
+      compRepos: this.$store.state.comparedRepos,
+      source: null
     }
   },
   watch: {
@@ -101,7 +100,6 @@ export default {
       let repos = []
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo])
-        console.log(window.AugurRepos[this.repo])
       } // end if (this.$store.repo)
       this.comparedRepos.forEach(function(repo) {
           repos.push(window.AugurRepos[repo])
@@ -769,8 +767,9 @@ export default {
       if (this.data) {
         processData(this.data)
       } else {
-        console.log("HERE", endpoints)
+        
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+          console.log("REPOS: ", data)
           processData(data)
         }, () => {
           //this.renderError()
@@ -808,6 +807,27 @@ export default {
         $(this.$el).find('.error').removeClass('hidden')
 
     }
-  }// end methods
+  },// end methods
+  created () {
+      let selected_group = 'all'
+      let selected_source = 'all'
+      let selected_metric_type = 'all'
+      let selected_backend_status = 'all'
+      let selected_frontend_status = 'all'
+      let selected_is_defined = 'all'
+      var query_string = "group=" + selected_group +
+                         "&data_source=" + selected_source +
+                         "&metric_type=" + selected_metric_type +
+                         "&backend_status=" + selected_backend_status +
+                         "&frontend_status=" + selected_frontend_status +
+                         "&is_defined=" + selected_is_defined
+
+      //   window.AugurAPI.getMetricsStatus(query_string).then((data) => {
+      //     this.metricsData = data
+      //     console.log(data, data[this.baseRepo], this.baseRepo)
+      //     this.source = data[this.baseRepo].source
+      //     let obj = data.find(o => o.name === 'string 1');
+      // })
+  }
 }
 </script>
