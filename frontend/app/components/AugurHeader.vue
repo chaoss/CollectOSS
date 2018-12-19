@@ -40,10 +40,12 @@ module.exports = {
           githubURL: e.target.value
         })
         let link = '/gmd/' + (e.target.value)
+        console.log("CHECK REPO", repo.owner, repo.name)
         this.$router.push({
-          path: link
-          // path: "/git"
+          name: 'single',
+          params: {tab: 'gmd', owner: repo.owner, repo: repo.name}
         })
+
       }
       
     }

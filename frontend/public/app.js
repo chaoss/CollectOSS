@@ -1185,7 +1185,8 @@ module.exports = {
 
     if (!this.groupid) this.mapGroup[1] = this.$store.state.comparedRepos;
     if (this.repo) {
-      if (this.domain) {
+      console.log("domain:", this.domain, this.owner);
+      if (this.domain && this.owner) {
         console.log("if", this.owner, this.repo);
         this.$store.commit('setGitRepo', {
           gitURL: this.owner + '/' + this.repo,
@@ -1193,8 +1194,10 @@ module.exports = {
         });
       } else {
         console.log("ELSE", this.owner, this.repo);
+        var owner = this.owner ? this.owner : this.domain;
+
         this.$store.commit('setRepo', {
-          githubURL: this.owner + '/' + this.repo
+          githubURL: owner + '/' + this.repo
         });
       }
       this.$store.commit('setTab', {
@@ -1229,7 +1232,7 @@ module.exports = {
       console.log(this.$store.state.comparedRepos.length, "second");
       console.log(this.groupid);
       localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
-      if (this.domain) localStorage.setItem('domain', this.domain);
+      if (this.gitRepo) localStorage.setItem('domain', this.domain);
 
       if (this.$store.state.comparedRepos.length > 1) {
         localStorage.setItem("groupid", this.groupid);
@@ -1323,7 +1326,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.reload("data-v-78eb2940", __vue__options__)
+    hotAPI.rerender("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1346,8 +1349,10 @@ module.exports = {
           githubURL: e.target.value
         });
         var link = '/gmd/' + e.target.value;
+        console.log("CHECK REPO", repo.owner, repo.name);
         this.$router.push({
-          path: link
+          name: 'single',
+          params: { tab: 'gmd', owner: repo.owner, repo: repo.name }
         });
       }
     }
@@ -1735,7 +1740,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-1825962d", __vue__options__)
   } else {
-    hotAPI.reload("data-v-1825962d", __vue__options__)
+    hotAPI.rerender("data-v-1825962d", __vue__options__)
   }
 })()}
 });
@@ -3459,13 +3464,24 @@ exports.default = {
       $(this.$el).find('.error').removeClass('hidden');
     }
   }, created: function created() {
+    var _this2 = this;
+
     var selected_group = 'all';
     var selected_source = 'all';
     var selected_metric_type = 'all';
     var selected_backend_status = 'all';
     var selected_frontend_status = 'all';
     var selected_is_defined = 'all';
-    var query_string = "group=" + selected_group + "&data_source=" + selected_source + "&metric_type=" + selected_metric_type + "&backend_status=" + selected_backend_status + "&frontend_status=" + selected_frontend_status + "&is_defined=" + selected_is_defined;
+    var query_string = "chart_mapping=openIssues";
+
+    window.AugurAPI.getMetricsStatus(query_string).then(function (data) {
+      _this2.metricsData = data;
+      console.log(data, data[_this2.baseRepo], _this2.baseRepo);
+      _this2.source = data[_this2.baseRepo].source;
+      var obj = data.find(function (o) {
+        return o.name === 'string 1';
+      });
+    });
   }
 };
 })()

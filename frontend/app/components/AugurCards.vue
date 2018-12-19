@@ -101,7 +101,8 @@ module.exports = {
     if(!this.groupid)
       this.mapGroup[1] = this.$store.state.comparedRepos
     if(this.repo){
-      if (this.domain){
+      console.log("domain:", this.domain, this.owner)
+      if (this.domain && this.owner){
         console.log("if", this.owner, this.repo)
         this.$store.commit('setGitRepo', {
           gitURL: this.owner + '/' + this.repo,
@@ -110,8 +111,10 @@ module.exports = {
       }
       else{
         console.log("ELSE", this.owner, this.repo)
+        let owner = this.owner ? this.owner : this.domain
+
         this.$store.commit('setRepo', {
-          githubURL: this.owner + '/' + this.repo
+          githubURL: owner + '/' + this.repo
         })
 
       }
@@ -148,7 +151,7 @@ module.exports = {
       console.log(this.$store.state.comparedRepos.length, "second")
       console.log(this.groupid)
       localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));  
-      if (this.domain)
+      if (this.gitRepo)
         localStorage.setItem('domain', this.domain)
       
       if(this.$store.state.comparedRepos.length > 1){

@@ -815,19 +815,20 @@ export default {
       let selected_backend_status = 'all'
       let selected_frontend_status = 'all'
       let selected_is_defined = 'all'
-      var query_string = "group=" + selected_group +
-                         "&data_source=" + selected_source +
-                         "&metric_type=" + selected_metric_type +
-                         "&backend_status=" + selected_backend_status +
-                         "&frontend_status=" + selected_frontend_status +
-                         "&is_defined=" + selected_is_defined
+      var query_string = "chart_mapping=openIssues" //+ this.source
+      // var query_string = "group=" + selected_group +
+      //                    "&data_source=" + selected_source +
+      //                    "&metric_type=" + selected_metric_type +
+      //                    "&backend_status=" + selected_backend_status +
+      //                    "&frontend_status=" + selected_frontend_status +
+      //                    "&is_defined=" + selected_is_defined
 
-      //   window.AugurAPI.getMetricsStatus(query_string).then((data) => {
-      //     this.metricsData = data
-      //     console.log(data, data[this.baseRepo], this.baseRepo)
-      //     this.source = data[this.baseRepo].source
-      //     let obj = data.find(o => o.name === 'string 1');
-      // })
+        window.AugurAPI.getMetricsStatus(query_string).then((data) => {
+          this.metricsData = data
+          console.log(data, data[this.baseRepo], this.baseRepo)
+          this.source = data[this.baseRepo].source
+          let obj = data.find(o => o.name === 'string 1');
+      })
   }
 }
 </script>
