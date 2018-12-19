@@ -2795,6 +2795,7 @@ cite.metric a {
 .tickchart * {
   overflow: visible !important;
   width: 100%;
+  margin-bottom: 30px;
 }
 .normalbar * {
   overflow: visible !important;
@@ -2999,9 +3000,6 @@ div.checkbox_select .select_input {
 .multiselect__content-wrapper ul {
   list-style: none;
 }
-.multiselect__content-wrapper {
-  z-index: 1000000 !important;
-}
 .multiselect__content-wrapper ul li .multiselect__option {
   display: block;
   text-decoration: none;
@@ -3028,9 +3026,6 @@ div.checkbox_select .select_input {
 .multiselect__content {
   margin: 0;
   width: 150px;
-}
-.multiselect__option--selected {
-  background-color: #0f0 !important;
 }
 .multiselect__option--selected:hover {
   background-color: #0f0 !important;
@@ -3404,6 +3399,7 @@ input:focus {
   width: 100% !important;
   animation: slide 60s linear infinite !important;
 }
+<<<<<<< Updated upstream
 .inputGroup {
   top: 30%;
   display: inline;
@@ -3491,21 +3487,45 @@ input:focus {
 }
 .relative {
   position: relative !important;
+=======
+.multiselect__content-wrapper {
+  position: absolute !important;
 }
-.note {
-  font-size: 10px;
-  opacity: 0.8;
-  margin: 0;
-  text-align: center;
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 0;
 }
-.invisible {
+.tooltip .tooltiptext {
   visibility: hidden;
-}
-.invalid-search {
-  color: #f00;
-  font-size: 16px;
+  width: 150px;
+  background-color: #fff;
+  color: #000;
   text-align: center;
-  vertical-align: bottom;
+  border-radius: 6px;
+  padding: 5px 0;
+/* Position the tooltip */
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -81px;
+  opacity: 0;
+  transition: opacity 1s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+.selected {
+  display: block !important;
+}
+.data-provided {
+  color: #f00;
+  opacity: 0.5;
+  font-style: normal;
+  font-size: 10px;
+  padding-left: 6em;
+>>>>>>> Stashed changes
 }
 @-moz-keyframes spin {
   0% {

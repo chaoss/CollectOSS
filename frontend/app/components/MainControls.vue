@@ -9,7 +9,7 @@
           <div class="row justify-content-md-center">
             <div class="col col-9">
               <div class="row">
-                <div class="col col-3" align="center" id="comparetext"><h6>Compare from your repos:</h6></div>
+                <div class="col col-3" align="center" id="comparetext" @click="stopSelecting"><h6>Compare from your repos:</h6></div>
                 <div class="col col-2" @click="keepSelecting">
                   <multiselect class="" v-model="project" :options="projects" :placeholder="project"></multiselect>
                 </div>
@@ -29,16 +29,18 @@
                 <div class="col col-1"><input type="button" @click="onArrayCompare(); stopSelecting(); onValuesClear()" value="Apply" style="max-width:69.9px"></div>
                 <div class="col col-1"><input type="button" @click="onClear(); stopSelecting()" value="Reset" style="max-width:69.9px"></div>
                 <div class="col col-3">
-                  <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare"/>
+                  <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare" @click="stopSelecting"/>
                   <p></p>
                 </div>
               </div>
 
             </div>
+                 
+                 <div id="invalid" class="col col-1 invisible invalid-search" align="center" @click="stopSelecting">Repo not found.</div>
 
-            <div id="collapse" class="col col-3">
-              <div class="col col-12 align-bottom" align="right" v-show="isCollapsed" @click="collapseText">Less configuration options &#9660</div>
-              <div class="col col-12 align-bottom" align="right" v-show="!isCollapsed" @click="collapseText">More configuration options &#9654</div>
+            <div id="collapse" class="col col-2">
+              <div class="col col-12 align-bottom" align="right" v-show="isCollapsed" @click="collapseText(); stopSelecting()">Less configuration options &#9660</div>
+              <div class="col col-12 align-bottom" align="right" v-show="!isCollapsed" @click="collapseText(); stopSelecting()">More configuration options &#9654</div>
             </div>
 
           </div>
@@ -298,17 +300,22 @@
 
       },
       onCompare (e) {
+        var element = document.getElementById("invalid")
         this.compCount++
         let repo = window.AugurAPI.Repo({
             githubURL: e.target.value
           })
         console.log(repo.batch(['codeCommits'], true))
         if(!repo.batch(['codeCommits'], true)[0]){
-          alert("The repo " + repo.githubURL + " could not be found. Please try again.")
+          //alert("The repo " + repo.githubURL + " could not be found. Please try again.")
+            element.classList.remove("invisible")
         } else {
           this.$store.commit('addComparedRepo', {
             githubURL: e.target.value
+
           })
+           element.classList.add("invisible")
+
         }
         
       }, 
