@@ -310,7 +310,7 @@ class Server(object):
 
     def addGitMetric(self, function, endpoint, cache=True):
         """Simplifies adding routes that accept"""
-        endpoint = '/{}/git/{}/'.format(self.api_version, endpoint)
+        endpoint = '/{}/git/{}'.format(self.api_version, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
         self.updateMetricMetadata(function, endpoint=endpoint, metric_type='git')
 

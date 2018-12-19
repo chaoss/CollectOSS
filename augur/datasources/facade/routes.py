@@ -34,10 +34,10 @@ def create_routes(server):
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
-    server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='facade')
+    server.updateMetricMetadata(function=facade.downloaded_repos, endpoint='/{}/git/repos'.format(server.api_version), metric_type='git')
 
     """
-    @api {get} /facade/lines_changed/:facade_repo_url Lines Changed by Author
+    @api {get} /git/lines_changed/:facade_repo_url Lines Changed by Author
     @apiName lines-changed-by-author
     @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
@@ -63,7 +63,7 @@ def create_routes(server):
     server.addGitMetric(facade.lines_changed_by_author, 'changes_by_author')
 
     """
-    @api {get} /facade/lines_changed_by_week/:facade_repo_url Lines Changed by Week
+    @api {get} /git/lines_changed_by_week/:facade_repo_url Lines Changed by Week
     @apiName lines-changed-by-week
     @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
@@ -83,7 +83,7 @@ def create_routes(server):
     server.addGitMetric(facade.lines_changed_by_week, 'lines_changed_by_week')
 
     """
-    @api {get} /facade/lines_changed_by_month/:facade_repo_url Lines Changed by Month
+    @api {get} /git/lines_changed_by_month/:facade_repo_url Lines Changed by Month
     @apiName lines-changed-by-month
     @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.

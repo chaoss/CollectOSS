@@ -283,7 +283,6 @@ export default class AugurAPI {
 
     if (repo.gitURL) {
       // Other
-      GitEndpoint(repo, 'linesChangedMinusWhitespace', 'lines_changed')
       GitEndpoint(repo, 'changesByAuthor', 'changes_by_author')
     }
 

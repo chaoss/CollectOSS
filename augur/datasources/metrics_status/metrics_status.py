@@ -22,13 +22,13 @@ class FrontendStatusExtractor(object):
         attribute = None
 
         if metric.metric_type is "timeseries":
-            attribute = next((attribute for attribute in self.timeseries_attributes if attribute[2] in metric.endpoint), None)
+            attribute = next((attribute for attribute in self.timeseries_attributes if f"/api/unstable/<owner>/<repo>/timeseries/{attribute[2]}" == metric.endpoint), None)
 
         elif metric.metric_type is "metric":
-            attribute = next((attribute for attribute in self.endpoint_attributes if attribute[2] in metric.endpoint), None)
+            attribute = next((attribute for attribute in self.endpoint_attributes if f"/api/unstable/<owner>/<repo>/{attribute[2]}" == metric.endpoint), None)
 
         elif metric.metric_type is "git":
-            attribute = next((attribute for attribute in self.git_endpoint_attributes if attribute[2] in metric.endpoint), None)
+            attribute = next((attribute for attribute in self.git_endpoint_attributes if f"/api/unstable/git/{attribute[2]}" == metric.endpoint), None)
 
         if attribute is not None:
             metric.frontend_status = 'implemented'
@@ -204,12 +204,17 @@ class MetricsStatus(object):
         for raw_name in activity_names:
             metric = GroupedMetric(raw_name, "activity")
 
-            is_grouped_metric = True
-            for group in self.metrics_by_group:
-                if metric.tag not in [metric.tag for metric in group]:
-                    is_grouped_metric = False
+            tags = []
 
-            if not is_grouped_metric:
+            for group in self.metrics_by_group:
+                for metric in group:
+                    tags.append(metric.tag)
+
+                is_not_grouped_metric = False
+                if metric.tag in tags:
+                    is_not_grouped_metric = True
+
+            if is_not_grouped_metric:
                 activity_metrics.append(metric)
 
         return activity_metrics
@@ -227,7 +232,7 @@ class MetricsStatus(object):
         # I'm sorry
         implemented_metric_tags = [metric.tag for metric in self.implemented_metrics]
         for group in self.metrics_by_group:
-            if group is not self.experimental_metrics: #experimental metrics don't need to be copied, since they don't have a definition
+            if group is not self.experimental_metrics: #experime    ntal metrics don't need to be copied, since they don't have a definition
                 for grouped_metric in group:
                     if grouped_metric.tag in implemented_metric_tags:
                         metric = next(metric for metric in self.implemented_metrics if metric.tag == grouped_metric.tag)
