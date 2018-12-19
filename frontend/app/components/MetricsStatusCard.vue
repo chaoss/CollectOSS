@@ -157,11 +157,11 @@ export default {
         window.AugurAPI.getMetricsStatusMetadata().then((data) => {
           this.metadata['metricStatusMetadata'] = data
 
-          this.metadata['groups'] = Object.keys(data.groups[0])
+          this.metadata['groups'] = Object.keys(data[0].groups)
 
-          this.metadata['data_sources'] = data.data_sources
+          this.metadata['data_sources'] = data[0].data_sources
 
-          this.metadata['metric_types'] = data.metric_types
+          this.metadata['metric_types'] = data[0].metric_types
         })
       },
       getImplementationStatusColor(metric, location) {

@@ -2227,11 +2227,11 @@ exports.default = {
       window.AugurAPI.getMetricsStatusMetadata().then(function (data) {
         _this2.metadata['metricStatusMetadata'] = data;
 
-        _this2.metadata['groups'] = Object.keys(data.groups[0]);
+        _this2.metadata['groups'] = Object.keys(data[0].groups);
 
-        _this2.metadata['data_sources'] = data.data_sources;
+        _this2.metadata['data_sources'] = data[0].data_sources;
 
-        _this2.metadata['metric_types'] = data.metric_types;
+        _this2.metadata['metric_types'] = data[0].metric_types;
       });
     },
     getImplementationStatusColor: function getImplementationStatusColor(metric, location) {

@@ -18,24 +18,25 @@ class FrontendStatusExtractor(object):
         self.endpoint_attributes = [attribute for attribute in self.attributes if attribute[0] == "Endpoint"]
         self.git_endpoint_attributes = [attribute for attribute in self.attributes if attribute[0] == "GitEndpoint"]
 
-    def determine_frontend_status(self, endpoint, metric_type):
+    def determine_frontend_status(self, metric):
         attribute = None
 
-        if metric_type is "timeseries":
-            attribute = next((attribute[1] for attribute in self.timeseries_attributes if attribute[2] in endpoint), None)
+        if metric.metric_type is "timeseries":
+            attribute = next((attribute for attribute in self.timeseries_attributes if attribute[2] in metric.endpoint), None)
 
-        elif metric_type is "metric":
-            attribute = next((attribute[1] for attribute in self.endpoint_attributes if attribute[2] in endpoint), None)
+        elif metric.metric_type is "metric":
+            attribute = next((attribute for attribute in self.endpoint_attributes if attribute[2] in metric.endpoint), None)
 
-        elif metric_type is "git":
-            attribute = next((attribute[1] for attribute in self.git_endpoint_attributes if attribute[2] in endpoint), None)
+        elif metric.metric_type is "git":
+            attribute = next((attribute for attribute in self.git_endpoint_attributes if attribute[2] in metric.endpoint), None)
 
         if attribute is not None:
-            status = 'implemented'
+            metric.frontend_status = 'implemented'
+            metric.chart_mapping = attribute[1]
         else:
-            status = 'unimplemented'
+            metric.frontend_status = 'unimplemented'
 
-        return status
+        return metric
 
 class Metric(object):
 
@@ -46,6 +47,7 @@ class Metric(object):
         self.group = 'none'
         self.backend_status = 'unimplemented'
         self.frontend_status = 'unimplemented'
+        self.chart_mapping = "none"
         self.endpoint = 'none'
         self.data_source = 'none'
         self.metric_type = 'none'
@@ -80,34 +82,35 @@ class ImplementedMetric(Metric):
 
         if 'endpoint' in metadata:
             self.endpoint = metadata['endpoint']
-            self.frontend_status = frontend_status_extractor.determine_frontend_status(self.endpoint, self.metric_type)
+            self = frontend_status_extractor.determine_frontend_status(self)
+        # print(self.frontend_status)
 
 class MetricsStatus(object):
 
     diversity_inclusion_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/goal_communication.md", "has_links": True},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/goal_contribution.md", "has_links": True},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/goal_events.md", "has_links": False},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/goal_governance.md", "has_links": False},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/goal_leadership.md", "has_links": False},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/goal_project_places.md", "has_links": True},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/goal_recognition.md", "has_links": False}
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_communication.md", "has_links": True},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_contribution.md", "has_links": True},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_events.md", "has_links": False},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_governance.md", "has_links": False},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_leadership.md", "has_links": False},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_project_places.md", "has_links": True},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_recognition.md", "has_links": False}
     ]   
 
     growth_maturity_decline_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/2_Growth-Maturity-Decline.md", "has_links": True},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/2_Growth-Maturity-Decline.md", "has_links": True},
     ]
 
     risk_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/3_Risk.md", "has_links": False},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/3_Risk.md", "has_links": False},
     ]
 
     value_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/4_Value.md", "has_links": False},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/4_Value.md", "has_links": False},
     ]
 
     activity_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/blob/wg-gmd/activity-metrics-list.md", "has_links": False},
+        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/activity-metrics-list.md", "has_links": False},
     ]
 
     activity_repo = "augurlabs/metrics"
@@ -115,6 +118,7 @@ class MetricsStatus(object):
     def __init__(self, githubapi):
         self.__githubapi = githubapi.api
 
+        #TODO: don't hardcode this
         self.groups = {
             "diversity-inclusion": "Diversity and Inclusion",
             "growth-maturity-decline": "Growth, Maturity, and Decline",
@@ -123,7 +127,7 @@ class MetricsStatus(object):
             "activity": "Activity",
             "experimental": "Experimental",
             "all": "All"
-       },
+       }
 
         self.data_sources = []
         self.metric_types = []
