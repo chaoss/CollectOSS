@@ -570,6 +570,7 @@ def create_routes(server):
                             }
                         ]
     """
+    server.addTimeseries(ghtorrent.pull_request_acceptance_rate, 'pulls/acceptance_rate')
 
     """
     @api {get} /:owner/:repo/community_age Community Age

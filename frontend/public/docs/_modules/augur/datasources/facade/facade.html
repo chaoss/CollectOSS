@@ -36,14 +36,14 @@
 <span class="sd">Data source that uses Facade&#39;s tables</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">base64</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">s</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
 <span class="c1"># end imports</span>
 <span class="c1"># (don&#39;t remove the above line, it&#39;s for a script)</span>
+
 
 <div class="viewcode-block" id="Facade"><a class="viewcode-back" href="../../../../datasources/augur.datasources.facade.facade.Facade.html#augur.datasources.facade.facade.Facade">[docs]</a><span class="k">class</span> <span class="nc">Facade</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Queries Facade&quot;&quot;&quot;</span>
@@ -91,6 +91,9 @@
 
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;downloaded-repos&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">downloaded_repos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all repository names, URLs, and base64 URLs in the facade database</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">downloadedReposSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT git AS url, status, projects.name as project_name</span>
 <span class="s2">            FROM repos</span>
@@ -101,16 +104,18 @@
         <span class="n">results</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">datum</span><span class="p">:</span> <span class="n">datum</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;//&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">:</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">project_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">)]</span>
-        <span class="k">return</span> <span class="n">results</span>
 
-    <span class="c1"># @annotate(tag=&#39;lines-changed-minus-whitespace&#39;)</span>
-    <span class="c1"># def lines_changed_minus_whitespace(self, repo_url, from_commit=None, df=None, rebuild_cache=False):</span>
-    <span class="c1">#     pass</span>
+        <span class="n">b64_urls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">b64_urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">((</span><span class="n">results</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">()))</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;base64_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b64_urls</span>
+
+        <span class="k">return</span> <span class="n">results</span>
 
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-by-author&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">lines_changed_by_author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        TODO: docstring</span>
+<span class="sd">        CALCULATES the total additions, deletions, and whitespace changes for a given repository URL per author per date</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">linesChangedByAuthorSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace</span>

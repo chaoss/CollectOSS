@@ -58,6 +58,9 @@ class Facade(object):
 
     @annotate(tag='downloaded-repos')
     def downloaded_repos(self):
+        """
+        Returns all repository names, URLs, and base64 URLs in the facade database
+        """
         downloadedReposSQL = s.sql.text("""
             SELECT git AS url, status, projects.name as project_name
             FROM repos
@@ -79,7 +82,7 @@ class Facade(object):
     @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):
         """
-        TODO: docstring
+        Calculates the total additions, deletions, and whitespace changes for a given repository URL per author per date
         """
         linesChangedByAuthorSQL = s.sql.text("""
             SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
