@@ -53,7 +53,7 @@ class Server(object):
         @app.route('/{}/'.format(self.api_version))
         def status():
             status = {
-                'status': 'OK'
+                'status': 'isdlakfj'
             }
             return Response(response=json.dumps(status),
                             status=200,
