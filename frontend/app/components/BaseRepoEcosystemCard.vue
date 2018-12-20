@@ -11,19 +11,19 @@
 
     <div class="row">
       <div class="col col-6">
-        <line-chart source="downloads"
+        <dynamic-line-chart source="downloads"
                     title="Downloads / Day" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty">
-        </line-chart>
+        </dynamic-line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="stars"
+        <dynamic-line-chart source="stars"
                     title="Stars / Week" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty">
-        </line-chart>
+        </dynamic-line-chart>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
 
 <script>
 
-import LineChart from './charts/LineChart'
+import DynamicLineChart from './charts/DynamicLineChart'
 import DependencyOverview from './charts/DependencyOverview'
 import BusFactor from './charts/BusFactor'
 
@@ -59,7 +59,7 @@ module.exports = {
     }
   },
   components: {
-    LineChart,
+    DynamicLineChart,
     DependencyOverview,
     BusFactor
   }
