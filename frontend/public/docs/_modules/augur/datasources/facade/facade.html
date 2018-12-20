@@ -115,7 +115,7 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-by-author&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">lines_changed_by_author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        CALCULATES the total additions, deletions, and whitespace changes for a given repository URL per author per date</span>
+<span class="sd">        Calculates the total additions, deletions, and whitespace changes for a given repository URL per author per date</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">linesChangedByAuthorSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace</span>
