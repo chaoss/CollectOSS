@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Creates routes for the downloads data source plugin
+"""
+
 def create_routes(server):
 
     downloads = server._augur['downloads']()

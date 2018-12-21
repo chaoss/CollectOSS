@@ -24,10 +24,12 @@ import argparse
 
 
 class Application(object):
-    """Initalizes all classes form Augur using a config file or environment variables"""
+    """Initalizes all classes from Augur using a config file or environment variables"""
 
     def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application', db_str='sqlite:///:memory:'):
-
+        """
+        Reads config, creates DB session, and initializes cache
+        """
         # Command line arguments
         # TODO: make this useful
         self.arg_parser = argparse.ArgumentParser(description=description)
@@ -118,6 +120,9 @@ class Application(object):
 
     @classmethod
     def import_plugins(cls):
+        """
+        Imports data source plugins and regular plugins
+        """
         if not hasattr(cls, 'plugins'):
             setattr(cls, 'plugins', {})
         for module in [augur.plugins, augur.datasources]:
@@ -131,6 +136,9 @@ class Application(object):
 
     @classmethod
     def register_plugin(cls, plugin):
+        """
+        Registers a plugin to the list of default plugins
+        """
         if 'name' not in plugin.augur_plugin_meta:
             raise NameError("{} didn't have a name")
         cls.plugins[plugin.augur_plugin_meta['name']] = plugin
@@ -138,6 +146,9 @@ class Application(object):
             Application.default_plugins.append(plugin.augur_plugin_meta['name'])
 
     def replace_config_variables(self, string, reverse=False):
+        """
+        Replaces config variables with environment variables, if they exist
+        """
         variable_map = {
             'AUGUR': self.__config_location,
             'RUNTIME': self.__runtime_location
@@ -156,6 +167,9 @@ class Application(object):
 
     @staticmethod
     def updater_process(name, delay, shared):
+        """
+        Controls a given plugin's update process
+        """
         logger.info('Spawned {} updater process with PID {}'.format(name, os.getpid()))
         app = Application()
         datasource = getattr(app, name)()
@@ -180,6 +194,9 @@ class Application(object):
                 update['started'] = True
 
     def read_config(self, section, name, environment_variable=None, default=None):
+        """
+        Reads the config file, substituing in environment variables when they exist
+        """
         value = None
         if environment_variable is not None:
             value = os.getenv(environment_variable)
@@ -199,7 +216,7 @@ class Application(object):
                 and not hasattr(self.__already_exported, environment_variable)):
             self.__export_file.write('export ' + environment_variable + '="' + str(value) + '"\n')
             self.__already_exported[environment_variable] = True
-        if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1': 
+        if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1':
             logger.debug('{}:{} = {}'.format(section, name, value))
         return value
 
@@ -233,6 +250,9 @@ class Application(object):
             return path
 
     def update_all(self):
+        """
+        Updates all plugins that are updateable
+        """
         print(self.__updatable)
         for updatable in self.__updatable:
             logger.info('Updating {}...'.format(updatable['name']))
@@ -251,6 +271,9 @@ class Application(object):
             process.join()
 
     def shutdown_updates(self):
+        """
+        Terminates all update processes
+        """
         for process in self.__processes:
             process.terminate()
 

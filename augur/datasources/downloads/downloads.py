@@ -4,10 +4,10 @@ Data source that gathers download stats from package managers
 """
 
 import json
-import pandas as pd
-import requests
 import datetime
 import base64
+import pandas as pd
+import requests
 from augur import logger
 from augur.util import annotate
 
@@ -47,7 +47,7 @@ class Downloads(object):
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
-        
+
     @annotate(tag='downloads')
     def downloads(self, owner, repo):
         """
@@ -79,8 +79,8 @@ class Downloads(object):
         df = pd.DataFrame(json.loads(json.loads(json.dumps(raw))))
         
         columnsTitles=["date","daily_downloads"]
-        df = df.reindex(columns= columnsTitles)
-        df.rename(columns= {"daily_downloads" : "downloads"}, inplace=True)
+        df = df.reindex(columns=columnsTitles)
+        df.rename(columns={"daily_downloads" : "downloads"}, inplace=True)
 
         return df
 
@@ -94,12 +94,11 @@ class Downloads(object):
         """
         contents = json.loads(json.loads(json.dumps(contents)))
         name = contents["name"]
-        dates = []
         r = requests.get("https://api.npmjs.org/downloads/range/0:%s/%s" % (datetime.datetime.today().strftime('%Y-%m-%d'), name))
         raw = r.text
         raw = json.loads(json.loads(json.dumps(raw)))
         df = pd.DataFrame(raw["downloads"])
-        df.rename(columns= {"day" : "date"}, inplace=True)
+        df.rename(columns={"day" : "date"}, inplace=True)
 
         for i, row in df.iterrows():
             if row["downloads"] != 0:

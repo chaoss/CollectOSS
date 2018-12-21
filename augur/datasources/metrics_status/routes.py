@@ -1,6 +1,11 @@
+#SPDX-License-Identifier: MIT
+"""
+Creates routes for the metrics status plugin
+"""
+
+import json
 from flask import Response, request
 from .metrics_status import Metric
-import json
 
 def filter_by(status, key, value):
     if value == "all" or value == '' or value is None:

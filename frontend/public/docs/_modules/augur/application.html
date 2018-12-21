@@ -57,10 +57,12 @@
 
 
 <div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Initalizes all classes form Augur using a config file or environment variables&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Initalizes all classes from Augur using a config file or environment variables&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Application.__init__"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="s1">&#39;augur.config.json&#39;</span><span class="p">,</span> <span class="n">no_config_file</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Augur application&#39;</span><span class="p">,</span> <span class="n">db_str</span><span class="o">=</span><span class="s1">&#39;sqlite:///:memory:&#39;</span><span class="p">):</span>
-
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads config, creates DB session, and initializes cache</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Command line arguments</span>
         <span class="c1"># TODO: make this useful</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
@@ -151,6 +153,9 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">import_plugins</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Imports data source plugins and regular plugins</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">):</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">[</span><span class="n">augur</span><span class="o">.</span><span class="n">plugins</span><span class="p">,</span> <span class="n">augur</span><span class="o">.</span><span class="n">datasources</span><span class="p">]:</span>
@@ -164,6 +169,9 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">register_plugin</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">plugin</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Registers a plugin to the list of default plugins</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> didn&#39;t have a name&quot;</span><span class="p">)</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">plugin</span>
@@ -171,6 +179,9 @@
             <span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">replace_config_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replaces config variables with environment variables, if they exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">variable_map</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;AUGUR&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span><span class="p">,</span>
             <span class="s1">&#39;RUNTIME&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_location</span>
@@ -189,6 +200,9 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">updater_process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">delay</span><span class="p">,</span> <span class="n">shared</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Controls a given plugin&#39;s update process</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Spawned </span><span class="si">{}</span><span class="s1"> updater process with PID </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
         <span class="n">app</span> <span class="o">=</span> <span class="n">Application</span><span class="p">()</span>
         <span class="n">datasource</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">name</span><span class="p">)()</span>
@@ -213,6 +227,9 @@
                 <span class="n">update</span><span class="p">[</span><span class="s1">&#39;started&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">read_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the config file, substituing in environment variables when they exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">environment_variable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">environment_variable</span><span class="p">)</span>
@@ -232,7 +249,7 @@
                 <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__already_exported</span><span class="p">,</span> <span class="n">environment_variable</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__export_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;export &#39;</span> <span class="o">+</span> <span class="n">environment_variable</span> <span class="o">+</span> <span class="s1">&#39;=&quot;&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__already_exported</span><span class="p">[</span><span class="n">environment_variable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_DEBUG_LOG_ENV&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_DEBUG_LOG_ENV&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1"> = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">value</span>
 
@@ -266,6 +283,9 @@
             <span class="k">return</span> <span class="n">path</span>
 
     <span class="k">def</span> <span class="nf">update_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates all plugins that are updateable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">updatable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">updatable</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
@@ -284,6 +304,9 @@
             <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">shutdown_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Terminates all update processes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="p">:</span>
             <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span></div>
 

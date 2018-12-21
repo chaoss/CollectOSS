@@ -136,7 +136,3 @@ class Facade(object):
         """)
         results = pd.read_sql(commitsByMonthSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
         return results
-
-
-
-    

@@ -64,15 +64,12 @@ import AugurHeader from './AugurHeader'
 import MetricsStatusCard from './MetricsStatusCard'
 import BaseRepoActivityCard from './BaseRepoActivityCard'
 import BaseRepoEcosystemCard from './BaseRepoEcosystemCard'
-import ComparedRepoActivityCard from './ComparedRepoActivityCard'
 import GrowthMaturityDeclineCard from './GrowthMaturityDeclineCard'
-import ComparedRepoGrowthMaturityDeclineCard from './ComparedRepoGrowthMaturityDeclineCard'
 import RiskCard from './RiskCard'
 import ValueCard from './ValueCard'
 import DiversityInclusionCard from './DiversityInclusionCard'
 import GitCard from './GitCard'
 import ExperimentalCard from './ExperimentalCard'
-import ComparedRepoExperimentalCard from './ComparedRepoExperimentalCard'
 import DownloadedReposCard from './DownloadedReposCard'
 import LoginForm from './LoginForm'
 import { mapState } from 'vuex'
@@ -85,15 +82,12 @@ module.exports = {
     MetricsStatusCard,
     BaseRepoActivityCard,
     BaseRepoEcosystemCard,
-    ComparedRepoActivityCard,
     GrowthMaturityDeclineCard,
-    ComparedRepoGrowthMaturityDeclineCard,
     RiskCard,
     ValueCard,
     DiversityInclusionCard,
     GitCard,
     ExperimentalCard,
-    ComparedRepoExperimentalCard,
     DownloadedReposCard,
     LoginForm
   },

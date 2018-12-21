@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Creates routes for the facade data source plugin
+"""
+
 from flask import Response
 
 def create_routes(server):

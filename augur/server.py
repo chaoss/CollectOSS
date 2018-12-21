@@ -19,6 +19,9 @@ AUGUR_API_VERSION = 'api/unstable'
 
 class Server(object):
     def __init__(self):
+        """
+        Initialzes the Flask app, creates an Augur application, initializes the cache, and creates the plugin routes
+        """
         # Create Flask application
         self.app = Flask(__name__)
         self.api_version = AUGUR_API_VERSION
@@ -240,6 +243,9 @@ class Server(object):
 
     def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records', 
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
+        """
+        Serializes a dataframe in a JSON object and applies specified transformations
+        """
 
         if orient is None:
             orient = 'records'
@@ -309,7 +315,7 @@ class Server(object):
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addGitMetric(self, function, endpoint, cache=True):
-        """Simplifies adding routes that accept"""
+        """Simplifies adding git routes"""
         endpoint = '/{}/git/{}'.format(self.api_version, endpoint)
         self.app.route(endpoint)(self.flaskify(function, cache=cache))
         self.updateMetricMetadata(function, endpoint=endpoint, metric_type='git')
@@ -324,6 +330,9 @@ class Server(object):
         self.addMetric(function, 'timeseries/{}'.format(endpoint), metric_type='timeseries')
 
     def updateMetricMetadata(self, function, endpoint, **kwargs):
+        """
+        Updates a metric's metadata with the endpoint and any other specified args
+        """
         # God forgive me
         #
         # Get the unbound function from the bound function's class so that we can modify metadata

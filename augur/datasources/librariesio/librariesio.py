@@ -1,3 +1,4 @@
+#SPDX-License-Identifier: MIT
 """
 Data source that uses the LibrariesIO dependency data
 """

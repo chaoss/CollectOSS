@@ -143,14 +143,12 @@
 </template>
 
 <script>
-import LineChart from './charts/LineChart'
 import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
 import DynamicLineChart from './charts/DynamicLineChart'
 module.exports = {
   
   components: {
-    LineChart,
     BubbleChart,
     StackedBarChart,
     DynamicLineChart

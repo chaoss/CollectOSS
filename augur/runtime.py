@@ -35,6 +35,9 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
         return server.app
 
 def run():
+    """
+    Runs either the server or the updater
+    """
     mp.set_start_method('forkserver')
     app = augur.Application()
     app.arg_parser.add_argument("-u", "--updater",

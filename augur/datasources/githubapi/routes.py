@@ -1,3 +1,8 @@
+#SPDX-License-Identifier: MIT
+"""
+Creates routes for the GitHub API data source plugin
+"""
+
 def create_routes(server):
 
     github = server._augur['githubapi']()

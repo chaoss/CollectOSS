@@ -40,7 +40,7 @@
 <dd><dl class="method">
 <dt id="augur.server.Server.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/server.html#Server.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.server.Server.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dd><p>Initialzes the Flask app, creates an Augur application, initializes the cache, and creates the plugin routes</p>
 </dd></dl>
 
 <p class="rubric">Methods</p>
@@ -51,10 +51,10 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#augur.server.Server.__init__" title="augur.server.Server.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</td>
-<td>Initialize self.</td>
+<td>Initialzes the Flask app, creates an Augur application, initializes the cache, and creates the plugin routes</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">addGitMetric</span></code>(function,&nbsp;endpoint[,&nbsp;cache])</td>
-<td>Simplifies adding routes that accept</td>
+<td>Simplifies adding git routes</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">addMetric</span></code>(function,&nbsp;endpoint[,&nbsp;cache])</td>
 <td>Simplifies adding routes that only accept owner/repo</td>
@@ -66,10 +66,10 @@
 <td>Simplifies API endpoints that just accept owner and repo, transforms them and spits them out</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code>(func[,&nbsp;args,&nbsp;kwargs,&nbsp;…])</td>
-<td></td>
+<td>Serializes a dataframe in a JSON object and applies specified transformations</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">updateMetricMetadata</span></code>(function,&nbsp;endpoint,&nbsp;…)</td>
-<td></td>
+<td>Updates a metric’s metadata with the endpoint and any other specified args</td>
 </tr>
 </tbody>
 </table>
