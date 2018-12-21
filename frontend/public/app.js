@@ -1453,7 +1453,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row auto"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])]),_vm._v(" "),_c('nav',{staticClass:"col col-4 header-nav"},[_c('a',{staticClass:"header-nav-item",attrs:{"href":"https://github.com/chaoss/augur"}},[_vm._v("GitHub")]),_vm._v(" "),_c('a',{staticClass:"header-nav-item",attrs:{"href":"static/docs/"}},[_vm._v("Python Docs")]),_vm._v(" "),_c('a',{staticClass:"header-nav-item",attrs:{"href":"static/api_docs/"}},[_vm._v("API Docs")]),_vm._v(" "),_c('router-link',{staticClass:"header-nav-item",attrs:{"to":"/metrics_status"}},[_vm._v("Metrics Status")])],1)])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('header',{staticClass:"hide-print"},[_c('div',{staticClass:"content"},[_c('div',{staticClass:"row auto"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","name":"headersearch","placeholder":"GitHub URL"},on:{"change":_vm.onRepo}})])]),_vm._v(" "),_c('nav',{staticClass:"col col-4 header-nav"},[_c('a',{staticClass:"header-nav-item",attrs:{"href":"https://github.com/chaoss/augur"}},[_vm._v("GitHub")]),_vm._v(" "),_c('a',{staticClass:"header-nav-item",attrs:{"href":"http://localhost:3333/static/docs/"}},[_vm._v("Python Docs")]),_vm._v(" "),_c('a',{staticClass:"header-nav-item",attrs:{"href":"http://localhost:3333/static/api_docs/"}},[_vm._v("API Docs")]),_vm._v(" "),_c('router-link',{staticClass:"header-nav-item",attrs:{"to":"/metrics_status"}},[_vm._v("Metrics Status")])],1)])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"/static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1462,7 +1462,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-6becaf40", __vue__options__)
   } else {
-    hotAPI.reload("data-v-6becaf40", __vue__options__)
+    hotAPI.rerender("data-v-6becaf40", __vue__options__)
   }
 })()}
 });
