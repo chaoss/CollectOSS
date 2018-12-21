@@ -57,11 +57,12 @@ export default function Augur () {
     },
     mutations: {
       setGitRepo(state, payload) {
-        console.log("hi",payload)
+        console.log("hi",payload, window.AugurAPI.Repo(payload))
         state.gitRepo = payload.gitURL
         state.baseRepo = payload.gitURL
         state.domain = payload.domain
         state.hasState = true
+        let repo = window.AugurAPI.Repo(payload)
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
         } else {

@@ -63,6 +63,9 @@ export default {
       $(this.$el).find('.spacing').removeClass('hidden')
     }
   },
+  mounted() {
+
+  },
   computed: {
     repo () {
       return this.$store.state.baseRepo
@@ -98,6 +101,7 @@ export default {
 
       // Get the repos we need
       let repos = []
+      
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo])
       } // end if (this.$store.repo)
