@@ -45,7 +45,11 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
 
 def run():
     """
+<<<<<<< Updated upstream
+    Runs either the server or the updater
+=======
     Runs app, halts app if exceptions/conflicts are found
+>>>>>>> Stashed changes
     """
     mp.set_start_method('forkserver')
     app = augur.Application()

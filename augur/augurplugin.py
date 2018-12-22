@@ -10,6 +10,11 @@ class AugurPlugin(object):
         self._augur = augur_app
 
     def create_routes(self, server):
+        """
+        Creates a route for the given plugin and assigns it to the server
+
+        :param server: desired server to create plugin route
+        """
         pass
 
     @staticmethod

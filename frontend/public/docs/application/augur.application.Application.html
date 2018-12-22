@@ -9,11 +9,11 @@
     <title>augur.application.Application &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="augur.augurplugin.AugurPlugin" href="augur.augurplugin.AugurPlugin.html" />
@@ -30,6 +30,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="augur-application-application">
@@ -55,46 +57,46 @@
 <td>Reads config, creates DB session, and initializes cache</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize_config</span></code>()</td>
-<td></td>
+<td>Finalizes the configuration and closes all necessary files</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">import_plugins</span></code>()</td>
-<td>Imports data source plugins and regular plugins</td>
+<td>imports desired plugins</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">join_updates</span></code>()</td>
 <td>Join to the update processes</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path</span></code>(path)</td>
-<td></td>
+<td>Returns the path of the variable sent to it</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_relative_to_config</span></code>(path)</td>
-<td></td>
+<td>Returns path relative to the variable sent</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_config</span></code>(section,&nbsp;name[,&nbsp;…])</td>
-<td>Reads the config file, substituing in environment variables when they exist</td>
+<td>Reads configurations of a variable, and returns it’s value</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_config_path</span></code>(section,&nbsp;name[,&nbsp;…])</td>
-<td></td>
+<td>Returns the path of given variable</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_plugin</span></code>(plugin)</td>
-<td>Registers a plugin to the list of default plugins</td>
+<td>Registers desired plugin, checks for a name and datasource</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_config_variables</span></code>(string[,&nbsp;reverse])</td>
-<td>Replaces config variables with environment variables, if they exist</td>
+<td>Replaces the configuration of a variable sent</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">schedule_updates</span></code>()</td>
-<td></td>
+<td>Schedules objects to be updated</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_config</span></code>(section,&nbsp;name,&nbsp;value)</td>
-<td></td>
+<td>Sets configuration of object</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown_updates</span></code>()</td>
-<td>Terminates all update processes</td>
+<td>Ends the updating process</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_all</span></code>()</td>
-<td>Updates all plugins that are updateable</td>
+<td>Updates desired object</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">updater_process</span></code>(name,&nbsp;delay,&nbsp;shared)</td>
-<td>Controls a given plugin’s update process</td>
+<td>Logs the process of updating via PID in the logger</td>
 </tr>
 </tbody>
 </table>
@@ -119,11 +121,12 @@
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="../index.html">Table Of Contents</a></h3>
+<h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
@@ -173,8 +176,8 @@
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/application/augur.application.Application.rst.txt"

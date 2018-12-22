@@ -82,9 +82,13 @@ class Facade(object):
     @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):
         """
+<<<<<<< Updated upstream
+        Calculates the total additions, deletions, and whitespace changes for a given repository URL per author per date
+=======
         Returns number of lines changed per author per day 
 
         :param repo_url: the repository's URL
+>>>>>>> Stashed changes
         """
         linesChangedByAuthorSQL = s.sql.text("""
             SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
@@ -144,3 +148,7 @@ class Facade(object):
         """)
         results = pd.read_sql(commitsByMonthSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
         return results
+
+
+
+    

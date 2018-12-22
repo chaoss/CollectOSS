@@ -9,11 +9,11 @@
     <title>augur.server.Server &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="augur.runtime" href="augur.runtime.html" />
@@ -30,6 +30,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="augur-server-server">
@@ -40,7 +42,7 @@
 <dd><dl class="method">
 <dt id="augur.server.Server.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/server.html#Server.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.server.Server.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialzes the Flask app, creates an Augur application, initializes the cache, and creates the plugin routes</p>
+<dd><p>Initializes the server, creating both the Flask application and Augur application</p>
 </dd></dl>
 
 <p class="rubric">Methods</p>
@@ -51,7 +53,7 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#augur.server.Server.__init__" title="augur.server.Server.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</td>
-<td>Initialzes the Flask app, creates an Augur application, initializes the cache, and creates the plugin routes</td>
+<td>Initializes the server, creating both the Flask application and Augur application</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">addGitMetric</span></code>(function,&nbsp;endpoint[,&nbsp;cache])</td>
 <td>Simplifies adding git routes</td>
@@ -60,16 +62,16 @@
 <td>Simplifies adding routes that only accept owner/repo</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">addTimeseries</span></code>(function,&nbsp;endpoint)</td>
-<td>Simplifies adding routes that accept owner/repo and return timeseries :param app:       Flask app :param function:  Function from a datasource to add :param endpoint:  GET endpoint to generate</td>
+<td>Simplifies adding routes that accept owner/repo and return timeseries</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">flaskify</span></code>(func[,&nbsp;cache])</td>
 <td>Simplifies API endpoints that just accept owner and repo, transforms them and spits them out</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code>(func[,&nbsp;args,&nbsp;kwargs,&nbsp;…])</td>
-<td>Serializes a dataframe in a JSON object and applies specified transformations</td>
+<td>Returns result of transforming the given variable</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">updateMetricMetadata</span></code>(function,&nbsp;endpoint,&nbsp;…)</td>
-<td>Updates a metric’s metadata with the endpoint and any other specified args</td>
+<td>Updates a given metric’s metadata</td>
 </tr>
 </tbody>
 </table>
@@ -79,11 +81,12 @@
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="../index.html">Table Of Contents</a></h3>
+<h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
@@ -133,8 +136,8 @@
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/application/augur.server.Server.rst.txt"

@@ -9,11 +9,11 @@
     <title>augur.server &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -28,6 +28,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for augur.server</h1><div class="highlight"><pre>
@@ -53,7 +55,7 @@
 <div class="viewcode-block" id="Server"><a class="viewcode-back" href="../../application/augur.server.Server.html#augur.server.Server">[docs]</a><span class="k">class</span> <span class="nc">Server</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <div class="viewcode-block" id="Server.__init__"><a class="viewcode-back" href="../../application/augur.server.Server.html#augur.server.Server.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialzes the Flask app, creates an Augur application, initializes the cache, and creates the plugin routes</span>
+<span class="sd">        Initializes the server, creating both the Flask application and Augur application</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Create Flask application</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -84,10 +86,16 @@
 
         <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">redirect_to_status</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Redirects the url of &#39;status&#39;</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">))</span>
 
         <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_version</span><span class="p">))</span>
         <span class="k">def</span> <span class="nf">status</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Returns the status of given route</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">status</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;isdlakfj&#39;</span>
             <span class="p">}</span>
@@ -201,6 +209,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">/batch/metadata&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_version</span><span class="p">),</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">])</span>
         <span class="k">def</span> <span class="nf">batch_metadata</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Returns metadata of batch</span>
+<span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">show_metadata</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -280,6 +291,10 @@
 <span class="sd">        Serializes a dataframe in a JSON object and applies specified transformations</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns result of transforming the given variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="n">orient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">orient</span> <span class="o">=</span> <span class="s1">&#39;records&#39;</span>
 
@@ -356,6 +371,7 @@
     <span class="k">def</span> <span class="nf">addTimeseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Simplifies adding routes that accept owner/repo and return timeseries</span>
+<span class="sd">        </span>
 <span class="sd">        :param app:       Flask app</span>
 <span class="sd">        :param function:  Function from a datasource to add</span>
 <span class="sd">        :param endpoint:  GET endpoint to generate</span>
@@ -364,8 +380,9 @@
 
     <span class="k">def</span> <span class="nf">updateMetricMetadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Updates a metric&#39;s metadata with the endpoint and any other specified args</span>
+<span class="sd">        Updates a given metric&#39;s metadata</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="c1"># God forgive me</span>
         <span class="c1">#</span>
         <span class="c1"># Get the unbound function from the bound function&#39;s class so that we can modify metadata</span>
@@ -374,6 +391,9 @@
         <span class="n">annotate</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">real_func</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs Server and app</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">server</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span>
     <span class="n">host</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;0.0.0.0&#39;</span><span class="p">)</span>
     <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;5000&#39;</span><span class="p">)</span>
@@ -381,6 +401,9 @@
 
 <span class="n">wsgi_app</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="k">def</span> <span class="nf">wsgi</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the instance of the app, with the environment and start response</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">global</span> <span class="n">wsgi_app</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">wsgi_app</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">app_instance</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span>
@@ -392,11 +415,12 @@
 </pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="../../index.html">Table Of Contents</a></h3>
+<h3><a href="../../index.html">Table of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../augurcontext.html">Augur Context</a></li>
@@ -437,8 +461,8 @@
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

@@ -20,7 +20,11 @@ AUGUR_API_VERSION = 'api/unstable'
 class Server(object):
     def __init__(self):
         """
+<<<<<<< Updated upstream
+        Initialzes the Flask app, creates an Augur application, initializes the cache, and creates the plugin routes
+=======
         Initializes the server, creating both the Flask application and Augur application
+>>>>>>> Stashed changes
         """
         # Create Flask application
         self.app = Flask(__name__)
@@ -345,9 +349,14 @@ class Server(object):
 
     def updateMetricMetadata(self, function, endpoint, **kwargs):
         """
+<<<<<<< Updated upstream
+        Updates a metric's metadata with the endpoint and any other specified args
+        """
+=======
         Updates a given metric's metadata
         """
 
+>>>>>>> Stashed changes
         # God forgive me
         #
         # Get the unbound function from the bound function's class so that we can modify metadata

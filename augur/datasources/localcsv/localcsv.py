@@ -18,8 +18,18 @@ class LocalCSV(object):
     companies = pd.read_csv(get_data_path('companies.csv'), index_col=['website'])
 
     def classify_emails(self, email_series):
+        """
+        Sends a series of emails to the classifier method
+
+        :param email_series: series of given emails
+        """
     
         def classifier(email):
+            """
+            Classifies what the emails associates with, based on its suffix (.edu, .com, .net, etc.)
+
+            :param email: desired email to be classified
+            """
             if email is None:
                 return 'Unknown'
             ext = tldextract.extract(email)
