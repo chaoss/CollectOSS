@@ -2,6 +2,7 @@
 """
 Creates a WSGI server that serves the Augur REST API
 """
+
 import os
 import sys
 import json
@@ -18,6 +19,9 @@ from augur.routes import create_plugin_routes, create_metrics_status_routes
 AUGUR_API_VERSION = 'api/unstable'
 
 class Server(object):
+    """
+    Defines Augur's server's behavior
+    """
     def __init__(self):
         """
         Initializes the server, creating both the Flask application and Augur application
@@ -52,17 +56,17 @@ class Server(object):
         @app.route('/')
         def redirect_to_status():
             """
-            Redirects the url of 'status'
+            Redirects to health check route
             """
             return redirect(url_for('status'))
 
         @app.route('/{}/'.format(self.api_version))
         def status():
             """
-            Returns the status of given route
+            Health check route
             """
             status = {
-                'status': 'isdlakfj'
+                'status': 'OK'
             }
             return Response(response=json.dumps(status),
                             status=200,
@@ -84,14 +88,10 @@ class Server(object):
 
             """
             to have on future batch request for each individual chart:
-
             - timeseries/metric
             - props that are in current card files (title)
             - do any of these things act like the vuex states?
-
             - what would singular card(dashboard) look like now?
-
-
             """
 
             self.show_metadata = False
@@ -175,7 +175,7 @@ class Server(object):
         @app.route('/{}/batch/metadata'.format(self.api_version), methods=['GET', 'POST'])
         def batch_metadata():
             """
-            Returns metadata of batch
+            Returns endpoint metadata in batch format
             """
 
             self.show_metadata = True
@@ -254,10 +254,6 @@ class Server(object):
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
         """
         Serializes a dataframe in a JSON object and applies specified transformations
-        """
-
-        """
-        Returns result of transforming the given variable
         """
 
         if orient is None:
@@ -357,7 +353,7 @@ class Server(object):
 
 def run():
     """
-    Runs Server and app
+    Runs server with configured hosts/ports
     """
     server = Server()
     host = server._augur.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
@@ -367,7 +363,7 @@ def run():
 wsgi_app = None
 def wsgi(env, start_response):
     """
-    Returns the instance of the app, with the environment and start response
+    Creates WSGI app
     """
     global wsgi_app
     if (wsgi_app is None):

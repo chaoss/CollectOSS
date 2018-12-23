@@ -11,7 +11,7 @@ from augur import logger
 from augur.util import annotate
 
 class GHTorrent(object):
-    """Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators"""
+    """Uses the GHTorrent database to return dataframes with interesting GitHub indicators"""
 
     def __init__(self, user, password, host, port, dbname):
         """
@@ -145,8 +145,6 @@ class GHTorrent(object):
     @annotate(tag='closed-issues')
     def closed_issues(self, owner, repo=None):
         """
-        Subgroup: Issue Resolution
-
         Timeseries of the count of the number of issues closed per week
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -168,8 +166,6 @@ class GHTorrent(object):
     @annotate(tag='code-commits')
     def code_commits(self, owner, repo=None, group_by="week"):        
         """
-        Subgroup: Code Development
-
         Timeseries of the count of commits
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -183,8 +179,6 @@ class GHTorrent(object):
     @annotate(tag='code-review-iteration')
     def code_review_iteration(self, owner, repo=None):
         """
-        Subgroup: Code Development
-
         Timeseries of the count of iterations (being closed and reopened) that a merge request (code review) goes through until it is finally merged
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -219,8 +213,6 @@ class GHTorrent(object):
     @annotate(tag='contribution-acceptance')
     def contribution_acceptance(self, owner, repo=None):
         """
-        Subgroup: Community Development
-
         Timeseries of the rolling ratio between merged pull requests over unmerged pull requests
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -236,8 +228,6 @@ class GHTorrent(object):
     @annotate(tag='contributing-github-organizations')
     def contributing_github_organizations(self, owner, repo=None): #needs clarification about return value
         """
-        Subgroup: Community Development
-
         Returns of all the contributing organizations to a project and the counts of each organization's contributions
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -299,8 +289,6 @@ class GHTorrent(object):
     @annotate(tag='first-response-to-issue-duration')
     def first_response_to_issue_duration(self, owner, repo): #needs clarification about return value
         """
-        Subgroup: Issue Resolution
-
         Timeseries of the time to first comment by issue
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -334,8 +322,7 @@ class GHTorrent(object):
     @annotate(tag='forks')
     def forks(self, owner, repo=None, group_by="week"): 
         """
-        Subgroup: Code Development
-
+        
         Timeseries of when a repo's forks were created
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -349,8 +336,6 @@ class GHTorrent(object):
     @annotate(tag='maintainer-response-to-merge-request-duration')
     def maintainer_response_to_merge_request_duration(self, owner, repo=None): #needs clarification on return value
         """
-        Subgroup: Code Development
-
         Timeseries of duration of time between a merge request being created and a maintainer commenting on that request
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -382,8 +367,6 @@ class GHTorrent(object):
     @annotate(tag='new-contributing-github-organizations')
     def new_contributing_github_organizations(self, owner, repo=None): #needs clarification about return value
         """
-        Subgroup: Community Growth
-
         Timeseries of information about new contributing organizations on a certain date
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -451,8 +434,6 @@ class GHTorrent(object):
     @annotate(tag='open-issues')
     def open_issues(self, owner, repo=None, group_by="week"):
         """
-        Subgroup: Individual Diversity
-
         Timeseries of the count of newly issues opened per week
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -466,8 +447,6 @@ class GHTorrent(object):
     @annotate(tag='pull-request-comments')
     def pull_request_comments(self, owner, repo=None):
         """
-        Subgroup: Code Development
-
         Timeseries of the count of new pull request comments
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
@@ -481,8 +460,6 @@ class GHTorrent(object):
     @annotate(tag='pull-requests-open')
     def pull_requests_open(self, owner, repo=None):
         """
-        Subgroup: Code Development
-
         Timeseries of pull requests creation and their associated activity
 
         :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.

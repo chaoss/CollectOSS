@@ -9,11 +9,11 @@
     <title>augur.application &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -28,8 +28,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for augur.application</h1><div class="highlight"><pre>
@@ -149,7 +147,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns plugin matching the name of the parameter &#39;plugin_name&#39;</span>
 
-<span class="sd">        :param plugin_name: name of desired plugin</span>
+<span class="sd">        :param plugin_name: name of specified plugin</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span><span class="p">:</span>
@@ -161,7 +159,7 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">import_plugins</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        imports desired plugins </span>
+<span class="sd">        Imports all plugins and datasources </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">):</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">,</span> <span class="p">{})</span>
@@ -177,9 +175,9 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">register_plugin</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">plugin</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Registers desired plugin, checks for a name and datasource</span>
+<span class="sd">        Registers specified plugin</span>
 
-<span class="sd">        :param plugin: desired plugin to register</span>
+<span class="sd">        :param plugin: specified plugin to register</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plugin</span><span class="o">.</span><span class="n">augur_plugin_meta</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> didn&#39;t have a name&quot;</span><span class="p">)</span>
@@ -204,9 +202,8 @@
 
     <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the path of the variable sent to it</span>
+<span class="sd">        Returns the absolute path for the given relative path</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace_config_variables</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">path</span>
@@ -214,7 +211,7 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">updater_process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">delay</span><span class="p">,</span> <span class="n">shared</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Logs the process of updating via PID in the logger</span>
+<span class="sd">        Controls a given plugin&#39;s update process</span>
 
 <span class="sd">        :param name: name of object to be updated </span>
 <span class="sd">        :param delay: time needed to update</span>
@@ -235,7 +232,7 @@
 
     <span class="k">def</span> <span class="nf">__updater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Checks for updates and updates if there are updates needed to be done</span>
+<span class="sd">        Starts update processes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">updates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">updates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span>
@@ -248,7 +245,7 @@
 
     <span class="k">def</span> <span class="nf">read_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Reads configurations of a variable, and returns it&#39;s value</span>
+<span class="sd">        Read a variable in specified section of the config file, unless provided an environment variable</span>
 
 <span class="sd">        :param section: location of given variable</span>
 <span class="sd">        :param name: name of variable</span>
@@ -276,20 +273,12 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1"> = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">read_config_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the path of given variable</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">environment_variable</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">path</span>
-
     <span class="k">def</span> <span class="nf">set_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sets configuration of object </span>
+<span class="sd">        Sets names and values of specified config section</span>
 
 <span class="sd">        :param section: area of object</span>
-<span class="sd">        :param name: name of desired object</span>
+<span class="sd">        :param name: name of specified object</span>
 <span class="sd">        :param value: new value to be set to object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">section</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="p">:</span>
@@ -298,7 +287,7 @@
 
     <span class="k">def</span> <span class="nf">finalize_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Finalizes the configuration and closes all necessary files</span>
+<span class="sd">        Parse args and generates a valid config if the given one is bad</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Parse args with help</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">()</span>
@@ -314,9 +303,9 @@
 
     <span class="k">def</span> <span class="nf">path_relative_to_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns path relative to the variable sent</span>
+<span class="sd">        Returns path relative to the config file</span>
 
-<span class="sd">        :param path: desired path of variable</span>
+<span class="sd">        :param path: specified path of variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
@@ -325,7 +314,7 @@
 
     <span class="k">def</span> <span class="nf">update_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Updates desired object</span>
+<span class="sd">        Updates all plugins</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">updatable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">:</span>
@@ -334,7 +323,7 @@
 
     <span class="k">def</span> <span class="nf">schedule_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Schedules objects to be updated</span>
+<span class="sd">        Schedules updates</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># don&#39;t use this, </span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Scheduling updates...&#39;</span><span class="p">)</span>
@@ -349,7 +338,7 @@
 
     <span class="k">def</span> <span class="nf">shutdown_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Ends the updating process</span>
+<span class="sd">        Ends all running update processes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="p">:</span>
             <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span></div>
@@ -360,12 +349,11 @@
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="../../index.html">Table of Contents</a></h3>
+<h3><a href="../../index.html">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../augurcontext.html">Augur Context</a></li>
@@ -406,8 +394,8 @@
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 

@@ -114,7 +114,7 @@ class Application(object):
         """
         Returns plugin matching the name of the parameter 'plugin_name'
 
-        :param plugin_name: name of desired plugin
+        :param plugin_name: name of specified plugin
         """
         if plugin_name not in self._loaded_plugins:
             if plugin_name not in Application.plugins:
@@ -126,7 +126,7 @@ class Application(object):
     @classmethod
     def import_plugins(cls):
         """
-        imports desired plugins 
+        Imports all plugins and datasources 
         """
         if not hasattr(cls, 'plugins'):
             setattr(cls, 'plugins', {})
@@ -142,9 +142,9 @@ class Application(object):
     @classmethod
     def register_plugin(cls, plugin):
         """
-        Registers desired plugin, checks for a name and datasource
+        Registers specified plugin
 
-        :param plugin: desired plugin to register
+        :param plugin: specified plugin to register
         """
         if 'name' not in plugin.augur_plugin_meta:
             raise NameError("{} didn't have a name")
@@ -169,9 +169,8 @@ class Application(object):
 
     def path(self, path):
         """
-        Returns the path of the variable sent to it
+        Returns the absolute path for the given relative path
         """
-
         path = self.replace_config_variables(path)
         path = os.path.abspath(os.path.expanduser(path))
         return path
@@ -179,7 +178,7 @@ class Application(object):
     @staticmethod
     def updater_process(name, delay, shared):
         """
-        Logs the process of updating via PID in the logger
+        Controls a given plugin's update process
 
         :param name: name of object to be updated 
         :param delay: time needed to update
@@ -200,7 +199,7 @@ class Application(object):
 
     def __updater(self, updates=None):
         """
-        Checks for updates and updates if there are updates needed to be done
+        Starts update processes
         """
         if updates is None:
             updates = self.__updatable
@@ -213,7 +212,7 @@ class Application(object):
 
     def read_config(self, section, name, environment_variable=None, default=None):
         """
-        Reads configurations of a variable, and returns it's value
+        Read a variable in specified section of the config file, unless provided an environment variable
 
         :param section: location of given variable
         :param name: name of variable
@@ -241,20 +240,12 @@ class Application(object):
             logger.debug('{}:{} = {}'.format(section, name, value))
         return value
 
-    def read_config_path(self, section, name, environment_variable=None, default=None):
-        """
-        Returns the path of given variable
-        """
-        path = self.read_config(section, name, environment_variable, default)
-        path = self.path(path)
-        return path
-
     def set_config(self, section, name, value):
         """
-        Sets configuration of object 
+        Sets names and values of specified config section
 
         :param section: area of object
-        :param name: name of desired object
+        :param name: name of specified object
         :param value: new value to be set to object
         """
         if not section in self.__config:
@@ -263,7 +254,7 @@ class Application(object):
 
     def finalize_config(self):
         """
-        Finalizes the configuration and closes all necessary files
+        Parse args and generates a valid config if the given one is bad
         """
         # Parse args with help
         self.arg_parser.parse_known_args()
@@ -279,9 +270,9 @@ class Application(object):
 
     def path_relative_to_config(self, path):
         """
-        Returns path relative to the variable sent
+        Returns path relative to the config file
 
-        :param path: desired path of variable
+        :param path: specified path of variable
         """
         if not os.path.isabs(path):
             return os.path.join(self.__config_location, path)
@@ -290,7 +281,7 @@ class Application(object):
 
     def update_all(self):
         """
-        Updates desired object
+        Updates all plugins
         """
         print(self.__updatable)
         for updatable in self.__updatable:
@@ -299,7 +290,7 @@ class Application(object):
 
     def schedule_updates(self):
         """
-        Schedules objects to be updated
+        Schedules updates
         """
         # don't use this, 
         logger.debug('Scheduling updates...')
@@ -314,7 +305,7 @@ class Application(object):
 
     def shutdown_updates(self):
         """
-        Ends the updating process
+        Ends all running update processes
         """
         for process in self.__processes:
             process.terminate()

@@ -9,11 +9,11 @@
     <title>Augur Python Library &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="augur.datasources.ghtorrent.ghtorrent.GHTorrent" href="datasources/augur.datasources.ghtorrent.ghtorrent.GHTorrent.html" />
@@ -30,8 +30,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="augur-python-library">
@@ -46,7 +44,7 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="datasources/augur.datasources.ghtorrent.ghtorrent.GHTorrent.html#augur.datasources.ghtorrent.ghtorrent.GHTorrent" title="augur.datasources.ghtorrent.ghtorrent.GHTorrent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrent.ghtorrent.GHTorrent</span></code></a></td>
-<td>Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators</td>
+<td>Uses the GHTorrent database to return dataframes with interesting GitHub indicators</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="datasources/augur.datasources.githubapi.githubapi.GitHubAPI.html#augur.datasources.githubapi.githubapi.GitHubAPI" title="augur.datasources.githubapi.githubapi.GitHubAPI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">githubapi.githubapi.GitHubAPI</span></code></a></td>
 <td>GitHubAPI is a class for getting metrics from the GitHub API</td>
@@ -58,10 +56,10 @@
 <td>Handles interaction with <a class="reference external" href="https://libraries.io/api">https://libraries.io/api</a> to get dependency data</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="datasources/augur.datasources.localcsv.localcsv.LocalCSV.html#augur.datasources.localcsv.localcsv.LocalCSV" title="augur.datasources.localcsv.localcsv.LocalCSV"><code class="xref py py-obj docutils literal notranslate"><span class="pre">localcsv.localcsv.LocalCSV</span></code></a></td>
-<td></td>
+<td>Reads local CSV files</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="datasources/augur.datasources.downloads.downloads.Downloads.html#augur.datasources.downloads.downloads.Downloads" title="augur.datasources.downloads.downloads.Downloads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloads.downloads.Downloads</span></code></a></td>
-<td>Class for retrieveing download information using APIs and web scrapers</td>
+<td>Class for retrieving download information using APIs and web scrapers</td>
 </tr>
 </tbody>
 </table>
@@ -75,13 +73,13 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="application/augur.application.Application.html#augur.application.Application" title="augur.application.Application"><code class="xref py py-obj docutils literal notranslate"><span class="pre">application.Application</span></code></a></td>
-<td>Initalizes all classes form Augur using a config file or environment variables</td>
+<td>Initalizes all classes from Augur using a config file or environment variables</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="application/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin" title="augur.augurplugin.AugurPlugin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">augurplugin.AugurPlugin</span></code></a></td>
 <td>Defines a base class for Augur plugins to implement</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="application/augur.server.Server.html#augur.server.Server" title="augur.server.Server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">server.Server</span></code></a></td>
-<td></td>
+<td>Defines Augur’s server’s behavior</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="application/augur.runtime.html#module-augur.runtime" title="augur.runtime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtime</span></code></a></td>
 <td>Runs Augur with Gunicorn when called</td>
@@ -96,12 +94,11 @@
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="index.html">Table of Contents</a></h3>
+<h3><a href="index.html">Table Of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="augurcontext.html">Augur Context</a></li>
@@ -149,8 +146,8 @@
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
       <a href="_sources/python.rst.txt"

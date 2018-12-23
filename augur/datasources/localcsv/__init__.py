@@ -5,7 +5,7 @@ from augur import logger
 
 class LocalCSVPlugin(AugurPlugin):
     """
-    This plugin serves as an example as to how to load plugins into Augur
+    Plugin that can read local CSV files
     """
     def __init__(self, augur):
         self.__localCSV= None

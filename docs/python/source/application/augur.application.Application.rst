@@ -20,7 +20,6 @@ augur.application.Application
       ~Application.path
       ~Application.path_relative_to_config
       ~Application.read_config
-      ~Application.read_config_path
       ~Application.register_plugin
       ~Application.replace_config_variables
       ~Application.schedule_updates

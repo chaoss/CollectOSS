@@ -2,6 +2,7 @@
 """
 Loads small included datasets
 """
+
 import pandas as pd
 import tldextract
 from urllib.parse import urlparse
@@ -10,7 +11,9 @@ from augur.util import get_data_path
 # (don't remove the above line, it's for a script)
 
 class LocalCSV(object):
-    
+    """
+    Reads local CSV files
+    """
     def __init__(self):
         return
 

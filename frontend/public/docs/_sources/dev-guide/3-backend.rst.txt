@@ -24,8 +24,6 @@ try running ``make install-dev`` again and watch out for any errors.
 Writing a Plugin
 ----------------
 
---------------
-
 In this section, we'll walk through the process of creating a sample
 data source plugin called ``Chaoss`` from beginning to end.
 

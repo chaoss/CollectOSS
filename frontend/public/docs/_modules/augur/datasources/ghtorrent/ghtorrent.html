@@ -9,11 +9,11 @@
     <title>augur.datasources.ghtorrent.ghtorrent &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
    
@@ -28,8 +28,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for augur.datasources.ghtorrent.ghtorrent</h1><div class="highlight"><pre>
@@ -46,7 +44,7 @@
 <span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
 
 <div class="viewcode-block" id="GHTorrent"><a class="viewcode-back" href="../../../../datasources/augur.datasources.ghtorrent.ghtorrent.GHTorrent.html#augur.datasources.ghtorrent.ghtorrent.GHTorrent">[docs]</a><span class="k">class</span> <span class="nc">GHTorrent</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Uses GHTorrent and other GitHub data sources and returns dataframes with interesting GitHub indicators&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Uses the GHTorrent database to return dataframes with interesting GitHub indicators&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="GHTorrent.__init__"><a class="viewcode-back" href="../../../../datasources/augur.datasources.ghtorrent.ghtorrent.GHTorrent.html#augur.datasources.ghtorrent.ghtorrent.GHTorrent.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -180,8 +178,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;closed-issues&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">closed_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Issue Resolution</span>
-
 <span class="sd">        Timeseries of the count of the number of issues closed per week</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -203,8 +199,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;code-commits&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">code_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>        
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Code Development</span>
-
 <span class="sd">        Timeseries of the count of commits</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -218,8 +212,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;code-review-iteration&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">code_review_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Code Development</span>
-
 <span class="sd">        Timeseries of the count of iterations (being closed and reopened) that a merge request (code review) goes through until it is finally merged</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -254,8 +246,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;contribution-acceptance&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">contribution_acceptance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Community Development</span>
-
 <span class="sd">        Timeseries of the rolling ratio between merged pull requests over unmerged pull requests</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -271,8 +261,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;contributing-github-organizations&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">contributing_github_organizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#needs clarification about return value</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Community Development</span>
-
 <span class="sd">        Returns of all the contributing organizations to a project and the counts of each organization&#39;s contributions</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -334,8 +322,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;first-response-to-issue-duration&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">first_response_to_issue_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span> <span class="c1">#needs clarification about return value</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Issue Resolution</span>
-
 <span class="sd">        Timeseries of the time to first comment by issue</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -369,8 +355,7 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;forks&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">forks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span> 
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Code Development</span>
-
+<span class="sd">        </span>
 <span class="sd">        Timeseries of when a repo&#39;s forks were created</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -384,8 +369,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;maintainer-response-to-merge-request-duration&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">maintainer_response_to_merge_request_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#needs clarification on return value</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Code Development</span>
-
 <span class="sd">        Timeseries of duration of time between a merge request being created and a maintainer commenting on that request</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -417,8 +400,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;new-contributing-github-organizations&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">new_contributing_github_organizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#needs clarification about return value</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Community Growth</span>
-
 <span class="sd">        Timeseries of information about new contributing organizations on a certain date</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -486,8 +467,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;open-issues&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">open_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="s2">&quot;week&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Individual Diversity</span>
-
 <span class="sd">        Timeseries of the count of newly issues opened per week</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -501,8 +480,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull-request-comments&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">pull_request_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Code Development</span>
-
 <span class="sd">        Timeseries of the count of new pull request comments</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -516,8 +493,6 @@
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull-requests-open&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">pull_requests_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subgroup: Code Development</span>
-
 <span class="sd">        Timeseries of pull requests creation and their associated activity</span>
 
 <span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
@@ -1105,12 +1080,11 @@
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="../../../../index.html">Table of Contents</a></h3>
+<h3><a href="../../../../index.html">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../augurcontext.html">Augur Context</a></li>
@@ -1151,8 +1125,8 @@
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 

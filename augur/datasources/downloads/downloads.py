@@ -15,7 +15,7 @@ from augur.util import annotate
 # (don't remove the above line, it's for a script)
 
 class Downloads(object):
-    """Class for retrieveing download information using APIs and web scrapers"""
+    """Class for retrieving download information using APIs and web scrapers"""
     def __init__(self, githubapi):
         self.__githubapi = githubapi.api
 
