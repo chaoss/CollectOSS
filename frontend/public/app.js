@@ -597,6 +597,10 @@ var AugurAPI = function () {
           var _splitURL = repo.gitURL.split('/');
           repo.owner = _splitURL[1];
           repo.name = _splitURL[2].split('.')[0];
+        } else {
+          var _splitURL2 = repo.gitURL.split('/');
+          repo.owner = _splitURL2[0];
+          repo.name = _splitURL2[1];
         }
       }
 
@@ -615,9 +619,9 @@ var AugurAPI = function () {
           var rs = false;
           data.forEach(function (gitURL) {
             if (gitURL.includes('github.com')) {
-              var _splitURL2 = gitURL.split('/');
-              var owner = _splitURL2[3];
-              var name = _splitURL2[4].split('.')[0];
+              var _splitURL3 = gitURL.split('/');
+              var owner = _splitURL3[3];
+              var name = _splitURL3[4].split('.')[0];
               if (repo.toString() === owner + '/' + name) {
                 rs = true;
               }
@@ -1642,23 +1646,19 @@ module.exports = {
       var extension = false;
 
       if (first == last) {
-        console.log("github");
         domain = e.url.substring(0, first);
         owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
         repo = e.url.slice(e.url.lastIndexOf('/') + 1);
       } else if (e.url.slice(last) == '.git') {
-        console.log("github with ext");
         domain = e.url.substring(0, first);
         extension = true;
         owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
         repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4);
       } else {
-        console.log("gluster", e.url);
         domain = e.url.substring(first + 1, last);
         owner = null;
         repo = e.url.slice(e.url.lastIndexOf('/') + 1);
       }
-      console.log("hi", domain, owner, repo);
       this.$store.commit('setRepo', {
         gitURL: e.url
       });
@@ -1700,7 +1700,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-1825962d", __vue__options__)
   } else {
-    hotAPI.reload("data-v-1825962d", __vue__options__)
+    hotAPI.rerender("data-v-1825962d", __vue__options__)
   }
 })()}
 });
@@ -2783,7 +2783,7 @@ var _AugurStats2 = _interopRequireDefault(_AugurStats);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
   data: function data() {
     return {
       legendLabels: [],
@@ -2817,6 +2817,9 @@ exports.default = {
     repo: function repo() {
       return this.$store.state.baseRepo;
     },
+    gitRepos: function gitRepos() {
+      return this.$store.state.gitRepo;
+    },
     period: function period() {
       return this.$store.state.trailingAverage;
     },
@@ -2848,9 +2851,13 @@ exports.default = {
       var _this = this;
 
       var repos = [];
-
       if (this.repo) {
-        repos.push(window.AugurRepos[this.repo]);
+        if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
+          var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
+          console.log(temp);
+          repos.push(temp);
+        }
       }
       this.comparedRepos.forEach(function (repo) {
         repos.push(window.AugurRepos[repo]);
@@ -3245,8 +3252,8 @@ exports.default = {
       };
 
       if (this.showTooltip) {
-        var temp = [this.repo];
-        temp.forEach(function (repo) {
+        var _temp = [this.repo];
+        _temp.forEach(function (repo) {
           var key = _this.rawWeekly ? "value" + repo : "valueRolling" + repo;
           buildTooltip(key);
         });
@@ -3384,14 +3391,14 @@ exports.default = {
 
           repos.forEach(function (repo) {
             if (!_this.status[repo]) {
-              var _temp = JSON.parse(JSON.stringify(values));
-              _temp = _temp.map(function (datum) {
+              var _temp2 = JSON.parse(JSON.stringify(values));
+              _temp2 = _temp2.map(function (datum) {
                 datum.name = repo + ": data n/a";
 
 
                 return datum;
               });
-              values.push.apply(values, _temp);
+              values.push.apply(values, _temp2);
             }
           });
 
@@ -3418,7 +3425,6 @@ exports.default = {
       } else {
 
         window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
-          console.log("REPOS: ", data);
           processData(data);
         }, function () {});
       }
@@ -6965,9 +6971,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var routes = [{ path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default },
 // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
-{ path: '/:tab/:domain?/:owner?/:repo', component: _AugurCards2.default, name: 'single', props: true },
+{ path: '/:tab/:owner?/:repo/:domain?', component: _AugurCards2.default, name: 'single', props: true },
 // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
-{ path: '/:tab/:domain?/:owner?/:repo/comparedto/:compareddomain?/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true },
+{ path: '/:tab/:owner?/:repo/:domain?/comparedto/:comparedowner/:comparedrepo/:compareddomain?', component: _AugurCards2.default, name: 'singlecompare', props: true },
 // {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},
 { path: '/:tab/groupid/:groupid', component: _AugurCards2.default, name: 'group', props: true }];
 var downloadedRepos = [],

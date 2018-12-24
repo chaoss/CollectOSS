@@ -51,29 +51,22 @@ module.exports = {
       let extension = false
 
       if (first == last){ //normal github
-        console.log("github")
         domain = e.url.substring(0, first)
         owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
         repo = e.url.slice(e.url.lastIndexOf('/') + 1)
-      }
-      else if (e.url.slice(last) == '.git'){ //github with extension
-        console.log("github with ext")
+      } else if (e.url.slice(last) == '.git'){ //github with extension
         domain = e.url.substring(0, first)
         extension = true
         owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
         repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4)
-      } 
-      else { //gluster
-        console.log("gluster", e.url)
+      } else { //gluster
         domain = e.url.substring(first + 1, last)
         owner = null //e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
         repo = e.url.slice(e.url.lastIndexOf('/') + 1)
       }
-      console.log("hi", domain, owner, repo)
       this.$store.commit('setRepo', {
         gitURL: e.url
       })
-
 
       this.$router.push({
         name: 'single',

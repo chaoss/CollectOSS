@@ -36,7 +36,7 @@ import AugurStats from 'AugurStats'
 
 
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
   data() {
     return {
       legendLabels: [],
@@ -70,6 +70,9 @@ export default {
     repo () {
       return this.$store.state.baseRepo
     },
+    gitRepos () {
+      return this.$store.state.gitRepo
+    },
     period () {
       return this.$store.state.trailingAverage
     },
@@ -101,12 +104,22 @@ export default {
 
       // Get the repos we need
       let repos = []
-      
       if (this.repo) {
-        repos.push(window.AugurRepos[this.repo])
+        if (window.AugurRepos[this.repo])
+          repos.push(window.AugurRepos[this.repo])
+        else if (this.domain){
+          let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+          if (window.AugurRepos[temp])
+            temp = window.AugurRepos[temp]
+          else
+            window.AugurRepos[temp] = temp
+          console.log(temp)
+          repos.push(temp)
+        }
+        // repos.push(this.repo)
       } // end if (this.$store.repo)
       this.comparedRepos.forEach(function(repo) {
-          repos.push(window.AugurRepos[repo])
+        repos.push(window.AugurRepos[repo])
       });
 
       repos.forEach((repo) => {
@@ -773,7 +786,6 @@ export default {
       } else {
         
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
-          console.log("REPOS: ", data)
           processData(data)
         }, () => {
           //this.renderError()
