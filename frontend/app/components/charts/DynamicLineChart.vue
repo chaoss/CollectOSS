@@ -582,8 +582,7 @@ export default {
 
       //set dates from main control options
       if(this.showDetail) {
-        config.vconcat[1].encoding.x["scale"] =
-          {
+        config.vconcat[1].encoding.x["scale"] = {
             "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
           }
       }
@@ -646,7 +645,7 @@ export default {
             d = AugurStats.convertKey(obj[key], field)
 
 
-            d = AugurStats.convertDates(d, this.earliest, this.latest)
+            d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
 
             return d
           }
@@ -701,8 +700,9 @@ export default {
 
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
-                console.log("buildlines params:", obj, key, field, count)
+                
                 let d = defaultProcess(obj, key, field, count)
+                console.log("buildlines params:", obj, key, field, count, d, AugurStats.zscores(d, 'value'))
                 let rolling = null
                 if (compare == 'zscore') {
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)

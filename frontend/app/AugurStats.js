@@ -104,7 +104,8 @@ export default class AugurStats {
   }
 
   static standardDeviation (data, key, mean) {
-    let flat = data.map((e) => { return e[key] })
+    let flat = data.map((e) => { return (e[key] ? e[key] : 0) })
+
     mean = mean || AugurStats.averageArray(flat)
     let distances = flat.map((e) => {
       return (e - mean) * (e - mean)
@@ -220,8 +221,6 @@ export default class AugurStats {
       iter['base']++
       iter['compare']++
     }
-
-    console.log('relative', result)
     return result
   }
 
@@ -230,10 +229,12 @@ export default class AugurStats {
     let stats = AugurStats.describe(data, key)
     return data.map((e) => {
       let newObj = {}
-      if (e.date) {
+      // if (e.date) {
         newObj.date = new Date(e.date)
-      }
-      let zscore = ((e[key] - stats['mean']) / stats['stddev'])
+      // } else {
+      //   newObj.date = 
+      // }
+      let zscore = stats['stddev'] == 0 ? 0 : ((e[key] - stats['mean']) / stats['stddev'])
       newObj[key] = zscore
       return newObj
     })

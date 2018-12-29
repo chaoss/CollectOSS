@@ -865,8 +865,9 @@ var AugurStats = function () {
     key: 'standardDeviation',
     value: function standardDeviation(data, key, mean) {
       var flat = data.map(function (e) {
-        return e[key];
+        return e[key] ? e[key] : 0;
       });
+
       mean = mean || AugurStats.averageArray(flat);
       var distances = flat.map(function (e) {
         return (e - mean) * (e - mean);
@@ -980,8 +981,6 @@ var AugurStats = function () {
         iter['base']++;
         iter['compare']++;
       }
-
-      console.log('relative', result);
       return result;
     }
   }, {
@@ -991,10 +990,12 @@ var AugurStats = function () {
       var stats = AugurStats.describe(data, key);
       return data.map(function (e) {
         var newObj = {};
-        if (e.date) {
-          newObj.date = new Date(e.date);
-        }
-        var zscore = (e[key] - stats['mean']) / stats['stddev'];
+        // if (e.date) {
+        newObj.date = new Date(e.date);
+        // } else {
+        //   newObj.date = 
+        // }
+        var zscore = stats['stddev'] == 0 ? 0 : (e[key] - stats['mean']) / stats['stddev'];
         newObj[key] = zscore;
         return newObj;
       });
@@ -3293,7 +3294,7 @@ exports.default = {
 
           d = _AugurStats2.default.convertKey(obj[key], field);
 
-          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest);
+          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest, 'date');
 
           return d;
         };
@@ -3338,8 +3339,9 @@ exports.default = {
         repos.forEach(function (repo) {
 
           buildLines(data[repo], function (obj, key, field, count) {
-            console.log("buildlines params:", obj, key, field, count);
+
             var d = defaultProcess(obj, key, field, count);
+            console.log("buildlines params:", obj, key, field, count, d, _AugurStats2.default.zscores(d, 'value'));
             var rolling = null;
             if (compare == 'zscore') {
               rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
