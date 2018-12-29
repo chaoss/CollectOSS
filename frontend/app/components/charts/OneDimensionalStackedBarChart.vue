@@ -152,7 +152,7 @@ export default {
               "color": {
                 "field": "author_email",
                 "type": "nominal",
-                "scale": { "range": colors},
+                "scale": {"scheme": "category10"},
                 "legend": null
               },
               // "size": size,

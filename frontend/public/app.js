@@ -3679,7 +3679,7 @@ exports.default = {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      group: 0
+      group: 1
     };
   },
 
@@ -3705,21 +3705,16 @@ exports.default = {
       if (this.group == 0) {
         timeUnit = 'year';
         format = '%Y';
-        type = "circle";
+        type = "bar";
         bin = false;
-        size = {
-          "field": "Net lines added",
-          "type": "quantitative",
-          "min": "15",
-          "scale": { "minSize": 30, "maxSize": 31 }
-        };
+        size = 30;
       }
       if (this.group == 1) {
         timeUnit = 'yearmonth';
-        format = '%Y %b';
-        type = "tick";
+        format = '%y %b';
+        type = "bar";
         bin = false;
-        size = {};
+        size = 13;
       }
 
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
@@ -3732,10 +3727,6 @@ exports.default = {
           "offset": 30
         },
         "config": {
-          "tick": {
-            "thickness": 8,
-            "bandSize": 23
-          },
           "axis": {
             "grid": false
           },
@@ -3746,7 +3737,12 @@ exports.default = {
             "titlePadding": 10,
             "padding": 40,
             "labelFontSize": 14
-          }, 'titleFontSize', 14), "scale": { "minSize": 100, "maxSize": 500 }
+          }, 'titleFontSize', 14),
+          "scale": { "minSize": 100, "maxSize": 500 },
+          "bar": {
+            "continuousBandSize": size,
+            "binSpacing": 0
+          }
         },
         "layer": [{
           "transform": [{
@@ -3765,15 +3761,17 @@ exports.default = {
           "mark": {
             "type": "bar",
             "tooltip": { "content": "data" },
-            "binSpacing": 3
+
+            "cornerRadius": 45
           },
           "encoding": {
             "x": {
               "field": "author_date",
               "type": "temporal",
 
-              "timeUnit": "yearmonth",
-              "axis": { "domain": false, "format": "%Y", "tickSize": 0 }
+              "timeUnit": timeUnit,
+
+              "axis": { "domain": false, "format": format }
             },
             "y": {
               "field": "count",
@@ -3786,7 +3784,7 @@ exports.default = {
             "color": {
               "field": "author_email",
               "type": "nominal",
-              "scale": { "scheme": "category20b" }
+              "scale": { "scheme": "category10" }
             }
           }
 
@@ -4039,7 +4037,7 @@ exports.default = {
             "color": {
               "field": "author_email",
               "type": "nominal",
-              "scale": { "range": colors },
+              "scale": { "scheme": "category10" },
               "legend": null
             }
           }
@@ -4174,7 +4172,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-5685f17a", __vue__options__)
   } else {
-    hotAPI.reload("data-v-5685f17a", __vue__options__)
+    hotAPI.rerender("data-v-5685f17a", __vue__options__)
   }
 })()}
 });
@@ -4585,7 +4583,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-083303b4", __vue__options__)
   } else {
-    hotAPI.reload("data-v-083303b4", __vue__options__)
+    hotAPI.rerender("data-v-083303b4", __vue__options__)
   }
 })()}
 });

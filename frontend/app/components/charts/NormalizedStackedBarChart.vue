@@ -46,7 +46,7 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      group: 0
+      group: 1
     }
   },
   computed: {
@@ -60,54 +60,22 @@ export default {
       return this.$store.state.endDate
     },
     spec() {
-
-      // let init = () => {
-      //   let type;
-      //   switch(this.tick) {
-      //     case 0: //circle
-      //       type = "circle"
-      //       // bin = false
-      //       // size = {
-      //       //         "field": "total",
-      //       //         "type": "quantitative",
-      //       //         "min": "15"
-      //       //       }
-      //       break
-      //     case 1: //tick
-      //       type = "tick"
-      //       // bin = false
-      //       // size = {}
-      //       break
-      //     case 2: //rect
-      //       type = "rect"
-      //       // bin = {"maxbins": 40}
-      //       // size = {}
-      //     default:
-      //       break
-      //   }
-      //   return type
-      // }
       
       let type = null, bin = null, size = null, timeUnit = null, format = null;
 
       if(this.group == 0) {
         timeUnit = 'year'
         format = '%Y'
-        type = "circle"
+        type = "bar"
         bin = false
-        size = {
-                "field": "Net lines added",
-                "type": "quantitative",
-                "min": "15",
-                "scale": {"minSize": 30, "maxSize": 31}
-              }
+        size = 30
       }
       if (this.group == 1) {
         timeUnit = 'yearmonth'
-        format = '%Y %b'
-        type = "tick"
+        format = '%y %b'
+        type = "bar"
             bin = false
-            size = {}
+            size = 13
       }
 
 
@@ -121,23 +89,24 @@ export default {
           "offset": 30
         },
         "config": {
-          "tick": {
-            "thickness": 8,
-            "bandSize": 23
-          },
           "axis":{
                 "grid": false
               },
-              "legend": {
-                "offset": -20,
-                
-                // "orient": "right",
-                "titleFontSize": 10,
-                "titlePadding": 10,
-                "padding": 40,
-                "labelFontSize": 14,
-                "titleFontSize": 14
-              },"scale": {"minSize": 100, "maxSize": 500}
+          "legend": {
+            "offset": -20,
+            
+            // "orient": "right",
+            "titleFontSize": 10,
+            "titlePadding": 10,
+            "padding": 40,
+            "labelFontSize": 14,
+            "titleFontSize": 14
+          },
+          "scale": {"minSize": 100, "maxSize": 500},
+          "bar": {
+            "continuousBandSize": size,
+            "binSpacing": 0,
+          }
         },
         "layer": [
           {
@@ -163,17 +132,18 @@ export default {
             "mark": {
               "type":"bar",
               "tooltip": {"content": "data"},
-              "binSpacing": 3
+              
+              "cornerRadius": 45
             },
             "encoding": {
               "x": {
                 "field": "author_date", 
                 "type": "temporal", 
                 // "bin": true, 
-                // "timeUnit": timeUnit, 
+                "timeUnit": timeUnit, 
                 // "axis": {"format": '%Y %b', "title": " ", "labelAngle": -35, "labelFlush": true}
-                "timeUnit": "yearmonth",
-                "axis": {"domain": false, "format": "%Y", "tickSize": 0}
+                // "timeUnit": "yearmonth",
+                "axis": {"domain": false, "format": format}
               },
               "y": {
                 "field": "count", 
@@ -187,7 +157,7 @@ export default {
               "color": {
                 "field": "author_email",
                 "type": "nominal",
-                "scale": {"scheme": "category20b"},
+                "scale": {"scheme": "category10"},
                 // "legend": {
                 //   "direction": "horizontal",
                 // }

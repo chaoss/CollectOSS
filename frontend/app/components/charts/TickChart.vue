@@ -65,34 +65,6 @@ export default {
       return this.$store.state.endDate
     },
     spec() {
-
-      // let init = () => {
-      //   let type;
-      //   switch(this.tick) {
-      //     case 0: //circle
-      //       type = "circle"
-      //       // bin = false
-      //       // size = {
-      //       //         "field": "total",
-      //       //         "type": "quantitative",
-      //       //         "min": "15"
-      //       //       }
-      //       break
-      //     case 1: //tick
-      //       type = "tick"
-      //       // bin = false
-      //       // size = {}
-      //       break
-      //     case 2: //rect
-      //       type = "rect"
-      //       // bin = {"maxbins": 40}
-      //       // size = {}
-      //     default:
-      //       break
-      //   }
-      //   return type
-      // }
-      
       let type = null, bin = null, size = null, opacity = null;
 
       if(this.tick == 0) {
@@ -182,8 +154,6 @@ export default {
         ]
         
       }
-
-
 
       let repo = window.AugurAPI.Repo({ gitURL: this.repo })
       let contributors = {}
