@@ -196,7 +196,6 @@ function Augur() {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      domain: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
@@ -212,8 +211,7 @@ function Augur() {
     mutations: {
       setGitRepo: function setGitRepo(state, payload) {
         state.gitRepo = payload.gitURL;
-        state.baseRepo = payload.baseRepo;
-        state.domain = payload.domain;
+        state.baseRepo = payload.gitURL;
         state.hasState = true;
         var repo = window.AugurAPI.Repo(payload);
         if (!window.AugurRepos[repo.toString()]) {
@@ -248,22 +246,30 @@ function Augur() {
       addComparedRepo: function addComparedRepo(state, payload) {
         state.compare = 'zscore';
         state.hasState = true;
+        console.log("adding", payload, state.comparedRepos);
+
         var repo = window.AugurAPI.Repo(payload);
         if (!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()) {
-          if (state.comparedRepos.length + 2 == 1) {
+          if (state.comparedRepos.length + 1 == 1) {
             if (!router.app._route.params.comparedrepo) {
+              var owner = state.gitRepo ? null : state.baseRepo.substring(0, state.baseRepo.indexOf('/'));
+              var _repo = state.gitRepo ? state.gitRepo : state.baseRepo.slice(state.baseRepo.indexOf('/') + 1);
               router.push({
                 name: 'singlecompare',
-                params: { tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1), comparedowner: payload.owner, comparedrepo: payload.name }
+                params: { tab: state.tab, owner: owner, repo: _repo, comparedowner: payload.owner, comparedrepo: payload.name }
               });
             }
           } else {
-            var link = '/' + state.tab + '/groupid/1';
+            var groupid = state.gitRepo ? String(state.gitRepo) + '+' : String(state.baseRepo) + "+";
+            state.comparedRepos.forEach(function (repo) {
+              groupid += String(repo) + '+';
+            });
+            groupid += repo;
             router.push({
               name: 'group',
               params: {
                 tab: state.tab,
-                groupid: 1
+                groupid: groupid
               }
             });
           }
@@ -1175,8 +1181,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _MainControls = require('./MainControls');
 
 var _MainControls2 = _interopRequireDefault(_MainControls);
@@ -1253,56 +1257,44 @@ module.exports = {
   created: function created() {
     var _this = this;
 
-    if (!this.groupid) this.mapGroup[1] = this.$store.state.comparedRepos;
     if (this.repo || this.groupid) {
-      if (this.domain && this.owner) {
-        console.log("if", this.owner, this.repo);
-        this.$store.commit('setGitRepo', {
-          gitURL: this.owner + '/' + this.repo,
-          domain: this.domain
-        });
-      } else if (!this.groupid) {
-        console.log("ELSE", this.owner, this.repo);
-        var owner = this.owner ? this.owner : this.domain;
-
-        this.$store.commit('setRepo', {
-          githubURL: owner + '/' + this.repo
-        });
-      }
       this.$store.commit('setTab', {
         tab: this.tab
       });
+      if (this.$router.history.current.name == "singlegit") {
+        this.$store.commit('setRepo', {
+          gitURL: this.repo
+        });
+      } else if (!this.groupid) {
+        this.$store.commit('setRepo', {
+          githubURL: this.owner + '/' + this.repo
+        });
+      }
       if (this.comparedrepo) {
         this.$store.commit('addComparedRepo', {
           githubURL: this.comparedowner + '/' + this.comparedrepo
         });
       }
 
-      if (localStorage.getItem('groupid')) {
-        console.log("getting HERE", localStorage.getItem('base'), String(localStorage.getItem('base')), _typeof(localStorage.getItem('base')), JSON.parse(localStorage.getItem('group')));
-
-        JSON.parse(localStorage.getItem('group')).forEach(function (repo) {
-          _this.$store.commit('addComparedRepo', {
-            githubURL: repo
-          });
-        });
-        if (localStorage.getItem('git') != null) {
-          console.log("wrong");
-          this.$store.commit('setGitRepo', {
-            gitURL: localStorage.getItem('git'),
-            baseRepo: localStorage.getItem('base'),
-            domain: localStorage.getItem('domain')
+      if (this.groupid) {
+        var repos = this.groupid.split('+');
+        if (repos[0].includes('github')) {
+          this.$store.commit('setRepo', {
+            gitURL: repos[0]
           });
         } else {
-          console.log(this.gitRepo);
-          var temp = localStorage.getItem('base');
           this.$store.commit('setRepo', {
-            githubURL: temp
+            gitURL: repos[0]
           });
-          console.log("happening", temp);
         }
+        repos.shift();
+
+        repos.forEach(function (cmprepo) {
+          _this.$store.commit('addComparedRepo', {
+            githubURL: cmprepo
+          });
+        });
       }
-      localStorage.clear();
     }
   },
 
@@ -1371,23 +1363,27 @@ module.exports = {
         tab: e.target.dataset['value']
       });
 
-      var link = null;
-      var repo = this.$store.state.gitRepo ? 'github/' + this.$store.state.baseRepo : this.$store.state.baseRepo;
-      if (this.$store.state.comparedRepos.length == 1) link = '/' + e.target.dataset['value'] + '/' + repo + '/comparedto/' + this.$store.state.comparedRepos[0];else if (this.$store.state.comparedRepos.length > 1) link = '/' + e.target.dataset['value'] + '/groupid/1';else link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo;
+      var repo = this.repo;
+
       if (this.$store.state.comparedRepos.length == 1) {
         this.$router.push({
           name: 'singlecompare',
-          params: { tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo }
+          params: { tab: e.target.dataset['value'], owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo }
         });
       } else if (this.$store.state.comparedRepos.length > 1) {
         this.$router.push({
           name: 'group',
-          params: { tab: e.target.dataset['value'], groupid: 1 }
+          params: { tab: e.target.dataset['value'], groupid: this.groupid }
+        });
+      } else if (this.$router.history.current.name == "singlegit") {
+        this.$router.push({
+          name: 'singlegit',
+          params: { tab: e.target.dataset['value'], repo: this.repo }
         });
       } else {
         this.$router.push({
           name: 'single',
-          params: { tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo }
+          params: { tab: e.target.dataset['value'], owner: this.owner, repo: this.repo }
         });
       }
     },
@@ -1409,7 +1405,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.reload("data-v-78eb2940", __vue__options__)
+    hotAPI.rerender("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1503,7 +1499,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-7655e5a2", __vue__options__)
   } else {
-    hotAPI.reload("data-v-7655e5a2", __vue__options__)
+    hotAPI.rerender("data-v-7655e5a2", __vue__options__)
   }
 })()}
 });
@@ -1592,7 +1588,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Diversity and Inclusion")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row"},[_c('p',[_vm._v("We currently do not have any metrics developed for this group.")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1601,7 +1597,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-3ae426c0", __vue__options__)
   } else {
-    hotAPI.reload("data-v-3ae426c0", __vue__options__)
+    hotAPI.rerender("data-v-3ae426c0", __vue__options__)
   }
 })()}
 });
@@ -1651,8 +1647,8 @@ module.exports = {
       });
 
       this.$router.push({
-        name: 'single',
-        params: { tab: 'git', domain: domain, owner: owner, repo: repo }
+        name: 'singlegit',
+        params: { tab: 'git', repo: e.url }
       });
     },
     getDownloadedRepos: function getDownloadedRepos() {
@@ -1786,7 +1782,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Git Metrics")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"10px"}},[_c('div',{staticStyle:{"padding-top":"75px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}}),_vm._v(" "),_c('div',{staticStyle:{"padding-top":"15px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"10px"}},[_c('div',{staticStyle:{"padding-top":"75px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}}),_vm._v(" "),_c('div',{staticStyle:{"padding-top":"15px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1795,7 +1791,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-f66913b6", __vue__options__)
+    hotAPI.rerender("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -2839,10 +2835,11 @@ exports.default = {
 
       var repos = [];
       if (this.repo) {
+        console.log("repo", this.repo);
         if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
           var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
           if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
-          console.log(temp);
+
           repos.push(temp);
         }
       }
@@ -4172,7 +4169,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-5685f17a", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-5685f17a", __vue__options__)
+    hotAPI.reload("data-v-5685f17a", __vue__options__)
   }
 })()}
 });
@@ -4583,7 +4580,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-083303b4", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-083303b4", __vue__options__)
+    hotAPI.reload("data-v-083303b4", __vue__options__)
   }
 })()}
 });
@@ -6959,7 +6956,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var routes = [{ path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default },
 // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
-{ path: '/single/:tab/:owner?/:repo/:domain?', component: _AugurCards2.default, name: 'single', props: true },
+{ path: '/single/:tab/:owner?/:repo', component: _AugurCards2.default, name: 'single', props: true }, { path: '/singlegit/:tab/:repo', component: _AugurCards2.default, name: 'singlegit', props: true },
 // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
 { path: '/compare/:tab/:owner?/:repo/:domain?/comparedto/:comparedowner/:comparedrepo/:compareddomain?', component: _AugurCards2.default, name: 'singlecompare', props: true },
 // {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},

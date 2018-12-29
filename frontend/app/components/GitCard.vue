@@ -1,6 +1,5 @@
 <template>
   <section>
-    <h1>Git Metrics</h1>
     <div style="display: inline-block;">
       <h2 style="display: inline-block; color: black !important">{{ $store.state.gitRepo }}</h2>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>

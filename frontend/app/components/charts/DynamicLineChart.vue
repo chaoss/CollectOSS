@@ -105,6 +105,7 @@ export default {
       // Get the repos we need
       let repos = []
       if (this.repo) {
+        console.log("repo", this.repo)
         if (window.AugurRepos[this.repo])
           repos.push(window.AugurRepos[this.repo])
         else if (this.domain){
@@ -113,7 +114,7 @@ export default {
             temp = window.AugurRepos[temp]
           else
             window.AugurRepos[temp] = temp
-          console.log(temp)
+          
           repos.push(temp)
         }
         // repos.push(this.repo)

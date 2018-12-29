@@ -92,59 +92,47 @@ module.exports = {
     LoginForm
   },
   created() {
-    if(!this.groupid)
-      this.mapGroup[1] = this.$store.state.comparedRepos
+    // if(!this.groupid)
+    //   this.mapGroup[1] = this.$store.state.comparedRepos
     if(this.repo || this.groupid){
-      if (this.domain && this.owner){
-        console.log("if", this.owner, this.repo)
-        this.$store.commit('setGitRepo', {
-          gitURL: this.owner + '/' + this.repo,
-          domain: this.domain
-        })
-      }
-      else if (!this.groupid){
-        console.log("ELSE", this.owner, this.repo)
-        let owner = this.owner ? this.owner : this.domain
-
-        this.$store.commit('setRepo', {
-          githubURL: owner + '/' + this.repo
-        })
-      }
       this.$store.commit('setTab', {
         tab: this.tab
       })
+      if (this.$router.history.current.name == "singlegit"){
+        this.$store.commit('setRepo', {
+          gitURL: this.repo
+        })
+      }
+      else if (!this.groupid){
+        this.$store.commit('setRepo', {
+          githubURL: this.owner + '/' + this.repo
+        })
+      }
       if(this.comparedrepo) { 
         this.$store.commit('addComparedRepo', {
           githubURL: this.comparedowner + '/' + this.comparedrepo
         })
       }
 
-      if (localStorage.getItem('groupid')) {
-        console.log("getting HERE", localStorage.getItem('base'), String(localStorage.getItem('base')), typeof(localStorage.getItem('base')),JSON.parse(localStorage.getItem('group')))
-
-        JSON.parse(localStorage.getItem('group')).forEach((repo) => {
+      if(this.groupid){
+        let repos = this.groupid.split('+')
+        if (repos[0].includes('github')) {
+          this.$store.commit('setRepo', {
+            gitURL: repos[0]
+          })
+        } else {
+          this.$store.commit('setRepo', {
+            gitURL: repos[0]
+          })
+        }
+        repos.shift()
+        // repos.pop()
+        repos.forEach((cmprepo) => {
           this.$store.commit('addComparedRepo', {
-            githubURL: repo
+            githubURL: cmprepo
           })
         })
-        if (localStorage.getItem('git') != null){
-          console.log("wrong")
-          this.$store.commit('setGitRepo', {
-            gitURL: localStorage.getItem('git'),
-            baseRepo: localStorage.getItem('base'),
-            domain: localStorage.getItem('domain')
-          })
-        }
-        else{
-          console.log(this.gitRepo)
-          let temp = localStorage.getItem('base')
-          this.$store.commit('setRepo', {
-            githubURL: temp,
-          })
-          console.log("happening", temp)
-        }
-      } 
-      localStorage.clear()
+      }
     }
   },
   watch: {
@@ -215,28 +203,27 @@ module.exports = {
         tab: e.target.dataset['value']
       })
       
-      let link = null
-      let repo = this.$store.state.gitRepo ? 'github/' + this.$store.state.baseRepo : this.$store.state.baseRepo
-      if (this.$store.state.comparedRepos.length == 1)
-        link = '/' + e.target.dataset['value'] + '/' + repo + '/comparedto/' + this.$store.state.comparedRepos[0]
-      else if (this.$store.state.comparedRepos.length > 1)
-        link = '/' + e.target.dataset['value'] + '/groupid/1'
-      else
-        link = '/' + e.target.dataset['value'] + '/' + this.$store.state.baseRepo
+      let repo = this.repo
+
       if(this.$store.state.comparedRepos.length == 1){
           this.$router.push({
           name: 'singlecompare',
-          params: {tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo}
+          params: {tab: e.target.dataset['value'], owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo}
         })        
       } else if (this.$store.state.comparedRepos.length > 1) {
         this.$router.push({
           name: 'group',
-          params: {tab: e.target.dataset['value'], groupid: 1}
+          params: {tab: e.target.dataset['value'], groupid: this.groupid}
+        })
+      } else if (this.$router.history.current.name == "singlegit") {
+        this.$router.push({
+          name: 'singlegit',
+          params: {tab: e.target.dataset['value'], repo: this.repo}
         })
       } else {
         this.$router.push({
           name: 'single',
-          params: {tab: e.target.dataset['value'], domain: this.domain, owner: this.owner, repo: this.repo, comparedowner: this.comparedowner, comparedrepo: this.comparedrepo}
+          params: {tab: e.target.dataset['value'], owner: this.owner, repo: this.repo}
         })
       }
       
