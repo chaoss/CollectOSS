@@ -94,8 +94,7 @@ module.exports = {
   created() {
     if(!this.groupid)
       this.mapGroup[1] = this.$store.state.comparedRepos
-    if(this.repo){
-      console.log("domain:", this.domain, this.owner)
+    if(this.repo || this.groupid){
       if (this.domain && this.owner){
         console.log("if", this.owner, this.repo)
         this.$store.commit('setGitRepo', {
@@ -103,14 +102,13 @@ module.exports = {
           domain: this.domain
         })
       }
-      else{
+      else if (!this.groupid){
         console.log("ELSE", this.owner, this.repo)
         let owner = this.owner ? this.owner : this.domain
 
         this.$store.commit('setRepo', {
           githubURL: owner + '/' + this.repo
         })
-
       }
       this.$store.commit('setTab', {
         tab: this.tab
@@ -120,40 +118,52 @@ module.exports = {
           githubURL: this.comparedowner + '/' + this.comparedrepo
         })
       }
+
       if (localStorage.getItem('groupid')) {
-        if (localStorage.getItem('domain'))
-          this.$store.commit('setGitRepo', {
-            gitURL: localStorage.getItem('owner') + '/' + localStorage.getItem('repo'),
-            domain: localStorage.getItem('domain')
-          })
-        else{
-          this.$store.commit('setRepo', {
-            githubURL: localStorage.getItem('owner') + '/' + localStorage.getItem('repo'),
-          })
-        }
+        console.log("getting HERE", localStorage.getItem('base'), String(localStorage.getItem('base')), typeof(localStorage.getItem('base')),JSON.parse(localStorage.getItem('group')))
+
         JSON.parse(localStorage.getItem('group')).forEach((repo) => {
           this.$store.commit('addComparedRepo', {
             githubURL: repo
           })
         })
+        if (localStorage.getItem('git') != null){
+          console.log("wrong")
+          this.$store.commit('setGitRepo', {
+            gitURL: localStorage.getItem('git'),
+            baseRepo: localStorage.getItem('base'),
+            domain: localStorage.getItem('domain')
+          })
+        }
+        else{
+          console.log(this.gitRepo)
+          let temp = localStorage.getItem('base')
+          this.$store.commit('setRepo', {
+            githubURL: temp,
+          })
+          console.log("happening", temp)
+        }
       } 
       localStorage.clear()
     }
   },
   watch: {
     comparedRepos: function(){
-      console.log(this.$store.state.comparedRepos.length, "second")
-      console.log(this.groupid)
-      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));  
-      if (this.gitRepo)
+      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
+       
+      if (this.gitRepo != null){
         localStorage.setItem('domain', this.domain)
+        localStorage.setItem('git', this.$store.state.gitRepo)
+      }
+      console.log(localStorage.getItem('git'), "this is it") 
+      localStorage.setItem('base', this.$store.state.baseRepo)
       
       if(this.$store.state.comparedRepos.length > 1){
         localStorage.setItem("groupid", this.groupid)
         localStorage.setItem('repo', this.repo)
         localStorage.setItem('owner', this.owner)
       }
-      console.log("GROUP HERE", localStorage.getItem('owner'))
+      console.log("GROUP HERE", localStorage.getItem('base'), localStorage.getItem('git'), JSON.parse(localStorage.getItem('group')), JSON.parse(localStorage.getItem('base')))
     }
   },
   data() {

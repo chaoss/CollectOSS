@@ -10,11 +10,11 @@ let routes = [
   {path: '/', component: AugurCards},
       {path: '/metrics_status', component: MetricsStatusCard},
       // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
-      {path: '/:tab/:owner?/:repo/:domain?', component: AugurCards, name: 'single', props: true},
+      {path: '/single/:tab/:owner?/:repo/:domain?', component: AugurCards, name: 'single', props: true},
       // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
-      {path: '/:tab/:owner?/:repo/:domain?/comparedto/:comparedowner/:comparedrepo/:compareddomain?', component: AugurCards, name: 'singlecompare', props: true},
+      {path: '/compare/:tab/:owner?/:repo/:domain?/comparedto/:comparedowner/:comparedrepo/:compareddomain?', component: AugurCards, name: 'singlecompare', props: true},
       // {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},
-      {path: '/:tab/groupid/:groupid', component: AugurCards, name: 'group', props: true},
+      {path: '/groupcompare/:tab/:groupid', component: AugurCards, name: 'group', props: true},
 ]
 let downloadedRepos = [], repos = [], projects = []
 window.AugurAPI.getDownloadedGitRepos().then((data) => {

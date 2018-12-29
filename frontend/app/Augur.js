@@ -57,9 +57,8 @@ export default function Augur () {
     },
     mutations: {
       setGitRepo(state, payload) {
-        console.log("hi",payload, window.AugurAPI.Repo(payload))
         state.gitRepo = payload.gitURL
-        state.baseRepo = payload.gitURL
+        state.baseRepo = payload.baseRepo
         state.domain = payload.domain
         state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
@@ -70,7 +69,9 @@ export default function Augur () {
         }
       },
       setRepo (state, payload) {
+        console.log("js",payload)
         let repo = window.AugurAPI.Repo(payload)
+        console.log(repo)
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
         } else {
@@ -89,51 +90,20 @@ export default function Augur () {
           state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
-        if (!payload.fromURL){
-            // window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
-          
-        }
-
-
-
-        // if (!payload.keepCompared) {
-        //   state.comparedRepos = []
-        // }
       },
       addComparedRepo (state, payload) {
-        // //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
-        // let repo = window.AugurAPI.Repo(payload)
-
-        // if (!window.AugurRepos[repo.toString()]) {
-        //   window.AugurRepos[repo.toString()] = repo
-        // }
-        // //state.comparedRepos.push(repo.toString())
-        // state.comparedTo = repo.toString()
-        // let title = 'Augur'
-        // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
-        // window.history.pushState(null, title, queryString)
         state.compare = 'zscore'
         state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
-        // console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString())
         if(!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()){
-        // if(false){
-          // console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, payload)
-          //(!this.$route.params.comparedowner) {
-          if (state.comparedRepos.length + 1 == 1) {
+          if (state.comparedRepos.length + 2 == 1) {
             if (!router.app._route.params.comparedrepo) {
-              console.log("should be here: ", payload.owner, payload.name)
               router.push({
                 name: 'singlecompare',
                 params: {tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1), comparedowner: payload.owner, comparedrepo: payload.name}
               })
-              // router.push({
-              //   path: link
-              //   // path: "/git"
-              // })
             }
           } else {
-            console.log("GROUPING augur")
             let link = '/' + state.tab + '/groupid/1'
             router.push({
               name: 'group',
@@ -141,7 +111,6 @@ export default function Augur () {
                 tab: state.tab,
                 groupid: 1
               }
-              // path: "/git"
             })
           }
           
@@ -152,11 +121,8 @@ export default function Augur () {
             repo = window.AugurRepos[repo.toString()]
           }
           state.hasState = true
-          console.log("TO BE PUSHED", repo.owner, repo.name, repo)
           if (repo.owner && repo.name) {
-            console.log("before: ", state.comparedRepos)
             state.comparedRepos.push(repo.toString())
-            console.log("after: ", state.comparedRepos)
             let title = repo.owner + '/' + repo.name + '- Augur'
             // state.tab = 'gmd'
             // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name

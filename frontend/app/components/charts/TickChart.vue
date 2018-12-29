@@ -171,7 +171,7 @@ export default {
               "color": {
                 "field": "Net lines added",
                 "type": "quantitative",
-                "scale": { "range": ["red", "green"]}
+                "scale": { "range": ["#FF0000", "#00FF00"]}
               },
               "size": size,
               "opacity": opacity

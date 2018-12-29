@@ -118,6 +118,7 @@ export default {
         }
         // repos.push(this.repo)
       } // end if (this.$store.repo)
+      console.log("CHECK REPOS". repos)
       this.comparedRepos.forEach(function(repo) {
         repos.push(window.AugurRepos[repo])
       });
@@ -700,6 +701,7 @@ export default {
 
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
+                console.log("buildlines params:", obj, key, field, count)
                 let d = defaultProcess(obj, key, field, count)
                 let rolling = null
                 if (compare == 'zscore') {
