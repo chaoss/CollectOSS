@@ -234,12 +234,12 @@ function Augur() {
         if (repo.owner && repo.name && !state.gitRepo) {
           state.baseRepo = repo.toString();
           var title = repo.owner + '/' + repo.name + '- Augur';
-          state.tab = 'gmd';
+          // state.tab = 'gmd'
           // state.queryObject['repo'] = repo.owner + '+' + repo.name
         }
         if (payload.gitURL) {
           // state.queryObject['git'] = window.btoa(repo.gitURL)
-          state.tab = 'git';
+          // state.tab = 'git'
           state.gitRepo = repo.gitURL;
         }
       },
@@ -1405,7 +1405,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-78eb2940", __vue__options__)
+    hotAPI.reload("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1499,7 +1499,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-7655e5a2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-7655e5a2", __vue__options__)
+    hotAPI.reload("data-v-7655e5a2", __vue__options__)
   }
 })()}
 });
@@ -1597,7 +1597,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-3ae426c0", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-3ae426c0", __vue__options__)
+    hotAPI.reload("data-v-3ae426c0", __vue__options__)
   }
 })()}
 });
@@ -1791,7 +1791,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-f66913b6", __vue__options__)
+    hotAPI.reload("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -3342,7 +3342,7 @@ exports.default = {
             var rolling = null;
             if (compare == 'zscore') {
               rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
-            } else rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
+            } else if (_this.rawWeekly || _this.disableRollingAverage) rolling = _AugurStats2.default.convertKey(d, 'value', 'value' + repo);else rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
             normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling', repo));
 
             aggregates.push(d);
@@ -3458,8 +3458,8 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"spacing"}),_vm._v(" "),_vm._m(0),_vm._v(" "),_c('div',{staticClass:"spinner loader"}),_vm._v(" "),_c('div',{staticClass:"hidefirst linechart",class:{ invis: !_vm.detail, invisDet: _vm.detail }},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-3",staticStyle:{"padding-left":"10px","position":"relative","top":"-8px !important"}},[_c('span',{staticStyle:{"font-size":"12px"}},[_vm._v("Data source: "+_vm._s(_vm.metricSource))])]),_vm._v(" "),_c('div',{staticClass:"col col-2",staticStyle:{"width":"154px !important","height":"38px !important","position":"relative","top":"-12px !important"}},[_c('cite',{staticClass:"metric"},[_c('a',{staticStyle:{"width":"100px !important","height":"38px !important","position":"absolute"},attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_c('img',{staticStyle:{"width":"100px","position":"relative"},attrs:{"src":"https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png","alt":"Chaoss-Definition-Logo","border":"0"}})])])]),_vm._v(" "),_c('div',{staticClass:"col col-4",staticStyle:{"position":"relative","top":"-8px !important"}},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"error hidden"},[_c('br'),_vm._v("Data is missing or unavailable")])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"spacing"}),_vm._v(" "),_c('div',{staticClass:"error hidden"},[_c('br'),_vm._v("Data is missing or unavailable for metric: "),_c('p',{staticStyle:{"color":"black !important"}},[_vm._v(_vm._s(_vm.title))])]),_vm._v(" "),_c('div',{staticClass:"spinner loader"}),_vm._v(" "),_c('div',{staticClass:"hidefirst linechart",class:{ invis: !_vm.detail, invisDet: _vm.detail }},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-3",staticStyle:{"padding-left":"10px","position":"relative","top":"-8px !important"}},[_c('span',{staticStyle:{"font-size":"12px"}},[_vm._v("Data source: "+_vm._s(_vm.metricSource))])]),_vm._v(" "),_c('div',{staticClass:"col col-2",staticStyle:{"width":"154px !important","height":"38px !important","position":"relative","top":"-12px !important"}},[_c('cite',{staticClass:"metric"},[_c('a',{staticStyle:{"width":"100px !important","height":"38px !important","position":"absolute"},attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_c('img',{staticStyle:{"width":"100px","position":"relative"},attrs:{"src":"https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png","alt":"Chaoss-Definition-Logo","border":"0"}})])])]),_vm._v(" "),_c('div',{staticClass:"col col-4",staticStyle:{"position":"relative","top":"-8px !important"}},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
+__vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return

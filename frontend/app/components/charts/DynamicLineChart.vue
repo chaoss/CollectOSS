@@ -1,7 +1,7 @@
 <template>
   <div ref="holder">
     <div class="spacing"></div>
-    <div class="error hidden"><br>Data is missing or unavailable</div>
+    <div class="error hidden"><br>Data is missing or unavailable for metric: <p style="color: black !important">{{ title }}</p></div>
     <div class="spinner loader"></div>
     <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
       <vega-lite :spec="spec" :data="values"></vega-lite>
@@ -707,7 +707,7 @@ export default {
                 let rolling = null
                 if (compare == 'zscore') {
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
-                }
+                } else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
                 else rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
 

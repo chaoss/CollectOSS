@@ -80,12 +80,12 @@ export default function Augur () {
         if (repo.owner && repo.name && !state.gitRepo) {
           state.baseRepo = repo.toString()
           let title = repo.owner + '/' + repo.name + '- Augur'
-          state.tab = 'gmd'
+          // state.tab = 'gmd'
           // state.queryObject['repo'] = repo.owner + '+' + repo.name
         }
         if (payload.gitURL) {
           // state.queryObject['git'] = window.btoa(repo.gitURL)
-          state.tab = 'git'
+          // state.tab = 'git'
           state.gitRepo = repo.gitURL
         }
       },
