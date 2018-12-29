@@ -707,7 +707,7 @@ export default {
                 let rolling = null
                 if (compare == 'zscore') {
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
-                } else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
+                } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
                 else rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
 
