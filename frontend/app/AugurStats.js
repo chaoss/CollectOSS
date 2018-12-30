@@ -32,7 +32,7 @@ export default class AugurStats {
           date: d.date,
           field: d[key[1]]
         }
-        obj[newName] = d[key[0]]
+        obj[newName] = d[key]
         return obj
       })
     }
@@ -41,7 +41,7 @@ export default class AugurStats {
         let obj = {
           date: d.date,
         }
-        obj[newName] = d[key]
+        obj[newName] = d[key] || 0
         return obj
       })
     }

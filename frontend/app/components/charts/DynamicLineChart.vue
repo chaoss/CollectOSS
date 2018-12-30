@@ -221,6 +221,40 @@ export default {
           }
       }
 
+      let getRawLine = (key, color) => {
+        let raw = (key.substring(key.length - 7) == "Rolling" ? false : true)
+        return {
+            "transform": [
+              brush
+          ],
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "axis": {
+                      "labels": !this.showDetail,
+                    "format": "%b %Y", "title": " "}
+              },
+              "y": {
+                "field": key,
+                "type": "quantitative",
+                "axis": {
+                  "title": null
+                }
+              },
+              "color": {
+                    "value": color
+                  },
+                  "opacity": {"value": .3}
+            },
+            "mark": {
+              "type": "line",
+              //"interpolate": "basis",
+              "clip": true
+            }
+          }
+      }
+
       let getToolPoint = (key) => { 
         let selection = (!selectionAdded ? {
               "tooltip": {
@@ -320,6 +354,7 @@ export default {
             "selection": selection
           }
       }
+
 
     let getArea = function (extension) {
       return {
@@ -524,8 +559,9 @@ export default {
         var color = 0;
         repos.forEach((repo) => {
           buildLines("valueRolling" + repo, colors[color])
+
           if(this.rawWeekly) 
-            buildLines("value" + repo,colors[color])
+            config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
           // if user doesn't want detail, then set vconcat to og
           if(this.showDetail) 
             config.vconcat[1] = getDetail("valueRolling" + this.repo)
@@ -694,27 +730,35 @@ export default {
           let legend = []
           let values = []
           let colors = []
-
-         
-
+          let baselineVals = null
           repos.forEach((repo) => {
 
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
-                
                 let d = defaultProcess(obj, key, field, count)
-                console.log("buildlines params:", obj, key, field, count, d, AugurStats.zscores(d, 'value'))
                 let rolling = null
-                if (compare == 'zscore') {
+                if (this.compare == 'zscore') {
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
                 } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
-                else rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
+                else if (this.compare == 'baseline') {
+                  if(repo.githubURL == this.repo){
+                    baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                  }
+                  rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                  for (var i = 0; i < baselineVals.length; i++){
+                    if (rolling[i] && baselineVals[i])
+                      rolling[i].valueRolling -= baselineVals[i].valueRolling                   
+                  }
+                  
+                  console.log(repo, baselineVals, rolling, rolling[0].valueRolling, baselineVals[0].valueRolling, rolling[0].value)
+                } else {
+                  rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                }
 
-                aggregates.push(d)
+                normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
+                aggregates.push(AugurStats.convertKey(d, 'value', 'value' + repo))
                 legend.push(repo + " " + field)
-                if (!this.disableRollingAverage) { colors.push(window.AUGUR_CHART_STYLE.brightColors[count]) }
-                if (this.rawWeekly || this.disableRollingAverage) { colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]) }
+                colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
               }, repo)
 
           });
@@ -731,16 +775,16 @@ export default {
                 values.push(d);
 
               })
-            }
-            if (this.rawWeekly) {
-              for(var i = 0; i < legend.length; i++){
+              if (this.rawWeekly) {
                 aggregates[i].forEach(d => {
-                  d.name = "raw " + legend[i]
+                  // d.name = "raw " + legend[i]
+                  d.name = legend[i]
                   d.color = colors[i]
                   values.push(d)
                 })
               }
             }
+            
             
             repos.forEach((repo) => {
               if(!this.status[repo]) {
