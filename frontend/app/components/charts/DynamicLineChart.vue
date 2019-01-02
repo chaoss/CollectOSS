@@ -8,9 +8,6 @@
       <p> {{ chart }} </p>
     </div>
 
-
-
-
     <div class="row below-chart">
       <div class="col col-1"></div>
       <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
@@ -29,11 +26,9 @@
   </div>
 </template>
 
-
 <script>
 import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
-
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
@@ -64,7 +59,6 @@ export default {
     }
   },
   mounted() {
-
   },
   computed: {
     repo () {
@@ -101,7 +95,6 @@ export default {
       return this.$store.state.showDetail
     },
     spec() {
-
       // Get the repos we need
       let repos = []
       if (this.repo) {
@@ -571,11 +564,9 @@ export default {
         });
       }
 
-
       let buildLines = function (key, color) {
         config.vconcat[0].layer.push(getStandardLine(key, color))
       }
-
 
       let buildTooltip = function (key) {
         config.vconcat[0].layer.push(getToolPoint(key))
@@ -612,9 +603,6 @@ export default {
         // }
       }
 
-      
-
-
       buildMetric()
 
       //set dates from main control options
@@ -639,7 +627,6 @@ export default {
         } else {
           window.$(this.$refs.holder).find('.hidefirst').removeClass('invis')
           window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet')
-
         }
       }
 
@@ -725,14 +712,12 @@ export default {
             } // end for in
           } // end normalize function
 
-
           // Build the lines we need
           let legend = []
           let values = []
           let colors = []
           let baselineVals = null
           repos.forEach((repo) => {
-
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
@@ -767,13 +752,11 @@ export default {
             // this.renderError()
           } else {
             values = []
-
             for(var i = 0; i < legend.length; i++){
               normalized[i].forEach(d => {
                 d.name = legend[i]
                 d.color = colors[i]
                 values.push(d);
-
               })
               if (this.rawWeekly) {
                 aggregates[i].forEach(d => {
@@ -784,8 +767,6 @@ export default {
                 })
               }
             }
-            
-            
             repos.forEach((repo) => {
               if(!this.status[repo]) {
                 let temp = JSON.parse(JSON.stringify(values))
@@ -798,8 +779,6 @@ export default {
                 values.push.apply(values, temp)
               }
             })  
-            
-
 
             this.legendLabels = legend
             this.values = values
@@ -809,9 +788,7 @@ export default {
               if(this.status[key]) allFalse = false
             if(!allFalse) $(this.$el).find('.error').addClass('hidden')
 
-
             // config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
-
 
             $(this.$el).find('.hidefirst').removeClass('invis')
             $(this.$el).find('.hidefirst').removeClass('invisDet')
@@ -822,9 +799,6 @@ export default {
 
             //this.mgConfig.legend_target = this.$refs.legend
             this.renderChart()
-
-
-
           }
       }
 
@@ -846,12 +820,12 @@ export default {
   methods: {
     downloadSVG (e) {
       var svgsaver = new window.SvgSaver()
-      var svg = window.$(this.$refs.chartholder).find('svg')[0]
+      var svg = window.$(this.$refs.holder).find('svg')[0]
       svgsaver.asSvg(svg, this.__download_file + '.svg')
     },
     downloadPNG (e) {
       var svgsaver = new window.SvgSaver()
-      var svg = window.$(this.$refs.chartholder).find('svg')[0]
+      var svg = window.$(this.$refs.holder).find('svg')[0]
       svgsaver.asPng(svg, this.__download_file + '.png')
     },
     renderChart () {
@@ -865,10 +839,8 @@ export default {
       this.$refs.chartholder.appendChild(this.mgConfig.target)
     },
     renderError () {
-
         $(this.$el).find('.spinner').removeClass('loader')
         $(this.$el).find('.error').removeClass('hidden')
-
     }
   },// end methods
   created () {

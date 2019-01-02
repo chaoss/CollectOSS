@@ -2144,7 +2144,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-4eb76a08", __vue__options__)
+    hotAPI.reload("data-v-4eb76a08", __vue__options__)
   }
 })()}
 });
@@ -3367,7 +3367,6 @@ exports.default = {
         var colors = [];
         var baselineVals = null;
         repos.forEach(function (repo) {
-
           buildLines(data[repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count);
             var rolling = null;
@@ -3396,7 +3395,6 @@ exports.default = {
 
         if (normalized.length == 0) {} else {
           values = [];
-
           for (var i = 0; i < legend.length; i++) {
             normalized[i].forEach(function (d) {
               d.name = legend[i];
@@ -3411,7 +3409,6 @@ exports.default = {
               });
             }
           }
-
           repos.forEach(function (repo) {
             if (!_this.status[repo]) {
               var _temp2 = JSON.parse(JSON.stringify(values));
@@ -3458,12 +3455,12 @@ exports.default = {
   methods: {
     downloadSVG: function downloadSVG(e) {
       var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      var svg = window.$(this.$refs.holder).find('svg')[0];
       svgsaver.asSvg(svg, this.__download_file + '.svg');
     },
     downloadPNG: function downloadPNG(e) {
       var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.chartholder).find('svg')[0];
+      var svg = window.$(this.$refs.holder).find('svg')[0];
       svgsaver.asPng(svg, this.__download_file + '.png');
     },
     renderChart: function renderChart() {
@@ -3477,7 +3474,6 @@ exports.default = {
       this.$refs.chartholder.appendChild(this.mgConfig.target);
     },
     renderError: function renderError() {
-
       $(this.$el).find('.spinner').removeClass('loader');
       $(this.$el).find('.error').removeClass('hidden');
     }
