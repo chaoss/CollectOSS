@@ -33,7 +33,11 @@
         "apikey": "0000000000000000000000000000000000"
     },
     "LibrariesIO": {
-        "apikey": ""
+                "host": "hostname.io",
+         "name": "name",
+         "pass": "password",
+         "port": "0000",
+         "user": "username"
     },
     "Plugins": [],
     "Server": {
