@@ -120,7 +120,7 @@ class Application(object):
             if plugin_name not in Application.plugins:
                 raise ValueError('Plugin %s not found.' % plugin_name)
             self._loaded_plugins[plugin_name] = Application.plugins[plugin_name](self)
-            logger.debug(f'{plugin_name} plugin loaded')
+            logger.debug('{plugin_name} plugin loaded')
         return self._loaded_plugins[plugin_name]
 
     @classmethod
@@ -136,7 +136,7 @@ class Application(object):
                     try:
                         importer.find_module(modname).load_module(modname)
                     except Exception as e:
-                        logger.warn(f'Error when loading plugin {module.__name__}.{modname}:')
+                        logger.warn('Error when loading plugin {module.__name__}.{modname}:')
                         logger.exception(e)
 
     @classmethod

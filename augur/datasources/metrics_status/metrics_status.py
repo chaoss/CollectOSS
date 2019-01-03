@@ -22,13 +22,13 @@ class FrontendStatusExtractor(object):
         attribute = None
 
         if metric.metric_type is "timeseries":
-            attribute = next((attribute for attribute in self.timeseries_attributes if f"/api/unstable/<owner>/<repo>/timeseries/{attribute[2]}" == metric.endpoint), None)
+            attribute = next((attribute for attribute in self.timeseries_attributes if "/api/unstable/<owner>/<repo>/timeseries/{attribute[2]}" == metric.endpoint), None)
 
         elif metric.metric_type is "metric":
-            attribute = next((attribute for attribute in self.endpoint_attributes if f"/api/unstable/<owner>/<repo>/{attribute[2]}" == metric.endpoint), None)
+            attribute = next((attribute for attribute in self.endpoint_attributes if "/api/unstable/<owner>/<repo>/{attribute[2]}" == metric.endpoint), None)
 
         elif metric.metric_type is "git":
-            attribute = next((attribute for attribute in self.git_endpoint_attributes if f"/api/unstable/git/{attribute[2]}" == metric.endpoint), None)
+            attribute = next((attribute for attribute in self.git_endpoint_attributes if "/api/unstable/git/{attribute[2]}" == metric.endpoint), None)
 
         if attribute is not None:
             metric.frontend_status = 'implemented'
