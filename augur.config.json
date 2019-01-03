@@ -1,0 +1,51 @@
+
+{
+    "Cache": {
+        "config": {
+            "cache.data_dir": "runtime/cache/",
+            "cache.lock_dir": "runtime/cache/",
+            "cache.type": "file"
+        }
+    },
+    "Database": {
+        "host": "hostname.io",
+        "name": "name",
+        "pass": "password",
+        "port": "0000",
+        "user": "username"
+     },
+    "Development": {
+        "developer": "0",
+        "interactive": "0"
+    },
+    "Facade": {
+        "host": "hostname.io",
+        "name": "name",
+        "pass": "password",
+        "port": "0000",
+        "projects": [
+            "project",
+            "project2",
+        ],
+        "user": "username"
+    },
+    "GitHub": {
+        "apikey": "0000000000000000000000000000000000"
+    },
+    "LibrariesIO": {
+                "host": "hostname.io",
+         "name": "name",
+         "pass": "password",
+         "port": "0000",
+         "user": "username"
+    },
+    "Plugins": [],
+    "Server": {
+        "cache_expire": 3600,
+        "host": "0.0.0.0",
+        "port": "5000",
+        "workers": 6
+    }
+}
+
+
