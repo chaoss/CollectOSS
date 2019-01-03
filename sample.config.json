@@ -1,5 +1,8 @@
-
 {
+    "Development": {
+        "developer": "0",
+        "interactive": "0"
+    },
     "Cache": {
         "config": {
             "cache.data_dir": "runtime/cache/",
@@ -7,17 +10,26 @@
             "cache.type": "file"
         }
     },
-    "Database": {
+    "Server": {
+        "cache_expire": 3600,
+        "host": "0.0.0.0",
+        "port": "5000",
+        "workers": 6
+    },
+    "Plugins": [],
+    "GitHub": {
+        "apikey": "your api key goes here"
+    },
+    "Postman": {
+        "apikey": "your api key goes here"
+    },
+    "GHTorrent": {
         "host": "hostname.io",
         "name": "name",
         "pass": "password",
         "port": "0000",
         "user": "username"
      },
-    "Development": {
-        "developer": "0",
-        "interactive": "0"
-    },
     "Facade": {
         "host": "hostname.io",
         "name": "name",
@@ -26,11 +38,9 @@
         "projects": [
             "project",
             "project2",
+            "project3"
         ],
         "user": "username"
-    },
-    "GitHub": {
-        "apikey": "0000000000000000000000000000000000"
     },
     "LibrariesIO": {
                 "host": "hostname.io",
@@ -38,14 +48,5 @@
          "pass": "password",
          "port": "0000",
          "user": "username"
-    },
-    "Plugins": [],
-    "Server": {
-        "cache_expire": 3600,
-        "host": "0.0.0.0",
-        "port": "5000",
-        "workers": 6
     }
 }
-
-
