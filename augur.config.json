@@ -39,7 +39,7 @@
     "Server": {
         "cache_expire": 3600,
         "host": "0.0.0.0",
-        "port": "0000",
+        "port": "5000",
         "workers": 6
     }
 }
