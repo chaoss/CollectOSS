@@ -12,10 +12,10 @@
         <div class="col col-6">
           <normalized-stacked-bar-chart title="Lines of code added by the top 10 authors as Percentages - By Time Period"></normalized-stacked-bar-chart>
         </div>
-        <div class="col col-6" style="padding-left: 10px">
+        <div class="col col-6" style="padding-left: 45px">
           <div style="padding-top: 75px"></div>
           <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
-          <div style="padding-top: 15px"></div>
+          <div style="padding-top: 35px"></div>
           <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
         </div>
       </div>

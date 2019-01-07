@@ -6,16 +6,21 @@
       <p> {{ chart }} </p>
       <div style="position: relative; top: -80px !important"class="form-item form-checkboxes tickradios">
 
-
+          
+          <div class="inputGroup ">
+            <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
+            <label id="front" for="monthradio">Month</label>
+          </div>
           <div class="inputGroup ">
             <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
             <label id="front" for="yearradio">Year</label>
           </div>
           <div class="inputGroup ">
-            <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
-            <label id="front" for="monthradio">Month</label>
+            <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
+            <label id="front" for="contradio">Continuous</label>
           </div>
-
+          
+          
 
         
       </div>
@@ -77,6 +82,14 @@ export default {
             bin = false
             size = 13
       }
+      if (this.group == 2) {
+        timeUnit = 'yearmonth'
+        format = '%y %b'
+        type = "bar"
+            bin = false
+            size = 13
+        type = "area"
+      }
 
 
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
@@ -94,13 +107,12 @@ export default {
               },
           "legend": {
             "offset": -20,
-            
-            // "orient": "right",
-            "titleFontSize": 10,
+            "orient": "right",
             "titlePadding": 10,
             "padding": 40,
             "labelFontSize": 14,
-            "titleFontSize": 14
+            "titleFontSize": 14,
+            "labelLimit": 260 
           },
           "scale": {"minSize": 100, "maxSize": 500},
           "bar": {
@@ -130,7 +142,7 @@ export default {
               },
             ],
             "mark": {
-              "type":"bar",
+              "type": type,
               "tooltip": {"content": "data"},
               
               "cornerRadius": 45
@@ -157,10 +169,7 @@ export default {
               "color": {
                 "field": "author_email",
                 "type": "nominal",
-                "scale": {"scheme": "category10"},
-                // "legend": {
-                //   "direction": "horizontal",
-                // }
+                "scale": {"scheme": "category10"}
               },
               // "size": size,
               // "opacity":{

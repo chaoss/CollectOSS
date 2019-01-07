@@ -836,6 +836,7 @@ export default {
       window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
       window.$(this.$refs.holder).find('.deleteme').remove()
       this.$refs.chartholder.innerHTML = ''
+      console.log("target", this.mgConfig)
       this.$refs.chartholder.appendChild(this.mgConfig.target)
     },
     renderError () {

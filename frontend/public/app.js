@@ -1266,16 +1266,21 @@ module.exports = {
           gitURL: this.repo
         });
       } else if (!this.groupid) {
-        this.$store.commit('setRepo', {
-          githubURL: this.owner + '/' + this.repo
-        });
+        if (this.repo.includes('github')) {
+          this.$store.commit('setRepo', {
+            gitURL: this.repo
+          });
+        } else {
+          this.$store.commit('setRepo', {
+            githubURL: this.owner + '/' + this.repo
+          });
+        }
       }
       if (this.comparedrepo) {
         this.$store.commit('addComparedRepo', {
           githubURL: this.comparedowner + '/' + this.comparedrepo
         });
       }
-
       if (this.groupid) {
         var repos = this.groupid.split('+');
         if (repos[0].includes('github')) {
@@ -1284,7 +1289,7 @@ module.exports = {
           });
         } else {
           this.$store.commit('setRepo', {
-            gitURL: repos[0]
+            githubURL: repos[0]
           });
         }
         repos.shift();
@@ -1782,7 +1787,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"10px"}},[_c('div',{staticStyle:{"padding-top":"75px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}}),_vm._v(" "),_c('div',{staticStyle:{"padding-top":"15px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"45px"}},[_c('div',{staticStyle:{"padding-top":"75px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}}),_vm._v(" "),_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -3471,6 +3476,7 @@ exports.default = {
       window.$(this.$refs.holder).find('.showme').removeClass('invisDet');
       window.$(this.$refs.holder).find('.deleteme').remove();
       this.$refs.chartholder.innerHTML = '';
+      console.log("target", this.mgConfig);
       this.$refs.chartholder.appendChild(this.mgConfig.target);
     },
     renderError: function renderError() {
@@ -3688,8 +3694,6 @@ var _AugurStats2 = _interopRequireDefault(_AugurStats);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 exports.default = {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
   data: function data() {
@@ -3745,6 +3749,14 @@ exports.default = {
         bin = false;
         size = 13;
       }
+      if (this.group == 2) {
+        timeUnit = 'yearmonth';
+        format = '%y %b';
+        type = "bar";
+        bin = false;
+        size = 13;
+        type = "area";
+      }
 
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
       var config = {
@@ -3759,14 +3771,15 @@ exports.default = {
           "axis": {
             "grid": false
           },
-          "legend": _defineProperty({
+          "legend": {
             "offset": -20,
-
-            "titleFontSize": 10,
+            "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 14
-          }, 'titleFontSize', 14),
+            "labelFontSize": 14,
+            "titleFontSize": 14,
+            "labelLimit": 260
+          },
           "scale": { "minSize": 100, "maxSize": 500 },
           "bar": {
             "continuousBandSize": size,
@@ -3788,7 +3801,7 @@ exports.default = {
             "as": "percent"
           }],
           "mark": {
-            "type": "bar",
+            "type": type,
             "tooltip": { "content": "data" },
 
             "cornerRadius": 45
@@ -3932,7 +3945,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-80px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-80px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"contradio","name":"timeframe","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"2")},on:{"change":function($event){_vm.group="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"contradio"}},[_vm._v("Continuous")])])])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4027,7 +4040,7 @@ exports.default = {
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
+        "width": 780,
 
         "config": {
           "tick": {
