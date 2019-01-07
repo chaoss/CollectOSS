@@ -908,6 +908,15 @@ var AugurStats = function () {
       data = data.filter(function (datum) {
         return isFinite(datum[key]);
       });
+      // if (data[0].date != startDate) {
+      //   let test = startDate
+      //   while (data[0].date - test > period) {
+      //     test += period
+      //   }
+      //   var offset = data[0].date - test
+      // }
+      // let before = offset ? offset : period
+      // let after = offset ? period - offset : period
       return AugurStats.dateAggregate(data, period, period, period / 2, function (filteredData, date) {
         var flat = AugurStats.flatten(filteredData, key);
         var datum = { date: date };
@@ -937,6 +946,14 @@ var AugurStats = function () {
         i++;
       }
       return rolling;
+    }
+  }, {
+    key: 'alignDates',
+    value: function alignDates(data, baseDate, windowSizeInDays) {
+      //key = key || 'value'
+      var period = windowSizeInDays / 2;
+      data.unshift({ date: baseDate, value: null });
+      return data;
     }
   }, {
     key: 'convertToPercentages',
@@ -3275,8 +3292,7 @@ exports.default = {
       };
 
       if (this.showTooltip) {
-        var _temp = [this.repo];
-        _temp.forEach(function (repo) {
+        repos.forEach(function (repo) {
           var key = _this.rawWeekly ? "value" + repo : "valueRolling" + repo;
           buildTooltip(key);
         });
@@ -3371,10 +3387,13 @@ exports.default = {
         var values = [];
         var colors = [];
         var baselineVals = null;
+        var baseDate = null;
         repos.forEach(function (repo) {
           buildLines(data[repo], function (obj, key, field, count) {
             var d = defaultProcess(obj, key, field, count);
+
             var rolling = null;
+            if (repo == _this.repo) baseDate = d[0].date;else d = _AugurStats2.default.alignDates(d, baseDate, _this.period);
             if (_this.compare == 'zscore') {
               rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
             } else if (_this.compare == 'baseline') {
@@ -3385,8 +3404,6 @@ exports.default = {
                 for (var i = 0; i < baselineVals.length; i++) {
                   if (rolling[i] && baselineVals[i]) rolling[i].valueRolling -= baselineVals[i].valueRolling;
                 }
-
-                console.log(repo, baselineVals, rolling, rolling[0].valueRolling, baselineVals[0].valueRolling, rolling[0].value);
               } else {
                 rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
               }
@@ -3416,14 +3433,14 @@ exports.default = {
           }
           repos.forEach(function (repo) {
             if (!_this.status[repo]) {
-              var _temp2 = JSON.parse(JSON.stringify(values));
-              _temp2 = _temp2.map(function (datum) {
+              var _temp = JSON.parse(JSON.stringify(values));
+              _temp = _temp.map(function (datum) {
                 datum.name = repo + ": data n/a";
 
 
                 return datum;
               });
-              values.push.apply(values, _temp2);
+              values.push.apply(values, _temp);
             }
           });
 
@@ -3476,7 +3493,6 @@ exports.default = {
       window.$(this.$refs.holder).find('.showme').removeClass('invisDet');
       window.$(this.$refs.holder).find('.deleteme').remove();
       this.$refs.chartholder.innerHTML = '';
-      console.log("target", this.mgConfig);
       this.$refs.chartholder.appendChild(this.mgConfig.target);
     },
     renderError: function renderError() {

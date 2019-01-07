@@ -588,8 +588,8 @@ export default {
       //push the tooltip to general spec
       //can change this.repo to whatever repo user wants tooltip on
       if(this.showTooltip) {
-        let temp = [this.repo]
-        temp.forEach((repo) => {
+        //let temp = [this.repo]
+        repos.forEach((repo) => {
           let key = (this.rawWeekly ? "value" + repo : "valueRolling" + repo)
           buildTooltip(key)
         })
@@ -717,11 +717,15 @@ export default {
           let values = []
           let colors = []
           let baselineVals = null
+          let baseDate = null
           repos.forEach((repo) => {
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
+                
                 let rolling = null
+                if (repo == this.repo) baseDate = d[0].date
+                else d = AugurStats.alignDates(d, baseDate, this.period)
                 if (this.compare == 'zscore') {
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
                 } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
@@ -734,8 +738,6 @@ export default {
                     if (rolling[i] && baselineVals[i])
                       rolling[i].valueRolling -= baselineVals[i].valueRolling                   
                   }
-                  
-                  console.log(repo, baselineVals, rolling, rolling[0].valueRolling, baselineVals[0].valueRolling, rolling[0].value)
                 } else {
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 }
@@ -836,7 +838,6 @@ export default {
       window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
       window.$(this.$refs.holder).find('.deleteme').remove()
       this.$refs.chartholder.innerHTML = ''
-      console.log("target", this.mgConfig)
       this.$refs.chartholder.appendChild(this.mgConfig.target)
     },
     renderError () {
