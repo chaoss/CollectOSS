@@ -1,15 +1,17 @@
 <template>
   <div ref="holder">
     <div class="spacing"></div>
-    <div class="error hidden"><br>Data is missing or unavailable</div>
+    <div class="error hidden"><br>Data is missing or unavailable for metric: <p style="color: black !important">{{ title }}</p></div>
     <div class="spinner loader"></div>
     <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
+      <!-- <div class="row">
+        <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
+        <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
+        <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>        
+      </div> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
     </div>
-
-
-
 
     <div class="row below-chart">
       <div class="col col-1"></div>
@@ -29,11 +31,9 @@
   </div>
 </template>
 
-
 <script>
 import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
-
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
@@ -44,7 +44,8 @@ export default {
       status: {},
       detail: this.$store.state.showDetail,
       compRepos: this.$store.state.comparedRepos,
-      metricSource: null
+      metricSource: null,
+      // timeperiod: 'all'
     }
   },
   watch: {
@@ -56,7 +57,6 @@ export default {
         $(this.$el).find('.spinner').addClass('loader')
         $(this.$el).find('.error').addClass('hidden')
       }
-        
       $(this.$el).find('.hidefirst').addClass('invis')
       $(this.$el).find('.hidefirst').addClass('invisDet')
       $(this.$el).find('.spinner').addClass('loader')
@@ -64,7 +64,6 @@ export default {
     }
   },
   mounted() {
-
   },
   computed: {
     repo () {
@@ -101,7 +100,6 @@ export default {
       return this.$store.state.showDetail
     },
     spec() {
-
       // Get the repos we need
       let repos = []
       if (this.repo) {
@@ -113,7 +111,6 @@ export default {
             temp = window.AugurRepos[temp]
           else
             window.AugurRepos[temp] = temp
-          console.log(temp)
           repos.push(temp)
         }
         // repos.push(this.repo)
@@ -128,7 +125,7 @@ export default {
 
       //COLORS TO PICK FOR EACH REPO
       var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
-
+      let brush = {"filter": {"selection": "brush"}}
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "config":{
@@ -151,9 +148,9 @@ export default {
             "height": 250,
             "layer": [
               {
-                // "transform": [
-                //     brush
-                // ],
+                "transform": [
+                  brush
+                ],
                 "mark": "rule",
                 "encoding":{
                   "x": {
@@ -180,7 +177,7 @@ export default {
         ]
       }
 
-      let brush = {"filter": {"selection": "brush"}}
+      
       if(!this.showDetail) brush = {"filter": "datum.date > 0"}
 
       //cannot have duplicate selection, so keep track if it has already been added
@@ -210,6 +207,40 @@ export default {
               "color": {
                     "value": color
                   },
+            },
+            "mark": {
+              "type": "line",
+              //"interpolate": "basis",
+              "clip": true
+            }
+          }
+      }
+
+      let getRawLine = (key, color) => {
+        let raw = (key.substring(key.length - 7) == "Rolling" ? false : true)
+        return {
+            "transform": [
+              brush
+          ],
+            "encoding": {
+              "x": {
+                "field": "date",
+                "type": "temporal",
+                "axis": {
+                      "labels": !this.showDetail,
+                    "format": "%b %Y", "title": " "}
+              },
+              "y": {
+                "field": key,
+                "type": "quantitative",
+                "axis": {
+                  "title": null
+                }
+              },
+              "color": {
+                    "value": color
+                  },
+                  "opacity": {"value": .3}
             },
             "mark": {
               "type": "line",
@@ -318,6 +349,7 @@ export default {
             "selection": selection
           }
       }
+
 
     let getArea = function (extension) {
       return {
@@ -437,6 +469,7 @@ export default {
             "align": "left",
             "dx": 5,
             "dy": -15
+            // "baseline": "top"
           },
           "encoding": {
             "text": {
@@ -522,8 +555,9 @@ export default {
         var color = 0;
         repos.forEach((repo) => {
           buildLines("valueRolling" + repo, colors[color])
+
           if(this.rawWeekly) 
-            buildLines("value" + repo,colors[color])
+            config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
           // if user doesn't want detail, then set vconcat to og
           if(this.showDetail) 
             config.vconcat[1] = getDetail("valueRolling" + this.repo)
@@ -533,11 +567,9 @@ export default {
         });
       }
 
-
       let buildLines = function (key, color) {
         config.vconcat[0].layer.push(getStandardLine(key, color))
       }
-
 
       let buildTooltip = function (key) {
         config.vconcat[0].layer.push(getToolPoint(key))
@@ -559,8 +591,8 @@ export default {
       //push the tooltip to general spec
       //can change this.repo to whatever repo user wants tooltip on
       if(this.showTooltip) {
-        let temp = [this.repo]
-        temp.forEach((repo) => {
+        //let temp = [this.repo]
+        repos.forEach((repo) => {
           let key = (this.rawWeekly ? "value" + repo : "valueRolling" + repo)
           buildTooltip(key)
         })
@@ -574,16 +606,42 @@ export default {
         // }
       }
 
-      
-
-
       buildMetric()
 
       //set dates from main control options
       if(this.showDetail) {
-        config.vconcat[1].encoding.x["scale"] =
-          {
-            "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+        let today = new Date()
+        let startyear = (this.timeperiod && this.timeperiod != 'all') ? today.getFullYear() : this.earliest.getFullYear()
+        let startmonth = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+          let d = new Date()
+          switch (this.timeperiod) {
+            case "month":
+              d = new Date(d.setDate(d.getDate()-30))
+              console.log("DATE", d, typeof(d), d.getMonth())
+              return d.getMonth();
+            case "year":
+              d = new Date(d.setDate(d.getDate()-365))
+              return d.getMonth();
+          }
+        })() : this.earliest.getMonth()
+        let startdate = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+          let d = new Date()
+          switch (this.timeperiod) {
+            case "month":
+              return d.setDate(d.getDate()-30);
+            case "year":
+              return d.setDate(d.getDate()-365);
+          }
+        })() : this.earliest.getDate()
+        console.log("CHECK DATE", startyear, startdate, startmonth)
+        // for(var i = 0; i < config.vconcat[0].layer.length; i++){
+        //   config.vconcat[0].layer[i].encoding.x["scale"] =
+        //     {
+        //       "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+        //     }
+        // }
+        config.vconcat[1].encoding.x["scale"] = {
+            "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
           }
       }
       else {
@@ -602,7 +660,6 @@ export default {
         } else {
           window.$(this.$refs.holder).find('.hidefirst').removeClass('invis')
           window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet')
-
         }
       }
 
@@ -645,7 +702,7 @@ export default {
             d = AugurStats.convertKey(obj[key], field)
 
 
-            d = AugurStats.convertDates(d, this.earliest, this.latest)
+            d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
 
             return d
           }
@@ -688,30 +745,40 @@ export default {
             } // end for in
           } // end normalize function
 
-
           // Build the lines we need
           let legend = []
           let values = []
           let colors = []
-
-         
-
+          let baselineVals = null
+          let baseDate = null
           repos.forEach((repo) => {
-
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
+                
                 let rolling = null
-                if (compare == 'zscore') {
+                if (repo == this.repo) baseDate = d[0].date
+                else d = AugurStats.alignDates(d, baseDate, this.period)
+                if (this.compare == 'zscore') {
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
+                } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
+                else if (this.compare == 'baseline') {
+                  if(repo.githubURL == this.repo){
+                    baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                  }
+                  rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                  for (var i = 0; i < baselineVals.length; i++){
+                    if (rolling[i] && baselineVals[i])
+                      rolling[i].valueRolling -= baselineVals[i].valueRolling                   
+                  }
+                } else {
+                  rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 }
-                else rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
 
-                aggregates.push(d)
+                normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
+                aggregates.push(AugurStats.convertKey(d, 'value', 'value' + repo))
                 legend.push(repo + " " + field)
-                if (!this.disableRollingAverage) { colors.push(window.AUGUR_CHART_STYLE.brightColors[count]) }
-                if (this.rawWeekly || this.disableRollingAverage) { colors.push(this.disableRollingAverage ? window.AUGUR_CHART_STYLE.brightColors[count] : window.AUGUR_CHART_STYLE.dullColors[count]) }
+                colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
               }, repo)
 
           });
@@ -720,25 +787,21 @@ export default {
             // this.renderError()
           } else {
             values = []
-
             for(var i = 0; i < legend.length; i++){
               normalized[i].forEach(d => {
                 d.name = legend[i]
                 d.color = colors[i]
                 values.push(d);
-
               })
-            }
-            if (this.rawWeekly) {
-              for(var i = 0; i < legend.length; i++){
+              if (this.rawWeekly) {
                 aggregates[i].forEach(d => {
-                  d.name = "raw " + legend[i]
+                  // d.name = "raw " + legend[i]
+                  d.name = legend[i]
                   d.color = colors[i]
                   values.push(d)
                 })
               }
             }
-            
             repos.forEach((repo) => {
               if(!this.status[repo]) {
                 let temp = JSON.parse(JSON.stringify(values))
@@ -751,8 +814,6 @@ export default {
                 values.push.apply(values, temp)
               }
             })  
-            
-
 
             this.legendLabels = legend
             this.values = values
@@ -762,9 +823,7 @@ export default {
               if(this.status[key]) allFalse = false
             if(!allFalse) $(this.$el).find('.error').addClass('hidden')
 
-
             // config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
-
 
             $(this.$el).find('.hidefirst').removeClass('invis')
             $(this.$el).find('.hidefirst').removeClass('invisDet')
@@ -775,9 +834,6 @@ export default {
 
             //this.mgConfig.legend_target = this.$refs.legend
             this.renderChart()
-
-
-
           }
       }
 
@@ -799,12 +855,12 @@ export default {
   methods: {
     downloadSVG (e) {
       var svgsaver = new window.SvgSaver()
-      var svg = window.$(this.$refs.chartholder).find('svg')[0]
+      var svg = window.$(this.$refs.holder).find('svg')[0]
       svgsaver.asSvg(svg, this.__download_file + '.svg')
     },
     downloadPNG (e) {
       var svgsaver = new window.SvgSaver()
-      var svg = window.$(this.$refs.chartholder).find('svg')[0]
+      var svg = window.$(this.$refs.holder).find('svg')[0]
       svgsaver.asPng(svg, this.__download_file + '.png')
     },
     renderChart () {
@@ -818,10 +874,8 @@ export default {
       this.$refs.chartholder.appendChild(this.mgConfig.target)
     },
     renderError () {
-
         $(this.$el).find('.spinner').removeClass('loader')
         $(this.$el).find('.error').removeClass('hidden')
-
     }
   },// end methods
   created () {

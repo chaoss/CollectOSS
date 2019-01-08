@@ -151,6 +151,7 @@
                   <div class="form-item form-checkboxes">
                     <label class="checkbox"><input name="comparebaseline" value="zscore" :checked="compared" type="radio" @change="onCompareChange">Z-score</label><br>
                     <label class="checkbox"><input name="comparebaseline" value="baseline" :checked="!compared" type="radio" @change="onCompareChange">Baseline is compared</label>
+                    <label class="checkbox"><input name="comparebaseline" value="rolling" :checked="!compared" type="radio" @change="onCompareChange">Rolling average</label>
                   </div>
                   </label>
               </label>

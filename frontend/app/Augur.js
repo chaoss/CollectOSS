@@ -42,12 +42,11 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      domain: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 January 2011'),
       endDate: new Date(),
-      compare: 'baseline',
+      compare: 'zscore',
       showBelowAverage: false,
       rawWeekly: false,
       showArea: true,
@@ -57,10 +56,8 @@ export default function Augur () {
     },
     mutations: {
       setGitRepo(state, payload) {
-        console.log("hi",payload, window.AugurAPI.Repo(payload))
         state.gitRepo = payload.gitURL
         state.baseRepo = payload.gitURL
-        state.domain = payload.domain
         state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
         if (!window.AugurRepos[repo.toString()]) {
@@ -70,7 +67,9 @@ export default function Augur () {
         }
       },
       setRepo (state, payload) {
+        console.log("js",payload)
         let repo = window.AugurAPI.Repo(payload)
+        console.log(repo)
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
         } else {
@@ -81,106 +80,60 @@ export default function Augur () {
         if (repo.owner && repo.name && !state.gitRepo) {
           state.baseRepo = repo.toString()
           let title = repo.owner + '/' + repo.name + '- Augur'
-          state.tab = 'gmd'
+          // state.tab = 'gmd'
           // state.queryObject['repo'] = repo.owner + '+' + repo.name
         }
         if (payload.gitURL) {
           // state.queryObject['git'] = window.btoa(repo.gitURL)
-          state.tab = 'git'
+          // state.tab = 'git'
           state.gitRepo = repo.gitURL
+          state.tab = 'git'
         }
-        if (!payload.fromURL){
-            // window.history.pushState(null, 'Augur', ('?' + queryString.stringify(state.queryObject, {encode: false})))
-          
-        }
-
-
-
-        // if (!payload.keepCompared) {
-        //   state.comparedRepos = []
-        // }
       },
+      // removeComparedRepo (state, payload) {
+      //   state.comparedRepos
+      // },
       addComparedRepo (state, payload) {
-        // //let repo = window.AugurAPI.Repo({ githubURL: payload.url })
-        // let repo = window.AugurAPI.Repo(payload)
-
-        // if (!window.AugurRepos[repo.toString()]) {
-        //   window.AugurRepos[repo.toString()] = repo
-        // }
-        // //state.comparedRepos.push(repo.toString())
-        // state.comparedTo = repo.toString()
-        // let title = 'Augur'
-        // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
-        // window.history.pushState(null, title, queryString)
         state.compare = 'zscore'
         state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
-        // console.log("fook", state.comparedRepos, repo.toString(), !state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString())
         if(!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()){
-        // if(false){
-          // console.log("hiiiii", router.app._route.params.comparedowner + '/' + router.app._route.params.comparedowner, payload)
-          //(!this.$route.params.comparedowner) {
           if (state.comparedRepos.length + 1 == 1) {
             if (!router.app._route.params.comparedrepo) {
-              console.log("should be here: ", payload.owner, payload.name)
+              let owner = state.gitRepo ? null : state.baseRepo.substring(0, state.baseRepo.indexOf('/'))
+              let repo = state.gitRepo ? state.gitRepo : state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)
               router.push({
                 name: 'singlecompare',
-                params: {tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1), comparedowner: payload.owner, comparedrepo: payload.name}
+                params: {tab: state.tab, owner, repo, comparedowner: payload.owner, comparedrepo: payload.name}
               })
-              // router.push({
-              //   path: link
-              //   // path: "/git"
-              // })
             }
           } else {
-            console.log("GROUPING augur")
-            let link = '/' + state.tab + '/groupid/1'
+            let groupid = (state.gitRepo ? String(state.gitRepo) + '+' : String(state.baseRepo) + "+")
+            state.comparedRepos.forEach((repo) => {
+              groupid += (String(repo) + '+')
+            })
+            groupid += repo
             router.push({
               name: 'group',
               params: {
                 tab: state.tab,
-                groupid: 1
+                groupid
               }
-              // path: "/git"
             })
           }
-          
           if (!window.AugurRepos[repo.toString()]) {
-            
             window.AugurRepos[repo.toString()] = repo
           } else {
             repo = window.AugurRepos[repo.toString()]
           }
           state.hasState = true
-          console.log("TO BE PUSHED", repo.owner, repo.name, repo)
           if (repo.owner && repo.name) {
-            console.log("before: ", state.comparedRepos)
             state.comparedRepos.push(repo.toString())
-            console.log("after: ", state.comparedRepos)
             let title = repo.owner + '/' + repo.name + '- Augur'
-            // state.tab = 'gmd'
-            // let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
-            // window.history.pushState(null, title, queryString)
           }
           if (payload.gitURL) {
-            // let queryString = '&git=' + window.btoa(repo.gitURL)
-            // window.history.pushState(null, 'Git Analysis - Augur', window.location.search + queryString)
-            // state.tab = 'git'
             state.gitRepo = repo.gitURL
           }
-          // if (state.comparedRepos.length == 1) {
-          // let link = this.$router.currentRoute + '/comparedto/' + e.target.value
-          //   this.$router.push({
-          //     path: link
-          //     // path: "/git"
-          //   })
-          // } else {
-          //   let link = '/groupid/'
-          //   this.$router.push({
-          //     path: link
-          //     // path: "/git"
-          //   })
-          // }
         }
       },
       setDates (state, payload) {
@@ -224,6 +177,9 @@ export default function Augur () {
           name: 'single',
           params: {tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
         })
+      },
+      resetBaseRepo (state) {
+        state.baseRepo = null
       },
       reset (state) {
         state = {
