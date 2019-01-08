@@ -1,11 +1,11 @@
 <template>
   <section>
     <!-- <h1>Growth, Maturity, and Decline</h1> -->
-    <div style="display: inline-block;" @click="stopSelecting">
+    <div style="display: inline-block;">
       <h2 style="display: inline-block; color: black !important">{{ $store.state.baseRepo }}</h2>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
       <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
-        <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
+        <span v-bind:style="{ 'color': colors[index] }" @click="" :value="repo" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
     <div class="row">
@@ -147,7 +147,6 @@ import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
 import DynamicLineChart from './charts/DynamicLineChart'
 module.exports = {
-  
   components: {
     BubbleChart,
     StackedBarChart,
@@ -171,11 +170,9 @@ module.exports = {
           this.metricsData = data
       })
     },
-
-    stopSelecting() {
-        $(this.$el).find('.multiselect__content-wrapper').removeClass('selecting')
-        
-      }
+    removeComparison() {
+      $(this.$el).find('.multiselect__content-wrapper').removeClass('selecting')
+    }
   },
   mounted() {
     this.selected_group = 'all'

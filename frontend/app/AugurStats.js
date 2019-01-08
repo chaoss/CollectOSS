@@ -135,6 +135,15 @@ export default class AugurStats {
     data = data.filter(datum => {
       return isFinite(datum[key])
     })
+    // if (data[0].date != startDate) {
+    //   let test = startDate
+    //   while (data[0].date - test > period) {
+    //     test += period
+    //   }
+    //   var offset = data[0].date - test
+    // }
+    // let before = offset ? offset : period
+    // let after = offset ? period - offset : period
     return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }
@@ -163,6 +172,13 @@ export default class AugurStats {
       i++
     }
     return rolling
+  }
+
+  static alignDates (data, baseDate, windowSizeInDays) {
+    //key = key || 'value'
+    let period = (windowSizeInDays / 2)
+    data.unshift({date: baseDate, value: null})
+    return data
   }
 
   static convertToPercentages (data, key, baseline) {

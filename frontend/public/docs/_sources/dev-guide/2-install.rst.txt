@@ -124,27 +124,29 @@ all priviledges on another database for Augur.**
     CREATE DATABASE augur;
     GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
 
-**Augur runs in an Anaconda environment. To get started, you need to run
-'augur' to create the augur.config.json file**
+Augur runs in an Anaconda environment. To get started, activate the environment and then 
+run ``augur``.
 
 .. code:: bash
 
     conda activate augur
     augur
 
-Edit the augur.config.json file with the the required information for
-database and API connections.
+After you run the ``augur`` command for the first time, a configuration file called ``augur.config.json`` will automatically be generated.
 
-For all the API's and visualiazations to work, you will need to include:
+Reference the sample configuration file (``sample.config.json``) on how to 
+set up the server, development, and cache options, as well as the plugin connections.
+
+For **all** the API's and visualiazations to work, you will need to include:
 
 -  A `GitHub <https://developer.github.com/v3/>`__ API Key,
--  A `PublicWWW <https://publicwww.com/>`__ API Key, and
--  A `LibrariesIO <https://libraries.io/>`__ API Key.
+-  A connection to a `Facade <https://opendata.missouri.edu>`__ database,
+-  A connection to a `GHTorrent <https://ghtorrent.org>`__ database.
 
-You **CAN** get off the ground without those API keys though.
+For local API testing, you will need a `Postman <https://www.getpostman.com>`__ API key.
 
 **You're ready to rock! To start both the frontend and backend, run:**
-``bash  make dev``
+``make dev``
 
 macOS High Sierra (and possibly older OS X Versions) Errata:
 ------------------------------------------------------------

@@ -102,18 +102,22 @@ module.exports = {
         this.$store.commit('setRepo', {
           gitURL: this.repo
         })
-      }
-      else if (!this.groupid){
-        this.$store.commit('setRepo', {
-          githubURL: this.owner + '/' + this.repo
-        })
+      } else if (!this.groupid){
+        if (this.repo.includes('github')) {
+          this.$store.commit('setRepo', {
+            gitURL: this.repo
+          })
+        } else {
+          this.$store.commit('setRepo', {
+            githubURL: this.owner + '/' + this.repo
+          })
+        }
       }
       if(this.comparedrepo) { 
         this.$store.commit('addComparedRepo', {
           githubURL: this.comparedowner + '/' + this.comparedrepo
         })
       }
-
       if(this.groupid){
         let repos = this.groupid.split('+')
         if (repos[0].includes('github')) {
@@ -122,7 +126,7 @@ module.exports = {
           })
         } else {
           this.$store.commit('setRepo', {
-            gitURL: repos[0]
+            githubURL: repos[0]
           })
         }
         repos.shift()
