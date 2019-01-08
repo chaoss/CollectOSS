@@ -3499,7 +3499,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-869af3b0", __vue__options__)
   } else {
-    hotAPI.reload("data-v-869af3b0", __vue__options__)
+    hotAPI.rerender("data-v-869af3b0", __vue__options__)
   }
 })()}
 });
@@ -3932,7 +3932,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-80px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-80px !important"}},[_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])])])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -3941,7 +3941,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0760224e", __vue__options__)
   } else {
-    hotAPI.reload("data-v-0760224e", __vue__options__)
+    hotAPI.rerender("data-v-0760224e", __vue__options__)
   }
 })()}
 });

@@ -7,13 +7,13 @@
       <div style="position: relative; top: -80px !important"class="form-item form-checkboxes tickradios">
 
 
-          <div class="inputGroup ">
+          <div class="inputGroup "  style="padding-top: 5px;">
             <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
-            <label id="front" for="yearradio">Year</label>
+            <label id="front" for="yearradio" >Year</label>
           </div>
-          <div class="inputGroup ">
+          <div class="inputGroup "  style="padding-top: 5px;">
             <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
-            <label id="front" for="monthradio">Month</label>
+            <label id="front" for="monthradio" >Month</label>
           </div>
 
 
