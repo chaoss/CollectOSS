@@ -467,6 +467,7 @@ export default {
             "align": "left",
             "dx": 5,
             "dy": -15
+            // "baseline": "top"
           },
           "encoding": {
             "text": {
