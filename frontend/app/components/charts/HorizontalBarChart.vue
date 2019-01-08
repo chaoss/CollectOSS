@@ -1,29 +1,29 @@
 <template>
   <div ref="holder">
-    <div class="tickchart ">
-      <h3>Lines of code added by the top 10 authors visualized</h3>
+    <div class="normalbar">
+      <!-- <h3>Lines of code added by the top 10 authors as Percentages - All Time</h3> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
-      <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
-      <div class="form-item form-checkboxes tickradios">
+      <div style="position: relative; top: -60px !important"class="form-item form-checkboxes tickradios">
 
-
+          
           <div class="inputGroup ">
-            <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
-            <label id="front" for="circradio">Circle</label>
+            <input id="totalradio" name="lines" value="1" type="radio" checked v-model="type">
+            <label id="front" for="totalradio">Total</label>
           </div>
           <div class="inputGroup ">
-            <input id="tickradio"name="comparebaseline" value="1" type="radio" v-model="tick">
-            <label id="front" for="tickradio">Tick</label>
+            <input id="netradio" name="lines" value="0" type="radio" v-model="type">
+            <label id="front" for="netradio">Net</label>
           </div>
           <div class="inputGroup ">
-            <input id="rectradio"name="comparebaseline" value="2" type="radio" v-model="tick">
-            <label id="front" for="rectradio">Rectangle</label>
+            <input id="addedradio" name="lines" value="2" type="radio" v-model="type">
+            <label id="front" for="addedradio">Added</label>
           </div>
+          
+          
 
         
       </div>
-      
     </div>
   </div>
 </template>
@@ -34,7 +34,7 @@ import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
 
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'type'],
   data() {
     let years = []
     for (let i = 9; i >= 0; i--) {
@@ -51,11 +51,12 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      tick: 0
+      tick: 0,
+      type: 1
     }
   },
   created () {
-    this.tick = 0
+    this.type = 1
   },
   computed: {
     repo() {
@@ -68,59 +69,62 @@ export default {
       return this.$store.state.endDate
     },
     spec() {
-      let type = null, bin = null, size = null, opacity = null;
 
-      if(this.tick == 0) {
-        type = "circle"
-        bin = false
-        size = {
-                "field": "Total lines changed",
-                "type": "quantitative",
-                "min": "15",
-                "scale": {"minSize": 30, "maxSize": 31}
-              }
-        opacity = {}
-      }
-      if (this.tick == 1) {
-        type = "tick"
-            bin = false
-            size = {}
-        opacity = {
-                "field": "Total lines changed",
-                "type": "quantitative",
-                "min": ".5"
-              }
-      }
-      if (this.tick == 2) {
-        type = "rect"
-            bin = {"maxbins": 40}
-            size = {}
-        opacity = {
-                "field": "Total lines changed",
-                "type": "quantitative",
-                "min": ".5"
-              }
-      }
+      // let init = () => {
+      //   let type;
+      //   switch(this.tick) {
+      //     case 0: //circle
+      //       type = "circle"
+      //       // bin = false
+      //       // size = {
+      //       //         "field": "total",
+      //       //         "type": "quantitative",
+      //       //         "min": "15"
+      //       //       }
+      //       break
+      //     case 1: //tick
+      //       type = "tick"
+      //       // bin = false
+      //       // size = {}
+      //       break
+      //     case 2: //rect
+      //       type = "rect"
+      //       // bin = {"maxbins": 40}
+      //       // size = {}
+      //     default:
+      //       break
+      //   }
+      //   return type
+      // }
+      
+      let field = null;
 
 
+      if (this.type == 0) {
+        field = "netratio"
+      } else if (this.type == 1) {
+        field = "totalratio"
+      } else if (this.type == 2) {
+        field = "addedratio"
+      }
+
+      var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
-        "height": 300,
+        "width": 700,
+        "height": 310,
         "config": {
           "tick": {
             "thickness": 8,
             "bandSize": 23
           },
           "axis":{
-                "grid": false,
-                "title": null
-              },
-              "legend": {
-               // "offset": -505,
-                "titleFontSize": 10,
-                "titlePadding": 10
-              },"scale": {"minSize": 100, "maxSize": 500}
+            "grid": false
+          },
+        },
+        "title": {
+          "text": this.title,
+          "offset": 15
         },
         "layer": [
           {
@@ -135,28 +139,77 @@ export default {
                 "as": "Net lines added"
               },
               {
-                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
-                "as": "Total lines changed"
+                "calculate": "((datum.additions - datum.deletions) / datum.commits)",
+                "as": "netratio"
+              },
+              {
+                "calculate": "(datum.additions / datum.commits)",
+                "as": "addedratio"
+              },
+              {
+                "calculate": "(datum.lines / datum.commits)",
+                "as": "totalratio"
               },
             ],
-            "mark": type,
-            "encoding": {
-              "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
-              "y": {"field": "author_email", "type": "nominal"},
-              "color": {
-                "field": "Net lines added",
-                "type": "quantitative",
-                "scale": { "range": ["#FF0000", "#00FF00"]}
-              },
-              "size": size,
-              "opacity": opacity
-
+            "mark": {
+              "type":"bar",
+              "tooltip": {"content": "data"}
             },
+            "encoding": {
+              // "y": {"field": "author_date", "type": "temporal", "bin": true, "axis": {"format": "%b %Y", "title": " "}},
+              "x": {"field": field, "type": "quantitative"},
+              "y": {
+                "field": "author_email",
+                "sort": {
+                  "field": field,
+                  "op": "mean",
+                  "order": "descending"
+                },
+                "type": "nominal",
+                "axis": {"title": null}
+              },
+              "color": {
+                "field": "author_email",
+                "type": "nominal",
+                "scale": {"scheme": "category10"},
+                "legend": null
+              },
+              // "size": size,
+              // "opacity":{
+              //   "field": "Total lines changed",
+              //   "type": "quantitative",
+              //   "min": ".5"
+              // },
+            }
             
-          }
+            
+          },
+          // {
+          //   "mark": {
+          //     "type": "text",
+          //     "dx": -15,
+          //     "dy": -15
+          //   },
+          //   "encoding": {
+          //     // "x": {"field": "author_date", "type": "temporal", "axis": {"format": "%b %Y", "title": " "}},
+          //     "x": {"field": "flag", "type": "quantitative","stack": "normalize"},
+          //     "color": {
+          //       "field": "author_email",
+          //       "type": "nominal",
+          //       "scale": { "range": colors}
+          //     },
+          //     "text":{
+          //       "field": "flag",
+          //       "type": "quantitative",
+
+          //     },
+
+          //   },
+          // }
         ]
         
       }
+
 
       let repo = window.AugurAPI.Repo({ gitURL: this.repo })
       let contributors = {}
@@ -202,9 +255,20 @@ export default {
         return (new Date(change.author_date)).getFullYear() > this.years[0]
       }
 
+      let authors = []
+      let track = {}
       repo.changesByAuthor().then((changes) => {
         changes.forEach((change) => {
-          change.author_date = new Date(change.author_date)
+          // change.author_date = new Date(change.author_date)
+          // change["commits"] = change["commits"] ? change["commits"] + 1 : 1
+          track[change.author_email] = track[change.author_email] ? track[change.author_email] : {'commits': 0, 'lines': 0, 'additions': 0, 'deletions': 0}
+          track[change.author_email]['commits'] = track[change.author_email]['commits'] ? track[change.author_email]['commits'] + 1 : 1
+          // track["total_commits"] += 1
+          // change["lines"] = change["lines"] ? change["lines"] + change.additions : change.additions
+          track[change.author_email]['lines'] = track[change.author_email]['lines'] ? track[change.author_email]['lines'] + change.additions + change.deletions : change.additions + change.deletions
+          track[change.author_email]['additions'] = track[change.author_email]['additions'] ? track[change.author_email]['additions'] + change.additions : change.additions
+          track[change.author_email]['deletions'] = track[change.author_email]['deletions'] ? track[change.author_email]['deletions'] + change.deletions : change.deletions
+          // track["total_lines"] += change.additions
         })
 
         changes.forEach((change) => {
@@ -214,6 +278,13 @@ export default {
               group(organizations, 'affiliation', change, filterDates)
             }
           }
+          if(!authors.includes(change["author_email"])) {
+            authors.push(change["author_email"])
+            change["flag"] = ((track[change.author_email] / track["total"] * 100).toFixed(4))
+            // console.log(change, track)
+          } //else change["flag"] = 100
+
+          
         })
         
 
@@ -240,20 +311,19 @@ export default {
 
         var ary = []
         
-        careabout.forEach((name) => {
-          findObjectByKey(changes, "author_email", name).forEach((obj) => {
-            ary.push(obj)
-          })
-          // changes.find(obj => obj.author_email == name))
-        })
+        for (var key in track) {
+          if (careabout.includes(key))
+            ary.push({"author_email": key, "commits": track[key]['commits'], "lines": track[key]['lines'], "additions": track[key]['additions'], "deletions": track[key]['deletions']})
+        }
       
-        this.values = ary
 
+        this.values = ary
+        console.log("TRACK", ary, careabout)
       })
         
       
 
-
+            
 
       
 

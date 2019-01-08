@@ -99,7 +99,7 @@ export default {
         "height": 380,
         "title": {
           "text": this.title,
-          "offset": 30
+          "offset": 15
         },
         "config": {
           "axis":{

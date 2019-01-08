@@ -8,21 +8,25 @@
       </h2>
     </div>
       <tick-chart></tick-chart>
-      <div class="row">
-        <div class="col col-6">
+      <div class="row" style="transform: translateY(-50px) !important">
+        <div class="col col-6" style="padding-right: 35px">
           <normalized-stacked-bar-chart title="Lines of code added by the top 10 authors as Percentages - By Time Period"></normalized-stacked-bar-chart>
         </div>
-        <div class="col col-6" style="padding-left: 45px">
-          <div style="padding-top: 75px"></div>
-          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        <div class="col col-6" style="padding-left: 65px">
           <div style="padding-top: 35px"></div>
-          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+          <horizontal-bar-chart type="lines" title="Average Lines of Code Per Commit"></horizontal-bar-chart>
         </div>
       </div>
-      <!-- <normalized-stacked-bar-chart></normalized-stacked-bar-chart>
-      <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - By Time Period"></one-dimensional-stacked-bar-chart>
-      <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - By Time Period"></one-dimensional-stacked-bar-chart> -->
-      <div class="row">
+      <div style="transform: translateY(-100px) !important" class="row">
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+      </div>
+
+      <div class="row" style="transform: translateY(-50px) !important">
         <lines-of-code-chart></lines-of-code-chart>
       </div>
     </div>
@@ -36,6 +40,7 @@ import TickChart from './charts/TickChart'
 import LinesOfCodeChart from './charts/LinesOfCodeChart'
 import NormalizedStackedBarChart from './charts/NormalizedStackedBarChart'
 import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChart'
+import HorizontalBarChart from './charts/HorizontalBarChart'
 
 module.exports = {
   data() {
@@ -48,7 +53,8 @@ module.exports = {
     TickChart,
     LinesOfCodeChart,
     NormalizedStackedBarChart,
-    OneDimensionalStackedBarChart
+    OneDimensionalStackedBarChart,
+    HorizontalBarChart
   }
 }
 

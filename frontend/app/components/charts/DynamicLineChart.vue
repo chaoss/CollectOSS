@@ -4,6 +4,11 @@
     <div class="error hidden"><br>Data is missing or unavailable for metric: <p style="color: black !important">{{ title }}</p></div>
     <div class="spinner loader"></div>
     <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
+      <!-- <div class="row">
+        <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
+        <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
+        <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>        
+      </div> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
     </div>
@@ -39,7 +44,8 @@ export default {
       status: {},
       detail: this.$store.state.showDetail,
       compRepos: this.$store.state.comparedRepos,
-      metricSource: null
+      metricSource: null,
+      // timeperiod: 'all'
     }
   },
   watch: {
@@ -51,7 +57,6 @@ export default {
         $(this.$el).find('.spinner').addClass('loader')
         $(this.$el).find('.error').addClass('hidden')
       }
-        
       $(this.$el).find('.hidefirst').addClass('invis')
       $(this.$el).find('.hidefirst').addClass('invisDet')
       $(this.$el).find('.spinner').addClass('loader')
@@ -98,7 +103,6 @@ export default {
       // Get the repos we need
       let repos = []
       if (this.repo) {
-        console.log("repo", this.repo)
         if (window.AugurRepos[this.repo])
           repos.push(window.AugurRepos[this.repo])
         else if (this.domain){
@@ -107,12 +111,10 @@ export default {
             temp = window.AugurRepos[temp]
           else
             window.AugurRepos[temp] = temp
-          
           repos.push(temp)
         }
         // repos.push(this.repo)
       } // end if (this.$store.repo)
-      console.log("CHECK REPOS". repos)
       this.comparedRepos.forEach(function(repo) {
         repos.push(window.AugurRepos[repo])
       });
@@ -123,7 +125,7 @@ export default {
 
       //COLORS TO PICK FOR EACH REPO
       var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
-
+      let brush = {"filter": {"selection": "brush"}}
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "config":{
@@ -146,9 +148,9 @@ export default {
             "height": 250,
             "layer": [
               {
-                // "transform": [
-                //     brush
-                // ],
+                "transform": [
+                  brush
+                ],
                 "mark": "rule",
                 "encoding":{
                   "x": {
@@ -175,7 +177,7 @@ export default {
         ]
       }
 
-      let brush = {"filter": {"selection": "brush"}}
+      
       if(!this.showDetail) brush = {"filter": "datum.date > 0"}
 
       //cannot have duplicate selection, so keep track if it has already been added
@@ -608,8 +610,38 @@ export default {
 
       //set dates from main control options
       if(this.showDetail) {
+        let today = new Date()
+        let startyear = (this.timeperiod && this.timeperiod != 'all') ? today.getFullYear() : this.earliest.getFullYear()
+        let startmonth = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+          let d = new Date()
+          switch (this.timeperiod) {
+            case "month":
+              d = new Date(d.setDate(d.getDate()-30))
+              console.log("DATE", d, typeof(d), d.getMonth())
+              return d.getMonth();
+            case "year":
+              d = new Date(d.setDate(d.getDate()-365))
+              return d.getMonth();
+          }
+        })() : this.earliest.getMonth()
+        let startdate = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+          let d = new Date()
+          switch (this.timeperiod) {
+            case "month":
+              return d.setDate(d.getDate()-30);
+            case "year":
+              return d.setDate(d.getDate()-365);
+          }
+        })() : this.earliest.getDate()
+        console.log("CHECK DATE", startyear, startdate, startmonth)
+        // for(var i = 0; i < config.vconcat[0].layer.length; i++){
+        //   config.vconcat[0].layer[i].encoding.x["scale"] =
+        //     {
+        //       "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+        //     }
+        // }
         config.vconcat[1].encoding.x["scale"] = {
-            "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+            "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
           }
       }
       else {

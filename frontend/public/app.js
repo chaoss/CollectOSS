@@ -241,6 +241,7 @@ function Augur() {
           // state.queryObject['git'] = window.btoa(repo.gitURL)
           // state.tab = 'git'
           state.gitRepo = repo.gitURL;
+          state.tab = 'git';
         }
       },
 
@@ -1766,6 +1767,10 @@ var _OneDimensionalStackedBarChart = require('./charts/OneDimensionalStackedBarC
 
 var _OneDimensionalStackedBarChart2 = _interopRequireDefault(_OneDimensionalStackedBarChart);
 
+var _HorizontalBarChart = require('./charts/HorizontalBarChart');
+
+var _HorizontalBarChart2 = _interopRequireDefault(_HorizontalBarChart);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
@@ -1780,14 +1785,15 @@ module.exports = {
     TickChart: _TickChart2.default,
     LinesOfCodeChart: _LinesOfCodeChart2.default,
     NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
-    OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default
+    OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
+    HorizontalBarChart: _HorizontalBarChart2.default
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"45px"}},[_c('div',{staticStyle:{"padding-top":"75px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}}),_vm._v(" "),_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('lines-of-code-chart')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"type":"lines","title":"Average Lines of Code Per Commit"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-100px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('lines-of-code-chart')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1796,7 +1802,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-f66913b6", __vue__options__)
+    hotAPI.rerender("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -2761,6 +2767,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _vuex = require('vuex');
 
 var _AugurStats = require('AugurStats');
@@ -2791,7 +2799,6 @@ exports.default = {
         $(this.$el).find('.spinner').addClass('loader');
         $(this.$el).find('.error').addClass('hidden');
       }
-
       $(this.$el).find('.hidefirst').addClass('invis');
       $(this.$el).find('.hidefirst').addClass('invisDet');
       $(this.$el).find('.spinner').addClass('loader');
@@ -2839,15 +2846,12 @@ exports.default = {
 
       var repos = [];
       if (this.repo) {
-        console.log("repo", this.repo);
         if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
           var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
           if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
-
           repos.push(temp);
         }
       }
-      console.log("CHECK REPOS".repos);
       this.comparedRepos.forEach(function (repo) {
         repos.push(window.AugurRepos[repo]);
       });
@@ -2857,7 +2861,7 @@ exports.default = {
       });
 
       var colors = ["black", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
-
+      var brush = { "filter": { "selection": "brush" } };
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "config": {
@@ -2878,6 +2882,7 @@ exports.default = {
           "width": 520,
           "height": 250,
           "layer": [{
+            "transform": [brush],
             "mark": "rule",
             "encoding": {
               "x": {
@@ -2902,7 +2907,6 @@ exports.default = {
         }]
       };
 
-      var brush = { "filter": { "selection": "brush" } };
       if (!this.showDetail) brush = { "filter": "datum.date > 0" };
 
       var selectionAdded = false;
@@ -3283,8 +3287,33 @@ exports.default = {
       buildMetric();
 
       if (this.showDetail) {
+        var today = new Date();
+        var startyear = this.timeperiod && this.timeperiod != 'all' ? today.getFullYear() : this.earliest.getFullYear();
+        var startmonth = this.timeperiod && this.timeperiod != 'all' ? function () {
+          var d = new Date();
+          switch (_this.timeperiod) {
+            case "month":
+              d = new Date(d.setDate(d.getDate() - 30));
+              console.log("DATE", d, typeof d === 'undefined' ? 'undefined' : _typeof(d), d.getMonth());
+              return d.getMonth();
+            case "year":
+              d = new Date(d.setDate(d.getDate() - 365));
+              return d.getMonth();
+          }
+        }() : this.earliest.getMonth();
+        var startdate = this.timeperiod && this.timeperiod != 'all' ? function () {
+          var d = new Date();
+          switch (_this.timeperiod) {
+            case "month":
+              return d.setDate(d.getDate() - 30);
+            case "year":
+              return d.setDate(d.getDate() - 365);
+          }
+        }() : this.earliest.getDate();
+        console.log("CHECK DATE", startyear, startdate, startmonth);
+
         config.vconcat[1].encoding.x["scale"] = {
-          "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
+          "domain": [{ "year": startyear, "month": startmonth, "date": startdate }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
         };
       } else {
         for (var i = 0; i < config.vconcat[0].layer.length; i++) {
@@ -3561,6 +3590,262 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/charts/HorizontalBarChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'type'],
+  data: function data() {
+    var years = [];
+    for (var i = 9; i >= 0; i--) {
+      years.push(new Date().getFullYear() - i);
+    }
+    var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var monthDecimals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    return {
+      values: [],
+      contributors: [],
+      organizations: [],
+      view: 'year',
+      monthNames: monthNames,
+      monthDecimals: monthDecimals,
+      years: years,
+      setYear: 0,
+      tick: 0,
+      type: 1
+    };
+  },
+  created: function created() {
+    this.type = 1;
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.gitRepo;
+    },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
+    spec: function spec() {
+      var _this = this;
+
+      var field = null;
+
+      if (this.type == 0) {
+        field = "netratio";
+      } else if (this.type == 1) {
+        field = "totalratio";
+      } else if (this.type == 2) {
+        field = "addedratio";
+      }
+
+      var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "width": 700,
+        "height": 310,
+        "config": {
+          "tick": {
+            "thickness": 8,
+            "bandSize": 23
+          },
+          "axis": {
+            "grid": false
+          }
+        },
+        "title": {
+          "text": this.title,
+          "offset": 15
+        },
+        "layer": [{
+          "transform": [{
+            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+            "as": "Majority type of changes"
+          }, {
+            "calculate": "(datum.additions - datum.deletions)",
+            "as": "Net lines added"
+          }, {
+            "calculate": "((datum.additions - datum.deletions) / datum.commits)",
+            "as": "netratio"
+          }, {
+            "calculate": "(datum.additions / datum.commits)",
+            "as": "addedratio"
+          }, {
+            "calculate": "(datum.lines / datum.commits)",
+            "as": "totalratio"
+          }],
+          "mark": {
+            "type": "bar",
+            "tooltip": { "content": "data" }
+          },
+          "encoding": {
+            "x": { "field": field, "type": "quantitative" },
+            "y": {
+              "field": "author_email",
+              "sort": {
+                "field": field,
+                "op": "mean",
+                "order": "descending"
+              },
+              "type": "nominal",
+              "axis": { "title": null }
+            },
+            "color": {
+              "field": "author_email",
+              "type": "nominal",
+              "scale": { "scheme": "category10" },
+              "legend": null
+            }
+          }
+
+        }]
+
+      };
+
+      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var contributors = {};
+      var organizations = {};
+
+      var addChanges = function addChanges(dest, src) {
+        if (dest && src) {
+          if ((typeof dest === 'undefined' ? 'undefined' : _typeof(dest)) !== 'object') {
+            dest['additions'] = 0;
+            dest['deletions'] = 0;
+          }
+          dest['additions'] += src['additions'] || 0;
+          dest['deletions'] += src['deletions'] || 0;
+        }
+      };
+
+      var group = function group(obj, name, change, filter) {
+        if (filter(change)) {
+          var year = new Date(change.author_date).getFullYear();
+          var month = new Date(change.author_date).getMonth();
+          obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]], change);
+          obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]][year], change);
+          obj[change[name]][year + '-' + month] = obj[change[name]][year + '-' + month] || { additions: 0, deletions: 0 };
+          addChanges(obj[change[name]][year + '-' + month], change);
+        }
+      };
+
+      var flattenAndSort = function flattenAndSort(obj, keyName, sortField) {
+        return Object.keys(obj).map(function (key) {
+          var d = obj[key];
+          d[keyName] = key;
+          return d;
+        }).sort(function (a, b) {
+          return b[sortField] - a[sortField];
+        });
+      };
+
+      var filterDates = function filterDates(change) {
+        return new Date(change.author_date).getFullYear() > _this.years[0];
+      };
+
+      var authors = [];
+      var track = {};
+      repo.changesByAuthor().then(function (changes) {
+        changes.forEach(function (change) {
+          track[change.author_email] = track[change.author_email] ? track[change.author_email] : { 'commits': 0, 'lines': 0, 'additions': 0, 'deletions': 0 };
+          track[change.author_email]['commits'] = track[change.author_email]['commits'] ? track[change.author_email]['commits'] + 1 : 1;
+
+          track[change.author_email]['lines'] = track[change.author_email]['lines'] ? track[change.author_email]['lines'] + change.additions + change.deletions : change.additions + change.deletions;
+          track[change.author_email]['additions'] = track[change.author_email]['additions'] ? track[change.author_email]['additions'] + change.additions : change.additions;
+          track[change.author_email]['deletions'] = track[change.author_email]['deletions'] ? track[change.author_email]['deletions'] + change.deletions : change.deletions;
+        });
+
+        changes.forEach(function (change) {
+          if (isFinite(change.additions) && isFinite(change.deletions)) {
+            group(contributors, 'author_email', change, filterDates);
+            if (change.author_affiliation !== 'Unknown') {
+              group(organizations, 'affiliation', change, filterDates);
+            }
+          }
+          if (!authors.includes(change["author_email"])) {
+            authors.push(change["author_email"]);
+            change["flag"] = (track[change.author_email] / track["total"] * 100).toFixed(4);
+          }
+        });
+
+        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+        var careabout = [];
+        _this.contributors.slice(0, 10).forEach(function (obj) {
+          careabout.push(obj["author_email"]);
+        });
+
+        var findObjectByKey = function findObjectByKey(array, key, value) {
+          var ary = [];
+          for (var i = 0; i < array.length; i++) {
+            if (array[i][key] == value) {
+              ary.push(array[i]);
+            }
+          }
+          return ary;
+        };
+
+        var ary = [];
+
+        for (var key in track) {
+          if (careabout.includes(key)) ary.push({ "author_email": key, "commits": track[key]['commits'], "lines": track[key]['lines'], "additions": track[key]['additions'], "deletions": track[key]['deletions'] });
+        }
+
+        _this.values = ary;
+        console.log("TRACK", ary, careabout);
+      });
+
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
+
+      var repos = [];
+      if (this.repo) {
+        repos.push(window.AugurRepos[this.repo]);
+      }
+
+      var processData = function processData(data) {};
+
+      return config;
+    }
+  }
+
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-60px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio","checked":""},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])],1)])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-8d346828", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-8d346828", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/charts/LinesOfCodeChart.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -3763,7 +4048,7 @@ exports.default = {
         "height": 380,
         "title": {
           "text": this.title,
-          "offset": 30
+          "offset": 15
         },
         "config": {
           "axis": {
@@ -4414,6 +4699,9 @@ exports.default = {
       tick: 0
     };
   },
+  created: function created() {
+    this.tick = 0;
+  },
 
   computed: {
     repo: function repo() {
@@ -4614,7 +4902,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('p',{staticClass:"note"},[_vm._v("*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)

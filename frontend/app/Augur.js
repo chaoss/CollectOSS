@@ -87,6 +87,7 @@ export default function Augur () {
           // state.queryObject['git'] = window.btoa(repo.gitURL)
           // state.tab = 'git'
           state.gitRepo = repo.gitURL
+          state.tab = 'git'
         }
       },
       // removeComparedRepo (state, payload) {
