@@ -12,7 +12,6 @@ SOURCE=**
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                    Installs augur using pip"
-	@ echo "    install-e                  Installs augur in editable mode (pip -e)"
 	@ echo "    install-dev                Installs augur's developer dependencies (requires npm and pip)"
 	@ echo "    install-msr                Installs MSR14 dataset"
 	@ echo "    upgrade                    Pulls newest version, installs, performs migrations"
@@ -23,7 +22,7 @@ default:
 	@ echo "    dev-start                  Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop                   Stops the backgrounded commands"
 	@ echo "    dev-restart                Runs dev-stop then dev-restart"
-	@ echo "    server            	       Runs a single instance of the server (useful for debugging endpoints)"
+	@ echo "    server            	       Runs a single instance of the server (useful for debugging)"
 	@ echo "    test    			       Runs all pytest unit tests and API tests"
 	@ echo "    test-ds SOURCE={source}    Run pytest unit tests for the specified data source. Defaults to all"
 	@ echo "    test-api   			       Run API tests locally using newman"
@@ -53,10 +52,7 @@ install:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install --upgrade .'
 
 install-dev:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
-
-install-dev-admin:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install'
+	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-msr:
 	@ ./util/install-msr.sh

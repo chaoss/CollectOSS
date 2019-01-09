@@ -5,8 +5,8 @@ import pandas
 @pytest.fixture
 def librariesio():
     import augur
-    augurApp = augur.Application()
-    return augurApp['librariesio']()
+    augur_app = augur.Application()
+    return augur_app['librariesio']()
 
 # *** DIVERSITY AND INCLUSION *** #
 
