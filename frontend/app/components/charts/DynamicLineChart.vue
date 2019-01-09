@@ -45,7 +45,7 @@ export default {
       detail: this.$store.state.showDetail,
       compRepos: this.$store.state.comparedRepos,
       metricSource: null,
-      // timeperiod: 'all'
+      timeperiod: 'all'
     }
   },
   watch: {
@@ -611,13 +611,22 @@ export default {
       //set dates from main control options
       if(this.showDetail) {
         let today = new Date()
-        let startyear = (this.timeperiod && this.timeperiod != 'all') ? today.getFullYear() : this.earliest.getFullYear()
+        let startyear = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+          let d = new Date()
+          switch (this.timeperiod) {
+            case "month":
+              d = new Date(d.setDate(d.getDate()-30))
+              return d.getFullYear();
+            case "year":
+              d = new Date(d.setDate(d.getDate()-365))
+              return d.getFullYear();
+          }
+        })() : this.earliest.getFullYear()
         let startmonth = (this.timeperiod && this.timeperiod != 'all') ? (() => {
           let d = new Date()
           switch (this.timeperiod) {
             case "month":
               d = new Date(d.setDate(d.getDate()-30))
-              console.log("DATE", d, typeof(d), d.getMonth())
               return d.getMonth();
             case "year":
               d = new Date(d.setDate(d.getDate()-365))
@@ -628,12 +637,13 @@ export default {
           let d = new Date()
           switch (this.timeperiod) {
             case "month":
-              return d.setDate(d.getDate()-30);
+              d = new Date(d.setDate(d.getDate()-30))
+              return d.getDate();
             case "year":
-              return d.setDate(d.getDate()-365);
+              d = new Date(d.setDate(d.getDate()-365))
+              return d.getDate();
           }
         })() : this.earliest.getDate()
-        console.log("CHECK DATE", startyear, startdate, startmonth)
         // for(var i = 0; i < config.vconcat[0].layer.length; i++){
         //   config.vconcat[0].layer[i].encoding.x["scale"] =
         //     {

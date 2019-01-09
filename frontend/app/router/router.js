@@ -10,12 +10,12 @@ let routes = [
   {path: '/', component: AugurCards},
       {path: '/metrics_status', component: MetricsStatusCard},
       // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
-      {path: '/single/:tab/:owner?/:repo', component: AugurCards, name: 'single', props: true},
-      {path: '/singlegit/:tab/:repo', component: AugurCards, name: 'singlegit', props: true},
+      {path: '/single/:tab/:owner?/:repo', component: AugurCards, name: 'single', props: true, canReuse: false,},
+      {path: '/singlegit/:tab/:repo', component: AugurCards, name: 'singlegit', props: true, canReuse: false,},
       // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
-      {path: '/compare/:tab/:owner?/:repo/:domain?/comparedto/:comparedowner/:comparedrepo/:compareddomain?', component: AugurCards, name: 'singlecompare', props: true},
+      {path: '/compare/:tab/:owner?/:repo/:domain?/comparedto/:comparedowner/:comparedrepo/:compareddomain?', component: AugurCards, name: 'singlecompare', props: true, canReuse: false,},
       // {path: '/:tab/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'singlecompare'},
-      {path: '/groupcompare/:tab/:groupid', component: AugurCards, name: 'group', props: true},
+      {path: '/groupcompare/:tab/:groupid', component: AugurCards, name: 'group', props: true, canReuse: false,},
 ]
 let downloadedRepos = [], repos = [], projects = []
 window.AugurAPI.getDownloadedGitRepos().then((data) => {
@@ -36,5 +36,6 @@ window.AugurAPI.getDownloadedGitRepos().then((data) => {
 export default new Router({
   // routes,
   routes,
-  mode: 'history'
+  mode: 'history',
+  hashbang: false
 })

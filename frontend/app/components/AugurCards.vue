@@ -31,7 +31,7 @@
 
       <div ref="cards">
         <main-controls></main-controls>
-        <div v-if="(baseRepo && (currentTab == 'gmd'))">
+        <div v-if="(baseRepo && (currentTab == 'gmd'))" :key="update">
           <growth-maturity-decline-card></growth-maturity-decline-card>
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
@@ -91,10 +91,9 @@ module.exports = {
     DownloadedReposCard,
     LoginForm
   },
-  created() {
-    // if(!this.groupid)
-    //   this.mapGroup[1] = this.$store.state.comparedRepos
+  created(to, from, next) {
     if(this.repo || this.groupid){
+      this.$store.commit("resetTab")
       this.$store.commit('setTab', {
         tab: this.tab
       })
@@ -140,22 +139,25 @@ module.exports = {
     }
   },
   watch: {
-    comparedRepos: function(){
-      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
+    // comparedRepos: function(){
+    //   localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
        
-      if (this.gitRepo != null){
-        localStorage.setItem('domain', this.domain)
-        localStorage.setItem('git', this.$store.state.gitRepo)
-      }
-      console.log(localStorage.getItem('git'), "this is it") 
-      localStorage.setItem('base', this.$store.state.baseRepo)
+    //   if (this.gitRepo != null){
+    //     localStorage.setItem('domain', this.domain)
+    //     localStorage.setItem('git', this.$store.state.gitRepo)
+    //   }
+    //   console.log(localStorage.getItem('git'), "this is it") 
+    //   localStorage.setItem('base', this.$store.state.baseRepo)
       
-      if(this.$store.state.comparedRepos.length > 1){
-        localStorage.setItem("groupid", this.groupid)
-        localStorage.setItem('repo', this.repo)
-        localStorage.setItem('owner', this.owner)
-      }
-      console.log("GROUP HERE", localStorage.getItem('base'), localStorage.getItem('git'), JSON.parse(localStorage.getItem('group')), JSON.parse(localStorage.getItem('base')))
+    //   if(this.$store.state.comparedRepos.length > 1){
+    //     localStorage.setItem("groupid", this.groupid)
+    //     localStorage.setItem('repo', this.repo)
+    //     localStorage.setItem('owner', this.owner)
+    //   }
+    // },
+    '$route': function (to, from) {
+      if (to.name != from.name || to.name == 'group')
+        window.location.reload()
     }
   },
   data() {
@@ -163,7 +165,8 @@ module.exports = {
       downloadedRepos: [],
       isCollapsed: false,
       mapGroup: {1: this.$store.state.comparedRepos},
-      extra: false
+      extra: false,
+      update: 0
     }
   },
   computed: {
