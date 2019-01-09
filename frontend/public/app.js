@@ -3412,8 +3412,11 @@ exports.default = {
                   baselineVals = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
                 }
                 rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
-                for (var i = 0; i < baselineVals.length; i++) {
-                  if (rolling[i] && baselineVals[i]) rolling[i].valueRolling -= baselineVals[i].valueRolling;
+                if (baselineVals) {
+
+                  for (var i = 0; i < baselineVals.length; i++) {
+                    if (rolling[i] && baselineVals[i]) rolling[i].valueRolling -= baselineVals[i].valueRolling;
+                  }
                 }
               } else {
                 rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
@@ -4237,7 +4240,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0760224e", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-0760224e", __vue__options__)
+    hotAPI.reload("data-v-0760224e", __vue__options__)
   }
 })()}
 });
