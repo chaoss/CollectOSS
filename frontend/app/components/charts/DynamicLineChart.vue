@@ -777,9 +777,12 @@ export default {
                     baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
                   }
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                  for (var i = 0; i < baselineVals.length; i++){
+                  if(baselineVals){
+
+                    for (var i = 0; i < baselineVals.length; i++){
                     if (rolling[i] && baselineVals[i])
                       rolling[i].valueRolling -= baselineVals[i].valueRolling                   
+                    }
                   }
                 } else {
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)

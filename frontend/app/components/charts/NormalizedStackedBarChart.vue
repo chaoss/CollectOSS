@@ -15,11 +15,7 @@
             <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
             <label id="front" for="monthradio" >Month</label>
           </div>
-          <div class="inputGroup ">
-            <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
-            <label id="front" for="yearradio">Year</label>
-          </div>
-          <div class="inputGroup ">
+          <div class="inputGroup " style="padding-top: 5px;">
             <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
             <label id="front" for="contradio">Continuous</label>
           </div>

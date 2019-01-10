@@ -2,15 +2,13 @@
 """
 Data source that uses the GitHub API
 """
-from augur.datasources.localcsv.localcsv import LocalCSV
+
 import json
 import re
-from dateutil.parser import parse
 import pandas as pd
 from github import Github
-import numpy as np
-import datetime
 import requests
+from augur.datasources.localcsv.localcsv import LocalCSV
 from augur import logger
 from augur.util import annotate
 # end imports
@@ -348,5 +346,3 @@ class GitHubAPI(object):
     #             cursor = '"{}"'.format(data['data']['repository']['pullRequests']['edges'][-1]['cursor'])
 
     #     return pd.DataFrame({'date': pullReqTime, 'code_reviews': numReviews})
-
-

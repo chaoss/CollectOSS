@@ -9,6 +9,7 @@ class MetricsStatusPlugin(AugurPlugin):
     """
     def __init__(self, augur):
         self.__metrics_status = None
+        self.__githubapi = None
         # _augur will be set by the super init
         super().__init__(augur)
 
@@ -17,7 +18,7 @@ class MetricsStatusPlugin(AugurPlugin):
         from augur.datasources.githubapi.githubapi import GitHubAPI
         if self.__metrics_status is None:
             logger.debug('Initializing MetricsStatus')
-            api_key=self._augur.read_config('GitHub', 'apikey', 'AUGUR_GITHUB_API_KEY', 'None')
+            api_key = self._augur.read_config('GitHub', 'apikey', 'AUGUR_GITHUB_API_KEY', 'None')
             self.__githubapi = GitHubAPI(api_key=api_key)
             self.__metrics_status = MetricsStatus(self.__githubapi)
         return self.__metrics_status
@@ -28,7 +29,7 @@ class MetricsStatusPlugin(AugurPlugin):
         """
         from .routes import create_routes
         create_routes(flask_app)
-        
+
 MetricsStatusPlugin.augur_plugin_meta = {
     'name': 'metrics_status',
     'datasource': True
