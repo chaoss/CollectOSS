@@ -8,14 +8,10 @@ import time
 import argparse
 import multiprocessing as mp
 import logging
-# import configparser as configparser
 import json
-# import importlib
 import pkgutil
-# import coloredlogs
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
-# from lockfile import LockFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from augur import logger
