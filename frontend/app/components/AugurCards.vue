@@ -1,7 +1,9 @@
 <template>
    
   <div>
-    <augur-header></augur-header>
+    <div class="fullwidth">
+        <augur-header></augur-header>
+    </div>
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
       <!-- <login-form></login-form> -->

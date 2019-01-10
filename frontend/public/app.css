@@ -3512,6 +3512,14 @@ input:focus {
   justify-content: center;
   padding-bottom: 14px;
 }
+.fullwidth {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
 @-moz-keyframes spin {
   0% {
     transform: rotate(0deg);
