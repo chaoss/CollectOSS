@@ -5,22 +5,22 @@ Handles global context, I/O, and configuration
 
 import os
 import time
+import argparse
 import multiprocessing as mp
 import logging
-import configparser as configparser
+# import configparser as configparser
 import json
-import importlib
+# import importlib
 import pkgutil
-import coloredlogs
+# import coloredlogs
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
-from lockfile import LockFile
+# from lockfile import LockFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from augur import logger
 import augur.plugins
 import augur.datasources
-import argparse
 
 
 class Application(object):

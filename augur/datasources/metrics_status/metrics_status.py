@@ -4,31 +4,30 @@ Analyzes Augur source and CHAOSS repos to determine metric implementation status
 """
 
 import re
-import json
-import glob
+from abc import ABC
 import requests
 from augur.util import metric_metadata
 
 class FrontendStatusExtractor(object):
 
     def __init__(self):
-        self.api_text =  open("frontend/app/AugurAPI.js", 'r').read()
+        self.api_text = open("frontend/app/AugurAPI.js", 'r').read()
         self.attributes = re.findall(r'(?:(GitEndpoint|Endpoint|Timeseries)\(repo, )\'(.*)\', \'(.*)\'', self.api_text)
-        self.timeseries_attributes = [attribute for attribute in self.attributes if attribute[0] == "Timeseries"]
-        self.endpoint_attributes = [attribute for attribute in self.attributes if attribute[0] == "Endpoint"]
-        self.git_endpoint_attributes = [attribute for attribute in self.attributes if attribute[0] == "GitEndpoint"]
+        self.timeseries = [attribute for attribute in self.attributes if attribute[0] == "Timeseries"]
+        self.endpoints = [attribute for attribute in self.attributes if attribute[0] == "Endpoint"]
+        self.git_endpoints = [attribute for attribute in self.attributes if attribute[0] == "GitEndpoint"]
 
     def determine_frontend_status(self, metric):
         attribute = None
 
-        if metric.metric_type is "timeseries":
-            attribute = next((attribute for attribute in self.timeseries_attributes if f"/api/unstable/<owner>/<repo>/timeseries/{attribute[2]}" == metric.endpoint), None)
+        if metric.metric_type == "timeseries":
+            attribute = next((attribute for attribute in self.timeseries if f"/api/unstable/<owner>/<repo>/timeseries/{attribute[2]}" == metric.endpoint), None)
 
-        elif metric.metric_type is "metric":
-            attribute = next((attribute for attribute in self.endpoint_attributes if f"/api/unstable/<owner>/<repo>/{attribute[2]}" == metric.endpoint), None)
+        elif metric.metric_type == "metric":
+            attribute = next((attribute for attribute in self.endpoints if f"/api/unstable/<owner>/<repo>/{attribute[2]}" == metric.endpoint), None)
 
-        elif metric.metric_type is "git":
-            attribute = next((attribute for attribute in self.git_endpoint_attributes if f"/api/unstable/git/{attribute[2]}" == metric.endpoint), None)
+        elif metric.metric_type == "git":
+            attribute = next((attribute for attribute in self.git_endpoints if f"/api/unstable/git/{attribute[2]}" == metric.endpoint), None)
 
         if attribute is not None:
             metric.frontend_status = 'implemented'
@@ -36,9 +35,9 @@ class FrontendStatusExtractor(object):
         else:
             metric.frontend_status = 'unimplemented'
 
-        return metric
+        # return metric
 
-class Metric(object):
+class Metric(ABC):
 
     def __init__(self):
         self.ID = 'none'
@@ -82,7 +81,7 @@ class ImplementedMetric(Metric):
 
         if 'endpoint' in metadata:
             self.endpoint = metadata['endpoint']
-            self = frontend_status_extractor.determine_frontend_status(self)
+            frontend_status_extractor.determine_frontend_status(self)
         # print(self.frontend_status)
 
 class MetricsStatus(object):
@@ -95,7 +94,7 @@ class MetricsStatus(object):
         {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_leadership.md", "has_links": False},
         {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_project_places.md", "has_links": True},
         {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_recognition.md", "has_links": False}
-    ]   
+    ]
 
     growth_maturity_decline_urls = [
         {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/2_Growth-Maturity-Decline.md", "has_links": True},
@@ -127,15 +126,23 @@ class MetricsStatus(object):
             "activity": "Activity",
             "experimental": "Experimental",
             "all": "All"
-       }
+        }
+
+        self.implemented_metrics = []
+
+        self.diversity_inclusion_metrics = []
+        self.growth_maturity_decline_metrics = []
+        self.risk_metrics = []
+        self.value_metrics = []
+        self.activity_metrics = []
+
+        self.metrics_by_group = []
+
+        self.metrics_status = []
 
         self.data_sources = []
         self.metric_types = []
         self.tags = {}
-
-        self.implemented_metrics = []
-
-        self.raw_metrics_status = []
         self.metadata = []
 
     def create_metrics_status(self):
@@ -159,9 +166,9 @@ class MetricsStatus(object):
 
         self.find_defined_metrics()
 
-        self.get_raw_metrics_status()
+        self.build_metrics_status()
 
-        self.get_metadata()
+        self.build_metadata()
 
     def build_implemented_metrics(self):
         frontend_status_extractor = FrontendStatusExtractor()
@@ -229,7 +236,7 @@ class MetricsStatus(object):
 
     def copy_implemented_metrics(self):
         # takes implemented metrics and copies their data to the appropriate metric object
-        # I'm sorry
+        # I am so very sorry
         implemented_metric_tags = [metric.tag for metric in self.implemented_metrics]
         for group in self.metrics_by_group:
             if group is not self.experimental_metrics: #experime    ntal metrics don't need to be copied, since they don't have a definition
@@ -250,12 +257,12 @@ class MetricsStatus(object):
                     metric.is_defined = 'true'
                     metric.documentation_url = "https://github.com/{}/blob/wg-gmd/activity-metrics/{}.md".format(MetricsStatus.activity_repo, metric.tag)
 
-    def get_raw_metrics_status(self):
+    def build_metrics_status(self):
         for group in self.metrics_by_group:
             for metric in group:
-                self.raw_metrics_status.append(metric.__dict__)
+                self.metrics_status.append(metric.__dict__)
 
-    def get_metadata(self):
+    def build_metadata(self):
         self.get_metric_sources()
         self.get_metric_types()
         self.get_metric_tags()
@@ -267,29 +274,29 @@ class MetricsStatus(object):
                 "risk_urls": self.risk_urls,
                 "value_urls": self.value_urls,
                 "activity_repo_urls": self.activity_urls
-           },  
+            },
             "groups": self.groups,
             "data_sources": self.data_sources,
             "metric_types": self.metric_types,
             "tags": self.tags
-       }
+        }
 
     def get_metric_sources(self):
-        for data_source in [metric['data_source'] for metric in self.raw_metrics_status]:
+        for data_source in [metric['data_source'] for metric in self.metrics_status]:
             data_source = data_source.lower()
             if data_source not in self.data_sources and data_source != "none":
                 self.data_sources.append(data_source)
         self.data_sources.append("all")
 
     def get_metric_types(self):
-        for metric_type in [metric['metric_type'] for metric in self.raw_metrics_status]:
+        for metric_type in [metric['metric_type'] for metric in self.metrics_status]:
             metric_type = metric_type.lower()
             if metric_type not in self.metric_types and metric_type != "none":
                 self.metric_types.append(metric_type)
         self.metric_types.append("all")
 
     def get_metric_tags(self):
-        for tag in [(metric['tag'], metric['group']) for metric in self.raw_metrics_status]:
+        for tag in [(metric['tag'], metric['group']) for metric in self.metrics_status]:
             # tag[0] = tag[0].lower()
             if tag[0] not in [tag[0] for tag in self.tags] and tag[0] != "none":
                 self.tags[tag[0]] = tag[1]

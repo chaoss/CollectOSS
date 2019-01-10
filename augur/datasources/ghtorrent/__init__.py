@@ -31,7 +31,7 @@ class GHTorrentPlugin(AugurPlugin):
         """
         from .routes import create_routes
         create_routes(flask_app)
-        
+
 GHTorrentPlugin.augur_plugin_meta = {
     'name': 'ghtorrent',
     'datasource': True
