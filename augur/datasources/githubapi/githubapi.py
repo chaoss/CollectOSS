@@ -36,8 +36,28 @@ class GitHubAPI(object):
     ### GROWTH, MATURITY, AND DECLINE ###
     #####################################
 
+    @annotate(tag='closed-issues')
+    def closed_issues(self, owner, repo=None):
+        """
+        Timeseries of the count of the number of issues closed per day
+
+        :param owner: The name of the project owner.
+        :param repo: The name of the repo.
+        :return: DataFrame with newly closed issues/day
+        """
+
+        url = "https://api.github.com/repos/{}/{}/issues?state=closed".format(owner, repo)
+        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
+        df = pd.DataFrame(json, columns=['created_at'])
+
+        df['created_at'] = pd.to_datetime(df['created_at']).dt.normalize()
+
+        df = df.groupby('created_at').size().reset_index(name='count')
+
+        return df
+
     @annotate(tag='lines-of-code-changed')
-    def lines_of_code_changed(self, owner, repo=None): 
+    def lines_of_code_changed(self, owner, repo=None):
         """
         Timeseries of the count of lines added, deleted, and the net change each week
 
@@ -119,7 +139,7 @@ class GitHubAPI(object):
                               }
                             }
                           }
-                        }            
+                        }
                         """ % (repo, owner, cursor)
             }
             r = requests.post(url, auth=requests.auth.HTTPBasicAuth('user', self.GITHUB_API_KEY), json=query)
@@ -150,7 +170,7 @@ class GitHubAPI(object):
             j = j + 1
             if num >= threshold:
                 break
-        best = j    
+        best = j
 
         bus_factor = [{'worst': worst, 'best' : best}]
 
