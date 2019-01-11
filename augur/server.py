@@ -97,7 +97,7 @@ class Server(object):
                 return app.make_response('{"status": "501", "response": "Defaults for batch requests not implemented. Please POST a JSON array of requests to this endpoint for now."}')
 
             try:
-                requests = json.loads(request.data)
+                requests = json.loads(request.data.decode('utf-8'))
             except ValueError as e:
                 request.abort(400)
 
@@ -181,7 +181,7 @@ class Server(object):
                 return app.make_response(json.dumps(metric_metadata))
 
             try:
-                requests = json.loads(request.data)
+                requests = json.loads(request.data.decode('utf-8'))
             except ValueError as e:
                 request.abort(400)
 
