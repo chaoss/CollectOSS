@@ -4,8 +4,8 @@ import pytest
 @pytest.fixture(scope="module")
 def ghtorrent():
     import augur
-    augurApp = augur.Application()
-    return augurApp['ghtorrent']()
+    augur_app = augur.Application()
+    return augur_app['ghtorrent']()
 
 def test_repoid(ghtorrent):
     assert ghtorrent.repoid('rails', 'rails') >= 1000

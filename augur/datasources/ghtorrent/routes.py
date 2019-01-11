@@ -45,7 +45,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Code Commits
     @apiName code-commits
     @apiGroup Growth-Maturity-Decline
-    @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -69,7 +69,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/code_review_iteration Code Review Iteration
     @apiName code-review-iteration
     @apiGroup Growth-Maturity-Decline
-    @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md">CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -92,7 +92,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/contribution_acceptance Contribution Acceptance
     @apiName contribution-acceptance
     @apiGroup Growth-Maturity-Decline
-    @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="https://www.github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md">CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -112,10 +112,10 @@ def create_routes(server):
     server.addTimeseries(ghtorrent.contribution_acceptance, 'contribution_acceptance')
 
     """
-    @api {get} /:owner/:repo/timeseries/contributing_github_organizations Contributing Github Organizations
+    @api {get} /:owner/:repo/contributing_github_organizations Contributing Github Organizations
     @apiName contributing-github-organizations
     @apiGroup Growth-Maturity-Decline
-    @apiDescription/github.<a href="com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md">CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -202,7 +202,7 @@ def create_routes(server):
     server.addTimeseries(ghtorrent.forks, 'forks')
 
     """
-    @api {get} /:owner/:repo/pulls/maintainer_response_time Maintainer Response to Merge Request Duration
+    @api {get} /:owner/:repo/timeseries/pulls/maintainer_response_time Maintainer Response to Merge Request Duration
     @apiName maintainer-response-to-merge-request-duration
     @apiGroup Growth-Maturity-Decline
     @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
@@ -225,7 +225,7 @@ def create_routes(server):
     server.addTimeseries(ghtorrent.maintainer_response_to_merge_request_duration, 'pulls/maintainer_response_time')
 
     """
-    @api {get} /:owner/:repo/pulls/new_contributing_github_organizations New Contributing Github Organizations
+    @api {get} /:owner/:repo/timeseries/pulls/new_contributing_github_organizations New Contributing Github Organizations
     @apiName new-github-contributing-organizations
     @apiGroup Growth-Maturity-Decline
     @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/new-contributing-organizations.md">CHAOSS Metric Definition</a>
