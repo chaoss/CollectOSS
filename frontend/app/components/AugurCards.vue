@@ -158,7 +158,7 @@ module.exports = {
     //   }
     // },
     '$route': function (to, from) {
-      if (to.name != from.name || to.name == 'group')
+      if (to.name != from.name)
         window.location.reload()
     }
   },
