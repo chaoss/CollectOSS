@@ -159,7 +159,7 @@ module.exports = {
     // },
     '$route': function (to, from) {
       if (to.name != from.name)
-        window.location.reload()
+        window.location.replace(to.path)
     }
   },
   data() {
