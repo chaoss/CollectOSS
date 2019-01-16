@@ -1311,7 +1311,7 @@ module.exports = {
 
   watch: {
     '$route': function $route(to, from) {
-      if (to.name != from.name) window.location.reload();
+      if (to.name != from.name) window.location.replace(to.path);
     }
   },
   data: function data() {
