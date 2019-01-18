@@ -16,6 +16,8 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Augur Python Library" href="python.html" />
+    <link rel="prev" title="Augur Context" href="augurcontext.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -32,27 +34,34 @@
             
   <div class="section" id="architecture">
 <h1>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h1>
-<p>Augur’s architecture consists of 4 primary pieces:</p>
-<dl class="docutils">
-<dt>Backend:</dt>
-<dd><ol class="first last arabic simple">
-<li>Python classes that know how to produce metrics from a given datasource (augur.GHTorrent, augur.Git, etc.)</li>
-<li>A main class (<a class="reference internal" href="application/augur.application.html"><span class="doc">augur.application</span></a>) that knows how instantiate the datasource classes from configuration</li>
-<li>A WSGI server (<a class="reference internal" href="application/augur.server.html"><span class="doc">augur.server</span></a>) that exposes the datasources as a REST API</li>
+<p>Augur’s architecture consists of 5 primary pieces:</p>
+<div class="section" id="backend">
+<h2>Backend:<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Python plugins that know how to produce metrics from a given
+datasource (<code class="docutils literal notranslate"><span class="pre">augur.datasources.GHTorrent</span></code>,
+<code class="docutils literal notranslate"><span class="pre">augur.datasources.Facade</span></code>, etc.) or provide a given functionality</li>
+<li>A main class that’s in charge of caching, registering plugins, and
+reading the configuration file (<code class="docutils literal notranslate"><span class="pre">augur.Application</span></code>)</li>
+<li>A WSGI server built with Flask that exposes the datasources as a REST
+API (<code class="docutils literal notranslate"><span class="pre">augur.Server</span></code>, <code class="docutils literal notranslate"><span class="pre">augur.runtime</span></code>)</li>
 </ol>
-</dd>
-<dt>Frontend:</dt>
-<dd><ol class="first last arabic simple" start="4">
-<li>Vue frontend, compiled with Brunch - visualizations</li>
+</div>
+<div class="section" id="frontend">
+<h2>Frontend:<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple" start="4">
+<li>Vue frontend to display visualizations and controls, compiled with
+Brunch</li>
+<li>Visualizations made with Vega-Lite for the metrics exposed by the
+backend</li>
 </ol>
-</dd>
-</dl>
-<p>(usually made with Vega-Lite) for the metrics exposed by the backend</p>
-<div class="section" id="technology">
-<h2>Technology<a class="headerlink" href="#technology" title="Permalink to this headline">¶</a></h2>
-<dl class="docutils">
-<dt>Backend:</dt>
-<dd><ul class="first last simple">
+<div class="section" id="technologies">
+<h3>Technologies<a class="headerlink" href="#technologies" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="id1">
+<h2>Backend:<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
 <li><a class="reference external" href="https://docs.python.org/3/index.html">Python</a></li>
 <li><a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/">Pandas</a></li>
 <li><a class="reference external" href="http://flask.pocoo.org/">Flask</a></li>
@@ -62,23 +71,23 @@
 <li><a class="reference external" href="https://docs.docker.com/">Docker</a></li>
 <li><a class="reference external" href="https://docs.pytest.org/en/latest/">pytest</a></li>
 </ul>
-</dd>
-<dt>Frontend:</dt>
-<dd><ul class="first last simple">
+</div>
+<div class="section" id="id2">
+<h2>Frontend:<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
 <li><a class="reference external" href="https://vuejs.org/v2/guide/">VueJS</a></li>
 <li><a class="reference external" href="https://vega.github.io/vega-lite/">Vega-Lite</a></li>
 <li><a class="reference external" href="https://brunch.io/">Brunch</a></li>
 <li><a class="reference external" href="http://stylus-lang.com/">Stylus</a></li>
 <li><a class="reference external" href="https://babeljs.io/docs/setup/">Babel</a></li>
 </ul>
-</dd>
-<dt>Documentation:</dt>
-<dd><ul class="first last simple">
+</div>
+<div class="section" id="documentation">
+<h2>Documentation:<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
 <li><a class="reference external" href="http://www.sphinx-doc.org/en/master/">Sphinx</a></li>
 <li><a class="reference external" href="http://apidocjs.com/">apidocjs</a></li>
 </ul>
-</dd>
-</dl>
 </div>
 </div>
 
@@ -89,14 +98,23 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table Of Contents</a></h3>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use-cases-toc.html">Use Cases</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="augurcontext.html" title="previous chapter">Augur Context</a></li>
+      <li>Next: <a href="python.html" title="next chapter">Augur Python Library</a></li>
   </ul></li>
 </ul>
 </div>

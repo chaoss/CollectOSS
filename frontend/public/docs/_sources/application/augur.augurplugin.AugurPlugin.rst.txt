@@ -15,7 +15,7 @@ augur.augurplugin.AugurPlugin
    
       ~AugurPlugin.__init__
       ~AugurPlugin.create_routes
-      ~AugurPlugin.register
+      ~AugurPlugin.update
    
    
 

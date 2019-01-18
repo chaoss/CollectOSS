@@ -139,6 +139,11 @@ export default class AugurAPI {
         repo.owner = splitURL[1]
         repo.name = splitURL[2].split('.')[0]
       }
+      else {
+        let splitURL = repo.gitURL.split('/')
+        repo.owner = splitURL[0]
+        repo.name = splitURL[1]
+      }
     }
 
     repo.toString = () => {
@@ -191,7 +196,7 @@ export default class AugurAPI {
     }
 
     var GitEndpoint = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('git/' + endpoint + '/' + r.gitURL)
+      var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL))
       return __Endpoint(r, jsName, url)
     }
 
@@ -277,12 +282,12 @@ export default class AugurAPI {
       Timeseries(repo, 'fakes', 'fakes')
       Endpoint(repo, 'linkingWebsites', 'linking_websites')
       Timeseries(repo, 'majorTags', 'tags/major')
+      Timeseries(repo, 'newWatchers', 'new_watchers')
       Timeseries(repo, 'tags', 'tags')
     }
 
     if (repo.gitURL) {
       // Other
-      GitEndpoint(repo, 'linesChangedMinusWhitespace', 'lines_changed')
       GitEndpoint(repo, 'changesByAuthor', 'changes_by_author')
     }
 

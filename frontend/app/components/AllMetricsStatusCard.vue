@@ -17,7 +17,7 @@
       <div class="col col-4">
         <label>Source:
         <select id="metric_source" @change="getMetricsStatus()" v-model='selected_source'>
-         <option v-for="source in metadata['sources']" v-bind:value="source">
+         <option v-for="source in metadata['data_sources']" v-bind:value="source">
           {{ source }}
          </option>
         </select>
@@ -87,10 +87,10 @@
             <td v-bind:style="{ color: getFrontendStatusColor(metric) }" style="width: 135px !important">{{ metric.frontend_status }}</td>
 
             <template v-if="metric.url != '/'" >
-              <td style="width: 170px !important"><a :href="metric.url">{{ metric.name }}</a></td>
+              <td style="width: 170px !important"><a :href="metric.documentation_url">{{ metric.display_name }}</a></td>
             </template>
             <template v-else >
-            <td style="width: 170px !important">{{ metric.name }}</td>
+            <td style="width: 170px !important">{{ metric.display_name }}</td>
             </template>
 
             <td style="width: 121px !important">{{ metric.group }}</td>
@@ -134,7 +134,7 @@ export default {
   methods: {
       getMetricsStatus() {
         var query_string = "group=" + this.selected_group +
-                           "&source=" + this.selected_source +
+                           "&data_source=" + this.selected_source +
                            "&metric_type=" + this.selected_metric_type +
                            "&backend_status=" + this.selected_backend_status +
                            "&frontend_status=" + this.selected_frontend_status +
@@ -150,10 +150,9 @@ export default {
 
           this.metadata['groups'] = Object.keys(data.groups[0])
 
-          this.metadata['sources'] = data.sources
+          this.metadata['data_sources'] = data.data_sources
 
           this.metadata['metric_types'] = data.metric_types
-
 
         })
       },

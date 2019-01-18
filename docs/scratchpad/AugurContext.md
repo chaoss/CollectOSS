@@ -14,7 +14,7 @@ Our core team has a long standing interest in social computing, software enginee
 
 ## Here are some more detailed links:
 - Example Website (running on a development grade web server, be gentle): http://augur.sociallycompute.io
-- Source Code Repository: http://github.com/OSSHealth/augur
+- Source Code Repository: http://github.com/chaoss/augur
 - List of Metrics: https://github.com/chaoss/metrics/blob/master/activity-metrics-list.md
 	Here are some examples:
 	1. https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-response-rate.md

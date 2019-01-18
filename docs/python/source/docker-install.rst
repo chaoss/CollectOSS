@@ -1,5 +1,5 @@
-Installation with Docker (easy to get up and running)
------------------------------------------------------
+Docker Installation
+==================================
 
 Before we begin, make sure you have everything you need installed:
 `Git <https://git-scm.com/downloads>`__,
@@ -15,7 +15,7 @@ Now, to install:
 
 .. code:: bash
 
-    git clone https://github.com/OSSHealth/augur
+    git clone https://github.com/chaoss/augur
     cd augur
 
 2. Set the following variables in your environment:

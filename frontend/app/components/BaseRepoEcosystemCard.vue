@@ -1,23 +1,29 @@
 <template>
   <section>
     <h1>Ecosystem</h1>
-    <h2>{{ $store.state.baseRepo }}</h2>
+    <div style="display: inline-block;">
+      <h2 style="display: inline-block; color: black !important">{{ $store.state.baseRepo }}</h2>
+      <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
+      <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
+        <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
+      </h2>
+    </div>
 
     <div class="row">
       <div class="col col-6">
-        <line-chart source="downloads"
+        <dynamic-line-chart source="downloads"
                     title="Downloads / Day" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty">
-        </line-chart>
+        </dynamic-line-chart>
       </div>
 
       <div class="col col-6">
-        <line-chart source="stars"
+        <dynamic-line-chart source="stars"
                     title="Stars / Week" 
                     cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/community-activity.md"
                     cite-text="Community Activty">
-        </line-chart>
+        </dynamic-line-chart>
       </div>
     </div>
 
@@ -42,13 +48,18 @@
 
 <script>
 
-import LineChart from './charts/LineChart'
+import DynamicLineChart from './charts/DynamicLineChart'
 import DependencyOverview from './charts/DependencyOverview'
 import BusFactor from './charts/BusFactor'
 
 module.exports = {
+  data() {
+    return {
+      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+    }
+  },
   components: {
-    LineChart,
+    DynamicLineChart,
     DependencyOverview,
     BusFactor
   }

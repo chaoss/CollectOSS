@@ -2,7 +2,7 @@
  services:
    augur:
      build: .
-     image: osshealth/augur
+     image: chaoss/augur
      restart: always
      volumes:
        - .:/augur

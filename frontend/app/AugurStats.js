@@ -20,26 +20,29 @@ export default class AugurStats {
     return data
   }
 
-  static convertKey (data, key) {
+  static convertKey (data, key, newName) {
+    newName = newName || "value"
     if (Array.isArray(data[0])) {
       data = data.map((datum) => {
         return AugurStats.convertKey(datum, key)
       })
     } else if (key.length > 1){
       return data.map((d) => {
-        return {
+        let obj = {
           date: d.date,
-          value: d[key[0]],
           field: d[key[1]]
         }
+        obj[newName] = d[key]
+        return obj
       })
     }
     else{
       return data.map((d) => {
-        return {
+        let obj = {
           date: d.date,
-          value: d[key]
         }
+        obj[newName] = d[key] || 0
+        return obj
       })
     }
     return data
@@ -92,7 +95,7 @@ export default class AugurStats {
       let newObj = {}
       if (e.date) {
         newObj.date = new Date(e.date)
-        newObj[key] = e[key]
+        newObj[key + extension] = e[key]
       }
       newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances))
       newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances))
@@ -101,7 +104,8 @@ export default class AugurStats {
   }
 
   static standardDeviation (data, key, mean) {
-    let flat = data.map((e) => { return e[key] })
+    let flat = data.map((e) => { return (e[key] ? e[key] : 0) })
+
     mean = mean || AugurStats.averageArray(flat)
     let distances = flat.map((e) => {
       return (e - mean) * (e - mean)
@@ -131,6 +135,15 @@ export default class AugurStats {
     data = data.filter(datum => {
       return isFinite(datum[key])
     })
+    // if (data[0].date != startDate) {
+    //   let test = startDate
+    //   while (data[0].date - test > period) {
+    //     test += period
+    //   }
+    //   var offset = data[0].date - test
+    // }
+    // let before = offset ? offset : period
+    // let after = offset ? period - offset : period
     return AugurStats.dateAggregate(data, period, period, (period / 2), (filteredData, date) => {
       let flat = AugurStats.flatten(filteredData, key)
       let datum = { date: date }
@@ -159,6 +172,13 @@ export default class AugurStats {
       i++
     }
     return rolling
+  }
+
+  static alignDates (data, baseDate, windowSizeInDays) {
+    //key = key || 'value'
+    let period = (windowSizeInDays / 2)
+    data.unshift({date: baseDate, value: null})
+    return data
   }
 
   static convertToPercentages (data, key, baseline) {
@@ -217,8 +237,6 @@ export default class AugurStats {
       iter['base']++
       iter['compare']++
     }
-
-    console.log('relative', result)
     return result
   }
 
@@ -227,10 +245,12 @@ export default class AugurStats {
     let stats = AugurStats.describe(data, key)
     return data.map((e) => {
       let newObj = {}
-      if (e.date) {
+      // if (e.date) {
         newObj.date = new Date(e.date)
-      }
-      let zscore = ((e[key] - stats['mean']) / stats['stddev'])
+      // } else {
+      //   newObj.date = 
+      // }
+      let zscore = stats['stddev'] == 0 ? 0 : ((e[key] - stats['mean']) / stats['stddev'])
       newObj[key] = zscore
       return newObj
     })

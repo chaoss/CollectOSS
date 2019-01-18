@@ -167,7 +167,7 @@ echo "All dependencies in place."
 #
 echo 
 echo "Downloading Augur..."
-git clone https://github.com/OSSHealth/augur.git
+git clone https://github.com/chaoss/augur.git
 cd augur
 read -p "Would you like to install [m]aster or [d]ev: " -n 1 -r
 DEVELOPER=0

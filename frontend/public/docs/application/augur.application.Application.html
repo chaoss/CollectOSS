@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="augur.augurplugin.AugurPlugin" href="augur.augurplugin.AugurPlugin.html" />
-    <link rel="prev" title="augur.downloads.Downloads" href="../datasources/augur.downloads.Downloads.html" />
+    <link rel="prev" title="augur.datasources.downloads.downloads.Downloads" href="../datasources/augur.datasources.downloads.downloads.Downloads.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -36,12 +36,12 @@
 <h1>augur.application.Application<a class="headerlink" href="#augur-application-application" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="augur.application.Application">
-<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initalizes all classes form Augur using a config file or environment variables</p>
+<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initalizes all classes from Augur using a config file or environment variables</p>
 <dl class="method">
 <dt id="augur.application.Application.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads config, creates DB session, and initializes cache</p>
 </dd></dl>
 
 <p class="rubric">Methods</p>
@@ -52,73 +52,46 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#augur.application.Application.__init__" title="augur.application.Application.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([config_file,&nbsp;no_config_file,&nbsp;…])</td>
-<td>Initialize self.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloads</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">facade</span></code>()</td>
-<td></td>
+<td>Reads config, creates DB session, and initializes cache</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize_config</span></code>()</td>
-<td></td>
+<td>Parse args and generates a valid config if the given one is bad</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrent</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">ghtorrentplus</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">git</span></code>([update])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">githubapi</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_all</span></code>()</td>
-<td></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">import_plugins</span></code>()</td>
+<td>Imports all plugins and datasources</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">join_updates</span></code>()</td>
 <td>Join to the update processes</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">librariesio</span></code>()</td>
-<td></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path</span></code>(path)</td>
+<td>Returns the absolute path for the given relative path</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">localcsv</span></code>()</td>
-<td></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_relative_to_config</span></code>(path)</td>
+<td>Returns path relative to the config file</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics_status</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path</span></code>(path)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_relative_to_config</span></code>(path)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_config</span></code>(section,&nbsp;name[,&nbsp;…])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_config_path</span></code>(section,&nbsp;name[,&nbsp;…])</td>
-<td></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_config</span></code>(section,&nbsp;name[,&nbsp;…])</td>
+<td>Read a variable in specified section of the config file, unless provided an environment variable</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_plugin</span></code>(plugin)</td>
-<td></td>
+<td>Registers specified plugin</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace_config_variables</span></code>(string[,&nbsp;reverse])</td>
-<td></td>
+<td>Replaces the configuration of a variable sent</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">schedule_updates</span></code>()</td>
-<td></td>
+<td>Schedules updates</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_config</span></code>(section,&nbsp;name,&nbsp;value)</td>
-<td></td>
+<td>Sets names and values of specified config section</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown_updates</span></code>()</td>
-<td></td>
+<td>Ends all running update processes</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_all</span></code>()</td>
-<td></td>
+<td>Updates all plugins</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">updater_process</span></code>(name,&nbsp;delay,&nbsp;shared)</td>
+<td>Controls a given plugin’s update process</td>
 </tr>
 </tbody>
 </table>
@@ -129,7 +102,10 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">plugins</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_plugins</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">plugins</span></code></td>
 <td></td>
 </tr>
 </tbody>
@@ -147,25 +123,21 @@
 <h3><a href="../index.html">Table Of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../python.html#data-source-modules">Data Source Modules</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../python.html#application-modules">Application Modules</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">augur.application.Application</a></li>
-<li class="toctree-l3"><a class="reference internal" href="augur.augurplugin.AugurPlugin.html">augur.augurplugin.AugurPlugin</a></li>
-<li class="toctree-l3"><a class="reference internal" href="augur.server.Server.html">augur.server.Server</a></li>
-<li class="toctree-l3"><a class="reference internal" href="augur.runtime.html">augur.runtime</a></li>
-<li class="toctree-l3"><a class="reference internal" href="augur.util.html">augur.util</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../python.html">Augur Python Library</a><ul>
-      <li>Previous: <a href="../datasources/augur.downloads.Downloads.html" title="previous chapter">augur.downloads.Downloads</a></li>
+      <li>Previous: <a href="../datasources/augur.datasources.downloads.downloads.Downloads.html" title="previous chapter">augur.datasources.downloads.downloads.Downloads</a></li>
       <li>Next: <a href="augur.augurplugin.AugurPlugin.html" title="next chapter">augur.augurplugin.AugurPlugin</a></li>
   </ul></li>
   </ul></li>

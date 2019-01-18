@@ -2,7 +2,7 @@
 <div class="row" id="controls">
   <div class="col col-12">
     <div class="form">
-
+      
 
       <div class="topic">
         <div class="container">
@@ -18,10 +18,12 @@
               </div>
 
             </div>
+                 
+                 <div id="invalid" class="col col-1 invisible invalid-search" align="center">Repo not found.</div>
 
-            <div id="collapse" class="col col-3">
-              <div class="col col-12 align-bottom" align="right" v-show="isCollapsed" @click="collapseText">Less configuration options &#9660</div>
-              <div class="col col-12 align-bottom" align="right" v-show="!isCollapsed" @click="collapseText">More configuration options &#9654</div>
+            <div id="collapse" class="col col-2">
+              <div class="col col-12 align-bottom" align="right" v-show="isCollapsed" @click="collapseText()">Less configuration options &#9660</div>
+              <div class="col col-12 align-bottom" align="right" v-show="!isCollapsed" @click="collapseText()">More configuration options &#9654</div>
             </div>
 
           </div>
@@ -129,8 +131,9 @@
               <h6>Comparison Type</h6>
                   <label>
                   <div class="form-item form-checkboxes">
-                    <label class="checkbox"><input name="comparebaseline" value="zscore" type="radio" @change="onCompareChange">Z-score</label><br>
-                    <label class="checkbox"><input name="comparebaseline" value="baseline" checked type="radio" @change="onCompareChange">Baseline is compared</label>
+                    <label class="checkbox"><input name="comparebaseline" value="zscore" :checked="compared" type="radio" @change="onCompareChange">Z-score</label><br>
+                    <label class="checkbox"><input name="comparebaseline" value="baseline" :checked="!compared" type="radio" @change="onCompareChange">Baseline is compared</label>
+                    <label class="checkbox"><input name="comparebaseline" value="rolling" :checked="!compared" type="radio" @change="onCompareChange">Rolling average</label>
                   </div>
                   </label>
               </label>
@@ -150,8 +153,16 @@
       </div>
 
     </div>
+    <!-- <div style="display: inline-block;">
+      <h7 style="display: inline-block;">{{ $store.state.baseRepo }}</h7>
+      <h7 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h7>
+      <h7 style="display: inline-block;" v-for="repo in $store.state.comparedRepos">
+        <span class="repolisting"> {{ repo }} </span> 
+      </h7>
+    </div> -->
   </div>
-</div>
+  
+
 </template>
 
 <script>
@@ -176,14 +187,12 @@
         // document.querySelector('.section.collapsible').classList.toggle('collapsed')
       },
       onStartDateChange (e) {
-        console.log(e)
         var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
           delete this.startDateTimeout
         }
         this.startDateTimeout = setTimeout(() => {
-          console.log(date)
           this.$store.commit('setDates', {
             startDate: date
           })
@@ -196,7 +205,6 @@
           delete this.endDateTimeout
         }
         this.endDateTimeout = setTimeout(() => {
-          console.log(date)
           this.$store.commit('setDates', {
             endDate: date
           })
@@ -232,12 +240,20 @@
       onCompareChange (e) {
         this.$store.commit('setCompare', {
           compare: e.target.value
-        })
+        }) 
+
       },
       onCompare (e) {
         this.$store.commit('addComparedRepo', {
           githubURL: e.target.value
         })
+      },
+      onValuesClear () {
+        this.values = []
+      },
+      onClear () {
+        this.values = []
+        this.$store.commit('resetComparedRepos')
       },
       onDetailChange (e) {
         this.$store.commit('setVizOptions', {

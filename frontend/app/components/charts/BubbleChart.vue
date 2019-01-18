@@ -148,7 +148,7 @@ export default {
     }
   },
   components: {
-    'vega-interactive': window.VueVega.mapVegaLiteSpec(spec)
+     'vega-interactive': window.VueVega.mapVegaLiteSpec(spec)
   },
   computed: {
     repo() {
@@ -160,7 +160,6 @@ export default {
     chart() {
       // so that this will get re-rendered consistently
       let removeBelowAverageContributors = !this.showBelowAverage
-      console.log(removeBelowAverageContributors)
       $(this.$el).find('.showme').addClass('invis')
       $(this.$el).find('.bubblechart').addClass('loader')
       let shared = {};

@@ -18,6 +18,9 @@ from gunicorn.arbiter import Arbiter
 
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
+    """
+    Loads configurations, initializes Gunicorn, loads server
+    """
 
     def __init__(self, options=None):
         self.options = options or {}
@@ -25,16 +28,25 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
         # self.cfg.pre_request.set(pre_request)
 
     def load_config(self):
+        """
+        Sets the values for configurations
+        """
         config = dict([(key, value) for key, value in iteritems(self.options)
                        if key in self.cfg.settings and value is not None])
         for key, value in iteritems(config):
             self.cfg.set(key.lower(), value)
 
     def load(self):
+        """
+        Returns the loaded server
+        """
         server = Server()
         return server.app
 
 def run():
+    """
+    Runs app, halts app if exceptions/conflicts are found
+    """
     mp.set_start_method('forkserver')
     app = augur.Application()
     app.arg_parser.add_argument("-u", "--updater",
@@ -42,7 +54,7 @@ def run():
         help="Do not start the Gunicorn server, only run update threads.")
     args, unknown_args = app.arg_parser.parse_known_args()
     logger.info('Loading...')
-    app.init_all()
+    # app.init_all()
     app.finalize_config()
     app.schedule_updates()
     master = None

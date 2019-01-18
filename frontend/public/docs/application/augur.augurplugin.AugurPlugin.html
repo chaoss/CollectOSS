@@ -36,11 +36,11 @@
 <h1>augur.augurplugin.AugurPlugin<a class="headerlink" href="#augur-augurplugin-augurplugin" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="augur.augurplugin.AugurPlugin">
-<em class="property">class </em><code class="descclassname">augur.augurplugin.</code><code class="descname">AugurPlugin</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">augur.augurplugin.</code><code class="descname">AugurPlugin</code><span class="sig-paren">(</span><em>augur_app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines a base class for Augur plugins to implement</p>
 <dl class="method">
 <dt id="augur.augurplugin.AugurPlugin.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>augur_app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -51,14 +51,14 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#augur.augurplugin.AugurPlugin.__init__" title="augur.augurplugin.AugurPlugin.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(config)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#augur.augurplugin.AugurPlugin.__init__" title="augur.augurplugin.AugurPlugin.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(augur_app)</td>
 <td>Initialize self.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_routes</span></code>(flask_app)</td>
-<td></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_routes</span></code>(server)</td>
+<td>Creates a route for the given plugin and assigns it to the server</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register</span></code>(application)</td>
-<td></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(shared)</td>
+<td>Should implement a function that gathers data</td>
 </tr>
 </tbody>
 </table>
@@ -75,18 +75,14 @@
 <h3><a href="../index.html">Table Of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../python.html#data-source-modules">Data Source Modules</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../python.html#application-modules">Application Modules</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="augur.application.Application.html">augur.application.Application</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">augur.augurplugin.AugurPlugin</a></li>
-<li class="toctree-l3"><a class="reference internal" href="augur.server.Server.html">augur.server.Server</a></li>
-<li class="toctree-l3"><a class="reference internal" href="augur.runtime.html">augur.runtime</a></li>
-<li class="toctree-l3"><a class="reference internal" href="augur.util.html">augur.util</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

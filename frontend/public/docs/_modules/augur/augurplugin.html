@@ -35,19 +35,27 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Provides a class that can be used to extend Augur</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
 <div class="viewcode-block" id="AugurPlugin"><a class="viewcode-back" href="../../application/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin">[docs]</a><span class="k">class</span> <span class="nc">AugurPlugin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Defines a base class for Augur plugins to implement&quot;&quot;&quot;</span>
-<div class="viewcode-block" id="AugurPlugin.__init__"><a class="viewcode-back" href="../../application/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span></div>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines a base class for Augur plugins to implement</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AugurPlugin.__init__"><a class="viewcode-back" href="../../application/augur.augurplugin.AugurPlugin.html#augur.augurplugin.AugurPlugin.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">augur_app</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_augur</span> <span class="o">=</span> <span class="n">augur_app</span></div>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">application</span><span class="p">):</span>
-        <span class="n">application</span><span class="o">.</span><span class="n">register_plugin</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">create_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a route for the given plugin and assigns it to the server</span>
 
-    <span class="k">def</span> <span class="nf">create_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flask_app</span><span class="p">):</span>
-        <span class="n">routes</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="s1">&#39;routes&#39;</span><span class="p">)</span>
-        <span class="n">routes</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">flask_app</span><span class="p">)</span></div>
+<span class="sd">        :param server: desired server to create plugin route</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">shared</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Should implement a function that gathers data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
 </pre></div>
 
           </div>
@@ -58,7 +66,14 @@
 <h3><a href="../../index.html">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../use-cases-toc.html">Use Cases</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

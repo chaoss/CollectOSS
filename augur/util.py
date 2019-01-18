@@ -2,10 +2,8 @@
 """
 Provides shared functions that do not fit in a class of their own
 """
-import pandas as pd
 import os
 import re
-import json
 import logging
 import coloredlogs
 import beaker
@@ -18,15 +16,30 @@ logger = logging.getLogger('augur')
 # (don't remove the above line, it's for a script)
 
 def getFileID(path):
+    """
+    Returns file ID of given object
+
+    :param path: path of given object
+    """
     return os.path.splitext(os.path.basename(path))[0]
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
+    """
+    Returns data path of given object
+
+    :param path: given path of object
+    """
     return os.path.join(__ROOT, 'data', path)
 
 # Default cache is in memory
 __memory_cache = None
 def get_cache(namespace, cache_manager=None):
+    """
+    Returns cache of object called 'namespace'
+
+    :param namespace: name associated with the targeted cache
+    """
     global __memory_cache
     if cache_manager is None:
         if __memory_cache is None:
@@ -41,10 +54,10 @@ def get_cache(namespace, cache_manager=None):
 metric_metadata = []
 def annotate(metadata=None, **kwargs):
     """
-    Decorate a function as being a metric
+    Decorates a function as being a metric
     """
     if metadata is None:
-        metadata ={}
+        metadata = {}
     def decorate(func):
         if not hasattr(func, 'metadata'):
             func.metadata = {}

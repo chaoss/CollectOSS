@@ -1,7 +1,7 @@
-Production Installation Instructions
+Deployment Guide
 ====================================
 
-These instructions include commands for Ubuntu
+These instructions include commands for Ubuntu.
 
 Step 1 - Install dependencies
 -----------------------------
@@ -63,7 +63,7 @@ download the repo:
 
 .. code:: bash
 
-    git clone https://github.com/OSSHealth/augur
+    git clone https://github.com/chaoss/augur
     cd augur
 
 Then, install Augur using ``make install``. If you want to help develop

@@ -6,13 +6,20 @@ function augur_log(str) {
   console.log("\033[0;33maugur-frontend\033[0;0m: " + str);
 }
 
+
+
+
 app.use('/static', express.static(__dirname + '/public'));
-app.get('/', function(req, res) { res.sendFile(__dirname + '/public/index.html') })
-app.use('/api*', proxy('localhost:5000', {
+
+app.use('/api', proxy('localhost:5000', {
   proxyReqPathResolver: function(req) {
     return req.originalUrl
   }
 }));
+
+app.use("*", function(req, resp) {
+  resp.sendFile(__dirname + "/public/index.html");
+});
 
 
 module.exports = (config, callback) => {

@@ -5,43 +5,27 @@ Handles global context, I/O, and configuration
 
 import os
 import time
+import argparse
 import multiprocessing as mp
 import logging
-import configparser as configparser
 import json
-import importlib
 import pkgutil
-import coloredlogs
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
-from lockfile import LockFile
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from augur import logger
-import argparse
+import augur.plugins
+import augur.datasources
 
-def updater_process(name, delay):
-    logger.info('Spawned {} updater process with PID {}'.format(name, os.getpid()))
-    app = Application()
-    datasource = getattr(app, name)()
-    try:
-        while True:
-            logger.info('Updating {}...'.format(name))
-            datasource.update()
-            time.sleep(delay)
-    except KeyboardInterrupt:
-        os._exit(0)
-    except:
-        raise
-
-def load_plugins():
-    if not hasattr(load_plugins, 'already_loaded'):
-        import augur.plugins
-    load_plugins.already_loaded = True
 
 class Application(object):
-    """Initalizes all classes form Augur using a config file or environment variables"""
+    """Initalizes all classes from Augur using a config file or environment variables"""
 
-    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application'):
-
+    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application', db_str='sqlite:///:memory:'):
+        """
+        Reads config, creates DB session, and initializes cache
+        """
         # Command line arguments
         # TODO: make this useful
         self.arg_parser = argparse.ArgumentParser(description=description)
@@ -107,27 +91,67 @@ class Application(object):
         cache_parsed = parse_cache_config_options(cache_config)
         self.cache = CacheManager(**cache_parsed)
 
-        # Initalize all objects to None
-        self.__ghtorrent = None
-        self.__ghtorrentplus = None
-        self.__githubapi = None
-        self.__git = None
-        self.__facade = None
-        self.__librariesio = None
-        self.__downloads = None
-        self.__localCSV = None
-        self.__metrics_status = None
+        # Create DB Session
+        self.db = None
+        self.session = None
+        if db_str:
+            self.db = create_engine(db_str)
+            self.__Session = sessionmaker(bind=self.db)
+            self.session = self.__Session()
 
-        # Load plugins
-        import augur.plugins
+        # Initalize all objects to None
+        self.__metrics_status = None
+        self._loaded_plugins = {}
+
+        for plugin_name in Application.default_plugins:
+            self[plugin_name]
+
+    def __getitem__(self, plugin_name):
+        """
+        Returns plugin matching the name of the parameter 'plugin_name'
+
+        :param plugin_name: name of specified plugin
+        """
+        if plugin_name not in self._loaded_plugins:
+            if plugin_name not in Application.plugins:
+                raise ValueError('Plugin %s not found.' % plugin_name)
+            self._loaded_plugins[plugin_name] = Application.plugins[plugin_name](self)
+            logger.debug('{plugin_name} plugin loaded')
+        return self._loaded_plugins[plugin_name]
+
+    @classmethod
+    def import_plugins(cls):
+        """
+        Imports all plugins and datasources 
+        """
+        if not hasattr(cls, 'plugins'):
+            setattr(cls, 'plugins', {})
+        for module in [augur.plugins, augur.datasources]:
+            for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
+                if ispkg:
+                    try:
+                        importer.find_module(modname).load_module(modname)
+                    except Exception as e:
+                        logger.warn('Error when loading plugin {module.__name__}.{modname}:')
+                        logger.exception(e)
 
     @classmethod
     def register_plugin(cls, plugin):
-        if not hasattr(plugin, 'name'):
+        """
+        Registers specified plugin
+
+        :param plugin: specified plugin to register
+        """
+        if 'name' not in plugin.augur_plugin_meta:
             raise NameError("{} didn't have a name")
-        cls.plugins[plugin.name] = plugin
+        cls.plugins[plugin.augur_plugin_meta['name']] = plugin
+        if plugin.augur_plugin_meta.get('datasource'):
+            Application.default_plugins.append(plugin.augur_plugin_meta['name'])
 
     def replace_config_variables(self, string, reverse=False):
+        """
+        Replaces the configuration of a variable sent
+        """
         variable_map = {
             'AUGUR': self.__config_location,
             'RUNTIME': self.__runtime_location
@@ -140,32 +164,55 @@ class Application(object):
         return string
 
     def path(self, path):
+        """
+        Returns the absolute path for the given relative path
+        """
         path = self.replace_config_variables(path)
         path = os.path.abspath(os.path.expanduser(path))
         return path
 
+    @staticmethod
+    def updater_process(name, delay, shared):
+        """
+        Controls a given plugin's update process
+
+        :param name: name of object to be updated 
+        :param delay: time needed to update
+        :param shared: shared object that is to also be updated
+        """
+        logger.info('Spawned {} updater process with PID {}'.format(name, os.getpid()))
+        app = Application()
+        datasource = getattr(app, name)()
+        try:
+            while True:
+                logger.info('Updating {}...'.format(name))
+                datasource.update(shared)
+                time.sleep(delay)
+        except KeyboardInterrupt:
+            os._exit(0)
+        except:
+            raise
+
     def __updater(self, updates=None):
+        """
+        Starts update processes
+        """
         if updates is None:
             updates = self.__updatable
         for update in updates:
             if not 'started' in update:
-                up = mp.Process(target=updater_process, args=(update['name'], update['delay']), daemon=True)
+                up = mp.Process(target=Application.updater_process, args=(update['name'], update['delay']), daemon=True)
                 up.start()
                 self.__processes.append(up)
                 update['started'] = True
 
-    def init_all(self):
-        self.ghtorrent()
-        self.ghtorrentplus()
-        self.githubapi()
-        self.git()
-        self.facade()
-        self.librariesio()
-        self.downloads()
-        self.localcsv()        
-        self.metrics_status()
-
     def read_config(self, section, name, environment_variable=None, default=None):
+        """
+        Read a variable in specified section of the config file, unless provided an environment variable
+
+        :param section: location of given variable
+        :param name: name of variable
+        """
         value = None
         if environment_variable is not None:
             value = os.getenv(environment_variable)
@@ -183,23 +230,28 @@ class Application(object):
                 and value is not None
                 and self.__export_env
                 and not hasattr(self.__already_exported, environment_variable)):
-            self.__export_file.write('export ' + environment_variable + '="' + value + '"\n')
+            self.__export_file.write('export ' + environment_variable + '="' + str(value) + '"\n')
             self.__already_exported[environment_variable] = True
-        if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1': 
+        if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1':
             logger.debug('{}:{} = {}'.format(section, name, value))
         return value
 
-    def read_config_path(self, section, name, environment_variable=None, default=None):
-        path = self.read_config(section, name, environment_variable, default)
-        path = self.path(path)
-        return path
-
     def set_config(self, section, name, value):
+        """
+        Sets names and values of specified config section
+
+        :param section: area of object
+        :param name: name of specified object
+        :param value: new value to be set to object
+        """
         if not section in self.__config:
             self.__config[section] = {}
         self.__config[section][name] = value
 
     def finalize_config(self):
+        """
+        Parse args and generates a valid config if the given one is bad
+        """
         # Parse args with help
         self.arg_parser.parse_known_args()
         # Close files and save config
@@ -211,22 +263,31 @@ class Application(object):
             config_text = config_text.replace(self.__config_location, '$(AUGUR)')
             self.__config_file.write(config_text)
         self.__config_file.close()
-        if (self.__export_env):
-            self.__export_file.close()
 
     def path_relative_to_config(self, path):
+        """
+        Returns path relative to the config file
+
+        :param path: specified path of variable
+        """
         if not os.path.isabs(path):
             return os.path.join(self.__config_location, path)
         else:
             return path
 
     def update_all(self):
+        """
+        Updates all plugins
+        """
         print(self.__updatable)
         for updatable in self.__updatable:
             logger.info('Updating {}...'.format(updatable['name']))
             updatable['update']()
 
     def schedule_updates(self):
+        """
+        Schedules updates
+        """
         # don't use this, 
         logger.debug('Scheduling updates...')
         self.__updater()
@@ -239,111 +300,12 @@ class Application(object):
             process.join()
 
     def shutdown_updates(self):
+        """
+        Ends all running update processes
+        """
         for process in self.__processes:
             process.terminate()
 
-    def ghtorrent(self):
-        from augur.ghtorrent import GHTorrent
-        if self.__ghtorrent is None:
-            logger.debug('Initializing GHTorrent')
-            self.__ghtorrent = GHTorrent(
-                user=self.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-                password=self.read_config('Database', 'pass', 'AUGUR_DB_PASS', 'password'),
-                host=self.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-                port=self.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-                dbname=self.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
-            )
-        return self.__ghtorrent
-
-    def facade(self):
-        from augur.facade import Facade
-        if self.__facade is None:
-            logger.debug('Initializing Facade')
-            self.__facade = Facade(
-                user=self.read_config('Facade', 'user', 'AUGUR_FACADE_DB_USER', 'root'),
-                password=self.read_config('Facade', 'pass', 'AUGUR_FACADE_DB_PASS', ''),
-                host=self.read_config('Facade', 'host', 'AUGUR_FACADE_DB_HOST', '127.0.0.1'),
-                port=self.read_config('Facade', 'port', 'AUGUR_FACADE_DB_PORT', '3306'),
-                dbname=self.read_config('Facade', 'name', 'AUGUR_FACADE_DB_NAME', 'facade'),
-                projects=self.read_config('Facade', 'projects', None, [])
-            )
-        return self.__facade
-
-    def ghtorrentplus(self):
-        from augur.ghtorrentplus import GHTorrentPlus
-        if self.__ghtorrentplus is None:
-            logger.debug('Initializing GHTorrentPlus')
-            self.__ghtorrentplus = GHTorrentPlus(
-                user=self.read_config('GHTorrentPlus', 'user', 'AUGUR_GHTORRENT_PLUS_USER', 'root'),
-                password=self.read_config('GHTorrentPlus', 'pass', 'AUGUR_GHTORRENT_PLUS_PASS', 'password'),
-                host=self.read_config('GHTorrentPlus', 'host', 'AUGUR_GHTORRENT_PLUS_HOST', '127.0.0.1'),
-                port=self.read_config('GHTorrentPlus', 'port', 'AUGUR_GHTORRENT_PLUS_PORT', '3306'),
-                dbname=self.read_config('GHTorrentPlus', 'name', 'AUGUR_GHTORRENT_PLUS_NAME', 'ghtorrentplus')
-            , ghtorrent=self.ghtorrent())
-        return self.__ghtorrentplus
-
-    def git(self, update=False):
-        from augur.git import Git
-        storage = self.path_relative_to_config(
-            self.read_config_path('Git', 'storage', 'AUGUR_GIT_STORAGE', '$(RUNTIME)/git_repos/')
-        )
-        repolist = self.read_config('Git', 'repositories', None, [])
-        if self.__git is None:
-            logger.debug('Initializing Git')
-            self.__git = Git(
-                list_of_repositories=repolist,
-                storage_folder=storage,
-                csv=self.localcsv(),
-                cache=self.cache
-            )
-            self.__updatable.append({
-                'name': 'git',
-                'delay': int(self.read_config('Git', 'refresh', 'AUGUR_GIT_REFRESH', '3600')),
-                'update': self.__git.update
-            })
-        if update:
-            self.__git.update()
-        return self.__git
-
-
-    def githubapi(self):
-        from augur.githubapi import GitHubAPI
-        if self.__githubapi is None:
-            logger.debug('Initializing GitHub API')
-            api_key=self.read_config('GitHub', 'apikey', 'AUGUR_GITHUB_API_KEY', 'None')
-            self.__githubapi = GitHubAPI(api_key=api_key)
-        return self.__githubapi
-
-    def librariesio(self):
-        from augur.librariesio import LibrariesIO
-        if self.__librariesio is None:
-            logger.debug('Initializing LibrariesIO')
-            self.__librariesio = LibrariesIO(
-                api_key=self.read_config('LibrariesIO', 'apikey', 'AUGUR_LIBRARIESIO_API_KEY', 'None'), 
-                githubapi=self.githubapi()
-            )
-        return self.__librariesio
-
-    def downloads(self):
-        from augur.downloads import Downloads
-        if self.__downloads is None:
-            logger.debug('Initializing Downloads')
-            self.__downloads = Downloads(self.githubapi())
-        return self.__downloads
-
-    def localcsv(self):
-        from augur.localcsv import LocalCSV
-        if self.__localCSV is None:
-            logger.debug('Initializing LocalCSV')
-            self.__localCSV = LocalCSV()
-        return self.__localCSV
-
-    def metrics_status(self):
-        from augur.metrics_status import MetricsStatus
-        if self.__metrics_status is None:
-            logger.debug('Initializing MetricsStatus')
-            self.__metrics_status = MetricsStatus(self.githubapi())
-        return self.__metrics_status
-
-
 Application.plugins = {}
+Application.default_plugins = []
+Application.import_plugins()

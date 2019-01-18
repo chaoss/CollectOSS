@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT
 Install augur package with pip.
 '''
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
@@ -23,10 +23,10 @@ setup(
     include_package_data=True,
     description='Library/Server for data related to the health and sustainability of OSS',
     long_description=long_description,
-    url='https://github.com/OSSHealth/augur',
+    url='https://github.com/chaoss/augur',
     author='Derek Howard',
     author_email='derek@howderek.com',
-    packages=['augur', 'augur.plugins', 'augur.routes'],
+    packages=find_packages(),
     license='MIT',
     classifiers=[
         'Development Status :: 1 - Planning',
@@ -38,8 +38,9 @@ setup(
     keywords='ghtorrent github api data science',
     install_requires=[
         'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
-        'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 'GitPython',
-        'gunicorn', 'traitlets', 'coloredlogs', 'tldextract', 'beaker', 'lockfile'],
+        'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 
+        'GitPython', 'gunicorn', 'traitlets', 'coloredlogs', 'tldextract', 'beaker', 'lockfile',
+        'werkzeug', 'flask-login', 'wtforms', 'Flask-WTF'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
