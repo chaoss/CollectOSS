@@ -86,6 +86,22 @@ class GitHubAPI(object):
 
         return df
 
+    @annotate(tag='contributors')
+    def contributors(self, owner, repo):
+        """
+        List of contributors and their contributions.
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame consisting of contributors and their contributions
+        """
+        url = 'https://api.github.com/repos/{}/{}/contributors'.format(owner, repo)
+        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
+
+        df = pd.DataFrame(json, columns=['login', 'contributions'])
+
+        return df
+
     @annotate(tag='lines-of-code-changed')
     def lines_of_code_changed(self, owner, repo=None):
         """
