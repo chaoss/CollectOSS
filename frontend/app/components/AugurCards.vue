@@ -1,7 +1,9 @@
 <template>
    
   <div>
-    <augur-header></augur-header>
+    <div class="fullwidth">
+        <augur-header></augur-header>
+    </div>
     <!-- content to show if app has no state yet -->
     <div :class="{ hidden: hasState }">
       <!-- <login-form></login-form> -->
@@ -31,7 +33,7 @@
 
       <div ref="cards">
         <main-controls></main-controls>
-        <div v-if="(baseRepo && (currentTab == 'gmd'))">
+        <div v-if="(baseRepo && (currentTab == 'gmd'))" :key="update">
           <growth-maturity-decline-card></growth-maturity-decline-card>
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
@@ -91,10 +93,9 @@ module.exports = {
     DownloadedReposCard,
     LoginForm
   },
-  created() {
-    // if(!this.groupid)
-    //   this.mapGroup[1] = this.$store.state.comparedRepos
+  created(to, from, next) {
     if(this.repo || this.groupid){
+      this.$store.commit("resetTab")
       this.$store.commit('setTab', {
         tab: this.tab
       })
@@ -102,18 +103,22 @@ module.exports = {
         this.$store.commit('setRepo', {
           gitURL: this.repo
         })
-      }
-      else if (!this.groupid){
-        this.$store.commit('setRepo', {
-          githubURL: this.owner + '/' + this.repo
-        })
+      } else if (!this.groupid){
+        if (this.repo.includes('github')) {
+          this.$store.commit('setRepo', {
+            gitURL: this.repo
+          })
+        } else {
+          this.$store.commit('setRepo', {
+            githubURL: this.owner + '/' + this.repo
+          })
+        }
       }
       if(this.comparedrepo) { 
         this.$store.commit('addComparedRepo', {
           githubURL: this.comparedowner + '/' + this.comparedrepo
         })
       }
-
       if(this.groupid){
         let repos = this.groupid.split('+')
         if (repos[0].includes('github')) {
@@ -122,7 +127,7 @@ module.exports = {
           })
         } else {
           this.$store.commit('setRepo', {
-            gitURL: repos[0]
+            githubURL: repos[0]
           })
         }
         repos.shift()
@@ -136,22 +141,25 @@ module.exports = {
     }
   },
   watch: {
-    comparedRepos: function(){
-      localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
+    // comparedRepos: function(){
+    //   localStorage.setItem('group', JSON.stringify(this.$store.state.comparedRepos));
        
-      if (this.gitRepo != null){
-        localStorage.setItem('domain', this.domain)
-        localStorage.setItem('git', this.$store.state.gitRepo)
-      }
-      console.log(localStorage.getItem('git'), "this is it") 
-      localStorage.setItem('base', this.$store.state.baseRepo)
+    //   if (this.gitRepo != null){
+    //     localStorage.setItem('domain', this.domain)
+    //     localStorage.setItem('git', this.$store.state.gitRepo)
+    //   }
+    //   console.log(localStorage.getItem('git'), "this is it") 
+    //   localStorage.setItem('base', this.$store.state.baseRepo)
       
-      if(this.$store.state.comparedRepos.length > 1){
-        localStorage.setItem("groupid", this.groupid)
-        localStorage.setItem('repo', this.repo)
-        localStorage.setItem('owner', this.owner)
-      }
-      console.log("GROUP HERE", localStorage.getItem('base'), localStorage.getItem('git'), JSON.parse(localStorage.getItem('group')), JSON.parse(localStorage.getItem('base')))
+    //   if(this.$store.state.comparedRepos.length > 1){
+    //     localStorage.setItem("groupid", this.groupid)
+    //     localStorage.setItem('repo', this.repo)
+    //     localStorage.setItem('owner', this.owner)
+    //   }
+    // },
+    '$route': function (to, from) {
+      if (to.name != from.name || to.name == 'group')
+        window.location.reload()
     }
   },
   data() {
@@ -159,7 +167,8 @@ module.exports = {
       downloadedRepos: [],
       isCollapsed: false,
       mapGroup: {1: this.$store.state.comparedRepos},
-      extra: false
+      extra: false,
+      update: 0
     }
   },
   computed: {

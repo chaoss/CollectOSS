@@ -2686,7 +2686,7 @@ section.status {
   position: relative;
   z-index: 2;
   width: 100%;
-  margin: -10px 0px 30px 0px;
+  margin: 10px auto;
   padding: 0px 30px 0px 25px;
 }
 .section {
@@ -3503,9 +3503,22 @@ input:focus {
 }
 .invalid-search {
   color: #f00;
-  font-size: 16px;
-  text-align: center;
-  vertical-align: bottom;
+  font-size: 14px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  padding-bottom: 14px;
+}
+.fullwidth {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
 }
 @-moz-keyframes spin {
   0% {
