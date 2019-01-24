@@ -52,7 +52,7 @@ install:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install --upgrade .'
 
 install-dev:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
+	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-dev-admin:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install; cd ../ '#&& make install-dosocs2'
