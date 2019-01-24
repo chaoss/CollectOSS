@@ -38,22 +38,18 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">configparser</span> <span class="k">as</span> <span class="nn">configparser</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">import</span> <span class="nn">pkgutil</span>
-<span class="kn">import</span> <span class="nn">coloredlogs</span>
 <span class="kn">from</span> <span class="nn">beaker.cache</span> <span class="k">import</span> <span class="n">CacheManager</span>
 <span class="kn">from</span> <span class="nn">beaker.util</span> <span class="k">import</span> <span class="n">parse_cache_config_options</span>
-<span class="kn">from</span> <span class="nn">lockfile</span> <span class="k">import</span> <span class="n">LockFile</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">create_engine</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">sessionmaker</span>
 <span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">import</span> <span class="nn">augur.plugins</span>
 <span class="kn">import</span> <span class="nn">augur.datasources</span>
-<span class="kn">import</span> <span class="nn">argparse</span>
 
 
 <div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -153,7 +149,7 @@
             <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Plugin </span><span class="si">%s</span><span class="s1"> not found.&#39;</span> <span class="o">%</span> <span class="n">plugin_name</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{plugin_name}</span><span class="s1"> plugin loaded&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{plugin_name}</span><span class="s1"> plugin loaded&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span>
 
     <span class="nd">@classmethod</span>
@@ -169,7 +165,7 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">importer</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">modname</span><span class="p">)</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">modname</span><span class="p">)</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Error when loading plugin </span><span class="si">{module.__name__}</span><span class="s1">.</span><span class="si">{modname}</span><span class="s1">:&#39;</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Error when loading plugin </span><span class="si">{module.__name__}</span><span class="s1">.</span><span class="si">{modname}</span><span class="s1">:&#39;</span><span class="p">)</span>
                         <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
