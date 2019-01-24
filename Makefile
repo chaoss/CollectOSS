@@ -54,9 +54,6 @@ install:
 install-dev:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
-install-dev-admin:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install; cd ../ '
-
 install-msr:
 	@ ./util/install-msr.sh
 
