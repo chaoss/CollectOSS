@@ -55,10 +55,7 @@ install-dev:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-dev-admin:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install; cd ../ '#&& make install-dosocs2'
-
-#install-dosocs2:
-	#bash -c 'sudo git clone https://github.com/Nebrethar/DoSOCSv2.git; sudo pip3 install ./DoSOCSv2; sudo ./DoSOCSv2/scripts/install-nomos.sh'
+	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; cd frontend/ && npm install; cd ../ '
 
 install-msr:
 	@ ./util/install-msr.sh
