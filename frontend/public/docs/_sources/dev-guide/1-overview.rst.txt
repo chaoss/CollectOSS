@@ -31,10 +31,10 @@ Augur Development Overview
 tl;dr
 ~~~~~
 
-1. `Installation <2-3-backend.md>`__
-2. `Back End Development Guide <3-3-backend.md>`__
-3. .. rubric:: `Front End Development Guide <4-frontend.md>`__
-      :name: front-end-development-guide
+1. `Installation <2-install.rst>`__
+2. `Backend Development Guide <3-backend.rst>`__
+3. `Frontend Development Guide <4-frontend.rst>`__
+4. `Testing Guide <5-testing.rst>`__
 
 Augur's Design Value System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +66,7 @@ Time is, in effect, a project focused type of comparison. If you can see
 the changes in different metrics on your project over time, its easier
 to maintain awareness of how metrics compare with results.
 
---------------
+--------------------
 
 Augur's Architecture
 --------------------

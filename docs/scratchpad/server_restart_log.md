@@ -60,6 +60,7 @@ Documents when each server was restarted, and from what branch it pulled.
 ------------
 -12/20/18 (`dev`)
 -1/22/19 (`master`)
+-1/23/19 (`hotfix`)
 
 ## `ceph`
 ------------
