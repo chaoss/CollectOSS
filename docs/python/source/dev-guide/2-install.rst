@@ -10,8 +10,7 @@ Local Installation (For Development)
 -  Anaconda
 -  NodeJS Version 8.0 or newer, which includes ``npm``
 
-`*Also remember the database dependency in the README.md
-file* <http://ghtorrent.org/msr14.html>`__
+Also remember the database dependency in the `README <http://ghtorrent.org/msr14.html>`__.
 
 1. `Dependency Installation for Ubuntu <#Ubuntu>`__
 2. `Dependency Installation for Fedora <#Fedora>`__

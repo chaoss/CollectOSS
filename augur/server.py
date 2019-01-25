@@ -5,7 +5,7 @@ Creates a WSGI server that serves the Augur REST API
 
 import json
 import base64
-from flask import Flask, request, Response, redirect, url_for
+from flask import Flask, request, Response, redirect, url_for, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import augur
@@ -23,7 +23,7 @@ class Server(object):
         Initializes the server, creating both the Flask application and Augur application
         """
         # Create Flask application
-        self.app = Flask(__name__)
+        self.app = Flask(__name__, static_folder='../frontend/public')
         self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
@@ -49,12 +49,17 @@ class Server(object):
         ###          UTILITY              ###
         #####################################
 
-        @app.route('/')
-        def redirect_to_status():
+        @app.route('/', defaults={'path': ''})
+        @app.route('/<path:path>')
+        def index(path):
             """
             Redirects to health check route
             """
-            return redirect(url_for('status'))
+            return app.send_static_file('index.html')
+
+        @app.route('/static/<path:path>')
+        def send_static(path):
+            return send_from_directory('../frontend/public', path)
 
         @app.route('/{}/'.format(self.api_version))
         def status():

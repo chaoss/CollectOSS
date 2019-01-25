@@ -69,8 +69,28 @@
     <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
     <span class="c1">#####################################</span>
 
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;closed-issues&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">closed_issues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the count of the number of issues closed per day</span>
+
+<span class="sd">        :param owner: The name of the project owner.</span>
+<span class="sd">        :param repo: The name of the repo.</span>
+<span class="sd">        :return: DataFrame with newly closed issues/day</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/repos/</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">/issues?state=closed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">))</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">json</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;created_at&#39;</span><span class="p">])</span>
+
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;created_at&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;created_at&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;created_at&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span>
+
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-of-code-changed&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">lines_of_code_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> 
+    <span class="k">def</span> <span class="nf">lines_of_code_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Timeseries of the count of lines added, deleted, and the net change each week</span>
 
@@ -152,7 +172,7 @@
 <span class="sd">                              }</span>
 <span class="sd">                            }</span>
 <span class="sd">                          }</span>
-<span class="sd">                        }            </span>
+<span class="sd">                        }</span>
 <span class="sd">                        &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">cursor</span><span class="p">)</span>
             <span class="p">}</span>
             <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">requests</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">),</span> <span class="n">json</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
@@ -183,7 +203,7 @@
             <span class="n">j</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
                 <span class="k">break</span>
-        <span class="n">best</span> <span class="o">=</span> <span class="n">j</span>    
+        <span class="n">best</span> <span class="o">=</span> <span class="n">j</span>
 
         <span class="n">bus_factor</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;worst&#39;</span><span class="p">:</span> <span class="n">worst</span><span class="p">,</span> <span class="s1">&#39;best&#39;</span> <span class="p">:</span> <span class="n">best</span><span class="p">}]</span>
 

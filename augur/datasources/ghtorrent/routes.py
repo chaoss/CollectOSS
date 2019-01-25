@@ -205,7 +205,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/pulls/maintainer_response_time Maintainer Response to Merge Request Duration
     @apiName maintainer-response-to-merge-request-duration
     @apiGroup Growth-Maturity-Decline
-    @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -228,7 +228,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/pulls/new_contributing_github_organizations New Contributing Github Organizations
     @apiName new-github-contributing-organizations
     @apiGroup Growth-Maturity-Decline
-    @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/new-contributing-organizations.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/new-contributing-organizations.md">CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository

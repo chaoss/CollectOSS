@@ -35,6 +35,9 @@
         <main-controls></main-controls>
         <div v-if="(baseRepo && (currentTab == 'gmd'))" :key="update">
           <growth-maturity-decline-card></growth-maturity-decline-card>
+          <div id="comparisonCards" v-bind:class="{ hidden: !comparedRepos.length }" v-for="repo in comparedRepos">
+            <compared-repo-growth-maturity-decline-card :comparedTo="repo"></compared-repo-growth-maturity-decline-card>
+          </div>
         </div>
         <div v-if="(baseRepo && (currentTab == 'diversityInclusion'))">
           <diversity-inclusion-card></diversity-inclusion-card>
@@ -158,8 +161,8 @@ module.exports = {
     //   }
     // },
     '$route': function (to, from) {
-      if (to.name != from.name || to.name == 'group')
-        window.location.reload()
+      if (to.path != from.path)
+        window.location.replace(to.path)
     }
   },
   data() {
