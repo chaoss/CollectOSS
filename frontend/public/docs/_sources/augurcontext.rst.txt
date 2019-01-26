@@ -31,8 +31,9 @@ behavior.
 Here are some more detailed links:
 ----------------------------------
 
--  Example Website (running on a development grade web server, be
+-  Home Site (running on a development grade web server, be
    gentle): http://augur.sociallycompute.io
+-  Hosted Example: http://dev.augurlabs.io
 -  Source Code Repository: http://github.com/chaoss/augur
 -  List of Metrics:
    https://github.com/chaoss/metrics/blob/master/activity-metrics-list.md
@@ -43,7 +44,7 @@ Here are some more detailed links:
    3. https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-open.md
 
 -  Several "data providers" are available for the project. A good one to
-   start with is GHTORRENT, because it has a number of readily populated
+   start with is GHTorrent, because it has a number of readily populated
    tables in a relational structure. You can learn more about GHTorrent
    here: GHTorrent is explained here:
    https://github.com/gousiosg/github-mirror

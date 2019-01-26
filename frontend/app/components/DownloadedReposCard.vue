@@ -88,7 +88,7 @@ module.exports = {
   },
   mounted() {
     this.getDownloadedRepos()
-  }
+  } 
 };
 
 </script>
