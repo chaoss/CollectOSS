@@ -126,6 +126,36 @@ class GitHubAPI(object):
         # return the dataframe
         return df
 
+    @annotate(tag='open-issues')
+    def open_issues(self, owner, repo):
+        """
+        Timeseries of the number of issues opened per day.
+
+        :param owner: The username of the project owner.
+        :param repo: The name of the repository.
+        :return: DatFrame with number of issues opened per day.
+        """
+
+        url = 'https://api.github.com/repos/{}/{}/issues?state=all'.format(owner, repo)
+        issues = []
+
+        while True:
+            response = requests.get(url, auth=('user', self.GITHUB_API_KEY))
+            issues += response.json()
+
+            if 'next' not in response.links:
+                break
+
+            url = response.links['next']['url']
+
+        df = pd.DataFrame(issues, columns=['created_at'])
+        df['created_at'] = pd.to_datetime(df['created_at']).dt.normalize()
+        df = df.groupby('created_at').size().reset_index(name='count')
+
+        return df
+
+
+
     #####################################
     ###            RISK               ###
     #####################################
