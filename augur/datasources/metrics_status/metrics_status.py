@@ -204,25 +204,29 @@ class MetricsStatus(object):
 
         raw_activity_names = re.findall(r'\|(?:\[|)(.*)\|(?:\]|)(?:\S| )', activity_metrics_raw_text)
 
-        activity_names = [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names if '---' not in name and 'Name' not in name]
+        activity_names = [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names if name not in ('---', 'Name')]
 
         activity_metrics = []
 
+        tags = []
+
+        for group in self.metrics_by_group:
+            for metric in group:
+                tags.append(metric.tag)
+
         for raw_name in activity_names:
             metric = GroupedMetric(raw_name, "activity")
+            # print(metric.tag)
 
-            tags = []
-
-            for group in self.metrics_by_group:
-                for metric in group:
-                    tags.append(metric.tag)
-
-                is_not_grouped_metric = False
-                if metric.tag in tags:
-                    is_not_grouped_metric = True
+            is_not_grouped_metric = False
+            if metric.tag in tags:
+                is_not_grouped_metric = True
 
             if is_not_grouped_metric:
                 activity_metrics.append(metric)
+
+        for metric in activity_metrics:
+            print(metric.tag)
 
         return activity_metrics
 

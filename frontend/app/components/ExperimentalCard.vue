@@ -38,7 +38,7 @@
       <div class="col col-6">
         <dynamic-line-chart source="communityEngagement:issues_open"
                     title="Community Engagement: Open Issues"
-                    cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/open-issues.md"
+                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md"
                     cite-text="Open Issues"
                     disable-rolling-average=1>
         </dynamic-line-chart>
@@ -47,7 +47,7 @@
       <div class="col col-6">
         <dynamic-line-chart source="communityEngagement:issues_closed_total"
                     title="Community Engagement: Closed Issues"
-                    cite-url="https://github.com/OSSHealth/wg-gmd/blob/master/activity-metrics/closed-issues.md"
+                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
                     cite-text="Closed Issues"
                     disable-rolling-average=1>
         </dynamic-line-chart>

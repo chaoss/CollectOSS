@@ -15,6 +15,9 @@ augur.datasources.githubapi.githubapi.GitHubAPI
    
       ~GitHubAPI.__init__
       ~GitHubAPI.bus_factor
+      ~GitHubAPI.closed_issues
+      ~GitHubAPI.code_commits
+      ~GitHubAPI.contributors
       ~GitHubAPI.contributors_gender
       ~GitHubAPI.lines_of_code_changed
       ~GitHubAPI.major_tags

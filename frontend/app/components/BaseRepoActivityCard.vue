@@ -13,7 +13,7 @@
       <div class="col col-6">
         <dynamic-line-chart source="issueComments" 
                     title="Issue Comments / Week " 
-                    cite-url="https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/issue-comments.md"
+                    cite-url="https://github.com/augurlabs/wg-gmd/tree/master/activity-metrics/issue-comments.md"
                     cite-text="Issue Comments"> 
         </dynamic-line-chart>
       </div>
@@ -21,7 +21,7 @@
       <div class="col col-6">
         <dynamic-line-chart source="pullRequestsMadeClosed" 
                     title="Pull Requests Made/ Closed per Week " 
-                    cite-url="https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/pull-requests-made-closed.md"
+                    cite-url="https://github.com/augurlabs/wg-gmd/tree/master/activity-metrics/pull-requests-made-closed.md"
                     cite-text="Pull Requests Made/Closed"> 
         </dynamic-line-chart>
       </div>
@@ -29,7 +29,7 @@
       <div class="col col-6">
         <dynamic-line-chart source="watchers" 
                     title="Watchers / Week " 
-                    cite-url="https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/watchers.md"
+                    cite-url="https://github.com/augurlabs/wg-gmd/tree/master/activity-metrics/watchers.md"
                     cite-text="Watchers"> 
         </dynamic-line-chart>
       </div>
