@@ -216,7 +216,6 @@ class MetricsStatus(object):
 
         for raw_name in activity_names:
             metric = GroupedMetric(raw_name, "activity")
-            # print(metric.tag)
 
             is_not_grouped_metric = False
             if metric.tag in tags:
