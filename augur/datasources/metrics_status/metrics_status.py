@@ -82,7 +82,6 @@ class ImplementedMetric(Metric):
         if 'endpoint' in metadata:
             self.endpoint = metadata['endpoint']
             frontend_status_extractor.determine_frontend_status(self)
-        # print(self.frontend_status)
 
 class MetricsStatus(object):
 
@@ -169,6 +168,12 @@ class MetricsStatus(object):
         self.build_metrics_status()
 
         self.build_metadata()
+
+        for group in self.metrics_by_group:
+            # print(group)
+            print(group[0].group)
+            for metric in group:
+                print(f'\t{metric.tag}')
 
     def build_implemented_metrics(self):
         frontend_status_extractor = FrontendStatusExtractor()
