@@ -9,11 +9,11 @@
     <title>augur.application.Application &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="augur.augurplugin.AugurPlugin" href="augur.augurplugin.AugurPlugin.html" />
@@ -30,17 +30,19 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="augur-application-application">
 <h1>augur.application.Application<a class="headerlink" href="#augur-application-application" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="augur.application.Application">
-<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initalizes all classes from Augur using a config file or environment variables</p>
 <dl class="method">
 <dt id="augur.application.Application.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads config, creates DB session, and initializes cache</p>
 </dd></dl>
 
@@ -116,11 +118,12 @@
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="../index.html">Table Of Contents</a></h3>
+<h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
@@ -170,8 +173,8 @@
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/application/augur.application.Application.rst.txt"
