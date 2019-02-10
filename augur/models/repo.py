@@ -18,7 +18,7 @@ class Repo(Base):
    
     # Keys
     url = Column(String(1024), primary_key=True)
-    vcs = Column(String(64), primary_key=True, default='git')
+    vcs = Column(String(64), default='git')
 
     # Fields
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

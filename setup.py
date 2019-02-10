@@ -3,7 +3,7 @@ SPDX-License-Identifier: MIT
 
 Install augur package with pip.
 '''
-
+import fastentrypoints
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
@@ -37,10 +37,11 @@ setup(
     ],
     keywords='ghtorrent github api data science',
     install_requires=[
-        'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
+        'cython', 'protobuf', 'ipython', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
         'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub', 
         'GitPython', 'gunicorn', 'traitlets', 'coloredlogs', 'tldextract', 'beaker', 'lockfile',
-        'werkzeug', 'flask-login', 'wtforms', 'Flask-WTF'],
+        'werkzeug', 'flask-login', 'wtforms', 'Flask-WTF', 'alembic', 'colored',
+        'prompt_toolkit', 'click', 'psycopg2-binary'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],

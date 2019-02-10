@@ -1747,11 +1747,13 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/LoginForm.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
 
 module.exports = {
   data: function data() {
-    return {};
+    return {
+      'formAction': '/login?next=' + encodeURI('http://' + window.location.host)
+    };
   },
 
   methods: {},
@@ -1761,8 +1763,8 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('div',{staticClass:"container-login background"},[_c('div',{staticClass:"wrap-login"},[_c('form',{staticClass:"login-form validate-form"},[_c('div',{staticStyle:{"text-align":"center","padding-right":"10px"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})]),_vm._v(" "),_c('span',{staticClass:"login-form-title"},[_vm._v("\n          Log in\n        ")]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input",attrs:{"type":"text","name":"username","placeholder":"Username"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","placeholder":"Password"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("🔒")])]),_vm._v(" "),_c('div',{staticClass:"contact-form-checkbox"},[_c('input',{staticClass:"input-checkbox",attrs:{"id":"ckb1","type":"checkbox"}}),_vm._v(" "),_c('label',{staticClass:"label-checkbox",attrs:{"for":"ckb1"}},[_vm._v("\n            Remember me\n          ")])]),_vm._v(" "),_c('div',{staticClass:"container-login-form-btn"},[_c('button',{staticClass:"login-form-btn"},[_vm._v("\n            Login\n          ")])])])])])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('div',{staticClass:"container-login background"},[_c('div',{staticClass:"wrap-login"},[_c('form',{staticClass:"login-form validate-form",attrs:{"action":_vm.formAction,"method":"post"}},[_vm._m(0),_vm._v(" "),_c('span',{staticClass:"login-form-title"},[_vm._v("\n          Log in\n        ")]),_vm._v(" "),_vm._m(1),_vm._v(" "),_vm._m(2),_vm._v(" "),_vm._m(3),_vm._v(" "),_vm._m(4)])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"text-align":"center","padding-right":"10px"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input",attrs:{"type":"text","name":"username","placeholder":"Username"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","name":"password","placeholder":"Password"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("🔒")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"contact-form-checkbox"},[_c('input',{staticClass:"input-checkbox",attrs:{"id":"ckb1","type":"checkbox"}}),_vm._v(" "),_c('label',{staticClass:"label-checkbox",attrs:{"for":"ckb1"}},[_vm._v("\n            Remember me\n          ")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"container-login-form-btn"},[_c('input',{staticClass:"login-form-btn",attrs:{"type":"submit","name":"submit"}}),_vm._v("\n            Login\n          ")])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -6980,43 +6982,7 @@ exports['default'] = SvgSaver;
 module.exports = exports['default'];
 });
 
-require.register("router.js", function(exports, require, module) {
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _AugurCards = require('./components/AugurCards');
-
-var _AugurCards2 = _interopRequireDefault(_AugurCards);
-
-var _GrowthMaturityDeclineCard = require('./components/GrowthMaturityDeclineCard');
-
-var _GrowthMaturityDeclineCard2 = _interopRequireDefault(_GrowthMaturityDeclineCard);
-
-var _ExperimentalCard = require('./components/ExperimentalCard');
-
-var _ExperimentalCard2 = _interopRequireDefault(_ExperimentalCard);
-
-var _vueRouter = require('vue-router');
-
-var _vueRouter2 = _interopRequireDefault(_vueRouter);
-
-var _vue = require('vue');
-
-var _vue2 = _interopRequireDefault(_vue);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-_vue2.default.use(_vueRouter2.default);
-
-exports.default = new _vueRouter2.default({
-    routes: [{ path: '/', component: _vue2.default.component('augur-cards', require('./components/AugurCards')) }]
-});
-});
-
-;require.register("router/router.js", function(exports, require, module) {
+require.register("router/router.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7051,9 +7017,13 @@ var _GrowthMaturityDeclineCard = require('../components/GrowthMaturityDeclineCar
 
 var _GrowthMaturityDeclineCard2 = _interopRequireDefault(_GrowthMaturityDeclineCard);
 
+var _LoginForm = require('../components/LoginForm.vue');
+
+var _LoginForm2 = _interopRequireDefault(_LoginForm);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var routes = [{ path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default },
+var routes = [{ path: '/', component: _AugurCards2.default }, { path: '/metrics_status', component: _MetricsStatusCard2.default }, { path: '/login', component: _LoginForm2.default },
 // {path: '/:tab/:owner/:repo', component: AugurCards, name: 'single'},
 { path: '/single/:tab/:owner?/:repo', component: _AugurCards2.default, name: 'single', props: true, canReuse: false }, { path: '/singlegit/:tab/:repo', component: _AugurCards2.default, name: 'singlegit', props: true, canReuse: false },
 // {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
@@ -7064,7 +7034,6 @@ var downloadedRepos = [],
     repos = [],
     projects = [];
 window.AugurAPI.getDownloadedGitRepos().then(function (data) {
-
   repos = window._.groupBy(data, 'project_name');
   projects = Object.keys(repos);
 });
@@ -7075,7 +7044,6 @@ window.AugurAPI.getDownloadedGitRepos().then(function (data) {
 //     component: () => require(`@/components/${route.component}.vue`)
 //   }
 // })
-
 
 exports.default = new _vueRouter2.default({
   // routes,

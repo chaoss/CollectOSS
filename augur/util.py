@@ -71,3 +71,38 @@ def annotate(metadata=None, **kwargs):
 
         return func
     return decorate
+
+
+#
+# IPython
+#
+
+def init_shell_config():
+    from IPython.terminal.prompts import Prompts, Token
+    from traitlets.config.loader import Config
+    
+    class PYRCSSPrompt(Prompts):
+        def in_prompt_tokens(self, cli=None):
+           return [
+                (Token.Prompt, 'augur ['),
+                (Token.PromptNum, str(self.shell.execution_count)),
+                (Token.Prompt, ']: '),
+            ]
+        def out_prompt_tokens(self):
+           return [
+                (Token.OutPrompt, 'output ['),
+                (Token.OutPromptNum, str(self.shell.execution_count)),
+                (Token.OutPrompt, ']: '),
+            ]
+
+    try:
+        get_ipython
+    except NameError:
+        nested = 0
+        cfg = Config()
+        cfg.TerminalInteractiveShell.prompts_class=PYRCSSPrompt
+    else:
+        print("Running nested copies of the augur shell.")
+        cfg = Config()
+        nested = 1
+    return cfg

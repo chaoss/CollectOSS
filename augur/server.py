@@ -5,25 +5,39 @@ Creates a WSGI server that serves the Augur REST API
 
 import json
 import base64
-from flask import Flask, request, Response, redirect, url_for, send_from_directory
+from flask import Flask, request, Response, redirect, url_for, send_from_directory, render_template
 from flask_cors import CORS
 import pandas as pd
 import augur
 from augur.util import annotate, metric_metadata, logger
-from augur.routes import create_plugin_routes
+from augur.routes import create_routes
+import os
 
 AUGUR_API_VERSION = 'api/unstable'
+
+class VueCompatibleFlask(Flask):
+  jinja_options = Flask.jinja_options.copy()
+  jinja_options.update(dict(
+    block_start_string='(%',
+    block_end_string='%)',
+    variable_start_string='%%',
+    variable_end_string='%%',
+    comment_start_string='(#',
+    comment_end_string='#)',
+  ))
+
 
 class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self):
+    def __init__(self, frontend_folder='../frontend/public'):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
         # Create Flask application
-        self.app = Flask(__name__, static_folder='../frontend/public')
+
+        self.app = VueCompatibleFlask(__name__, static_folder=frontend_folder, template_folder=frontend_folder)
         self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
@@ -38,25 +52,35 @@ class Server(object):
         self.cache = augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
+        app.config['SECRET_KEY'] = augur_app.read_config('Server', 'secret_key', 'AUGUR_SECRET_KEY', os.urandom(32))
+        app.config['WTF_CSRF_ENABLED'] = False
+
         self.show_metadata = False
 
-        create_plugin_routes(self)
+        create_routes(self)
 
         #####################################
         ###          UTILITY              ###
         #####################################
 
-        @app.route('/', defaults={'path': ''})
-        @app.route('/<path:path>')
-        def index(path):
+        @app.route('/')
+        @app.errorhandler(404)
+        @app.errorhandler(405)
+        def index(err=None):
             """
             Redirects to health check route
             """
-            return app.send_static_file('index.html')
+            if AUGUR_API_VERSION in request.url:
+                return Response(response=json.dumps({'error': 'Not Found'}),
+                            status=404,
+                            mimetype="application/json")
+            else:
+                session_data = {}
+                return render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
 
         @app.route('/static/<path:path>')
         def send_static(path):
-            return send_from_directory('../frontend/public', path)
+            return send_from_directory(frontend_folder, path)
 
         @app.route('/{}/'.format(self.api_version))
         def status():
@@ -64,7 +88,8 @@ class Server(object):
             Health check route
             """
             status = {
-                'status': 'OK'
+                'status': 'OK',
+                'plugins': self._augur._loaded_plugins
             }
             return Response(response=json.dumps(status),
                             status=200,
@@ -358,8 +383,9 @@ def run():
     port = server._augur.read_config('Server', 'port', 'AUGUR_PORT', '5000')
     Server().app.run(host=host, port=int(port))
 
+
 wsgi_app = None
-def wsgi(env, start_response):
+def wsgi(environ, start_response):
     """
     Creates WSGI app
     """
@@ -367,7 +393,21 @@ def wsgi(env, start_response):
     if (wsgi_app is None):
         app_instance = Server()
         wsgi_app = app_instance.app
-    return wsgi_app(env, start_response)
+    # Stuff to make proxypass work
+    script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
+    if script_name:
+        environ['SCRIPT_NAME'] = script_name
+        path_info = environ['PATH_INFO']
+        if path_info.startswith(script_name):
+            environ['PATH_INFO'] = path_info[len(script_name):]
+
+    scheme = environ.get('HTTP_X_SCHEME', '')
+    if scheme:
+        environ['wsgi.url_scheme'] = scheme
+    server = environ.get('HTTP_X_FORWARDED_SERVER', '') 
+    if server: 
+        environ['HTTP_HOST'] = server
+    return wsgi_app(environ, start_response)
 
 if __name__ == "__main__":
     run()

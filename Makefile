@@ -2,7 +2,7 @@
 .PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
 .PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
 
-SERVECOMMAND=augur
+SERVECOMMAND=augur run
 CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda activate augur; then conda env create -n=augur -f=environment.yml; else conda env update -n=augur -f=environment.yml; fi;
 CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
 OLDVERSION="null"

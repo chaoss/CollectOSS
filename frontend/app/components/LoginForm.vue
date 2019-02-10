@@ -3,7 +3,7 @@
   <!-- <div class="background"></div> -->
   <div class="container-login background"> <!-- background image -->
     <div class="wrap-login">
-      <form class="login-form validate-form">
+      <form class="login-form validate-form" :action="formAction" method="post">
         <div style="text-align: center; padding-right: 10px">
           <img src="static/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
 
@@ -19,7 +19,7 @@
         </div>
 
         <div class="wrap-input validate-input" data-validate="Enter password">
-          <input class="input" type="password" placeholder="Password">
+          <input class="input" type="password" name="password" placeholder="Password">
           <span class="focus-input" style="padding: 12px 0px 0px 10px">&#128274</span>
         </div>
 
@@ -31,9 +31,9 @@
         </div>
 
         <div class="container-login-form-btn">
-          <button class="login-form-btn">
+          <input type="submit" class="login-form-btn" name="submit">
             Login
-          </button>
+          </input>
         </div>
 
       </form>
@@ -46,7 +46,7 @@
   module.exports = {
     data() {
       return {
-
+        'formAction': '/login?next=' + encodeURI('http://' + window.location.host)
       }
     },
     methods: {

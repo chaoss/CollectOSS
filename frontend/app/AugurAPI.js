@@ -138,8 +138,7 @@ export default class AugurAPI {
         let splitURL = repo.gitURL.split('/')
         repo.owner = splitURL[1]
         repo.name = splitURL[2].split('.')[0]
-      }
-      else {
+      } else {
         let splitURL = repo.gitURL.split('/')
         repo.owner = splitURL[0]
         repo.name = splitURL[1]
