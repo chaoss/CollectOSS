@@ -33,3 +33,16 @@ Application Modules
    server.Server
    runtime
    util
+
+.. CLI Modules
+.. ---------------------------------
+.. .. currentmodule:: augur.cli
+
+.. .. autosummary::
+..    :nosignatures:
+..    :toctree: cli
+
+..    db
+..    run
+..    util
+

@@ -241,10 +241,9 @@ access an instance of the class.</p>
 <div class="section" id="using-the-python-debugger">
 <h3>3.3.5. Using the Python Debugger<a class="headerlink" href="#using-the-python-debugger" title="Permalink to this headline">¶</a></h3>
 <p>If you want to use an iPython shell to test your functions during
-development, in the root directory, first execute <code class="docutils literal notranslate"><span class="pre">ipython</span></code>, which
-will drop you into an iPython shell. Then, execute
-<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">augur;</span> <span class="pre">app</span> <span class="pre">=</span> <span class="pre">augur.Application()</span></code>, which will create an Augur
-application for you.</p>
+development, in the root directory, first execute <code class="docutils literal notranslate"><span class="pre">augur</span> <span class="pre">util</span> <span class="pre">shell</span></code>, which
+will drop you into an iPython shell and automatically give you an Augur
+application called <code class="docutils literal notranslate"><span class="pre">app</span></code>.</p>
 <p>You can then test your function by first creating a new instance of that
 class, and then running your function. For example:
 <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">=</span> <span class="pre">app.ghtorrent();</span> <span class="pre">gh.closed_issues('rails',</span> <span class="pre">'rails')</span></code> will let
@@ -312,7 +311,7 @@ enviroment by running <code class="docutils literal notranslate"><span class="pr
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>

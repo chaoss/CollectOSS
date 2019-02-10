@@ -69,8 +69,6 @@
 <span class="c1"># You must agree to Anaconda&#39;s license terms to proceed</span>
 <span class="o">./</span><span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">b</span>
 <span class="n">rm</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
-
-<span class="c1"># [Install Augur](#Install)</span>
 </pre></div>
 </div>
 </div>
@@ -94,13 +92,11 @@
 <span class="c1"># You must agree to Anaconda&#39;s license terms to proceed</span>
 <span class="o">./</span><span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">b</span>
 <span class="n">rm</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
-
-<span class="c1"># [Install Augur](#Install)</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="mac-osx-dependency-installation-instructions">
-<h4>2.1.2.3. Mac OSX Dependency Installation Instructions<a class="headerlink" href="#mac-osx-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="macos-dependency-installation-instructions">
+<h4>2.1.2.3. macOS Dependency Installation Instructions<a class="headerlink" href="#macos-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install Homebrew</span>
 <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ruby</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</span>
 
@@ -114,15 +110,44 @@
 <span class="n">cd</span> <span class="o">~/</span><span class="n">Downloads</span>
 <span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">repo</span><span class="o">.</span><span class="n">anaconda</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">archive</span><span class="o">/</span><span class="n">Anaconda3</span><span class="o">-</span><span class="mf">5.1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">MacOSX</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">pkg</span>
 <span class="nb">open</span> <span class="n">Anaconda3</span><span class="o">-</span><span class="mf">5.1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">MacOSX</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">pkg</span>
-
-<span class="c1"># [Install Augur](#Install)</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
+<div class="section" id="a-note-about-anaconda">
+<h2>2.2. A Note about Anaconda<a class="headerlink" href="#a-note-about-anaconda" title="Permalink to this headline">¶</a></h2>
+<p>In the past, we’ve had new developers struggle with getting Anaconda to work, especially on Ubuntu.
+Despite these troubles, the development team feels that continuing to support Anaconda is ultimately worthwhile,
+as no longer doing so means mainting detailed builds for each package manager, which we’d rather not do.
+However, we still want people to work on Augur, and so here are a few tips and tricks to making sure Anaconda
+works for you.</p>
+<ol class="arabic simple">
+<li>Make sure Anaconda is installed in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. This varies from shell to shell, so here are a few examples:</li>
+</ol>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span># BASH
+# Add this line to your .bash_profile.
+. /Users/carterlandis/anaconda3/etc/profile.d/conda.sh
+
+# ZSH
+# Add this line to your .zshrc.
+export PATH=&quot;/Users/carterlandis/anaconda3/bin:$PATH&quot;
+
+# FISH
+# Add these lines to your config.fish file.
+set PATH /Users/carterlandis/anaconda3/bin $PATH
+source (conda info --root)/etc/fish/conf.d/conda.fish
+</pre></div>
+</div>
+<p>2. Make sure your shell is configured to use <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span></code>. To do so, type <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span></code>, and one of
+two things will happen. Either 1). The <code class="docutils literal notranslate"><span class="pre">base</span></code> conda environment will activate, meaning you’re good to go, or
+2). It will throw some error of some sort, prompting with you with some steps you can take to resolve the issue.</p>
+<p>All this being said, it IS possible to work on Augur without using Anaconda to manage the Python environment,
+and if you find a workaround that you prefer, by all means, please use that. Just keep in mind that this is what we
+officially support and build our installations and <code class="docutils literal notranslate"><span class="pre">make</span></code> commands around. Now, on to the fun part!</p>
+</div>
 <div class="section" id="augur-installation-instructions">
-<h2>2.2. Augur Installation Instructions<a class="headerlink" href="#augur-installation-instructions" title="Permalink to this headline">¶</a></h2>
+<h2>2.3. Augur Installation Instructions<a class="headerlink" href="#augur-installation-instructions" title="Permalink to this headline">¶</a></h2>
 <p>Clone the repo and install the libraries and tools needed by Augur</p>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">chaoss</span><span class="o">/</span><span class="n">augur</span><span class="o">/</span>
 
@@ -134,7 +159,7 @@
 <span class="n">git</span> <span class="n">checkout</span> <span class="n">dev</span>
 
 <span class="c1"># Install the Python and Node tools and libraries needed</span>
-<span class="n">make</span> <span class="n">install</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="n">admin</span> <span class="c1"># some libraries require a root install.</span>
+<span class="n">sudo</span> <span class="n">make</span> <span class="n">install</span><span class="o">-</span><span class="n">dev</span> <span class="c1"># some libraries require a root install.</span>
 
 <span class="c1"># Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way.</span>
 </pre></div>
@@ -150,12 +175,12 @@ all priviledges on another database for Augur.</strong></p>
 </pre></div>
 </div>
 <p>Augur runs in an Anaconda environment. To get started, activate the environment and then
-run <code class="docutils literal notranslate"><span class="pre">augur</span></code>.</p>
+run <code class="docutils literal notranslate"><span class="pre">augur</span> <span class="pre">run</span></code>.</p>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">augur</span>
-<span class="n">augur</span>
+<span class="n">augur</span> <span class="n">run</span>
 </pre></div>
 </div>
-<p>After you run the <code class="docutils literal notranslate"><span class="pre">augur</span></code> command for the first time, a configuration file called <code class="docutils literal notranslate"><span class="pre">augur.config.json</span></code> will automatically be generated.</p>
+<p>After you run the <code class="docutils literal notranslate"><span class="pre">augur</span> <span class="pre">run</span></code> command for the first time, a configuration file called <code class="docutils literal notranslate"><span class="pre">augur.config.json</span></code> will automatically be generated.</p>
 <p>Reference the sample configuration file (<code class="docutils literal notranslate"><span class="pre">sample.config.json</span></code>) on how to
 set up the server, development, and cache options, as well as the plugin connections.</p>
 <p>For <strong>all</strong> the API’s and visualiazations to work, you will need to include:</p>
@@ -169,7 +194,7 @@ set up the server, development, and cache options, as well as the plugin connect
 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dev</span></code></p>
 </div>
 <div class="section" id="macos-high-sierra-and-possibly-older-os-x-versions-errata">
-<h2>2.3. macOS High Sierra (and possibly older OS X Versions) Errata:<a class="headerlink" href="#macos-high-sierra-and-possibly-older-os-x-versions-errata" title="Permalink to this headline">¶</a></h2>
+<h2>2.4. macOS High Sierra (and possibly older OS X Versions) Errata:<a class="headerlink" href="#macos-high-sierra-and-possibly-older-os-x-versions-errata" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
 <li><p class="first">If you check the logs/frontend.log and find that “brunch” was not
 found:</p>
@@ -244,7 +269,7 @@ that case:</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>

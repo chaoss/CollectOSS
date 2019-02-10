@@ -24,6 +24,7 @@
         "apikey": "your api key goes here"
     },
     "GHTorrent": {
+        "connection_string": "sqlite:///:memory:",
         "host": "hostname.io",
         "name": "name",
         "pass": "password",
@@ -48,5 +49,13 @@
          "pass": "password",
          "port": "0000",
          "user": "username"
+    },
+    "Database": {
+        "connection_string": "sqlite:///:memory:",
+        "host": "127.0.0.1",
+        "name": "msr14",
+        "pass": "password",
+        "port": "3306",
+        "user": "root"
     }
 }

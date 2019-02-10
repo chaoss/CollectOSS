@@ -41,8 +41,6 @@ Ubuntu Dependency Installation Instructions
     ./Anaconda.sh -b
     rm Anaconda.sh
 
-    # [Install Augur](#Install)
-
 Fedora Dependency Installation Instructions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -67,9 +65,7 @@ Fedora Dependency Installation Instructions
     ./Anaconda.sh -b
     rm Anaconda.sh
 
-    # [Install Augur](#Install)
-
-Mac OSX Dependency Installation Instructions
+macOS Dependency Installation Instructions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: bash
@@ -88,7 +84,40 @@ Mac OSX Dependency Installation Instructions
     wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
     open Anaconda3-5.1.0-MacOSX-x86_64.pkg
 
-    # [Install Augur](#Install)
+
+A Note about Anaconda
+---------------------
+In the past, we've had new developers struggle with getting Anaconda to work, especially on Ubuntu.
+Despite these troubles, the development team feels that continuing to support Anaconda is ultimately worthwhile,
+as no longer doing so means mainting detailed builds for each package manager, which we'd rather not do.
+However, we still want people to work on Augur, and so here are a few tips and tricks to making sure Anaconda
+works for you.
+
+1. Make sure Anaconda is installed in your ``PATH``. This varies from shell to shell, so here are a few examples:
+
+.. code:: bash
+
+    # BASH
+    # Add this line to your .bash_profile.
+    . /Users/carterlandis/anaconda3/etc/profile.d/conda.sh
+
+    # ZSH
+    # Add this line to your .zshrc.
+    export PATH="/Users/carterlandis/anaconda3/bin:$PATH"
+
+    # FISH
+    # Add these lines to your config.fish file.
+    set PATH /Users/carterlandis/anaconda3/bin $PATH
+    source (conda info --root)/etc/fish/conf.d/conda.fish
+
+2. Make sure your shell is configured to use ``conda activate``. To do so, type ``conda activate``, and one of
+two things will happen. Either 1). The ``base`` conda environment will activate, meaning you're good to go, or
+2). It will throw some error of some sort, prompting with you with some steps you can take to resolve the issue.
+
+All this being said, it IS possible to work on Augur without using Anaconda to manage the Python environment,
+and if you find a workaround that you prefer, by all means, please use that. Just keep in mind that this is what we
+officially support and build our installations and ``make`` commands around. Now, on to the fun part!
+
 
 Augur Installation Instructions
 -------------------------------
@@ -107,7 +136,7 @@ Clone the repo and install the libraries and tools needed by Augur
     git checkout dev
 
     # Install the Python and Node tools and libraries needed
-    make install-dev-admin # some libraries require a root install.  
+    sudo make install-dev # some libraries require a root install.
 
     # Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way. 
 
@@ -124,14 +153,14 @@ all priviledges on another database for Augur.**
     GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
 
 Augur runs in an Anaconda environment. To get started, activate the environment and then 
-run ``augur``.
+run ``augur run``.
 
 .. code:: bash
 
     conda activate augur
-    augur
+    augur run
 
-After you run the ``augur`` command for the first time, a configuration file called ``augur.config.json`` will automatically be generated.
+After you run the ``augur run`` command for the first time, a configuration file called ``augur.config.json`` will automatically be generated.
 
 Reference the sample configuration file (``sample.config.json``) on how to 
 set up the server, development, and cache options, as well as the plugin connections.
