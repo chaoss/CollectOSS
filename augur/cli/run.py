@@ -1,7 +1,6 @@
 import click
 import os
 import sys
-import pyrcss.util
 from augur.runtime import pass_application
 from augur.util import logger
 from augur.server import Server
