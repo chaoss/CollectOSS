@@ -52,11 +52,20 @@ def create_user_routes(server):
     def login():
         form = LoginForm(request.form)
         nxt = request.args.get('next')
+        err = request.args.get('err')
         if form.validate_on_submit():
             user = User.query.filter_by(username=form.username.data).first()
             if user and user.check_password(form.password.data):
                 if login_user(user):
-                    logger.info('Logged in user %s', user.username)
+                    logger.info('Logged in user: %s', user.username)
+                else:
+                    logger.info('Failed to login user: %s', user.username)
+            else:
+                flash('Bad password')
+                return redirect(err or '/login?wrong=1')
+        else:
+            flash('Form invalid')
+            return redirect(err or '/login?invalid=1')
         return redirect(nxt or '/')
 
 
@@ -64,15 +73,15 @@ def create_user_routes(server):
     def register():
         form = RegistrationForm(request.form)
         nxt = request.args.get('next')
+        err = request.args.get('err')
         if request.method == 'POST' and form.validate():
             user = User(username=form.username.data, email=form.email.data)
             user.password = form.password.data
             server._augur.session.add(user)
             server._augur.session.commit()
-            print(user)
-            flash('thanks for registering')
+            flash('Registration successful')
         else:
-            print('bad login')
+            return redirect(err or '/')
         return redirect(nxt or '/')
 
 
