@@ -56,6 +56,52 @@ class GitHubAPI(object):
 
         return df
 
+    @annotate(tag='code-commits')
+    def code_commits(self, owner, repo):
+        """
+        Timeseries of the count of code commits per day.
+
+        :param owner: The name of the project owner.
+        :param repo: The name of the repo.
+        :return: DataFrame with code commits/day.
+        """
+        i = 0
+        url = "https://api.github.com/repos/{}/{}/commits?page={}"
+        json = []
+
+        # Paginate through all the code commits
+        while True:
+            j = requests.get(url.format(owner, repo, i),
+                             auth=('user', self.GITHUB_API_KEY)).json()
+            if len(j) == 0:
+                break
+            json += j
+            i += 1
+
+        df = pd.DataFrame.from_dict({i: json[i]['commit']['author']['date']
+                                     for i in range(len(json))}, orient='index')
+        df.columns = ['created_at']
+        df['created_at'] = pd.to_datetime(df['created_at']).dt.normalize()
+        df = df.groupby('created_at').size().reset_index(name='count')
+
+        return df
+
+    @annotate(tag='contributors')
+    def contributors(self, owner, repo):
+        """
+        List of contributors and their contributions.
+
+        :param owner: The name of the project owner
+        :param repo: The name of the repo
+        :return: DataFrame consisting of contributors and their contributions
+        """
+        url = 'https://api.github.com/repos/{}/{}/contributors'.format(owner, repo)
+        json = requests.get(url, auth=('user', self.GITHUB_API_KEY)).json()
+
+        df = pd.DataFrame(json, columns=['login', 'contributions'])
+
+        return df
+
     @annotate(tag='lines-of-code-changed')
     def lines_of_code_changed(self, owner, repo=None):
         """
@@ -79,6 +125,36 @@ class GitHubAPI(object):
         df['total_lines'] = df['delta'].cumsum()
         # return the dataframe
         return df
+
+    @annotate(tag='open-issues')
+    def open_issues(self, owner, repo):
+        """
+        Timeseries of the number of issues opened per day.
+
+        :param owner: The username of the project owner.
+        :param repo: The name of the repository.
+        :return: DatFrame with number of issues opened per day.
+        """
+
+        url = 'https://api.github.com/repos/{}/{}/issues?state=all'.format(owner, repo)
+        issues = []
+
+        while True:
+            response = requests.get(url, auth=('user', self.GITHUB_API_KEY))
+            issues += response.json()
+
+            if 'next' not in response.links:
+                break
+
+            url = response.links['next']['url']
+
+        df = pd.DataFrame(issues, columns=['created_at'])
+        df['created_at'] = pd.to_datetime(df['created_at']).dt.normalize()
+        df = df.groupby('created_at').size().reset_index(name='count')
+
+        return df
+
+
 
     #####################################
     ###            RISK               ###

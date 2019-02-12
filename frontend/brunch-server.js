@@ -11,15 +11,11 @@ function augur_log(str) {
 
 app.use('/static', express.static(__dirname + '/public'));
 
-app.use('/api', proxy('localhost:5000', {
+app.use('*', proxy('localhost:5000', {
   proxyReqPathResolver: function(req) {
     return req.originalUrl
   }
 }));
-
-app.use("*", function(req, resp) {
-  resp.sendFile(__dirname + "/public/index.html");
-});
 
 
 module.exports = (config, callback) => {

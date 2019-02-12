@@ -2,7 +2,7 @@
 .PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
 .PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
 
-SERVECOMMAND=augur
+SERVECOMMAND=augur run
 CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda activate augur; then conda env create -n=augur -f=environment.yml; else conda env update -n=augur -f=environment.yml; fi;
 CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
 OLDVERSION="null"
@@ -14,6 +14,7 @@ default:
 	@ echo "    install                    Installs augur using pip"
 	@ echo "    install-dev                Installs augur's developer dependencies (requires npm and pip)"
 	@ echo "    install-msr                Installs MSR14 dataset"
+	@ echo "    clean                      Cleans the developer environment"
 	@ echo "    upgrade                    Pulls newest version, installs, performs migrations"
 	@ echo "    version                    Print the currently installed version"
 	@ echo
@@ -52,7 +53,7 @@ install:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install --upgrade .'
 
 install-dev:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
+	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch newman; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-msr:
 	@ ./util/install-msr.sh
@@ -74,6 +75,7 @@ upgrade: version download-upgrade install-dev
 #  Development
 #
 dev-start: dev-stop
+	@ mkdir -p logs runtime
 	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
 	@ bash -c '($(CONDAACTIVATE) sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid;)'
 	@ echo "Server     Description       Log                   Monitoring                   PID                        "
@@ -140,6 +142,13 @@ update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
 	pipreqs ./augur/
 	bash -c "$(CONDAACTIVATE) conda env export > environment.yml"
+
+
+clean:
+	@ echo "Removes node_modules, logs, caches, and some other dumb stuff that can be annoying."
+	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
+	find . -name \*.pyc -delete
+	@ echo "Run sudo make install-dev again to reinstall the environment."
 
 
 #

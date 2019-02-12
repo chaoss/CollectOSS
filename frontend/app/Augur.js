@@ -97,43 +97,24 @@ export default function Augur () {
         state.compare = 'zscore'
         state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
-        if(!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()){
-          if (state.comparedRepos.length + 1 == 1) {
-            if (!router.app._route.params.comparedrepo) {
-              let owner = state.gitRepo ? null : state.baseRepo.substring(0, state.baseRepo.indexOf('/'))
-              let repo = state.gitRepo ? state.gitRepo : state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)
-              router.push({
-                name: 'singlecompare',
-                params: {tab: state.tab, owner, repo, comparedowner: payload.owner, comparedrepo: payload.name}
-              })
-            }
-          } else {
-            let groupid = (state.gitRepo ? String(state.gitRepo) + '+' : String(state.baseRepo) + "+")
-            state.comparedRepos.forEach((repo) => {
-              groupid += (String(repo) + '+')
-            })
-            groupid += repo
-            router.push({
-              name: 'group',
-              params: {
-                tab: state.tab,
-                groupid
-              }
-            })
-          }
-          if (!window.AugurRepos[repo.toString()]) {
-            window.AugurRepos[repo.toString()] = repo
-          } else {
-            repo = window.AugurRepos[repo.toString()]
-          }
-          state.hasState = true
-          if (repo.owner && repo.name) {
-            state.comparedRepos.push(repo.toString())
-            let title = repo.owner + '/' + repo.name + '- Augur'
-          }
-          if (payload.gitURL) {
-            state.gitRepo = repo.gitURL
-          }
+        if (!window.AugurRepos[repo.toString()]) {
+          window.AugurRepos[repo.toString()] = repo
+        } else {
+          repo = window.AugurRepos[repo.toString()]
+        }
+        state.hasState = true
+        if (repo.owner && repo.name) {
+          state.comparedRepos.push(repo.toString())
+          let title = repo.owner + '/' + repo.name + '- Augur'
+          state.tab = 'gmd'
+          let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
+          window.history.pushState(null, title, queryString)
+        }
+        if (payload.gitURL) {
+          let queryString = '&git=' + window.btoa(repo.gitURL)
+          window.history.pushState(null, 'Git Analysis - Augur', window.location.search + queryString)
+          state.tab = 'git'
+          state.gitRepo = repo.gitURL
         }
       },
       setDates (state, payload) {

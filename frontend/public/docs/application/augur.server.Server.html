@@ -36,11 +36,11 @@
 <h1>augur.server.Server<a class="headerlink" href="#augur-server-server" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="augur.server.Server">
-<em class="property">class </em><code class="descclassname">augur.server.</code><code class="descname">Server</code><a class="reference internal" href="../_modules/augur/server.html#Server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.server.Server" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">augur.server.</code><code class="descname">Server</code><span class="sig-paren">(</span><em>frontend_folder='../frontend/public'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/server.html#Server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.server.Server" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines Augur’s server’s behavior</p>
 <dl class="method">
 <dt id="augur.server.Server.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/server.html#Server.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.server.Server.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>frontend_folder='../frontend/public'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/server.html#Server.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.server.Server.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the server, creating both the Flask application and Augur application</p>
 </dd></dl>
 
@@ -51,7 +51,7 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#augur.server.Server.__init__" title="augur.server.Server.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="#augur.server.Server.__init__" title="augur.server.Server.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([frontend_folder])</td>
 <td>Initializes the server, creating both the Flask application and Augur application</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">addGitMetric</span></code>(function,&nbsp;endpoint[,&nbsp;cache])</td>
@@ -131,7 +131,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>

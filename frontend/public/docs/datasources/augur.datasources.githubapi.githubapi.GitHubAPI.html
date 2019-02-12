@@ -65,16 +65,25 @@
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">bus_factor</span></code>(owner,&nbsp;repo[,&nbsp;threshold])</td>
 <td>Calculates bus factor by adding up percentages from highest to lowest until they exceed threshold</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributors_gender</span></code>(owner[,&nbsp;repo])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">closed_issues</span></code>(owner[,&nbsp;repo])</td>
+<td>Timeseries of the count of the number of issues closed per day</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">code_commits</span></code>(owner,&nbsp;repo)</td>
+<td>Timeseries of the count of code commits per day.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributors</span></code>(owner,&nbsp;repo)</td>
+<td>List of contributors and their contributions.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">contributors_gender</span></code>(owner[,&nbsp;repo])</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_of_code_changed</span></code>(owner[,&nbsp;repo])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_of_code_changed</span></code>(owner[,&nbsp;repo])</td>
 <td>Timeseries of the count of lines added, deleted, and the net change each week</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">major_tags</span></code>(owner,&nbsp;repo)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">major_tags</span></code>(owner,&nbsp;repo)</td>
 <td>Timeseries of the dates and names of major version (according to semver) tags.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code>(owner,&nbsp;repo[,&nbsp;raw])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span></code>(owner,&nbsp;repo[,&nbsp;raw])</td>
 <td>Timeseries of the dates and names of tags</td>
 </tr>
 </tbody>
@@ -136,7 +145,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>

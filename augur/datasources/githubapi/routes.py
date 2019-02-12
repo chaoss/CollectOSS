@@ -19,7 +19,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/lines_changed Lines of Code Changed
     @apiName lines-of-code-changed
     @apiGroup Growth-Maturity-Decline
-    @apiDescription <a href="https://github.com/OSSHealth/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
 
     @apiGroup Growth-Maturity-Decline
     @apiParam {String} owner Username of the owner of the GitHub repository

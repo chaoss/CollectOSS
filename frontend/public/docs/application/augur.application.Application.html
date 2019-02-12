@@ -36,11 +36,11 @@
 <h1>augur.application.Application<a class="headerlink" href="#augur-application-application" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="augur.application.Application">
-<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">augur.application.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initalizes all classes from Augur using a config file or environment variables</p>
 <dl class="method">
 <dt id="augur.application.Application.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>db_str='sqlite:///:memory:'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>config_file='augur.config.json'</em>, <em>no_config_file=0</em>, <em>description='Augur application'</em>, <em>config=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/application.html#Application.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.application.Application.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads config, creates DB session, and initializes cache</p>
 </dd></dl>
 
@@ -167,7 +167,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>

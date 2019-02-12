@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Table, ForeignKey, Column, Integer, String, DateTime
+from sqlalchemy import Table, ForeignKey, Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from .common import Base
@@ -12,7 +12,7 @@ user_has_repo_group = Table('user_has_repo_group',
     Column('repo_group_id', ForeignKey('repo_group.id'), primary_key=True),
 )
 
-class User(UserMixin, Base):
+class User(Base):
     """
     The User object models users in the database.
     """
@@ -29,9 +29,14 @@ class User(UserMixin, Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     password_updated_at = Column(DateTime, default=datetime.datetime.utcnow)
     last_login_at = Column(DateTime, nullable=True)
+    authenticated = Column(Boolean, default=False)
+    active = Column(Boolean, default=True)
     
     # Foreign Keys
     repo_groups = relationship('RepoGroup', secondary=user_has_repo_group, back_populates='users_of')
+
+    def get_id(self):
+        return self.id
 
     def __repr__(self):
        return f"<User(username='{self.username}', email='{self.email}')>"
@@ -46,3 +51,10 @@ class User(UserMixin, Base):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def is_authenticated(self):
+        return self.authenticated
+
+    def is_active(self):
+        # False as we do not support annonymity
+        return self.active
