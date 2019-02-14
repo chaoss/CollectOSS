@@ -707,13 +707,12 @@ export default {
           // We usually want to limit dates and convert the key to being vega-lite friendly
           let defaultProcess = (obj, key, field, count) => {
             let d = null
-            if (typeof(field) == "string") field = [field]
+            if (typeof(field) == "string") {
+              field = [field]
+            }
 
             d = AugurStats.convertKey(obj[key], field)
-
-
             d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
-
             return d
           }
 

@@ -4,7 +4,6 @@ const queryString = require('query-string')
 // import router from './router/router'
 // import AugurCards from './components/AugurCards.vue'
 
-
 export default function Augur () {
   window.jQuery = require('jquery')
   window.Vue = require('vue')
@@ -21,7 +20,6 @@ export default function Augur () {
   window.VueRouter = require('vue-router')
   let router = require('./router/router').default
 
-
   window.AUGUR_CHART_STYLE = {
     brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
     dullColors: ['#CCCCCC', '#CCE7F2', '#D4F0B0', '#D8C3E3']
@@ -33,8 +31,6 @@ export default function Augur () {
   window.Vue.use(window.VueVega)
   window.Vue.use(window.VueRouter)
   window.Vue.config.productionTip = false
-
-
 
   window.augur = new window.Vuex.Store({
     state: {
@@ -55,7 +51,7 @@ export default function Augur () {
       byDate: false
     },
     mutations: {
-      setGitRepo(state, payload) {
+      setGitRepo (state, payload) {
         state.gitRepo = payload.gitURL
         state.baseRepo = payload.gitURL
         state.hasState = true
@@ -67,7 +63,7 @@ export default function Augur () {
         }
       },
       setRepo (state, payload) {
-        console.log("js",payload)
+        console.log('js', payload)
         let repo = window.AugurAPI.Repo(payload)
         console.log(repo)
         if (!window.AugurRepos[repo.toString()]) {
@@ -181,14 +177,12 @@ export default function Augur () {
   })
 
   AugurApp.store = window.augur
-  
-  
-  
+
   // AugurApp.router = router
   // AugurApp.render = h => h(AugurApp)
 
   // window.AugurApp = new window.Vue(AugurApp).$mount('#app')
-  
+
   window.AugurApp = new window.Vue({
     // components: { AugurApp },
     // store: window.augur,

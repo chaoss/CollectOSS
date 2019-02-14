@@ -52,7 +52,6 @@ def cli(app):
     mp.set_start_method('forkserver')
     logger.info('Loading...')
     # app.init_all()
-    app.finalize_config()
     app.schedule_updates()
     master = None
 
@@ -61,6 +60,7 @@ def cli(app):
         if master is not None:
             master.halt()
         app.shutdown_updates()
+        app.finalize_config()
         # Prevent multiprocessing's atexit from conflicting with gunicorn
         os._exit(0)
 

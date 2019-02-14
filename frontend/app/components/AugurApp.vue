@@ -1,7 +1,7 @@
 <template>
   <div>
     
-    <div id="app" class="content">
+    <div id="app">
       <router-view></router-view>
       <!-- <augur-cards></augur-cards> -->
     </div>

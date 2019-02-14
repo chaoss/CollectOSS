@@ -7,6 +7,7 @@ import json
 import base64
 from flask import Flask, request, Response, redirect, url_for, send_from_directory, render_template
 from flask_cors import CORS
+from flask_login import current_user
 import pandas as pd
 import augur
 from augur.util import annotate, metric_metadata, logger
@@ -75,7 +76,10 @@ class Server(object):
                             status=404,
                             mimetype="application/json")
             else:
+
                 session_data = {}
+                if current_user and hasattr(current_user, 'username'):
+                    session_data = { 'username': current_user.username }
                 return render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
 
         @app.route('/static/<path:path>')

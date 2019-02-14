@@ -1,6 +1,6 @@
 import json
 from flask import Flask, request, Response, send_from_directory, redirect, flash
-from flask_login import LoginManager, current_user, login_user, login_required
+from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, Email
@@ -82,6 +82,14 @@ def create_user_routes(server):
             flash('Registration successful')
         else:
             return redirect(err or '/')
+        return redirect(nxt or '/')
+
+
+    @server.app.route("/logout")
+    @login_required
+    def logout():
+        nxt = request.args.get('next')
+        logout_user()
         return redirect(nxt or '/')
 
 

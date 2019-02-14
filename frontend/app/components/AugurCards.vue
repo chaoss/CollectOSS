@@ -1,11 +1,9 @@
 <template>
    
   <div>
-    <div class="fullwidth">
-        <augur-header></augur-header>
-    </div>
+    <augur-header></augur-header>
     <!-- content to show if app has no state yet -->
-    <div :class="{ hidden: hasState }">
+    <div :class="{ hidden: hasState }" class="content">
       <!-- <login-form></login-form> -->
       <section class="unmaterialized">
         <div id="collapse">
@@ -18,7 +16,7 @@
     </div>
 
     <!-- content to show if app does have a repo to show -->
-    <div :class="{ hidden: !hasState }">
+    <div :class="{ hidden: !hasState }" class="content">
       <nav class="tabs">
         <ul>
           <li :class="{ active: (currentTab == 'gmd'), hidden: !baseRepo }"><a href="#" @click="changeTab" data-value="gmd">Growth, Maturity, and Decline</a></li>

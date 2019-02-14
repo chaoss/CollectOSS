@@ -7,6 +7,9 @@
   "license": "MIT",
   "devDependencies": {
     "auto-reload-brunch": "^2.7.1",
+    "babel": "^6.23.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-runtime": "^6.26.0",
     "babel-brunch": "^6.1.1",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-plugin-syntax-jsx": "^6.18.0",
@@ -22,18 +25,12 @@
     "vue-brunch": "^2.0.1"
   },
   "dependencies": {
-    "babel": "^6.23.0",
-    "babel-polyfill": "^6.26.0",
-    "babel-runtime": "^6.26.0",
     "css-loader": "^0.28.9",
     "d3": "^5.5.0",
     "hoek": "^5.0.3",
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",
-    "macos": "0.0.1",
-    "metrics-graphics": "^2.15.6",
     "moment": "^2.22.2",
-    "npm": "^6.7.0",
     "query-string2": "^0.1.2",
     "svgsaver": "^0.9.0",
     "vega": "^4.4.0",
