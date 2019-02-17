@@ -1,20 +1,41 @@
-#!/bin/bash
-echo "Installing Miniconda..."
 
-MINICONDA_SCRIPT=/tmp/miniconda.sh
-curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh --output MINICONDA_SCRIPT
-echo "Downloaded Miniconda to $MINICONDA_SCRIPT"
+# sudo su -
 
-chmod +x MINICONDA_SCRIPT
-$MINICONDA_SCRIPT -b -p $HOME/anaconda
-echo "Miniconda installed to ${HOME}/anaconda"
+# echo "Updating apt-get..."
+# sudo apt-get update
 
-echo "Installing MariaDB..."
-sudo yum install -y mariadb-server
+# echo "Installing MariaDB..."
+# sudo apt-get install -y mariadb-server
 
-echo "Creating databases..."
-sudo systemctl start mariadb
-sudo systemctl enable mariadb
-mysql -u root -e 'CREATE DATABASE facade;'
-mysql -u root -e 'CREATE DATABASE msr14;'
-mysql -u root -e 'CREATE DATABASE ghtorrentplus;'
+# echo "Creating databases..."
+# sudo service mysql restart
+# sudo mysql -u root -e 'CREATE DATABASE facade;'
+# sudo mysql -u root -e 'CREATE DATABASE msr14;'
+# sudo mysql -u root -e 'CREATE DATABASE ghtorrent;'
+
+# echo "Installing NodeSource..."
+# curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+
+# echo "Installing node.js..."
+# sudo apt-get install -y nodejs
+
+# echo "Installing pip..."
+# sudo apt-get install -y python-pip
+
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt-get update -y
+sudo apt-get install python3.7 -y
+
+cd $HOME
+rm -rf $HOME/augur/
+git clone https://github.com/chaoss/augur.git
+git checkout vagrant
+cd augur
+
+export AUGUR_PYTHON=python3.7
+export AUGUR_PIP=pip3
+
+$AUGUR_PIP install -U -e .
+
+# echo "Done!"
+
