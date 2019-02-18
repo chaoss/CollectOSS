@@ -1044,3 +1044,14 @@ class GHTorrent(object):
             GROUP BY YEARWEEK(created_at)
         """)
         return pd.read_sql(newWatchersSQL, self.db, params={"repoid": str(repoid)})
+
+
+
+    ### Utility
+    def user(self, user_id):
+        usersSQL = s.sql.text("""
+            SELECT *
+            FROM users
+            WHERE id = :user_id
+        """)
+        return pd.read_sql(usersSQL, self.db, params={"user_id": int(user_id)})

@@ -300,7 +300,7 @@ class Server(object):
                 data = func(*args)
             else:
                 data = func(*args, **kwargs)
-                
+
             if hasattr(data, 'to_json'):
                 if group_by is not None:
                     data = data.group_by(group_by).aggregate(aggregate)

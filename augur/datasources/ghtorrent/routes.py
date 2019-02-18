@@ -805,28 +805,33 @@ def create_routes(server):
     server.addTimeseries(ghtorrent.new_watchers, 'new_watchers')
 
     """
-    @api {get} /ghtorrent_range GHTorrent Date Range
-    @apiName GhtorrentRange
+    @api {get} /user/:userid User
+    @apiName User
     @apiGroup Utility
-    @apiDescription Utility endpoint to show the range of dates GHTorrent covers.
+    @apiDescription Utility endpoint to show information about users on GitHub.
 
     @apiSuccessExample {json} Success-Response:
                         [
                             {
-                                "date": "2008-04-10T17:25:06-07:00",
-                                "release": "v0.9.1"
-                            },
-                            {
-                                "date": "2008-04-10T17:25:07-07:00",
-                                "release": "v0.9.2"
+                                "id": 18,
+                                "login": "developertown",
+                                "company": null,
+                                "created_at": "2010-12-09T13:14:35.000Z",
+                                "type": "ORG",
+                                "fake": 0,
+                                "deleted": 0,
+                                "long": -86.158068,
+                                "lat": 39.768403,
+                                "country_code": "us",
+                                "state": "Marion County",
+                                "city": "Indianapolis",
+                                "location": "Indianapolis, IN"
                             }
                         ]
     """
-    @server.app.route('/{}/ghtorrent_range'.format(server.api_version))
-
-    def ghtorrent_range():
-        ghr = server.transform(ghtorrent.ghtorrent_range())
-        return Response(response=ghr,
+    @server.app.route('/{}/user/<user_id>'.format(server.api_version))
+    def user(user_id):
+        user = server.transform(func=ghtorrent.user, args=[user_id])
+        return Response(response=user,
                         status=200,
                         mimetype="application/json")
-    # server.updateMetricMetadata(ghtorrent.ghtorrent_range, '/{}/ghtorrent_range'.format(server.api_version))
