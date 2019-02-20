@@ -40,7 +40,6 @@ module.exports = {
       let repo = window.AugurAPI.Repo({
           githubURL: e.target.value
         })
-      console.log("check", repo.batch(['codeCommits'], true))
       if(!repo.batch(['codeCommits'], true)[0]){
         alert("The repo " + repo.githubURL + " could not be found. Please try again.")
       } else {
@@ -49,8 +48,8 @@ module.exports = {
           githubURL: e.target.value
         })
         this.$router.push({
-          name: 'single',
-          params: {tab: 'gmd', owner: repo.owner, repo: repo.name}
+          name: 'gmd',
+          params: {owner: repo.owner, repo: repo.name}
         })
 
       }

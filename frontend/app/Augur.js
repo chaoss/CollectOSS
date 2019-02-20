@@ -92,25 +92,47 @@ export default function Augur () {
       addComparedRepo (state, payload) {
         state.compare = 'zscore'
         state.hasState = true
+        console.log("currentPath", router)
         let repo = window.AugurAPI.Repo(payload)
-        if (!window.AugurRepos[repo.toString()]) {
-          window.AugurRepos[repo.toString()] = repo
-        } else {
-          repo = window.AugurRepos[repo.toString()]
-        }
-        state.hasState = true
-        if (repo.owner && repo.name) {
-          state.comparedRepos.push(repo.toString())
-          let title = repo.owner + '/' + repo.name + '- Augur'
-          state.tab = 'gmd'
-          let queryString = window.location.search + '&comparedTo[]=' + repo.owner + '+' + repo.name
-          window.history.pushState(null, title, queryString)
-        }
-        if (payload.gitURL) {
-          let queryString = '&git=' + window.btoa(repo.gitURL)
-          window.history.pushState(null, 'Git Analysis - Augur', window.location.search + queryString)
-          state.tab = 'git'
-          state.gitRepo = repo.gitURL
+        if(!state.comparedRepos.includes(repo.toString()) && state.baseRepo != repo.toString()){
+          if (!window.AugurRepos[repo.toString()]) {
+            window.AugurRepos[repo.toString()] = repo
+          } else {
+            repo = window.AugurRepos[repo.toString()]
+          }
+          state.hasState = true
+          if (repo.owner && repo.name) {
+            state.comparedRepos.push(repo.toString())
+            let title = repo.owner + '/' + repo.name + '- Augur'
+          }
+          if (payload.gitURL) {
+            state.gitRepo = repo.gitURL
+          }
+          if (state.comparedRepos.length == 1) {
+            if (!router.currentRoute.params.comparedrepo) {
+              console.log("SINGLE COMPARE INSIDE MUTATION", state.tab, payload)
+
+              let owner = state.gitRepo ? null : state.baseRepo.substring(0, state.baseRepo.indexOf('/'))
+              let repo = state.gitRepo ? state.gitRepo : state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)
+              let name = state.tab + "compare"
+              router.push({
+                name,
+                params: {owner, repo, comparedowner: payload.owner, comparedrepo: payload.name}
+              })
+            }
+          } else {
+            let groupid = (state.gitRepo ? String(state.gitRepo) + '+' : String(state.baseRepo) + "+")
+            state.comparedRepos.forEach((repo) => {
+              groupid += (String(repo) + '+')
+            })
+            let name = state.tab + "group"
+            router.push({
+              name,
+              params: {
+                groupid
+              }
+            })
+          }
         }
       },
       setDates (state, payload) {
@@ -151,8 +173,8 @@ export default function Augur () {
       resetComparedRepos (state) {
         state.comparedRepos = []
         router.push({
-          name: 'single',
-          params: {tab: state.tab, domain: state.domain, owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
+          name: state.tab,
+          params: {owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
         })
       },
       resetBaseRepo (state) {
@@ -182,6 +204,72 @@ export default function Augur () {
   // AugurApp.render = h => h(AugurApp)
 
   // window.AugurApp = new window.Vue(AugurApp).$mount('#app')
+
+  router.beforeEach((to, from, next) => {
+    console.log("HEYYYYY", to, from, augur.state)
+    if(to.params.repo || to.params.groupid){
+      console.log("STARTED")
+      if (!to.params.groupid && !to.params.comparedrepo){
+        console.log("SINGLE")
+        AugurApp.store.commit("resetTab")
+        AugurApp.store.commit('setTab', {
+          tab: to.name
+        })
+        if (to.params.repo.includes('github')) {
+          console.log("SINGLEGIT")
+          AugurApp.store.commit('setRepo', {
+            gitURL: to.params.repo
+          })
+        } else {
+          console.log("SINGLE", to.params.repo)
+          AugurApp.store.commit('setRepo', {
+            githubURL: to.params.owner + '/' + to.params.repo
+          })
+        }
+      } else if(to.params.comparedrepo && augur.state.comparedRepos.length == 0) { 
+        console.log("SINGLECOMPARE")
+        let tab = to.name
+        tab = tab.substring(0, tab.length-7)
+        console.log(tab)
+        AugurApp.store.commit("resetTab")
+        AugurApp.store.commit('setTab', {
+          tab
+        })
+        AugurApp.store.commit('setRepo', {
+            githubURL: to.params.owner + '/' + to.params.repo
+          })
+        AugurApp.store.commit('addComparedRepo', {
+          githubURL: to.params.comparedowner + '/' + to.params.comparedrepo
+        })
+      } else if(to.params.groupid && augur.state.comparedRepos.length == 0){
+        AugurApp.store.commit("resetTab")
+        let tab = to.name
+        tab = tab.substring(0, tab.length-5)
+        AugurApp.store.commit('setTab', {
+          tab
+        })
+        let repos = to.params.groupid.split('+')
+        if (repos[0].includes('github')) {
+          AugurApp.store.commit('setRepo', {
+            gitURL: repos[0]
+          })
+        } else {
+          AugurApp.store.commit('setRepo', {
+            githubURL: repos[0]
+          })
+        }
+        repos.shift()
+        // repos.pop()
+        repos.forEach((cmprepo) => {
+          AugurApp.store.commit('addComparedRepo', {
+            githubURL: cmprepo
+          })
+        })
+      }
+    }
+
+    next()
+  })
 
   window.AugurApp = new window.Vue({
     // components: { AugurApp },

@@ -12,7 +12,7 @@
                 <div class="col col-3" align="center" id="comparetext"><h6>Compare from your repos:</h6></div>
                 <div style="text-align:center !important" class="row col col-4" v-click-outside="stopSelecting">
                   <div class="col col-6" style="display:inline !important" @click="keepSelecting">
-                    <multiselect class="" v-model="project" :options="projects" :placeholder="project"></multiselect>
+                    <multiselect class="search reposearch special" v-model="project" :options="projects" :placeholder="project"></multiselect>
                   </div>
                   <div class="col col-6" style="display:inline !important" @click="keepSelecting">
                     <multiselect 
