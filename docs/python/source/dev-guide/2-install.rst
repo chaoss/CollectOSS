@@ -15,6 +15,7 @@ Also remember the database dependency in the `README <http://ghtorrent.org/msr14
 1. `Dependency Installation for Ubuntu <#Ubuntu>`__
 2. `Dependency Installation for Fedora <#Fedora>`__
 3. `Dependency Installation for OS X <#MacOSX>`__
+4. `Getting Started with Vagrant <#Vagrant>`__
 
 2. `Install Augur <#Install>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,6 +90,29 @@ Mac OSX Dependency Installation Instructions
     open Anaconda3-5.1.0-MacOSX-x86_64.pkg
 
     # [Install Augur](#Install)
+
+Getting Started with Vagrant
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you've got trouble getting all the dependcies installed, don't want to mess with your system, or are working
+using an OS we don't currenly support, we provide an option to develop Augur using `Vagrant <https://www.vagrantup.com/>`__.
+
+Using Vagrant, you can set up a (relatively) lightweight headless Ubuntu 16.04 VM that comes with Augur and
+all its dependencies preinstalled. To get started, you'll need a VM provider (we currently only support `Virtualbox <https://www.virtualbox.org/>`__)
+and Vagrant installed on your local machine. To begin, simply clone the repository, enter the root directory, 
+and type ``vagrant up``.
+
+The first time you run this command, Vagrant will need to download the box configuration, which shouldn't take too long.
+After that, it'll provision the machine and install Augur alongside all the required dependencies. Additionally,
+it'll create a lightweight version of both the `Facade <facade-oss.org>`__ and `GHTorrent <http://ghtorrent.org/>`__ datasets which we rely on for a lot of our metrics. 
+
+Note: you'll probably see a fair bit of erros during the ``vagrant up`` process as Augur is getting installed. Don't worry about them, most of them are harmless. Probably.
+
+After the ``vagrant up`` process has completed, the VM should be up and running. Then, run ``vagrant ssh`` (while
+still in the root ``augur`` directory); this will log you in to your newly provisioned VM. Log in as ``root``
+with ``sudo su -`` and then navigate to ``/vagrant/augur``. This folder is where you'll be working, as it's synced with your local installation of
+Augur, meaning you won't have to worry about losing your changes after you shutdown the VM. After you're in this
+directory, you're ready to start developing! See the section below to make sure you have all the necessary API keys.
 
 Augur Installation Instructions
 -------------------------------
