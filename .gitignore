@@ -78,3 +78,4 @@ augur/plugins/
 *.config.*
 *.cfg.*
 !sample.config.json
+frontend/public/*.map
