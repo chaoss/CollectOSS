@@ -212,9 +212,9 @@ def create_routes(server):
 
         calendar_year = request.args.get('calendar_year')
         interval = request.args.get('interval')
-        repo_group = request.args.get('repo_group')
+        # repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rep_tp_interval_loc_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval, 'repo_group': repo_group}))
+        data = server.transform(facade.cd_rep_tp_interval_loc_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
 
         return Response(response=data,
                        status=200,
@@ -227,9 +227,9 @@ def create_routes(server):
 
         calendar_year = request.args.get('calendar_year')
         interval = request.args.get('interval')
-        repo_group = request.args.get('repo_group')
+        # repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rep_tp_interval_loc_commits_ua, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval, 'repo_group': repo_group}))
+        data = server.transform(facade.cd_rep_tp_interval_loc_commits_ua, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
 
         return Response(response=data,
                        status=200,

@@ -3317,9 +3317,9 @@ exports.default = {
 
             var rolling = null;
             if (repo == _this.repo) baseDate = d[0].date;else d = _AugurStats2.default.alignDates(d, baseDate, _this.period);
-            if (_this.compare == 'zscore') {
+            if (_this.compare == 'zscore' && _this.comparedRepos.length > 0) {
               rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
-            } else if (_this.compare == 'baseline') {
+            } else if (_this.compare == 'baseline' && _this.comparedRepos.length > 0) {
                 if (repo.githubURL == _this.repo) {
                   baselineVals = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
                 }
@@ -3447,7 +3447,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-869af3b0", __vue__options__)
   } else {
-    hotAPI.reload("data-v-869af3b0", __vue__options__)
+    hotAPI.rerender("data-v-869af3b0", __vue__options__)
   }
 })()}
 });

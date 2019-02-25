@@ -768,10 +768,10 @@ export default {
                 let rolling = null
                 if (repo == this.repo) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
-                if (this.compare == 'zscore') {
+                if (this.compare == 'zscore' && this.comparedRepos.length > 0) {
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
                 } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
-                else if (this.compare == 'baseline') {
+                else if (this.compare == 'baseline' && this.comparedRepos.length > 0) {
                   if(repo.githubURL == this.repo){
                     baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
                   }
