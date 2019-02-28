@@ -31,10 +31,10 @@ Augur Development Overview
 tl;dr
 ~~~~~
 
-1. `Installation <2-install.rst>`__
-2. `Backend Development Guide <3-backend.rst>`__
-3. `Frontend Development Guide <4-frontend.rst>`__
-4. `Testing Guide <5-testing.rst>`__
+1. `Installation <2-install.html>`__
+2. `Backend Development Guide <3-backend.html>`__
+3. `Frontend Development Guide <4-frontend.html>`__
+4. `Testing Guide <5-testing.html>`__
 
 Augur's Design Value System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

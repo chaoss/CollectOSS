@@ -156,8 +156,8 @@ class MetricsStatus(object):
 
         self.metrics_by_group = [self.diversity_inclusion_metrics, self.growth_maturity_decline_metrics, self.risk_metrics, self.value_metrics]
 
-        self.activity_metrics = self.create_activity_metrics()
-        self.metrics_by_group.append(self.activity_metrics)
+        # self.activity_metrics = self.create_activity_metrics()
+        # self.metrics_by_group.append(self.activity_metrics)
 
         self.create_experimental_metrics()
         self.metrics_by_group.append(self.experimental_metrics)

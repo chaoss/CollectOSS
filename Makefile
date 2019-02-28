@@ -8,6 +8,8 @@ CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activat
 OLDVERSION="null"
 EDITOR?="vi"
 SOURCE=**
+AUGUR_PIP?='pip'
+AUGUR_PYTHON?='python'
 
 default:
 	@ echo "Installation Commands:"
@@ -49,24 +51,24 @@ default:
 #  Installation
 #
 install:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install --upgrade .'
+	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install --upgrade .'
 
 install-dev:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) pip install pipreqs sphinx; sudo npm install -g apidoc brunch; pip install -e .; python -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
+	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-msr:
 	@ ./util/install-msr.sh
 
 version:
-	$(eval OLDVERSION=$(shell python ./util/print-version.py))
+	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
 	@ echo "installed version: $(OLDVERSION)"
 
 download-upgrade:
 	git pull
 
 upgrade: version download-upgrade install-dev
-	@ python util/post-upgrade.py $(OLDVERSION)
-	@ echo "Upgraded from $(OLDVERSION) to $(shell python util/print-version.py)."
+	@ $(AUGUR_PYTHON) util/post-upgrade.py $(OLDVERSION)
+	@ echo "Upgraded from $(OLDVERSION) to $(shell $(AUGUR_PYTHON) util/print-version.py)."
 
 
 
@@ -105,7 +107,7 @@ monitor:
 dev-restart: dev-stop dev-start
 
 server:
-	@ python -m augur.server
+	@ $(AUGUR_PYTHON) -m augur.server
 
 frontend:
 	bash -c 'cd frontend; brunch build'
@@ -125,11 +127,11 @@ build: frontend docs
 test:test-ds test-api
 
 test-ds:
-	bash -c '$(CONDAACTIVATE) python -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
+	bash -c '$(CONDAACTIVATE)  -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 
 test-api:
 	make dev-start
-	python test/api/test_api.py
+	 test/api/test_api.py
 	make dev-stop
 
 .PHONY: unlock
@@ -137,10 +139,16 @@ unlock:
 	find . -type f -name "*.lock" -delete
 
 update-deps:
-	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; pip install pipreqs; exit 1; }
+	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; $(AUGUR_PIP) install pipreqs; exit 1; }
 	pipreqs ./augur/
-	bash -c "$(CONDAACTIVATE) conda env export > environment.yml"
+	bash -c "$(CONDAACTIVATE) conda env  --no-builds > environment.yml"
 
+vagrant:
+	@ vagrant up
+	@ vagrant ssh
+	@ echo "****************************************************"
+	@ echo "Don't forget to shutdown the VM with 'vagrant halt'!"
+	@ echo "****************************************************"
 
 #
 # Git
@@ -158,7 +166,7 @@ jupyter:
 		@ bash -c '$(CONDAACTIVATE) cd notebooks; jupyter notebook'
 
 create-jupyter-env:
-		bash -c '$(CONDAACTIVATE) python -m ipykernel install --user --name augur --display-name "Python (augur)";'
+		bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)";'
 
 
 
@@ -167,7 +175,7 @@ create-jupyter-env:
 #
 .PHONY: to-json
 to-json:
-	@ bash -c '$(CONDAACTIVATE) python util/post-upgrade.py migrate_config_to_json'
+	@ bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) util/post-upgrade.py migrate_config_to_json'
 
 .PHONY: to-env
 to-env:

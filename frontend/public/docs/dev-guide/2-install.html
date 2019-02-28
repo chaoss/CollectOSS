@@ -9,11 +9,11 @@
     <title>2. Installation &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="3. Backend" href="3-backend.html" />
@@ -30,12 +30,14 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="installation">
 <h1>2. Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="local-installation-for-development">
-<h2>2.1. Local Installation (For Development)<a class="headerlink" href="#local-installation-for-development" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="local-installation">
+<h2>2.1. Local Installation<a class="headerlink" href="#local-installation" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="install-dependencies-os-specific-instructions-below">
 <h3>2.1.1. 1. Install Dependencies (OS Specific Instructions Below)<a class="headerlink" href="#install-dependencies-os-specific-instructions-below" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
@@ -47,12 +49,11 @@
 <li><a class="reference external" href="#Ubuntu">Dependency Installation for Ubuntu</a></li>
 <li><a class="reference external" href="#Fedora">Dependency Installation for Fedora</a></li>
 <li><a class="reference external" href="#MacOSX">Dependency Installation for OS X</a></li>
+<li><a class="reference external" href="#Install">Install Augur</a></li>
 </ol>
-</div>
-<div class="section" id="install-augur">
-<h3>2.1.2. 2. <a class="reference external" href="#Install">Install Augur</a><a class="headerlink" href="#install-augur" title="Permalink to this headline">¶</a></h3>
+<hr class="docutils" />
 <div class="section" id="ubuntu-dependency-installation-instructions">
-<h4>2.1.2.1. Ubuntu Dependency Installation Instructions<a class="headerlink" href="#ubuntu-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
+<h4>2.1.1.1. Ubuntu Dependency Installation Instructions<a class="headerlink" href="#ubuntu-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install NodeSource</span>
 <span class="n">curl</span> <span class="o">-</span><span class="n">sL</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">deb</span><span class="o">.</span><span class="n">nodesource</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">setup_8</span><span class="o">.</span><span class="n">x</span> <span class="o">|</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="n">bash</span> <span class="o">-</span>
 
@@ -75,7 +76,7 @@
 </div>
 </div>
 <div class="section" id="fedora-dependency-installation-instructions">
-<h4>2.1.2.2. Fedora Dependency Installation Instructions<a class="headerlink" href="#fedora-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
+<h4>2.1.1.2. Fedora Dependency Installation Instructions<a class="headerlink" href="#fedora-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install NodeSource</span>
 <span class="n">curl</span> <span class="o">-</span><span class="n">sL</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">rpm</span><span class="o">.</span><span class="n">nodesource</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">setup_10</span><span class="o">.</span><span class="n">x</span> <span class="o">|</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="n">bash</span> <span class="o">-</span>
 <span class="n">sudo</span> <span class="n">yum</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">nodejs</span>
@@ -100,7 +101,7 @@
 </div>
 </div>
 <div class="section" id="mac-osx-dependency-installation-instructions">
-<h4>2.1.2.3. Mac OSX Dependency Installation Instructions<a class="headerlink" href="#mac-osx-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
+<h4>2.1.1.3. Mac OSX Dependency Installation Instructions<a class="headerlink" href="#mac-osx-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install Homebrew</span>
 <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ruby</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</span>
 
@@ -121,8 +122,29 @@
 </div>
 </div>
 </div>
+<div class="section" id="macos-high-sierra-and-possibly-older-os-x-versions-errata">
+<h2>2.2. macOS High Sierra (and possibly older OS X Versions) Errata:<a class="headerlink" href="#macos-high-sierra-and-possibly-older-os-x-versions-errata" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">If you check the logs/frontend.log and find that “brunch” was not
+found:</p>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">install</span> <span class="n">npm</span>
+<span class="n">npm</span> <span class="n">install</span> <span class="o">-</span><span class="n">g</span> <span class="n">brunch</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">yarn</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">If the logs look good but the webpage at localhost:3333 is empty, it
+could be that Yarn installed the wrong version of some libraries. In
+that case:</p>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">frontend</span>
+<span class="n">npm</span> <span class="n">install</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
 <div class="section" id="augur-installation-instructions">
-<h2>2.2. Augur Installation Instructions<a class="headerlink" href="#augur-installation-instructions" title="Permalink to this headline">¶</a></h2>
+<h2>2.3. Augur Installation Instructions<a class="headerlink" href="#augur-installation-instructions" title="Permalink to this headline">¶</a></h2>
 <p>Clone the repo and install the libraries and tools needed by Augur</p>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">chaoss</span><span class="o">/</span><span class="n">augur</span><span class="o">/</span>
 
@@ -167,37 +189,24 @@ set up the server, development, and cache options, as well as the plugin connect
 <p>For local API testing, you will need a <a class="reference external" href="https://www.getpostman.com">Postman</a> API key.</p>
 <p><strong>You’re ready to rock! To start both the frontend and backend, run:</strong>
 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dev</span></code></p>
+<div class="section" id="getting-started-with-vagrant">
+<h3>2.3.1. 2. Getting Started with Vagrant<a class="headerlink" href="#getting-started-with-vagrant" title="Permalink to this headline">¶</a></h3>
+<p>If you’ve got trouble getting all the dependcies installed, don’t want to mess with your system, or are working using an OS we don’t currenly support, we provide an option to develop Augur using <a class="reference external" href="https://www.vagrantup.com/">Vagrant</a>.</p>
+<p>Using Vagrant, you can set up a (relatively) lightweight headless Ubuntu 16.04 VM that comes with Augur and all its dependencies preinstalled. To get started, you’ll need a VM provider (we currently only support <a class="reference external" href="https://www.virtualbox.org/">Virtualbox</a>) and Vagrant installed on your local machine. To begin, simply clone the repository, enter the root directory, and type <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">vagrant</span></code>.</p>
+<p>The first time you run this command, Vagrant will need to download the box configuration, which shouldn’t take too long. After that, it’ll provision the machine and install Augur alongside all the required dependencies. Additionally, it’ll create a lightweight version of both the <a class="reference external" href="facade-oss.org">Facade</a> and <a class="reference external" href="http://ghtorrent.org/">GHTorrent</a> datasets which we rely on for a lot of our metrics. Note: you’ll probably see a fair bit of errors during this provisioning process as Augur is getting installed. Don’t worry about them, most of them are harmless. Probably.</p>
+<p>After this process has completed, the VM should be up and running. You’ll then but automatically logged in to your newly provisioned VM. Log in as <code class="docutils literal notranslate"><span class="pre">root</span></code> with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">su</span> <span class="pre">-</span></code> and then navigate to <code class="docutils literal notranslate"><span class="pre">/vagrant/augur</span></code>. This folder is where you’ll be working, as it’s synced with your local installation of Augur, meaning you won’t have to worry about losing your changes after you shutdown the VM. You’ll also be able to use your preferred editor. After you’re in this directory, you’re ready to start developing! See the section above to make sure you have all the necessary API keys.</p>
 </div>
-<div class="section" id="macos-high-sierra-and-possibly-older-os-x-versions-errata">
-<h2>2.3. macOS High Sierra (and possibly older OS X Versions) Errata:<a class="headerlink" href="#macos-high-sierra-and-possibly-older-os-x-versions-errata" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic">
-<li><p class="first">If you check the logs/frontend.log and find that “brunch” was not
-found:</p>
-<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">install</span> <span class="n">npm</span>
-<span class="n">npm</span> <span class="n">install</span> <span class="o">-</span><span class="n">g</span> <span class="n">brunch</span>
-<span class="n">brew</span> <span class="n">install</span> <span class="n">yarn</span>
-</pre></div>
-</div>
-</li>
-<li><p class="first">If the logs look good but the webpage at localhost:3333 is empty, it
-could be that Yarn installed the wrong version of some libraries. In
-that case:</p>
-<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">frontend</span>
-<span class="n">npm</span> <span class="n">install</span>
-</pre></div>
-</div>
-</li>
-</ol>
 </div>
 </div>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h3><a href="../index.html">Table Of Contents</a></h3>
+<h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
@@ -247,8 +256,8 @@ that case:</p>
       &copy;2018, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="../_sources/dev-guide/2-install.rst.txt"

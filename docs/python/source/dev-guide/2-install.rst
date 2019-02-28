@@ -1,7 +1,7 @@
 Installation
 =============================================
 
-Local Installation (For Development)
+Local Installation
 ------------------------------------
 
 1. Install Dependencies (OS Specific Instructions Below)
@@ -15,8 +15,8 @@ Also remember the database dependency in the `README <http://ghtorrent.org/msr14
 1. `Dependency Installation for Ubuntu <#Ubuntu>`__
 2. `Dependency Installation for Fedora <#Fedora>`__
 3. `Dependency Installation for OS X <#MacOSX>`__
+4. `Install Augur <#Install>`__
 
-2. `Install Augur <#Install>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Ubuntu Dependency Installation Instructions
@@ -90,6 +90,27 @@ Mac OSX Dependency Installation Instructions
 
     # [Install Augur](#Install)
 
+macOS High Sierra (and possibly older OS X Versions) Errata:
+------------------------------------------------------------
+
+1. If you check the logs/frontend.log and find that "brunch" was not
+   found:
+
+   .. code:: bash
+
+       brew install npm
+       npm install -g brunch
+       brew install yarn
+
+2. If the logs look good but the webpage at localhost:3333 is empty, it
+   could be that Yarn installed the wrong version of some libraries. In
+   that case:
+
+   .. code:: bash
+
+       cd frontend 
+       npm install
+
 Augur Installation Instructions
 -------------------------------
 
@@ -107,7 +128,7 @@ Clone the repo and install the libraries and tools needed by Augur
     git checkout dev
 
     # Install the Python and Node tools and libraries needed
-    make install-dev-admin # some libraries require a root install.  
+    sudo make install-dev # some libraries require a root install.  
 
     # Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way. 
 
@@ -146,24 +167,3 @@ For local API testing, you will need a `Postman <https://www.getpostman.com>`__ 
 
 **You're ready to rock! To start both the frontend and backend, run:**
 ``make dev``
-
-macOS High Sierra (and possibly older OS X Versions) Errata:
-------------------------------------------------------------
-
-1. If you check the logs/frontend.log and find that "brunch" was not
-   found:
-
-   .. code:: bash
-
-       brew install npm
-       npm install -g brunch
-       brew install yarn
-
-2. If the logs look good but the webpage at localhost:3333 is empty, it
-   could be that Yarn installed the wrong version of some libraries. In
-   that case:
-
-   .. code:: bash
-
-       cd frontend 
-       npm install

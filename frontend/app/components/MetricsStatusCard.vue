@@ -1,8 +1,5 @@
  <template>
 
-  
-    
-
   <div class="is-table-container">
     <augur-header></augur-header>
     <section>
@@ -117,7 +114,7 @@
 import AugurHeader from './AugurHeader'
 export default {
 
-  name: 'AllMetricsStatusCard',
+  name: 'MetricsStatus',
   components: {
     AugurHeader
   },
