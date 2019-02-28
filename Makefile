@@ -143,6 +143,12 @@ update-deps:
 	pipreqs ./augur/
 	bash -c "$(CONDAACTIVATE) conda env  --no-builds > environment.yml"
 
+vagrant:
+	@ vagrant up
+	@ vagrant ssh
+	@ echo "****************************************************"
+	@ echo "Don't forget to shutdown the VM with 'vagrant halt'!"
+	@ echo "****************************************************"
 
 #
 # Git

@@ -1,7 +1,7 @@
 Installation
 =============================================
 
-Local Installation (For Development)
+Local Installation
 ------------------------------------
 
 1. Install Dependencies (OS Specific Instructions Below)
@@ -15,9 +15,8 @@ Also remember the database dependency in the `README <http://ghtorrent.org/msr14
 1. `Dependency Installation for Ubuntu <#Ubuntu>`__
 2. `Dependency Installation for Fedora <#Fedora>`__
 3. `Dependency Installation for OS X <#MacOSX>`__
-4. `Getting Started with Vagrant <#Vagrant>`__
+4. `Install Augur <#Install>`__
 
-2. `Install Augur <#Install>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Ubuntu Dependency Installation Instructions
@@ -91,28 +90,26 @@ Mac OSX Dependency Installation Instructions
 
     # [Install Augur](#Install)
 
-Getting Started with Vagrant
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+macOS High Sierra (and possibly older OS X Versions) Errata:
+------------------------------------------------------------
 
-If you've got trouble getting all the dependcies installed, don't want to mess with your system, or are working
-using an OS we don't currenly support, we provide an option to develop Augur using `Vagrant <https://www.vagrantup.com/>`__.
+1. If you check the logs/frontend.log and find that "brunch" was not
+   found:
 
-Using Vagrant, you can set up a (relatively) lightweight headless Ubuntu 16.04 VM that comes with Augur and
-all its dependencies preinstalled. To get started, you'll need a VM provider (we currently only support `Virtualbox <https://www.virtualbox.org/>`__)
-and Vagrant installed on your local machine. To begin, simply clone the repository, enter the root directory, 
-and type ``vagrant up``.
+   .. code:: bash
 
-The first time you run this command, Vagrant will need to download the box configuration, which shouldn't take too long.
-After that, it'll provision the machine and install Augur alongside all the required dependencies. Additionally,
-it'll create a lightweight version of both the `Facade <facade-oss.org>`__ and `GHTorrent <http://ghtorrent.org/>`__ datasets which we rely on for a lot of our metrics. 
+       brew install npm
+       npm install -g brunch
+       brew install yarn
 
-Note: you'll probably see a fair bit of erros during the ``vagrant up`` process as Augur is getting installed. Don't worry about them, most of them are harmless. Probably.
+2. If the logs look good but the webpage at localhost:3333 is empty, it
+   could be that Yarn installed the wrong version of some libraries. In
+   that case:
 
-After the ``vagrant up`` process has completed, the VM should be up and running. Then, run ``vagrant ssh`` (while
-still in the root ``augur`` directory); this will log you in to your newly provisioned VM. Log in as ``root``
-with ``sudo su -`` and then navigate to ``/vagrant/augur``. This folder is where you'll be working, as it's synced with your local installation of
-Augur, meaning you won't have to worry about losing your changes after you shutdown the VM. After you're in this
-directory, you're ready to start developing! See the section below to make sure you have all the necessary API keys.
+   .. code:: bash
+
+       cd frontend 
+       npm install
 
 Augur Installation Instructions
 -------------------------------
@@ -131,7 +128,7 @@ Clone the repo and install the libraries and tools needed by Augur
     git checkout dev
 
     # Install the Python and Node tools and libraries needed
-    make install-dev-admin # some libraries require a root install.  
+    sudo make install-dev # some libraries require a root install.  
 
     # Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way. 
 
@@ -170,24 +167,3 @@ For local API testing, you will need a `Postman <https://www.getpostman.com>`__ 
 
 **You're ready to rock! To start both the frontend and backend, run:**
 ``make dev``
-
-macOS High Sierra (and possibly older OS X Versions) Errata:
-------------------------------------------------------------
-
-1. If you check the logs/frontend.log and find that "brunch" was not
-   found:
-
-   .. code:: bash
-
-       brew install npm
-       npm install -g brunch
-       brew install yarn
-
-2. If the logs look good but the webpage at localhost:3333 is empty, it
-   could be that Yarn installed the wrong version of some libraries. In
-   that case:
-
-   .. code:: bash
-
-       cd frontend 
-       npm install
