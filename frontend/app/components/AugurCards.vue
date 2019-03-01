@@ -7,7 +7,7 @@
     </div>
 
     <div ref="cards" class="content">
-
+      
       <router-view name="tabs"></router-view>
 
       <router-view name="controls"></router-view>
@@ -50,7 +50,7 @@ module.exports = {
     GitCard,
     ExperimentalCard,
     DownloadedReposCard,
-    LoginForm
+    LoginForm,
   },
   mounted() {
     console.log("MOUNTED")

@@ -16,6 +16,7 @@ import AugurCards from '../components/AugurCards.vue'
 import MainControls from '../components/MainControls.vue'
 import AugurHeader from '../components/AugurHeader.vue'
 import Tabs from '../components/Tabs.vue'
+import TableView from '../components/TableView.vue'
 
 
 

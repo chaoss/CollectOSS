@@ -36,8 +36,10 @@ import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
 
 export default {
+  
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
   data() {
+
     return {
       legendLabels: [],
       values: [],
@@ -45,9 +47,11 @@ export default {
       detail: this.$store.state.showDetail,
       compRepos: this.$store.state.comparedRepos,
       metricSource: null,
-      timeperiod: 'all'
+      timeperiod: 'all',
+      forceRecomputeCounter: 0
     }
   },
+  
   watch: {
     compRepos: function() {
       let allFalse = true
@@ -61,9 +65,19 @@ export default {
       $(this.$el).find('.hidefirst').addClass('invisDet')
       $(this.$el).find('.spinner').addClass('loader')
       $(this.$el).find('.spacing').removeClass('hidden')
-    }
+    },
   },
-  mounted() {
+  beforeUpdate() {
+    this.$store.watch(
+      // When the returned result changes...
+      function (state) {
+        console.log("WORKED")
+        this.thisShouldTriggerRecompute()
+        return 
+      },
+      // // Run this callback
+      // callback
+    )
   },
   computed: {
     repo () {
@@ -101,6 +115,7 @@ export default {
     },
     spec() {
       // Get the repos we need
+      this.forceRecomputeCounter;
       let repos = []
       if (this.repo) {
         if (window.AugurRepos[this.repo])
@@ -768,10 +783,12 @@ export default {
                 let rolling = null
                 if (repo == this.repo) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
-                if (this.compare == 'zscore' && this.comparedRepos.length > 0) {
+                if (this.compare == 'zscore') { // && this.comparedRepos.length > 0
+                  console.log("zscore")
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
                 } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
-                else if (this.compare == 'baseline' && this.comparedRepos.length > 0) {
+                else if (this.compare == 'baseline' ) { //&& this.comparedRepos.length > 0
+                  console.log("baseline")
                   if(repo.githubURL == this.repo){
                     baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
                   }
@@ -784,6 +801,7 @@ export default {
                     }
                   }
                 } else {
+                  console.log("rolling")
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 }
 
@@ -888,6 +906,9 @@ export default {
     renderError () {
         $(this.$el).find('.spinner').removeClass('loader')
         $(this.$el).find('.error').removeClass('hidden')
+    },
+    thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
     }
   },// end methods
   created () {
@@ -895,6 +916,15 @@ export default {
       window.AugurAPI.getMetricsStatus(query_string).then((data) => {
         this.metricSource = data[0].data_source
       })
+  //     const unwatch = this.$store.watch(
+  //   // When the returned result changes...
+  //   function (state) {
+  //     console.log("WORKED")
+  //     return
+  //   },
+  //   // Run this callback
+  //   unwatch()
+  // )
   }
 }
 </script>

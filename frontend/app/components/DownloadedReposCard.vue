@@ -33,8 +33,11 @@
 </template>
 
 <script>
-
 module.exports = {
+
+  components: {
+
+  },
   data () { return {
     repos: {},
     projects: []

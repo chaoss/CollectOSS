@@ -149,9 +149,9 @@
               <h6>Comparison Type</h6>
                   <label>
                   <div class="form-item form-checkboxes">
-                    <label class="checkbox"><input name="comparebaseline" value="zscore" :checked="compared" type="radio" @change="onCompareChange">Z-score</label><br>
-                    <label class="checkbox"><input name="comparebaseline" value="baseline" :checked="!compared" type="radio" @change="onCompareChange">Baseline is compared</label>
-                    <label class="checkbox"><input name="comparebaseline" value="rolling" :checked="!compared" type="radio" @change="onCompareChange">Rolling average</label>
+                    <label class="checkbox"><input name="comparebaseline" value="zscore" type="radio" @change="onCompareChange">Z-score</label><br>
+                    <label class="checkbox"><input name="comparebaseline" value="baseline" type="radio" @change="onCompareChange">Baseline is compared</label>
+                    <label class="checkbox"><input name="comparebaseline" value="rolling" type="radio" checked @change="onCompareChange">Rolling average</label>
                   </div>
                   </label>
               </label>
@@ -165,7 +165,9 @@
         </div>
       </div>
 
-
+<!-- :checked="compared"
+:checked="!compared"
+:checked="!compared" -->
 
 
       </div>
@@ -319,6 +321,7 @@
         })
       },
       onCompareChange (e) {
+        console.log("compare change", e.target.value)
         this.$store.commit('setCompare', {
           compare: e.target.value
         }) 
