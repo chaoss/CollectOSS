@@ -1256,7 +1256,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-78eb2940", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-78eb2940", __vue__options__)
+    hotAPI.reload("data-v-78eb2940", __vue__options__)
   }
 })()}
 });
@@ -1847,9 +1847,9 @@ module.exports = {
 
       var date = null;
 
-      console.log("again", e.target.value);
       if (e.target.value > 12) {
-        date = Date.parse(this.startMonth + "/01/" + e.target.value);
+        console.log(this.startMonth);
+        date = Date.parse((parseInt(this.startMonth) + 1).toString() + "/01/" + e.target.value);
       } else {
         var month = (parseInt(e.target.value) + 1).toString();
         date = Date.parse(month + "/01/" + this.startYear);
@@ -1869,9 +1869,8 @@ module.exports = {
 
       var date = null;
 
-      console.log("again", e.target.value);
       if (e.target.value > 12) {
-        date = Date.parse(this.endMonth + "/01/" + e.target.value);
+        date = Date.parse((parseInt(this.endMonth) + 1).toString() + "/01/" + e.target.value);
       } else {
         var month = (parseInt(e.target.value) + 1).toString();
         console.log();

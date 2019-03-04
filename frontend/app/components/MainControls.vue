@@ -270,9 +270,9 @@
       onStartDateChange (e) {
         var date = null
         // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
-        console.log("again", e.target.value)
         if (e.target.value > 12) {
-          date = Date.parse((this.startMonth + "/01/" + e.target.value))
+          console.log(this.startMonth)
+          date = Date.parse(((parseInt(this.startMonth)+1).toString() + "/01/" + e.target.value))
         } else {
           let month = (parseInt(e.target.value) + 1).toString()
           date = Date.parse((month + "/01/" + this.startYear))
@@ -290,9 +290,8 @@
       onEndDateChange (e) {
         var date = null
         // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
-                console.log("again", e.target.value)
         if (e.target.value > 12) {
-          date = Date.parse((this.endMonth + "/01/" + e.target.value))
+          date = Date.parse(((parseInt(this.endMonth)+1).toString() + "/01/" + e.target.value))
         } else {
           let month = (parseInt(e.target.value) + 1).toString()
           console.log()
