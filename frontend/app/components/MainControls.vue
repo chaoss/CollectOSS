@@ -90,7 +90,7 @@
                             <div class="col col-7">
                               <div class="form-item">
                                 <select ref="startMonth" @change=onStartDateChange>
-                                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
+                                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="(startMonth) == month.value">{{ month.name }}</option>
                                 </select>
                                 <div class="desc">Month</div>
                               </div>
@@ -98,7 +98,7 @@
                             <div class="col col-5">
                               <div class="form-item">
                                 <select ref="startYear" @change=onStartDateChange>
-                                  <option v-for="year in years" v-bind:value="year" v-bind:selected="year == 2010">{{ year }}</option>
+                                  <option v-for="year in years" v-bind:value="year" v-bind:selected="startYear == year">{{ year }}</option>
                                 </select>
                                 <div class="desc">Year</div>
                               </div>
@@ -115,9 +115,9 @@
                         <label>End Date
                           <div class="row gutters">
                             <div class="col col-7">
-                              <div class="form-item">
+                              <div class="form-item"> <!--month.value == thisMonth--> <!--year == thisYear--> <!--year == 2010-->
                                 <select ref="endMonth" @change=onEndDateChange>
-                                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="month.value == thisMonth">{{ month.name }}</option>
+                                  <option v-for="month in months" v-bind:value="month.value" v-bind:selected="(endMonth) == month.value">{{ month.name }}</option>
                                 </select>
                                 <div class="desc">Month</div>
                               </div>
@@ -125,7 +125,7 @@
                             <div class="col col-5">
                               <div class="form-item">
                                 <select ref="endYear" @change=onEndDateChange>
-                                  <option v-for="year in years" v-bind:value="year" v-bind:selected="year == thisYear">{{ year }}</option>
+                                  <option v-for="year in years" v-bind:value="year" v-bind:selected="endYear == year">{{ year }}</option>
                                 </select>
                                 <div class="desc">Year</div>
                               </div>
@@ -149,9 +149,9 @@
               <h6>Comparison Type</h6>
                   <label>
                   <div class="form-item form-checkboxes">
-                    <label class="checkbox"><input name="comparebaseline" value="zscore" type="radio" @change="onCompareChange">Z-score</label><br>
-                    <label class="checkbox"><input name="comparebaseline" value="baseline" type="radio" @change="onCompareChange">Baseline is compared</label>
-                    <label class="checkbox"><input name="comparebaseline" value="rolling" type="radio" checked @change="onCompareChange">Rolling average</label>
+                    <label class="checkbox"><input name="comparebaseline" value="zscore" type="radio" :checked="compare == 'zscore'" @change="onCompareChange">Z-score</label><br>
+                    <label class="checkbox"><input name="comparebaseline" value="baseline" type="radio" :checked="compare == 'baseline'" @change="onCompareChange">Baseline is compared</label>
+                    <label class="checkbox"><input name="comparebaseline" value="rolling" type="radio" :checked="compare == 'rolling'" @change="onCompareChange">Rolling average</label>
                   </div>
                   </label>
               </label>
@@ -270,7 +270,15 @@
         // document.querySelector('.section.collapsible').classList.toggle('collapsed')
       },
       onStartDateChange (e) {
-        var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
+        var date = null
+        // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
+        console.log("again", e.target.value)
+        if (e.target.value > 12) {
+          date = Date.parse((this.startMonth + "/01/" + e.target.value))
+        } else {
+          let month = (parseInt(e.target.value) + 1).toString()
+          date = Date.parse((month + "/01/" + this.startYear))
+        }
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
           delete this.startDateTimeout
@@ -279,10 +287,20 @@
           this.$store.commit('setDates', {
             startDate: date
           })
-        }, 500);
+        }, 800);
       },
       onEndDateChange (e) {
-        var date = Date.parse((this.$refs.endMonth.value + "/01/" + this.$refs.endYear.value))
+        var date = null
+        // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
+                console.log("again", e.target.value)
+
+        if (e.target.value > 12) {
+          date = Date.parse((this.endMonth + "/01/" + e.target.value))
+        } else {
+          let month = (parseInt(e.target.value) + 1).toString()
+          console.log()
+          date = Date.parse((month + "/01/" + this.endYear))
+        }
         if (this.endDateTimeout) {
           clearTimeout(this.endDateTimeout)
           delete this.endDateTimeout
@@ -291,7 +309,7 @@
           this.$store.commit('setDates', {
             endDate: date
           })
-        }, 500);
+        }, 800);
       },
       onTrailingAverageChange (e) {
         this.info.days = e.target.value
@@ -321,11 +339,9 @@
         })
       },
       onCompareChange (e) {
-        console.log("compare change", e.target.value)
         this.$store.commit('setCompare', {
           compare: e.target.value
         }) 
-
       },
       onCompare (e) {
         var element = document.getElementById("invalid")
@@ -391,6 +407,9 @@
       }
     },
     computed: {
+      compare () {
+        return this.$store.state.compare
+      },
       months() { return [
         { name: 'January', value: 0 },
         { name: 'February', value: 1 },
@@ -413,6 +432,18 @@
           yearArray.push(i)
         }
         return yearArray;
+      },
+      startMonth() {
+        return this.$store.state.startDate.getMonth()
+      },
+      startYear() {
+        return this.$store.state.startDate.getUTCFullYear()
+      },
+      endMonth() {
+        return this.$store.state.endDate.getMonth()
+      },
+      endYear() {
+        return this.$store.state.endDate.getUTCFullYear()
       }
     },
     mounted() {
@@ -420,7 +451,7 @@
       // $(this.$el).find('.special').addClass('selecting')
       window.$(this.$el).find('.multiselect__input').addClass('search')
       window.$(this.$el).find('.multiselect__input').addClass('reposearch')
-      
+      console.log("CHECKING", this.$store.state.startDate.getMonth(), this.$store.state.startDate.getUTCFullYear(), this.$store.state.endDate.getMonth(), this.$store.state.endDate.getUTCFullYear())
       if (this.projects.length == 1) this.project = this.projects[0]
     }
 

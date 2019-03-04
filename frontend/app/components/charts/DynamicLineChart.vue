@@ -68,16 +68,43 @@ export default {
     },
   },
   beforeUpdate() {
+  console.log("started")
+      // $(this.$el).find('.spinner').addClass('loader')
+        // $(this.$el).find('.error').addClass('hidden')
+        // $(this.$el).find('.hidefirst').addClass('invis')
+        // $(this.$el).find('.hidefirst').addClass('invisDet')
+        // $(this.$el).find('.spacing').removeClass('hidden')
     this.$store.watch(
       // When the returned result changes...
+      
       function (state) {
         console.log("WORKED")
+        
         this.thisShouldTriggerRecompute()
         return 
-      },
+      }
+
       // // Run this callback
       // callback
     )
+    // this.$store.watch(
+    //   // When the returned result changes...      
+    //   (state) => {
+    //     console.log("STARTED")
+        
+    //     return
+    //   },
+    //   // // Run this callback
+    //   // callback
+    // )
+    
+  },
+  updated() {
+    // $(this.$el).find('.hidefirst').removeClass('invis')
+    //         $(this.$el).find('.hidefirst').removeClass('invisDet')
+    //         $(this.$el).find('.spinner').removeClass('loader')
+    //         $(this.$el).find('.spacing').addClass('hidden')
+    //         $(this.$el).find('.hidefirst').removeClass('invisDet')
   },
   computed: {
     repo () {
@@ -784,11 +811,9 @@ export default {
                 if (repo == this.repo) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
                 if (this.compare == 'zscore') { // && this.comparedRepos.length > 0
-                  console.log("zscore")
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
                 } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
-                else if (this.compare == 'baseline' ) { //&& this.comparedRepos.length > 0
-                  console.log("baseline")
+                else if (this.compare == 'baseline') { //&& this.comparedRepos.length > 0
                   if(repo.githubURL == this.repo){
                     baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
                   }
