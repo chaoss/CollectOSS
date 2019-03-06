@@ -48,7 +48,8 @@
         </div>
         <div class="row gutters section collapsible collapsed">
           <div class="col col-5">
-            <label>Line Charts
+            <label><h6>Line Chart Options</h6>
+                <!-- <label><b><t>Show:</t></b></label> -->
             <div class="row">
               <div class="col col-6">
                 <div class="form-item form-checkboxes">
@@ -66,7 +67,7 @@
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" checked @change="onDetailChange">Enable detail</label>
                 </div>
               </div>
-              <label>Bubble Charts
+              <label><h6>Bubble Chart Options </h6>
               <div class="form-item form-checkboxes">
                 <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
               </div>
@@ -81,7 +82,7 @@
           <div class="col col-7">
             <div class="row">
               <div class="col col-6">
-                <h6>Configuration</h6>
+                <h6>Chart Timeline Configuration</h6>
                   <div class="row gutters">
                     <div class="col col-11">
                       <div class="form-item">
@@ -115,7 +116,7 @@
                         <label>End Date
                           <div class="row gutters">
                             <div class="col col-7">
-                              <div class="form-item"> <!--month.value == thisMonth--> <!--year == thisYear--> <!--year == 2010-->
+                              <div class="form-item">
                                 <select ref="endMonth" @change=onEndDateChange>
                                   <option v-for="month in months" v-bind:value="month.value" v-bind:selected="(endMonth) == month.value">{{ month.name }}</option>
                                 </select>
@@ -268,18 +269,12 @@
         // document.querySelector('.section.collapsible').classList.toggle('collapsed')
       },
       onStartDateChange (e) {
-        var date = null
-        // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
-        if (e.target.value > 12) {
-          console.log(this.startMonth)
-          date = Date.parse(((parseInt(this.startMonth)+1).toString() + "/01/" + e.target.value))
-        } else {
-          let month = (parseInt(e.target.value) + 1).toString()
-          date = Date.parse((month + "/01/" + this.startYear))
-        }
+        var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
+        console.log('Start date has been changed!')
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
           delete this.startDateTimeout
+          console.log('startDateTimeout')
         }
         this.startDateTimeout = setTimeout(() => {
           this.$store.commit('setDates', {
