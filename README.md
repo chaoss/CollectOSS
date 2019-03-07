@@ -43,6 +43,9 @@ After this process has completed, the VM should be up and running. You'll then b
 # inside the vagrant VM
 sudo su -
 cd /vagrant/augur
+
+# due to vagrant weirdness, we have to manually install the python packages
+sudo $AUGUR_PIP install --upgrade .
 ```
 
 Once you've reached this point, you're ready to start developing! To start the backend, run `augur`. After you run the this command for the first time, a default configuration file called `augur.config.json` will automatically be generated. Reference the sample configuration file (`sample.config.json`) on how to set up the server, development, and cache configurations, as well as the plugin connections.
@@ -65,8 +68,8 @@ make vagrant
 sudo su -
 cd /vagrant/augur
 
-# you might to install the Python dependencies again- vagrant can be weird
-pip3 install -e .
+# due to vagrant weirdness, we have to manually install the python packages
+sudo $AUGUR_PIP install --upgrade .
 
 augur # to create an augur.config.json
 
