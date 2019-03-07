@@ -2598,6 +2598,7 @@ header .search {
   background: #eaeaea;
   border-bottom: 1px solid #eaeaea;
 }
+<<<<<<< Updated upstream
 .tabs li.active label {
   color: #000 !important;
   border-bottom: 3px solid #ddd !important;
@@ -3916,6 +3917,8 @@ header .search {
   background: #eaeaea;
   border-bottom: 1px solid #eaeaea;
 }
+=======
+>>>>>>> Stashed changes
 .tabs li.active label {
   color: #000 !important;
   border-bottom: 3px solid #ddd !important;
@@ -4991,6 +4994,11 @@ input:focus {
   right: 50%;
   margin-left: -50vw;
   margin-right: -50vw;
+}
+.parent {
+  position: absolute;
+  z-index: 1 !important;
+  align-content: center;
 }
 @-moz-keyframes spin {
   0% {

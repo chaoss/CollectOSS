@@ -1076,6 +1076,60 @@ var AugurStats = function () {
 exports.default = AugurStats;
 });
 
+;require.register("components/AddComparedRepoDashboard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _NavBar = require('./NavBar');
+
+var _NavBar2 = _interopRequireDefault(_NavBar);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+	components: {
+		NavBar: _NavBar2.default
+	}
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_vm._m(0),_vm._v(" "),_c('div',[_c('nav-bar')],1),_vm._v(" "),_vm._m(1)])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('h4',{staticClass:"row auto"},[_c('b',[_vm._v("Add a Compared Repo:")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row auto"},[_c('button',{staticClass:"dashboard-btn col-2"},[_vm._v("Browse Your projects")]),_vm._v(" "),_c('button',{staticClass:"dashboard-btn col-2"},[_vm._v("Create a Group")])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-12f059af", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-12f059af", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/AddNewProject.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('form',{staticClass:"login-form validate-form"},[_c('div',{staticClass:"container-login-form-btn"},[_c('button',{staticClass:"dashboard-btn",staticStyle:{"align-content":"center !important"}},[_vm._v("\n            Add New Project\n          ")])])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-5d2394bd", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-5d2394bd", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/AugurApp.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -1132,6 +1186,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
+<<<<<<< Updated upstream
 var _AugurHeader = require('../components/AugurHeader.vue');
 
 var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
@@ -1187,13 +1242,90 @@ var _MainControls2 = _interopRequireDefault(_MainControls);
 var _LoginForm = require('../components/LoginForm');
 
 var _LoginForm2 = _interopRequireDefault(_LoginForm);
+=======
+var _MainControls = require('./MainControls');
+
+var _MainControls2 = _interopRequireDefault(_MainControls);
+
+var _AugurHeader = require('./AugurHeader');
+
+var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
+
+var _MetricsStatusCard = require('./MetricsStatusCard');
+
+var _MetricsStatusCard2 = _interopRequireDefault(_MetricsStatusCard);
+
+var _BaseRepoActivityCard = require('./BaseRepoActivityCard');
+
+var _BaseRepoActivityCard2 = _interopRequireDefault(_BaseRepoActivityCard);
+
+var _BaseRepoEcosystemCard = require('./BaseRepoEcosystemCard');
+
+var _BaseRepoEcosystemCard2 = _interopRequireDefault(_BaseRepoEcosystemCard);
+
+var _GrowthMaturityDeclineCard = require('./GrowthMaturityDeclineCard');
+
+var _GrowthMaturityDeclineCard2 = _interopRequireDefault(_GrowthMaturityDeclineCard);
+
+var _RiskCard = require('./RiskCard');
+
+var _RiskCard2 = _interopRequireDefault(_RiskCard);
+
+var _ValueCard = require('./ValueCard');
+
+var _ValueCard2 = _interopRequireDefault(_ValueCard);
+
+var _DiversityInclusionCard = require('./DiversityInclusionCard');
+
+var _DiversityInclusionCard2 = _interopRequireDefault(_DiversityInclusionCard);
+
+var _GitCard = require('./GitCard');
+
+var _GitCard2 = _interopRequireDefault(_GitCard);
+
+var _ExperimentalCard = require('./ExperimentalCard');
+
+var _ExperimentalCard2 = _interopRequireDefault(_ExperimentalCard);
+
+var _DownloadedReposCard = require('./DownloadedReposCard');
+
+var _DownloadedReposCard2 = _interopRequireDefault(_DownloadedReposCard);
+
+var _LoginForm = require('./LoginForm');
+
+var _LoginForm2 = _interopRequireDefault(_LoginForm);
+
+var _ForgotPassword = require('./ForgotPassword');
+
+var _ForgotPassword2 = _interopRequireDefault(_ForgotPassword);
+
+var _PasswordReset = require('./PasswordReset');
+
+var _PasswordReset2 = _interopRequireDefault(_PasswordReset);
+
+var _NewUser = require('./NewUser');
+
+var _NewUser2 = _interopRequireDefault(_NewUser);
+
+var _UserDashboard = require('./UserDashboard');
+
+var _UserDashboard2 = _interopRequireDefault(_UserDashboard);
+
+var _AddNewProject = require('./AddNewProject');
+
+var _AddNewProject2 = _interopRequireDefault(_AddNewProject);
+>>>>>>> Stashed changes
 
 var _vuex = require('vuex');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
+<<<<<<< Updated upstream
+  props: ['owner', 'repo', 'domain', 'comparedowner', 'comparedrepo', 'groupid'],
+=======
   props: ['tab', 'owner', 'repo', 'domain', 'comparedowner', 'comparedrepo', 'groupid'],
+>>>>>>> Stashed changes
   components: {
     MainControls: _MainControls2.default,
     AugurHeader: _AugurHeader2.default,
@@ -1207,11 +1339,74 @@ module.exports = {
     GitCard: _GitCard2.default,
     ExperimentalCard: _ExperimentalCard2.default,
     DownloadedReposCard: _DownloadedReposCard2.default,
+<<<<<<< Updated upstream
     LoginForm: _LoginForm2.default
   },
   watch: {
     '$route': function $route(to, from) {
+      if (to.path != from.path) window.location.reload();
+=======
+    LoginForm: _LoginForm2.default,
+    ForgotPassword: _ForgotPassword2.default,
+    PasswordReset: _PasswordReset2.default,
+    NewUser: _NewUser2.default,
+    UserDashboard: _UserDashboard2.default,
+    AddNewProject: _AddNewProject2.default
+  },
+  created: function created(to, from, next) {
+    var _this = this;
+
+    if (this.repo || this.groupid) {
+      this.$store.commit("resetTab");
+      this.$store.commit('setTab', {
+        tab: this.tab
+      });
+      if (this.$router.history.current.name == "singlegit") {
+        this.$store.commit('setRepo', {
+          gitURL: this.repo
+        });
+      } else if (!this.groupid) {
+        if (this.repo.includes('github')) {
+          this.$store.commit('setRepo', {
+            gitURL: this.repo
+          });
+        } else {
+          this.$store.commit('setRepo', {
+            githubURL: this.owner + '/' + this.repo
+          });
+        }
+      }
+      if (this.comparedrepo) {
+        this.$store.commit('addComparedRepo', {
+          githubURL: this.comparedowner + '/' + this.comparedrepo
+        });
+      }
+      if (this.groupid) {
+        var repos = this.groupid.split('+');
+        if (repos[0].includes('github')) {
+          this.$store.commit('setRepo', {
+            gitURL: repos[0]
+          });
+        } else {
+          this.$store.commit('setRepo', {
+            githubURL: repos[0]
+          });
+        }
+        repos.shift();
+
+        repos.forEach(function (cmprepo) {
+          _this.$store.commit('addComparedRepo', {
+            githubURL: cmprepo
+          });
+        });
+      }
+    }
+  },
+
+  watch: {
+    '$route': function $route(to, from) {
       if (to.path != from.path) window.location.replace(to.path);
+>>>>>>> Stashed changes
     }
   },
   data: function data() {
@@ -1224,6 +1419,24 @@ module.exports = {
     };
   },
 
+<<<<<<< Updated upstream
+  methods: {
+    onRepo: function onRepo(e) {
+      var repo = window.AugurAPI.Repo({
+        githubURL: e.target.value
+      });
+      if (!repo.batch(['codeCommits'], true)[0]) {
+        alert("The repo " + repo.githubURL + " could not be found. Please try again.");
+      } else {
+        this.$store.commit('resetBaseRepo');
+        this.$store.commit('setRepo', {
+          githubURL: e.target.value
+        });
+        this.$router.push({
+          name: 'gmd',
+          params: { owner: repo.owner, repo: repo.name } });
+      }
+=======
   computed: {
     hasState: function hasState() {
       return this.$store.state.hasState;
@@ -1287,6 +1500,7 @@ module.exports = {
     },
     btoa: function btoa(s) {
       return window.btoa(s);
+>>>>>>> Stashed changes
     }
   }
 };
@@ -1294,8 +1508,13 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{staticClass:"fullwidth"},[_c('augur-header')],1),_vm._v(" "),_c('div',{class:{ hidden: _vm.hasState }},[_c('section',{staticClass:"unmaterialized"},[_vm._m(0),_vm._v(" "),_c('downloaded-repos-card')],1)]),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: _vm.comparedRepos.length < 2 }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Group Overview")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'openended'), hidden: _vm.comparedRepos.length > 0 }},[_c('a',{attrs:{"href":"#","data-value":"openended"},on:{"click":_vm.changeTab}},[_vm._v("Open Ended Questions")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',{key:_vm.update},[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card')],1):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.comparedRepos.length >= 2 && (_vm.currentTab == 'overview')))?_c('div',[_c('overview-card')],1):_vm._e(),_vm._v(" "),((_vm.comparedRepos.length == 0 && (_vm.currentTab == 'openended')))?_c('div',[_c('overview-card')],1):_vm._e()],1)])])}
+<<<<<<< Updated upstream
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{staticClass:"fullwidth"},[_c('router-view',{attrs:{"name":"header"}})],1),_vm._v(" "),_c('div',{ref:"cards",staticStyle:{"margin":"0 0 0 0"}},[_c('router-view',{attrs:{"name":"tabs"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"controls"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"content"}})],1)])}
+__vue__options__.staticRenderFns = []
+=======
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{staticClass:"fullwidth"},[_c('augur-header')],1),_vm._v(" "),_c('div',{class:{ hidden: _vm.hasState }},[_c('user-dashboard'),_vm._v(" "),_c('login-form'),_vm._v(" "),_c('forgot-password'),_vm._v(" "),_c('password-reset'),_vm._v(" "),_c('new-user'),_vm._v(" "),_c('section',{staticClass:"unmaterialized"},[_vm._m(0),_vm._v(" "),_c('downloaded-repos-card')],1)],1),_vm._v(" "),_c('div',{class:{ hidden: !_vm.hasState }},[_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityInclusion'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"diversityInclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental'), hidden: !_vm.baseRepo }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: _vm.comparedRepos.length < 2 }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Group Overview")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'openended'), hidden: _vm.comparedRepos.length > 0 }},[_c('a',{attrs:{"href":"#","data-value":"openended"},on:{"click":_vm.changeTab}},[_vm._v("Open Ended Questions")])])])]),_vm._v(" "),_c('div',{ref:"cards"},[_c('main-controls'),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'gmd')))?_c('div',{key:_vm.update},[_c('growth-maturity-decline-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'diversityInclusion')))?_c('div',[_c('diversity-inclusion-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'risk')))?_c('div',[_c('risk-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'value')))?_c('div',[_c('value-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'activity')))?_c('div',{attrs:{"id":"activity"}},[_c('base-repo-activity-card'),_vm._v(" "),_c('base-repo-ecosystem-card')],1):_vm._e(),_vm._v(" "),((_vm.baseRepo && (_vm.currentTab == 'experimental')))?_c('div',[_c('experimental-card')],1):_vm._e(),_vm._v(" "),((_vm.gitRepo && (_vm.currentTab == 'git')))?_c('div',[_c('git-card')],1):_vm._e(),_vm._v(" "),((_vm.comparedRepos.length >= 2 && (_vm.currentTab == 'overview')))?_c('div',[_c('overview-card')],1):_vm._e(),_vm._v(" "),((_vm.comparedRepos.length == 0 && (_vm.currentTab == 'openended')))?_c('div',[_c('overview-card')],1):_vm._e()],1)])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{attrs:{"id":"collapse"}},[_c('h3',[_vm._v("Downloaded Git Repos by Project")])])}]
+>>>>>>> Stashed changes
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -1400,6 +1619,23 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/BaseRepoDashboard.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('h4',{staticClass:"row auto",staticStyle:{"text-align":"center"}},[_c('b',[_vm._v("Base Repo")])]),_vm._v(" "),_c('button',{staticClass:"dashboard-btn row "},[_vm._v("Click To Select From Your Projects")]),_vm._v(" "),_c('h4',{staticClass:"row auto",staticStyle:{"text-align":"center"}},[_c('b',[_vm._v("Compared Repos:")])]),_vm._v(" "),_c('h2',{staticClass:"row",staticStyle:{"text-align":"center"}},[_vm._v("Empty")])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-387622d4", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-387622d4", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/BaseRepoEcosystemCard.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -1445,6 +1681,23 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-2a4aa320", __vue__options__)
   } else {
     hotAPI.reload("data-v-2a4aa320", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/ChooseAPage.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('h4',{staticClass:"row"},[_c('b',[_vm._v("Choose A Page:")])]),_vm._v(" "),_c('button',{staticClass:"dashboard-btn row auto col-2"},[_vm._v("Classic Tabs")]),_vm._v(" "),_c('button',{staticClass:"dashboard-btn row auto col-2"},[_vm._v("Single")]),_vm._v(" "),_c('button',{staticClass:"dashboard-btn row auto col-2"},[_vm._v("Single Compare")]),_vm._v(" "),_c('button',{staticClass:"dashboard-btn row auto col-2"},[_vm._v("Group")])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-310e4ddc", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-310e4ddc", __vue__options__)
   }
 })()}
 });
@@ -1588,6 +1841,23 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/EditProject.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('button',{staticClass:" dashboard-btn "},[_vm._v("Edit")])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-10246c5c", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-10246c5c", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/ExperimentalCard.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -1633,6 +1903,39 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-b05646f6", __vue__options__)
   } else {
     hotAPI.reload("data-v-b05646f6", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/ForgotPassword.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+
+module.exports = {
+  data: function data() {
+    return {};
+  },
+
+  methods: {},
+  computed: {},
+  mounted: function mounted() {
+    console.log("HEREEEE");
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('div',{staticClass:"container-login background"},[_c('div',{staticClass:"wrap-login"},[_c('form',{staticClass:"forgot-password validate-form"},[_c('div',{staticStyle:{"text-align":"center","padding-right":"10px"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})]),_vm._v(" "),_c('span',{staticClass:"forgot-password-title"},[_vm._v("\n          Forgot Password?\n        ")]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input",attrs:{"type":"text","name":"username","placeholder":"Username"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input",attrs:{"type":"text","name":"username","placeholder":"Email"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"container-login-form-btn"},[_c('button',{staticClass:"login-form-btn"},[_vm._v("\n            Request Password Reset\n          ")])])])])])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-b52cdcea", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-b52cdcea", __vue__options__)
   }
 })()}
 });
@@ -1687,7 +1990,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important","margin-bottom":"0"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block","margin-bottom":"0"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block","margin-bottom":"0"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-110px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px","padding-top":"0px","position":"relative","z-index":"-1"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"type":"lines","title":"Average Lines of Code Per Commit"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-150px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-90px) !important"}},[_c('lines-of-code-chart')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"type":"lines","title":"Average Lines of Code Per Commit"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-100px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('lines-of-code-chart')],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1696,7 +1999,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-f66913b6", __vue__options__)
+    hotAPI.reload("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -1759,7 +2062,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] }),attrs:{"value":repo},on:{"click":function($event){}}},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6 parent"},[_c('dynamic-line-chart',{attrs:{"source":"closedIssues","title":"Closed Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeCommits","title":"Code Commits / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"maintainerResponseToMergeRequestDuration","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"openIssues","title":"Open Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestsOpen","title":"Pull Requests Open / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations"}})],1)]),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] }),attrs:{"value":repo},on:{"click":function($event){}}},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"closedIssues","title":"Closed Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeCommits","title":"Code Commits / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"maintainerResponseToMergeRequestDuration","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"openIssues","title":"Open Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestsOpen","title":"Pull Requests Open / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations"}})],1)]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1768,7 +2071,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-429b02f1", __vue__options__)
+    hotAPI.reload("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -1789,8 +2092,13 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+<<<<<<< Updated upstream
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('div',{staticClass:"container-login background"},[_c('div',{staticClass:"wrap-login"},[_c('form',{staticClass:"login-form validate-form"},[_c('div',{staticStyle:{"text-align":"center","padding-right":"10px"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})]),_vm._v(" "),_c('span',{staticClass:"login-form-title"},[_vm._v("\n          Log in\n        ")]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input",attrs:{"type":"text","name":"username","placeholder":"Username"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","placeholder":"Password"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("🔒")])]),_vm._v(" "),_c('div',{staticClass:"contact-form-checkbox"},[_c('input',{staticClass:"input-checkbox",attrs:{"id":"ckb1","type":"checkbox"}}),_vm._v(" "),_c('label',{staticClass:"label-checkbox",attrs:{"for":"ckb1"}},[_vm._v("\n            Remember me\n          ")])]),_vm._v(" "),_c('div',{staticClass:"container-login-form-btn"},[_c('button',{staticClass:"login-form-btn"},[_vm._v("\n            Login\n          ")])])])])])])}]
+=======
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('router-link',{attrs:{"to":"/"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})]),_vm._v(" "),_c('div',{staticClass:"container-login background"},[_c('div',{staticClass:"wrap-login"},[_c('form',{staticClass:"login-form validate-form",attrs:{"action":_vm.formAction,"method":"post"}},[_vm._m(0),_vm._v(" "),_vm._m(1),_vm._v(" "),_vm._m(2),_vm._v(" "),_vm._m(3),_vm._v(" "),_vm._m(4)])])])],1)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input whiteplace",attrs:{"type":"text","name":"username","placeholder":"Username","id":"placehold"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","name":"password","placeholder":"Password"}})])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"contact-form-checkbox"},[_c('input',{staticClass:"input-checkbox",attrs:{"id":"ckb1","type":"checkbox"}}),_vm._v(" "),_c('label',{staticClass:"label-checkbox",attrs:{"for":"ckb1"}},[_vm._v("\n            Remember me\n          ")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('a',{staticClass:"input",staticStyle:{"text-decoration":"none","position":"relative"},attrs:{"href":""}},[_vm._v("New User")]),_vm._v(" "),_c('a',{staticClass:"input",staticStyle:{"text-decoration":"none","position":"relative"},attrs:{"href":""}},[_vm._v("Forgot Password?")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"container-login-form-btn"},[_c('input',{staticClass:"login-form-btn",attrs:{"type":"submit","value":"Login"}})])}]
+>>>>>>> Stashed changes
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -1892,8 +2200,20 @@ module.exports = {
     onStartDateChange: function onStartDateChange(e) {
       var _this2 = this;
 
+<<<<<<< Updated upstream
+      var date = null;
+
+      if (e.target.value > 12) {
+        console.log(this.startMonth);
+        date = Date.parse((parseInt(this.startMonth) + 1).toString() + "/01/" + e.target.value);
+      } else {
+        var month = (parseInt(e.target.value) + 1).toString();
+        date = Date.parse(month + "/01/" + this.startYear);
+      }
+=======
       var date = Date.parse(this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value);
       console.log('Start date has been changed!');
+>>>>>>> Stashed changes
       if (this.startDateTimeout) {
         clearTimeout(this.startDateTimeout);
         delete this.startDateTimeout;
@@ -2063,7 +2383,11 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+<<<<<<< Updated upstream
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{directives:[{name:"click-outside",rawName:"v-click-outside",value:(_vm.stopSelecting),expression:"stopSelecting"}],staticClass:"row col col-4",staticStyle:{"text-align":"center !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{attrs:{"options":_vm.projects,"placeholder":_vm.project},model:{value:(_vm.project),callback:function ($$v) {_vm.project=$$v},expression:"project"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.options,"multiple":true,"group-label":"url","placeholder":"Select repos"},model:{value:(_vm.values),callback:function ($$v) {_vm.values=$$v},expression:"values"}})],1)]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Apply"},on:{"click":function($event){_vm.onArrayCompare(); _vm.onValuesClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Reset"},on:{"click":function($event){_vm.onClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-3"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Search other GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-1 invisible invalid-search",attrs:{"id":"invalid","align":"center"}},[_vm._v("Repo not found.")]),_vm._v(" "),_c('div',{staticClass:"col col-2",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){_vm.collapseText()}}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){_vm.collapseText()}}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_vm._v("Line Charts\n            "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_vm._v("Bubble Charts\n              "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.startMonth) == month.value}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.startYear == year}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.endMonth) == month.value}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.endYear == year}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},domProps:{"checked":_vm.compare == 'zscore'},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","type":"radio"},domProps:{"checked":_vm.compare == 'baseline'},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"rolling","type":"radio"},domProps:{"checked":_vm.compare == 'rolling'},on:{"change":_vm.onCompareChange}}),_vm._v("Rolling average")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
+=======
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{directives:[{name:"click-outside",rawName:"v-click-outside",value:(_vm.stopSelecting),expression:"stopSelecting"}],staticClass:"row col col-4",staticStyle:{"text-align":"center !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{attrs:{"options":_vm.projects,"placeholder":_vm.project},model:{value:(_vm.project),callback:function ($$v) {_vm.project=$$v},expression:"project"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.options,"multiple":true,"group-label":"url","placeholder":"Select repos"},model:{value:(_vm.values),callback:function ($$v) {_vm.values=$$v},expression:"values"}})],1)]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Apply"},on:{"click":function($event){_vm.onArrayCompare(); _vm.onValuesClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Reset"},on:{"click":function($event){_vm.onClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-3"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Search other GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-1 invisible invalid-search",attrs:{"id":"invalid","align":"center"}},[_vm._v("Repo not found.")]),_vm._v(" "),_c('div',{staticClass:"col col-2",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){_vm.collapseText()}}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){_vm.collapseText()}}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_c('h6',[_vm._v("Line Chart Options")]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_c('h6',[_vm._v("Bubble Chart Options ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Chart Timeline Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.startMonth) == month.value}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.startYear == year}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.endMonth) == month.value}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.endYear == year}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},domProps:{"checked":_vm.compare == 'zscore'},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","type":"radio"},domProps:{"checked":_vm.compare == 'baseline'},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"rolling","type":"radio"},domProps:{"checked":_vm.compare == 'rolling'},on:{"change":_vm.onCompareChange}}),_vm._v("Rolling average")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
+>>>>>>> Stashed changes
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3",attrs:{"align":"center","id":"comparetext"}},[_c('h6',[_vm._v("Compare from your repos:")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-12"},[_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2072,7 +2396,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-4eb76a08", __vue__options__)
   } else {
-    hotAPI.reload("data-v-4eb76a08", __vue__options__)
+    hotAPI.rerender("data-v-4eb76a08", __vue__options__)
   }
 })()}
 });
@@ -2192,6 +2516,53 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/NavBar.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"form-item"},[_c('input',{staticClass:"search reposearch col-4",attrs:{"type":"text","name":"headersearch","placeholder":"Search by URL"},on:{"change":_vm.onRepo}})])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-789bdac6", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-789bdac6", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/NewUser.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+
+module.exports = {
+  data: function data() {
+    return {};
+  },
+
+  methods: {},
+  computed: {}
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('div',{staticClass:"container-login background"},[_c('div',{staticClass:"wrap-login"},[_c('form',{staticClass:"login-form validate-form"},[_c('div',{staticStyle:{"text-align":"center","padding-right":"10px"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})]),_vm._v(" "),_c('span',{staticClass:"login-form-title"},[_vm._v("\n          Welcome to Augur\n        ")]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input whiteplace",attrs:{"type":"text","name":"username","placeholder":"Username","id":"placehold"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input whiteplace",attrs:{"type":"text","name":"username","placeholder":"Email","id":"placehold"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input whiteplace",attrs:{"type":"text","name":"username","placeholder":"GitHub Username","id":"placehold"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","placeholder":"Password"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("🔒")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","placeholder":"Confirm Password"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("🔒")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input whiteplace",attrs:{"type":"text","name":"username","placeholder":"(Optional) Affiliation","id":"placehold"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"contact-form-checkbox"},[_c('input',{staticClass:"input-checkbox",attrs:{"id":"ckb1","type":"checkbox"}}),_vm._v(" "),_c('label',{staticClass:"label-checkbox",attrs:{"for":"ckb1"}},[_vm._v("\n            Remember me\n          ")])]),_vm._v(" "),_c('div',{staticClass:"container-login-form-btn"},[_c('button',{staticClass:"login-form-btn"},[_vm._v("\n            Sign Up\n          ")])])])])])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-734f7d2e", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-734f7d2e", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/OverviewCard.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -2252,6 +2623,67 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-7117fe96", __vue__options__)
   } else {
     hotAPI.reload("data-v-7117fe96", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/PasswordReset.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+
+module.exports = {
+  data: function data() {
+    return {};
+  },
+
+  methods: {},
+  computed: {}
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('div',{staticClass:"container-login background"},[_c('div',{staticClass:"wrap-login"},[_c('form',{staticClass:"login-form validate-form"},[_c('div',{staticStyle:{"text-align":"center","padding-right":"10px"}},[_c('img',{attrs:{"src":"static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})]),_vm._v(" "),_c('span',{staticClass:"login-form-title"},[_vm._v("\n          Reset Password\n        ")]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter username"}},[_c('input',{staticClass:"input whiteplace",attrs:{"type":"text","name":"username","placeholder":"Username","id":"placehold"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("👤")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","placeholder":"New Password"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("🔒")])]),_vm._v(" "),_c('div',{staticClass:"wrap-input validate-input",attrs:{"data-validate":"Enter password"}},[_c('input',{staticClass:"input",attrs:{"type":"password","placeholder":"Confirm New Password"}}),_vm._v(" "),_c('span',{staticClass:"focus-input",staticStyle:{"padding":"12px 0px 0px 10px"}},[_vm._v("🔒")])]),_vm._v(" "),_c('div',{staticClass:"container-login-form-btn"},[_c('button',{staticClass:"login-form-btn"},[_vm._v("\n            Validate\n          ")])])])])])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-622aae57", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-622aae57", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/RemoveProject.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+
+module.exports = {
+
+	methods: {
+		confirmDelete: function confirmDelete() {
+
+			if (confirm("Are you sure you want to proceed?")) {} else {}
+		}
+	}
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"limiter"},[_c('button',{staticClass:" dashboard-btn ",on:{"click":function($event){_vm.confirmDelete()}}},[_vm._v("Remove")])])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-2c80b858", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-2c80b858", __vue__options__)
   }
 })()}
 });
@@ -2317,6 +2749,19 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-0abc386c", __vue__options__)
   } else {
     hotAPI.reload("data-v-0abc386c", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/SideBarDashboard.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-6437cf25", __vue__options__)
+  } else {
   }
 })()}
 });
@@ -2545,6 +2990,61 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/UserDashboard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _YourProjects = require('./YourProjects');
+
+var _YourProjects2 = _interopRequireDefault(_YourProjects);
+
+var _BaseRepoDashboard = require('./BaseRepoDashboard');
+
+var _BaseRepoDashboard2 = _interopRequireDefault(_BaseRepoDashboard);
+
+var _AddComparedRepoDashboard = require('./AddComparedRepoDashboard');
+
+var _AddComparedRepoDashboard2 = _interopRequireDefault(_AddComparedRepoDashboard);
+
+var _ChooseAPage = require('./ChooseAPage');
+
+var _ChooseAPage2 = _interopRequireDefault(_ChooseAPage);
+
+var _SideBarDashboard = require('./SideBarDashboard');
+
+var _SideBarDashboard2 = _interopRequireDefault(_SideBarDashboard);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+	components: {
+		YourProjects: _YourProjects2.default,
+		AddComparedRepo: _AddComparedRepoDashboard2.default,
+		BaseRepo: _BaseRepoDashboard2.default,
+		ChooseAPage: _ChooseAPage2.default,
+		SideBar: _SideBarDashboard2.default
+	},
+
+	methods: {}
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"justify-content-md-center limiter"},[_c('h1',{staticStyle:{"text-align":"center"}},[_vm._v("Your Dashboard")]),_vm._v(" "),_c('div',[_c('side-bar')],1),_vm._v(" "),_c('div',[_c('base-repo')],1),_vm._v(" "),_c('div',[_c('add-compared-repo')],1),_vm._v(" "),_c('div',[_c('choose-a-page')],1),_vm._v(" "),_c('div',[_c('your-projects')],1)])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-2c49336c", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-2c49336c", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/ValueCard.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -2594,10 +3094,37 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-<<<<<<< Updated upstream
-=======
 ;require.register("components/YourProjects.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _AddNewProject = require('./AddNewProject');
+
+var _AddNewProject2 = _interopRequireDefault(_AddNewProject);
+
+var _EditProject = require('./EditProject');
+
+var _EditProject2 = _interopRequireDefault(_EditProject);
+
+var _RemoveProject = require('./RemoveProject');
+
+var _RemoveProject2 = _interopRequireDefault(_RemoveProject);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+	components: {
+		AddNewProject: _AddNewProject2.default,
+		EditProject: _EditProject2.default,
+		RemoveProject: _RemoveProject2.default
+	}
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_vm._m(0),_vm._v(" "),_c('span',{staticStyle:{"align-content":"center !important"}},[_c('div',{staticClass:"row auto",staticStyle:{"text-align":"center !important"}},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('edit-project')],1),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('remove-project')],1)]),_vm._v(" "),_c('div',{staticClass:"row auto",staticStyle:{"text-align":"center"}},[_vm._m(2),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('edit-project')],1),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('remove-project')],1)]),_vm._v(" "),_c('div',{staticClass:"row auto",staticStyle:{"text-align":"center"}},[_vm._m(3),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('edit-project')],1),_vm._v(" "),_c('div',{staticClass:"col col-2"},[_c('remove-project')],1)]),_vm._v(" "),_c('div',{staticClass:"row auto",staticStyle:{"text-align":"center !important"}},[_c('add-new-project')],1)])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('h4',{staticStyle:{"text-align":"center"}},[_c('b',[_vm._v("Current Projects:")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('label',{staticClass:"col col-3"},[_c('h3',[_vm._v("Twitter")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('label',{staticClass:"col col-3"},[_c('h3',[_vm._v("Pulp")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('label',{staticClass:"col col-3"},[_c('h3',[_vm._v("Etc")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -2610,7 +3137,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
->>>>>>> Stashed changes
 ;require.register("components/charts/BubbleChart.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -4502,7 +5028,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0760224e", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-0760224e", __vue__options__)
+    hotAPI.reload("data-v-0760224e", __vue__options__)
   }
 })()}
 });
@@ -5020,7 +5546,7 @@ exports.default = {
 
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 950,
+        "width": 800,
         "height": 300,
         "config": {
           "tick": {
@@ -5167,7 +5693,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder",staticStyle:{"position":"relative","z-index":"5"}},[_c('div',{staticClass:"tickchart"},[_c('h3',{staticStyle:{"text-align":"center"}},[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"transform":"translateY(-35px) !important"}},[_c('div',{staticClass:"inputGroup"},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -5176,7 +5702,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-083303b4", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-083303b4", __vue__options__)
+    hotAPI.reload("data-v-083303b4", __vue__options__)
   }
 })()}
 });
