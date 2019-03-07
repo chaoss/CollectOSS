@@ -78,4 +78,5 @@ augur/plugins/
 *.config.*
 *.cfg.*
 !sample.config.json
+!vagrant.config.json
 frontend/public/*.map
