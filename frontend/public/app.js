@@ -1701,9 +1701,7 @@ module.exports = {
         var url = repo.url;
         var first = url.indexOf(".");
         var last = url.lastIndexOf(".");
-
         var option = null;
-
         if (first == last) option = url.slice(url.indexOf('/') + 1);else if (url.slice(last) == '.git') option = url.slice(url.indexOf('/') + 1);else option = url.substring(first + 1, last) + repo.url.slice(url.indexOf('/'));
         _this.options.push(option);
       });

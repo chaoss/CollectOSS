@@ -7,10 +7,10 @@ Structure of the Backend
 Augur utilizes a plugin architecture. Plugins can be found in two
 directories: ``plugins/`` and ``datasources/``. ``plugins/`` is for
 generic plugins, while ``datasources/`` is specifically for plugins that
-provide a new datsource, like ``ghtorrent`` or ``facade``.
+provide a new data source, like ``ghtorrent`` or ``facade``.
 
-Inside each plugin directory are 4 required files: ``__init__.py``
-``plugin_name.py`` ``routes.py`` ``test_plugin_name.py``
+Inside each plugin directory are 4 required files: ``__init__.py``,
+``plugin_name.py``, ``routes.py``, and ``test_plugin_name.py``.
 
 We will go over these more in-depth in the following sections.
 
@@ -18,7 +18,7 @@ Setting up your environment
 ---------------------------
 
 Before you begin, make sure to activate the augur Anaconda environment
-by running ``conda activate augur``. If this environment doesn't exist,
+by running ``conda activate augur`` if you're using one. If this environment doesn't exist,
 try running ``make install-dev`` again and watch out for any errors.
 
 Writing a Plugin
@@ -31,7 +31,7 @@ Setting up a plugin
 ~~~~~~~~~~~~~~~~~~~
 
 ``__init__.py`` contains the plugin class, any code that is needed to
-initialize the datasource, plugin metadata, and the code needed to
+initialize the datasource, as well as the plugin metadata and boilerplate needed to
 register the plugin. ``__init__.py`` must also contain a
 ``create_routes`` function that takes in a ``flask_app``, which is
 responsible for adding the plugin's data source routes to the API.
@@ -137,7 +137,7 @@ definition, call the ``@annotate`` decorator as follows:
 
 .. code:: python
 
-    @annotate(metric_name='hello-world')
+    @annotate(tag='hello-world')
     def hello_world(self, owner, repo):
 
 It is currently standard practice to pass in the ``tag``, which should
