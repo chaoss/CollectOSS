@@ -45,7 +45,7 @@ def create_routes(server):
     @api {get} /git/lines_changed/:facade_repo_url Lines Changed by Author
     @apiName lines-changed-by-author
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://facade-oss.org/">Facade</a>
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -71,7 +71,7 @@ def create_routes(server):
     @api {get} /git/lines_changed_by_week/:facade_repo_url Lines Changed by Week
     @apiName lines-changed-by-week
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://facade-oss.org/">Facade</a>
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -91,7 +91,7 @@ def create_routes(server):
     @api {get} /git/lines_changed_by_month/:facade_repo_url Lines Changed by Month
     @apiName lines-changed-by-month
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://facade-oss.org/">Facade</a>
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -123,7 +123,7 @@ def create_routes(server):
     @api {get} /git/commits_by_week/:facade_repo_url Commits By Week
     @apiName commits-by-week
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://facade-oss.org/">Facade</a>
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 

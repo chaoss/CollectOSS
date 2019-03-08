@@ -1696,7 +1696,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-f66913b6", __vue__options__)
+    hotAPI.reload("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -1768,7 +1768,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-429b02f1", __vue__options__)
+    hotAPI.reload("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -2594,23 +2594,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-<<<<<<< Updated upstream
-=======
-;require.register("components/YourProjects.vue", function(exports, require, module) {
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-3ea95e3a", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-3ea95e3a", __vue__options__)
-  }
-})()}
-});
-
->>>>>>> Stashed changes
 ;require.register("components/charts/BubbleChart.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -4502,7 +4485,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0760224e", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-0760224e", __vue__options__)
+    hotAPI.reload("data-v-0760224e", __vue__options__)
   }
 })()}
 });
@@ -5176,7 +5159,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-083303b4", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-083303b4", __vue__options__)
+    hotAPI.reload("data-v-083303b4", __vue__options__)
   }
 })()}
 });
