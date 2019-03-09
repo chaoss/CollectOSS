@@ -16,6 +16,30 @@ def create_routes(server):
     #####################################
 
     """
+    @api {get} /:owner/:repo/githubapi/contributors List of Contributors & their Contributions
+    @apiName githubapi-contributors
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "login": "howderek",
+                                "contributions": 372
+                            },
+                            {
+                                "login": "ccarterlandis",
+                                "contributions": 190
+                            }
+                        ]
+    """
+    server.addMetric(github.contributors, 'githubapi/contributors')
+
+    """
     @api {get} /:owner/:repo/lines_changed Lines of Code Changed
     @apiName lines-of-code-changed
     @apiGroup Growth-Maturity-Decline
