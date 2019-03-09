@@ -40,6 +40,30 @@ def create_routes(server):
     server.addTimeseries(github.closed_issues, 'githubapi/issues/closed')
 
     """
+    @api {get} /:owner/:repo/timeseries/githubapi/commits Code Commits
+    @apiName githubapi-code-commits
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "created_at": "2017-01-30T00:00:00.000Z",
+                                "count": 6
+                            },
+                            {
+                                "created_at": "2017-01-31T00:00:00.000Z",
+                                "count": 14
+                            }
+                        ]
+    """
+    server.addTimeseries(github.code_commits, 'githubapi/commits')
+
+    """
     @api {get} /:owner/:repo/githubapi/contributors List of Contributors & their Contributions
     @apiName githubapi-contributors
     @apiGroup Growth-Maturity-Decline
