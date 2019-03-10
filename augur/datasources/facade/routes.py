@@ -234,8 +234,8 @@ def create_routes(server):
                        status=200,
                        mimetype="application/json")
 
-    # @server.app.route('/{}/git/cd_rg_tp_interval_loc_commits'.format(server.api_version))
-    @server.app.route('/{}/git/<calendar_year>/<interval>/<repo_group>/loc_commits'.format(server.api_version))
+    @server.app.route('/{}/git/cd_rg_tp_interval_loc_commits'.format(server.api_version))
+    # @server.app.route('/{}/git/<calendar_year>/<interval>/<repo_group>/loc_commits'.format(server.api_version))
     def cd_rg_tp_interval_loc_commits():
 
         repo_url_base = request.args.get('repo_url_base')

@@ -61,7 +61,7 @@ export default {
     spec() {
       let config = {
           "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-          "padding": {'left': 60, 'top': 10, 'right': 70, 'bottom': 20},
+          "padding": {'left': 60, 'top': 10, 'right': 70, 'bottom': 16},
           "config": {
               "bar": {
                 "discreteBandSize": 24
