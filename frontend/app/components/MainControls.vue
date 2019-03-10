@@ -280,7 +280,7 @@
           this.$store.commit('setDates', {
             startDate: date
           })
-        }, 500);
+        }, 100);
       },
       onEndDateChange (e) {
         var date = null
@@ -300,7 +300,7 @@
           this.$store.commit('setDates', {
             endDate: date
           })
-        }, 500);
+        }, 100);
       },
       onTrailingAverageChange (e) {
         this.info.days = e.target.value
