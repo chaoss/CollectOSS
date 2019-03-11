@@ -362,7 +362,7 @@ function Augur() {
         AugurApp.store.commit('setTab', {
           tab: to.name
         });
-        if (to.params.repo.includes('github')) {
+        if (to.params.repo.includes('github') || to.params.repo.split(".").length > 2) {
           AugurApp.store.commit('setRepo', {
             gitURL: to.params.repo
           });
@@ -4436,6 +4436,8 @@ exports.default = {
         processGitData(this.data);
       } else {
         var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        console.log(repo);
+        console.log(this.source);
         repo[this.source]().then(function (data) {
           console.log("batch data", data);
           processData(data);
@@ -5907,7 +5909,7 @@ exports.default = {
 
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-        "padding": { 'left': 60, 'top': 10, 'right': 70, 'bottom': 16 },
+        "padding": { 'left': 60, 'top': 10, 'right': 70, 'bottom': 20 },
         "config": {
           "bar": {
             "discreteBandSize": 24

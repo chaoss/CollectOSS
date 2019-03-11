@@ -206,7 +206,7 @@ export default function Augur () {
         AugurApp.store.commit('setTab', {
           tab: to.name
         })
-        if (to.params.repo.includes('github')) {
+        if (to.params.repo.includes('github') || to.params.repo.split(".").length > 2) {
           AugurApp.store.commit('setRepo', {
             gitURL: to.params.repo
           })
