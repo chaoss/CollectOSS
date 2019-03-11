@@ -10,7 +10,7 @@
     </div>
     <div class="row">
 
-      <div class="col col-6 parent">
+      <div class="col col-6">
         <dynamic-line-chart source="closedIssues"
                     title="Closed Issues / Week"
                     cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
