@@ -17,13 +17,14 @@ Functionally, Augur is a prototyped implementation of the Linux Foundation's [CH
 ### Vagrant
 **The quickest way to get started working on Augur is by using [Vagrant](https://www.vagrantup.com/)** to spin up a virtual machine (VM) that comes with Augur already installed. We'll do all the work of setting up and installing dependencies, leaving you free to jump right into contributing something awesome. 
 
-*Caveat: if you’re a super nerd who likes to have total control over your development environment, there’s a local installation link at the bottom of this page. For the rest of you, Vagrant is the way to go, especially if you've had trouble getting all the dependcies installed locally, are not comfortable installing them yourself, or are using an OS for which we don't currently support local installation. We currently only support local installation for macOS and most flavors of Linux.*
+*Caveat: if you’re a super nerd who likes to have total control over your development environment, there’s a local installation link at the bottom of this page. For the rest of you, Vagrant is the way to go, especially if you've had trouble getting all the dependcies installed locally, are not comfortable installing them yourself, or are using an OS for which we don't currently support local installation. **We currently only support local installation for macOS and most flavors of Linux**.*
+
+Windows installation instructions using Vagrant can be found [here](docs/python/source/windows-install.md).
 
 #### Dependencies
 
 - [Vagrant](https://www.vagrantup.com/)
 - [Virtualbox](https://www.virtualbox.org/)
-- Local installation of Augur
 - [GitHub Access Token](https://github.com/settings/tokens) (no write access required)
 
 To get started, you'll need a VM provider- we currently only support [Virtualbox](https://www.virtualbox.org/). You'll also need to install [Vagrant](https://www.vagrantup.com/downloads.html). To begin, clone the repository, enter the root directory, and run `make vagrant`.
@@ -48,11 +49,12 @@ cd /vagrant/augur
 sudo $AUGUR_PIP install --upgrade .
 ```
 
-Once you've reached this point, you're ready to start developing! To start the backend, run `augur`. After you run the this command for the first time, a default configuration file called `augur.config.json` will automatically be generated. Reference the sample configuration file (`sample.config.json`) on how to set up the server, development, and cache configurations, as well as the plugin connections.
+Augur will automatically create a config file called ``augur.config.json``. Add your GitHub API key to this file under the section ``GitHub``. At this point, you're ready to start developing!
+Run the backend with ``augur``, or the frontend and backend together with ``make dev``.
 
 ```bash
-augur # to create an augur.config.json
-# send SIGINT to the VM to stop augur so you can edit the config (usually this is CTRL+C)  
+# to start both the backend and the frontend
+make dev
 ```
 
 If you're interested in adding a new plugin, data source, or metric, check out the [backend development guide](http://augur.augurlabs.io/static/docs/dev-guide/3-backend.html). If new visualizations are more your speed, you'll want the [frontend development guide](http://augur.augurlabs.io/static/docs/dev-guide/4-frontend.html).
@@ -71,9 +73,9 @@ cd /vagrant/augur
 # due to vagrant weirdness, we have to manually install the python packages
 sudo $AUGUR_PIP install --upgrade .
 
-augur # to create an augur.config.json
-
 # add your GitHub personal access token to augur.config.json
+
+make dev
 # full steam ahead!
 ```
 

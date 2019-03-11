@@ -1,0 +1,196 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Windows Installation &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Deployment Guide" href="deployment.html" />
+    <link rel="prev" title="Docker Installation" href="docker-install.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="windows-installation">
+<h1>Windows Installation<a class="headerlink" href="#windows-installation" title="Permalink to this headline">¶</a></h1>
+<p>We currently don’t support local installation of Augur for Windows. However, we do provide a Vagrant box which can be used to spin up an Ubuntu VM with Augur pre-installed.</p>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git client</a></li>
+<li><a class="reference external" href="https://www.vagrantup.com/">Vagrant</a></li>
+<li><a class="reference external" href="https://www.virtualbox.org/">Virtualbox</a></li>
+<li><a class="reference external" href="https://github.com/settings/tokens">GitHub Access Token</a> (no
+write access required)</li>
+</ul>
+<p>To get started, you’ll need a VM provider-&nbsp;we currently only support
+<a class="reference external" href="https://www.virtualbox.org/">Virtualbox</a>. You’ll also need to
+install <a class="reference external" href="https://www.vagrantup.com/downloads.html">Vagrant</a> and a Git client. To
+begin, clone the repository using your Git client, enter the root directory of the repo using Command Prompt, and run
+<code class="docutils literal notranslate"><span class="pre">vagrant</span> <span class="pre">up</span></code>.</p>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># on your local machine</span>
+
+<span class="c1"># using your Git client:</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">chaoss</span><span class="o">/</span><span class="n">augur</span><span class="o">.</span><span class="n">git</span>
+
+<span class="c1"># using Command Prompt</span>
+<span class="n">cd</span> <span class="n">augur</span>
+<span class="n">vagrant</span> <span class="n">up</span>
+<span class="n">vagrant</span> <span class="n">ssh</span>
+</pre></div>
+</div>
+<p>The first time you run this command, Vagrant will need to download the
+base box configuration. After that, it will provision the VM and then
+install Augur and its dependencies. Note: you’ll probably see a fair bit
+of errors during this provisioning process as Augur is getting
+installed. Don’t worry about them, most of them are harmless.
+<em>Probably.</em></p>
+<p>After this process has completed, the VM should be up and running. Log in to the VM <code class="docutils literal notranslate"><span class="pre">vagrant</span> <span class="pre">ssh</span></code>. Log
+in as <code class="docutils literal notranslate"><span class="pre">root</span></code> with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">su</span> <span class="pre">-</span></code> and then navigate to
+<code class="docutils literal notranslate"><span class="pre">/vagrant/augur</span></code>. This folder is where you’ll be working, as it’s
+synced with your local version of Augur, meaning you won’t have to worry
+about losing your changes after you shutdown the VM. You’ll also be able
+to use your preferred editor. During the provisioning process, Augur
+will create a lightweight version of both the
+<a class="reference external" href="facade-oss.org">Facade</a> and <a class="reference external" href="http://ghtorrent.org/">GHTorrent</a>
+datasets, both of which we rely on for a lot of our metrics. You’ll need
+to provide Augur with a <a class="reference external" href="https://github.com/settings/tokens">GitHub Access
+Token</a> (no write access
+required).</p>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span># inside the vagrant VM
+sudo su -
+cd /vagrant/augur
+
+# due to vagrant weirdness, we have to manually install the python packages
+sudo $AUGUR_PIP install --upgrade .
+</pre></div>
+</div>
+<p>Augur will automatically create a config file called <code class="docutils literal notranslate"><span class="pre">augur.config.json</span></code>. Add your GitHub API key to this file under the section <code class="docutils literal notranslate"><span class="pre">GitHub</span></code>. At this point, you’re ready to start developing!
+Run the backend with <code class="docutils literal notranslate"><span class="pre">augur</span></code>, or the frontend and backend together with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dev</span></code>.</p>
+<p>If you’re interested in adding a new plugin, data source, or metric,
+check out the <a class="reference external" href="http://augur.augurlabs.io/static/docs/dev-guide/3-backend.html">backend development
+guide</a>.
+If new visualizations are more your speed, you’ll want the <a class="reference external" href="http://augur.augurlabs.io/static/docs/dev-guide/4-frontend.html">frontend
+development
+guide</a>.</p>
+<div class="section" id="tl-dr">
+<h3>TL;DR<a class="headerlink" href="#tl-dr" title="Permalink to this headline">¶</a></h3>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span># on your local machine
+
+# using your Git client:
+git clone https://github.com/chaoss/augur.git
+
+# using Command Prompt
+cd augur
+vagrant up
+vagrant ssh
+
+# inside the vagrant VM
+sudo su -
+cd /vagrant/augur
+
+# due to vagrant weirdness, we have to manually install the python packages
+sudo $AUGUR_PIP install --upgrade .
+
+# add your GitHub personal access token to augur.config.json
+
+make dev
+# full steam ahead!
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Windows Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use-cases-toc.html">Use Cases</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="docker-install.html" title="previous chapter">Docker Installation</a></li>
+      <li>Next: <a href="deployment.html" title="next chapter">Deployment Guide</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/windows-install.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/windows-install.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

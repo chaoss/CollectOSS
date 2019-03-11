@@ -178,6 +178,93 @@
 <span class="s2">            ORDER BY YEAR, WEEK, email ASC</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">commitsByMonthSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;top-new-repos-this-year-commits&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top_new_repos_this_year_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns top new repos this year by commits</span>
+<span class="sd">        :param limit: number of repos the user wishes to display</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">topNewReposCommits</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">           SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name</span>
+<span class="s2">           FROM repo_annual_cache, projects, repos</span>
+<span class="s2">           where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">           WHERE git LIKE :repourl</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">           LIMIT 1)</span>
+<span class="s2">           and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           group by repos_id</span>
+<span class="s2">           ORDER BY net desc</span>
+<span class="s2">           LIMIT 10</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">topNewReposCommits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;top-new-repos-this-year-lines-of-code&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top_new_repos_this_year_lines_of_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns top new repos this year by lines of code</span>
+<span class="sd">        :param limit: number of repos the user wishes to display</span>
+<span class="sd">        &quot;&quot;&quot;</span>       
+        <span class="n">topNewReposLines</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name</span>
+<span class="s2">           FROM repo_annual_cache, projects, repos</span>
+<span class="s2">           where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">           WHERE git LIKE :repourl</span>
+<span class="s2">           and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           LIMIT 1)</span>
+<span class="s2">           and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           group by repos_id</span>
+<span class="s2">           ORDER BY net desc</span>
+<span class="s2">           LIMIT 10</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">topNewReposLines</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;top-repos-all-time-commits&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top_repos_all_time_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns top new repos of all time by commits</span>
+<span class="sd">        :param limit: number of repos the user wishes to display</span>
+<span class="sd">        &quot;&quot;&quot;</span>       
+        <span class="n">topNewReposCommitsAllTime</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">           SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">           FROM repo_annual_cache, projects, repos</span>
+<span class="s2">           where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">           WHERE git LIKE :repourl</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           LIMIT 1)</span>
+<span class="s2">           and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           group by repos_id</span>
+<span class="s2">           ORDER BY net desc</span>
+<span class="s2">           LIMIT 10</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">topNewReposCommitsAllTime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;top-repos-all-time-lines-of-code&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top_repos_all_time_lines_of_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns top new repos of all time by lines of code</span>
+<span class="sd">        :param limit: number of repos the user wishes to display</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">topNewReposLinesAllTime</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">           FROM repo_annual_cache, projects, repos</span>
+<span class="s2">           where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">           WHERE git LIKE :repourl</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           LIMIT 1)</span>
+<span class="s2">           and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">           and repos.projects_id = projects.id</span>
+<span class="s2">           group by repos_id</span>
+<span class="s2">           ORDER BY net desc</span>
+<span class="s2">           LIMIT 10</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">topNewReposLinesAllTime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
         <span class="k">return</span> <span class="n">results</span></div>
 </pre></div>
 
@@ -195,6 +282,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../python.html">Augur Python Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../windows-install.html">Windows Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use-cases-toc.html">Use Cases</a></li>
