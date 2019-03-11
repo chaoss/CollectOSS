@@ -92,7 +92,10 @@ export default {
                 },
                 
               ],
-              "mark": "bar",
+              "mark": {
+                "type": "bar",
+                "clip": true
+              },
               "encoding": {
                   // "column": {
                   //   "field": "name", "type": "ordinal",
@@ -103,14 +106,14 @@ export default {
                     "field": "net", "type": "quantitative",
                     "axis": {"title": "net loc","grid": false},
                     "scale": {
-                      "domain": [-1000000, 1000000],
+                      // "domain": [-1000000, 1000000],
                       "nice": false,
                     }
                   },
                   "y2": {
                     "field": "avg_loc", "type": "quantitative","axis": {"title": "","grid": false},
                     "scale": {
-                      "domain": [-1000000, 1000000],
+                      // "domain": [-1000000, 1000000],
                      "nice": false,
                     }
                   },
@@ -140,13 +143,15 @@ export default {
                 },
 
               ],
-              "mark": "bar",
+              "mark": {
+                "type": "bar",
+                "clip": true
+              },
               "encoding": {
                   "y": {
                     "field": "avg_commits",
                     "axis": {"title": "commits","grid": false},
                     "scale": {
-                      "domain": [-100, 100],
                       "nice": false,
                     }
                   },
@@ -154,7 +159,6 @@ export default {
                     "field": "patches", "type": "quantitative",
                     "axis": {"title": "commits","grid": false},
                     "scale": {
-                      "domain": [-100, 100],
                       "nice": false,
                     }
                   },
@@ -196,7 +200,6 @@ export default {
                     "grid": false
                   },
                   "scale": {
-                      "domain": [-1000000, 1000000],
                       "nice": false,
                     }
 
@@ -224,7 +227,6 @@ export default {
                     "title": "","grid": false
                   },
                   "scale": {
-                      "domain": [-100, 100],
                       "nice": false,
                     }
                 },
@@ -245,7 +247,6 @@ export default {
                   "field": "net",
                   "axis": null,
                   "scale": {
-                      "domain": [-1000000, 1000000],
                       "nice": false,
                     }
                 },
@@ -258,6 +259,7 @@ export default {
               ],
               "mark": {
                 "type": "bar",
+                "clip": false
               },
               "encoding": {
 
@@ -347,6 +349,8 @@ export default {
         let sum_loc = 0
         let max_loc = 0
         let max_commit = 0
+        let min_loc = 0
+        let min_commit = 0
         for (let i = 0; i < data.length; i++){
           sum_commit += data[i]['patches']
           sum_loc += data[i]['net']
@@ -355,6 +359,10 @@ export default {
             max_loc = data[i]['net']
           if (data[i]['patches'] > max_commit)
             max_commit = data[i]['patches']
+          if (data[i]['net'] < min_loc)
+            min_loc = data[i]['net']
+          if (data[i]['patches'] < min_commit)
+            min_commit = data[i]['patches']
           if (i == 0)
             data[i].key = "commits"
           else
@@ -370,13 +378,17 @@ export default {
         })
         // data.push({'upper_loc': max_loc })
         // data.push({'lower_loc': sum_loc / data.length - max_loc})
-        config.layer[0].encoding.y.scale.domain  = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
-        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
-          config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit]
-          config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit]
-          config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
-          config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit]
-          config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
+        let dif_loc = Math.abs(max_loc - sum_loc / data.length) > Math.abs(min_loc - sum_loc / data.length) ? Math.abs(max_loc - sum_loc / data.length) : Math.abs(min_loc - sum_loc / data.length)
+        let dif_commit = Math.abs(max_commit - sum_commit / data.length) > Math.abs(min_commit - sum_commit / data.length) ? Math.abs(max_commit - sum_commit / data.length) : Math.abs(min_commit - sum_commit / data.length)
+        config.layer[0].encoding.y.scale.domain  = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+          config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit]
+          config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit]
+          config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+          config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit]
+          config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+
+
         repos.forEach((repo) => {
           // let d = defaultProcess(data[repo], Object.keys(data[this.repo])[0])
           // d[0].repo = repo.gitURL ? repo.gitURL : repo.githubURL

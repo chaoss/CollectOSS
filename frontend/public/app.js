@@ -4261,20 +4261,21 @@ exports.default = {
           "transform": [{
             "calculate": "datum.index + 0.125", "as": "loc_location"
           }],
-          "mark": "bar",
+          "mark": {
+            "type": "bar",
+            "clip": true
+          },
           "encoding": {
             "y": {
               "field": "net", "type": "quantitative",
               "axis": { "title": "net loc", "grid": false },
               "scale": {
-                "domain": [-1000000, 1000000],
                 "nice": false
               }
             },
             "y2": {
               "field": "avg_loc", "type": "quantitative", "axis": { "title": "", "grid": false },
               "scale": {
-                "domain": [-1000000, 1000000],
                 "nice": false
               }
             },
@@ -4291,13 +4292,15 @@ exports.default = {
           "transform": [{
             "calculate": "datum.index - 0.125", "as": "commit_location"
           }],
-          "mark": "bar",
+          "mark": {
+            "type": "bar",
+            "clip": true
+          },
           "encoding": {
             "y": {
               "field": "avg_commits",
               "axis": { "title": "commits", "grid": false },
               "scale": {
-                "domain": [-100, 100],
                 "nice": false
               }
             },
@@ -4305,7 +4308,6 @@ exports.default = {
               "field": "patches", "type": "quantitative",
               "axis": { "title": "commits", "grid": false },
               "scale": {
-                "domain": [-100, 100],
                 "nice": false
               }
             },
@@ -4341,7 +4343,6 @@ exports.default = {
                 "grid": false
               },
               "scale": {
-                "domain": [-1000000, 1000000],
                 "nice": false
               }
 
@@ -4366,7 +4367,6 @@ exports.default = {
                 "title": "", "grid": false
               },
               "scale": {
-                "domain": [-100, 100],
                 "nice": false
               }
             }
@@ -4384,7 +4384,6 @@ exports.default = {
               "field": "net",
               "axis": null,
               "scale": {
-                "domain": [-1000000, 1000000],
                 "nice": false
               }
             }
@@ -4393,7 +4392,8 @@ exports.default = {
         }, {
           "transform": [],
           "mark": {
-            "type": "bar"
+            "type": "bar",
+            "clip": false
           },
           "encoding": {
 
@@ -4436,8 +4436,6 @@ exports.default = {
         processGitData(this.data);
       } else {
         var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        console.log(repo);
-        console.log(this.source);
         repo[this.source]().then(function (data) {
           console.log("batch data", data);
           processData(data);
@@ -4468,12 +4466,16 @@ exports.default = {
         var sum_loc = 0;
         var max_loc = 0;
         var max_commit = 0;
+        var min_loc = 0;
+        var min_commit = 0;
         for (var i = 0; i < data.length; i++) {
           sum_commit += data[i]['patches'];
           sum_loc += data[i]['net'];
           data[i]['index'] = i;
           if (data[i]['net'] > max_loc) max_loc = data[i]['net'];
           if (data[i]['patches'] > max_commit) max_commit = data[i]['patches'];
+          if (data[i]['net'] < min_loc) min_loc = data[i]['net'];
+          if (data[i]['patches'] < min_commit) min_commit = data[i]['patches'];
           if (i == 0) data[i].key = "commits";else data[i].key = "net lines changed";
         }
 
@@ -4482,13 +4484,16 @@ exports.default = {
           el.avg_loc = sum_loc / data.length;
         });
 
-        config.layer[0].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
-        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
-        config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit];
-        config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit];
-        config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
-        config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit];
-        config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
+        var dif_loc = Math.abs(max_loc - sum_loc / data.length) > Math.abs(min_loc - sum_loc / data.length) ? Math.abs(max_loc - sum_loc / data.length) : Math.abs(min_loc - sum_loc / data.length);
+        var dif_commit = Math.abs(max_commit - sum_commit / data.length) > Math.abs(min_commit - sum_commit / data.length) ? Math.abs(max_commit - sum_commit / data.length) : Math.abs(min_commit - sum_commit / data.length);
+        config.layer[0].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+        config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
+        config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
+        config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+        config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
+        config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+
         repos.forEach(function (repo) {
           _this.values = data;
         });
@@ -5936,7 +5941,10 @@ exports.default = {
           "transform": [{
             "calculate": "datum.month + 0.155", "as": "loc_location"
           }],
-          "mark": "bar",
+          "mark": {
+            "type": "bar",
+            "clip": "true"
+          },
           "encoding": {
             "y": {
               "field": "net_lines_minus_whitespace", "type": "quantitative",
@@ -5966,7 +5974,10 @@ exports.default = {
           "transform": [{
             "calculate": "datum.month - 0.155", "as": "commit_location"
           }],
-          "mark": "bar",
+          "mark": {
+            "type": "bar",
+            "clip": "true"
+          },
           "encoding": {
             "y": {
               "field": "avg_commits",
@@ -6067,7 +6078,8 @@ exports.default = {
         }, {
           "transform": [],
           "mark": {
-            "type": "bar"
+            "type": "bar",
+            "clip": "true"
           },
           "encoding": {
 
@@ -6136,12 +6148,20 @@ exports.default = {
         var sum_loc = 0;
         var max_loc = 0;
         var max_commit = 0;
+        var min_loc = 0;
+        var min_commit = 0;
         for (var i = 0; i < data.length; i++) {
           sum_commit += data[i]['commits'];
           sum_loc += data[i]['net_lines_minus_whitespace'];
+          console.log(i, data[i]['commits'], data[i]['net_lines_minus_whitespace']);
           data[i]['index'] = i;
           if (data[i]['net_lines_minus_whitespace'] > max_loc) max_loc = data[i]['net_lines_minus_whitespace'];
           if (data[i]['commits'] > max_commit) max_commit = data[i]['commits'];
+          if (data[i]['net_lines_minus_whitespace'] < min_loc) {
+            min_loc = data[i]['net_lines_minus_whitespace'];
+            console.log("min = ", data[i]['net_lines_minus_whitespace']);
+          }
+          if (data[i]['commits'] < min_commit) min_commit = data[i]['commits'];
           if (i == 0) data[i].key = "commits";else data[i].key = "net lines changed";
         }
 
@@ -6151,13 +6171,17 @@ exports.default = {
           el.month_name = _this.months[el.month];
         });
 
-        config.layer[0].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
-        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
-        config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit];
-        config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit];
-        config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
-        config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit];
-        config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc];
+        var dif_loc = Math.abs(max_loc - sum_loc / data.length) > Math.abs(min_loc - sum_loc / data.length) ? Math.abs(max_loc - sum_loc / data.length) : Math.abs(min_loc - sum_loc / data.length);
+        var dif_commit = Math.abs(max_commit - sum_commit / data.length) > Math.abs(min_commit - sum_commit / data.length) ? Math.abs(max_commit - sum_commit / data.length) : Math.abs(min_commit - sum_commit / data.length);
+        console.log("HERE", sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc);
+        config.layer[0].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+        config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
+        config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
+        config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+        config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
+        config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
+
         repos.forEach(function (repo) {
           _this.values = data;
         });

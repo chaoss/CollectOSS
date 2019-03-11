@@ -92,7 +92,10 @@ export default {
                 },
                 
               ],
-              "mark": "bar",
+              "mark": {
+                "type": "bar",
+                "clip": "true"
+              },
               "encoding": {
                   // "column": {
                   //   "field": "name", "type": "ordinal",
@@ -140,7 +143,10 @@ export default {
                 },
 
               ],
-              "mark": "bar",
+              "mark": {
+                "type": "bar",
+                "clip": "true"
+              },
               "encoding": {
                   "y": {
                     "field": "avg_commits",
@@ -258,6 +264,7 @@ export default {
               ],
               "mark": {
                 "type": "bar",
+                "clip": "true"
               },
               "encoding": {
 
@@ -343,14 +350,23 @@ export default {
         let sum_loc = 0
         let max_loc = 0
         let max_commit = 0
+        let min_loc = 0
+        let min_commit = 0
         for (let i = 0; i < data.length; i++){
           sum_commit += data[i]['commits']
           sum_loc += data[i]['net_lines_minus_whitespace']
+          console.log(i, data[i]['commits'], data[i]['net_lines_minus_whitespace'])
           data[i]['index'] = i
           if (data[i]['net_lines_minus_whitespace'] > max_loc)
             max_loc = data[i]['net_lines_minus_whitespace']
           if (data[i]['commits'] > max_commit)
             max_commit = data[i]['commits']
+          if (data[i]['net_lines_minus_whitespace'] < min_loc){
+            min_loc = data[i]['net_lines_minus_whitespace']
+            console.log("min = ", data[i]['net_lines_minus_whitespace'])
+          }
+          if (data[i]['commits'] < min_commit)
+            min_commit = data[i]['commits']
           if (i == 0)
             data[i].key = "commits"
           else
@@ -369,13 +385,17 @@ export default {
 
         // data.push({'upper_loc': max_loc })
         // data.push({'lower_loc': sum_loc / data.length - max_loc})
-        config.layer[0].encoding.y.scale.domain  = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
-        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
-          config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit]
-          config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit]
-          config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
-          config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - max_commit, sum_commit / data.length + max_commit]
-          config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - max_loc, sum_loc / data.length + max_loc]
+        let dif_loc = Math.abs(max_loc - sum_loc / data.length) > Math.abs(min_loc - sum_loc / data.length) ? Math.abs(max_loc - sum_loc / data.length) : Math.abs(min_loc - sum_loc / data.length)
+        let dif_commit = Math.abs(max_commit - sum_commit / data.length) > Math.abs(min_commit - sum_commit / data.length) ? Math.abs(max_commit - sum_commit / data.length) : Math.abs(min_commit - sum_commit / data.length)
+        console.log("HERE", sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc)
+        config.layer[0].encoding.y.scale.domain  = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+          config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit]
+          config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit]
+          config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+          config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit]
+          config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
+
         repos.forEach((repo) => {
           // let d = defaultProcess(data[repo], Object.keys(data[this.repo])[0])
           // d[0].repo = repo.gitURL ? repo.gitURL : repo.githubURL
