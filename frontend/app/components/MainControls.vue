@@ -37,9 +37,9 @@
 
             </div>
                  
-                 <div id="invalid" class="col col-1 invisible invalid-search" align="center">Repo not found.</div>
+                 <!-- <div id="invalid" class="col col-1 invisible invalid-search" align="center">Repo not found.</div> -->
 
-            <div id="collapse" class="col col-2">
+            <div id="collapse" class="col col-3">
               <div class="col col-12 align-bottom" align="right" v-show="isCollapsed" @click="collapseText()">Less configuration options &#9660</div>
               <div class="col col-12 align-bottom" align="right" v-show="!isCollapsed" @click="collapseText()">More configuration options &#9654</div>
             </div>
@@ -280,7 +280,7 @@
           this.$store.commit('setDates', {
             startDate: date
           })
-        }, 500);
+        }, 100);
       },
       onEndDateChange (e) {
         var date = null
@@ -300,7 +300,7 @@
           this.$store.commit('setDates', {
             endDate: date
           })
-        }, 500);
+        }, 100);
       },
       onTrailingAverageChange (e) {
         this.info.days = e.target.value

@@ -8,7 +8,12 @@
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
+
       <div class="row">
+
+      <!-- <div class="col col-12">
+        <dual-axis-contributions></dual-axis-contributions>
+      </div> -->
 
       <div class="col col-6">
         <dynamic-line-chart source="commitComments"
@@ -97,6 +102,7 @@
 import DynamicLineChart from './charts/DynamicLineChart'
 import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
+import DualAxisContributions from './charts/DualAxisContributions'
 
 module.exports = {
   data() {
@@ -107,7 +113,8 @@ module.exports = {
   components: {
     DynamicLineChart,
     BubbleChart,
-    StackedBarChart
+    StackedBarChart,
+    DualAxisContributions
   }
 }
 

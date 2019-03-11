@@ -200,7 +200,7 @@ export default function Augur () {
   AugurApp.store = window.augur
 
   router.beforeEach((to, from, next) => {
-    if(to.params.repo || to.params.groupid){
+    if (to.params.repo || to.params.groupid){
       if (!to.params.groupid && !to.params.comparedrepo){
         AugurApp.store.commit("resetTab")
         AugurApp.store.commit('setTab', {
@@ -215,7 +215,7 @@ export default function Augur () {
             githubURL: to.params.owner + '/' + to.params.repo
           })
         }
-      } else if(to.params.comparedrepo && augur.state.comparedRepos.length == 0) { 
+      } else if (to.params.comparedrepo && augur.state.comparedRepos.length == 0) { 
         let tab = to.name
         tab = tab.substring(0, tab.length-7)
         AugurApp.store.commit("resetTab")
@@ -228,7 +228,7 @@ export default function Augur () {
         AugurApp.store.commit('addComparedRepo', {
           githubURL: to.params.comparedowner + '/' + to.params.comparedrepo
         })
-      } else if(to.params.groupid && augur.state.comparedRepos.length == 0){
+      } else if (to.params.groupid && augur.state.comparedRepos.length == 0){
         AugurApp.store.commit("resetTab")
         let tab = to.name
         tab = tab.substring(0, tab.length-5)
