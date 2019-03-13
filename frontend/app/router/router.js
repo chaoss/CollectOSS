@@ -33,10 +33,7 @@ let routes = [
       },
       {path: '/login', component: LoginForm},
       {path: '/metrics_status', 
-        components: {
-          header: AugurHeader,
-          content: MainControls
-        }
+        component: MetricsStatusCard
       }, 
       {path: '/single/:owner?/:repo', name: 'single', props: true, canReuse: false, component: AugurCards,
         children: [
