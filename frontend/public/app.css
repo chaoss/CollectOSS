@@ -2598,6 +2598,43 @@ header .search {
   background: #eaeaea;
   border-bottom: 1px solid #eaeaea;
 }
+.tabs li.active label {
+  color: #000 !important;
+  border-bottom: 3px solid #ddd !important;
+}
+.tabs li input {
+  visibility: hidden;
+}
+.tabs li label:hover {
+  background: #eaeaea;
+}
+@media (min-width: 1230px) {
+  .tabs ul {
+    border-bottom-style: none !important;
+    margin: 0px auto;
+  }
+}
+.linechart .tabs {
+  display: table;
+  margin: 0 auto;
+  transform: translateY(-50px);
+}
+.linechart .tabs ul {
+  list-style: none;
+}
+.linechart .tabs ul li {
+  display: inline;
+}
+.tabs li label {
+  position: relative;
+  top: 1px;
+  font-style: normal;
+  display: block;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  color: rgba(0,0,0,0.5);
+  text-decoration: none;
+}
 section#landing h1 {
   font-size: 25px;
 }
@@ -2688,6 +2725,7 @@ section.status {
   width: 100%;
   margin: 10px auto;
   padding: 0px 30px 0px 25px;
+  transform: translateY(-26px);
 }
 .section {
   overflow: hidden;
@@ -3162,6 +3200,17 @@ input:focus {
   text-transform: uppercase;
   display: block;
 }
+.limiter .forgot-password {
+  width: 100%;
+}
+.limiter .forgot-password-title {
+  font-size: 24px;
+  color: #fff;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  display: block;
+}
 .limiter .wrap-input {
   width: 100%;
   position: relative;
@@ -3339,6 +3388,56 @@ input:focus {
 .limiter .login-form-btn:hover:before {
   opacity: 0;
 }
+.limiter .dashboard-btn {
+  font-size: 16px;
+  color: #fff;
+  line-height: 1.2;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  min-width: 120px;
+  height: 50px;
+  border-radius: 25px;
+  background: #9152f8;
+  background: -webkit-linear-gradient(bottom, #7579ff, #b224ef);
+  background: -o-linear-gradient(bottom, #7579ff, #b224ef);
+  background: -moz-linear-gradient(bottom, #7579ff, #b224ef);
+  background: linear-gradient(bottom, #7579ff, #b224ef);
+  position: relative;
+  z-index: 1;
+  -webkit-transition: all 0.4s;
+  -o-transition: all 0.4s;
+  -moz-transition: all 0.4s;
+  transition: all 0.4s;
+}
+.limiter .dashboard-btn::before {
+  content: "";
+  display: block;
+  position: absolute;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  border-radius: 25px;
+  background-color: #000;
+  top: 0;
+  left: 0;
+  opacity: 1;
+  -webkit-transition: all 0.4s;
+  -o-transition: all 0.4s;
+  -moz-transition: all 0.4s;
+  transition: all 0.4s;
+}
+.limiter .dashboard-btn:hover {
+  color: #fff;
+}
+.limiter .dashboard-btn:hover:before {
+  opacity: 0;
+}
 @media (max-width: 576px) {
   .wrap-login {
     padding: 55px 15px 37px 15px;
@@ -3471,6 +3570,9 @@ input:focus {
 .inputGroup html {
   box-sizing: border-box;
 }
+.inputGroup #placehold::-webkit-input-placeholder {
+  color: #fff;
+}
 .inputGroup code {
   background-color: #9aa3ac;
   padding: 0 8px;
@@ -3512,6 +3614,58 @@ input:focus {
   justify-content: center;
   padding-bottom: 14px;
 }
+.switch {
+  position: relative;
+  margin: 10px auto;
+  width: 480px;
+  height: 40px;
+  color: #45f;
+  font-size: 25px;
+  border-radius: 10px;
+  transform: translateY(-30px);
+}
+.quality {
+  position: relative;
+  display: inline-block;
+  width: 33.33%;
+  height: 100%;
+  line-height: 40px;
+}
+.quality:first-child label {
+  border-radius: 5px 0 0 5px;
+}
+.quality:last-child label {
+  border-radius: 0 5px 5px 0;
+}
+.quality label {
+  border: 1px solid #000;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  font-style: italic;
+  text-align: center;
+  transition: transform 0.4s, color 0.4s, background-color 0.4s;
+}
+.quality input[type="radio"] {
+  appearance: none;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+.quality input[type="radio"]:focus {
+  outline: 0;
+  outline-offset: 0;
+}
+.quality input[type="radio"]:checked ~ label {
+  background-color: #ff838d;
+  color: #111;
+}
+.quality input[type="radio"]:active ~ label {
+  transform: scale(1.05);
+}
 .fullwidth {
   width: 100vw;
   position: relative;
@@ -3519,6 +3673,11 @@ input:focus {
   right: 50%;
   margin-left: -50vw;
   margin-right: -50vw;
+}
+.parent {
+  position: absolute;
+  z-index: 1 !important;
+  align-content: center;
 }
 @-moz-keyframes spin {
   0% {

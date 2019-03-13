@@ -19,7 +19,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/lines_changed Lines of Code Changed
     @apiName lines-of-code-changed
     @apiGroup Growth-Maturity-Decline
-    @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>
+    @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>.  Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiGroup Growth-Maturity-Decline
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -59,7 +59,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/bus_factor Bus Factor
     @apiName bus-factor
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -79,7 +79,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/tags/major Major Tags
     @apiName major-tags
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -102,7 +102,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/tags/major Tages
     @apiName tags
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository

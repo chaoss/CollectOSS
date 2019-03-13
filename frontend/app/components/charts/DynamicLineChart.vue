@@ -45,7 +45,8 @@ export default {
       detail: this.$store.state.showDetail,
       compRepos: this.$store.state.comparedRepos,
       metricSource: null,
-      timeperiod: 'all'
+      timeperiod: 'all',
+      forceRecomputeCounter: 0
     }
   },
   watch: {
@@ -63,7 +64,17 @@ export default {
       $(this.$el).find('.spacing').removeClass('hidden')
     }
   },
-  mounted() {
+  beforeUpdate() {
+    this.$store.watch(
+      // When the returned result changes...
+      function (state) {
+        console.log("WORKED")
+        this.thisShouldTriggerRecompute()
+        return 
+      },
+      // // Run this callback
+      // callback
+    )
   },
   computed: {
     repo () {
@@ -100,6 +111,7 @@ export default {
       return this.$store.state.showDetail
     },
     spec() {
+      this.forceRecomputeCounter;
       // Get the repos we need
       let repos = []
       if (this.repo) {
@@ -866,6 +878,9 @@ export default {
 
   }, // end computed
   methods: {
+    thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
+    },
     downloadSVG (e) {
       var svgsaver = new window.SvgSaver()
       var svg = window.$(this.$refs.holder).find('svg')[0]

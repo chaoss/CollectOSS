@@ -3,7 +3,7 @@
 Creates routes for the facade data source plugin
 """
 
-from flask import Response
+from flask import Response, request
 
 def create_routes(server):
 
@@ -45,7 +45,7 @@ def create_routes(server):
     @api {get} /git/lines_changed/:facade_repo_url Lines Changed by Author
     @apiName lines-changed-by-author
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -71,7 +71,7 @@ def create_routes(server):
     @api {get} /git/lines_changed_by_week/:facade_repo_url Lines Changed by Week
     @apiName lines-changed-by-week
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -91,7 +91,7 @@ def create_routes(server):
     @api {get} /git/lines_changed_by_month/:facade_repo_url Lines Changed by Month
     @apiName lines-changed-by-month
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -123,7 +123,7 @@ def create_routes(server):
     @api {get} /git/commits_by_week/:facade_repo_url Commits By Week
     @apiName commits-by-week
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -146,3 +146,106 @@ def create_routes(server):
                         ]
     """
     server.addGitMetric(facade.commits_by_week, 'commits_by_week')
+
+
+    @server.app.route('/{}/git/cd_rg_tp_ranked_loc'.format(server.api_version))
+    def cd_rg_tp_ranked_loc():
+
+        repo_url_base = request.args.get('repo_url_base')
+
+        timeframe = request.args.get('timeframe')
+        repo_group = request.args.get('repo_group')
+
+        data = server.transform(facade.cd_rg_tp_ranked_loc, args=([]), repo_url_base=repo_url_base, kwargs=({'timeframe': timeframe, 'repo_group': repo_group}))
+
+        return Response(response=data,
+                       status=200,
+                       mimetype="application/json")
+
+    # server.addGitMetric(facade.top_repos_commits, 'top_repos_commits')
+    @server.app.route('/{}/git/cd_rg_tp_ranked_commits'.format(server.api_version))
+    def cd_rg_tp_ranked_commits():
+
+        repo_url_base = request.args.get('repo_url_base')
+
+        timeframe = request.args.get('timeframe')
+        repo_group = request.args.get('repo_group')
+
+        data = server.transform(facade.cd_rg_tp_ranked_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'timeframe': timeframe, 'repo_group': repo_group}))
+
+        return Response(response=data,
+                       status=200,
+                       mimetype="application/json")
+
+    @server.app.route('/{}/git/cd_rg_newrep_ranked_loc'.format(server.api_version))
+    def cd_rg_newrep_ranked_loc():
+
+        repo_url_base = request.args.get('repo_url_base')
+
+        calendar_year = request.args.get('calendar_year')
+        repo_group = request.args.get('repo_group')
+
+        data = server.transform(facade.cd_rg_newrep_ranked_loc, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'repo_group': repo_group}))
+
+        return Response(response=data,
+                       status=200,
+                       mimetype="application/json")
+
+    # server.addGitMetric(facade.cd_rg_newrep_ranked_commits, 'top_new_repos_commits')
+    @server.app.route('/{}/git/cd_rg_newrep_ranked_commits'.format(server.api_version))
+    def cd_rg_newrep_ranked_commits():
+
+        repo_url_base = request.args.get('repo_url_base')
+
+        calendar_year = request.args.get('calendar_year')
+        repo_group = request.args.get('repo_group')
+
+        data = server.transform(facade.cd_rg_newrep_ranked_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'repo_group': repo_group}))
+
+        return Response(response=data,
+                       status=200,
+                       mimetype="application/json")
+
+    @server.app.route('/{}/git/cd_rep_tp_interval_loc_commits'.format(server.api_version))
+    def cd_rep_tp_interval_loc_commits():
+
+        repo_url_base = request.args.get('repo_url_base')
+
+        calendar_year = request.args.get('calendar_year')
+        interval = request.args.get('interval')
+
+        data = server.transform(facade.cd_rep_tp_interval_loc_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
+
+        return Response(response=data,
+                       status=200,
+                       mimetype="application/json")
+
+    @server.app.route('/{}/git/cd_rep_tp_interval_loc_commits_ua'.format(server.api_version))
+    def cd_rep_tp_interval_loc_commits_ua():
+
+        repo_url_base = request.args.get('repo_url_base')
+
+        calendar_year = request.args.get('calendar_year')
+        interval = request.args.get('interval')
+
+        data = server.transform(facade.cd_rep_tp_interval_loc_commits_ua, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
+
+        return Response(response=data,
+                       status=200,
+                       mimetype="application/json")
+
+    @server.app.route('/{}/git/cd_rg_tp_interval_loc_commits'.format(server.api_version))
+    # @server.app.route('/{}/git/<calendar_year>/<interval>/<repo_group>/loc_commits'.format(server.api_version))
+    def cd_rg_tp_interval_loc_commits():
+
+        repo_url_base = request.args.get('repo_url_base')
+
+        calendar_year = request.args.get('calendar_year')
+        interval = request.args.get('interval')
+        repo_group = request.args.get('repo_group')
+
+        data = server.transform(facade.cd_rg_tp_interval_loc_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval, 'repo_group': repo_group}))
+
+        return Response(response=data,
+                       status=200,
+                       mimetype="application/json") 

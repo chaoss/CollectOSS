@@ -1,14 +1,14 @@
 <template>
-  <div ref="holder">
-    <div class="tickchart ">
-      <h3>Lines of code added by the top 10 authors visualized</h3>
+  <div ref="holder" style="position: relative; z-index: 5">
+    <div class="tickchart">
+      <h3 style="text-align: center">Lines of code added by the top 10 authors visualized</h3>
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
-      <div class="form-item form-checkboxes tickradios">
+      <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
 
 
-          <div class="inputGroup ">
+          <div class="inputGroup" >
             <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
             <label id="front" for="circradio">Circle</label>
           </div>
@@ -105,7 +105,7 @@ export default {
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
+        "width": 950,
         "height": 300,
         "config": {
           "tick": {

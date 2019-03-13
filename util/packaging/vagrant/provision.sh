@@ -58,16 +58,6 @@ sudo $AUGUR_PIP install -e .
 echo "Installing Augur..."
 sudo make install-dev
 
-echo AUGUR_FACADE_DB_USER='augur' >> /etc/environment
-echo AUGUR_FACADE_DB_PASS='password' >> /etc/environment
-echo AUGUR_FACADE_DB_HOST='localhost' >> /etc/environment
-echo AUGUR_FACADE_DB_PORT=3306 >> /etc/environment
-echo AUGUR_FACADE_DB_NAME='facade' >> /etc/environment
-
-echo AUGUR_DB_USER='augur' >> /etc/environment
-echo AUGUR_DB_PASS='password' >> /etc/environment
-echo AUGUR_DB_HOST='localhost' >> /etc/environment
-echo AUGUR_DB_PORT=3306 >> /etc/environment
-echo AUGUR_DB_NAME='ghtorrent' >> /etc/environment
+cat vagrant.config.json > augur.config.json
 
 echo "Done!"

@@ -41,15 +41,15 @@
 <p>Augur utilizes a plugin architecture. Plugins can be found in two
 directories: <code class="docutils literal notranslate"><span class="pre">plugins/</span></code> and <code class="docutils literal notranslate"><span class="pre">datasources/</span></code>. <code class="docutils literal notranslate"><span class="pre">plugins/</span></code> is for
 generic plugins, while <code class="docutils literal notranslate"><span class="pre">datasources/</span></code> is specifically for plugins that
-provide a new datsource, like <code class="docutils literal notranslate"><span class="pre">ghtorrent</span></code> or <code class="docutils literal notranslate"><span class="pre">facade</span></code>.</p>
-<p>Inside each plugin directory are 4 required files: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>
-<code class="docutils literal notranslate"><span class="pre">plugin_name.py</span></code> <code class="docutils literal notranslate"><span class="pre">routes.py</span></code> <code class="docutils literal notranslate"><span class="pre">test_plugin_name.py</span></code></p>
+provide a new data source, like <code class="docutils literal notranslate"><span class="pre">ghtorrent</span></code> or <code class="docutils literal notranslate"><span class="pre">facade</span></code>.</p>
+<p>Inside each plugin directory are 4 required files: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">plugin_name.py</span></code>, <code class="docutils literal notranslate"><span class="pre">routes.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">test_plugin_name.py</span></code>.</p>
 <p>We will go over these more in-depth in the following sections.</p>
 </div>
 <div class="section" id="setting-up-your-environment">
 <h2>3.2. Setting up your environment<a class="headerlink" href="#setting-up-your-environment" title="Permalink to this headline">¶</a></h2>
 <p>Before you begin, make sure to activate the augur Anaconda environment
-by running <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">augur</span></code>. If this environment doesn’t exist,
+by running <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">augur</span></code> if you’re using one. If this environment doesn’t exist,
 try running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-dev</span></code> again and watch out for any errors.</p>
 </div>
 <div class="section" id="writing-a-plugin">
@@ -59,7 +59,7 @@ data source plugin called <code class="docutils literal notranslate"><span class
 <div class="section" id="setting-up-a-plugin">
 <h3>3.3.1. Setting up a plugin<a class="headerlink" href="#setting-up-a-plugin" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> contains the plugin class, any code that is needed to
-initialize the datasource, plugin metadata, and the code needed to
+initialize the datasource, as well as the plugin metadata and boilerplate needed to
 register the plugin. <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> must also contain a
 <code class="docutils literal notranslate"><span class="pre">create_routes</span></code> function that takes in a <code class="docutils literal notranslate"><span class="pre">flask_app</span></code>, which is
 responsible for adding the plugin’s data source routes to the API.</p>
@@ -141,7 +141,7 @@ serialized into JSON.</p>
 <p>If a function is a new metric that will have an endpoint, it needs to be
 annotated so that its metadata is updated. Right above the function
 definition, call the <code class="docutils literal notranslate"><span class="pre">&#64;annotate</span></code> decorator as follows:</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@annotate</span><span class="p">(</span><span class="n">metric_name</span><span class="o">=</span><span class="s1">&#39;hello-world&#39;</span><span class="p">)</span>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;hello-world&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
 </pre></div>
 </div>
@@ -276,6 +276,7 @@ enviroment by running <code class="docutils literal notranslate"><span class="pr
 <li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../windows-install.html">Windows Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>

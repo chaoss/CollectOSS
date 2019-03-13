@@ -1,6 +1,6 @@
 <template>
   <div ref="holder">
-    <div style="margin-bottom: 0 !important" class="tickchart ">
+    <div style="margin-bottom: 0 !important;" class="tickchart ">
       <!-- <h3>Lines of code added by the top 10 authors as Percentages - By Time Period</h3> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
