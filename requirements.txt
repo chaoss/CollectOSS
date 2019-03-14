@@ -74,7 +74,7 @@ python-daemon==2.1.2
 python-dateutil==2.7.3
 pytz==2018.5
 pyzmq==17.0.0
-requests>=2.20.0
+requests>=2.21.0
 requests-file==1.4.3
 setuptools-git==1.2
 simplegeneric==0.8.1
