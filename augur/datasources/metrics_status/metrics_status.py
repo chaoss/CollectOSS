@@ -4,9 +4,13 @@ Analyzes Augur source and CHAOSS repos to determine metric implementation status
 """
 
 import re
+import copy
 from abc import ABC
 import requests
 from augur.util import metric_metadata
+
+import pprint
+pp = pprint.PrettyPrinter()
 
 class FrontendStatusExtractor(object):
 
@@ -19,7 +23,7 @@ class FrontendStatusExtractor(object):
 
     def determine_frontend_status(self, metric):
         attribute = None
-        
+
         if metric.metric_type == "timeseries":
             attribute = next((attribute for attribute in self.timeseries if "/api/unstable/<owner>/<repo>/timeseries/{}".format(attribute[2]) == metric.endpoint), None)
 
@@ -34,8 +38,6 @@ class FrontendStatusExtractor(object):
             metric.chart_mapping = attribute[1]
         else:
             metric.frontend_status = 'unimplemented'
-
-        # return metric
 
 class Metric(ABC):
 
@@ -82,7 +84,6 @@ class ImplementedMetric(Metric):
         if 'endpoint' in metadata:
             self.endpoint = metadata['endpoint']
             frontend_status_extractor.determine_frontend_status(self)
-        # print(self.frontend_status)
 
 class MetricsStatus(object):
 
@@ -156,8 +157,8 @@ class MetricsStatus(object):
 
         self.metrics_by_group = [self.diversity_inclusion_metrics, self.growth_maturity_decline_metrics, self.risk_metrics, self.value_metrics]
 
-        # self.activity_metrics = self.create_activity_metrics()
-        # self.metrics_by_group.append(self.activity_metrics)
+        self.activity_metrics = self.create_activity_metrics()
+        self.metrics_by_group.append(self.activity_metrics)
 
         self.create_experimental_metrics()
         self.metrics_by_group.append(self.experimental_metrics)
@@ -182,7 +183,6 @@ class MetricsStatus(object):
         reg_ex_pattern = r'^(?!Name)(.*[^-])(?:\ \|)'
         if remote["has_links"]:
             reg_ex_pattern = r'\[(.*?)\]\((?:.*?\.md)\)'
-
         return re.findall(reg_ex_pattern, metric_file, re.M)
 
     def create_grouped_metrics(self, remotes_list, group):
@@ -209,20 +209,20 @@ class MetricsStatus(object):
         activity_metrics = []
 
         for raw_name in activity_names:
-            metric = GroupedMetric(raw_name, "activity")
+            activity_metric = GroupedMetric(raw_name, "activity")
 
             tags = []
 
             for group in self.metrics_by_group:
-                for metric in group:
-                    tags.append(metric.tag)
+                for grouped_metric in group:
+                    tags.append(grouped_metric.tag)
 
                 is_not_grouped_metric = False
-                if metric.tag in tags:
+                if activity_metric.tag in tags:
                     is_not_grouped_metric = True
 
             if is_not_grouped_metric:
-                activity_metrics.append(metric)
+                activity_metrics.append(activity_metric)
 
         return activity_metrics
 
@@ -237,15 +237,18 @@ class MetricsStatus(object):
     def copy_implemented_metrics(self):
         # takes implemented metrics and copies their data to the appropriate metric object
         # I am so very sorry
-        implemented_metric_tags = [metric.tag for metric in self.implemented_metrics]
-        for group in self.metrics_by_group:
-            if group is not self.experimental_metrics: #experime    ntal metrics don't need to be copied, since they don't have a definition
-                for grouped_metric in group:
-                    if grouped_metric.tag in implemented_metric_tags:
-                        metric = next(metric for metric in self.implemented_metrics if metric.tag == grouped_metric.tag)
-                        for key in metric.__dict__.keys():
-                            if key != 'group': #don't copy the group over, since the metrics are already grouped
-                                grouped_metric.__dict__[key] = metric.__dict__[key]
+        # TODO: burn this into the ground
+        for group in enumerate(self.metrics_by_group):
+            if group[1] is not self.experimental_metrics:
+                for grouped_metric in group[1]:
+                    defined_implemented_metrics = [metric for metric in self.implemented_metrics if grouped_metric.tag == metric.tag]
+                    if defined_implemented_metrics != []:
+                        for metric in defined_implemented_metrics:
+                            metric.group = group[1][0].group
+                            group[1].append(metric)
+                            self.implemented_metrics.remove(metric)
+                        grouped_metric.ID = 'n/a'
+                self.metrics_by_group[group[0]] = [metric for metric in group[1] if metric.ID != 'n/a']
 
     def find_defined_metrics(self):
         activity_files = self.__githubapi.get_repo(self.activity_repo).get_dir_contents("activity-metrics")
