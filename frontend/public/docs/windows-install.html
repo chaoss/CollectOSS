@@ -36,21 +36,22 @@
             
   <div class="section" id="windows-installation">
 <h1>Windows Installation<a class="headerlink" href="#windows-installation" title="Permalink to this headline">¶</a></h1>
-<p>We currently don’t support local installation of Augur for Windows. However, we do provide a Vagrant box which can be used to spin up an Ubuntu VM with Augur pre-installed.</p>
+<p>We currently don’t support local installation of Augur for Windows.
+However, we do provide a Vagrant box which can be used to spin up an
+Ubuntu VM with Augur pre-installed.</p>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><a class="reference external" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git client</a></li>
+<li><a class="reference external" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git
+client</a></li>
 <li><a class="reference external" href="https://www.vagrantup.com/">Vagrant</a></li>
 <li><a class="reference external" href="https://www.virtualbox.org/">Virtualbox</a></li>
 <li><a class="reference external" href="https://github.com/settings/tokens">GitHub Access Token</a> (no
 write access required)</li>
 </ul>
-<p>To get started, you’ll need a VM provider-&nbsp;we currently only support
-<a class="reference external" href="https://www.virtualbox.org/">Virtualbox</a>. You’ll also need to
-install <a class="reference external" href="https://www.vagrantup.com/downloads.html">Vagrant</a> and a Git client. To
-begin, clone the repository using your Git client, enter the root directory of the repo using Command Prompt, and run
-<code class="docutils literal notranslate"><span class="pre">vagrant</span> <span class="pre">up</span></code>.</p>
+<ol class="arabic simple">
+<li>Clone the repository and start the VM.</li>
+</ol>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># on your local machine</span>
 
 <span class="c1"># using your Git client:</span>
@@ -58,44 +59,44 @@ begin, clone the repository using your Git client, enter the root directory of t
 
 <span class="c1"># using Command Prompt</span>
 <span class="n">cd</span> <span class="n">augur</span>
-<span class="n">vagrant</span> <span class="n">up</span>
+<span class="n">vagrant</span> <span class="n">up</span> <span class="c1"># this might take a while</span>
 <span class="n">vagrant</span> <span class="n">ssh</span>
 </pre></div>
 </div>
-<p>The first time you run this command, Vagrant will need to download the
-base box configuration. After that, it will provision the VM and then
-install Augur and its dependencies. Note: you’ll probably see a fair bit
-of errors during this provisioning process as Augur is getting
-installed. Don’t worry about them, most of them are harmless.
-<em>Probably.</em></p>
-<p>After this process has completed, the VM should be up and running. Log in to the VM <code class="docutils literal notranslate"><span class="pre">vagrant</span> <span class="pre">ssh</span></code>. Log
-in as <code class="docutils literal notranslate"><span class="pre">root</span></code> with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">su</span> <span class="pre">-</span></code> and then navigate to
-<code class="docutils literal notranslate"><span class="pre">/vagrant/augur</span></code>. This folder is where you’ll be working, as it’s
-synced with your local version of Augur, meaning you won’t have to worry
-about losing your changes after you shutdown the VM. You’ll also be able
-to use your preferred editor. During the provisioning process, Augur
-will create a lightweight version of both the
-<a class="reference external" href="facade-oss.org">Facade</a> and <a class="reference external" href="http://ghtorrent.org/">GHTorrent</a>
-datasets, both of which we rely on for a lot of our metrics. You’ll need
-to provide Augur with a <a class="reference external" href="https://github.com/settings/tokens">GitHub Access
-Token</a> (no write access
-required).</p>
+<p>Note: you’ll probably see a fair bit of errors during this provisioning
+process. Don’t worry about them, most of them are harmless. <em>Probably.</em></p>
+<ol class="arabic simple" start="2">
+<li>Log in as <code class="docutils literal notranslate"><span class="pre">root</span></code> and navigate to <code class="docutils literal notranslate"><span class="pre">/vagrant/augur</span></code>. This folder is
+synced with your local clone of <code class="docutils literal notranslate"><span class="pre">augur</span></code>, meaning you’ll be able to
+use your preferred local editor and just use the VM to run augur.</li>
+</ol>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span># inside the vagrant VM
 sudo su -
 cd /vagrant/augur
 
-# due to vagrant weirdness, we have to manually install the python packages
-sudo $AUGUR_PIP install --upgrade .
+# due to vagrant weirdness, we have to manually install the python packages. This might take a while
+$AUGUR_PIP install --upgrade .
 </pre></div>
 </div>
-<p>Augur will automatically create a config file called <code class="docutils literal notranslate"><span class="pre">augur.config.json</span></code>. Add your GitHub API key to this file under the section <code class="docutils literal notranslate"><span class="pre">GitHub</span></code>. At this point, you’re ready to start developing!
-Run the backend with <code class="docutils literal notranslate"><span class="pre">augur</span></code>, or the frontend and backend together with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dev</span></code>.</p>
+<ol class="arabic simple" start="3">
+<li>Add your GitHub API key to the <code class="docutils literal notranslate"><span class="pre">augur.config.json</span></code> file under the
+section <code class="docutils literal notranslate"><span class="pre">GitHub</span></code>.</li>
+<li>Start both the backend and frontend servers with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dev</span></code>.</li>
+</ol>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">dev</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li>When you’re done working in the VM, type <code class="docutils literal notranslate"><span class="pre">exit</span></code> twice: once to log
+out of <code class="docutils literal notranslate"><span class="pre">root</span></code>, and another to log out of the VM. Don’t forget to
+shut down the VM with <code class="docutils literal notranslate"><span class="pre">vagrant</span> <span class="pre">halt</span></code>.</li>
+</ol>
 <p>If you’re interested in adding a new plugin, data source, or metric,
 check out the <a class="reference external" href="http://augur.augurlabs.io/static/docs/dev-guide/3-backend.html">backend development
 guide</a>.
-If new visualizations are more your speed, you’ll want the <a class="reference external" href="http://augur.augurlabs.io/static/docs/dev-guide/4-frontend.html">frontend
+If new visualizations are more your speed, you’ll want the [frontend
 development
-guide</a>.</p>
+guide](<a class="reference external" href="http://augur.augurlabs.io/static/docs/dev-guide/4-frontend.html">http://augur.augurlabs.io/static/docs/dev-guide/4-frontend.html</a>).</p>
 <div class="section" id="tl-dr">
 <h3>TL;DR<a class="headerlink" href="#tl-dr" title="Permalink to this headline">¶</a></h3>
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span># on your local machine
@@ -113,10 +114,11 @@ sudo su -
 cd /vagrant/augur
 
 # due to vagrant weirdness, we have to manually install the python packages
-sudo $AUGUR_PIP install --upgrade .
+$AUGUR_PIP install --upgrade .
 
 # add your GitHub personal access token to augur.config.json
 
+# start the frontend and backend servers
 make dev
 # full steam ahead!
 </pre></div>
