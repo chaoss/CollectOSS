@@ -12,22 +12,26 @@ Augur is focused on prototyping open source software metrics.
 Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/chaoss/metrics). Technically, Augur is a [Flask web application](http://augurlabs.io), [Python library](http://augur.augurlabs.io/static/docs/) and [REST server](http://augur.augurlabs.io/static/api_docs/) that presents metrics on open source software development project health and sustainability. 
 
 
-## Development 
+## Getting Started 
 -------------------
 ### Vagrant
-**The quickest way to get started working on Augur is by using [Vagrant](https://www.vagrantup.com/)** to spin up a virtual machine (VM) that comes with Augur already installed. We'll do all the work of setting up and installing dependencies, leaving you free to jump right into contributing something awesome. 
+**The quickest way to get started working on Augur is by using [Vagrant](https://www.vagrantup.com/)** to spin up a virtual machine (VM) that comes with Augur already installed. We'll do all the work of setting up and installing dependencies, leaving you free to jump right into making something awesome. 
 
 *Caveat: if you’re a super nerd who likes to have total control over your development environment, there’s a local installation link at the bottom of this page. For the rest of you, Vagrant is the way to go, especially if you've had trouble getting all the dependcies installed locally, are not comfortable installing them yourself, or are using an OS for which we don't currently support local installation. **We currently only support local installation for macOS and most flavors of Linux**.*
 
 Windows installation instructions using Vagrant can be found [here](docs/python/source/windows-install.md).
 
-#### Dependencies
+Dependencies
+------------
 
-- [Vagrant](https://www.vagrantup.com/)
-- [Virtualbox](https://www.virtualbox.org/)
-- [GitHub Access Token](https://github.com/settings/tokens) (no write access required)
+-   [Git
+    client](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+-   [Vagrant](https://www.vagrantup.com/)
+-   [Virtualbox](https://www.virtualbox.org/)
+-   [GitHub Access Token](https://github.com/settings/tokens) (no write
+    access required)
 
-To get started, you'll need a VM provider- we currently only support [Virtualbox](https://www.virtualbox.org/). You'll also need to install [Vagrant](https://www.vagrantup.com/downloads.html). To begin, clone the repository, enter the root directory, and run `make vagrant`.
+1. Clone the repository and boot up the VM.
 
 ```bash
 # on your local machine
@@ -36,45 +40,54 @@ cd augur
 make vagrant
 ```
 
-The first time you run this command, Vagrant will need to download the base box configuration. After that, it will provision the VM and then install Augur and its dependencies. Note: you'll probably see a fair bit of errors during this provisioning process as Augur is getting installed. Don't worry about them, most of them are harmless. *Probably.*
+Note: you'll probably see a fair bit of errors during this provisioning process as Augur is getting installed. Don't worry about them, most of them are harmless. *Probably.*
 
-After this process has completed, the VM should be up and running. You'll then be automatically logged in to your newly provisioned VM. Log in as `root` with `sudo su -` and then navigate to `/vagrant/augur`. This folder is where you'll be working, as it's synced with your local version of Augur, meaning you won't have to worry about losing your changes after you shutdown the VM. You'll also be able to use your preferred editor. During the provisioning process, Augur will create a lightweight version of both the [Facade](facade-oss.org) and [GHTorrent](http://ghtorrent.org/) datasets, both of which we rely on for a lot of our metrics. You'll need to provide Augur with a [GitHub Access Token](https://github.com/settings/tokens) (no write access required). 
-
+2. Log in as `root` and navigate to `/vagrant/augur`. This folder is synced with your local clone of `augur`, meaning you'll be able to use your preferred local editor and just use the VM to run augur.  
 ```bash
 # inside the vagrant VM
 sudo su -
 cd /vagrant/augur
 
-# due to vagrant weirdness, we have to manually install the python packages
-sudo $AUGUR_PIP install --upgrade .
+# due to vagrant weirdness, we have to manually install the python packagew (this might take a while)
+$AUGUR_PIP install --upgrade .
 ```
 
-Augur will automatically create a config file called ``augur.config.json``. Add your GitHub API key to this file under the section ``GitHub``. At this point, you're ready to start developing!
-Run the backend with ``augur``, or the frontend and backend together with ``make dev``.
+3. Add your GitHub API key to the `augur.config.json` file under the
+section `GitHub`. 
+
+4. Start both the backend and frontend servers with `make dev`.
 
 ```bash
-# to start both the backend and the frontend
 make dev
 ```
 
-If you're interested in adding a new plugin, data source, or metric, check out the [backend development guide](http://augur.augurlabs.io/static/docs/dev-guide/3-backend.html). If new visualizations are more your speed, you'll want the [frontend development guide](http://augur.augurlabs.io/static/docs/dev-guide/4-frontend.html).
+5. When you're done working in the VM, type `exit` twice: once to log out of `root`, and another to log out of the VM. Don't forget to shut down the VM with `vagrant halt`.
 
-##### TL;DR
+If you're interested in adding a new plugin, data source, or metric, check out the [backend development guide](http://augur.augurlabs.io/static/docs/dev-guide/3-backend.html). If new visualizations are more your speed, you'll want the [frontend development guide](http://augur.augurlabs.io/static/docs/dev-guide/4-frontend.html\).
+
+### TL;DR
+
 ```bash
 # on your local machine
+
+# using your Git client: 
 git clone https://github.com/chaoss/augur.git
+
+# using Command Prompt
 cd augur
-make vagrant
+vagrant up
+vagrant ssh
 
 # inside the vagrant VM
 sudo su -
 cd /vagrant/augur
 
 # due to vagrant weirdness, we have to manually install the python packages
-sudo $AUGUR_PIP install --upgrade .
+$AUGUR_PIP install --upgrade .
 
 # add your GitHub personal access token to augur.config.json
 
+# start the frontend and backend servers
 make dev
 # full steam ahead!
 ```
