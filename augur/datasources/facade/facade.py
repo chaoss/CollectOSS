@@ -69,8 +69,8 @@ class Facade(object):
         """)
         results = pd.read_sql(downloadedReposSQL, self.db)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
-        if self.projects:
-            results = results[results.project_name.isin(self.projects)]
+        # if self.projects:
+        #     results = results[results.project_name.isin(self.projects)]
 
         b64_urls = []
         for i in results.index:
