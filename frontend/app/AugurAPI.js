@@ -107,9 +107,9 @@ export default class AugurAPI {
       return new Promise((resolve, reject) => {
         if (Array.isArray(data)) {
           data.forEach(response => {
-            if (response.status === 200) {
+            if (response.status === 200 && reverseMap[response.path]) {
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
-            } else {
+            } else if (reverseMap[response.path]){
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null
             }
           })

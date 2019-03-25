@@ -3525,6 +3525,48 @@ code {
   right: 50%;
   width: 100vw;
 }
+.tabs li.active a {
+  color: #000;
+  background: #eaeaea;
+  border-bottom: 1px solid #eaeaea;
+}
+.tabs li.active label {
+  color: #000 !important;
+  border-bottom: 3px solid #ddd !important;
+}
+.tabs li input {
+  visibility: hidden;
+}
+.tabs li label:hover {
+  background: #eaeaea;
+}
+@media (min-width: 1230px) {
+  .tabs ul {
+    border-bottom-style: none !important;
+    margin: 0px auto;
+  }
+}
+.linechart .tabs {
+  display: table;
+  margin: 0 auto;
+  transform: translateY(-50px);
+}
+.linechart .tabs ul {
+  list-style: none;
+}
+.linechart .tabs ul li {
+  display: inline;
+}
+.tabs li label {
+  position: relative;
+  top: 1px;
+  font-style: normal;
+  display: block;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  color: rgba(0,0,0,0.5);
+  text-decoration: none;
+}
 @-moz-keyframes spin {
   0% {
     transform: rotate(0deg);

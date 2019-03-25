@@ -8,38 +8,22 @@
         <span v-bind:style="{ 'color': colors[index] }" @click="" :value="repo" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
-    <div class="row">
-
-      <div class="col col-6">
-        <dynamic-line-chart source="closedIssues"
-                    title="Closed Issues / Week"
-                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
-                    cite-text="Issues Closed">
-        </dynamic-line-chart>
-      </div>
-
-      <!-- <div class="col col-6">
-        <dynamic-line-chart source="closedIssueResolutionDuration"
-                    title="Time to Close for Issue / Week"
-                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
-                    cite-text="Issues Closed">
-        </dynamic-line-chart>
-      </div> -->
-
-      <div class="col col-6">
-        <dynamic-line-chart source="codeCommits"
-                    title="Code Commits / Week"
-                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/commits.md"
-                    cite-text="Commits">
-        </dynamic-line-chart>
-      </div>
+    <!-- <div class="row" v-if="loaded">
+      <skeleton-chart source="openIssues"
+                    title="Open Issues / Week"
+                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md"
+                    cite-text="Issues Open"
+                    :data="values['openIssues']"></skeleton-chart>
+    </div> -->
+    <div class="row" v-if="loaded">
 
       <div class="col col-6">
         <dynamic-line-chart source="codeReviewIteration"
                       title="Number of Code Review Iterations"
                       size="total"
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md"
-                      cite-text="Code Review Iterations">
+                      cite-text="Code Review Iterations"
+                      :data="values['codeReviewIteration']">
         </dynamic-line-chart>
       </div>
 
@@ -48,7 +32,26 @@
                       title="Contribution Acceptance"
                       size="total"
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md"
-                      cite-text="Contribution Acceptance">
+                      cite-text="Contribution Acceptance"
+                      :data="values['contributionAcceptance']">
+        </dynamic-line-chart>
+      </div>
+
+      <div class="col col-6">
+        <dynamic-line-chart source="closedIssues"
+                    title="Closed Issues / Week"
+                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
+                    cite-text="Issues Closed"
+                    :data="values['closedIssues']">
+        </dynamic-line-chart>
+      </div>
+
+      <div class="col col-6">
+        <dynamic-line-chart source="codeCommits"
+                    title="Code Commits / Week"
+                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/commits.md"
+                    cite-text="Commits"
+                    :data="values['codeCommits']">
         </dynamic-line-chart>
       </div>
 
@@ -64,24 +67,18 @@
         <dynamic-line-chart source="forks"
                     title="Forks / Week"
                     cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/forks.md"
-                    cite-text="Forks">
+                    cite-text="Forks"
+                    :data="values['forks']">
         </dynamic-line-chart>
       </div>
 
-<!--       <div class="col col-6">
-        <dynamic-line-chart source="linesOfCodeChanged"
-                    title="Lines Of Code Changed / Week"
-                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/lines-of-code-changed.md"
-                    cite-text="Lines Of Code Changed">
-        </dynamic-line-chart>
-      </div>
- -->
       <div class="col col-6">
         <dynamic-line-chart source="maintainerResponseToMergeRequestDuration"
                       title="Time to First Maintainer Response to Merge Request"
                       size="total"
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md"
-                      cite-text="Time to First Maintainer Response to Merge Request">
+                      cite-text="Time to First Maintainer Response to Merge Request"
+                      :data="values['maintainerResponseToMergeRequestDuration']">
         </dynamic-line-chart>
       </div>
 
@@ -90,24 +87,17 @@
                       title="New Contributing Github Organizations"
                       size="total"
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md"
-                      cite-text="New Contributing Organizations">
+                      cite-text="New Contributing Organizations"
+                      :data="values['newContributingGithubOrganizations']">
         </dynamic-line-chart>
       </div>
-
-      <!-- <div class="col col-6">
-        <dynamic-line-chart source="codeReviews"
-                      title="Code Reviews"
-                      size="total"
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-reviews.md"
-                      cite-text="Code Reviews">
-        </dynamic-line-chart>
-      </div> -->
 
       <div class="col col-6">
         <dynamic-line-chart source="openIssues"
                     title="Open Issues / Week"
                     cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md"
-                    cite-text="Issues Open">
+                    cite-text="Issues Open"
+                    :data="values['openIssues']">
         </dynamic-line-chart>
       </div>
 
@@ -115,7 +105,8 @@
         <dynamic-line-chart source="pullRequestComments"
                     title="Pull Request Comments / Week "
                     cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-request-comments.md"
-                    cite-text="Pull Request Comments">
+                    cite-text="Pull Request Comments"
+                    :data="values['pullRequestComments']">
         </dynamic-line-chart>
       </div>
 
@@ -123,7 +114,8 @@
         <dynamic-line-chart source="pullRequestsOpen"
                     title="Pull Requests Open / Week"
                     cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-requests-open.md"
-                    cite-text="Open Pull Requests">
+                    cite-text="Open Pull Requests"
+                    :data="values['pullRequestsOpen']">
         </dynamic-line-chart>
       </div>
 
@@ -132,7 +124,8 @@
                       title="Contributing Github Organizations Overview"
                       size="total"
                       cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md"
-                      cite-text="Contributing Organizations">
+                      cite-text="Contributing Organizations"
+                      :data="values['contributingGithubOrganizations']">
         </bubble-chart>
       </div>
 
@@ -146,16 +139,32 @@
 import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
 import DynamicLineChart from './charts/DynamicLineChart'
+import SkeletonChart from './charts/SkeletonChart'
 module.exports = {
   components: {
     BubbleChart,
     StackedBarChart,
-    DynamicLineChart
+    DynamicLineChart,
+    SkeletonChart
   },
   data() {
     return {
-      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+      values: {},
+      loaded: false
     }
+  },
+  computed: {
+    repo () {
+      return this.$store.state.baseRepo
+    },
+    gitRepos () {
+      return this.$store.state.gitRepo
+    },
+    comparedRepos () {
+      return this.$store.state.comparedRepos
+    },
+    
   },
   methods: {
     getMetricsStatus() {
@@ -182,6 +191,70 @@ module.exports = {
     this.selected_frontend_status = 'all'
     this.selected_is_defined = 'all'
     this.getMetricsStatus()
+  },
+  created() {
+    let repos = []
+    if (this.repo) {
+      if (window.AugurRepos[this.repo])
+        repos.push(window.AugurRepos[this.repo])
+      else if (this.domain){
+        let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+        if (window.AugurRepos[temp])
+          temp = window.AugurRepos[temp]
+        else
+          window.AugurRepos[temp] = temp
+        repos.push(temp)
+      }
+      // repos.push(this.repo)
+    } // end if (this.$store.repo)
+    this.comparedRepos.forEach(function(repo) {
+      repos.push(window.AugurRepos[repo])
+    });
+    let endpoints1 = [
+      "closedIssues",
+      "codeCommits",
+      "codeReviewIteration",
+      "contributionAcceptance",
+      "forks",
+    ]
+    window.AugurAPI.batchMapped(repos, endpoints1).then((data) => {
+      console.log("here",data)
+      endpoints1.forEach((endpoint) => {
+        this.values[endpoint] = {}
+        this.values[endpoint][this.repo] = {}
+        this.values[endpoint][this.repo][endpoint] = data[this.repo][endpoint]
+      })
+      // this.values=data
+      this.loaded=true
+      // return data
+    }, (error) => {
+      //this.renderError()
+      console.log("failed", error)
+    }) // end batch request
+
+    let endpoints2 = [
+      "maintainerResponseToMergeRequestDuration",
+      "newContributingGithubOrganizations",
+      "openIssues",
+      "pullRequestComments",
+      "pullRequestsOpen",
+      "contributingGithubOrganizations"
+    ]
+    window.AugurAPI.batchMapped(repos, endpoints2).then((data) => {
+      console.log("here",data)
+      endpoints2.forEach((endpoint) => {
+        this.values[endpoint] = {}
+        this.values[endpoint][this.repo] = {}
+        this.values[endpoint][this.repo][endpoint] = data[this.repo][endpoint]
+      })
+      // this.values=data
+      this.loaded=true
+      // return data
+    }, (error) => {
+      //this.renderError()
+      console.log("failed", error)
+    }) // end batch request
   }
+
 };
 </script>

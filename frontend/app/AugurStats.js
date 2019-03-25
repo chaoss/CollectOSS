@@ -85,8 +85,12 @@ export default class AugurStats {
     })
   }
 
-  static standardDeviationLines (data, key, extension, mean) {
+  static standardDeviationLines (data, key, addon, mean) {
     let flat = data.map((e) => { return e[key] })
+    console.log(addon)
+
+    let extension = addon//(addon['githubURL']).split('/').join('');
+    console.log(extension)
     mean = mean || AugurStats.averageArray(flat)
     let distances = flat.map((e) => {
       return (e - mean) * (e - mean)

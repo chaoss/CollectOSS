@@ -18,6 +18,9 @@ export default function Augur () {
   window.d3 = require('d3')
   window.SvgSaver = require('svgsaver')
   window.VueRouter = require('vue-router')
+  window.vegaEmbed = require('vega-embed')
+  window.vega = require('vega')
+  window.vegaLite = require('vega-lite')
   let router = require('./router/router').default
 
   window.AUGUR_CHART_STYLE = {
@@ -46,7 +49,7 @@ export default function Augur () {
       showBelowAverage: false,
       rawWeekly: false,
       showArea: true,
-      showDetail: true,
+      showDetail: false,
       showTooltip: true,
       byDate: false
     },

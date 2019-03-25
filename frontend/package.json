@@ -26,16 +26,14 @@
   },
   "dependencies": {
     "css-loader": "^0.28.9",
-    "d3": "^5.5.0",
+    
     "hoek": "^5.0.3",
     "jquery": "^3.3.1",
     "lodash": "^4.17.11",
     "moment": "^2.22.2",
     "query-string2": "^0.1.2",
     "svgsaver": "^0.9.0",
-    "vega": "^4.4.0",
-    "vega-embed": "^3.18.1",
-    "vega-lite": "^2.6.0",
+    
     "vue": "^2.5.16",
     "vue-loader": "^15.2.4",
     "vue-multiselect": "^2.1.3",

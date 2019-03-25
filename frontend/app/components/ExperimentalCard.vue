@@ -14,7 +14,8 @@
         <dynamic-line-chart source="commitComments"
                     title="Commit Comments / Week "
                     cite-url=""
-                    cite-text="Commit Comments">
+                    cite-text="Commit Comments"
+                    :data="values['commitComments']">
         </dynamic-line-chart>
       </div>
 
@@ -23,7 +24,8 @@
                     title="Committers"
                     cite-url=""
                     cite-text="Total Commiters"
-                    disable-rolling-average=1>
+                    disable-rolling-average=1
+                    :data="values['totalCommitters']">
         </dynamic-line-chart>
       </div>
 
@@ -31,7 +33,8 @@
         <dynamic-line-chart source="contributionAcceptance"
                     title="Contribution Acceptance Rate"
                     cite-url=""
-                    cite-text="Contribution Acceptance">
+                    cite-text="Contribution Acceptance"
+                    :data="values['contributionAcceptance']">
         </dynamic-line-chart>
       </div>
 
@@ -40,7 +43,8 @@
                     title="Community Engagement: Open Issues"
                     cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md"
                     cite-text="Open Issues"
-                    disable-rolling-average=1>
+                    disable-rolling-average=1
+                    :data="values['communityEngagement:issues_open']">
         </dynamic-line-chart>
       </div>
 
@@ -49,7 +53,8 @@
                     title="Community Engagement: Closed Issues"
                     cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
                     cite-text="Closed Issues"
-                    disable-rolling-average=1>
+                    disable-rolling-average=1
+                    :data="values['communityEngagement:issues_closed_total']">
         </dynamic-line-chart>
       </div>
 
@@ -58,7 +63,8 @@
                     title="Fakes"
                     cite-url=""
                     cite-text="Fakes"
-                    disable-rolling-average=1>
+                    disable-rolling-average=1
+                    :data="values['fakes']">
         </dynamic-line-chart>
       </div>
 
@@ -66,7 +72,8 @@
         <dynamic-line-chart source="newWatchers"
                     title="New Watchers / Week"
                     cite-url=""
-                    cite-text="New Watchers">
+                    cite-text="New Watchers"
+                    :data="values['newWatchers']">
         </dynamic-line-chart>
       </div>
 
