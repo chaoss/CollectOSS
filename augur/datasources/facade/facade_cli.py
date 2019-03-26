@@ -69,7 +69,7 @@ def add_repo(project_id,git_repo):
 		
 	add_repo = ("INSERT INTO repos (project_id,git,status) VALUES "
 		"(:project_id,:git_repo,'New')")
-	self.db.execute(add_repo, params= {'project_id': project_id, 'git_repo': git_repo})
+	return self.db.execute(add_repo, params= {'project_id': project_id, 'git_repo': git_repo})
 
 def delete_repo(git_repo):
 
@@ -81,7 +81,7 @@ def delete_repo(git_repo):
 	# cursor: A database cursor
 
 	get_status = "SELECT status FROM repos WHERE id = :git_repo"
-	return self.db.execute(get_status, self.db, git_repo=git_repo)
+	return pd.read_sql(get_status, self.db, git_repo=git_repo)
 	status = self.db.fetchone()
 
 	if status == 'New':
@@ -126,7 +126,7 @@ def delete_project(project_id):
 	# Begin cleaning up repos associated with the project
 
 	get_repos = "SELECT id FROM repos WHERE projects_id = :project_id"
-	self.db.execute(get_repos, params={'project_id':project_id })
+	pd.read_sql(get_repos, self.db, params={'project_id':project_id })
 
 	repos = list(self.db)
 
