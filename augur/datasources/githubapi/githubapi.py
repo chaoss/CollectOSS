@@ -170,6 +170,21 @@ class GitHubAPI(object):
     ###           ACTIVITY            ###
     #####################################
 
+    @annotate(tag="repository-size")
+    def repository_size(self, owner, repo):
+      """
+      Calculate the repository size.
+      
+      :param owner: Username of the repository owner.
+      :param repo: Name of the repository.
+      :return: Size of repository in KBs.
+      """
+
+      url = 'https://api.github.com/repos/{}/{}'.format(owner, repo)
+      response = requests.get(url, auth=('user', self.GITHUB_API_KEY))
+
+      return {'size': response.json()['size']}
+
 
     #####################################
     ###         EXPERIMENTAL          ###
