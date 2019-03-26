@@ -1471,21 +1471,63 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 module.exports = {
   data: function data() {
     return {
-      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
+      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      loaded: false,
+      values: {}
     };
   },
 
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepos: function gitRepos() {
+      return this.$store.state.gitRepo;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    }
+  },
   components: {
     DynamicLineChart: _DynamicLineChart2.default,
     BubbleChart: _BubbleChart2.default,
     StackedBarChart: _StackedBarChart2.default
+  },
+  created: function created() {
+    var _this = this;
+
+    var repos = [];
+    if (this.repo) {
+      if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
+        var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+        if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
+        repos.push(temp);
+      }
+    }
+    this.comparedRepos.forEach(function (repo) {
+      repos.push(window.AugurRepos[repo]);
+    });
+    var endpoints1 = ["commitComments", "totalCommitters", "contributionAcceptance", "communityEngagement:issues_open", "communityEngagement:issues_closed_total", "fakes", "newWatchers", "issueActivity", "contributors"];
+    console.log(repos, endpoints1);
+    window.AugurAPI.batchMapped(repos, endpoints1).then(function (data) {
+      console.log("here", data);
+      endpoints1.forEach(function (endpoint) {
+        _this.values[endpoint] = {};
+        _this.values[endpoint][_this.repo] = {};
+        _this.values[endpoint][_this.repo][endpoint] = data[_this.repo][endpoint];
+      });
+
+      _this.loaded = true;
+    }, function (error) {
+      console.log("failed", error);
+    });
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments","data":_vm.values['commitComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1","data":_vm.values['totalCommitters']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance Rate","cite-url":"","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_open']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_closed_total']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1","data":_vm.values['fakes']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newWatchers","title":"New Watchers / Week","cite-url":"","cite-text":"New Watchers","data":_vm.values['newWatchers']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments","data":_vm.values['commitComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1","data":_vm.values['totalCommitters']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance Rate","cite-url":"","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_open']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_closed_total']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1","data":_vm.values['fakes']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newWatchers","title":"New Watchers / Week","cite-url":"","cite-text":"New Watchers","data":_vm.values['newWatchers']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1596,7 +1638,8 @@ module.exports = {
     return {
       colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
       values: {},
-      loaded: false
+      loaded1: false,
+      loaded2: false
     };
   },
 
@@ -1609,6 +1652,9 @@ module.exports = {
     },
     comparedRepos: function comparedRepos() {
       return this.$store.state.comparedRepos;
+    },
+    loaded: function loaded() {
+      return this.loaded1 && this.loaded2;
     }
   },
   methods: {
@@ -1657,7 +1703,7 @@ module.exports = {
         _this2.values[endpoint][_this2.repo][endpoint] = data[_this2.repo][endpoint];
       });
 
-      _this2.loaded = true;
+      _this2.loaded1 = true;
     }, function (error) {
       console.log("failed", error);
     });
@@ -1671,7 +1717,7 @@ module.exports = {
         _this2.values[endpoint][_this2.repo][endpoint] = data[_this2.repo][endpoint];
       });
 
-      _this2.loaded = true;
+      _this2.loaded2 = true;
     }, function (error) {
       console.log("failed", error);
     });

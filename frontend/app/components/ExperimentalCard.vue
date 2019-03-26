@@ -8,7 +8,7 @@
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
-      <div class="row">
+    <div class="row" v-if="loaded">
 
       <div class="col col-6">
         <dynamic-line-chart source="commitComments"
@@ -108,13 +108,71 @@ import StackedBarChart from './charts/StackedBarChart'
 module.exports = {
   data() {
     return {
-      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+      loaded: false,
+      values: {}
     }
+  },
+  computed: {
+    repo () {
+      return this.$store.state.baseRepo
+    },
+    gitRepos () {
+      return this.$store.state.gitRepo
+    },
+    comparedRepos () {
+      return this.$store.state.comparedRepos
+    },
   },
   components: {
     DynamicLineChart,
     BubbleChart,
     StackedBarChart
+  },
+  created() {
+    let repos = []
+    if (this.repo) {
+      if (window.AugurRepos[this.repo])
+        repos.push(window.AugurRepos[this.repo])
+      else if (this.domain){
+        let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+        if (window.AugurRepos[temp])
+          temp = window.AugurRepos[temp]
+        else
+          window.AugurRepos[temp] = temp
+        repos.push(temp)
+      }
+      // repos.push(this.repo)
+    } // end if (this.$store.repo)
+    this.comparedRepos.forEach(function(repo) {
+      repos.push(window.AugurRepos[repo])
+    });
+    let endpoints1 = [
+"commitComments",
+"totalCommitters",
+"contributionAcceptance",
+"communityEngagement:issues_open",
+"communityEngagement:issues_closed_total",
+"fakes",
+"newWatchers",
+"issueActivity",
+"contributors"
+    ]
+    console.log(repos, endpoints1)
+    window.AugurAPI.batchMapped(repos, endpoints1).then((data) => {
+      console.log("here",data)
+      endpoints1.forEach((endpoint) => {
+        this.values[endpoint] = {}
+        this.values[endpoint][this.repo] = {}
+        this.values[endpoint][this.repo][endpoint] = data[this.repo][endpoint]
+      })
+      // this.values=data
+      this.loaded=true
+      // return data
+    }, (error) => {
+      //this.renderError()
+      console.log("failed", error)
+    }) // end batch request
   }
 }
 
