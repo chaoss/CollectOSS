@@ -147,6 +147,8 @@ def create_routes(server):
     """
     server.addGitMetric(facade.commits_by_week, 'commits_by_week')
 
+    server.addGitMetric(facade.facade_project, 'facade_project')
+
     @server.app.route('/{}/git/cd_rg_tp_ranked_loc'.format(server.api_version))
     def cd_rg_tp_ranked_loc():
 
