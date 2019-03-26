@@ -2,6 +2,7 @@
 from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
+import facade-cli
 
 class FacadePlugin(AugurPlugin):
     """
@@ -31,6 +32,8 @@ class FacadePlugin(AugurPlugin):
         Responsible for adding this plugin's data sources to the API
         """
         from .routes import create_routes
+        from .facade_cli_datasource import create_routes
+
         create_routes(flask_app)
 
 FacadePlugin.augur_plugin_meta = {

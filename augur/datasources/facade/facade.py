@@ -8,6 +8,7 @@ import pandas as pd
 import sqlalchemy as s
 from augur import logger
 from augur.util import annotate
+import facade_cli
 # end imports
 # (don't remove the above line, it's for a script)
 
@@ -693,3 +694,38 @@ class Facade(object):
                 """)
         results = pd.read_sql(cdRgTpIntervalLocCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "calendar_year": calendar_year, "repo_group": repo_group})
         return results
+
+    def cli_add_project(name, description, website):
+        
+        return facade_cli.add_project(name, description, website)
+
+    def cli_delete_project(project_id)
+
+        return facade_cli.delete_project(project_id)
+ 
+    def cli_add_repo(project_id, git_repo)
+
+        return facade_cli.add_repo(project_id, git_repo)
+
+    def cli_delete_repo(git_repo)
+
+        return facade_cli.delete_repo(git_repo)
+
+    def cli_add_alias(alias,canonical)
+
+        return facade_cli.add_alias(alias, canonical)
+
+    def cli_delete_alias(alias_id)
+
+        return facade_cli.delete_alias(alias_id)
+
+    def cli_add_affiliation(domain, affiliation, start_date = '')
+
+        return facade_cli.add_affiliation(domain, affiliation, start_date = '')
+
+    def cli_delete_affiliation(affiliation_id)
+
+        return facade_cli.delete_affiliation(affiliation_id)
+
+    
+
