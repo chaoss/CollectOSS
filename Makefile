@@ -129,8 +129,7 @@ build: frontend docs
 test:test-ds test-api
 
 test-ds:
-	bash -c '$(CONDAACTIVATE)  -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
-
+	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 test-api:
 	make dev-start
 	 test/api/test_api.py

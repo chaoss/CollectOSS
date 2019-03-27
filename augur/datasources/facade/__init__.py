@@ -2,7 +2,6 @@
 from augur.application import Application
 from augur.augurplugin import AugurPlugin
 from augur import logger
-import facade-cli
 
 class FacadePlugin(AugurPlugin):
     """
