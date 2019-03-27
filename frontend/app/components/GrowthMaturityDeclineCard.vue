@@ -15,6 +15,8 @@
                     cite-text="Issues Open"
                     :data="values['openIssues']"></skeleton-chart>
     </div> -->
+        <div v-if="!loaded" style="text-align: center; margin-left: 44.4%; position: relative !important" class="col col-12 spinner loader"></div>
+
     <div class="row" v-if="loaded">
 
       <div class="col col-6">

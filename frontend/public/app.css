@@ -2889,7 +2889,7 @@ cite.metric a {
 }
 .lines-of-code-table th,
 .lines-of-code-table td {
-  padding: 0.5rem;
+  padding: 0.5rem 1.4rem 0.5rem 1.4rem;
 }
 .clickable-header {
   color: #3794de;

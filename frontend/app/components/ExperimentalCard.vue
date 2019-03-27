@@ -8,6 +8,8 @@
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
+    <div v-if="!loaded" style="text-align: center; margin-left: 44.4%; position: relative !important" class="col col-12 spinner loader"></div>
+   
     <div class="row" v-if="loaded">
 
       <div class="col col-6">
@@ -158,9 +160,7 @@ module.exports = {
 "issueActivity",
 "contributors"
     ]
-    console.log(repos, endpoints1)
     window.AugurAPI.batchMapped(repos, endpoints1).then((data) => {
-      console.log("here",data)
       endpoints1.forEach((endpoint) => {
         this.values[endpoint] = {}
         this.values[endpoint][this.repo] = {}
