@@ -1633,7 +1633,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-f66913b6", __vue__options__)
+    hotAPI.reload("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -3944,7 +3944,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-869af3b0", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-869af3b0", __vue__options__)
+    hotAPI.reload("data-v-869af3b0", __vue__options__)
   }
 })()}
 });
@@ -4482,6 +4482,67 @@ exports.default = {
               "type": "nominal",
               "scale": { "scheme": "category10" },
               "legend": null
+            }
+          }
+
+        }, {
+          "transform": [{
+            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+            "as": "Majority type of changes"
+          }, {
+            "calculate": "(datum.additions - datum.deletions)",
+            "as": "Net lines added"
+          }, {
+            "calculate": "((datum.additions - datum.deletions) / datum.commits)",
+            "as": "netratio"
+          }, {
+            "calculate": "(datum.additions / datum.commits)",
+            "as": "addedratio"
+          }, {
+            "calculate": "(datum.lines / datum.commits)",
+            "as": "totalratio"
+          }],
+          "mark": {
+            "type": "rule",
+            "size": 20
+          },
+
+          "selection": {
+            "tooltip": {
+              "type": "multi",
+              "on": "mouseover",
+              "nearest": false,
+              "empty": "none",
+              "fields": ["_vgsid_"],
+              "toggle": "event.shiftKey",
+              "resolve": "global"
+            }
+          },
+          "encoding": {
+
+            "y": {
+              "field": "author_email",
+              "sort": {
+                "field": field,
+                "op": "mean",
+                "order": "descending"
+              },
+              "type": "nominal",
+              "axis": { "title": null }
+            },
+            "tooltip": [{ "field": field, "type": "quantitative" }, {
+              "field": "author_email",
+
+              "type": "nominal"
+            }],
+            "color": {
+              "condition": {
+                "selection": { "not": "tooltip" }, "value": "transparent"
+              },
+              "value": "black"
+            },
+            "opacity": {
+              "value": 0.05
             }
           }
 
@@ -5986,8 +6047,9 @@ exports.default = {
           },
           "encoding": {
             "size": { "value": 4 },
-            "opacity": { "value": 1.001 },
+            "opacity": { "value": 1.051 },
             "x": { "field": "author_date", "type": "temporal" },
+
             "tooltip": [{ "field": "author_email", "type": "nominal" }, {
               "field": "Total lines changed",
               "type": "quantitative"

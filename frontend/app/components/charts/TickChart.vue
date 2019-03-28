@@ -165,7 +165,7 @@ export default {
           {
             "mark": "rule",
             "transform": [
-             
+
               {
                 "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
                 "as": "Majority type of changes"
@@ -184,8 +184,9 @@ export default {
             },
             "encoding": {
               "size": {"value": 4},
-              "opacity": {"value": 1.001},
+              "opacity": {"value": 1.051},
               "x": {"field": "author_date", "type": "temporal"},
+              // "y": {"field": "author_email", "type": "nominal"},
               "tooltip": [{"field": "author_email", "type": "nominal"},{
                 "field": "Total lines changed",
                 "type": "quantitative",

@@ -149,6 +149,76 @@ export default {
             
             
           },
+          {
+            "transform": [
+             
+              {
+                "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+                "as": "Majority type of changes"
+              },
+              {
+                "calculate": "(datum.additions - datum.deletions)",
+                "as": "Net lines added"
+              },
+              {
+                "calculate": "((datum.additions - datum.deletions) / datum.commits)",
+                "as": "netratio"
+              },
+              {
+                "calculate": "(datum.additions / datum.commits)",
+                "as": "addedratio"
+              },
+              {
+                "calculate": "(datum.lines / datum.commits)",
+                "as": "totalratio"
+              },
+            ],
+            "mark": {
+              "type":"rule",
+              "size": 20
+            },
+
+            "selection": {
+              "tooltip": {
+                "type": "multi",
+                "on": "mouseover",
+                "nearest": false,
+                "empty": "none",
+                "fields": ["_vgsid_"],
+                "toggle": "event.shiftKey",
+                "resolve": "global"
+              }
+            },
+            "encoding": {
+
+              "y": {
+                "field": "author_email",
+                "sort": {
+                  "field": field,
+                  "op": "mean",
+                  "order": "descending"
+                },
+                "type": "nominal",
+                "axis": {"title": null}
+              },
+              "tooltip": [{"field": field, "type": "quantitative"},{
+                "field": "author_email",
+
+                "type": "nominal"
+              }],
+              "color": {
+                "condition":{
+                  "selection": {"not": "tooltip"}, "value": "transparent"
+                },
+                "value": "black"
+              },
+              "opacity": {
+                "value": 0.05
+              }
+            }
+            
+            
+          },
         ]
         
       }
