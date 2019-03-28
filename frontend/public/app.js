@@ -1535,7 +1535,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-b05646f6", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-b05646f6", __vue__options__)
+    hotAPI.reload("data-v-b05646f6", __vue__options__)
   }
 })()}
 });
@@ -1624,7 +1624,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('div',{staticClass:"col col-12 spinner loader",staticStyle:{"text-align":"center","margin-left":"44.4%","position":"relative !important"}}):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-40px) !important"}},[_c('div',{staticClass:"col col-12"},[_c('tick-chart',{attrs:{"source":"changesByAuthor","data":_vm.values['changesByAuthor']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px","transform":"translateY(-70px) !important"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px","transform":"translateY(-70px) !important"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"measure":"lines","title":"Average Lines of Code Per Commit"}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-180px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-190px) !important"}},[_c('lines-of-code-chart')],1):_vm._e()])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('div',{staticClass:"col col-12 spinner loader",staticStyle:{"text-align":"center","margin-left":"44.4%","position":"relative !important"}}):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-40px) !important"}},[_c('div',{staticClass:"col col-12"},[_c('tick-chart',{attrs:{"source":"changesByAuthor","data":_vm.values['changesByAuthor']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px","transform":"translateY(-0px) !important"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period","source":"changesByAuthor1","data":_vm.values['changesByAuthor']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"0px","transform":"translateY(-0px) !important"}},[_c('div',{staticStyle:{"padding-top":"0px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"measure":"lines","title":"Average Lines of Code Per Commit","source":"changesByAuthor2","data":_vm.values['changesByAuthor']}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-30px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-40px) !important"}},[_c('lines-of-code-chart')],1):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1769,7 +1769,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-429b02f1", __vue__options__)
+    hotAPI.reload("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -3944,7 +3944,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-869af3b0", __vue__options__)
   } else {
-    hotAPI.reload("data-v-869af3b0", __vue__options__)
+    hotAPI.rerender("data-v-869af3b0", __vue__options__)
   }
 })()}
 });
@@ -4398,6 +4398,9 @@ exports.default = {
   created: function created() {
     this.type = 1;
   },
+  mounted: function mounted() {
+    this.spec;
+  },
 
   computed: {
     repo: function repo() {
@@ -4425,8 +4428,9 @@ exports.default = {
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 700,
-        "height": 310,
+        "width": 450,
+        "height": 300,
+        "padding": { "left": 10, "top": 35, "right": 5, "bottom": 0 },
         "config": {
           "tick": {
             "thickness": 8,
@@ -4458,8 +4462,8 @@ exports.default = {
             "as": "totalratio"
           }],
           "mark": {
-            "type": "bar",
-            "tooltip": { "content": "data" }
+            "type": "bar"
+
           },
           "encoding": {
             "x": { "field": field, "type": "quantitative" },
@@ -4529,54 +4533,56 @@ exports.default = {
 
       var authors = [];
       var track = {};
-      repo.changesByAuthor().then(function (changes) {
-        changes.forEach(function (change) {
-          track[change.author_email] = track[change.author_email] ? track[change.author_email] : { 'commits': 0, 'lines': 0, 'additions': 0, 'deletions': 0 };
-          track[change.author_email]['commits'] = track[change.author_email]['commits'] ? track[change.author_email]['commits'] + 1 : 1;
+      var changes = null;
 
-          track[change.author_email]['lines'] = track[change.author_email]['lines'] ? track[change.author_email]['lines'] + change.additions + change.deletions : change.additions + change.deletions;
-          track[change.author_email]['additions'] = track[change.author_email]['additions'] ? track[change.author_email]['additions'] + change.additions : change.additions;
-          track[change.author_email]['deletions'] = track[change.author_email]['deletions'] ? track[change.author_email]['deletions'] + change.deletions : change.deletions;
-        });
+      if (this.data) changes = this.data;else changes = repo.changesByAuthor();
 
-        changes.forEach(function (change) {
-          if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates);
-            if (change.author_affiliation !== 'Unknown') {
-              group(organizations, 'affiliation', change, filterDates);
-            }
-          }
-          if (!authors.includes(change["author_email"])) {
-            authors.push(change["author_email"]);
-            change["flag"] = (track[change.author_email] / track["total"] * 100).toFixed(4);
-          }
-        });
+      changes.forEach(function (change) {
+        track[change.author_email] = track[change.author_email] ? track[change.author_email] : { 'commits': 0, 'lines': 0, 'additions': 0, 'deletions': 0 };
+        track[change.author_email]['commits'] = track[change.author_email]['commits'] ? track[change.author_email]['commits'] + 1 : 1;
 
-        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-        var careabout = [];
-        _this.contributors.slice(0, 10).forEach(function (obj) {
-          careabout.push(obj["author_email"]);
-        });
-
-        var findObjectByKey = function findObjectByKey(array, key, value) {
-          var ary = [];
-          for (var i = 0; i < array.length; i++) {
-            if (array[i][key] == value) {
-              ary.push(array[i]);
-            }
-          }
-          return ary;
-        };
-
-        var ary = [];
-
-        for (var key in track) {
-          if (careabout.includes(key)) ary.push({ "author_email": key, "commits": track[key]['commits'], "lines": track[key]['lines'], "additions": track[key]['additions'], "deletions": track[key]['deletions'] });
-        }
-
-        _this.values = ary;
-        console.log("TRACK", ary, careabout);
+        track[change.author_email]['lines'] = track[change.author_email]['lines'] ? track[change.author_email]['lines'] + change.additions + change.deletions : change.additions + change.deletions;
+        track[change.author_email]['additions'] = track[change.author_email]['additions'] ? track[change.author_email]['additions'] + change.additions : change.additions;
+        track[change.author_email]['deletions'] = track[change.author_email]['deletions'] ? track[change.author_email]['deletions'] + change.deletions : change.deletions;
       });
+
+      changes.forEach(function (change) {
+        if (isFinite(change.additions) && isFinite(change.deletions)) {
+          group(contributors, 'author_email', change, filterDates);
+          if (change.author_affiliation !== 'Unknown') {
+            group(organizations, 'affiliation', change, filterDates);
+          }
+        }
+        if (!authors.includes(change["author_email"])) {
+          authors.push(change["author_email"]);
+          change["flag"] = (track[change.author_email] / track["total"] * 100).toFixed(4);
+        }
+      });
+
+      this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+      var careabout = [];
+      this.contributors.slice(0, 10).forEach(function (obj) {
+        careabout.push(obj["author_email"]);
+      });
+
+      var findObjectByKey = function findObjectByKey(array, key, value) {
+        var ary = [];
+        for (var i = 0; i < array.length; i++) {
+          if (array[i][key] == value) {
+            ary.push(array[i]);
+          }
+        }
+        return ary;
+      };
+
+      var ary = [];
+
+      for (var key in track) {
+        if (careabout.includes(key)) ary.push({ "author_email": key, "commits": track[key]['commits'], "lines": track[key]['lines'], "additions": track[key]['additions'], "deletions": track[key]['deletions'] });
+      }
+
+      this.values = ary;
+      console.log("TRACK", ary, careabout);
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
@@ -4586,9 +4592,15 @@ exports.default = {
         repos.push(window.AugurRepos[this.repo]);
       }
 
-      var processData = function processData(data) {};
+      this.reloadImage(config);
 
       return config;
+    }
+  },
+  methods: {
+    reloadImage: function reloadImage(config) {
+      config.data = { "values": this.values };
+      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -100, offsetX: 40 }, mode: 'vega-lite' });
     }
   }
 
@@ -4597,7 +4609,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-60px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-0px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4606,7 +4618,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-8d346828", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-8d346828", __vue__options__)
+    hotAPI.reload("data-v-8d346828", __vue__options__)
   }
 })()}
 });
@@ -4800,7 +4812,6 @@ exports.default = {
       if (this.group == 2) {
         timeUnit = 'yearmonth';
         format = '%y %b';
-        type = "bar";
         bin = false;
         size = 13;
         type = "area";
@@ -4809,8 +4820,9 @@ exports.default = {
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
-        "height": 380,
+        "width": 450,
+        "height": 300,
+        "padding": { "left": 10, "top": 35, "right": 5, "bottom": 0 },
         "title": {
           "text": this.title,
           "offset": 15
@@ -4824,11 +4836,11 @@ exports.default = {
             "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 14,
+            "labelFontSize": 12,
             "titleFontSize": 14,
             "labelLimit": 260
           },
-          "scale": { "minSize": 100, "maxSize": 500 },
+
           "bar": {
             "continuousBandSize": size,
             "binSpacing": 0
@@ -4848,25 +4860,22 @@ exports.default = {
             "calculate": "(datum.count * 100)",
             "as": "percent"
           }],
+
           "mark": {
             "type": type,
-            "tooltip": { "content": "data" },
 
-            "cornerRadius": 45
+            "cornerRadius": 1
           },
           "encoding": {
             "x": {
               "field": "author_date",
               "type": "temporal",
-
               "timeUnit": timeUnit,
-
               "axis": { "domain": false, "format": format }
             },
             "y": {
               "field": "count",
               "type": "quantitative",
-
               "aggregate": "sum",
               "stack": "center",
               "axis": null
@@ -4876,10 +4885,78 @@ exports.default = {
               "type": "nominal",
               "scale": { "scheme": "category10" }
             }
+
           }
+        }, {
+          "mark": {
+            "type": type,
 
+            "cornerRadius": 1
+          },
+          "transform": [{
+            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+            "as": "Majority type of changes"
+          }, {
+            "calculate": "(datum.additions - datum.deletions)",
+            "as": "Net lines added"
+          }, {
+            "calculate": "(datum.additions)",
+            "as": "Total lines added"
+          }, {
+            "calculate": "(datum.count * 100)",
+            "as": "percent"
+          }],
+          "selection": {
+            "tooltip": {
+              "type": "multi",
+              "on": "mouseover",
+              "nearest": false,
+              "empty": "none",
+              "fields": ["_vgsid_"],
+              "toggle": "event.shiftKey",
+              "resolve": "global"
+            }
+          },
+
+          "encoding": {
+            "opacity": { "value": 1.001 },
+            "x": {
+              "field": "author_date",
+              "type": "temporal",
+              "timeUnit": timeUnit,
+              "axis": { "domain": false, "format": format }
+            },
+            "y": {
+              "field": "count",
+              "type": "quantitative",
+              "aggregate": "sum",
+              "stack": "center",
+              "axis": null
+            },
+            "tooltip": [{
+              "aggregate": "sum",
+              "field": "Total lines added",
+              "type": "quantitative"
+            }, {
+              "aggregate": "sum",
+              "field": "Net lines added",
+              "type": "quantitative"
+            }, {
+              "field": "author_date",
+              "type": "temporal",
+              "timeUnit": timeUnit
+            }, {
+              "field": "author_email",
+              "type": "nominal"
+            }],
+            "color": {
+              "condition": {
+                "selection": { "not": "tooltip" }, "value": "transparent"
+              },
+              "value": "black"
+            }
+          }
         }]
-
       };
 
       var repo = window.AugurAPI.Repo({ gitURL: this.repo });
@@ -4926,53 +5003,55 @@ exports.default = {
 
       var authors = [];
       var track = { "total": 0 };
-      repo.changesByAuthor().then(function (changes) {
-        changes.forEach(function (change) {
-          change.author_date = new Date(change.author_date);
-          change["count"] = change["count"] ? change["count"] + 1 : 1;
-          track[change.author_email] = track[change.author_email] ? track[change.author_email] + 1 : 1;
-          track["total"] += 1;
-        });
 
-        changes.forEach(function (change) {
-          if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates);
-            if (change.author_affiliation !== 'Unknown') {
-              group(organizations, 'affiliation', change, filterDates);
-            }
-          }
-          if (!authors.includes(change["author_email"])) {
-            authors.push(change["author_email"]);
-            change["flag"] = (track[change.author_email] / track["total"]).toFixed(4);
-          }
-        });
+      var changes = null;
+      if (this.data) changes = this.data;else changes = repo.changesByAuthor();
 
-        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-        var careabout = [];
-        _this.contributors.slice(0, 10).forEach(function (obj) {
-          careabout.push(obj["author_email"]);
-        });
-
-        var findObjectByKey = function findObjectByKey(array, key, value) {
-          var ary = [];
-          for (var i = 0; i < array.length; i++) {
-            if (array[i][key] == value) {
-              ary.push(array[i]);
-            }
-          }
-          return ary;
-        };
-
-        var ary = [];
-
-        careabout.forEach(function (name) {
-          findObjectByKey(changes, "author_email", name).forEach(function (obj) {
-            ary.push(obj);
-          });
-        });
-
-        _this.values = ary;
+      changes.forEach(function (change) {
+        change.author_date = new Date(change.author_date);
+        change["count"] = change["count"] ? change["count"] + 1 : 1;
+        track[change.author_email] = track[change.author_email] ? track[change.author_email] + 1 : 1;
+        track["total"] += 1;
       });
+
+      changes.forEach(function (change) {
+        if (isFinite(change.additions) && isFinite(change.deletions)) {
+          group(contributors, 'author_email', change, filterDates);
+          if (change.author_affiliation !== 'Unknown') {
+            group(organizations, 'affiliation', change, filterDates);
+          }
+        }
+        if (!authors.includes(change["author_email"])) {
+          authors.push(change["author_email"]);
+          change["flag"] = (track[change.author_email] / track["total"]).toFixed(4);
+        }
+      });
+
+      this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+      var careabout = [];
+      this.contributors.slice(0, 10).forEach(function (obj) {
+        careabout.push(obj["author_email"]);
+      });
+
+      var findObjectByKey = function findObjectByKey(array, key, value) {
+        var ary = [];
+        for (var i = 0; i < array.length; i++) {
+          if (array[i][key] == value) {
+            ary.push(array[i]);
+          }
+        }
+        return ary;
+      };
+
+      var ary = [];
+
+      careabout.forEach(function (name) {
+        findObjectByKey(changes, "author_email", name).forEach(function (obj) {
+          ary.push(obj);
+        });
+      });
+
+      this.values = ary;
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
@@ -4982,9 +5061,18 @@ exports.default = {
         repos.push(window.AugurRepos[this.repo]);
       }
 
-      var processData = function processData(data) {};
-
+      this.reloadImage(config);
       return config;
+    }
+  },
+  mounted: function mounted() {
+    this.spec;
+  },
+
+  methods: {
+    reloadImage: function reloadImage(config) {
+      config.data = { "values": this.values };
+      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -100, offsetX: 40 }, mode: 'vega-lite' });
     }
   }
 
@@ -4993,7 +5081,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-80px !important"}},[_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"contradio","name":"timeframe","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"2")},on:{"change":function($event){_vm.group="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"contradio"}},[_vm._v("Continuous")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-0px !important"}},[_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"contradio","name":"timeframe","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"2")},on:{"change":function($event){_vm.group="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"contradio"}},[_vm._v("Continuous")])])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -6002,7 +6090,6 @@ exports.default = {
       };
 
       if (this.data) {
-
         processData(this.data);
       } else {
         repo.changesByAuthor().then(function (changes) {
@@ -6042,7 +6129,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-083303b4", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-083303b4", __vue__options__)
+    hotAPI.reload("data-v-083303b4", __vue__options__)
   }
 })()}
 });

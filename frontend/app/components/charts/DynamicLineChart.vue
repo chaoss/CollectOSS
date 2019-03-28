@@ -270,8 +270,9 @@ export default {
 
       let getToolPoint = (key) => { 
         let selection = (!selectionAdded ? {
-              "tooltip": {"type": "single", "on": "mouseover","nearest": false}
-            } : null)
+            "tooltip": {"type": "single", "on": "mouseover","nearest": false}
+          } : null
+        )
         let size = 17
         var timeDiff = Math.abs(this.latest.getTime() - this.earliest.getTime());
         var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
@@ -283,27 +284,23 @@ export default {
           "transform": [
               brush
           ],
-    "mark": "rule",
-    "selection": {
-      "tooltip": {"type": "single", "on": "mouseover","nearest": false, "empty": "none"}
-    },
-    "encoding": {
-      "size": {"value": 20},
-      "opacity": {"value": 0.001},
-      "x": {
-                "field": "date",
-                "type": "temporal",
-                "axis": null,
-              },
-"tooltip": [
-// {
-//                 "field": "date",
-//                 "type": "ordinal"
-              
-//               },
-              {"field": field, "type": "quantitative"}],
-    }
-  }
+          "mark": "rule",
+          "selection": {
+            "tooltip": {"type": "single", "on": "mouseover","nearest": false, "empty": "none"}
+          },
+          "encoding": {
+            "size": {"value": 20},
+            "opacity": {"value": 0.001},
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": null,
+            },
+            "tooltip": [
+              {"field": field, "type": "quantitative"}
+            ],
+          }
+        }
       }
 
       let getStandardPoint = (key, color) => {

@@ -299,34 +299,15 @@ export default {
       }
 
       if (this.data) {
-        
         processData(this.data)
       } else {
         repo.changesByAuthor().then((changes) => {
           processData(changes)
         })
       }
-      
-        
-      
-
-
-
-      
-
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis')
       $(this.$el).find('.stackedbarchart').removeClass('loader')
-
-      // let endpoints = []
-      // let fields = {}
-      // this.source.split(',').forEach((endpointAndFields) => {
-      //   let split = endpointAndFields.split(':')
-      //   endpoints.push(split[0])
-      //   if (split[1]) {
-      //     fields[split[0]] = split[1].split('+')
-      //   }
-      // })
 
       // Get the repos we need
       let repos = []
