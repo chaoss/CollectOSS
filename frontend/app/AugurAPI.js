@@ -287,7 +287,13 @@ export default class AugurAPI {
 
     if (repo.gitURL) {
       // Other
-      GitEndpoint(repo, 'changesByAuthor', 'changes_by_author')
+      GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'),
+      GitEndpoint(repo, 'cdRepTpIntervalLocCommits', 'cd_rep_tp_interval_loc_commits'),
+      GitEndpoint(repo, 'cdRgTpRankedLoc', 'cd_rg_tp_ranked_loc'),
+      GitEndpoint(repo, 'cdRgTpRankedCommits', 'cd_rg_tp_ranked_commits'),
+      GitEndpoint(repo, 'cdRgNewrepRankedLoc', 'cd_rg_newrep_ranked_loc'),
+      GitEndpoint(repo, 'cdRgNewrepRankedCommits', 'cd_rg_newrep_ranked_commits')
+      GitEndpoint(repo, 'facadeProject', 'facade_project')
     }
 
     return repo

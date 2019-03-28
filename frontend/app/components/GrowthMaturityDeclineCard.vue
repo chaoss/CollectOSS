@@ -15,6 +15,8 @@
                     cite-text="Issues Open"
                     :data="values['openIssues']"></skeleton-chart>
     </div> -->
+        <div v-if="!loaded" style="text-align: center; margin-left: 44.4%; position: relative !important" class="col col-12 spinner loader"></div>
+
     <div class="row" v-if="loaded">
 
       <div class="col col-6">
@@ -151,7 +153,8 @@ module.exports = {
     return {
       colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
       values: {},
-      loaded: false
+      loaded1: false,
+      loaded2: false
     }
   },
   computed: {
@@ -164,6 +167,9 @@ module.exports = {
     comparedRepos () {
       return this.$store.state.comparedRepos
     },
+    loaded() {
+      return this.loaded1 && this.loaded2
+    }
     
   },
   methods: {
@@ -225,7 +231,7 @@ module.exports = {
         this.values[endpoint][this.repo][endpoint] = data[this.repo][endpoint]
       })
       // this.values=data
-      this.loaded=true
+      this.loaded1=true
       // return data
     }, (error) => {
       //this.renderError()
@@ -248,7 +254,7 @@ module.exports = {
         this.values[endpoint][this.repo][endpoint] = data[this.repo][endpoint]
       })
       // this.values=data
-      this.loaded=true
+      this.loaded2=true
       // return data
     }, (error) => {
       //this.renderError()

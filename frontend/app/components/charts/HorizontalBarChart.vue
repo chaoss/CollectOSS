@@ -8,7 +8,7 @@
 
           
           <div class="inputGroup ">
-            <input id="totalradio" name="lines" value="1" type="radio" checked v-model="type">
+            <input id="totalradio" name="lines" value="1" type="radio" v-model="type">
             <label id="front" for="totalradio">Total</label>
           </div>
           <div class="inputGroup ">
@@ -34,7 +34,7 @@ import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
 
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'type'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'measure'],
   data() {
     let years = []
     for (let i = 9; i >= 0; i--) {

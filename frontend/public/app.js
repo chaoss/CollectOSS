@@ -773,7 +773,8 @@ var AugurAPI = function () {
 
       if (repo.gitURL) {
         // Other
-        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author');
+        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'), GitEndpoint(repo, 'cdRepTpIntervalLocCommits', 'cd_rep_tp_interval_loc_commits'), GitEndpoint(repo, 'cdRgTpRankedLoc', 'cd_rg_tp_ranked_loc'), GitEndpoint(repo, 'cdRgTpRankedCommits', 'cd_rg_tp_ranked_commits'), GitEndpoint(repo, 'cdRgNewrepRankedLoc', 'cd_rg_newrep_ranked_loc'), GitEndpoint(repo, 'cdRgNewrepRankedCommits', 'cd_rg_newrep_ranked_commits');
+        GitEndpoint(repo, 'facadeProject', 'facade_project');
       }
 
       return repo;
@@ -1471,21 +1472,61 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 module.exports = {
   data: function data() {
     return {
-      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
+      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      loaded: false,
+      values: {}
     };
   },
 
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepos: function gitRepos() {
+      return this.$store.state.gitRepo;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    }
+  },
   components: {
     DynamicLineChart: _DynamicLineChart2.default,
     BubbleChart: _BubbleChart2.default,
     StackedBarChart: _StackedBarChart2.default
+  },
+  created: function created() {
+    var _this = this;
+
+    var repos = [];
+    if (this.repo) {
+      if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
+        var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+        if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
+        repos.push(temp);
+      }
+    }
+    this.comparedRepos.forEach(function (repo) {
+      repos.push(window.AugurRepos[repo]);
+    });
+    var endpoints1 = ["commitComments", "totalCommitters", "contributionAcceptance", "communityEngagement:issues_open", "communityEngagement:issues_closed_total", "fakes", "newWatchers", "issueActivity", "contributors"];
+    window.AugurAPI.batchMapped(repos, endpoints1).then(function (data) {
+      endpoints1.forEach(function (endpoint) {
+        _this.values[endpoint] = {};
+        _this.values[endpoint][_this.repo] = {};
+        _this.values[endpoint][_this.repo][endpoint] = data[_this.repo][endpoint];
+      });
+
+      _this.loaded = true;
+    }, function (error) {
+      console.log("failed", error);
+    });
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments","data":_vm.values['commitComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1","data":_vm.values['totalCommitters']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance Rate","cite-url":"","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_open']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_closed_total']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1","data":_vm.values['fakes']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newWatchers","title":"New Watchers / Week","cite-url":"","cite-text":"New Watchers","data":_vm.values['newWatchers']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('div',{staticClass:"col col-12 spinner loader",staticStyle:{"text-align":"center","margin-left":"44.4%","position":"relative !important"}}):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments","data":_vm.values['commitComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1","data":_vm.values['totalCommitters']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance Rate","cite-url":"","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_open']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_closed_total']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1","data":_vm.values['fakes']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newWatchers","title":"New Watchers / Week","cite-url":"","cite-text":"New Watchers","data":_vm.values['newWatchers']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1494,7 +1535,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-b05646f6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-b05646f6", __vue__options__)
+    hotAPI.rerender("data-v-b05646f6", __vue__options__)
   }
 })()}
 });
@@ -1532,7 +1573,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 module.exports = {
   data: function data() {
     return {
-      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
+      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      values: {},
+      loaded: false
     };
   },
 
@@ -1543,13 +1586,45 @@ module.exports = {
     NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
     OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
     HorizontalBarChart: _HorizontalBarChart2.default
+  },
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
+      return this.$store.state.gitRepo;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    }
+  },
+  created: function created() {
+    var _this = this;
+
+    var repos = [];
+    if (this.repo) {
+      if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);
+    }
+    this.comparedRepos.forEach(function (repo) {
+      repos.push(window.AugurRepos[repo]);
+    });
+    var endpoints1 = ["changesByAuthor"];
+
+    endpoints1.forEach(function (source) {
+      var repo = window.AugurAPI.Repo({ gitURL: _this.gitRepo });
+      repo[source]().then(function (data) {
+        console.log("batch data", data);
+        _this.values[source] = data;
+        _this.loaded = true;
+      }, function () {});
+    });
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"type":"lines","title":"Average Lines of Code Per Commit"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-100px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('lines-of-code-chart')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('div',{staticClass:"col col-12 spinner loader",staticStyle:{"text-align":"center","margin-left":"44.4%","position":"relative !important"}}):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-40px) !important"}},[_c('div',{staticClass:"col col-12"},[_c('tick-chart',{attrs:{"source":"changesByAuthor","data":_vm.values['changesByAuthor']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px","transform":"translateY(-70px) !important"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px","transform":"translateY(-70px) !important"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"measure":"lines","title":"Average Lines of Code Per Commit"}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-180px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-190px) !important"}},[_c('lines-of-code-chart')],1):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1558,7 +1633,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-f66913b6", __vue__options__)
   } else {
-    hotAPI.reload("data-v-f66913b6", __vue__options__)
+    hotAPI.rerender("data-v-f66913b6", __vue__options__)
   }
 })()}
 });
@@ -1596,7 +1671,8 @@ module.exports = {
     return {
       colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
       values: {},
-      loaded: false
+      loaded1: false,
+      loaded2: false
     };
   },
 
@@ -1609,6 +1685,9 @@ module.exports = {
     },
     comparedRepos: function comparedRepos() {
       return this.$store.state.comparedRepos;
+    },
+    loaded: function loaded() {
+      return this.loaded1 && this.loaded2;
     }
   },
   methods: {
@@ -1657,7 +1736,7 @@ module.exports = {
         _this2.values[endpoint][_this2.repo][endpoint] = data[_this2.repo][endpoint];
       });
 
-      _this2.loaded = true;
+      _this2.loaded1 = true;
     }, function (error) {
       console.log("failed", error);
     });
@@ -1671,7 +1750,7 @@ module.exports = {
         _this2.values[endpoint][_this2.repo][endpoint] = data[_this2.repo][endpoint];
       });
 
-      _this2.loaded = true;
+      _this2.loaded2 = true;
     }, function (error) {
       console.log("failed", error);
     });
@@ -1681,7 +1760,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] }),attrs:{"value":repo},on:{"click":function($event){}}},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations","data":_vm.values['codeReviewIteration']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"closedIssues","title":"Closed Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed","data":_vm.values['closedIssues']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeCommits","title":"Code Commits / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits","data":_vm.values['codeCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks","data":_vm.values['forks']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"maintainerResponseToMergeRequestDuration","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request","data":_vm.values['maintainerResponseToMergeRequestDuration']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations","data":_vm.values['newContributingGithubOrganizations']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"openIssues","title":"Open Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open","data":_vm.values['openIssues']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments","data":_vm.values['pullRequestComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestsOpen","title":"Pull Requests Open / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests","data":_vm.values['pullRequestsOpen']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations","data":_vm.values['contributingGithubOrganizations']}})],1)]):_vm._e(),_vm._v(" "),_vm._m(0)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] }),attrs:{"value":repo},on:{"click":function($event){}}},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('div',{staticClass:"col col-12 spinner loader",staticStyle:{"text-align":"center","margin-left":"44.4%","position":"relative !important"}}):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeReviewIteration","title":"Number of Code Review Iterations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"Code Review Iterations","data":_vm.values['codeReviewIteration']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"closedIssues","title":"Closed Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Issues Closed","data":_vm.values['closedIssues']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"codeCommits","title":"Code Commits / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/commits.md","cite-text":"Commits","data":_vm.values['codeCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"forks","title":"Forks / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/forks.md","cite-text":"Forks","data":_vm.values['forks']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"maintainerResponseToMergeRequestDuration","title":"Time to First Maintainer Response to Merge Request","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md","cite-text":"Time to First Maintainer Response to Merge Request","data":_vm.values['maintainerResponseToMergeRequestDuration']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newContributingGithubOrganizations","title":"New Contributing Github Organizations","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/new-contributing-organizations.md","cite-text":"New Contributing Organizations","data":_vm.values['newContributingGithubOrganizations']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"openIssues","title":"Open Issues / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Issues Open","data":_vm.values['openIssues']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestComments","title":"Pull Request Comments / Week ","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-request-comments.md","cite-text":"Pull Request Comments","data":_vm.values['pullRequestComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"pullRequestsOpen","title":"Pull Requests Open / Week","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/pull-requests-open.md","cite-text":"Open Pull Requests","data":_vm.values['pullRequestsOpen']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributingGithubOrganizations","title":"Contributing Github Organizations Overview","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md","cite-text":"Contributing Organizations","data":_vm.values['contributingGithubOrganizations']}})],1)]):_vm._e(),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('small',[_vm._v("Data provided by "),_c('a',{attrs:{"href":"http://ghtorrent.org/msr14.html"}},[_vm._v("GHTorrent")]),_vm._v(" "),_c('span',{staticClass:"ghtorrent-version"}),_vm._v(" and the "),_c('a',{attrs:{"href":"https://developer.github.com/"}},[_vm._v("GitHub API")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1690,7 +1769,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
-    hotAPI.reload("data-v-429b02f1", __vue__options__)
+    hotAPI.rerender("data-v-429b02f1", __vue__options__)
   }
 })()}
 });
@@ -2151,12 +2230,23 @@ var _HorizontalBarChart = require('./charts/HorizontalBarChart');
 
 var _HorizontalBarChart2 = _interopRequireDefault(_HorizontalBarChart);
 
+var _GroupedBarChart = require('./charts/GroupedBarChart');
+
+var _GroupedBarChart2 = _interopRequireDefault(_GroupedBarChart);
+
+var _StackedBarChart = require('./charts/StackedBarChart');
+
+var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
   data: function data() {
     return {
-      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
+      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      values: {},
+      loaded: false,
+      project: null
     };
   },
 
@@ -2166,14 +2256,49 @@ module.exports = {
     LinesOfCodeChart: _LinesOfCodeChart2.default,
     NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
     OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
-    HorizontalBarChart: _HorizontalBarChart2.default
+    HorizontalBarChart: _HorizontalBarChart2.default,
+    GroupedBarChart: _GroupedBarChart2.default,
+    StackedBarChart: _StackedBarChart2.default
+  },
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
+      return this.$store.state.gitRepo;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    }
+  },
+  created: function created() {
+    var _this = this;
+
+    var repos = [];
+    if (this.repo) {
+      if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);
+    }
+    this.comparedRepos.forEach(function (repo) {
+      repos.push(window.AugurRepos[repo]);
+    });
+    var endpoints1 = ["cdRgTpRankedCommits", "cdRgTpRankedLoc", "cdRgNewrepRankedCommits", "cdRgNewrepRankedLoc", "facadeProject"];
+    endpoints1.forEach(function (source) {
+      var repo = window.AugurAPI.Repo({ gitURL: _this.gitRepo });
+      repo[source]().then(function (data) {
+        console.log("batch data", data);
+        _this.values[source] = data;
+        _this.loaded = true;
+        _this.project = _this.values["facadeProject"][0].name;
+        console.log(_this.project, "here", _this.values["facadeProject"]);
+      }, function () {});
+    });
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('tick-chart'),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"type":"lines","title":"Average Lines of Code Per Commit"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-100px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('lines-of-code-chart')],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Project Overview: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedCommits","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['cdRgTpRankedCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedLoc","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['cdRgTpRankedLoc']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedCommits","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['cdRgNewrepRankedCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedLoc","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['cdRgNewrepRankedLoc']}})],1)]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2448,7 +2573,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityinclusion') }},[_c('a',{attrs:{"href":"#","data-value":"diversityinclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk') }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value') }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityinclusion') }},[_c('a',{attrs:{"href":"#","data-value":"diversityinclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk') }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value') }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Overview")])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4141,15 +4266,7 @@ exports.default = {
           fields[split[0]] = split[1].split('+');
         }
       });
-      if (this.data) {
-        processGitData(this.data);
-      } else {
-        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        repo[this.source]().then(function (data) {
-          console.log("batch data", data);
-          processData(data);
-        }, function () {});
-      }
+
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
       var processGitData = function processGitData(data) {
@@ -4207,6 +4324,15 @@ exports.default = {
           _this.values = data;
         });
       };
+      if (this.data) {
+        processData(this.data);
+      } else {
+        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        repo[this.source]().then(function (data) {
+          console.log("batch data", data);
+          processData(data);
+        }, function () {});
+      }
       return config;
     }
   }
@@ -4248,7 +4374,7 @@ var _AugurStats2 = _interopRequireDefault(_AugurStats);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'type'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'measure'],
   data: function data() {
     var years = [];
     for (var i = 9; i >= 0; i--) {
@@ -4471,7 +4597,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-60px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio","checked":""},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-60px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4480,7 +4606,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-8d346828", __vue__options__)
   } else {
-    hotAPI.reload("data-v-8d346828", __vue__options__)
+    hotAPI.rerender("data-v-8d346828", __vue__options__)
   }
 })()}
 });
@@ -5651,8 +5777,8 @@ exports.default = {
       tick: 0
     };
   },
-  created: function created() {
-    this.tick = 0;
+  mounted: function mounted() {
+    this.spec;
   },
 
   computed: {
@@ -5667,6 +5793,9 @@ exports.default = {
     },
     spec: function spec() {
       var _this = this;
+
+      console.log("test");
+      var vegaEmbed = window.vegaEmbed;
 
       var type = null,
           bin = null,
@@ -5707,8 +5836,9 @@ exports.default = {
 
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
-        "height": 300,
+        "width": 1000,
+        "height": 360,
+        "padding": { "left": -10, "top": 35, "right": 5, "bottom": -18 },
         "config": {
           "tick": {
             "thickness": 8,
@@ -5735,7 +5865,9 @@ exports.default = {
             "as": "Total lines changed"
           }],
           "mark": type,
+
           "encoding": {
+
             "x": { "field": "author_date", "type": "temporal", "bin": bin, "axis": { "format": "%b %Y", "title": " " } },
             "y": { "field": "author_email", "type": "nominal" },
             "color": {
@@ -5743,11 +5875,44 @@ exports.default = {
               "type": "quantitative",
               "scale": { "range": ["#FF0000", "#00FF00"] }
             },
+
             "size": size,
             "opacity": opacity
 
           }
 
+        }, {
+          "mark": "rule",
+          "transform": [{
+            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+            "as": "Majority type of changes"
+          }, {
+            "calculate": "(datum.additions - datum.deletions)",
+            "as": "Net lines added"
+          }, {
+            "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
+            "as": "Total lines changed"
+          }],
+          "selection": {
+            "tooltip": { "type": "multi", "on": "mouseover", "nearest": false, "empty": "none" }
+          },
+          "encoding": {
+            "size": { "value": 4 },
+            "opacity": { "value": 1.001 },
+            "x": { "field": "author_date", "type": "temporal" },
+            "tooltip": [{ "field": "author_email", "type": "nominal" }, {
+              "field": "Total lines changed",
+              "type": "quantitative"
+            }, {
+              "field": "Net lines added",
+              "type": "quantitative"
+            }],
+            "color": {
+              "condition": {
+                "selection": { "not": "tooltip" }, "value": "transparent"
+              }
+            }
+          }
         }]
 
       };
@@ -5794,12 +5959,13 @@ exports.default = {
         return new Date(change.author_date).getFullYear() > _this.years[0];
       };
 
-      repo.changesByAuthor().then(function (changes) {
-        changes.forEach(function (change) {
+      var processData = function processData(data) {
+
+        data.forEach(function (change) {
           change.author_date = new Date(change.author_date);
         });
 
-        changes.forEach(function (change) {
+        data.forEach(function (change) {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
             group(contributors, 'author_email', change, filterDates);
             if (change.author_affiliation !== 'Unknown') {
@@ -5827,13 +5993,22 @@ exports.default = {
         var ary = [];
 
         careabout.forEach(function (name) {
-          findObjectByKey(changes, "author_email", name).forEach(function (obj) {
+          findObjectByKey(data, "author_email", name).forEach(function (obj) {
             ary.push(obj);
           });
         });
 
         _this.values = ary;
-      });
+      };
+
+      if (this.data) {
+
+        processData(this.data);
+      } else {
+        repo.changesByAuthor().then(function (changes) {
+          processData(changes);
+        });
+      }
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
@@ -5842,19 +6017,23 @@ exports.default = {
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo]);
       }
-
-      var processData = function processData(data) {};
+      this.reloadImage(config);
 
       return config;
     }
+  },
+  methods: {
+    reloadImage: function reloadImage(config) {
+      config.data = { "values": this.values };
+      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -110 }, mode: 'vega-lite' });
+    }
   }
-
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios"},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -5863,7 +6042,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-083303b4", __vue__options__)
   } else {
-    hotAPI.reload("data-v-083303b4", __vue__options__)
+    hotAPI.rerender("data-v-083303b4", __vue__options__)
   }
 })()}
 });
