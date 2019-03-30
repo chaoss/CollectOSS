@@ -163,12 +163,12 @@ that case:</p>
 </div>
 <p><strong>Make sure you have a database user that has select access to the
 database where you installed `GHTorrent &lt;http://ghtorrent.org/&gt;`__ and
-all priviledges on another database for Augur.</strong></p>
+all privileges on another database for Augur.</strong></p>
 <div class="code sql highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CREATE</span> <span class="n">USER</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="n">BY</span> <span class="s1">&#39;password&#39;</span><span class="p">;</span>
 <span class="n">GRANT</span> <span class="n">SELECT</span> <span class="n">ON</span> <span class="n">ghtorrent</span><span class="o">.*</span> <span class="n">TO</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 
 <span class="n">CREATE</span> <span class="n">DATABASE</span> <span class="n">augur</span><span class="p">;</span>
-<span class="n">GRANT</span> <span class="n">ALL</span> <span class="n">PRIVILEDGES</span> <span class="n">ON</span> <span class="n">augur</span><span class="o">.*</span> <span class="n">TO</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<span class="n">GRANT</span> <span class="n">ALL</span> <span class="n">PRIVILEGES</span> <span class="n">ON</span> <span class="n">augur</span><span class="o">.*</span> <span class="n">TO</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Augur runs in an Anaconda environment. To get started, activate the environment and then
