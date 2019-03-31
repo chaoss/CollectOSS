@@ -42,18 +42,18 @@
 # pip install mysqlclient 
 # From: https://pypi.org/project/mysqlclient/
 
+# import MySQLdb
+# import texttable
+# import xlsxwriter
 
 
 import sys
 import os
 import configparser
-import MySQLdb
 import datetime
 import time
 import textwrap
-import texttable
 import re
-import xlsxwriter
 import csv
 
 ### Importable repo helper functions ###

@@ -8,14 +8,14 @@ import pandas as pd
 import sqlalchemy as s
 from augur import logger
 from augur.util import annotate
-from facade_cli import add_project
-from facade_cli import delete_project
-from facade_cli import add_repo
-from facade_cli import delete_repo
-from facade_cli import add_alias
-from facade_cli import delete_alias
-from facade_cli import add_affiliation
-from facade_cli import delete_affiliation
+import sys
+import os
+import configparser
+import datetime
+import time
+import textwrap
+import re
+import csv
 
 
 # end imports
@@ -705,35 +705,96 @@ class Facade(object):
         results = pd.read_sql(cdRgTpIntervalLocCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "calendar_year": calendar_year, "repo_group": repo_group})
         return results
 
+    def cli_add_repo(self, project_id, git_repo):
+
+        cli_add_repo = ("INSERT INTO repos (self, project_id,git,status) VALUES "
+                        "(:project_id,:git_repo,'New')")
+        return self.db.execute(cli_add_repo, params={'self': self, 'project_id': project_id, 'git_repo': git_repo})
+  
+    def cli_delete_repo(self, pd, git_repo):
+
+        get_status = "SELECT status FROM repos WHERE id = :git_repo"
+        pd.read_sql(get_status, self.db, git_repo=git_repo)
+        status = self.db.fetchone()
+
+        if status == 'New':
+
+        # Nothing was cloned, so delete it immediately
+
+            delete_repo = "DELETE FROM repos WHERE id = :git_repo"
+
+        else:
+
+        # Something may have been cloned, let facade-worker.py clean it
+
+            delete_repo = ("UPDATE repos SET status = 'Delete' WHERE id = :git_repo")
+
+        return self.db.execute(delete_repo, self.db, params={'git_repo':git_repo})
+    
     def cli_add_project(self, name, description, website):
         
-        return add_project(self, name, description, website)
+        add = ("INSERT INTO projects (name,description,website) "
+               "VALUES (:name,:description,:website)")
+        return self.db.execute(add, self.db, params={'name': name, 'description': description, 'website': website})
+
 
     def cli_delete_project(self, pd, project_id):
 
-        return delete_project(self, pd, project_id)
+        get_repos = "SELECT id FROM repos WHERE projects_id = :project_id"
+        pd.read_sql(get_repos, self.db, params={'project_id':project_id})
+
+        repos = list(self.db)
+
+        for repo in repos:
+
+            cli_delete_repo(self, pd, repo['id'])
+
+    # Remove entries from the exclude table
+
+        delete_exclude = "DELETE FROM exclude WHERE projects_id = :project_id"
+        self.db.execute(delete_exclude, self.db, project_id=project_id)
+
+    # facade-worker.py will clean up the rest
+
+        set_project_delete = ("UPDATE projects SET name = '(Queued for removal)' "
+                          "WHERE id = :project_id")
+        return self.db.execute(set_project_delete, self.db, params={'project_id': project_id})
+
  
-    def cli_add_repo(self, project_id, git_repo):
-
-        return add_repo(self, project_id, git_repo)
-
-    def cli_delete_repo(self, pd, git_repo):
-
-        return delete_repo(self, pd, git_repo)
-
     def cli_add_alias(self, alias, canonical):
 
-        return add_alias(self, alias, canonical)
+        add_alias = ("INSERT INTO aliases (alias,canonical) "
+                     "VALUES (:alias, :canonical) "
+                     "ON DUPLICATE KEY UPDATE active = TRUE")
+
+        return self.db.execute(add_alias, self.db, params={'alias':alias, 'canonical':canonical})
 
     def cli_delete_alias(self, alias_id):
 
-        return delete_alias(self, alias_id)
+        set_alias_inactive = ("UPDATE aliases SET active = FALSE WHERE id=:alias_id")
+
+        return self.db.execute(set_alias_inactive, self.db, params={'alias_id': alias_id})
 
     def cli_add_affiliation(self, domain, affiliation, start_date=''):
 
-        return add_affiliation(self, domain, affiliation, start_date='')
+        if start_date:
+            add_an_affiliation = ("INSERT INTO affiliations "
+            "(domain, affiliation, start_date) VALUES "
+            "(:domain,:affiliation,:start_date) ON DUPLICATE KEY UPDATE active = TRUE")
 
+            return self.db.execute(add_an_affiliation, self.db, params={'domain':domain, 'affiliation':affiliation, 'start_date':start_date})
+
+        else:
+            add_an_affiliation = ("INSERT INTO affiliations "
+                                  "(domain, affiliation) VALUES "
+                                  "(:domain,:affiliation) ON DUPLICATE KEY UPDATE active = TRUE")
+
+            return self.db.execute(add_an_affiliation, params={'domain':domain, 'affiliation':affiliation})
+    
     def cli_delete_affiliation(self, affiliation_id):
 
-        return delete_affiliation(self, affiliation_id)
+        set_affiliation_inactive = ("UPDATE affiliations SET active = FALSE "
+                                    "WHERE id=:affiliation_id")
+
+        return self.db.execute(set_affiliation_inactive, self.db, params={'affiliation_id':affiliation_id})
 
