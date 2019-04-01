@@ -479,7 +479,7 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
 
-    @annotate(tag='pull-request-closed')
+    @annotate(tag='pull-requests-closed')
     def pull_requests_closed(self, owner, repo=None):
         """
         Timeseries of pull requests closed and their associated activity

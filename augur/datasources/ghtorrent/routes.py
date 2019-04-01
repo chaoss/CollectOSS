@@ -319,7 +319,7 @@ def create_routes(server):
     server.addTimeseries(ghtorrent.pull_requests_open, 'pulls')
 
     """
-    @api {get} /:owner/:repo/timeseries/pulls/closed Pull Requests Open
+    @api {get} /:owner/:repo/timeseries/pulls/closed Pull Requests Closed
     @apiName pull-requests-closed
     @apiGroup Growth-Maturity-Decline
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-closed.md">CHAOSS Metric Definition</a>
