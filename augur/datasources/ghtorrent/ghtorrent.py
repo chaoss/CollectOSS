@@ -479,6 +479,30 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
 
+    @annotate(tag='pull-request-closed')
+    def pull_requests_closed(self, owner, repo=None):
+        """
+        Timeseries of pull requests closed and their associated activity
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+
+        :return: DataFrame with closed pull request information/week
+        """
+        repoid = self.repoid(owner, repo)
+        pullsSQL = s.sql.text("""
+            SELECT SUBDATE(DATE(pull_request_history.created_at), WEEKDAY(DATE(pull_request_history.created_at))) AS "date",
+            COUNT(pull_requests.id) AS "pull_requests"
+            FROM pull_request_history
+            INNER JOIN pull_requests
+            ON pull_request_history.pull_request_id = pull_requests.id
+            WHERE pull_requests.head_repo_id = :repoid
+            AND pull_request_history.action = "closed"
+            GROUP BY YEARWEEK(DATE(pull_request_history.created_at))
+        """)
+        return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
+
+
     #####################################
     ###            RISK               ###
     #####################################

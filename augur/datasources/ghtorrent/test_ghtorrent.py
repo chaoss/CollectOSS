@@ -62,6 +62,9 @@ def test_pull_request_comments(ghtorrent):
 def test_pull_requests_open(ghtorrent):
     assert ghtorrent.pull_requests_open('rails', 'rails').isin(["2013-01-09T00:00:00.000Z"]).any
 
+def test_pull_requests_closed(ghtorrent):
+    assert ghtorrent.pull_requests_closed('rails', 'rails').isin(["2013-01-09T00:00:00.000Z"]).any
+
 # *** RISK *** #
 
 # *** VALUE *** #
