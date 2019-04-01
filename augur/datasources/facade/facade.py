@@ -8,14 +8,7 @@ import pandas as pd
 import sqlalchemy as s
 from augur import logger
 from augur.util import annotate
-import sys
-import os
-import configparser
-import datetime
-import time
-import textwrap
-import re
-import csv
+
 
 
 # end imports
@@ -747,7 +740,7 @@ class Facade(object):
 
         for repo in repos:
 
-            cli_delete_repo(self, pd, repo['id'])
+            self.cli_delete_repo(self, pd, repo.id)
 
     # Remove entries from the exclude table
 
