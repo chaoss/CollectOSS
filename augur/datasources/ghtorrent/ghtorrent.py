@@ -502,6 +502,43 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
 
+    @annotate(tag='pull-request-comment-duration')
+    def pull_request_comment_duration(self, owner, repo=None):
+        """
+        Timeseries of the time to recentt comment by pull requests
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame of pull requests with their response information
+        """
+        repoid = self.repoid(owner, repo)
+        durationSQL = s.sql.text("""
+        SELECT
+	        pull_request_history.id AS "pull_request_id" ,
+            pull_request_history.created_at AS "opened" ,
+            MIN( pull_request_comments.created_at ) AS "first_pr_comment",
+            TIMESTAMPDIFF( MINUTE ,
+            pull_request_history.created_at ,
+            MIN( pull_request_comments.created_at )) AS "minutes_to_first_pr_comment" ,
+            MIN( pull_request_comments.created_at ) AS "most_recent_comment",
+            TIMESTAMPDIFF( MINUTE ,
+            pull_request_history.created_at ,
+            MAX( pull_request_comments.created_at )) AS "minutes_to_recent_pr_comment" 
+        FROM
+	        pull_request_history
+        JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
+        JOIN pull_request_comments ON pull_request_comments.pull_request_id = pull_requests.id
+        WHERE
+	        pull_requests.base_repo_id = 1  AND pull_request_history.action = 'opened'
+        GROUP BY
+	        pull_request_history.id ,
+	        pull_requests.base_repo_id ,
+	        pull_request_history.created_at
+        ORDER BY
+	        pull_request_history.created_at
+        """)
+
+        return pd.read_sql(durationSQL, self.db, params={"repoid": str(repoid)})
 
     #####################################
     ###            RISK               ###

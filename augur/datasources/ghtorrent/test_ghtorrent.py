@@ -65,6 +65,9 @@ def test_pull_requests_open(ghtorrent):
 def test_pull_requests_closed(ghtorrent):
     assert ghtorrent.pull_requests_closed('rails', 'rails').isin(["2013-01-09T00:00:00.000Z"]).any
 
+def test_pull_request_comment_duration(ghtorrent):
+    assert ghtorrent.pull_request_comment_duration('AudioKit', 'AudioKit').isin(["13000839"]).any
+
 # *** RISK *** #
 
 # *** VALUE *** #
