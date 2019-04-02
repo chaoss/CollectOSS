@@ -740,7 +740,7 @@ class Facade(object):
 
         for repo in repos:
 
-            self.cli_delete_repo(self, pd, repo.id)
+            self.cli_delete_repo(pd, repo.id)
 
     # Remove entries from the exclude table
 
