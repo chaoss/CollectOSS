@@ -529,7 +529,7 @@ class GHTorrent(object):
         JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
         JOIN pull_request_comments ON pull_request_comments.pull_request_id = pull_requests.id
         WHERE
-	        pull_requests.base_repo_id = 1  AND pull_request_history.action = 'opened'
+	        pull_requests.base_repo_id = :repoid  AND pull_request_history.action = 'opened'
         GROUP BY
 	        pull_request_history.id ,
 	        pull_requests.base_repo_id ,
