@@ -147,6 +147,27 @@ def create_routes(server):
     ###           ACTIVITY            ###
     #####################################
 
+    """
+    @api {get} /:owner/:repo/githubapi/repository_size Repository Size
+    @apiName repository-size
+    @apiGroup Activity
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/archived_metrics/repository-size.md">CHAOSS Metric Definition</a>
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "best": "5",
+                                "worst": "1"
+                            }
+                        ]
+    """
+    server.addMetric(github.repository_size, "githubapi/repository_size")
+
+    
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
