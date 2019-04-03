@@ -11,7 +11,7 @@ def facade():
 def test_downloaded_repos(facade):
     assert facade.downloaded_repos()["project_name"].iloc[0] == "Twitter"
     assert facade.downloaded_repos()["url"].iloc[0] == "github.com/twitter/twemoji"
-    assert facade.downloaded_repos()["status"].iloc[0] == "Update"
+    assert facade.downloaded_repos()["status"].iloc[0] == "Complete"
     assert facade.downloaded_repos()["base64_url"].iloc[0] == b"Z2l0aHViLmNvbS90d2l0dGVyL3R3ZW1vamk="
 
 def test_lines_changed_by_author(facade):
