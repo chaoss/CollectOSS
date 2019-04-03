@@ -79,3 +79,4 @@ augur/plugins/
 *.cfg.*
 !sample.config.json
 frontend/public/*.map
+docs/python/build/doctrees/AugurContext.doctree
