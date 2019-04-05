@@ -78,5 +78,7 @@ augur/plugins/
 *.config.*
 *.cfg.*
 !sample.config.json
+!vagrant.config.json
 frontend/public/*.map
 docs/python/build/doctrees/AugurContext.doctree
+docs/python/build/doctrees/augurcontext.doctree

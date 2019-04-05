@@ -6,10 +6,10 @@
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <p> {{ chart }} </p>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
-      <div class="form-item form-checkboxes tickradios">
+      <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
 
 
-          <div class="inputGroup ">
+          <div class="inputGroup" >
             <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
             <label id="front" for="circradio">Circle</label>
           </div>

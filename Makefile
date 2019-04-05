@@ -144,7 +144,6 @@ update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; $(AUGUR_PIP) install pipreqs; exit 1; }
 	pipreqs ./augur/
 	bash -c "$(CONDAACTIVATE) conda env  --no-builds > environment.yml"
-
 vagrant:
 	@ vagrant up
 	@ vagrant ssh

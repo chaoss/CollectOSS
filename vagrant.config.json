@@ -1,0 +1,43 @@
+{
+    "Development": {
+        "developer": "0",
+        "interactive": "0"
+    },
+    "Cache": {
+        "config": {
+            "cache.data_dir": "runtime/cache/",
+            "cache.lock_dir": "runtime/cache/",
+            "cache.type": "file"
+        }
+    },
+    "Server": {
+        "cache_expire": 3600,
+        "host": "0.0.0.0",
+        "port": "5000",
+        "workers": 6
+    },
+    "Plugins": [],
+    "GitHub": {
+        "apikey": "your api key goes here"
+    },
+    "Postman": {
+        "apikey": "your api key goes here"
+    },
+    "GHTorrent": {
+        "host": "localhost",
+        "name": "ghtorrent",
+        "pass": "password",
+        "port": "3306",
+        "user": "augur"
+     },
+    "Facade": {
+        "host": "localhost",
+        "name": "facade",
+        "pass": "password",
+        "port": "3306",
+        "user": "augur",
+        "projects": [
+            "Twitter"
+        ]
+    }
+}

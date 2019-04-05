@@ -787,6 +787,9 @@ export default {
 
   }, // end computed
   methods: {
+    thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
+    },
     downloadSVG (e) {
       var svgsaver = new window.SvgSaver()
       var svg = window.$(this.$refs.holder).find('svg')[0]

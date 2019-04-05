@@ -96,7 +96,8 @@ export default {
         },
         "title": {
           "text": this.title,
-          "offset": 15
+          "offset": 15,
+          
         },
         "layer": [
           {

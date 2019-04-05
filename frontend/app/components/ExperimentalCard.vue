@@ -12,6 +12,10 @@
    
     <div class="row" v-if="loaded">
 
+      <!-- <div class="col col-12">
+        <dual-axis-contributions></dual-axis-contributions>
+      </div> -->
+
       <div class="col col-6">
         <dynamic-line-chart source="commitComments"
                     title="Commit Comments / Week "
@@ -106,6 +110,7 @@
 import DynamicLineChart from './charts/DynamicLineChart'
 import BubbleChart from './charts/BubbleChart'
 import StackedBarChart from './charts/StackedBarChart'
+import DualAxisContributions from './charts/DualAxisContributions'
 
 module.exports = {
   data() {

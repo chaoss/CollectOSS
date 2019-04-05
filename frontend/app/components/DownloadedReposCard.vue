@@ -1,13 +1,12 @@
 <template>
   <!-- <div class="row section collapsible collapsed"> -->
-  <section class="unmaterialized">
-    <h3>Downloaded Git Repos by Project</h3>
-    <div class="row section">
-      <hr>
-      <div style=" margin-left: 42.4%" class="col col-12 relative spinner loader"></div>
-      <div v-for="project in projects" class="col-6">
-        <h4>{{ project }}</h4>
-
+<section class="unmaterialized">
+  <h3>Downloaded Git Repos by Project</h3>
+  <div class="row section">
+    <hr>
+    <div style=" margin-left: 42.4%" class="col col-12 relative spinner loader"></div>
+    <div v-for="project in projects" class="col-6">
+      <h4>{{ project }}</h4>
         <div class="repo-link-holder">
           <table class="is-responsive">
             <thead class="repo-link-table repo-link-table-body">
@@ -29,7 +28,6 @@
       </div>
     </div>
   </section>
-  
 </template>
 
 <script>

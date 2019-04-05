@@ -104,6 +104,7 @@ export default class AugurAPI {
       processedData[repo.toString()] = {}
     })
     return this.batch(endpoints).then((data) => {
+
       return new Promise((resolve, reject) => {
         if (Array.isArray(data)) {
           data.forEach(response => {

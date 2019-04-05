@@ -313,7 +313,6 @@ export default {
           fields[split[0]] = split[1].split('+')
         }
       })
-      
       $(this.$el).find('.showme, .hidefirst').removeClass('invis')
       $(this.$el).find('.stackedbarchart').removeClass('loader')
       let processGitData = (data) => {

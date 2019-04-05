@@ -29,17 +29,17 @@ def test_lines_changed_by_week(facade):
     assert facade.lines_changed_by_week("github.com/twitter/twemoji")["whitespace"].iloc[0] == 27375
 
 def test_lines_changed_by_month(facade):
-    assert facade.lines_changed_by_month("github.com/twitter/twemoji")["author_email"].iloc[0] == "agiammarchi@twitter.com"
-    assert facade.lines_changed_by_month("github.com/twitter/twemoji")["affiliation"].iloc[0] == "Twitter"
-    assert facade.lines_changed_by_month("github.com/twitter/twemoji")["month"].iloc[0] == 11
-    assert facade.lines_changed_by_month("github.com/twitter/twemoji")["year"].iloc[0] == 2014
-    assert facade.lines_changed_by_month("github.com/twitter/twemoji")["additions"].iloc[0] == 5477
-    assert facade.lines_changed_by_month("github.com/twitter/twemoji")["deletions"].iloc[0] == 50511
-    assert facade.lines_changed_by_month("github.com/twitter/twemoji")["whitespace"].iloc[0] == 37
+    assert facade.lines_changed_by_month("github.com/adobe/s3mock")["author_email"].iloc[0] == "gudian@adobe.com"
+    assert facade.lines_changed_by_month("github.com/adobe/s3mock")["affiliation"].iloc[0] == "Adobe"
+    assert facade.lines_changed_by_month("github.com/adobe/s3mock")["month"].iloc[0] == 7
+    assert facade.lines_changed_by_month("github.com/adobe/s3mock")["year"].iloc[0] == 2017
+    assert facade.lines_changed_by_month("github.com/adobe/s3mock")["additions"].iloc[0] == 5361
+    assert facade.lines_changed_by_month("github.com/adobe/s3mock")["deletions"].iloc[0] == 46
+    assert facade.lines_changed_by_month("github.com/adobe/s3mock")["whitespace"].iloc[0] == 875
 
 def test_commits_by_week(facade):
-    assert facade.commits_by_week("github.com/twitter/twemoji")["author_email"].iloc[0] == "agiammarchi@twitter.com"
-    assert facade.commits_by_week("github.com/twitter/twemoji")["affiliation"].iloc[0] == "Twitter"
-    assert facade.commits_by_week("github.com/twitter/twemoji")["week"].iloc[0] == 44
-    assert facade.commits_by_week("github.com/twitter/twemoji")["year"].iloc[0] == 2014
-    assert facade.commits_by_week("github.com/twitter/twemoji")["patches"].iloc[0] == 5
+    assert facade.commits_by_week("github.com/adobe/s3mock")["author_email"].iloc[0] == "gudian@adobe.com"
+    assert facade.commits_by_week("github.com/adobe/s3mock")["affiliation"].iloc[0] == "Adobe"
+    assert facade.commits_by_week("github.com/adobe/s3mock")["week"].iloc[0] == 29
+    assert facade.commits_by_week("github.com/adobe/s3mock")["year"].iloc[0] == 2017
+    assert facade.commits_by_week("github.com/adobe/s3mock")["patches"].iloc[0] == 1

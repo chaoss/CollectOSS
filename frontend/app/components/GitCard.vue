@@ -1,9 +1,9 @@
 <template>
   <section>
     <div style="display: inline-block;">
-      <h2 style="display: inline-block; color: black !important">{{ $store.state.gitRepo }}</h2>
-      <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
-      <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
+      <h2 style="display: inline-block; color: black !important; margin-bottom: 20px">{{ $store.state.gitRepo }}</h2>
+      <h2 style="display: inline-block;margin-bottom: 20px" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
+      <h2 style="display: inline-block;margin-bottom: 20px" v-for="(repo, index) in $store.state.comparedRepos">
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
@@ -51,6 +51,10 @@ import LinesOfCodeChart from './charts/LinesOfCodeChart'
 import NormalizedStackedBarChart from './charts/NormalizedStackedBarChart'
 import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChart'
 import HorizontalBarChart from './charts/HorizontalBarChart'
+import GroupedBarChart from './charts/GroupedBarChart'
+import DirectionalTimeChart from './charts/DirectionalTimeChart'
+import TimeIntervalBarChart from './charts/TimeIntervalBarChart'
+
 
 module.exports = {
   data() {
@@ -93,9 +97,8 @@ created() {
       repos.push(window.AugurRepos[repo])
     });
     let endpoints1 = [
-"changesByAuthor",
+    "changesByAuthor",
     ]
-
     endpoints1.forEach((source) => {
       let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
       repo[source]().then((data) => {
