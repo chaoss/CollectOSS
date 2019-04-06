@@ -169,7 +169,9 @@ export default {
                     "field": "date",
                     "type": "temporal",
                     "axis": {
-                      "labels": !this.showDetail
+                      "labels": this.showDetail,
+                      "format": "%b %Y",
+                      "title": " "
                     }
                   },
                   "color": {
