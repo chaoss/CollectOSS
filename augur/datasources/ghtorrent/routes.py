@@ -318,6 +318,62 @@ def create_routes(server):
     """
     server.addTimeseries(ghtorrent.pull_requests_open, 'pulls')
 
+    """
+    @api {get} /:owner/:repo/timeseries/pulls/closed Pull Requests Closed
+    @apiName pull-requests-closed
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-closed.md">CHAOSS Metric Definition</a>
+    
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+    
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "date": "2013-01-09T00:00:00.000Z",
+                                "pull_requests": 3
+                            },
+                            {
+                                "date": "2016-01-14T00:00:00.000Z",
+                                "pull_requests": 1
+                            }
+                        ]
+    """
+    server.addTimeseries(ghtorrent.pull_requests_closed, 'pulls/closed')
+
+    """
+    @api {get} /:owner/:repo/timeseries/pulls/response_time Most Recent Response To Pull Requests Duration
+    @apiName pull-request-comment-duration'
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/pull-requests-comment-duration.md>CHAOSS Metric Definition</a>
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "pull_request_id": 1709,
+                                "opened": "2012-01-19T05:24:55.000Z",
+                                "first_commented": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_first_pr_comment": 5,
+                                "most_recent_comment": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_recent_pr_comment": 5
+                                
+                            },
+                            {
+                                "pull_request_id": 1721,
+                                "opened": "2012-01-19T05:24:55.000Z",
+                                "first_commented": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_first_pr_comment": 5,
+                                "most_recent_comment": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_recent_pr_comment": 5
+                            }
+                        ]
+    """
+
+    server.addTimeseries(ghtorrent.pull_request_comment_duration, 'pulls/response_time')
+
     #####################################
     ###            RISK               ###
     #####################################
