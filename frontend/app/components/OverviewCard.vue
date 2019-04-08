@@ -1,6 +1,7 @@
 <template>
   <section>
     <div style="display: inline-block;">
+      <h2 v-if="loaded" style="display: inline-block; color: black !important">Project Overview: {{ project }}</h2>
       <p></p>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
       <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">

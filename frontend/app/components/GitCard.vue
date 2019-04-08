@@ -14,7 +14,9 @@
         <div class="col col-12">
           <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
         </div>
-        
+        <!--<div class="col col-12">
+          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+        </div> -->
         <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
           <normalized-stacked-bar-chart 
           title="Lines of code added by the top 10 authors as Percentages - By Time Period"
@@ -47,6 +49,7 @@
 
 import AugurHeader from './AugurHeader'
 import TickChart from './charts/TickChart'
+import CommitChart from './charts/CommitChart'
 import LinesOfCodeChart from './charts/LinesOfCodeChart'
 import NormalizedStackedBarChart from './charts/NormalizedStackedBarChart'
 import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChart'
@@ -70,7 +73,8 @@ module.exports = {
     LinesOfCodeChart,
     NormalizedStackedBarChart,
     OneDimensionalStackedBarChart,
-    HorizontalBarChart
+    HorizontalBarChart,
+    CommitChart
   },
   computed: {
     repo () {
