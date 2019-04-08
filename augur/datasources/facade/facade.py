@@ -209,85 +209,85 @@ class Facade(object):
         results = pd.read_sql(cdRgNewrepRankedCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group})
         return results
 
-    # @annotate(tag='cd-rg-newrep-ranked-loc')
-    # def cd_rg_newrep_ranked_loc(self, repo_url, calendar_year=None, repo_group=None):
-    #     """
-    #     For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
-    #     calendar year (a new repo in that year), 
-    #     show all lines of code for that year (total for year by repo). Result ranked from highest number of commits to lowest by default. 
+    @annotate(tag='cd-rg-newrep-ranked-loc')
+    def cd_rg_newrep_ranked_loc(self, repo_url, calendar_year=None, repo_group=None):
+        """
+        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
+        calendar year (a new repo in that year), 
+        show all lines of code for that year (total for year by repo). Result ranked from highest number of commits to lowest by default. 
 
-    #     :param repo_url: the repository's URL
-    #     :param calendar_year: the calendar year a repo is created in to be considered "new"
-    #     :param repo_group: the group of repositories to analyze
+        :param repo_url: the repository's URL
+        :param calendar_year: the calendar year a repo is created in to be considered "new"
+        :param repo_group: the group of repositories to analyze
 
-    #     """       
+        """       
 
-    #     if calendar_year == None:
-    #         calendar_year = 'year'
+        if calendar_year == None:
+            calendar_year = 'year'
 
-    #     if repo_group == None:
-    #         repo_group = 'facade_project'
+        if repo_group == None:
+            repo_group = 'facade_project'
 
-    #     cdRgNewrepRankedLocSQL = None
-    #     if repo_group == 'facade_project':
-    #         if timeframe == 'year':
-    #             cdRgNewrepRankedLocSQL = s.sql.text("""
-    #                 SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
-    #                 FROM repo_annual_cache, projects, repos
-    #                 where projects.name = (SELECT projects.name FROM repos, projects
-    #                 WHERE git LIKE :repourl
-    #                 and YEAR(repos.added) = YEAR(CURDATE())
-    #                 and repos.projects_id = projects.id
-    #                 LIMIT 1)
-    #                 and repo_annual_cache.repos_id = repos.id
-    #                 and repos.projects_id = projects.id
-    #                 group by repos_id
-    #                 ORDER BY net desc
-    #                 LIMIT 10
-    #             """)
-    #         elif timeframe == 'month':
-    #             cdRgNewrepRankedLocSQL = s.sql.text("""
-    #                 SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
-    #                 FROM repo_annual_cache, projects, repos
-    #                 where projects.name = (SELECT projects.name FROM repos, projects
-    #                 WHERE git LIKE :repourl
-    #                 and MONTH(repos.added) = MONTH(CURDATE())
-    #                 and repos.projects_id = projects.id
-    #                 LIMIT 1)
-    #                 and repo_monthly_cache.repos_id = repos.id
-    #                 and repos.projects_id = projects.id
-    #                 group by repos_id
-    #                 ORDER BY net desc
-    #                 LIMIT 10
-    #             """)
-    #     else:
-    #         if timeframe == 'year':
-    #             cdRgNewrepRankedLocSQL = s.sql.text("""
-    #                 SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
-    #                 FROM repo_annual_cache, projects, repos
-    #                 where projects.name = :repo_group
-    #                 and repos.projects_id = projects.id
-    #                 LIMIT 1)
-    #                 and repo_annual_cache.repos_id = repos.id
-    #                 and repos.projects_id = projects.id
-    #                 group by repos_id
-    #                 ORDER BY net desc
-    #                 LIMIT 10
-    #             """)
-    #         elif timeframe == 'month':
-    #             cdRgNewrepRankedLocSQL = s.sql.text("""
-    #                 SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
-    #                 FROM repo_annual_cache, projects, repos
-    #                 where projects.name = :repo_group
-    #                 and repo_monthly_cache.repos_id = repos.id
-    #                 and repos.projects_id = projects.id
-    #                 group by repos_id
-    #                 ORDER BY net desc
-    #                 LIMIT 10
-    #             """)
+        cdRgNewrepRankedLocSQL = None
+        if repo_group == 'facade_project':
+            if timeframe == 'year':
+                cdRgNewrepRankedLocSQL = s.sql.text("""
+                    SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
+                    FROM repo_annual_cache, projects, repos
+                    where projects.name = (SELECT projects.name FROM repos, projects
+                    WHERE git LIKE :repourl
+                    and YEAR(repos.added) = YEAR(CURDATE())
+                    and repos.projects_id = projects.id
+                    LIMIT 1)
+                    and repo_annual_cache.repos_id = repos.id
+                    and repos.projects_id = projects.id
+                    group by repos_id
+                    ORDER BY net desc
+                    LIMIT 10
+                """)
+            elif timeframe == 'month':
+                cdRgNewrepRankedLocSQL = s.sql.text("""
+                    SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
+                    FROM repo_annual_cache, projects, repos
+                    where projects.name = (SELECT projects.name FROM repos, projects
+                    WHERE git LIKE :repourl
+                    and MONTH(repos.added) = MONTH(CURDATE())
+                    and repos.projects_id = projects.id
+                    LIMIT 1)
+                    and repo_monthly_cache.repos_id = repos.id
+                    and repos.projects_id = projects.id
+                    group by repos_id
+                    ORDER BY net desc
+                    LIMIT 10
+                """)
+        else:
+            if timeframe == 'year':
+                cdRgNewrepRankedLocSQL = s.sql.text("""
+                    SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
+                    FROM repo_annual_cache, projects, repos
+                    where projects.name = :repo_group
+                    and repos.projects_id = projects.id
+                    LIMIT 1)
+                    and repo_annual_cache.repos_id = repos.id
+                    and repos.projects_id = projects.id
+                    group by repos_id
+                    ORDER BY net desc
+                    LIMIT 10
+                """)
+            elif timeframe == 'month':
+                cdRgNewrepRankedLocSQL = s.sql.text("""
+                    SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name
+                    FROM repo_annual_cache, projects, repos
+                    where projects.name = :repo_group
+                    and repo_monthly_cache.repos_id = repos.id
+                    and repos.projects_id = projects.id
+                    group by repos_id
+                    ORDER BY net desc
+                    LIMIT 10
+                """)
 
-    #     results = pd.read_sql(cdRgNewrepRankedLocSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group})
-    #     return results
+        results = pd.read_sql(cdRgNewrepRankedLocSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group})
+        return results
 
     @annotate(tag='cd-rg-tp-ranked-commits')
     def cd_rg_tp_ranked_commits(self, repo_url, timeframe=None, repo_group=None):
@@ -698,96 +698,101 @@ class Facade(object):
         results = pd.read_sql(cdRgTpIntervalLocCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "calendar_year": calendar_year, "repo_group": repo_group})
         return results
 
-    def cli_add_repo(self, project_id, git_repo):
+    def cli_add_repo(self, new_project_id, new_git_repo):
 
-        cli_add_repo = ("INSERT INTO repos (self, project_id,git,status) VALUES "
-                        "(:project_id,:git_repo,'New')")
-        return self.db.execute(cli_add_repo, params={'self': self, 'project_id': project_id, 'git_repo': git_repo})
+        return self.db.execute("""
+                        INSERT INTO repos (projects_id, git, status)
+                        VALUES (%s, %s, %s);
+                        """, (new_project_id, new_git_repo, 'New'))
   
     def cli_delete_repo(self, git_repo):
-
-        get_status = "SELECT status FROM repos WHERE id = :git_repo"
-        pd.read_sql(get_status, self.db, git_repo)
-        status = self.db.fetchone()
+  
+        status = self.db.execute("""
+            SELECT status FROM repos WHERE id = %s
+            """, (git_repo))
 
         if status == 'New':
 
         # Nothing was cloned, so delete it immediately
 
-            delete_repo = "DELETE FROM repos WHERE id = :git_repo"
+            return self.db.execute("""
+                DELETE FROM repos WHERE id = %s
+                """, (git_repo))
 
         else:
 
         # Something may have been cloned, let facade-worker.py clean it
 
-            delete_repo = ("UPDATE repos SET status = 'Delete' WHERE id = :git_repo")
-
-        return self.db.execute(delete_repo, self.db, params={'git_repo':git_repo})
+            return self.db.execute("UPDATE repos SET status = 'Delete' WHERE id = %s", (git_repo))
     
-    def cli_add_project(self, name, description, website):
-        
-        add = ("INSERT INTO projects (name,description,website) "
-               "VALUES (:name,:description,:website)")
-        return self.db.execute(add, self.db, params={'name': name, 'description': description, 'website': website})
+    def cli_add_project(self, new_name, new_description, new_website):
+
+        return self.db.execute("""
+                INSERT INTO projects (name,description,website) 
+                VALUES (%s, %s, %s);
+               """, (new_name, new_description, new_website)) 
 
 
     def cli_delete_project(self, project_id):
 
-        get_repos = "SELECT id FROM repos WHERE projects_id = :project_id"
-        pd.read_sql(get_repos, self.db, params={'project_id':project_id})
 
-        repos = list(self.db)
+        repos = list(self.db.execute("""
+            SELECT id FROM repos WHERE projects_id = %s
+            """, (project_id)))
 
         for repo in repos:
 
-            self.cli_delete_repo(repo.id)
+            self.cli_delete_repo(repo)
 
     # Remove entries from the exclude table
 
-        delete_exclude = "DELETE FROM exclude WHERE projects_id = :project_id"
-        self.db.execute(delete_exclude, self.db, project_id=project_id)
+        self.db.execute("""
+            DELETE FROM exclude WHERE projects_id = %s
+            """, (project_id))
 
     # facade-worker.py will clean up the rest
 
-        set_project_delete = ("UPDATE projects SET name = '(Queued for removal)' "
-                          "WHERE id = :project_id")
-        return self.db.execute(set_project_delete, self.db, params={'project_id': project_id})
+        return self.db.execute("""
+                          UPDATE projects SET name = '(Queued for removal)' 
+                          WHERE id = %s
+                          """, (project_id))
 
  
-    def cli_add_alias(self, alias, canonical):
+    def cli_add_alias(self, new_alias, new_canonical):
 
-        add_alias = ("INSERT INTO aliases (alias,canonical) "
-                     "VALUES (:alias, :canonical) "
-                     "ON DUPLICATE KEY UPDATE active = TRUE")
-
-        return self.db.execute(add_alias, self.db, params={'alias':alias, 'canonical':canonical})
+        return self.db.execute("""
+                     INSERT INTO aliases (alias,canonical) 
+                     VALUES (%s, %s) 
+                     ON DUPLICATE KEY UPDATE active = TRUE
+                     """, (new_alias, new_canonical))
 
     def cli_delete_alias(self, alias_id):
 
-        set_alias_inactive = ("UPDATE aliases SET active = FALSE WHERE id=:alias_id")
+        return self.db.execute("""
+                     UPDATE aliases SET active = FALSE WHERE id= %s
+                     """, (alias_id))
 
-        return self.db.execute(set_alias_inactive, self.db, params={'alias_id': alias_id})
+    def cli_add_affiliation(self, Ndomain, Naffiliation, Nstart_date=''):
 
-    def cli_add_affiliation(self, domain, affiliation, start_date=''):
-
-        if start_date:
-            add_an_affiliation = ("INSERT INTO affiliations "
-                                  "(domain, affiliation, start_date) VALUES "
-                                  "(:domain, :affiliation, :start_date) ON DUPLICATE KEY UPDATE active = TRUE")
-
-            return self.db.execute(add_an_affiliation, self.db, params={'domain':domain, 'affiliation':affiliation, 'start_date':start_date})
+        if Nstart_date:
+        
+            return self.db.execute("""
+                INSERT INTO affiliations (domain, affiliation, start_date) 
+                VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE active = TRUE
+                """, (Ndomain, Naffiliation, Nstart_date))
 
         else:
-            add_an_affiliation = ("INSERT INTO affiliations "
-                                  "(domain, affiliation) VALUES "
-                                  "(:domain,:affiliation) ON DUPLICATE KEY UPDATE active = TRUE")
 
-            return self.db.execute(add_an_affiliation, params={'domain':domain, 'affiliation':affiliation})
+            return self.db.execute("""
+                INSERT INTO affiliations (domain, affiliation) 
+                VALUES (%s, %s) 
+                ON DUPLICATE KEY UPDATE active = TRUE
+                """, (Ndomain, Naffiliation))
     
     def cli_delete_affiliation(self, affiliation_id):
 
-        set_affiliation_inactive = ("UPDATE affiliations SET active = FALSE "
-                                    "WHERE id=:affiliation_id")
-
-        return self.db.execute(set_affiliation_inactive, self.db, params={'affiliation_id':affiliation_id})
+        return self.db.execute("""
+            UPDATE affiliations SET active = FALSE 
+            WHERE id = %s 
+            """, (affiliation_id))
 
