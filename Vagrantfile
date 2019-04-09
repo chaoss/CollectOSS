@@ -21,8 +21,7 @@ Vagrant.configure("2") do |config|
   if Vagrant::Util::Platform.windows? then
       config.vm.synced_folder ".", "/vagrant/augur", type: "rsync", rsync__auto: true, rsync__exclude: ['./frontend/node_modules']
   else
-      config.vm.synced_folder ".", "/vagrant/augur", type: 'virtualbox', SharedFoldersEnableSymlinksCreate: false
-  end
+     config.vm.synced_folder ".", "/vagrant/augur", type: 'virtualbox', SharedFoldersEnableSymlinksCreate: false
 
   config.vm.provider "virtualbox" do |v|
     v.name = "augur"
