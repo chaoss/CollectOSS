@@ -37,9 +37,9 @@
 
             </div>
                  
-                 <div id="invalid" class="col col-1 invisible invalid-search" align="center">Repo not found.</div>
+                 <!-- <div id="invalid" class="col col-1 invisible invalid-search" align="center">Repo not found.</div> -->
 
-            <div id="collapse" class="col col-2">
+            <div id="collapse" class="col col-3">
               <div class="col col-12 align-bottom" align="right" v-show="isCollapsed" @click="collapseText()">Less configuration options &#9660</div>
               <div class="col col-12 align-bottom" align="right" v-show="!isCollapsed" @click="collapseText()">More configuration options &#9654</div>
             </div>
@@ -48,7 +48,8 @@
         </div>
         <div class="row gutters section collapsible collapsed">
           <div class="col col-5">
-            <label>Line Charts
+            <label><h6>Line Chart Options</h6>
+                <!-- <label><b><t>Show:</t></b></label> -->
             <div class="row">
               <div class="col col-6">
                 <div class="form-item form-checkboxes">
@@ -66,7 +67,7 @@
                   <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" checked @change="onDetailChange">Enable detail</label>
                 </div>
               </div>
-              <label>Bubble Charts
+              <label><h6>Bubble Chart Options </h6>
               <div class="form-item form-checkboxes">
                 <label class="checkbox"><input name="comparebaseline" value="each" type="checkbox" @change="onShowBelowAverageChange">Show users with below-average total contributions<sup class="warn"></sup></label><br>
               </div>
@@ -81,7 +82,7 @@
           <div class="col col-7">
             <div class="row">
               <div class="col col-6">
-                <h6>Configuration</h6>
+                <h6>Chart Timeline Configuration</h6>
                   <div class="row gutters">
                     <div class="col col-11">
                       <div class="form-item">
@@ -233,7 +234,6 @@
         if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
         if (this.$store.state.comparedRepos.length == 1) this.compared = true
       }
-
     },
     directives: {
       'click-outside': {
@@ -270,7 +270,6 @@
       onStartDateChange (e) {
         var date = null
         // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
-        console.log("again", e.target.value)
         if (e.target.value > 12) {
           date = Date.parse((this.startMonth + "/01/" + e.target.value))
         } else {
@@ -280,18 +279,17 @@
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
           delete this.startDateTimeout
+          console.log('startDateTimeout')
         }
         this.startDateTimeout = setTimeout(() => {
           this.$store.commit('setDates', {
             startDate: date
           })
-        }, 800);
+        }, 500);
       },
       onEndDateChange (e) {
         var date = null
         // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
-                console.log("again", e.target.value)
-
         if (e.target.value > 12) {
           date = Date.parse((this.endMonth + "/01/" + e.target.value))
         } else {
@@ -307,7 +305,7 @@
           this.$store.commit('setDates', {
             endDate: date
           })
-        }, 800);
+        }, 500);
       },
       onTrailingAverageChange (e) {
         this.info.days = e.target.value
@@ -347,7 +345,6 @@
         let repo = window.AugurAPI.Repo({
             githubURL: e.target.value
           })
-        console.log(repo.batch(['codeCommits'], true))
         if(!repo.batch(['codeCommits'], true)[0]){
           //alert("The repo " + repo.githubURL + " could not be found. Please try again.")
             element.classList.remove("invisible")
@@ -369,7 +366,6 @@
             let end = url.slice(url.length - 4)
             if (end == ".git")
               link = link.substring(0, url.length - 4)
-            console.log("link: ", link)
             this.$store.commit('addComparedRepo', {
               githubURL: link
             })

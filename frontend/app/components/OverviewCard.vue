@@ -110,12 +110,6 @@ created() {
             //this.renderError()
       }) // end batch request
     })
-    
-    
-
-
-
-
   }
 }
 </script>

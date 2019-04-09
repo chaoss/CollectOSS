@@ -2,7 +2,7 @@
 
   <div ref="holder">
     <div class="spacing"></div>
-    <div class="error hidden"><br>Data is missing or unavailable for metric: <p style="color: black !important">{{ title }}</p></div>
+    <div style="color: black" class="error hidden"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
     <div class="spinner loader"></div>
     <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
       <!-- <div class="row">
@@ -33,7 +33,10 @@
         <!-- <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite> -->
         <cite class="metric"><a style="width:100px !important;height: 38px !important; position: absolute;" v-bind:href="citeUrl" target="_blank"><img style="width:100px;position: relative;" src="https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png" alt="Chaoss-Definition-Logo" border="0"></a></cite>
       </div>
-      <div class="col col-4" style="position: relative; top: -8px !important;"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button><a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
+      <div class="col col-4" style="position: relative; top: -8px !important;">
+        <!-- <button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button>
+        <button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button> -->
+        <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
 
   </div>
@@ -270,8 +273,9 @@ export default {
 
       let getToolPoint = (key) => { 
         let selection = (!selectionAdded ? {
-              "tooltip": {"type": "single", "on": "mouseover","nearest": false}
-            } : null)
+            "tooltip": {"type": "single", "on": "mouseover","nearest": false}
+          } : null
+        )
         let size = 17
         var timeDiff = Math.abs(this.latest.getTime() - this.earliest.getTime());
         var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
@@ -283,27 +287,23 @@ export default {
           "transform": [
               brush
           ],
-    "mark": "rule",
-    "selection": {
-      "tooltip": {"type": "single", "on": "mouseover","nearest": false, "empty": "none"}
-    },
-    "encoding": {
-      "size": {"value": 20},
-      "opacity": {"value": 0.001},
-      "x": {
-                "field": "date",
-                "type": "temporal",
-                "axis": null,
-              },
-"tooltip": [
-// {
-//                 "field": "date",
-//                 "type": "ordinal"
-              
-//               },
-              {"field": field, "type": "quantitative"}],
-    }
-  }
+          "mark": "rule",
+          "selection": {
+            "tooltip": {"type": "single", "on": "mouseover","nearest": false, "empty": "none"}
+          },
+          "encoding": {
+            "size": {"value": 20},
+            "opacity": {"value": 0.001},
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": null,
+            },
+            "tooltip": [
+              {"field": field, "type": "quantitative"}
+            ],
+          }
+        }
       }
 
       let getStandardPoint = (key, color) => {
@@ -332,13 +332,13 @@ export default {
                   "format": "%b %Y"
                 },
               },
-              "y": {
-                "field": key,
-                "type": "quantitative",
-                "axis": {
-                  "title": null
-                }
-              },
+              // "y": {
+              //   "field": key,
+              //   "type": "quantitative",
+              //   "axis": {
+              //     "title": null
+              //   }
+              // },
               "color": {
                 // "value": color
                 "value": "black"
@@ -352,7 +352,7 @@ export default {
               }
             },
             "mark": {
-              "type": "point"
+              "type": "rule"
             },
             "selection": selection
           }
@@ -564,7 +564,6 @@ export default {
         let d = new Date()
         return new Date(d.setDate(d.getDate()-Number(this.timeperiod))).getDate()
       })() : this.earliest.getDate()
-      console.log("change:", this.timeperiod, startmonth, startdate, startyear)
       for(var i = 0; i < config.vconcat[0].layer.length; i++){
         config.vconcat[0].layer[i].encoding.x["scale"] =
           {
@@ -709,7 +708,6 @@ export default {
                     }
                   }
                 } else {
-                  console.log("rolling")
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 }
 
@@ -729,7 +727,6 @@ export default {
             for(var i = 0; i < legend.length; i++){
               normalized[i].forEach(d => {
 
-                console.log(d.date + "less than" + (new Date(startyear,startmonth,startdate)))
                 if (d.date < (new Date(startyear,startmonth,startdate))){
                   d = {}
                 } else {
@@ -790,6 +787,9 @@ export default {
 
   }, // end computed
   methods: {
+    thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
+    },
     downloadSVG (e) {
       var svgsaver = new window.SvgSaver()
       var svg = window.$(this.$refs.holder).find('svg')[0]
@@ -828,6 +828,11 @@ export default {
     },
     respec(){this.spec;},
     reloadImage (config) {
+      console.log(config.data, this.source)
+      if (config.data.length == 0){
+        this.spec;
+        return
+      }
       vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'}) 
     }
   },// end methods

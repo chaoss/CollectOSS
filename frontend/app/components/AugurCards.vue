@@ -34,7 +34,6 @@ import DownloadedReposCard from '../components/DownloadedReposCard.vue'
 import MainControls from '../components/MainControls.vue'
 import LoginForm from '../components/LoginForm'
 import { mapState } from 'vuex'
-
 module.exports = {
   props: ['owner', 'repo', 'domain', 'comparedowner', 'comparedrepo', 'groupid'],
   components: {
@@ -51,64 +50,6 @@ module.exports = {
     ExperimentalCard,
     DownloadedReposCard,
     LoginForm,
-  },
-  mounted() {
-    console.log("MOUNTED")
-  },
-  created() {
-
-    console.log("IT IS WORKING NOW")
-    // if(this.repo || this.groupid){
-    //   this.$store.commit("resetTab")
-    //   // this.$store.commit('setTab', {
-    //   //   tab: this.tab
-    //   // })
-    //   if (this.$router.history.current.name == "git"){
-    //     this.$store.commit('setRepo', {
-    //       gitURL: this.repo
-    //     })
-    //   } else if (!this.groupid){
-    //     if (this.repo.includes('github')) {
-    //       this.$store.commit('setRepo', {
-    //         gitURL: this.repo
-    //       })
-    //     } else {
-    //       this.$store.commit('setRepo', {
-    //         githubURL: this.owner + '/' + this.repo
-    //       })
-    //     }
-    //   }
-    //   if(this.comparedrepo) { 
-    //     this.$store.commit('addComparedRepo', {
-    //       githubURL: this.comparedowner + '/' + this.comparedrepo
-    //     })
-    //   }
-    //   if(this.groupid){
-    //     let repos = this.groupid.split('+')
-    //     if (repos[0].includes('github')) {
-    //       this.$store.commit('setRepo', {
-    //         gitURL: repos[0]
-    //       })
-    //     } else {
-    //       this.$store.commit('setRepo', {
-    //         githubURL: repos[0]
-    //       })
-    //     }
-    //     repos.shift()
-    //     // repos.pop()
-    //     repos.forEach((cmprepo) => {
-    //       this.$store.commit('addComparedRepo', {
-    //         githubURL: cmprepo
-    //       })
-    //     })
-    //   }
-    // }
-  },
-  beforeRouteEnter (to, from, next) {
-    // called before the route that renders this component is confirmed.
-    // does NOT have access to `this` component instance,
-    // because it has not been created yet when this guard is called!
-    console.log("HIHKLJKLEJ")
   },
   watch: {
     '$route': function (to, from) {
@@ -139,4 +80,3 @@ module.exports = {
     }
   }
 }
-

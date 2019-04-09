@@ -129,11 +129,11 @@ build: frontend docs
 test:test-ds test-api
 
 test-ds:
-	bash -c '$(CONDAACTIVATE)  -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
+	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 
 test-api:
 	make dev-start
-	 test/api/test_api.py
+	$(AUGUR_PYTHON) test/api/test_api.py
 	make dev-stop
 
 .PHONY: unlock
@@ -144,7 +144,6 @@ update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; $(AUGUR_PIP) install pipreqs; exit 1; }
 	pipreqs ./augur/
 	bash -c "$(CONDAACTIVATE) conda env  --no-builds > environment.yml"
-
 vagrant:
 	@ vagrant up
 	@ vagrant ssh

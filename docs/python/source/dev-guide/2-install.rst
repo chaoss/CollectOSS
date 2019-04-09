@@ -140,6 +140,27 @@ macOS High Sierra (and possibly older OS X Versions) Errata:
        cd frontend 
        npm install
 
+macOS High Sierra (and possibly older OS X Versions) Errata:
+------------------------------------------------------------
+
+1. If you check the logs/frontend.log and find that "brunch" was not
+   found:
+
+   .. code:: bash
+
+       brew install npm
+       npm install -g brunch
+       brew install yarn
+
+2. If the logs look good but the webpage at localhost:3333 is empty, it
+   could be that Yarn installed the wrong version of some libraries. In
+   that case:
+
+   .. code:: bash
+
+       cd frontend 
+       npm install
+
 Augur Installation Instructions
 -------------------------------
 
@@ -163,7 +184,7 @@ Clone the repo and install the libraries and tools needed by Augur
 
 **Make sure you have a database user that has select access to the
 database where you installed `GHTorrent <http://ghtorrent.org/>`__ and
-all priviledges on another database for Augur.**
+all privileges on another database for Augur.**
 
 .. code:: sql
 
@@ -171,7 +192,7 @@ all priviledges on another database for Augur.**
     GRANT SELECT ON ghtorrent.* TO 'augur'@'localhost';
 
     CREATE DATABASE augur;
-    GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
+    GRANT ALL PRIVILEGES ON augur.* TO 'augur'@'localhost';
 
 Augur runs in an Anaconda environment. To get started, activate the environment and then 
 run ``augur run``.

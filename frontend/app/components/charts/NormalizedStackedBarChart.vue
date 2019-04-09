@@ -1,12 +1,10 @@
 <template>
   <div ref="holder">
     <div style="margin-bottom: 0 !important" class="tickchart ">
-      <!-- <h3>Lines of code added by the top 10 authors as Percentages - By Time Period</h3> -->
-      <vega-lite :spec="spec" :data="values"></vega-lite>
+      <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
+      <div :id="source"></div>
       <p> {{ chart }} </p>
-      <div style="position: relative; top: -80px !important"class="form-item form-checkboxes tickradios">
-
-
+      <div style="position: relative; top: -0px !important"class="form-item form-checkboxes tickradios">
           <div class="inputGroup "  style="padding-top: 5px;">
             <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
             <label id="front" for="yearradio" >Year</label>
@@ -19,10 +17,6 @@
             <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
             <label id="front" for="contradio">Continuous</label>
           </div>
-          
-          
-
-        
       </div>
     </div>
   </div>
@@ -85,7 +79,6 @@ export default {
       if (this.group == 2) {
         timeUnit = 'yearmonth'
         format = '%y %b'
-        type = "bar"
             bin = false
             size = 13
         type = "area"
@@ -95,8 +88,9 @@ export default {
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
-        "height": 380,
+        "width": 450,
+        "height": 300,
+        "padding": {"left": 10, "top": 35, "right": 5, "bottom": 0},
         "title": {
           "text": this.title,
           "offset": 15
@@ -110,11 +104,11 @@ export default {
             "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 14,
+            "labelFontSize": 12,
             "titleFontSize": 14,
             "labelLimit": 260 
           },
-          "scale": {"minSize": 100, "maxSize": 500},
+          // "scale": {"minSize": 100, "maxSize": 500},
           "bar": {
             "continuousBandSize": size,
             "binSpacing": 0,
@@ -141,27 +135,22 @@ export default {
                 "as": "percent"
               },
             ],
+            
             "mark": {
               "type": type,
-              "tooltip": {"content": "data"},
               
-              "cornerRadius": 45
+              "cornerRadius": 1
             },
             "encoding": {
               "x": {
                 "field": "author_date", 
                 "type": "temporal", 
-                // "bin": true, 
                 "timeUnit": timeUnit, 
-                // "axis": {"format": '%Y %b', "title": " ", "labelAngle": -35, "labelFlush": true}
-                // "timeUnit": "yearmonth",
                 "axis": {"domain": false, "format": format}
               },
               "y": {
                 "field": "count", 
                 "type": "quantitative",
-                // "stack": "normalize", 
-                // "axis": {"labels": false, "title": null},
                 "aggregate": "sum",
                 "stack": "center",
                 "axis": null,
@@ -171,42 +160,86 @@ export default {
                 "type": "nominal",
                 "scale": {"scheme": "category10"}
               },
-              // "size": size,
-              // "opacity":{
-              //   "field": "Total lines changed",
-              //   "type": "quantitative",
-              //   "min": ".5"
-              // },
-
+              
             },
-            
-            
           },
-          // {
-          //   "mark": {
-          //     "type": "text",
-          //     "align": "left",
-          //     "dx": -5,
-          //     "dy": -15
-          //   },
-          //   "encoding": {
-          //     // "x": {"field": "author_date", "type": "temporal", "axis": {"format": "%b %Y", "title": " "}},
-          //     "x": {"field": "flag", "type": "quantitative","stack": "normalize"},
-          //     "color": {
-          //       "field": "author_email",
-          //       "type": "nominal",
-          //       // "scale": { "range": ["red", "green"]}
-          //     },
-          //     "text":{
-          //       "field": "flag",
-          //       "type": "nominal",
+          {
+            "mark": {
+              "type": type,
+              
+              "cornerRadius": 1
+            },
+            "transform": [
+             
+              {
+                "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+                "as": "Majority type of changes"
+              },
+              {
+                "calculate": "(datum.additions - datum.deletions)",
+                "as": "Net lines added"
+              },
+              {
+                "calculate": "(datum.additions)",// + datum.deletions)",
+                "as": "Total lines added"
+              },
+              {
+                "calculate": "(datum.count * 100)",
+                "as": "percent"
+              },
+            ],
+            "selection": {
+              "tooltip": {
+                "type": "multi",
+                "on": "mouseover",
+                "nearest": false,
+                "empty": "none",
+                "fields": ["_vgsid_"],
+                "toggle": "event.shiftKey",
+                "resolve": "global"
+              }
+            },
 
-          //     },
-
-          //   },
-          // }
-        ]
-        
+            "encoding": {
+              "opacity": {"value": 1.001},
+              "x": {
+                "field": "author_date", 
+                "type": "temporal", 
+                "timeUnit": timeUnit, 
+                "axis": {"domain": false, "format": format}
+              },
+              "y": {
+                "field": "count", 
+                "type": "quantitative",
+                "aggregate": "sum",
+                "stack": "center",
+                "axis": null,
+              },
+              "tooltip": [{
+                "aggregate": "sum",
+                "field": "Total lines added",
+                "type": "quantitative"
+              },{
+                "aggregate": "sum",
+                "field": "Net lines added",
+                "type": "quantitative"
+              },{
+                "field": "author_date", 
+                "type": "temporal", 
+                "timeUnit": timeUnit
+              },{
+                "field": "author_email",
+                "type": "nominal",
+              }],
+              "color": {
+                "condition":{
+                  "selection": {"not": "tooltip"}, "value": "transparent"
+                },
+                "value": "black"
+              }
+            }
+          }
+        ]   
       }
 
 
@@ -256,7 +289,11 @@ export default {
 
       let authors = []
       let track = {"total": 0}
-      repo.changesByAuthor().then((changes) => {
+
+      let changes = null
+      if (this.data) changes = this.data
+      else changes = repo.changesByAuthor()
+      
         changes.forEach((change) => {
           change.author_date = new Date(change.author_date)
           change["count"] = change["count"] ? change["count"] + 1 : 1
@@ -274,22 +311,16 @@ export default {
           if(!authors.includes(change["author_email"])) {
             authors.push(change["author_email"])
             change["flag"] = (track[change.author_email] / track["total"]).toFixed(4)
-            // console.log(change, track)
           } //else change["flag"] = 100
 
           
         })
         
-
-        //this.values = flattenAndSort(contributors, 'author_email', 'additions')
-        //this.organizations = flattenAndSort(organizations, 'name', 'additions')
         this.contributors = flattenAndSort(contributors, 'author_email', 'additions')
         var careabout = []
         this.contributors.slice(0,10).forEach((obj) => {
           careabout.push(obj["author_email"])
         })
-
-
 
         let findObjectByKey = (array, key, value) => {
             let ary = []
@@ -301,39 +332,20 @@ export default {
             return ary;
         }
 
-
         var ary = []
         
         careabout.forEach((name) => {
           findObjectByKey(changes, "author_email", name).forEach((obj) => {
             ary.push(obj)
           })
-          // changes.find(obj => obj.author_email == name))
         })
       
         this.values = ary
 
-      })
-        
       
-
-            
-
-      
-
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis')
       $(this.$el).find('.stackedbarchart').removeClass('loader')
-
-      // let endpoints = []
-      // let fields = {}
-      // this.source.split(',').forEach((endpointAndFields) => {
-      //   let split = endpointAndFields.split(':')
-      //   endpoints.push(split[0])
-      //   if (split[1]) {
-      //     fields[split[0]] = split[1].split('+')
-      //   }
-      // })
 
       // Get the repos we need
       let repos = []
@@ -341,84 +353,18 @@ export default {
         repos.push(window.AugurRepos[this.repo])
       }
 
-      let processData = (data) => {
-        // // We usually want to limit dates and convert the key to being vega-lite friendly
-        // let defaultProcess = (obj, key, field, count) => {
-        //   let d = AugurStats.convertKey(obj[key], field)
-        //   return AugurStats.convertDates(d, this.earliest, this.latest)
-        // }
-
-        // // Normalize the data into [{ date, value },{ date, value }]
-        // // BuildLines iterates over the fields requested and runs onCreateData on each
-        // let normalized = []
-        // let buildLines = (obj, onCreateData) => {
-        //   if (!obj) {
-        //     return
-        //   }
-        //   if (!onCreateData) {
-        //     onCreateData = (obj, key, field, count) => {
-        //       let d = defaultProcess(obj, key, field, count)
-        //       normalized.push(d)
-        //     }
-        //   }
-        //   let count = 0
-        //   for (var key in obj) {
-        //     if (obj.hasOwnProperty(key)) {
-        //       if (fields[key]) {
-        //         fields[key].forEach((field) => {
-        //           onCreateData(obj, key, field, count)
-        //           count++
-        //         })
-        //       } else {
-        //         if (Array.isArray(obj[key]) && obj[key].length > 0) {
-        //           let field = Object.keys(obj[key][0]).splice(1)
-        //           onCreateData(obj, key, field, count)
-        //           count++
-        //         } else {
-        //           this.renderError()
-        //           return
-        //         }
-        //       }
-        //     } // end hasOwnProperty
-        //   } // end for in
-        // } // end normalize function
-
-        // let values = []
-
-        // buildLines(data[this.repo], (obj, key, field, count) => {
-        //   // Build basic chart
-        //   normalized.push(defaultProcess(obj, key, field, count))
-        // })
-
-        // if (normalized.length == 0) {
-        //   this.renderError()
-        // } else {
-        //     for(var i = 0; i < normalized.length; i++){
-        //       normalized[i].forEach(d => {
-        //         //d.name = legend[i]
-        //         //d.color = colors[i]
-        //         values.push(d);
-        //       })
-        //     }
-        //   }
-
-        // $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-        // $(this.$el).find('.stackedbarchart').removeClass('loader')
-        // this.values = values
-      }
-
-      // if (this.data) {
-      //   processData(this.data)
-      // } else {
-      //   window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
-      //     processData(data)
-      //   })
-      // }
-
-
-
+      this.reloadImage(config)
       return config
 
+    }
+  },
+  mounted() {
+    this.spec;
+  },
+  methods: {
+    reloadImage (config) {
+      config.data = {"values": this.values}
+      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -100, offsetX: 40}, mode: 'vega-lite',}) 
     }
   }
   

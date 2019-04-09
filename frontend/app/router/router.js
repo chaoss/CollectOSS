@@ -17,8 +17,7 @@ import MainControls from '../components/MainControls.vue'
 import AugurHeader from '../components/AugurHeader.vue'
 import Tabs from '../components/Tabs.vue'
 import TableView from '../components/TableView.vue'
-
-
+import ProjectDropdown from '../components/ProjectDropdown.vue'
 
 let routes = [
       {path: '/', component: AugurCards,
@@ -28,17 +27,16 @@ let routes = [
             name: "reposcard",
             components: {
               header: AugurHeader,
-              content: DownloadedReposCard
+              // tabs: ProjectDropdown,
+              content: DownloadedReposCard,
+              // controls: OverviewCard
             }
           },
         ]
       },
       {path: '/login', component: LoginForm},
       {path: '/metrics_status', 
-        components: {
-          header: AugurHeader,
-          content: MainControls
-        }
+        component: MetricsStatusCard
       }, 
       {path: '/single/:owner?/:repo', name: 'single', props: true, canReuse: false, component: AugurCards,
         children: [

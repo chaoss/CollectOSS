@@ -6,10 +6,10 @@
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <p> {{ chart }} </p>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
-      <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
+      <div class="form-item form-checkboxes tickradios">
 
 
-          <div class="inputGroup" >
+          <div class="inputGroup ">
             <input id="circradio" name="comparebaseline" value="0" type="radio" v-model="tick">
             <label id="front" for="circradio">Circle</label>
           </div>
@@ -33,6 +33,7 @@
 <script>
 import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
+
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
   data() {
@@ -51,7 +52,8 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      tick: 0
+      tick: 0,
+      care: []
     }
   },
   mounted() {
@@ -70,7 +72,9 @@ export default {
     spec() {
       console.log("test")
       const vegaEmbed = window.vegaEmbed;
+
       let type = null, bin = null, size = null, opacity = null;
+
       if(this.tick == 0) {
         type = "circle"
         bin = false
@@ -102,8 +106,10 @@ export default {
                 "min": ".5"
               }
       }
+
+
       let config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": 1000,
         "height": 360,
         "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},
@@ -122,10 +128,35 @@ export default {
                 "titlePadding": 10
               },"scale": {"minSize": 100, "maxSize": 500}
         },
+        
         "layer": [
+  //       {
+  //         "transform": [{"filter": {"selection": "tooltip"}}],
+  //         "mark": "text",
+  // "encoding": {
+  //   "y": {"field": "author_email", "type": "nominal"},
+  //   "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
+
+  //   "tooltip": [{"field": "contributors", "type": "nominal"},{
+  //               "field": "Total lines changed",
+  //               "type": "quantitative",
+  //             },{
+  //               "field": "Net lines added",
+  //               "type": "quantitative",
+  //             }],
+    
+  // }
+  //       },
           {
             "transform": [
-             
+              {
+                "calculate": "datetime((datum.year),(datum.month),1)",//month(datum.author_date)+1
+                "as": "Current month"
+              },
+              {
+                "calculate": "datetime((datum.year),(datum.month)+1,1)",//month(datum.author_date)+1
+                "as": "Next month"
+              },
               {
                 "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
                 "as": "Majority type of changes"
@@ -142,6 +173,7 @@ export default {
             "mark": type,
             
             "encoding": {
+
               "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
               "y": {"field": "author_email", "type": "nominal"},
               "color": {
@@ -152,12 +184,14 @@ export default {
               
               "size": size,
               "opacity": opacity
+
             },
             
           },
           {
-            "mark": "rule",
+            "mark": "rect",
             "transform": [
+
               {
                 "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
                 "as": "Majority type of changes"
@@ -167,19 +201,45 @@ export default {
                 "as": "Net lines added"
               },
               {
+                "calculate": "0",
+                "as": "zero"
+              },
+              {
+                "calculate": "1000",
+                "as": "thousand"
+              },
+              {
+                "calculate": "datetime((datum.year),(datum.month),1)",//month(datum.author_date)+1
+                "as": "Current month"
+              },
+              {
+                "calculate": "datetime((datum.year),(datum.month)+1,1)",//month(datum.author_date)+1
+                "as": "Next month"
+              },
+              {
                 "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
                 "as": "Total lines changed"
               },
             ],
             "selection": {
-              "tooltip": {"type": "multi", "on": "mouseover","nearest": false, "empty": "none"}
-            },
+                "tooltip": {"type": "multi", "on": "mouseover","nearest": false, "empty": "none"}
+              },
             "encoding": {
-              "size": {"value": 8},
               "opacity": {"value": 1.051},
-              "x": {"field": "author_date", "type": "temporal"},
-              // "y": {"field": "author_email", "type": "nominal"},
-              "tooltip": [{"field": "author_email", "type": "nominal"},{
+              "x": {"field": "Current month", "type": "temporal"},
+              "x2": {"field": "Next month", "type": "temporal"},
+              "y": {"field": "zero", "type": "quantitative", "axis": {"title": "", "labels": false},},
+              "y2": {"field": "thousand", "type": "quantitative", "axis": {"title": "", "labels": false},},
+              
+              "tooltip": [{"field": this.care[0], "type": "nominal"},
+              {"field": this.care[1], "type": "nominal"},
+              {"field": this.care[2], "type": "nominal"},
+              {"field": this.care[3], "type": "nominal"},
+              {"field": this.care[4], "type": "nominal"},
+              {"field": this.care[5], "type": "nominal"},
+              {"field": this.care[6], "type": "nominal"},
+              {"field": this.care[7], "type": "nominal"},
+              {"field": this.care[8], "type": "nominal"},{
                 "field": "Total lines changed",
                 "type": "quantitative",
               },{
@@ -192,13 +252,18 @@ export default {
                 }
               }
             }
-          }
+          },
+
         ]
+          
+        
         
       }
+
       let repo = window.AugurAPI.Repo({ gitURL: this.repo })
       let contributors = {}
       let organizations = {}
+
       let addChanges = (dest, src) => {
         if (dest && src) {
           if (typeof dest !== 'object') {
@@ -209,6 +274,7 @@ export default {
           dest['deletions'] += (src['deletions'] || 0)
         }
       }
+
       let group = (obj, name, change, filter) => {
         if (filter(change)) {
           let year = (new Date(change.author_date)).getFullYear()
@@ -221,6 +287,7 @@ export default {
           addChanges(obj[change[name]][year + '-' + month], change)
         }
       }
+
       let flattenAndSort = (obj, keyName, sortField) => {
         return Object.keys(obj)
             .map((key) => {
@@ -232,13 +299,18 @@ export default {
               return b[sortField] - a[sortField]
             })
       }
+
       let filterDates = (change) => {
         return (new Date(change.author_date)).getFullYear() > this.years[0]
       }
+
       let processData = (data) => {
+
         data.forEach((change) => {
           change.author_date = new Date(change.author_date)
         })
+
+
         data.forEach((change) => {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
             group(contributors, 'author_email', change, filterDates)
@@ -248,6 +320,7 @@ export default {
           }
         })
         
+
         //this.values = flattenAndSort(contributors, 'author_email', 'additions')
         //this.organizations = flattenAndSort(organizations, 'name', 'additions')
         this.contributors = flattenAndSort(contributors, 'author_email', 'additions')
@@ -255,6 +328,9 @@ export default {
         this.contributors.slice(0,10).forEach((obj) => {
           careabout.push(obj["author_email"])
         })
+
+
+
         let findObjectByKey = (array, key, value) => {
             let ary = []
             for (var i = 0; i < array.length; i++) {
@@ -264,17 +340,42 @@ export default {
             }
             return ary;
         }
+
         var ary = []
-        
+        let template = {year: null, month: null, additions: 0, whitespace: 0, deletions: 0}
         careabout.forEach((name) => {
           findObjectByKey(data, "author_email", name).forEach((obj) => {
+            console.log(obj)
+
+            let found = ary.some(function(el) {
+              return el.year == obj.author_date.getFullYear() && el.month == obj.author_date.getMonth()
+            })
+            if (!found){
+              ary.push({year: obj.author_date.getFullYear(), month: obj.author_date.getMonth(), additions: 0, whitespace: 0, deletions: 0});
+              
+            }
+            else {
+              let el = ary.find(function(el) {
+                return el.year == obj.author_date.getFullYear() && el.month == obj.author_date.getMonth()
+              })
+              if (!Object.keys(el).includes(obj.author_email)) {
+                el[obj.author_email] = "additions: " + obj.additions
+                if(!this.care.includes(obj.author_email)) {
+                  this.care.push(obj.author_email)
+                }
+              }
+              el.additions += obj.additions
+              el.deletions += obj.deletions
+              el.whitespace += obj.whitespace
+            }
             ary.push(obj)
           })
-          // changes.find(obj => obj.author_email == name))
         })
       
         this.values = ary
+
       }
+
       if (this.data) {
         processData(this.data)
       } else {
@@ -282,22 +383,31 @@ export default {
           processData(changes)
         })
       }
+
       $(this.$el).find('.showme, .hidefirst').removeClass('invis')
       $(this.$el).find('.stackedbarchart').removeClass('loader')
+
       // Get the repos we need
       let repos = []
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo])
       }
       this.reloadImage(config)
+
       return config
+
     }
   },
   methods: {
     reloadImage (config) {
       config.data = {"values": this.values}
-      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite',}) 
+      var tooltipOptions = {
+        theme: 'custom',
+        offsetY: -110
+      };
+      vegaEmbed('#' + this.source, config, {tooltip: tooltipOptions, mode: 'vega-lite',}) 
     }
   }
 }
+
 </script>
