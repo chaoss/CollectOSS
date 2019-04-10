@@ -37,8 +37,6 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('signin')
 
 
-
-
 def create_user_routes(server):
 
     login_manager = LoginManager()
