@@ -92,7 +92,7 @@ Implementation Status | Metric
 | <ul><li>- [ ] Frontend</li><li>- [ ] Backend</li></ul>| [Issues Submitted/Closed](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/issues-submitted-closed.md)
 | <ul><li>- [ ] Frontend</li><li>- [ ] Backend</li></ul>| [Pull Request Discussion Diversity](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/pull-request-discussion-diversity.md)
 | <ul><li>- [ ] Frontend</li><li>- [ ] Backend</li></ul>| [Reopened Issues](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/reopnened-issues.md)
-| <ul><li>- [ ] Frontend</li><li>- [ ] Backend</li></ul>| [Repository Size](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/issue-size.md)
+| <ul><li>- [ ] Frontend</li><li>- [x] Backend</li></ul>| [Repository Size](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/issue-size.md)
 | <ul><li>- [ ] Frontend</li><li>- [ ] Backend</li></ul>| [Size of Code base](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/size-of-code-base.md)
 | <ul><li>- [ ] Frontend</li><li>- [ ] Backend</li></ul>| [Transparency](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/transparency.md)
 | <ul><li>- [ ] Frontend</li><li>- [x] Backend</li></ul>| [Watchers](https://github.com/OSSHealth/wg-gmd/tree/master/activity-metrics/activity-metrics-list.md)

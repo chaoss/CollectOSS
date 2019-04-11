@@ -1,51 +1,60 @@
 <template>
   <section>
     <div style="display: inline-block;">
-      <h2 style="display: inline-block; color: black !important">{{ $store.state.gitRepo }}</h2>
+      <h2 v-if="loaded" style="display: inline-block; color: black !important">Project Overview: {{ project }}</h2>
+      <p></p>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
       <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
-      <tick-chart></tick-chart>
-      <div class="row" style="transform: translateY(-50px) !important">
-        <div class="col col-6" style="padding-right: 35px">
-          <normalized-stacked-bar-chart title="Lines of code added by the top 10 authors as Percentages - By Time Period"></normalized-stacked-bar-chart>
-        </div>
-        <div class="col col-6" style="padding-left: 65px">
-          <div style="padding-top: 35px"></div>
-          <horizontal-bar-chart type="lines" title="Average Lines of Code Per Commit"></horizontal-bar-chart>
-        </div>
-      </div>
-      <div style="transform: translateY(-100px) !important" class="row">
-        <div class="col col-6">
-          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
-        </div>
-        <div class="col col-6">
-          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
-        </div>
-      </div>
+      <div class="row" style="transform: translateY(-50px) !important" v-if="loaded">
 
-      <div class="row" style="transform: translateY(-50px) !important">
-        <lines-of-code-chart></lines-of-code-chart>
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgTpRankedCommits"
+          title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"
+          :data="values['cdRgTpRankedCommits']"></grouped-bar-chart>
+        </div>
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgTpRankedLoc"
+          title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"
+          :data="values['cdRgTpRankedLoc']"></grouped-bar-chart>
+        </div>
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"
+          :data="values['cdRgNewrepRankedCommits']"></grouped-bar-chart>
+        </div>
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"
+          :data="values['cdRgNewrepRankedLoc']"></grouped-bar-chart>
+
       </div>
     </div>
   </section>
-</template> 
+</template>
 
 <script>
-
 import AugurHeader from './AugurHeader'
 import TickChart from './charts/TickChart'
 import LinesOfCodeChart from './charts/LinesOfCodeChart'
 import NormalizedStackedBarChart from './charts/NormalizedStackedBarChart'
 import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChart'
 import HorizontalBarChart from './charts/HorizontalBarChart'
-
+import GroupedBarChart from './charts/GroupedBarChart'
+import StackedBarChart from './charts/StackedBarChart'
 module.exports = {
   data() {
     return {
-      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+      values: {},
+      loaded: false,
+      project: null
     }
   },
   components: {
@@ -54,8 +63,53 @@ module.exports = {
     LinesOfCodeChart,
     NormalizedStackedBarChart,
     OneDimensionalStackedBarChart,
-    HorizontalBarChart
+    HorizontalBarChart,
+    GroupedBarChart,
+    StackedBarChart
+  },
+  computed: {
+    repo () {
+      return this.$store.state.baseRepo
+    },
+    gitRepo () {
+      return this.$store.state.gitRepo
+    },
+    comparedRepos () {
+      return this.$store.state.comparedRepos
+    },
+    // loaded() {
+    //   return this.loaded1 && this.loaded2
+    // }
+  },
+created() {
+    let repos = []
+    if (this.repo) {
+      if (window.AugurRepos[this.repo])
+        repos.push(window.AugurRepos[this.repo])
+      // repos.push(this.repo)
+    } // end if (this.$store.repo)
+    this.comparedRepos.forEach(function(repo) {
+      repos.push(window.AugurRepos[repo])
+    });
+    let endpoints1 = [
+"cdRgTpRankedCommits",
+"cdRgTpRankedLoc",
+"cdRgNewrepRankedCommits",
+"cdRgNewrepRankedLoc",
+"facadeProject"
+    ]
+    endpoints1.forEach((source) => {
+      let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
+      repo[source]().then((data) => {
+        console.log("batch data", data)
+        this.values[source] = data
+        this.loaded=true
+        this.project = this.values["facadeProject"][0].name
+        console.log(this.project, "here", this.values["facadeProject"])     
+      }, () => {
+            //this.renderError()
+      }) // end batch request
+    })
   }
 }
-
 </script>

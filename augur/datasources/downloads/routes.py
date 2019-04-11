@@ -35,7 +35,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/downloads Downloads
     @apiName downloads
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository

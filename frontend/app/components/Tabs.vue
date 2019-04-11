@@ -8,14 +8,13 @@
           <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
           <li :class="{ active: (currentTab == 'experimental') }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li>  
           <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li>
-          <!-- <li :class="{ active: (currentTab == 'overview'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="overview">Overview</a></li> -->
+          <li :class="{ active: (currentTab == 'overview'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="overview">Overview</a></li>
           <!-- <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li> -->
         </ul>
       </nav>
 </template>
 
 <script>
-
 module.exports = {
   props: ['owner', 'repo', 'comparedowner', 'comparedrepo', 'groupid'],
   computed: {
@@ -37,7 +36,6 @@ module.exports = {
       console.log("changing tab to: ", e.target.dataset.value)
       this.$store.commit('setTab', {
             tab: e.target.dataset.value
-
           })
       if(this.$store.state.comparedRepos.length == 1) {
         let owner = this.gitRepo ? null : this.baseRepo.split('/')[0]
@@ -54,7 +52,6 @@ module.exports = {
             this.comparedRepos.forEach((repo) => {
               groupid += (String(repo) + '+')
             })
-
         let name = e.target.dataset['value'] + "group"
         this.$router.push({
           name,
@@ -72,5 +69,4 @@ module.exports = {
     },
   }
 };
-
 </script>

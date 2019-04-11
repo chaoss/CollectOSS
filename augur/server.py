@@ -93,7 +93,7 @@ class Server(object):
             """
             status = {
                 'status': 'OK',
-                'plugins': self._augur._loaded_plugins
+                'plugins': [p for p in self._augur._loaded_plugins]
             }
             return Response(response=json.dumps(status),
                             status=200,
@@ -377,6 +377,10 @@ class Server(object):
         # across instances of that class.
         real_func = getattr(function.__self__.__class__, function.__name__)
         annotate(endpoint=endpoint, **kwargs)(real_func)
+
+
+    def admin(self):
+        return (current_user and current_user.administrator) or (request.args.get('admin_token') == self._augur.read_config('Server', 'admin_token', 'AUGUR_ADMIN_TOKEN', 'changeme'))
 
 def run():
     """

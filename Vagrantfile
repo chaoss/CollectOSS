@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.network "forwarded_port", guest: 3333, host: 3333
   config.vm.network "forwarded_port", guest: 5000, host: 5000
-  config.vm.synced_folder ".", "/vagrant/augur", type: "virtualbox"
+  config.vm.synced_folder ".", "/vagrant/augur", type: "rsync", rsync__auto: true, rsync__exclude: ['./node_modules*']
 
   config.vm.provider "virtualbox" do |v|
     v.name = "augur"

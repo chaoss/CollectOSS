@@ -15,9 +15,11 @@ Augur is a software suite that provides open source health and sustainability me
    augurcontext
    architecture
    python
-   dev-guide-toc
 
+   dev-guide-toc
    docker-install
+   windows-install
+
    deployment
    ghtorrent-restore
    use-cases-toc

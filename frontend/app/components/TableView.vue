@@ -157,8 +157,6 @@
 
 <script>
   import Multiselect from 'vue-multiselect'
-
-
   module.exports = {
     components: {
       Multiselect
@@ -315,7 +313,4 @@
         }
       }
     }
-
-  
-
 </script>

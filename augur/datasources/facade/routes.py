@@ -136,7 +136,7 @@ def create_routes(server):
     @api {get} /git/lines_changed/:facade_repo_url Lines Changed by Author
     @apiName lines-changed-by-author
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -162,7 +162,7 @@ def create_routes(server):
     @api {get} /git/lines_changed_by_week/:facade_repo_url Lines Changed by Week
     @apiName lines-changed-by-week
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -182,7 +182,7 @@ def create_routes(server):
     @api {get} /git/lines_changed_by_month/:facade_repo_url Lines Changed by Month
     @apiName lines-changed-by-month
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -214,7 +214,7 @@ def create_routes(server):
     @api {get} /git/commits_by_week/:facade_repo_url Commits By Week
     @apiName commits-by-week
     @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
 
     @apiParam {String} facade_repo_url URL of the GitHub repository as it appears in the Facade
 
@@ -237,6 +237,8 @@ def create_routes(server):
                         ]
     """
     server.addGitMetric(facade.commits_by_week, 'commits_by_week')
+
+    server.addGitMetric(facade.facade_project, 'facade_project')
 
     @server.app.route('/{}/git/cd_rg_tp_ranked_loc'.format(server.api_version))
     def cd_rg_tp_ranked_loc():
@@ -327,6 +329,8 @@ def create_routes(server):
                        mimetype="application/json")
 
     @server.app.route('/{}/git/cd_rg_tp_interval_loc_commits'.format(server.api_version))
+
+    # @server.app.route('/{}/git/<calendar_year>/<interval>/<repo_group>/loc_commits'.format(server.api_version))
     def cd_rg_tp_interval_loc_commits():
 
         repo_url_base = request.args.get('repo_url_base')

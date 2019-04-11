@@ -18,6 +18,9 @@ export default function Augur () {
   window.d3 = require('d3')
   window.SvgSaver = require('svgsaver')
   window.VueRouter = require('vue-router')
+  window.vegaEmbed = require('vega-embed')
+  window.vega = require('vega')
+  window.vegaLite = require('vega-lite')
   let router = require('./router/router').default
 
   window.AUGUR_CHART_STYLE = {
@@ -40,13 +43,13 @@ export default function Augur () {
       gitRepo: null,
       comparedRepos: [],
       trailingAverage: 180,
-      startDate: new Date('1 January 2011'),
+      startDate: new Date('1 February 2011'),
       endDate: new Date(),
       compare: 'rolling',
       showBelowAverage: false,
       rawWeekly: false,
       showArea: true,
-      showDetail: true,
+      showDetail: false,
       showTooltip: true,
       byDate: false
     },
@@ -200,15 +203,14 @@ export default function Augur () {
   // AugurApp.render = h => h(AugurApp)
 
   // window.AugurApp = new window.Vue(AugurApp).$mount('#app')
-
   router.beforeEach((to, from, next) => {
-    if(to.params.repo || to.params.groupid){
+    if (to.params.repo || to.params.groupid){
       if (!to.params.groupid && !to.params.comparedrepo){
         AugurApp.store.commit("resetTab")
         AugurApp.store.commit('setTab', {
           tab: to.name
         })
-        if (to.params.repo.includes('github')) {
+        if (to.params.repo.includes('github') || to.params.repo.split(".").length > 2) {
           AugurApp.store.commit('setRepo', {
             gitURL: to.params.repo
           })
@@ -217,7 +219,7 @@ export default function Augur () {
             githubURL: to.params.owner + '/' + to.params.repo
           })
         }
-      } else if(to.params.comparedrepo && augur.state.comparedRepos.length == 0) { 
+      } else if (to.params.comparedrepo && augur.state.comparedRepos.length == 0) { 
         let tab = to.name
         tab = tab.substring(0, tab.length-7)
         AugurApp.store.commit("resetTab")
@@ -230,7 +232,7 @@ export default function Augur () {
         AugurApp.store.commit('addComparedRepo', {
           githubURL: to.params.comparedowner + '/' + to.params.comparedrepo
         })
-      } else if(to.params.groupid && augur.state.comparedRepos.length == 0){
+      } else if (to.params.groupid && augur.state.comparedRepos.length == 0){
         AugurApp.store.commit("resetTab")
         let tab = to.name
         tab = tab.substring(0, tab.length-5)
