@@ -31,6 +31,7 @@ class User(Base):
     last_login_at = Column(DateTime, nullable=True)
     authenticated = Column(Boolean, default=False)
     active = Column(Boolean, default=True)
+    administrator = Column(Boolean, default=False)
     
     # Foreign Keys
     repo_groups = relationship('RepoGroup', secondary=user_has_repo_group, back_populates='users_of')

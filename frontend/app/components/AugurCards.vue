@@ -1,10 +1,7 @@
 <template>
    
   <div>
-    <div class="fullwidth">
-      <router-view name="header"></router-view>
-      <!-- <augur-header></augur-header> -->
-    </div>
+    <router-view name="header"></router-view>
 
     <div ref="cards" class="content">
       

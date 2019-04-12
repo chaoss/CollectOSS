@@ -26,9 +26,9 @@ default:
 	@ echo "    dev-stop                   Stops the backgrounded commands"
 	@ echo "    dev-restart                Runs dev-stop then dev-restart"
 	@ echo "    server            	       Runs a single instance of the server (useful for debugging)"
-	@ echo "    test    			       Runs all pytest unit tests and API tests"
+	@ echo "    test    			             Runs all pytest unit tests and API tests"
 	@ echo "    test-ds SOURCE={source}    Run pytest unit tests for the specified data source. Defaults to all"
-	@ echo "    test-api   			       Run API tests locally using newman"
+	@ echo "    test-api   			           Run API tests locally using newman"
 	@ echo "    build                      Builds documentation and frontend - use before pushing"
 	@ echo "    frontend                   Builds frontend with Brunch"
 	@ echo "    update-deps                Generates updated requirements.txt and environment.yml"
@@ -56,6 +56,7 @@ install:
 
 install-dev:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
+
 
 install-msr:
 	@ ./util/install-msr.sh
