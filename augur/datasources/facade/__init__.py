@@ -31,6 +31,7 @@ class FacadePlugin(AugurPlugin):
         Responsible for adding this plugin's data sources to the API
         """
         from .routes import create_routes
+
         create_routes(flask_app)
 
 FacadePlugin.augur_plugin_meta = {

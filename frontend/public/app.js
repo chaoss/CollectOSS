@@ -1164,14 +1164,11 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/AugurHeader.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
 module.exports = {
   data: function data() {
-    return {
-      'user': AUGUR_SESSION['username'],
-      'logoutLink': '/logout?next=' + encodeURI('http://' + window.location.host)
-    };
+    return {};
   },
 
   methods: {
@@ -4776,6 +4773,7 @@ exports.default = {
     console.log(config.data, this.source);
     if (config.data.length == 0) {
       this.spec;
+      this.renderError();
       return;
     }
     vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -110 }, mode: 'vega-lite' });
@@ -9695,7 +9693,350 @@ exports['default'] = SvgSaver;
 module.exports = exports['default'];
 });
 
-require.alias("buffer/index.js", "buffer");
+require.register("router/router.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _vueRouter = require('vue-router');
+
+var _vueRouter2 = _interopRequireDefault(_vueRouter);
+
+var _MetricsStatusCard = require('../components/MetricsStatusCard.vue');
+
+var _MetricsStatusCard2 = _interopRequireDefault(_MetricsStatusCard);
+
+var _BaseRepoActivityCard = require('../components/BaseRepoActivityCard.vue');
+
+var _BaseRepoActivityCard2 = _interopRequireDefault(_BaseRepoActivityCard);
+
+var _BaseRepoEcosystemCard = require('../components/BaseRepoEcosystemCard.vue');
+
+var _BaseRepoEcosystemCard2 = _interopRequireDefault(_BaseRepoEcosystemCard);
+
+var _GrowthMaturityDeclineCard = require('../components/GrowthMaturityDeclineCard');
+
+var _GrowthMaturityDeclineCard2 = _interopRequireDefault(_GrowthMaturityDeclineCard);
+
+var _RiskCard = require('../components/RiskCard');
+
+var _RiskCard2 = _interopRequireDefault(_RiskCard);
+
+var _ValueCard = require('../components/ValueCard');
+
+var _ValueCard2 = _interopRequireDefault(_ValueCard);
+
+var _DiversityInclusionCard = require('../components/DiversityInclusionCard');
+
+var _DiversityInclusionCard2 = _interopRequireDefault(_DiversityInclusionCard);
+
+var _GitCard = require('../components/GitCard');
+
+var _GitCard2 = _interopRequireDefault(_GitCard);
+
+var _OverviewCard = require('../components/OverviewCard.vue');
+
+var _OverviewCard2 = _interopRequireDefault(_OverviewCard);
+
+var _ExperimentalCard = require('../components/ExperimentalCard');
+
+var _ExperimentalCard2 = _interopRequireDefault(_ExperimentalCard);
+
+var _DownloadedReposCard = require('../components/DownloadedReposCard.vue');
+
+var _DownloadedReposCard2 = _interopRequireDefault(_DownloadedReposCard);
+
+var _LoginForm = require('../components/LoginForm');
+
+var _LoginForm2 = _interopRequireDefault(_LoginForm);
+
+var _AugurCards = require('../components/AugurCards.vue');
+
+var _AugurCards2 = _interopRequireDefault(_AugurCards);
+
+var _MainControls = require('../components/MainControls.vue');
+
+var _MainControls2 = _interopRequireDefault(_MainControls);
+
+var _AugurHeader = require('../components/AugurHeader.vue');
+
+var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
+
+var _Tabs = require('../components/Tabs.vue');
+
+var _Tabs2 = _interopRequireDefault(_Tabs);
+
+var _TableView = require('../components/TableView.vue');
+
+var _TableView2 = _interopRequireDefault(_TableView);
+
+var _ProjectDropdown = require('../components/ProjectDropdown.vue');
+
+var _ProjectDropdown2 = _interopRequireDefault(_ProjectDropdown);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var routes = [{ path: '/', component: _AugurCards2.default,
+  children: [{
+    path: "",
+    name: "reposcard",
+    components: {
+      header: _AugurHeader2.default,
+      // tabs: ProjectDropdown,
+      content: _DownloadedReposCard2.default
+      // controls: OverviewCard
+    }
+  }]
+}, { path: '/login', component: _LoginForm2.default }, { path: '/metrics_status',
+  component: _MetricsStatusCard2.default
+}, { path: '/single/:owner?/:repo', name: 'single', props: true, canReuse: false, component: _AugurCards2.default,
+  children: [{
+    path: "gmd",
+    name: "gmd",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusion",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "risk",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
+    }
+  }, {
+    path: "activity",
+    name: "activity",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _BaseRepoActivityCard2.default
+    }
+  }, {
+    path: "value",
+    name: "value",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ValueCard2.default
+    }
+  }, {
+    path: "experimental",
+    name: "experimental",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ExperimentalCard2.default
+    }
+  }, {
+    path: "git",
+    name: "git",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GitCard2.default
+    }
+  }, {
+    path: "overview",
+    name: "overview",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _OverviewCard2.default
+    }
+  }]
+},
+// {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
+{ path: '/compare/:owner?/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true, canReuse: false,
+  children: [{
+    path: "gmd",
+    name: "gmdcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusioncompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "riskcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
+    }
+  }, {
+    path: "value",
+    name: "valuecompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ValueCard2.default
+    }
+  }, {
+    path: "activity",
+    name: "activitycompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _BaseRepoActivityCard2.default
+    }
+  }, {
+    path: "experimental",
+    name: "experimentalcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ExperimentalCard2.default
+    }
+  }, {
+    path: "git",
+    name: "gitcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GitCard2.default
+    }
+  }]
+}, { path: '/groupcompare/:groupid', component: _AugurCards2.default, name: 'group', props: true, canReuse: false,
+  children: [{
+    path: "gmd",
+    name: "gmdgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusiongroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "riskgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
+    }
+  }, {
+    path: "value",
+    name: "valuegroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ValueCard2.default
+    }
+  }, {
+    path: "activity",
+    name: "activitygroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _BaseRepoActivityCard2.default
+    }
+  }, {
+    path: "experimental",
+    name: "experimentalgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ExperimentalCard2.default
+    }
+  }, {
+    path: "git",
+    name: "gitgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GitCard2.default
+    }
+  }, {
+    path: "overview",
+    name: "overviewgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _OverviewCard2.default
+    }
+  }]
+}];
+var downloadedRepos = [],
+    repos = [],
+    projects = [];
+window.AugurAPI.getDownloadedGitRepos().then(function (data) {
+
+  repos = window._.groupBy(data, 'project_name');
+  projects = Object.keys(repos);
+});
+// const routes = routerOptions.map(route => {
+//   // let route1 = Object.assign({}, route);
+//   return {
+//     route,
+//     component: () => require(`@/components/${route.component}.vue`)
+//   }
+// })
+
+
+exports.default = new _vueRouter2.default({
+  // routes,
+  routes: routes,
+  mode: 'history',
+  hashbang: false
+});
+});
+
+;require.alias("buffer/index.js", "buffer");
 require.alias("process/browser.js", "process");
 require.alias("vue/dist/vue.common.js", "vue");process = require('process');require.register("___globals___", function(exports, require, module) {
   

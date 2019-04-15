@@ -831,6 +831,7 @@ export default {
       console.log(config.data, this.source)
       if (config.data.length == 0){
         this.spec;
+        this.renderError()
         return
       }
       vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'}) 
