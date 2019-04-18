@@ -1164,11 +1164,14 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/AugurHeader.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
 
 module.exports = {
   data: function data() {
-    return {};
+    return {
+      'user': AUGUR_SESSION['username'],
+      'logoutLink': '/logout?next=' + encodeURI('http://' + window.location.host)
+    };
   },
 
   methods: {
