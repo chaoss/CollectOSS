@@ -21,7 +21,12 @@ Vagrant.configure("2") do |config|
   if Vagrant::Util::Platform.windows? then
       config.vm.synced_folder ".", "/vagrant/augur", type: "rsync", rsync__auto: true, rsync__exclude: ['./frontend/node_modules']
   else
+<<<<<<< HEAD
      config.vm.synced_folder ".", "/vagrant/augur", type: 'virtualbox', SharedFoldersEnableSymlinksCreate: false
+=======
+      config.vm.synced_folder ".", "/vagrant/augur", type: 'virtualbox', SharedFoldersEnableSymlinksCreate: false
+  end
+>>>>>>> Disable symlink creation in shared folders on Vagrant machine
 
   config.vm.provider "virtualbox" do |v|
     v.name = "augur"
