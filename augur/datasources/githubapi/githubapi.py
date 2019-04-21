@@ -154,6 +154,34 @@ class GitHubAPI(object):
 
         return df
 
+    @annotate(tag='pull_requests_open')
+    def pull_requests_open(self, owner, repo):
+      """
+      Total number of pull requests open
+
+      :param owner: The username of the repository owner
+      :param repo: The name of the repository
+      :return: Total count of pull requests open
+      """
+      url = "https://api.github.com/graphql"
+      query = '''
+              query($owner: String!, $name: String!) {
+                repository (owner: $owner, name:$name) {
+                  pullRequests (states: OPEN) {
+                    totalCount
+                  }
+                }
+              }
+              '''
+      variables = {'owner': owner, 'name': repo}
+      
+      r = requests.post(url, 
+                        auth=('user', self.GITHUB_API_KEY), 
+                        json={'query' : query, 'variables': variables})
+
+      count = r.json()['data']['repository']['pullRequests']['totalCount']
+
+      return {'count' : count}
 
 
     #####################################
