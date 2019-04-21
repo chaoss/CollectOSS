@@ -1164,14 +1164,11 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/AugurHeader.vue", function(exports, require, module) {
 ;(function(){
-'use strict';
+"use strict";
 
 module.exports = {
   data: function data() {
-    return {
-      'user': AUGUR_SESSION['username'],
-      'logoutLink': '/logout?next=' + encodeURI('http://' + window.location.host)
-    };
+    return {};
   },
 
   methods: {
@@ -1190,7 +1187,6 @@ module.exports = {
           name: 'gmd',
           params: { owner: repo.owner, repo: repo.name }
         });
-        window.location.reload();
       }
     }
   }
@@ -1707,9 +1703,15 @@ var _DynamicLineChart = require('./charts/DynamicLineChart');
 
 var _DynamicLineChart2 = _interopRequireDefault(_DynamicLineChart);
 
+<<<<<<< Updated upstream
 var _SkeletonChart = require('./charts/SkeletonChart');
 
 var _SkeletonChart2 = _interopRequireDefault(_SkeletonChart);
+=======
+var _FacadeTest = require('./FacadeTest');
+
+var _FacadeTest2 = _interopRequireDefault(_FacadeTest);
+>>>>>>> Stashed changes
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1718,7 +1720,11 @@ module.exports = {
     BubbleChart: _BubbleChart2.default,
     StackedBarChart: _StackedBarChart2.default,
     DynamicLineChart: _DynamicLineChart2.default,
+<<<<<<< Updated upstream
     SkeletonChart: _SkeletonChart2.default
+=======
+    FacadeTest: _FacadeTest2.default
+>>>>>>> Stashed changes
   },
   data: function data() {
     return {

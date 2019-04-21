@@ -35,7 +35,7 @@ module.exports = {
       'logoutLink': '/logout?next=' + encodeURI('http://' + window.location.host)
     }
   },
-  methods: {
+   methods: {
     onRepo (e) {
       let repo = window.AugurAPI.Repo({
           githubURL: e.target.value
@@ -51,7 +51,7 @@ module.exports = {
           name: 'gmd',
           params: {owner: repo.owner, repo: repo.name}
         })
-
+        window.location.reload()
       }
       
     }

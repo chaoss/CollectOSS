@@ -145,6 +145,7 @@ let routes = [
               content: DiversityInclusionCard
             }
           },
+            
           {
             path: "risk",
             name: "riskcompare",
