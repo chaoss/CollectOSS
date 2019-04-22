@@ -240,66 +240,66 @@ def create_routes(server):
 
     server.addGitMetric(facade.facade_project, 'facade_project')
 
-    @server.app.route('/{}/git/cd_rg_tp_ranked_loc'.format(server.api_version))
-    def cd_rg_tp_ranked_loc():
+    @server.app.route('/{}/git/annual_lines_of_code_count_ranked_by_repo_in_repo_group'.format(server.api_version))
+    def annual_lines_of_code_count_ranked_by_repo_in_repo_group():
 
         repo_url_base = request.args.get('repo_url_base')
 
         timeframe = request.args.get('timeframe')
         repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rg_tp_ranked_loc, args=([]), repo_url_base=repo_url_base, kwargs=({'timeframe': timeframe, 'repo_group': repo_group}))
+        data = server.transform(facade.annual_lines_of_code_count_ranked_by_repo_in_repo_group, args=([]), repo_url_base=repo_url_base, kwargs=({'timeframe': timeframe, 'repo_group': repo_group}))
 
         return Response(response=data,
                        status=200,
                        mimetype="application/json")
 
     # server.addGitMetric(facade.top_repos_commits, 'top_repos_commits')
-    @server.app.route('/{}/git/cd_rg_tp_ranked_commits'.format(server.api_version))
-    def cd_rg_tp_ranked_commits():
+    @server.app.route('/{}/git/annual_commit_count_ranked_by_repo_in_repo_group'.format(server.api_version))
+    def annual_commit_count_ranked_by_repo_in_repo_group():
 
         repo_url_base = request.args.get('repo_url_base')
 
         timeframe = request.args.get('timeframe')
         repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rg_tp_ranked_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'timeframe': timeframe, 'repo_group': repo_group}))
+        data = server.transform(facade.annual_commit_count_ranked_by_repo_in_repo_group, args=([]), repo_url_base=repo_url_base, kwargs=({'timeframe': timeframe, 'repo_group': repo_group}))
 
         return Response(response=data,
                        status=200,
                        mimetype="application/json")
 
-    @server.app.route('/{}/git/cd_rg_newrep_ranked_loc'.format(server.api_version))
-    def cd_rg_newrep_ranked_loc():
+    @server.app.route('/{}/git/annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'.format(server.api_version))
+    def annual_lines_of_code_count_ranked_by_new_repo_in_repo_group():
 
         repo_url_base = request.args.get('repo_url_base')
 
         calendar_year = request.args.get('calendar_year')
         repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rg_newrep_ranked_loc, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'repo_group': repo_group}))
+        data = server.transform(facade.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'repo_group': repo_group}))
 
         return Response(response=data,
                        status=200,
                        mimetype="application/json")
 
-    # server.addGitMetric(facade.cd_rg_newrep_ranked_commits, 'top_new_repos_commits')
-    @server.app.route('/{}/git/cd_rg_newrep_ranked_commits'.format(server.api_version))
-    def cd_rg_newrep_ranked_commits():
+    # server.addGitMetric(facade.annual_commit_count_ranked_by_new_repo_in_repo_group, 'top_new_repos_commits')
+    @server.app.route('/{}/git/annual_commit_count_ranked_by_new_repo_in_repo_group'.format(server.api_version))
+    def annual_commit_count_ranked_by_new_repo_in_repo_group():
 
         repo_url_base = request.args.get('repo_url_base')
 
         calendar_year = request.args.get('calendar_year')
         repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rg_newrep_ranked_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'repo_group': repo_group}))
+        data = server.transform(facade.annual_commit_count_ranked_by_new_repo_in_repo_group, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'repo_group': repo_group}))
 
         return Response(response=data,
                        status=200,
                        mimetype="application/json")
 
-    @server.app.route('/{}/git/cd_rep_tp_interval_loc_commits'.format(server.api_version))
-    def cd_rep_tp_interval_loc_commits():
+    @server.app.route('/{}/git/lines_of_code_commit_counts_by_calendar_year_grouped'.format(server.api_version))
+    def lines_of_code_commit_counts_by_calendar_year_grouped():
 
         repo_url_base = request.args.get('repo_url_base')
 
@@ -307,14 +307,14 @@ def create_routes(server):
         interval = request.args.get('interval')
         # repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rep_tp_interval_loc_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
+        data = server.transform(facade.lines_of_code_commit_counts_by_calendar_year_grouped, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
 
         return Response(response=data,
                        status=200,
                        mimetype="application/json")
 
-    @server.app.route('/{}/git/cd_rep_tp_interval_loc_commits_ua'.format(server.api_version))
-    def cd_rep_tp_interval_loc_commits_ua():
+    @server.app.route('/{}/git/unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped'.format(server.api_version))
+    def unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped():
 
         repo_url_base = request.args.get('repo_url_base')
 
@@ -322,16 +322,16 @@ def create_routes(server):
         interval = request.args.get('interval')
         # repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rep_tp_interval_loc_commits_ua, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
+        data = server.transform(facade.unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
 
         return Response(response=data,
                        status=200,
                        mimetype="application/json")
 
-    @server.app.route('/{}/git/cd_rg_tp_interval_loc_commits'.format(server.api_version))
+    @server.app.route('/{}/git/repo_group_lines_of_code_commit_counts_calendar_year_grouped'.format(server.api_version))
 
     # @server.app.route('/{}/git/<calendar_year>/<interval>/<repo_group>/loc_commits'.format(server.api_version))
-    def cd_rg_tp_interval_loc_commits():
+    def repo_group_lines_of_code_commit_counts_calendar_year_grouped():
 
         repo_url_base = request.args.get('repo_url_base')
 
@@ -339,7 +339,7 @@ def create_routes(server):
         interval = request.args.get('interval')
         repo_group = request.args.get('repo_group')
 
-        data = server.transform(facade.cd_rg_tp_interval_loc_commits, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval, 'repo_group': repo_group}))
+        data = server.transform(facade.repo_group_lines_of_code_commit_counts_calendar_year_grouped, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval, 'repo_group': repo_group}))
 
         return Response(response=data,
                        status=200,

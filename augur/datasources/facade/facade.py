@@ -175,8 +175,8 @@ class Facade(object):
     # rep - repo
     # ua - unaffiliated
 
-    @annotate(tag='cd-rg-newrep-ranked-commits')
-    def cd_rg_newrep_ranked_commits(self, repo_url, calendar_year=None, repo_group=None):
+    @annotate(tag='annual-commit-count-ranked-by-new-repo-in-repo-group')
+    def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_url, calendar_year=None, repo_group=None):
         """
         For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
         calendar year (a new repo in that year), 
@@ -224,8 +224,8 @@ class Facade(object):
         results = pd.read_sql(cdRgNewrepRankedCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group, "calendar_year": calendar_year})
         return results
 
-    @annotate(tag='cd-rg-newrep-ranked-loc')
-    def cd_rg_newrep_ranked_loc(self, repo_url, calendar_year=None, repo_group=None):
+    @annotate(tag='annual-lines-of-code-count-ranked-by-new-repo-in-repo-group')
+    def annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(self, repo_url, calendar_year=None, repo_group=None):
         """
         For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
         calendar year (a new repo in that year), 
@@ -274,8 +274,8 @@ class Facade(object):
         results = pd.read_sql(cdRgNewrepRankedLocSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group, "calendar_year": calendar_year})
         return results
 
-    @annotate(tag='cd-rg-tp-ranked-commits')
-    def cd_rg_tp_ranked_commits(self, repo_url, timeframe=None, repo_group=None):
+    @annotate(tag='annual-commit-count-ranked-by-repo-in-repo-group')
+    def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_url, timeframe=None, repo_group=None):
         """
         For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
         Year or Week. Result ranked from highest number of commits to lowest by default. 
@@ -377,8 +377,8 @@ class Facade(object):
         results = pd.read_sql(cdRgTpRankedCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group})
         return results
 
-    @annotate(tag='cd-rg-tp-ranked-loc')
-    def cd_rg_tp_ranked_loc(self, repo_url, timeframe=None, repo_group=None):
+    @annotate(tag='annual-lines-of-code-count-ranked-by-repo-in-repo-group')
+    def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_url, timeframe=None, repo_group=None):
         """
         For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
         Year or Week. Result ranked from highest number of LOC to lowest by default. 
@@ -481,8 +481,8 @@ class Facade(object):
         results = pd.read_sql(cdRgTpRankedLocSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group})
         return results
 
-    @annotate(tag='cd-rep-tp-interval-loc-commits')
-    def cd_rep_tp_interval_loc_commits(self, repo_url, calendar_year=None, interval=None):
+    @annotate(tag='lines-of-code-commit-counts-by-calendar-year-grouped')
+    def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None):
         """
         For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval (week or month)
         
@@ -533,8 +533,8 @@ class Facade(object):
         results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
         return results
 
-    @annotate(tag='cd-rep-tp-interval-loc-commits-ua')
-    def cd_rep_tp_interval_loc_commits_ua(self, repo_url, calendar_year=None, interval=None, repo_group=None):
+    @annotate(tag='unaffiliated-contributors-lines-of-code-commit-counts-by-calendar-year-grouped')
+    def unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None, repo_group=None):
         """
         For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval 
         (week or month) and by the affiliation of individuals and domains that are not mapped as "inside" within the repositories gitdm file. 
@@ -636,8 +636,8 @@ class Facade(object):
         results = pd.read_sql(cdRepTpIntervalLocCommitsUaSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "repo_group": repo_group, 'calendar_year': calendar_year})
         return results
 
-    @annotate(tag='cd-rg-tp-interval-loc-commits')
-    def cd_rg_tp_interval_loc_commits(self, repo_url, calendar_year=None, interval=None, repo_group=None):
+    @annotate(tag='repo-group-lines-of-code-commit-counts-calendar-year-grouped')
+    def repo_group_lines_of_code_commit_counts_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None, repo_group=None):
         """
         For each repository in a collection of repositories, all the commits and lines of code occuring for the specified year, 
         grouped by repository and the specified interval (week or month). Results ordered by repo. 

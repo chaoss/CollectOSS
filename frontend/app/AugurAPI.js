@@ -289,11 +289,11 @@ export default class AugurAPI {
     if (repo.gitURL) {
       // Other
       GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'),
-      GitEndpoint(repo, 'cdRepTpIntervalLocCommits', 'cd_rep_tp_interval_loc_commits'),
-      GitEndpoint(repo, 'cdRgTpRankedLoc', 'cd_rg_tp_ranked_loc'),
-      GitEndpoint(repo, 'cdRgTpRankedCommits', 'cd_rg_tp_ranked_commits'),
-      GitEndpoint(repo, 'cdRgNewrepRankedLoc', 'cd_rg_newrep_ranked_loc'),
-      GitEndpoint(repo, 'cdRgNewrepRankedCommits', 'cd_rg_newrep_ranked_commits')
+      GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped'),
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group'),
+      GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group'),
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'),
+      GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group')
       GitEndpoint(repo, 'facadeProject', 'facade_project')
     }
 
