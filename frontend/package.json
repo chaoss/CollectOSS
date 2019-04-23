@@ -34,6 +34,7 @@
     "moment": "^2.22.2",
     "npm": "^6.2.0",
     "query-string2": "^0.1.2",
+    "shards-vue": "^1.0.7",
     "svgsaver": "^0.9.0",
     "vega": "^4.1.0",
     "vega-embed": "^3.18.1",

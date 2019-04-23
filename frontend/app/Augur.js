@@ -3,6 +3,12 @@ const queryString = require('query-string')
 // import AugurApp from './components/AugurApp.vue'
 // import router from './router/router'
 // import AugurCards from './components/AugurCards.vue'
+// import Vue from 'vue';
+// import ShardsVue from "shards-vue";
+// Vue.use(ShardsVue);\
+// import { Button } from 'shards-vue/src/components'
+// Vue.use(Button)
+// import router from './router';
 
 
 export default function Augur () {
@@ -19,7 +25,11 @@ export default function Augur () {
   window.d3 = require('d3')
   window.SvgSaver = require('svgsaver')
   window.VueRouter = require('vue-router')
-  let router = require('./router/router').default
+  window.ShardsVue = require('shards-vue')
+
+
+  
+  let router = require('./router.js').default
 
 
   window.AUGUR_CHART_STYLE = {
@@ -29,6 +39,7 @@ export default function Augur () {
 
   let AugurApp = require('./components/AugurApp')
 
+  window.Vue.use(window.ShardsVue);
   window.Vue.use(window.Vuex)
   window.Vue.use(window.VueVega)
   window.Vue.use(window.VueRouter)
