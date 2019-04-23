@@ -135,6 +135,51 @@ def create_routes(server):
     """
     server.addTimeseries(github.open_issues, 'githubapi/issues')
 
+    """
+    @api {get} /:owner/:repo/githubapi/pull_requests_closed Pull Requests Closed
+    @apiName githubapi-pull-requests-Closed
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/ComputationalMystics/wg-gmd/blob/master/activity-metrics/pull-requests-closed.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        {'count': 6}
+    """
+    server.addMetric(github.pull_requests_closed, 'githubapi/pull_requests_closed')
+
+    """
+    @api {get} /:owner/:repo/githubapi/pull_requests_merged Pull Requests Merged
+    @apiName githubapi-pull-requests-merged
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        {'count': 84}
+    """
+    server.addMetric(github.pull_requests_merged, 'githubapi/pull_requests_merged')
+
+    """
+    @api {get} /:owner/:repo/githubapi/pull_requests_open Pull Requests Open
+    @apiName githubapi-pull-requests-open
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/ComputationalMystics/wg-gmd/blob/master/activity-metrics/pull-requests-open.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        {'count': 3}
+    """
+    server.addMetric(github.pull_requests_open, 'githubapi/pull_requests_open')
+
     #####################################
     ###            RISK               ###
     #####################################
@@ -166,7 +211,7 @@ def create_routes(server):
     """
     server.addMetric(github.repository_size, "githubapi/repository_size")
 
-    
+
 
     #####################################
     ###         EXPERIMENTAL          ###
