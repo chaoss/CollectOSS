@@ -134,7 +134,7 @@ Clone the repo and install the libraries and tools needed by Augur
 
 **Make sure you have a database user that has select access to the
 database where you installed `GHTorrent <http://ghtorrent.org/>`__ and
-all priviledges on another database for Augur.**
+all privileges on another database for Augur.**
 
 .. code:: sql
 
@@ -142,7 +142,7 @@ all priviledges on another database for Augur.**
     GRANT SELECT ON ghtorrent.* TO 'augur'@'localhost';
 
     CREATE DATABASE augur;
-    GRANT ALL PRIVILEDGES ON augur.* TO 'augur'@'localhost';
+    GRANT ALL PRIVILEGES ON augur.* TO 'augur'@'localhost';
 
 Augur runs in an Anaconda environment. To get started, activate the environment and then 
 run ``augur``.
