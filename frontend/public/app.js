@@ -9670,10 +9670,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _SmallStats = require('../components/common/SmallStats.vue');
-
-var _SmallStats2 = _interopRequireDefault(_SmallStats);
-
 var _SparkChart = require('../components/charts/SparkChart.vue');
 
 var _SparkChart2 = _interopRequireDefault(_SparkChart);
@@ -9684,83 +9680,8 @@ var _InsightChart2 = _interopRequireDefault(_InsightChart);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var PostsListTwo = [{
-  category: 'Travel',
-  categoryTheme: 'info',
-  author: 'Anna Ken',
-  title: 'Attention he extremity unwilling on otherwise cars backwards yet',
-  body: 'Conviction up partiality as delightful is discovered. Yet jennings resolved disposed exertion you off. Left did fond drew fat head poor jet pan flying over...',
-  date: '29 February 2019'
-}, {
-  category: 'Business',
-  categoryTheme: 'dark',
-  author: 'John James',
-  title: 'Totally words widow one downs few age every seven if miss part by fact',
-  body: 'Discovered had get considered projection who favourable. Necessary up knowledge it tolerably. Unwilling departure education to admitted speaking...',
-  date: '29 February 2019'
-}, {
-  category: 'Business',
-  categoryTheme: 'dark',
-  author: 'John James',
-  title: 'Totally words widow one downs few age every seven if miss part by fact',
-  body: 'Discovered had get considered projection who favourable. Necessary up knowledge it tolerably. Unwilling departure education to admitted speaking...',
-  date: '29 February 2019'
-}];
-
-var PostsListThree = [{
-  author: 'John James',
-  title: 'Had denoting properly jointure which well books beyond',
-  body: 'In said to of poor full be post face snug. Introduced imprudence see say unpleasing devonshire acceptance son. Exeter longer wisdom work...',
-  date: '29 February 2019'
-}, {
-  author: 'John James',
-  title: 'Husbands ask repeated resolved but laughter debating',
-  body: 'It abode words began enjoy years no do ﻿no. Tried spoil as heart visit blush or. Boy possible blessing sensible set but margaret interest. Off tears...',
-  date: '29 February 2019'
-}, {
-  author: 'John James',
-  title: 'Instantly gentleman contained belonging exquisite now direction',
-  body: 'West room at sent if year. Numerous indulged distance old law you. Total state as merit court green decay he. Steepest merit checking railway...',
-  date: '29 February 2019'
-}];
-
-var PostsListFour = [{
-  author: 'Alene Trenton',
-  authorUrl: '#',
-  category: 'News',
-  categoryUrl: '#',
-  title: 'Extremity so attending objection as engrossed',
-  body: 'Pursuit chamber as elderly amongst on. Distant however warrant farther to of. My justice wishing prudent waiting in be...',
-  date: '29 February 2019'
-}, {
-  author: 'Chris Jamie',
-  authorUrl: '#',
-  category: 'News',
-  categoryUrl: '#',
-  title: 'Bed sincerity yet therefore forfeited his',
-  body: 'Speaking throwing breeding betrayed children my to. Me marianne no he horrible produced ye. Sufficient unpleasing and...',
-  date: '29 February 2019'
-}, {
-  author: 'Monica Jordan',
-  authorUrl: '#',
-  category: 'News',
-  categoryUrl: '#',
-  title: 'Object remark lively all did feebly excuse our',
-  body: 'Morning prudent removal an letters by. On could my in order never it. Or excited certain sixteen it to parties colonel not seeing...',
-  date: '29 February 2019'
-}, {
-  author: 'Monica Jordan',
-  authorUrl: '#',
-  category: 'News',
-  categoryUrl: '#',
-  title: 'His followed carriage proposal entrance',
-  body: 'For county now sister engage had season better had waited. Occasional mrs interested far expression directly as regard...',
-  date: '29 February 2019'
-}];
-
 exports.default = {
   components: {
-    SmallStats: _SmallStats2.default,
     SparkChart: _SparkChart2.default,
     InsightChart: _InsightChart2.default
   },
@@ -9770,9 +9691,6 @@ exports.default = {
       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-      PostsListTwo: PostsListTwo,
-      PostsListThree: PostsListThree,
-      PostsListFour: PostsListFour,
       repos: {},
       projects: [],
       themes: ['dark', 'info', 'royal-blue', 'warning'],
@@ -9986,7 +9904,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(project))]),_vm._v(" "),(_vm.loaded)?_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"color":_vm.colors[idx],"source":_vm.testEndpoints[idx],"owner":"twitter","repo":"twemoji"}}):_vm._e(),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"2rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repos[project][0].url))+"/"+_vm._s(_vm.getRepo(_vm.repos[project][0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1)}),_vm._v(" "),_c('d-col',{staticClass:"col-3"},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("7,128 / 18,432")])])])])])],1)],2),_vm._v(" "),_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"0 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Most Frequent Projects")])])]),_vm._v(" "),_c('d-row',_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repos[project].slice(0,5)),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v(_vm._s(repo.url))]),_vm._v(" "),(_vm.loaded)?_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"10px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"owner":_vm.getOwner(repo.url),"repo":_vm.getRepo(repo.url),"source":"codeCommits"}}):_vm._e()],1)}))])])],1)})),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListThree),function(post,idx){return _c('d-col',{key:idx,attrs:{"lg":"4"}},[_c('d-card',{staticClass:"card-small card-post mb-4"},[_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_vm._v(_vm._s(post.title))]),_vm._v(" "),_c('p',{staticClass:"card-text text-muted"},[_vm._v(_vm._s(post.body))])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top d-flex"},[_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",attrs:{"href":"#"}},[_vm._v("Written by James Khan")]),_vm._v(" "),_c('div',{staticClass:"d-flex flex-column justify-content-center ml-3"},[_c('span',{staticClass:"card-post__author-name"},[_vm._v(_vm._s(post.author))]),_vm._v(" "),_c('small',{staticClass:"text-muted"},[_vm._v(_vm._s(post.date))])])]),_vm._v(" "),_c('div',{staticClass:"my-auto ml-auto"},[_c('d-button',{staticClass:"btn-white",attrs:{"size":"sm"}},[_c('i',{staticClass:"far fa-bookmark mr-1"}),_vm._v(" Bookmark\n            ")])],1)])],1)],1)})),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListFour),function(post,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post h-10"},[_c('div',{staticClass:"card-post__image"}),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(post.title))])]),_vm._v(" "),_c('p',{staticClass:"card-text"},[_vm._v(_vm._s(post.body))])]),_vm._v(" "),_c('d-card-footer',{staticClass:"text-muted border-top py-3"},[_c('span',{staticClass:"d-inline-block"},[_vm._v("By "),_c('a',{staticClass:"text-fiord-blue",attrs:{"href":post.authorUrl}},[_vm._v(_vm._s(post.author))]),_vm._v(" in "),_c('a',{staticClass:"text-fiord-blue",attrs:{"href":post.categoryUrl}},[_vm._v(_vm._s(post.category))])])])],1)],1)}))],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(project))]),_vm._v(" "),(_vm.loaded)?_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"color":_vm.colors[idx],"source":_vm.testEndpoints[idx],"owner":"twitter","repo":"twemoji"}}):_vm._e(),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"2rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repos[project][0].url))+"/"+_vm._s(_vm.getRepo(_vm.repos[project][0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1)}),_vm._v(" "),_c('d-col',{staticClass:"col-3"},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("7,128 / 18,432")])])])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top"},[_c('d-row',[_c('d-col',[_c('d-select',{staticStyle:{"max-width":"130px"},attrs:{"size":"sm","value":"last-week"}},[_c('option',{attrs:{"value":"last-week"}},[_vm._v("Sort")]),_vm._v(" "),_c('option',{attrs:{"value":"today"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-month"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-year"}},[_vm._v("?")])])],1),_vm._v(" "),_c('d-col',{staticClass:"text-right view-report col-8"},[_c('a',{attrs:{"href":"#"}},[_vm._v("All workers and priority options →")])])],1)],1)],1)],1)],2),_vm._v(" "),_c('div',{staticStyle:{"transform":"translateY(-20px)"}},[_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"0 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Most Frequent Projects")])])]),_vm._v(" "),_c('d-row',_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repos[project].slice(0,5)),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v(_vm._s(repo.url))]),_vm._v(" "),(_vm.loaded)?_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"10px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"owner":_vm.getOwner(repo.url),"repo":_vm.getRepo(repo.url),"source":"codeCommits"}}):_vm._e()],1)}))])])],1)}))],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
