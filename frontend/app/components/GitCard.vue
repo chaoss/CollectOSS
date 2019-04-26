@@ -10,7 +10,7 @@
         <div v-if="!loaded" style="text-align: center; margin-left: 44.4%; position: relative !important" class="col col-12 spinner loader"></div>
 
       
-      <div class="row" style="transform: translateY(-40px) !important" v-if="loaded">
+      <div class="row" style="transform: translateY(-10px) !important" v-if="loaded">
         <div class="col col-12">
           <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
         </div>
