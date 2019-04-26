@@ -8,8 +8,8 @@ CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activat
 OLDVERSION="null"
 EDITOR?="vi"
 SOURCE=**
-AUGUR_PIP?='$(AUGUR_PYTHON) -m pip'
 AUGUR_PYTHON?='python'
+AUGUR_PIP?='pip'
 
 default:
 	@ echo "Installation Commands:"
