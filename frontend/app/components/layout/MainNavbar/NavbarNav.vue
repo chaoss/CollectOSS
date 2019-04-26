@@ -1,6 +1,6 @@
 <template>
   <d-navbar-nav class="border-left flex-row">
-    <li class="nav-item border-right dropdown notifications">
+    <li class="nav-item border-right dropdown notifications" style="width: auto !important">
       <a class="nav-link nav-link-icon text-center" v-d-toggle.notifications>
         <div class="nav-link-icon__wrapper">
           <i class="material-icons">&#xE7F4;</i>
@@ -33,9 +33,11 @@
         <d-dropdown-item class="notification__all text-center">View all Notifications</d-dropdown-item>
       </d-collapse>
     </li>
-    <li class="nav-item dropdown">
-      <a class="nav-link dropdown-toggle text-nowrap px-3" v-d-toggle.user-actions>
-        <img class="user-avatar rounded-circle mr-2" src="@/assets/images/avatars/0.jpg" alt="User Avatar"> <span class="d-none d-md-inline-block">Sierra Brooks</span>
+    <li class="nav-item dropdown" style="width: auto !important;">
+      <a class="nav-link dropdown-toggle text-nowrap px-3" v-d-toggle.user-actions style="position: relative; top: 50%; transform: translateY(-50%);font-size: 20px !important">
+        <!-- <img class="user-avatar rounded-circle mr-2" src="@/assets/images/avatars/0.jpg" alt="User Avatar">  -->
+        <i class="material-icons">person</i>
+        <span class="d-none d-md-inline-block">Gabe Gabe</span>
       </a>
       <d-collapse id="user-actions" class="dropdown-menu dropdown-menu-small">
         <d-dropdown-item><i class="material-icons">&#xE7FD;</i> Profile</d-dropdown-item>

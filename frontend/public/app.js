@@ -4966,6 +4966,110 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/charts/InsightChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['repo', 'owner', 'source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'color'],
+  data: function data() {
+    return {
+      values: [],
+      user: null
+    };
+  },
+
+  computed: {
+    spec: function spec() {
+      var _this = this;
+
+      var repo = window.AugurAPI.Repo({ githubURL: this.owner + '/' + this.repo });
+      if (!this.data) {
+        repo[this.source]().then(function (data) {
+
+          _this.values = _this.convertKey(data);
+          console.log(_this.values);
+        });
+      }
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "width": 363.5,
+        "height": 165,
+        "padding": { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 },
+
+        "mark": "line",
+        "encoding": {
+          "x": {
+            "timeUnit": "yearmonth", "field": "date", "type": "temporal",
+            "axis": { "labels": false, "grid": false, "title": false, "ticks": false }
+          },
+          "y": {
+            "field": "value", "type": "quantitative",
+            "axis": { "labels": false, "grid": false, "title": false, "ticks": false }
+          },
+          "color": { "value": this.color }
+        }
+
+      };
+
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.spinner').removeClass('loader');
+
+      return config;
+    }
+  },
+  methods: {
+    renderChart: function renderChart() {},
+    convertKey: function convertKey(ary) {
+      ary.forEach(function (el) {
+
+        var keys = Object.keys(el);
+        var field = null;
+        keys.forEach(function (key) {
+          if (el[key] != null && key != 'date') {
+            console.log(key);
+            field = key;
+          }
+        });
+        el['value'] = el[field];
+        el['field'] = field;
+      });
+      return ary;
+    }
+  }
+
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder",staticStyle:{"position":"relative","z-index":"5"}},[_c('div',{staticClass:"chart hidefirst "},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-1bac4f83", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-1bac4f83", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/charts/LinesOfCodeChart.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -5618,6 +5722,109 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-5685f17a", __vue__options__)
   } else {
     hotAPI.reload("data-v-5685f17a", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/SparkChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['repo', 'owner', 'source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'color'],
+  data: function data() {
+    return {
+      values: [],
+      user: null
+    };
+  },
+
+  computed: {
+    spec: function spec() {
+      var _this = this;
+
+      var repo = window.AugurAPI.Repo({ githubURL: this.owner + '/' + this.repo });
+      if (!this.data) {
+        repo[this.source]().then(function (data) {
+
+          _this.values = _this.convertKey(data);
+          console.log(_this.values);
+        });
+      }
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "width": 100,
+        "height": 50,
+
+        "mark": "line",
+        "encoding": {
+          "x": {
+            "timeUnit": "yearmonth", "field": "date", "type": "temporal",
+            "axis": { "labels": false, "grid": false, "title": false, "ticks": false }
+          },
+          "y": {
+            "field": "value", "type": "quantitative",
+            "axis": { "labels": false, "grid": false, "title": false, "ticks": false }
+          },
+          "color": { "value": this.color }
+        }
+
+      };
+
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.spinner').removeClass('loader');
+
+      return config;
+    }
+  },
+  methods: {
+    renderChart: function renderChart() {},
+    convertKey: function convertKey(ary) {
+      ary.forEach(function (el) {
+
+        var keys = Object.keys(el);
+        var field = null;
+        keys.forEach(function (key) {
+          if (el[key] != null && key != 'date') {
+            console.log(key);
+            field = key;
+          }
+        });
+        el['value'] = el[field];
+        el['field'] = field;
+      });
+      return ary;
+    }
+  }
+
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder",staticStyle:{"position":"relative","z-index":"5"}},[_c('div',{staticClass:"chart hidefirst "},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-92f339c4", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-92f339c4", __vue__options__)
   }
 })()}
 });
@@ -6618,7 +6825,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert(".nav-link:hover {\n  cursor: pointer;\n}")
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-navbar-nav',{staticClass:"border-left flex-row"},[_c('li',{staticClass:"nav-item border-right dropdown notifications"},[_c('a',{directives:[{name:"d-toggle",rawName:"v-d-toggle.notifications",modifiers:{"notifications":true}}],staticClass:"nav-link nav-link-icon text-center"},[_c('div',{staticClass:"nav-link-icon__wrapper"},[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" "),_c('d-badge',{attrs:{"pill":"","theme":"danger"}},[_vm._v("2")])],1)]),_vm._v(" "),_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":"notifications"}},[_c('d-dropdown-item',[_c('div',{staticClass:"notification__icon-wrapper"},[_c('div',{staticClass:"notification__icon"},[_c('i',{staticClass:"material-icons"},[_vm._v("")])])]),_vm._v(" "),_c('div',{staticClass:"notification__content"},[_c('span',{staticClass:"notification__category"},[_vm._v("Analytics")]),_vm._v(" "),_c('p',[_vm._v("Your website’s active users count increased by "),_c('span',{staticClass:"text-success text-semibold"},[_vm._v("28%")]),_vm._v(" in the last week. Great job!")])])]),_vm._v(" "),_c('d-dropdown-item',{attrs:{"href":"#"}},[_c('div',{staticClass:"notification__icon-wrapper"},[_c('div',{staticClass:"notification__icon"},[_c('i',{staticClass:"material-icons"},[_vm._v("")])])]),_vm._v(" "),_c('div',{staticClass:"notification__content"},[_c('span',{staticClass:"notification__category"},[_vm._v("Sales")]),_vm._v(" "),_c('p',[_vm._v("Last week your store’s sales count decreased by "),_c('span',{staticClass:"text-danger text-semibold"},[_vm._v("5.52%")]),_vm._v(". It could have been worse!")])])]),_vm._v(" "),_c('d-dropdown-item',{staticClass:"notification__all text-center"},[_vm._v("View all Notifications")])],1)],1),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown"},[_c('a',{directives:[{name:"d-toggle",rawName:"v-d-toggle.user-actions",modifiers:{"user-actions":true}}],staticClass:"nav-link dropdown-toggle text-nowrap px-3"},[_c('img',{staticClass:"user-avatar rounded-circle mr-2",attrs:{"src":"@/assets/images/avatars/0.jpg","alt":"User Avatar"}}),_vm._v(" "),_c('span',{staticClass:"d-none d-md-inline-block"},[_vm._v("Sierra Brooks")])]),_vm._v(" "),_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":"user-actions"}},[_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Profile")]),_vm._v(" "),_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Edit Profile")]),_vm._v(" "),_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Files")]),_vm._v(" "),_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Transactions")]),_vm._v(" "),_c('d-dropdown-divider'),_vm._v(" "),_c('d-dropdown-item',{staticClass:"text-danger",attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons text-danger"},[_vm._v("")]),_vm._v(" Logout\n      ")])],1)],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-navbar-nav',{staticClass:"border-left flex-row"},[_c('li',{staticClass:"nav-item border-right dropdown notifications",staticStyle:{"width":"auto !important"}},[_c('a',{directives:[{name:"d-toggle",rawName:"v-d-toggle.notifications",modifiers:{"notifications":true}}],staticClass:"nav-link nav-link-icon text-center"},[_c('div',{staticClass:"nav-link-icon__wrapper"},[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" "),_c('d-badge',{attrs:{"pill":"","theme":"danger"}},[_vm._v("2")])],1)]),_vm._v(" "),_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":"notifications"}},[_c('d-dropdown-item',[_c('div',{staticClass:"notification__icon-wrapper"},[_c('div',{staticClass:"notification__icon"},[_c('i',{staticClass:"material-icons"},[_vm._v("")])])]),_vm._v(" "),_c('div',{staticClass:"notification__content"},[_c('span',{staticClass:"notification__category"},[_vm._v("Analytics")]),_vm._v(" "),_c('p',[_vm._v("Your website’s active users count increased by "),_c('span',{staticClass:"text-success text-semibold"},[_vm._v("28%")]),_vm._v(" in the last week. Great job!")])])]),_vm._v(" "),_c('d-dropdown-item',{attrs:{"href":"#"}},[_c('div',{staticClass:"notification__icon-wrapper"},[_c('div',{staticClass:"notification__icon"},[_c('i',{staticClass:"material-icons"},[_vm._v("")])])]),_vm._v(" "),_c('div',{staticClass:"notification__content"},[_c('span',{staticClass:"notification__category"},[_vm._v("Sales")]),_vm._v(" "),_c('p',[_vm._v("Last week your store’s sales count decreased by "),_c('span',{staticClass:"text-danger text-semibold"},[_vm._v("5.52%")]),_vm._v(". It could have been worse!")])])]),_vm._v(" "),_c('d-dropdown-item',{staticClass:"notification__all text-center"},[_vm._v("View all Notifications")])],1)],1),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown",staticStyle:{"width":"auto !important"}},[_c('a',{directives:[{name:"d-toggle",rawName:"v-d-toggle.user-actions",modifiers:{"user-actions":true}}],staticClass:"nav-link dropdown-toggle text-nowrap px-3",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-50%)","font-size":"20px !important"}},[_c('i',{staticClass:"material-icons"},[_vm._v("person")]),_vm._v(" "),_c('span',{staticClass:"d-none d-md-inline-block"},[_vm._v("Gabe Gabe")])]),_vm._v(" "),_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":"user-actions"}},[_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Profile")]),_vm._v(" "),_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Edit Profile")]),_vm._v(" "),_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Files")]),_vm._v(" "),_c('d-dropdown-item',[_c('i',{staticClass:"material-icons"},[_vm._v("")]),_vm._v(" Transactions")]),_vm._v(" "),_c('d-dropdown-divider'),_vm._v(" "),_c('d-dropdown-item',{staticClass:"text-danger",attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons text-danger"},[_vm._v("")]),_vm._v(" Logout\n      ")])],1)],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -6636,7 +6843,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;require.register("components/layout/MainNavbar/NavbarSearch.vue", function(exports, require, module) {
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-form',{staticClass:"main-navbar__search w-100 d-none d-md-flex d-lg-flex"},[_c('d-input-group',{staticClass:"ml-3",attrs:{"seamless":""}},[_c('d-input-group-text',{attrs:{"slot":"prepend"},slot:"prepend"},[_c('i',{staticClass:"material-icons"},[_vm._v("search")])]),_vm._v(" "),_c('d-input',{staticClass:"navbar-search",attrs:{"placeholder":"Search for something..."}})],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-form',{staticClass:"main-navbar__search w-100 d-none d-md-flex d-lg-flex",staticStyle:{"margin-bottom":"0 !important"}},[_c('d-input-group',{staticClass:"ml-3",attrs:{"seamless":""}},[_c('d-input-group-text',{attrs:{"slot":"prepend"},slot:"prepend"},[_c('i',{staticClass:"material-icons"},[_vm._v("search")])]),_vm._v(" "),_c('d-input',{staticClass:"navbar-search",staticStyle:{"padding-left":"40px !important"},attrs:{"placeholder":"Search for something..."}})],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -6684,7 +6891,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 });
 
 ;require.register("components/layout/MainSidebar/MainSidebar.vue", function(exports, require, module) {
-var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 88, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 91, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
+var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 106, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 109, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
 ;(function(){
 'use strict';
 
@@ -6702,15 +6909,25 @@ exports.default = {
   data: function data() {
     return {
       sidebarVisible: false,
-      items: ['hello', 'yes']
+      items: [{
+        title: 'Augur Dashboard',
+        to: {
+          name: 'home'
+        },
+        htmlBefore: '<i class="material-icons">vertical_split</i>',
+        htmlAfter: ''
+      }, {
+        title: 'Projects',
+        to: {
+          name: 'projects'
+        },
+        htmlBefore: '<i class="material-icons">table_chart</i>',
+        htmlAfter: ''
+      }]
     };
   },
-  created: function created() {
-    this.$eventHub.$on('toggle-sidebar', this.handleToggleSidebar);
-  },
-  beforeDestroy: function beforeDestroy() {
-    this.$eventHub.$off('toggle-sidebar');
-  },
+  created: function created() {},
+  beforeDestroy: function beforeDestroy() {},
 
   methods: {
     handleToggleSidebar: function handleToggleSidebar() {
@@ -6722,8 +6939,8 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-3 px-0"},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_c('a',{staticClass:"navbar-brand w-100 mr-0",staticStyle:{"line-height":"25px"},attrs:{"href":"#"}},[_c('div',{staticClass:"d-table m-auto"},[_c('img',{staticClass:"d-inline-block align-top mr-1",staticStyle:{"max-width":"25px"},attrs:{"id":"main-logo","src":"@/assets/images/shards-dashboards-logo.svg","alt":"Shards Dashboard"}}),_vm._v(" "),(!_vm.hideLogoText)?_c('span',{staticClass:"d-none d-md-inline ml-1"},[_vm._v("Shards Dashboard")]):_vm._e()])]),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-sm-inline d-md-none d-lg-none",on:{"click":function($event){_vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("")])])])]),_vm._v(" "),_vm._m(0),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column"},_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])})):_vm._e()],1)}))],1)])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('form',{staticClass:"main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none",attrs:{"action":"#"}},[_c('div',{staticClass:"input-group input-group-seamless ml-3"},[_c('div',{staticClass:"input-group-prepend"},[_c('div',{staticClass:"input-group-text"},[_c('i',{staticClass:"fas fa-search"})])]),_vm._v(" "),_c('input',{staticClass:"navbar-search form-control",attrs:{"type":"text","placeholder":"Search for something...","aria-label":"Search"}})])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){_vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column",staticStyle:{"margin":"0 !important"}},_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],staticStyle:{"font-size":"1.4rem"},attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])})):_vm._e()],1)}))],1)])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('a',{staticClass:"navbar-brand w-100 mr-0",staticStyle:{"line-height":"25px"},attrs:{"href":"#"}},[_c('div',{staticClass:"d-table m-auto"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"/static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('form',{staticClass:"main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none",attrs:{"action":"#"}},[_c('div',{staticClass:"input-group input-group-seamless ml-3"},[_c('div',{staticClass:"input-group-prepend"},[_c('div',{staticClass:"input-group-text"},[_c('i',{staticClass:"fas fa-search"})])]),_vm._v(" "),_c('input',{staticClass:"navbar-search form-control",attrs:{"type":"text","placeholder":"Search for something...","aria-label":"Search"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -6732,7 +6949,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-ac7c9dc2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-ac7c9dc2", __vue__options__)
+    hotAPI.reload("data-v-ac7c9dc2", __vue__options__)
   }
 })()}
 });
@@ -9154,7 +9371,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{attrs:{"fluid":""}},[_c('d-row',[_c('router-view',{attrs:{"name":"sidebar"}}),_vm._v(" "),_c('d-col',{staticClass:"main-content col-9 p-0"},[_c('router-view',{attrs:{"name":"navbar"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"content"}})],1)],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{attrs:{"fluid":""}},[_c('d-row',[_c('router-view',{attrs:{"name":"sidebar"}}),_vm._v(" "),_c('d-col',{staticClass:"main-content col-10 offset-lg-2 p-0"},[_c('router-view',{attrs:{"name":"navbar"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"content"}})],1)],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -9163,7 +9380,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-084d77e2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-084d77e2", __vue__options__)
+    hotAPI.reload("data-v-084d77e2", __vue__options__)
   }
 })()}
 });
@@ -9302,7 +9519,7 @@ var routes = [{
     components: {
       sidebar: _MainSidebar2.default,
       navbar: _MainNavbar2.default,
-      content: _PersonalBlog2.default
+      content: _BlogPosts2.default
     }
   }]
 }, {
@@ -9453,35 +9670,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var PostsListOne = [{
-  category: 'Business',
-  categoryTheme: 'dark',
-  author: 'Anna Kunis',
-  title: 'Conduct at an replied removal an amongst',
-  body: 'However venture pursuit he am mr cordial. Forming musical am hearing studied be luckily. But in for determine what would see...',
-  date: '28 February 2019'
-}, {
-  category: 'Travel',
-  categoryTheme: 'info',
-  author: 'James Jamerson',
-  title: 'Off tears are day blind smile alone had ready',
-  body: 'Is at purse tried jokes china ready decay an. Small its shy way had woody downs power. To denoting admitted speaking learning my...',
-  date: '29 February 2019'
-}, {
-  category: 'Technology',
-  categoryTheme: 'royal-blue',
-  author: 'Jimmy Jackson',
-  title: 'Difficult in delivered extensive at direction',
-  body: 'Is at purse tried jokes china ready decay an. Small its shy way had woody downs power. To denoting admitted speaking learning my...',
-  date: '29 February 2019'
-}, {
-  category: 'Business',
-  categoryTheme: 'warning',
-  author: 'John James',
-  title: 'It so numerous if he may outlived disposal',
-  body: 'How but sons mrs lady when. Her especially are unpleasant out alteration continuing unreserved ready road market resolution...',
-  date: '29 February 2019'
-}];
+var _SmallStats = require('../components/common/SmallStats.vue');
+
+var _SmallStats2 = _interopRequireDefault(_SmallStats);
+
+var _SparkChart = require('../components/charts/SparkChart.vue');
+
+var _SparkChart2 = _interopRequireDefault(_SparkChart);
+
+var _InsightChart = require('../components/charts/InsightChart.vue');
+
+var _InsightChart2 = _interopRequireDefault(_InsightChart);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var PostsListTwo = [{
   category: 'Travel',
@@ -9489,6 +9690,13 @@ var PostsListTwo = [{
   author: 'Anna Ken',
   title: 'Attention he extremity unwilling on otherwise cars backwards yet',
   body: 'Conviction up partiality as delightful is discovered. Yet jennings resolved disposed exertion you off. Left did fond drew fat head poor jet pan flying over...',
+  date: '29 February 2019'
+}, {
+  category: 'Business',
+  categoryTheme: 'dark',
+  author: 'John James',
+  title: 'Totally words widow one downs few age every seven if miss part by fact',
+  body: 'Discovered had get considered projection who favourable. Necessary up knowledge it tolerably. Unwilling departure education to admitted speaking...',
   date: '29 February 2019'
 }, {
   category: 'Business',
@@ -9551,20 +9759,234 @@ var PostsListFour = [{
 }];
 
 exports.default = {
+  components: {
+    SmallStats: _SmallStats2.default,
+    SparkChart: _SparkChart2.default,
+    InsightChart: _InsightChart2.default
+  },
+  computed: {},
   data: function data() {
     return {
-      PostsListOne: PostsListOne,
+      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
       PostsListTwo: PostsListTwo,
       PostsListThree: PostsListThree,
-      PostsListFour: PostsListFour
+      PostsListFour: PostsListFour,
+      repos: {},
+      projects: [],
+      themes: ['dark', 'info', 'royal-blue', 'warning'],
+
+      smallStats: [{
+        label: 'Posts',
+        value: '2,390',
+        percentage: '4.7%',
+        increase: true,
+        labels: ['Label', 'Label', 'Label', 'Label', 'Label', 'Label'],
+        datasets: [{
+          label: 'Today',
+          fill: 'start',
+          borderWidth: 1.5,
+          backgroundColor: 'rgba(0, 184, 216, 0.1)',
+          borderColor: 'rgb(0, 184, 216)',
+          data: [1, 2, 1, 3, 5, 4, 7]
+        }]
+      }, {
+        label: 'Pages',
+        value: '182',
+        percentage: '12.4',
+        increase: true,
+        labels: ['Label', 'Label', 'Label', 'Label', 'Label', 'Label'],
+        datasets: [{
+          label: 'Today',
+          fill: 'start',
+          borderWidth: 1.5,
+          backgroundColor: 'rgba(23,198,113,0.1)',
+          borderColor: 'rgb(23,198,113)',
+          data: [1, 2, 3, 3, 3, 4, 4]
+        }]
+      }, {
+        label: 'Comments',
+        value: '8,147',
+        percentage: '3.8%',
+        increase: false,
+        decrease: true,
+        labels: ['Label', 'Label', 'Label', 'Label', 'Label', 'Label'],
+        datasets: [{
+          label: 'Today',
+          fill: 'start',
+          borderWidth: 1.5,
+          backgroundColor: 'rgba(255,180,0,0.1)',
+          borderColor: 'rgb(255,180,0)',
+          data: [2, 3, 3, 3, 4, 3, 3]
+        }]
+      }, {
+        label: 'New Customers',
+        value: '29',
+        percentage: '2.71%',
+        increase: false,
+        decrease: true,
+        labels: ['Label', 'Label', 'Label', 'Label', 'Label', 'Label'],
+        datasets: [{
+          label: 'Today',
+          fill: 'start',
+          borderWidth: 1.5,
+          backgroundColor: 'rgba(255,65,105,0.1)',
+          borderColor: 'rgb(255,65,105)',
+          data: [1, 7, 1, 3, 1, 4, 8]
+        }]
+      }, {
+        label: 'Subscribers',
+        value: '17,281',
+        percentage: '2.4%',
+        increase: false,
+        decrease: true,
+        labels: ['Label', 'Label', 'Label', 'Label', 'Label', 'Label'],
+        datasets: [{
+          label: 'Today',
+          fill: 'start',
+          borderWidth: 1.5,
+          backgroundColor: 'rgb(0,123,255,0.1)',
+          borderColor: 'rgb(0,123,255)',
+          data: [3, 2, 3, 2, 4, 5, 4]
+        }]
+      }]
     };
+  },
+
+  methods: {
+    getOwner: function getOwner(url) {
+      var first = url.indexOf(".");
+      var last = url.lastIndexOf(".");
+      var domain = null;
+      var owner = null;
+      var repo = null;
+      var extension = false;
+
+      if (first == last) {
+        domain = url.substring(0, first);
+        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'));
+        repo = url.slice(url.lastIndexOf('/') + 1);
+        console.log(owner + "/" + repo);
+        return owner;
+      } else if (url.slice(last) == '.git') {
+        domain = url.substring(0, first);
+        extension = true;
+        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'));
+        repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4);
+        return owner;
+      } else {
+        domain = url.substring(first + 1, last);
+        owner = null;
+        repo = url.slice(url.lastIndexOf('/') + 1);
+        return domain;
+      }
+    },
+    getRepo: function getRepo(url) {
+      var first = url.indexOf(".");
+      var last = url.lastIndexOf(".");
+      var domain = null;
+      var owner = null;
+      var repo = null;
+      var extension = false;
+
+      if (first == last) {
+        domain = url.substring(0, first);
+        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'));
+        repo = url.slice(url.lastIndexOf('/') + 1);
+        return repo;
+      } else if (url.slice(last) == '.git') {
+        domain = url.substring(0, first);
+        extension = true;
+        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'));
+        repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4);
+        return repo;
+      } else {
+        domain = url.substring(first + 1, last);
+        owner = null;
+        repo = url.slice(url.lastIndexOf('/') + 1);
+        return repo;
+      }
+    },
+    getColor: function getColor(idx) {
+      if (idx % 2 == 0) return 'color: green';else return 'color: red';
+    },
+    getDirection: function getDirection(idx) {
+      if (idx % 2 == 0) return 'arrow_upward';else return 'arrow_downward';
+    },
+    getPhrase: function getPhrase(idx) {
+      if (idx % 2 == 0) return 'increased';else return 'declined';
+    },
+    onRepo: function onRepo(e) {
+      this.$store.commit('setRepo', {
+        githubURL: e.target.value
+      });
+    },
+    onGitRepo: function onGitRepo(e) {
+      var first = e.url.indexOf(".");
+      var last = e.url.lastIndexOf(".");
+      var domain = null;
+      var owner = null;
+      var repo = null;
+      var extension = false;
+
+      if (first == last) {
+        domain = e.url.substring(0, first);
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1);
+      } else if (e.url.slice(last) == '.git') {
+        domain = e.url.substring(0, first);
+        extension = true;
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'));
+        repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4);
+      } else {
+        domain = e.url.substring(first + 1, last);
+        owner = null;
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1);
+      }
+      this.$store.commit('setRepo', {
+        gitURL: e.url
+      });
+
+      this.$store.commit('setTab', {
+        tab: 'git'
+      });
+
+      this.$router.push({
+        name: 'git',
+        params: { repo: e.url }
+      });
+    },
+    getDownloadedRepos: function getDownloadedRepos() {
+      var _this = this;
+
+      this.downloadedRepos = [];
+      window.AugurAPI.getDownloadedGitRepos().then(function (data) {
+        $(_this.$el).find('.spinner').removeClass('loader');
+        $(_this.$el).find('.spinner').removeClass('relative');
+        _this.repos = window._.groupBy(data, 'project_name');
+        _this.projects = Object.keys(_this.repos);
+        var impRepos = [];
+        for (var i = 0; i < _this.projects.length; i++) {
+          impRepos.push(_this.repos[_this.projects[i]][0]);
+        }
+        console.log("LOADED");
+        _this.loaded = true;
+      });
+    },
+    btoa: function btoa(s) {
+      return window.btoa(s);
+    }
+  },
+  created: function created() {
+    this.getDownloadedRepos();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Components")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Blog Posts")])])]),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListOne),function(post,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + post.categoryTheme ],attrs:{"pill":""}},[_vm._v(_vm._s(post.category))]),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",style:({ backgroundImage: 'url(\'' +  '\')' }),attrs:{"href":"#"}},[_vm._v("Written by "+_vm._s(post.author))])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(post.title))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v(_vm._s(post.body))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(post.date))])])],1)],1)})),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListTwo),function(post,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post card-post--aside card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + post.categoryTheme ],attrs:{"pill":""}},[_vm._v(_vm._s(post.category))]),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",attrs:{"href":"#"}},[_vm._v("Written by Anna Ken")])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(post.title))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v(_vm._s(post.body))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(post.date))])])],1)],1)})),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListThree),function(post,idx){return _c('d-col',{key:idx,attrs:{"lg":"4"}},[_c('d-card',{staticClass:"card-small card-post mb-4"},[_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_vm._v(_vm._s(post.title))]),_vm._v(" "),_c('p',{staticClass:"card-text text-muted"},[_vm._v(_vm._s(post.body))])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top d-flex"},[_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",attrs:{"href":"#"}},[_vm._v("Written by James Khan")]),_vm._v(" "),_c('div',{staticClass:"d-flex flex-column justify-content-center ml-3"},[_c('span',{staticClass:"card-post__author-name"},[_vm._v(_vm._s(post.author))]),_vm._v(" "),_c('small',{staticClass:"text-muted"},[_vm._v(_vm._s(post.date))])])]),_vm._v(" "),_c('div',{staticClass:"my-auto ml-auto"},[_c('d-button',{staticClass:"btn-white",attrs:{"size":"sm"}},[_c('i',{staticClass:"far fa-bookmark mr-1"}),_vm._v(" Bookmark\n            ")])],1)])],1)],1)})),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListFour),function(post,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post h-10"},[_c('div',{staticClass:"card-post__image"}),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(post.title))])]),_vm._v(" "),_c('p',{staticClass:"card-text"},[_vm._v(_vm._s(post.body))])]),_vm._v(" "),_c('d-card-footer',{staticClass:"text-muted border-top py-3"},[_c('span',{staticClass:"d-inline-block"},[_vm._v("By "),_c('a',{staticClass:"text-fiord-blue",attrs:{"href":post.authorUrl}},[_vm._v(_vm._s(post.author))]),_vm._v(" in "),_c('a',{staticClass:"text-fiord-blue",attrs:{"href":post.categoryUrl}},[_vm._v(_vm._s(post.category))])])])],1)],1)}))],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(project))]),_vm._v(" "),(_vm.loaded)?_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"color":_vm.colors[idx],"source":_vm.testEndpoints[idx],"owner":"twitter","repo":"twemoji"}}):_vm._e(),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"2rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repos[project][0].url))+"/"+_vm._s(_vm.getRepo(_vm.repos[project][0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1)}),_vm._v(" "),_c('d-col',{staticClass:"col-3"},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("7,128 / 18,432")])])])])])],1)],2),_vm._v(" "),_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"0 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Most Frequent Projects")])])]),_vm._v(" "),_c('d-row',_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repos[project].slice(0,5)),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v(_vm._s(repo.url))]),_vm._v(" "),(_vm.loaded)?_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"10px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"owner":_vm.getOwner(repo.url),"repo":_vm.getRepo(repo.url),"source":"codeCommits"}}):_vm._e()],1)}))])])],1)})),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListThree),function(post,idx){return _c('d-col',{key:idx,attrs:{"lg":"4"}},[_c('d-card',{staticClass:"card-small card-post mb-4"},[_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_vm._v(_vm._s(post.title))]),_vm._v(" "),_c('p',{staticClass:"card-text text-muted"},[_vm._v(_vm._s(post.body))])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top d-flex"},[_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",attrs:{"href":"#"}},[_vm._v("Written by James Khan")]),_vm._v(" "),_c('div',{staticClass:"d-flex flex-column justify-content-center ml-3"},[_c('span',{staticClass:"card-post__author-name"},[_vm._v(_vm._s(post.author))]),_vm._v(" "),_c('small',{staticClass:"text-muted"},[_vm._v(_vm._s(post.date))])])]),_vm._v(" "),_c('div',{staticClass:"my-auto ml-auto"},[_c('d-button',{staticClass:"btn-white",attrs:{"size":"sm"}},[_c('i',{staticClass:"far fa-bookmark mr-1"}),_vm._v(" Bookmark\n            ")])],1)])],1)],1)})),_vm._v(" "),_c('d-row',_vm._l((_vm.PostsListFour),function(post,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post h-10"},[_c('div',{staticClass:"card-post__image"}),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(post.title))])]),_vm._v(" "),_c('p',{staticClass:"card-text"},[_vm._v(_vm._s(post.body))])]),_vm._v(" "),_c('d-card-footer',{staticClass:"text-muted border-top py-3"},[_c('span',{staticClass:"d-inline-block"},[_vm._v("By "),_c('a',{staticClass:"text-fiord-blue",attrs:{"href":post.authorUrl}},[_vm._v(_vm._s(post.author))]),_vm._v(" in "),_c('a',{staticClass:"text-fiord-blue",attrs:{"href":post.categoryUrl}},[_vm._v(_vm._s(post.category))])])])],1)],1)}))],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)

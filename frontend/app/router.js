@@ -40,7 +40,7 @@ let routes = [
                   components: {
                         sidebar: MainSidebar,
                         navbar: MainNavbar,
-                        content: PersonalBlog
+                        content: BlogPosts
                   }
             }
       ]

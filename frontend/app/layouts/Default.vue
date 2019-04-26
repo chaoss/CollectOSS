@@ -7,7 +7,7 @@
       <!-- </d-col>   -->
        <!--<main-sidebar :items="sidebarItems" />-->
 
-      <d-col class="main-content col-9 p-0" ><!-- offset-lg-2 offset-md-3 p-0" tag="main" lg="10" md="9" sm="12">-->
+      <d-col class="main-content col-10 offset-lg-2 p-0" ><!-- offset-lg-2 offset-md-3 p-0" tag="main" lg="10" md="9" sm="12">-->
 
         <!-- Main Navbar -->
         <router-view name="navbar"></router-view> <!--<main-navbar />-->

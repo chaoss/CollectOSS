@@ -1,15 +1,17 @@
 <template>
-  <aside class="main-sidebar col-3 px-0"><!--:class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']">-->
+  <aside class="main-sidebar col-2 px-0" style="position: fixed !important"><!--:class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']">-->
       <div class="main-navbar">
         <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0">
           <a class="navbar-brand w-100 mr-0" href="#" style="line-height: 25px;">
             <div class="d-table m-auto">
-              <img id="main-logo" class="d-inline-block align-top mr-1" style="max-width: 25px;" src="@/assets/images/shards-dashboards-logo.svg" alt="Shards Dashboard">
-              <span v-if="!hideLogoText" class="d-none d-md-inline ml-1">Shards Dashboard</span>
+              <a href="/">
+                <img src="/static/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
+              </a>
+              <!-- <span v-if="!hideLogoText" class="d-none d-md-inline ml-1">Augur Dashboard</span> -->
             </div>
           </a>
-          <a class="toggle-sidebar d-sm-inline d-md-none d-lg-none" @click="handleToggleSidebar()">
-            <i class="material-icons">&#xE5C4;</i>
+          <a class="toggle-sidebar d-lg-none" @click="handleToggleSidebar()"> <!--d-sm-inline d-md-none d-lg-none-->
+            <i class="material-icons">&#xE5C4;sfdaf</i>
           </a>
         </nav>
       </div>
@@ -26,9 +28,9 @@
       </form>
 
       <div class="nav-wrapper">
-          <d-nav class="flex-column">
+          <d-nav class="flex-column" style="margin: 0 !important">
             <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
-              <d-link :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
+              <d-link style="font-size: 1.4rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
                 <span v-if="item.title">{{ item.title }}</span>
                 <div class="item-icon-wrapper" v-if="item.htmlAfter" v-html="item.htmlAfter" />
@@ -66,14 +68,30 @@ export default {
   data() {
     return {
       sidebarVisible: false,
-      items: ['hello', 'yes']
+      items: [
+        {
+          title: 'Augur Dashboard',
+          to: {
+            name: 'home',
+          },
+          htmlBefore: '<i class="material-icons">vertical_split</i>',
+          htmlAfter: '',
+        }, {
+          title: 'Projects',
+          to: {
+            name: 'projects',
+          },
+          htmlBefore: '<i class="material-icons">table_chart</i>',
+          htmlAfter: '',
+        }
+      ]
     };
   },
   created() {
-    this.$eventHub.$on('toggle-sidebar', this.handleToggleSidebar);
+    // this.$eventHub.$on('toggle-sidebar', this.handleToggleSidebar);
   },
   beforeDestroy() {
-    this.$eventHub.$off('toggle-sidebar');
+    // this.$eventHub.$off('toggle-sidebar');
   },
   methods: {
     handleToggleSidebar() {

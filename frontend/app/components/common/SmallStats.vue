@@ -158,63 +158,55 @@ export default {
     },
   },
   mounted() {
-    // const chartOptions = {
-    //   ...{
-    //     maintainAspectRatio: true,
-    //     responsive: true,
-    //     legend: {
-    //       display: false,
-    //     },
-    //     tooltips: {
-    //       enabled: false,
-    //       custom: false,
-    //     },
-    //     elements: {
-    //       point: {
-    //         radius: 0,
-    //       },
-    //       line: {
-    //         tension: 0.33,
-    //       },
-    //     },
-    //     scales: {
-    //       xAxes: [{
-    //         gridLines: false,
-    //         ticks: {
-    //           display: false,
-    //         },
-    //       }],
-    //       yAxes: [{
-    //         gridLines: false,
-    //         scaleLabel: false,
-    //         ticks: {
-    //           display: false,
-    //           isplay: false,
-    //           // Avoid getting the graph line cut of at the top of the canvas.
-    //           // Chart.js bug link: https://github.com/chartjs/Chart.js/issues/4790
-    //           suggestedMax: Math.max(...this.chartData[0].data) + 1,
-    //         },
-    //       }],
-    //     },
-    //   },
-    //   ...this.chartOptions,
-    // };
+    this.chartOptions = {
+      maintainAspectRatio: true,
+      responsive: true,
+      legend: {
+        display: false,
+      },
+      tooltips: {
+        enabled: false,
+        custom: false,
+      },
+      elements: {
+        point: {
+          radius: 0,
+        },
+        line: {
+          tension: 0.33,
+        },
+      },
+      scales: {
+        xAxes: [{
+          gridLines: false,
+          ticks: {
+            display: false,
+          },
+        }],
+        yAxes: [{
+          gridLines: false,
+          scaleLabel: false,
+          ticks: {
+            display: false,
+            isplay: false,
+            // Avoid getting the graph line cut of at the top of the canvas.
+            // Chart.js bug link: https://github.com/chartjs/Chart.js/issues/4790
+            suggestedMax: Math.max(this.chartData[0].data) + 1,
+          },
+        }],
+      },
+    }
 
-    // const chartConfig = {
-    //   ...{
-    //     type: 'line',
-    //     data: {
-    //       ...{ labels: ['Label 1', 'Label 2', 'Label 3', 'Label 4', 'Label 5'] },
-    //       ...{
-    //         datasets: this.chartData,
-    //       },
-    //     },
-    //     options: chartOptions,
-    //   },
-    //   ...this.chartConfig,
-    // };
+    this.chartConfig = {
+      type: 'line',
+      data: {
+        labels: ['Label 1', 'Label 2', 'Label 3', 'Label 4', 'Label 5'],
+        datasets: this.chartData
+      },
+      options: this.chartOptions,
+    }
 
-    // new Chart(this.$refs.canvas, chartConfig);
+    new Chart(this.$refs.canvas, this.chartConfig)
   },
 };
 </script>
