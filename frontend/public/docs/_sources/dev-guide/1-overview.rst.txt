@@ -10,6 +10,9 @@ the mailing list for
 `CHAOSS <https://lists.linuxfoundation.org/mailman/listinfo/oss-health-metrics>`__,
 Submit a pull request.
 
+Please note we require all commits to be signed off with a `Developer Certificate of Origin <https://developercertificate.org/>`__ in accordance with the 
+`CHAOSS Project Charter section 8.2.1 <https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy>`__. This can be easily done by using the ``-s`` flag when using ``git commit``. For example: ``git commit -s -m "Update README.md"``.
+
 Building Changes
 ----------------
 
