@@ -2,6 +2,7 @@
   <section>
     <div style="display: inline-block;">
       <h2 v-if="loaded" style="display: inline-block; color: black !important">Project Overview: {{ project }}</h2>
+      <p></p>
     </div>
       <div class="row" style="transform: translateY(-50px) !important">
 
@@ -47,6 +48,11 @@ module.exports = {
       project: null
     }
   },
+  computed: {
+    gitRepo () {
+      return this.$store.state.gitRepo
+    },
+  },
   components: {
     AugurHeader,
     TickChart,
@@ -57,7 +63,7 @@ module.exports = {
     GroupedBarChart,
     StackedBarChart
   },
-  created() {
+  mounted() {
     let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
 
     repo.facadeProject().then((data) => {

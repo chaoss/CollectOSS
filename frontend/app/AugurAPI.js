@@ -295,7 +295,7 @@ export default class AugurAPI {
       GitEndpoint(repo, 'cdRgTpRankedCommits', 'cd_rg_tp_ranked_commits'),
       GitEndpoint(repo, 'cdRgNewrepRankedLoc', 'cd_rg_newrep_ranked_loc'),
       GitEndpoint(repo, 'cdRgNewrepRankedCommits', 'cd_rg_newrep_ranked_commits')
-
+      GitEndpoint(repo, 'facadeProject', 'facade_project')
 
     }
 
