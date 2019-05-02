@@ -1,14 +1,11 @@
 <template>
   <nav class="tabs">
         <ul>
-          <li :class="{ active: (currentTab == 'gmd') }"><a href="#" @click="changeTab" data-value="gmd">Growth, Maturity, and Decline</a></li>
-          <li :class="{ active: (currentTab == 'diversityinclusion') }"><a href="#" @click="changeTab" data-value="diversityinclusion">Diversity and Inclusion</a></li>
-          <li :class="{ active: (currentTab == 'risk') }"><a href="#" @click="changeTab" data-value="risk">Risk</a></li>
-          <li :class="{ active: (currentTab == 'value') }"><a href="#" @click="changeTab" data-value="value">Value</a></li>
-          <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
-          <li :class="{ active: (currentTab == 'experimental') }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li> 
           <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li>
           <li :class="{ active: (currentTab == 'overview'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="overview">Overview</a></li>
+          <li :class="{ active: (currentTab == 'gmd') }"><a href="#" @click="changeTab" data-value="gmd">Evolution</a></li>
+          <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
+          <li :class="{ active: (currentTab == 'experimental') }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li> 
           <!-- <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li> -->
         </ul>
       </nav>
