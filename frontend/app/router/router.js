@@ -103,7 +103,6 @@ let routes = [
             components: {
               header: AugurHeader,
               tabs: Tabs,
-              controls: MainControls,
               content: GitCard
             }
           },
@@ -113,7 +112,6 @@ let routes = [
             components: {
               header: AugurHeader,
               tabs: Tabs,
-              controls: MainControls,
               content: OverviewCard
             }
           },
@@ -188,7 +186,6 @@ let routes = [
             components: {
               header: AugurHeader,
               tabs: Tabs,
-              controls: MainControls,
               content: GitCard
             }
           },
@@ -262,7 +259,6 @@ let routes = [
             components: {
               header: AugurHeader,
               tabs: Tabs,
-              controls: MainControls,
               content: GitCard
             }
           },
@@ -272,7 +268,6 @@ let routes = [
             components: {
               header: AugurHeader,
               tabs: Tabs,
-              controls: MainControls,
               content: OverviewCard
             }
           },
