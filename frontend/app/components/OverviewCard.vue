@@ -1,11 +1,8 @@
 <template>
   <section>
     <div style="display: inline-block;">
-      <h2 style="display: inline-block; color: black !important">{{ $store.state.gitRepo }}</h2>
-      <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
-      <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
-        <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
-      </h2>
+      <h2 v-if="loaded" style="display: inline-block; color: black !important">Project Overview: {{ project }}</h2>
+      <p></p>
     </div>
       <div class="row" style="transform: translateY(-50px) !important">
 
@@ -46,8 +43,15 @@ import StackedBarChart from './charts/StackedBarChart'
 module.exports = {
   data() {
     return {
-      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+      loaded: false,
+      project: null
     }
+  },
+  computed: {
+    gitRepo () {
+      return this.$store.state.gitRepo
+    },
   },
   components: {
     AugurHeader,
@@ -58,6 +62,15 @@ module.exports = {
     HorizontalBarChart,
     GroupedBarChart,
     StackedBarChart
+  },
+  mounted() {
+    let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
+
+    repo.facadeProject().then((data) => {
+      this.project = data[0].name
+      console.log(this.project, "here")
+      this.loaded=true
+    })
   }
 }
 </script>
