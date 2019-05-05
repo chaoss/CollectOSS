@@ -94,6 +94,9 @@ def test_committer_locations(ghtorrent):
 def test_total_committers(ghtorrent):
     assert ghtorrent.total_committers('rails', 'rails').isin(["2004-11-24T00:00:00.000Z"]).any
 
+def test_total_watchers(ghtorrent):
+    assert ghtorrent.total_watchers('rails', 'rails').isin(["2005-08-26T00:00:00.000Z"]).any
+
 def test_issue_activity(ghtorrent):
     assert ghtorrent.issue_activity('bitcoin', 'bitcoin').isin(["2010-12-20T00:00:00.000Z"]).any
 

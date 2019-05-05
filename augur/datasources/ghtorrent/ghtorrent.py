@@ -1088,6 +1088,31 @@ class GHTorrent(object):
         """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
+    @annotate(tag='total-watchers')
+    def total_watchers(self, owner, repo=None):
+        """
+        Timeseries of total watchers as of each week
+            
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with total watchers/week
+        """
+        
+        repoid = self.repoid(owner, repo)
+        totalWatchersSQL = s.sql.text("""
+            SELECT total_watchers.created_at AS "date", COUNT(total_watchers.user_id) total_watchers
+            FROM (
+                SELECT user_id, MIN(DATE(created_at)) created_at
+                FROM watchers
+                WHERE repo_id = :repoid
+                GROUP BY user_id
+                ORDER BY created_at ASC) AS total_watchers
+            GROUP BY YEARWEEK(total_watchers.created_at)
+        """)
+        df = pd.read_sql(totalWatchersSQL, self.db, params={"repoid": str(repoid)})
+        df['total_watchers'] = df['totla_watchers'].cumsum()
+        return df
+    
     @annotate(tag='new-watchers')
     def new_watchers(self, owner, repo=None): 
         """

@@ -859,6 +859,29 @@ def create_routes(server):
                         ]
     """
     server.addTimeseries(ghtorrent.new_watchers, 'new_watchers')
+    
+    """
+    @api {get} /:owner/:repo/timeseries/total_watchers Total Watchers
+    @apiName total-watchers
+    @apiGroup Experimental
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
+        
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+        
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "date": "2005-08-26T00:00:00.000Z",
+                                "total_total_watchers": 5
+                            },
+                            {
+                                "date": "2005-09-02T00:00:00.000Z",
+                                "total_total_watchers": 6
+                            }
+                        ]
+    """
+    server.addTimeseries(ghtorrent.total_watchers, 'total_watchers')
 
     """
     @api {get} /user/:userid User
