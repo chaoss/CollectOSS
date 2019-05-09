@@ -1,7 +1,12 @@
 <template>
   <d-container fluid class="main-content-container px-4">
+    <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px" :items="breadcrumbItems">
+      <d-breadcrumb-item :active="false" text="Products" href="#" />
+      <d-breadcrumb-item :active="false" :text="project" href="#" />
+      <d-breadcrumb-item :active="true" :text="gitRepo" href="#" />
+    </d-breadcrumb>
     <!-- Page Header -->
-    <div class="page-header row no-gutters py-4">
+    <div class="page-header row no-gutters py-4" style="padding-top: 0px !important">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <!-- <span class="text-uppercase page-subtitle">Components</span> -->
         <h3 class="page-title" style="font-size: 2rem">Insights</h3>
@@ -104,7 +109,7 @@
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in repos[project].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="onGitRepo(repo)">
+                      <d-link :to="repo_overview">
                         <span class="text-semibold text-fiord-blue">{{ repo.url }}</span>
                       </d-link> 
                       <spark-chart v-if="loaded" :color="colors[idx]" style="max-height: 50px; padding-bottom: 10px; margin-left:auto; margin-right:0;" :owner="getOwner(repo.url)" :repo="getRepo(repo.url)" source="codeCommits"/>
@@ -128,16 +133,23 @@ export default {
     InsightChart,
   },
   computed: {
+    repo () {
+      return this.$store.state.baseRepo
+    },
+    gitRepo () {
+      return this.$store.state.gitRepo
+    },
   },
   data() {
     return {
       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+      testEndpoints: ['closedIssues', 'openIssues', 'codeCommits'],
       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
       repos: {},
       projects: [],
       themes: ['dark', 'info', 'royal-blue', 'warning'],
-    }
+      project: null
+    };
   },
   methods: {
     getOwner(url) {
@@ -217,8 +229,38 @@ export default {
       })
     },
     onGitRepo (e) {
+      let first = e.url.indexOf(".")
+      let last = e.url.lastIndexOf(".")
+      let domain = null
+      let owner = null
+      let repo = null
+      let extension = false
+
+      if (first == last){ //normal github
+        domain = e.url.substring(0, first)
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
+      } else if (e.url.slice(last) == '.git'){ //github with extension
+        domain = e.url.substring(0, first)
+        extension = true
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
+        repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4)
+      } else { //gluster
+        domain = e.url.substring(first + 1, last)
+        owner = null //e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
+      }
       this.$store.commit('setRepo', {
         gitURL: e.url
+      })
+
+      this.$store.commit('setTab', {
+        tab: 'git'
+      })
+
+      this.$router.push({
+        name: 'git',
+        params: {repo: e.url}
       })
     },
     getDownloadedRepos() {
@@ -247,6 +289,11 @@ export default {
   },
   created() {
     this.getDownloadedRepos()
+    let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
+    repo.facadeProject().then((data) => {
+      this.project = data[0].name
+      this.loaded=true
+    })
   },
 }
 </script>

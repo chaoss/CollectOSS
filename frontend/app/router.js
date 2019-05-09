@@ -28,23 +28,69 @@ import BlogPosts from './views/BlogPosts.vue';
 import Default from './layouts/Default.vue';
 import MainSidebar from './components/layout/MainSidebar/MainSidebar.vue';
 import MainNavbar from './components/layout/MainNavbar/MainNavbar.vue';
+import RepoOverview from './views/RepoOverview.vue';
 
 let routes = [
       {
-      path: '/',
-      component: Default,
-      children: [
-            {
-                  path: "",
-                  name: "home",
-                  components: {
-                        sidebar: MainSidebar,
-                        navbar: MainNavbar,
-                        content: BlogPosts
+            path: '/',
+            component: Default,
+            children: [
+                  {
+                        path: "",
+                        name: "home",
+                        components: {
+                              sidebar: MainSidebar,
+                              navbar: MainNavbar,
+                              content: BlogPosts
+                        }
                   }
-            }
-      ]
-    },
+            ]
+      },
+      {
+            path: '/projects',
+            component: Default,
+            children: [
+                  {
+                        path: "",
+                        name: "projects",
+                        components: {
+                              sidebar: MainSidebar,
+                              navbar: MainNavbar,
+                              content: Tables
+                        }
+                  }
+            ]
+      },
+      {
+            path: '/workers',
+            component: Default,
+            children: [
+                  {
+                        path: "",
+                        name: "workers",
+                        components: {
+                              sidebar: MainSidebar,
+                              navbar: MainNavbar,
+                              content: Tables
+                        }
+                  }
+            ]
+      },
+      {
+            path: '/repo/:owner?/:repo',
+            component: Default,
+            children: [
+                  {
+                        path: "",
+                        name: "repo_overview",
+                        components: {
+                              sidebar: MainSidebar,
+                              navbar: MainNavbar,
+                              content: RepoOverview
+                        }
+                  }
+            ]
+      },
     {
       path: '/blog-overview',
       name: 'blog-overview',

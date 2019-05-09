@@ -145,6 +145,20 @@ class Facade(object):
         results = pd.read_sql(commitsByMonthSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
         return results
 
+    @annotate(tag='facade-project')
+    def facade_project(self, repo_url):
+        """
+        Returns number of patches per commiter per week
+        :param repo_url: the repository's URL
+        """
+        facadeProjectSQL = s.sql.text("""
+            SELECT projects.name FROM repos, projects
+            WHERE git LIKE :repourl
+            and repos.projects_id = projects.id
+            LIMIT 1
+        """)
+        results = pd.read_sql(facadeProjectSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
+        return results
     
     # cd - code
     # rg - repo group

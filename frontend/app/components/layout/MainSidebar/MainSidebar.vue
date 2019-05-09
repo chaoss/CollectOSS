@@ -41,6 +41,37 @@
                 </d-dropdown-item>
               </d-collapse>
             </li>
+            <li class="nav-item dropdown" style="height: 340px !important; position: absolute; bottom: 0; margin-top: auto">
+              <d-link style="font-size: 1.4rem" class="nav-link">
+              <!-- <d-link style="font-size: 1.4rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`"> -->
+                <i class="material-icons">vertical_split</i>
+                <span>Comparison Manager</span>
+                <div class="item-icon-wrapper" />
+              </d-link>
+              <div class="row" style="position: absolute; bottom: 0; padding-left: 15px; width: 320px !important">
+                <div class="col col-6" style="padding: 0px">
+                  <d-link class="nav-link" style="padding-left: 24px">
+                    <i class="material-icons">autorenew</i>
+                    <span>Reset</span>
+                    <div class="item-icon-wrapper" />
+                  </d-link>
+                </div>
+                
+                <div class="col col-6" style="padding: 0px">
+                  <d-link class="nav-link" style="padding-left: 12px; padding-right: 0">
+                    <i class="material-icons">library_add</i>
+                    <span>Add comparison</span>
+                    <div class="item-icon-wrapper" />
+                  </d-link>
+                </div>
+              </div>
+              
+              <!-- <d-collapse v-if="item.items && item.items.length" :id="`snc-${navItemIdx}`" class="dropdown-menu dropdown-menu-small" accordion="sidebar-items-accordion">
+                <d-dropdown-item v-for="(subItem, subItemIdx) in item.items" :key="subItemIdx" :href="subItem.href" :to="subItem.to">
+                  {{ subItem.title }}
+                </d-dropdown-item>
+              </d-collapse> -->
+            </li>
           </d-nav>
       </div>
   </aside>
@@ -50,20 +81,10 @@
 export default {
   name: 'main-sidebar',
   props: {
-    /**
-      * Whether to hide the logo text, or not.
-      */
     hideLogoText: {
       type: Boolean,
       default: false,
     },
-    /**
-     * The menu items.
-     */
-    // items: {
-    //   type: Array,
-    //   required: true,
-    // },
   },
   data() {
     return {
@@ -83,15 +104,17 @@ export default {
           },
           htmlBefore: '<i class="material-icons">table_chart</i>',
           htmlAfter: '',
+        },
+        {
+          title: 'Workers',
+          to: {
+            name: 'workers',
+          },
+          htmlBefore: '<i class="material-icons">assignment</i>',
+          htmlAfter: '',
         }
       ]
     };
-  },
-  created() {
-    // this.$eventHub.$on('toggle-sidebar', this.handleToggleSidebar);
-  },
-  beforeDestroy() {
-    // this.$eventHub.$off('toggle-sidebar');
   },
   methods: {
     handleToggleSidebar() {

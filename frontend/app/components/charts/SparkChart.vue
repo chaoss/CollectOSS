@@ -41,7 +41,10 @@ export default {
         "height": 50,
       
         // "data": {"url": "https://vega.github.io/vega-lite/data/unemployment-across-industries.json"},
-        "mark": "line",
+        "mark": {
+          "type":"line",
+          "interpolate": "basis"
+        },
         "encoding": {
           "x": {
             "timeUnit": "yearmonth", "field": "date", "type": "temporal",
