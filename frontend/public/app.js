@@ -203,6 +203,7 @@ function Augur() {
     state: {
       hasState: null,
       tab: 'gmd',
+      page: 'dashboard',
       baseRepo: null,
       gitRepo: null,
       comparedRepos: [],
@@ -6898,7 +6899,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 });
 
 ;require.register("components/layout/MainSidebar/MainSidebar.vue", function(exports, require, module) {
-var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 129, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 132, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
+var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 146, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 149, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
 ;(function(){
 'use strict';
 
@@ -6937,6 +6938,20 @@ exports.default = {
         },
         htmlBefore: '<i class="material-icons">assignment</i>',
         htmlAfter: ''
+      }, {
+        title: 'Groups',
+        to: {
+          name: 'groups'
+        },
+        htmlBefore: '<i class="material-icons">group_work</i>',
+        htmlAfter: ''
+      }, {
+        title: 'Explore Insights',
+        to: {
+          name: 'insights'
+        },
+        htmlBefore: '<i class="material-icons">trending_up</i>',
+        htmlAfter: ''
       }]
     };
   },
@@ -6951,7 +6966,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){_vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column",staticStyle:{"margin":"0 !important"}},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],staticStyle:{"font-size":"1.4rem"},attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])})):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown",staticStyle:{"height":"340px !important","position":"absolute","bottom":"0","margin-top":"auto"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"1.4rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"15px","width":"320px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding-left":"24px"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding-left":"12px","padding-right":"0"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add comparison")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){_vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column",staticStyle:{"margin":"0 !important"}},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],staticStyle:{"font-size":"1.4rem"},attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])})):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown",staticStyle:{"height":"240px !important","position":"absolute","bottom":"0","margin-top":"auto"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"1.4rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"15px","width":"320px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding-left":"24px"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding-left":"12px","padding-right":"0"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add comparison")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('a',{staticClass:"navbar-brand w-100 mr-0",staticStyle:{"line-height":"25px"},attrs:{"href":"#"}},[_c('div',{staticClass:"d-table m-auto"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"/static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('form',{staticClass:"main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none",attrs:{"action":"#"}},[_c('div',{staticClass:"input-group input-group-seamless ml-3"},[_c('div',{staticClass:"input-group-prepend"},[_c('div',{staticClass:"input-group-text"},[_c('i',{staticClass:"fas fa-search"})])]),_vm._v(" "),_c('input',{staticClass:"navbar-search form-control",attrs:{"type":"text","placeholder":"Search for something...","aria-label":"Search"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -10270,7 +10285,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-494787fc", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-494787fc", __vue__options__)
+    hotAPI.reload("data-v-494787fc", __vue__options__)
   }
 })()}
 });

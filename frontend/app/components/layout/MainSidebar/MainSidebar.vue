@@ -41,7 +41,7 @@
                 </d-dropdown-item>
               </d-collapse>
             </li>
-            <li class="nav-item dropdown" style="height: 340px !important; position: absolute; bottom: 0; margin-top: auto">
+            <li class="nav-item dropdown" style="height: 240px !important; position: absolute; bottom: 0; margin-top: auto">
               <d-link style="font-size: 1.4rem" class="nav-link">
               <!-- <d-link style="font-size: 1.4rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`"> -->
                 <i class="material-icons">vertical_split</i>
@@ -112,7 +112,24 @@ export default {
           },
           htmlBefore: '<i class="material-icons">assignment</i>',
           htmlAfter: '',
-        }
+        },
+        {
+          title: 'Groups',
+          to: {
+            name: 'groups',
+          },
+          htmlBefore: '<i class="material-icons">group_work</i>',
+          htmlAfter: '',
+        },
+        {
+          title: 'Explore Insights',
+          to: {
+            name: 'insights',
+          },
+          htmlBefore: '<i class="material-icons">trending_up</i>',
+          htmlAfter: '',
+        },
+
       ]
     };
   },

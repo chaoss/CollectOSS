@@ -51,6 +51,7 @@ export default function Augur () {
     state: {
       hasState: null,
       tab: 'gmd',
+      page: 'dashboard',
       baseRepo: null,
       gitRepo: null,
       comparedRepos: [],
