@@ -1110,7 +1110,7 @@ class GHTorrent(object):
             GROUP BY YEARWEEK(total_watchers.created_at)
         """)
         df = pd.read_sql(totalWatchersSQL, self.db, params={"repoid": str(repoid)})
-        df['total_watchers'] = df['totla_watchers'].cumsum()
+        df['total_watchers'] = df['total_watchers'].cumsum()
         return df
     
     @annotate(tag='new-watchers')
