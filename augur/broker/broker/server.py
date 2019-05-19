@@ -1,9 +1,7 @@
-
 import atexit
 import sys
 import random
 import json
-# import ipdb
 
 from broker.routes import create_all_routes
 from broker.broker import Broker
@@ -16,6 +14,8 @@ logging.basicConfig(filename='logs/server.log')
 logger = logging.getLogger(name="broker_server_logger")
 
 class Server():
+    """ Initialization of the server/flask app that the broker is running on
+    """
     def __init__(self):
         # create the Flask app
         self.app = Flask(__name__, instance_relative_config=True)
@@ -24,25 +24,16 @@ class Server():
         #enable CORS
         cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-        # load config file
+        self.broker = Broker() #declare the app's broker
 
-        self.broker = Broker()
-
-        self.API_VERSION = '/api'
+        self.API_VERSION = '/api' #string to precede any AUGWOP endpoints
 
         # create routes
         logger.info("Creating all routes")
         create_all_routes(self)
         
-        @app.route('/')
-        def default():
-            return redirect(url_for('ping'))
 
-        @app.route('{}/ping'.format(self.API_VERSION), methods=['GET'])
-        def ping():
-            return jsonify({"status": "It's alive!"})
-
-broker_server = Server()
+broker_server = Server() #declares our instance of the Server class the broker runs on
 app = broker_server.app
 
 if __name__ == "__main__":
