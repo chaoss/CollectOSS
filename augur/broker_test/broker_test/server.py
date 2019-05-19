@@ -5,6 +5,9 @@ import random
 import json
 # import ipdb
 
+from broker_test.routes import create_all_routes
+from broker_test.broker import Broker
+
 from flask import Flask, jsonify, Response, redirect, url_for, request
 from flask_cors import CORS
 
@@ -14,33 +17,30 @@ logger = logging.getLogger(name="chambers")
 
 class Server():
     def __init__(self):
-        # create the Flask app, 
-            self.app = Flask(__name__, instance_relative_config=True)
-            app = self.app
+        # create the Flask app
+        self.app = Flask(__name__, instance_relative_config=True)
+        app = self.app
 
-            #enable CORS
-            cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+        #enable CORS
+        cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-            # load config file
+        # load config file
 
-            self.API_VERSION = '/api'
+        self.broker = Broker()
 
-            # create routes
-            logger.info("Creating all routes")
-            
-            @app.route('/')
-            def default():
-                return redirect(url_for('ping'))
+        self.API_VERSION = '/api'
 
-            @app.route('{}/ping'.format(self.API_VERSION), methods=['GET'])
-            def ping():
-                return jsonify({"status": "It's alive!"})
+        # create routes
+        logger.info("Creating all routes")
+        create_all_routes(self)
+        
+        @app.route('/')
+        def default():
+            return redirect(url_for('ping'))
 
-            @app.route('{}/task'.format(self.API_VERSION), methods=['POST'])
-            def task():
-                task = request.json
-                print(task['task'])
-                return jsonify({"task": task})
+        @app.route('{}/ping'.format(self.API_VERSION), methods=['GET'])
+        def ping():
+            return jsonify({"status": "It's alive!"})
 
 broker_server = Server()
 app = broker_server.app
