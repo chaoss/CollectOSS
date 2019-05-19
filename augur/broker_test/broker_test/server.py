@@ -13,7 +13,7 @@ from flask_cors import CORS
 
 import logging
 logging.basicConfig(filename='logs/server.log')
-logger = logging.getLogger(name="chambers")
+logger = logging.getLogger(name="broker_server_logger")
 
 class Server():
     def __init__(self):
