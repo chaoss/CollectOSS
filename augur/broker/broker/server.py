@@ -5,8 +5,8 @@ import random
 import json
 # import ipdb
 
-from broker_test.routes import create_all_routes
-from broker_test.broker import Broker
+from broker.routes import create_all_routes
+from broker.broker import Broker
 
 from flask import Flask, jsonify, Response, redirect, url_for, request
 from flask_cors import CORS
