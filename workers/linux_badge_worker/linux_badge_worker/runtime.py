@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 import click
-from augur_worker_github.worker import GitHubWorker
+from linux_badge_worker.worker import BadgeWorker
 
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
@@ -9,9 +9,6 @@ def create_server(app, gw):
     Can retrieve the workers config object
     """
     
-    @app.route("/")
-    def hello():
-        return "Hello World!"
 
     @app.route("/AUGWOP/task", methods=['POST', 'GET'])
     def augwop_task():
@@ -40,7 +37,7 @@ def create_server(app, gw):
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51232, help='Port')
+@click.option('--port', default=51235, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
@@ -57,14 +54,14 @@ def main(augur_url, host, port):
 
     config = { 
             'database_connection_string': 'psql://localhost:5432/augur',
-            "key": "2759b561575060cce0d87c0f8d7f72f53fe35e14",
-            "display_name": "GitHub API Key",
-            "description": "API Token for the GitHub API v3",
+            "key": "",
+            "display_name": "",
+            "description": "",
             "required": 1,
             "type": "string"
         }
 
-    app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
+    app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)

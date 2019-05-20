@@ -53,7 +53,7 @@ def query(git_url):
 
 
 
-class GitHubWorker:
+class BadgeWorker:
     """ Worker that collects data from the Github API and stores it in our database
     task: current task being worked on
     child: current process of the queue being ran
@@ -69,7 +69,7 @@ class GitHubWorker:
         self.API_KEY = self.config['key']
         
         specs = {
-            "id": "com.augurlabs.core.github_worker",
+            "id": "com.augurlabs.core.badge_worker",
             "location": "http://localhost:51232",
             "qualifications":  [
                 {
@@ -88,9 +88,9 @@ class GitHubWorker:
         """
         self.config = {
             'database_connection_string': 'psql://localhost:5432/augur',
-            "key": "2759b561575060cce0d87c0f8d7f72f53fe35e14",
-            "display_name": "GitHub API Key",
-            "description": "API Token for the GitHub API v3",
+            "key": "",
+            "display_name": "",
+            "description": "",
             "required": 1,
             "type": "string"
         }

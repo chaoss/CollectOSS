@@ -20,6 +20,7 @@ class Worker():
         self.qualifications = qualifications
         self.given = qualifications[0]['given'][0][0]
         print("Worker given: " + self.given)
+        #queue
 
 class Job():
     """ Defines the instructions to give to a worker about the data needed to be inserted in our database
