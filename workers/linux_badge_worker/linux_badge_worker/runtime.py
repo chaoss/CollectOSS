@@ -53,8 +53,14 @@ def main(augur_url, host, port):
     # Base.query = self.__Session.query_property()
 
     config = { 
-            'database_connection_string': 'psql://localhost:5432/augur',
-            "key": "",
+            "connection_string": "postgresql://localhost:5432/gabeheim",
+            "host": "nekocase.augurlabs.io",
+            "password": "avengers22",
+            "port": "5433",
+            "user": "augur",
+            "database": "augur",
+            "table": "repo_badging",
+            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             "display_name": "",
             "description": "",
             "required": 1,

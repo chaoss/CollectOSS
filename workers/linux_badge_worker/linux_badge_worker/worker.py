@@ -1,55 +1,19 @@
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 import requests
+import pandas as pd
+import sqlalchemy as s
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy import MetaData
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
     Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
     and the github_url given that it will be collecting data for
     """
-    def __init__(self, message_type='TASK', github_url=None):
+    def __init__(self, message_type='TASK', entry_info=None):
         self.type = message_type
-        self.github_url = github_url
-
-
-def collect(queue, config):
-    """ Function to process each entry in the worker's task queue
-    Determines what action to take based off the message type
-    """
-    while True:
-        try:
-            message = queue.get()
-        except Queue.Empty:
-            break
-
-        if message.type == 'EXIT':
-            break
-        if message.type != 'TASK':
-            raise ValueError(f'{message.type} is not a recognized task type')
-        print(message.github_url)
-
-        if message.type == 'TASK':
-            query(message.github_url)
-
-def query(git_url):
-    """ Data collection function
-    Query the github api for contributors and issues (not yet implemented)
-    """
-    path = urlparse(url)
-    split = path[2].split('/')
-
-    owner = split[1]
-    name = split[2]
-
-    url = ("https://api.github.com/repos/" + owner + "/" + name + "/contributors")
-
-    request = requests.get(url)
-    if request.status_code == 200:
-        print(request.json())
-        return request.json()
-    else:
-        raise Exception("ERROR {}".format(request.status_code)) 
-    #call method that starting
+        self.entry_info = entry_info
 
 
 
@@ -65,8 +29,8 @@ class BadgeWorker:
         self._child = None
         self._queue = Queue()
         self.config = config
-        # self.update_config(self, config)
-        self.API_KEY = self.config['key']
+        self.db = None
+        self.table = None
         
         specs = {
             "id": "com.augurlabs.core.badge_worker",
@@ -79,6 +43,50 @@ class BadgeWorker:
             ],
             "config": [self.config]
         }
+
+        """
+        Connect to GHTorrent
+        
+        :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
+        """
+        self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
+        )
+
+        dbschema='augur_data' # Searches left-to-right
+        self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(dbschema)})
+
+        
+        # produce our own MetaData object
+        metadata = MetaData()
+
+        # we can reflect it ourselves from a database, using options
+        # such as 'only' to limit what tables we look at...
+        metadata.reflect(self.db, only=['repo_badging'])
+
+        # we can then produce a set of mappings from this MetaData.
+        Base = automap_base(metadata=metadata)
+
+        # calling prepare() just sets up mapped classes and relationships.
+        Base.prepare()
+
+        # mapped classes are ready
+        self.table = Base.classes.repo_badging.__table__
+
+
+        """ Query all repos """
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_git, repo_id FROM repo
+            """)
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+
+        #fill queue
+        for index, row in rs.iterrows():
+            self._queue.put(CollectorTask(message_type='TASK', entry_info=row))
+
+        self.run()
+
 
         requests.post('http://localhost:5000/api/workers', json=specs) #hello message
         
@@ -114,8 +122,7 @@ class BadgeWorker:
             if 'github.com' in git_url:
                 self._task = value
                 self.run()
-        # else:
-            # raise ValueError('Queue is already full')
+
 
     def cancel(self):
         """ Delete/cancel current task
@@ -127,4 +134,37 @@ class BadgeWorker:
         Gets run whenever a new task is added
         """
         if not self._child:
-            self._child = Process(target=collect, args=((self._queue, self.config),))
+            self._child = Process(target=self.collect, args=())
+            self._child.start()
+
+    def collect(self):
+        """ Function to process each entry in the worker's task queue
+        Determines what action to take based off the message type
+        """
+        while True:
+            if not self._queue.empty():
+                message = self._queue.get()
+            else:
+                break
+
+            if message.type == 'EXIT':
+                break
+            if message.type != 'TASK':
+                raise ValueError(f'{message.type} is not a recognized task type')
+
+            if message.type == 'TASK':
+                self.query(message.entry_info)
+
+    def query(self, entry_info):
+        """ Data collection function
+        Query the github api for contributors and issues (not yet implemented)
+        """
+        extension = "?pq=" + entry_info['repo_git']
+        url = self.config['endpoint'] + extension
+
+        r = requests.get(url=url)
+        data = r.json()
+        data[0]['repo_id'] = entry_info['repo_id']
+
+        self.db.execute(self.table.insert().values(data[0]))
+
