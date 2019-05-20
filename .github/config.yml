@@ -1,0 +1,45 @@
+# Configuration for welcome - https://github.com/behaviorbot/welcome
+
+# Configuration for new-issue-welcome - https://github.com/behaviorbot/new-issue-welcome
+
+# Comment to be posted to on first time issues
+newIssueWelcomeComment: |
+  Thanks for opening your first issue here! 🛠
+  We always appreciate attentive users and developers such as yourself.
+  
+  Please be sure to follow the issue template, as the info it provides will help us help you!
+  
+  If you have any questions, please don't hesitate contact @ccarterlandis, @sgoggins, or @gabe-heim!
+
+# Configuration for new-pr-welcome - https://github.com/behaviorbot/new-pr-welcome
+
+# Comment to be posted to on PRs from first time contributors in your repository
+newPRWelcomeComment: |
+  Thanks for opening this pull request! 🚀
+  We're grateful for your contribution and are excited to work with you to make our project even better!
+
+  If you've added any new metrics, please make sure that you've added sufficient documentation and tests. Guides for these things can be found [here](http://augur.augurlabs.io/static/docs/dev-guide/3-backend.html#defining-a-plugin-s-functionality).
+  
+  Please make sure that all of your commits contain a DCO sign-off. If you'd like more info about DCO, you can find it [here](https://developercertificate.org/).
+
+  We also ask that your commit messages follow a few guidelines for enhanced readability. We ask that commit messages:
+   - Separate subject from body with a blank line
+   - Limit the subject line to 50 characters
+   - Capitalize the subject line
+   - Do not end the subject line with a period
+   - Use the imperative mood in the subject line
+   - Wrap the body at 72 characters
+   - Use the body to explain what and why vs. how
+
+  If you have any questions, please don't hesitate contact @ccarterlandis, @sgoggins, or @gabe-heim!
+
+# Configuration for first-pr-merge - https://github.com/behaviorbot/first-pr-merge
+
+# Comment to be posted to on pull requests merged by a first time user
+firstPRMergeComment: |
+  Congrats on merging your first pull request! 🎉 
+  We here at Augur are proud of you and we can't wait see what you'll do next!
+
+  If you have any questions, please don't hesitate contact @ccarterlandis, @sgoggins, or @gabe-heim!
+
+# It is recommended to include as many gifs and emojis as possible!
