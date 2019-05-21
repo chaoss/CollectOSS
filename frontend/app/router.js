@@ -77,6 +77,36 @@ let routes = [
             ]
       },
       {
+            path: '/groups',
+            component: Default,
+            children: [
+                  {
+                        path: "",
+                        name: "groups",
+                        components: {
+                              sidebar: MainSidebar,
+                              navbar: MainNavbar,
+                              content: Tables
+                        }
+                  }
+            ]
+      },
+      {
+            path: '/insights',
+            component: Default,
+            children: [
+                  {
+                        path: "",
+                        name: "insights",
+                        components: {
+                              sidebar: MainSidebar,
+                              navbar: MainNavbar,
+                              content: Tables
+                        }
+                  }
+            ]
+      },
+      {
             path: '/repo/:owner?/:repo',
             component: Default,
             children: [
