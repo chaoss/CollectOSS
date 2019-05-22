@@ -10,3 +10,7 @@ def create_routes(server):
         worker = request.json
         server.broker.add_new_worker(worker)
         return jsonify({"status": "success"})
+
+    @server.app.route('{}/completed_task'.format(server.API_VERSION), methods=['POST'])
+    def sync_queue():
+    	server.broker.completed_job()

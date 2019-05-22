@@ -1,5 +1,6 @@
 import logging
 import requests
+from multiprocessing import Process, Queue
 logging.basicConfig(filename='logs/server.log')
 logger = logging.getLogger(name="broker_logger")
 
@@ -14,13 +15,13 @@ class Worker():
     location: the url of the server a worker is working on
     qualifications: consists of the given and model a worker is able to provide data about
     """
-    def __init__(self, ID, location, qualifications):
-        self.ID = ID
+    def __init__(self, id, location, qualifications):
+        self.id = id
         self.location = location
         self.qualifications = qualifications
         self.given = qualifications[0]['given'][0][0]
         print("Worker given: " + self.given)
-        #queue
+        self.queue = Queue()
 
 class Job():
     """ Defines the instructions to give to a worker about the data needed to be inserted in our database
@@ -47,27 +48,44 @@ class Broker(object):
     def __init__(self):
         """ Initialize the broker's maintained sets of connected workers and created jobs
         """
-        self.connected_workers = []
+        self.connected_workers = {}
         self.created_jobs = []
 
     def add_new_worker(self, worker):
         """ Method to add a new worker to the set of workers the broker is managing
         """
-        self.connected_workers.append(Worker(ID=worker['id'], location=worker['location'], qualifications=worker['qualifications']))
+        self.connected_workers[worker['id']] = (Worker(id=worker['id'], location=worker['location'], qualifications=worker['qualifications']))
 
-    def create_job(self, job):
+    def create_job(self, job_received):
         """ Method to add a job to the brokers set of maintained jobs and find compatible workers for it
         Hits compatible workers' AUGWOP endpoints that adds the job to their queues
         """
-        self.created_jobs.append(Job(job_type=job['job_type'], models=job['models'], given=job["given"]))
+        # self.created_jobs.append(Job(job_type=job['job_type'], models=job['models'], given=job["given"]))
 
-        for job in self.created_jobs:
-            job_given = list(job.given.keys())[0]
-            compatible_workers = [worker for worker in self.connected_workers if worker.given == job_given]
+        # job = Job(job_type=job_received['job_type'], models=job_received['models'], given=job_received["given"])
+        # for job in self.created_jobs:
+        job_given = list(job_received['given'].keys())[0]
+        compatible_workers = [worker for worker in self.connected_workers.values() if worker.given == job_given]
 
-            for worker in compatible_workers:
-                task = {'task': job.given}
-                requests.post(worker.location + '/AUGWOP/task', json=task)
+        for worker in compatible_workers:
+            self.connected_workers[worker.id].queue.put(job_received)
+            print(worker.id + "'s queue after adding the job: ")
+            print(dump_queue(self.connected_workers[worker.id].queue))
+            requests.post(worker.location + '/AUGWOP/task', json=job_received)
 
+    def completed_job(self, worker_id, job):
+        completed_job = self.connected_workers[worker_id].queue.get()
+        print(completed_job)
 
+def dump_queue(queue):
+    """
+    Empties all pending items in a queue and returns them in a list.
+    """
+    result = []
+    queue.put("STOP")
+
+    for i in iter(queue.get, 'STOP'):
+        result.append(i)
+    # time.sleep(.1)
+    return result
 

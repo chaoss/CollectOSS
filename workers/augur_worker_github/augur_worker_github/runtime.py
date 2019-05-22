@@ -40,7 +40,7 @@ def create_server(app, gw):
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51232, help='Port')
+@click.option('--port', default=51235, help='Port') # Change default port #? Was 51232
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
@@ -55,21 +55,35 @@ def main(augur_url, host, port):
     # self.session = self.__Session()
     # Base.query = self.__Session.query_property()
 
+    # config = { 
+    #         'database_connection_string': 'psql://localhost:5432/augur',
+    #         "key": "2759b561575060cce0d87c0f8d7f72f53fe35e14",
+    #         "display_name": "GitHub API Key",
+    #         "description": "API Token for the GitHub API v3",
+    #         "required": 1,
+    #         "type": "string"
+    #     }
+
     config = { 
-            'database_connection_string': 'psql://localhost:5432/augur',
+            "connection_string": "postgresql://localhost:5432/augur",
             "key": "2759b561575060cce0d87c0f8d7f72f53fe35e14",
-            "display_name": "GitHub API Key",
-            "description": "API Token for the GitHub API v3",
+            "host": "nekocase.augurlabs.io",
+            "password": "avengers22",
+            "port": "5433",
+            "user": "augur",
+            "database": "augur",
+            "table": "contributors",
+            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
+            "display_name": "",
+            "description": "",
             "required": 1,
             "type": "string"
         }
 
     app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
-    
+
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)
-    
-
 
 def read_config(self, section, name, environment_variable=None, default=None):
         """

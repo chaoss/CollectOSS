@@ -15,11 +15,20 @@ class CollectorTask:
         self.type = message_type
         self.entry_info = entry_info
 
-
+def dump_queue(queue):
+    """
+    Empties all pending items in a queue and returns them in a list.
+    """
+    result = []
+    queue.put("STOP")
+    for i in iter(queue.get, 'STOP'):
+        result.append(i)
+    # time.sleep(.1)
+    return result
 
 class BadgeWorker:
     """ Worker that collects data from the Github API and stores it in our database
-    task: current task being worked on
+    task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
     queue: queue of tasks to be fulfilled
     config: holds info like api keys, descriptions, and database connection strings
@@ -34,11 +43,11 @@ class BadgeWorker:
         
         specs = {
             "id": "com.augurlabs.core.badge_worker",
-            "location": "http://localhost:51232",
+            "location": "http://localhost:51235",
             "qualifications":  [
                 {
                     "given": [["git_url"]],
-                    "models":["issues"]
+                    "models":["badges"]
                 }
             ],
             "config": [self.config]
@@ -75,18 +84,18 @@ class BadgeWorker:
         self.table = Base.classes.repo_badging.__table__
 
 
-        """ Query all repos """
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo
-            """)
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        # """ Query all repos """
+        # repoUrlSQL = s.sql.text("""
+        #     SELECT repo_git, repo_id FROM repo
+        #     """)
+        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
-        #fill queue
-        for index, row in rs.iterrows():
-            self._queue.put(CollectorTask(message_type='TASK', entry_info=row))
+        # #fill queue
+        # for index, row in rs.iterrows():
+        #     entry_info = {"git_url": row["repo_git"], "repo_id": row["repo_id"]}
+        #     self._queue.put(CollectorTask(message_type='TASK', entry_info=entry_info))
 
-        self.run()
-
+        # self.run()
 
         requests.post('http://localhost:5000/api/workers', json=specs) #hello message
         
@@ -113,11 +122,26 @@ class BadgeWorker:
     
     @task.setter
     def task(self, value):
-        """ Method to set or update the current task property's value
+        """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        git_url = value[0]['given']['git_url']
-        self._queue.put(CollectorTask(message_type='TASK', github_url=git_url))
+        print("VALUE", value)
+        git_url = value['given']['git_url']
+
+        """ Query all repos """
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_id FROM repo WHERE repo_git = '{}'
+            """.format(git_url))
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        print(rs, repoUrlSQL)
+        try:
+            self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs.iloc[0]["repo_id"]}))
+        
+        # list_queue = dump_queue(self._queue)
+        # print("worker's queue after adding the job: " + list_queue)
+
+        except:
+            print("that repo is not in our database")
         if self._queue.empty(): 
             if 'github.com' in git_url:
                 self._task = value
@@ -159,12 +183,15 @@ class BadgeWorker:
         """ Data collection function
         Query the github api for contributors and issues (not yet implemented)
         """
-        extension = "?pq=" + entry_info['repo_git']
+        extension = "?pq=" + entry_info['git_url']
         url = self.config['endpoint'] + extension
 
         r = requests.get(url=url)
         data = r.json()
         data[0]['repo_id'] = entry_info['repo_id']
-
+        print(self.table)
         self.db.execute(self.table.insert().values(data[0]))
+        requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
+
+
 
