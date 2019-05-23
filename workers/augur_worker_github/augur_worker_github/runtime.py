@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 import click
-from augur_worker_github.worker import GitHubWorker
+from linux_badge_worker.worker import BadgeWorker
+import os
+import json
 
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
@@ -9,26 +11,21 @@ def create_server(app, gw):
     Can retrieve the workers config object
     """
     
-    @app.route("/")
-    def hello():
-        return "Hello World!"
-
     @app.route("/AUGWOP/task", methods=['POST', 'GET'])
     def augwop_task():
-        """ AUGWOP endpoint that gets hit to add a task to the workers queue
+        """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
         """
         if request.method == 'POST': #will post a task to be added to the queue
             print(request.json)
-            app.gh_worker._queue.put(request.json)
+            app.gh_worker.task = request.json
             #set task
             return jsonify({"success": "sucess"})
         if request.method == 'GET': #will retrieve the current tasks/status of the worker
             return jsonify({
-                "status": "IDLE",
+                "status": gh_worker._queue if condition else condition_if_false,
                 "tasks": [{
-                    "given": []
-                }],
-                "test": gh_worker.tasks
+                    "given": list(gh_worker._queue)
+                }]
             })
 
     @app.route("/AUGWOP/config")
@@ -40,39 +37,23 @@ def create_server(app, gw):
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51235, help='Port') # Change default port #? Was 51232
+@click.option('--port', default=51235, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
     app = Flask(__name__)
 
-    # # Create DB Session
-    # self.db = None
-    # self.session = None
-    # db_str = self.read_config('Database', 'connection_string', 'AUGUR_DATABASE', 'sqlite:///:memory:')
-    # self.db = create_engine(db_str)
-    # self.__Session = scoped_session(sessionmaker(bind=self.db))
-    # self.session = self.__Session()
-    # Base.query = self.__Session.query_property()
-
-    # config = { 
-    #         'database_connection_string': 'psql://localhost:5432/augur',
-    #         "key": "2759b561575060cce0d87c0f8d7f72f53fe35e14",
-    #         "display_name": "GitHub API Key",
-    #         "description": "API Token for the GitHub API v3",
-    #         "required": 1,
-    #         "type": "string"
-    #     }
+    #load credentials
+    credentials = read_config("Database")
 
     config = { 
-            "connection_string": "postgresql://localhost:5432/augur",
-            "key": "2759b561575060cce0d87c0f8d7f72f53fe35e14",
-            "host": "nekocase.augurlabs.io",
-            "password": "avengers22",
-            "port": "5433",
-            "user": "augur",
-            "database": "augur",
-            "table": "contributors",
+            "connection_string": credentials["connection_string"],
+            "host": credentials["host"],
+            "password": credentials["password"],
+            "port": credentials["port"],
+            "user": credentials["user"],
+            "database": credentials["database"],
+            "table": "repo_badging",
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             "display_name": "",
             "description": "",
@@ -80,37 +61,62 @@ def main(augur_url, host, port):
             "type": "string"
         }
 
-    app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
-
+    #create instance of the worker
+    app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
+    
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)
+    
 
-def read_config(self, section, name, environment_variable=None, default=None):
+
+def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0):
         """
         Read a variable in specified section of the config file, unless provided an environment variable
 
         :param section: location of given variable
         :param name: name of variable
         """
-        value = None
-        if environment_variable is not None:
-            value = os.getenv(environment_variable)
-        if value is None:
+
+        __config_bad = False
+        __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
+        __config_location = os.path.dirname(__config_file_path)
+        __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
+        __default_config = { 'Database': {"host": "nekocase.augurlabs.io"} }
+
+        if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
             try:
-                value =  self.__config[section][name]
-            except Exception as e:
-                value = default
-                if not section in self.__config:
-                    self.__config[section] = {}
-                if self.__using_config_file:
-                    self.__config_bad = True
-                    self.__config[section][name] = default
-        if (environment_variable is not None
-                and value is not None
-                and self.__export_env
-                and not hasattr(self.__already_exported, environment_variable)):
-            self.__export_file.write('export ' + environment_variable + '="' + str(value) + '"\n')
-            self.__already_exported[environment_variable] = True
-        if os.getenv('AUGUR_DEBUG_LOG_ENV', '0') == '1':
-            logger.debug('{}:{} = {}'.format(section, name, value))
-        return value
+                __config_file = open(__config_file_path, 'r+')
+            except:
+                # logger.info('Couldn\'t open {}, attempting to create. If you have a augur.cfg, you can convert it to a json file using "make to-json"'.format(config_file))
+                if not os.path.exists(__config_location):
+                    os.makedirs(__config_location)
+                __config_file = open(__config_file_path, 'w+')
+                __config_bad = True
+
+
+            # Options to export the loaded configuration as environment variables for Docker
+           
+            if __export_env:
+                
+                export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
+                __export_file = open(export_filename, 'w+')
+                # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
+                __export_file.write('#!/bin/bash\n')
+
+            # Load the config file and return [section][name]
+            try:
+                config_text = __config_file.read()
+                __config = json.loads(config_text)
+                if name is not None:
+                    return(__config[section][name])
+                else:
+                    return(__config[section])
+
+            except json.decoder.JSONDecodeError as e:
+                if not __config_bad:
+                    __using_config_file = False
+                    # logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', __config_file_path, str(e))
+
+                __config = __default_config
+                return(__config[section][name])
+

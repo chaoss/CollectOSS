@@ -64,13 +64,24 @@ class Broker(object):
 
         # job = Job(job_type=job_received['job_type'], models=job_received['models'], given=job_received["given"])
         # for job in self.created_jobs:
-        job_given = list(job_received['given'].keys())[0]
-        compatible_workers = [worker for worker in self.connected_workers.values() if worker.given == job_given]
+        given = list(job_received['given'].keys())[0]
+        compatible_workers = [worker for worker in self.connected_workers.values() if worker.given == given]
 
         for worker in compatible_workers:
-            self.connected_workers[worker.id].queue.put(job_received)
+
+            """ PRIORITY KEY:
+                0 - user/endpoint created job ("UPDATE" job type)
+                1 - a maintained job created by the housekeeper ("MAINTAIN" job type)
+            """
+
+            if job_received['job_type'] == "UPDATE":
+                self.connected_workers[worker.id].queue.put(job_received)
+            elif job_received['job_type'] == "MAINTAIN":
+                self.connected_workers[worker.id].queue.put(job_received)
+
             print(worker.id + "'s queue after adding the job: ")
             print(dump_queue(self.connected_workers[worker.id].queue))
+
             requests.post(worker.location + '/AUGWOP/task', json=job_received)
 
     def completed_job(self, worker_id, job):

@@ -12,3 +12,5 @@ def create_routes(server):
         print(job['given'])
         server.broker.create_job(job)
         return jsonify({"job": job})
+
+    
