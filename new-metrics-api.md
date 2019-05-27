@@ -72,27 +72,3 @@
     server.addTimeseries(ghtorrent.code_review_iteration, 'code_review_iteration')
 
 ```
-
-3. example file 3: 'augurAPI.js' in the `augur/frontend/app/` directory needs to have the the metric from `routes.py` mapped to an API endpoint that the frontend will then access. 
-   - Metrics from the facade.py that take a git url should go under the //GIT section in this file
-   - Most of your metrics are going to belong in the //GROWTH, MATURITY AND DECLINE section. 
-```javascript
-
-    // IN THIS SECTION of augurAPI.js DEVELOPER NOTE
-
-    if (repo.owner && repo.name) {
-      // DIVERSITY AND INCLUSION
-      // GROWTH, MATURITY, AND DECLINE
-
-      // FIND THE RIGHT SECTION, like "GROWTH, MATURITY AND DECLINE" and ADD YOUR code
-      Timeseries(repo, 'closedIssues', 'issues/closed')
-      Timeseries(repo, 'closedIssueResolutionDuration', 'issues/time_to_close')
-      Timeseries(repo, 'codeCommits', 'commits')
-      // Timeseries(repo, 'codeReviews', 'code_reviews')
-
-      // THIS IS THE NEW METRIC IN OUR EXAMPLE
-      Timeseries(repo, 'codeReviewIteration', 'code_review_iteration')
-    }
-
-```
-
