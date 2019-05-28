@@ -15,11 +15,20 @@ class CollectorTask:
         self.type = message_type
         self.entry_info = entry_info
 
-
+def dump_queue(queue):
+    """
+    Empties all pending items in a queue and returns them in a list.
+    """
+    result = []
+    queue.put("STOP")
+    for i in iter(queue.get, 'STOP'):
+        result.append(i)
+    # time.sleep(.1)
+    return result
 
 class GitHubWorker:
     """ Worker that collects data from the Github API and stores it in our database
-    task: current task being worked on
+    task: most recent task the broker added to the worker's queue
     child: current process of the queue being ran
     queue: queue of tasks to be fulfilled
     config: holds info like api keys, descriptions, and database connection strings
@@ -29,7 +38,6 @@ class GitHubWorker:
         self._child = None
         self._queue = Queue()
         self.config = config
-        # self.update_config(self, config)
         self.db = None
         self.table = None
         self.API_KEY = self.config['key']
@@ -47,7 +55,7 @@ class GitHubWorker:
         }
 
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
+            self.config['user'], self.config['pass'], self.config['host'], self.config['port'], self.config['database']
         )
         
         dbschema = 'augur_data'
@@ -56,15 +64,19 @@ class GitHubWorker:
 
         metadata = MetaData()
 
-        metadata.reflect(self.db, only=['contributors'])
+        metadata.reflect(self.db, only=['issues', 'message', 'issue_message_ref'])
 
         Base = automap_base(metadata=metadata)
 
         Base.prepare()
 
-        self.table = Base.classes.contributors.__table__
+        self.table = Base.classes.issues.__table__
+        self.table1 = Base.classes.issues.__table__
+        self.table2 = Base.classes.message.__table__
+        self.table3 = Base.classes.issue_message_ref.__table__
 
-        # Query all repos
+
+        # Query all repos // CHANGE THIS
         repoUrlSQL = s.sql.text("""
             SELECT repo_git, repo_id FROM repo
             """)
@@ -83,17 +95,9 @@ class GitHubWorker:
         """ Method to update config and set a default
         """
         self.config = {
-            'database_connection_string': 'psql://localhost:5432/augur',
-            "key": "2759b561575060cce0d87c0f8d7f72f53fe35e14",
-            "host": "nekocase.augurlabs.io",
-            "password": "avengers22",
-            "port": "5433",
-            "user": "augur",
-            "database": "augur",
-            "table": "contributors",
-            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
-            "display_name": "GitHub API Key",
-            "description": "API Token for the GitHub API v3",
+            'database_connection_string': 'psql://localhost:5433/augur',
+            "display_name": "",
+            "description": "",
             "required": 1,
             "type": "string"
         }
@@ -108,11 +112,26 @@ class GitHubWorker:
     
     @task.setter
     def task(self, value):
-        """ Method to set or update the current task property's value
+        """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        git_url = value[0]['given']['git_url']
-        self._queue.put(CollectorTask(message_type='TASK', github_url=git_url))
+        print("VALUE", value)
+        git_url = value['given']['git_url']
+
+        """ Query all repos """
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_id FROM repo WHERE repo_git = '{}'
+            """.format(git_url))
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        print(rs, repoUrlSQL)
+        try:
+            self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs.iloc[0]["repo_id"]}))
+        
+        # list_queue = dump_queue(self._queue)
+        # print("worker's queue after adding the job: " + list_queue)
+
+        except:
+            print("that repo is not in our database")
         if self._queue.empty(): 
             if 'github.com' in git_url:
                 self._task = value
@@ -162,60 +181,148 @@ class GitHubWorker:
         owner = split[1]
         name = split[2]
 
-        url = ("https://api.github.com/repos/" + owner + "/" + name + "/contributors") # Issues??
-        # check if contributor has been loaded in already before creating duplicates
-        # only store contributors in the database
+        ### CONTRIBUTORS ###
+
+        url = ("https://api.github.com/repos/" + owner + "/" + name + "/contributors")
+
+        r = requests.get(url=url)
+        data = r.json()
+        data[1]['repo_id'] = entry_info['repo_id']
+        
+        modified_data = {
+            # "cntrb_login": 'test',
+            # "cntrb_email": 'test',
+            # "cntrb_company": 'test',
+            # "cntrb_type": 'test',
+            # "cntrb_fake": 1,
+            # "cntrb_deleted": 1,
+            # "cntrb_long": 1,
+            # "cntrb_lat": 1,
+            # "cntrb_country_code": 1,
+            # "cntrb_state": 'test',
+            # "cntrb_city": 'test',
+            # "cntrb_location": 'test',
+            # "cntrb_canonical": 'test',
+            "gh_user_id": data[1]['id'],
+            "gh_login": data[1]['login'],
+            "gh_url": data[1]['url'],
+            "gh_html_url": data[1]['html_url'],
+            "gh_node_id": data[1]['node_id'],
+            "gh_avatar_url": data[1]['avatar_url'],
+            "gh_gravatar_id": data[1]['gravatar_id'],
+            "gh_followers_url": data[1]['followers_url'],
+            "gh_following_url": data[1]['following_url'],
+            "gh_gists_url": data[1]['gists_url'],
+            "gh_starred_url": data[1]['starred_url'],
+            "gh_subscriptions_url": data[1]['subscriptions_url'],
+            "gh_organizationas_url": data[1]['organizations_url'],
+            "gh_repos_url": data[1]['repos_url'],
+            "gh_events_url": data[1]['events_url'],
+            "gh_received_events_url": data[1]['received_events_url'],
+            "gh_type": data[1]['type'],
+            "gh_site_admin": data[1]['site_admin'],
+            # "tool_source": 'test',
+            # "tool_version": 'test',
+            # "data_source": 'test',
+        }
+
+        # self.db.execute(self.table.insert().values(modified_data))
+
+
+        ### ISSUES ###
+
+        url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues")
 
         r = requests.get(url=url)
         data = r.json()
         data[0]['repo_id'] = entry_info['repo_id']
-        
+
         modified_data = {
-            "cntrb_id": data[0]['id'],
-            "cntrb_login": 'test',
-            "cntrb_email": 'test',
-            "cntrb_company": 'test',
-            "cntrb_created_at": '2016-06-22 19:10:25-07',
-            "cntrb_type": 'test',
-            "cntrb_fake": 1,
-            "cntrb_deleted": 1,
-            "cntrb_long": 1,
-            "cntrb_lat": 1,
-            "cntrb_country_code": 1,
-            "cntrb_state": 'test',
-            "cntrb_city": 'test',
-            "cntrb_location": 'test',
-            "cntrb_canonical": 'test',
-            "gh_user_id": data[0]['id'],
-            "gh_login": data[0]['login'],
-            "gh_url": data[0]['url'],
-            "gh_html_url": data[0]['html_url'],
-            "gh_node_id": data[0]['node_id'],
-            "gh_avatar_url": data[0]['avatar_url'],
-            "gh_gravatar_id": data[0]['gravatar_id'],
-            "gh_followers_url": data[0]['followers_url'],
-            "gh_following_url": data[0]['following_url'],
-            "gh_gists_url": data[0]['gists_url'],
-            "gh_starred_url": data[0]['starred_url'],
-            "gh_subscriptions_url": data[0]['subscriptions_url'],
-            "gh_organizationas_url": data[0]['organizations_url'],
-            "gh_repos_url": data[0]['repos_url'],
-            "gh_events_url": data[0]['events_url'],
-            "gh_received_events_url": data[0]['received_events_url'],
-            "gh_type": data[0]['type'],
-            "gh_site_admin": data[0]['site_admin'],
-            "tool_source": 'test',
-            "tool_version": 'test',
-            "data_source": 'test',
-            "data_collection_date": '2016-06-22 19:10:25-07'
+            "issue_id": data[0]['number'], # primary key
+            "repo_id": data[0]['repo_id'],
+        #     "reporter_id": 1,
+            "pull_request": data[0]['number'],
+            "pull_request_id": data[0]['number'],
+            "issue_title": data[0]['title'],
+            "issue_body": data[0]['body'],
+        #     "cntrb_id": 1,
+            "comment_count": data[0]['comments'],
+            "updated_at": data[0]['updated_at'],
+            "closed_at": data[0]['closed_at'],
+            "repository_url": data[0]['repository_url'],
+            "issue_url": data[0]['url'],
+            "labels_url": data[0]['labels_url'],
+            "comments_url": data[0]['comments_url'],
+            "events_url": data[0]['events_url'],
+            "html_url": data[0]['html_url'],
+            "issue_state": data[0]['state'],
+        #    "issue_node_id": 1, #data[0]['node_id'], change to int ?
+            "gh_issue_id": data[0]['id'],
+            "gh_user_id": data[0]['user']['id']
+        #     "tool_source": 'test', # change
+        #     "tool_version": 'test', # change
+        #     "data_source": 'test' # change
         }
 
-        self.db.execute(self.table.insert().values(modified_data))
+        # self.db.execute(self.table.insert().values(modified_data))
+        
+        ### ISSUE COMMENTS ####
 
-        # request = requests.get(url)
-        # if request.status_code == 200:
-        #     print(request.json())
-        #     return request.json()
-        # else:
-        #     raise Exception("ERROR {}".format(request.status_code))
-        # #call method that starting
+        issue_number = '245'
+
+        url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues/" + issue_number)
+        r = requests.get(url=url)
+        data_issues = r.json()
+
+        data_issues['repo_id'] = entry_info['repo_id']
+
+        modified_data_issues = {
+            "issue_id": data_issues['number'], # primary key
+            "repo_id": data_issues['repo_id'],
+        #     "reporter_id": 1,
+            "pull_request": data_issues['number'],
+            "pull_request_id": data_issues['number'],
+            "issue_title": data_issues['title'],
+            "issue_body": data_issues['body'],
+        #     "cntrb_id": 1,
+            "comment_count": data_issues['comments'],
+            "updated_at": data_issues['updated_at'],
+            "closed_at": data_issues['closed_at'],
+            "repository_url": data_issues['repository_url'],
+            "issue_url": data_issues['url'],
+            "labels_url": data_issues['labels_url'],
+            "comments_url": data_issues['comments_url'],
+            "events_url": data_issues['events_url'],
+            "html_url": data_issues['html_url'],
+            "issue_state": data_issues['state'],
+        #    "issue_node_id": 1, #data[0]['node_id'], change to int ?
+            "gh_issue_id": data_issues['id'],
+            "gh_user_id": data_issues['user']['id']
+        #     "tool_source": 'test',
+        #     "tool_version": 'test',
+        #     "data_source": 'test'
+        }
+
+        # self.db.execute(self.table1.insert().values(modified_data_issues))
+
+        url = (url + "/comments")
+        r = requests.get(url=url)
+        data_message = r.json()
+
+        modified_data_message = {
+            "pltfrm_id": 25150,
+            "msg_text": data_message[0]['body'],
+            "msg_timestamp": data_message[0]['created_at']
+        }
+
+        # self.db.execute(self.table2.insert().values(modified_data_message))
+
+        ### ISSUE MESSAGE REF TABLE ###
+
+        modified_data_issue_message = {
+            "issue_id": modified_data_issues['issue_id'],
+        }
+
+        # self.db.execute(self.table3.insert().values(modified_data_issue_message))
+
+        requests.post('http://localhost:5000/api/completed_task', json=entry_info['repo_git'])
