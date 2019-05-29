@@ -68,6 +68,37 @@ class Augur(object):
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
 
+    @annotate(tag='pull-requests-merge-contributor-new')
+    def pull_requests_merge_contributor_new(self, repo_url, period='day', begin_date=None, end_date=None):
+        """
+        Returns a timeseries of the count of persons contributing with an accepted commit for the first time.
+
+        :param repo_url: The repository's URL
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of persons/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:00:00'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        commitNewContributor = s.sql.text("""
+            SELECT date_trunc(:period, new_date::DATE) as commit_date, 
+            COUNT(cmt_ght_author_id)
+            FROM ( SELECT cmt_ght_author_id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
+            FROM commits WHERE
+            repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
+            AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_ght_author_id IS NOT NULL
+            GROUP BY cmt_ght_author_id
+            ) as abc GROUP BY commit_date
+        """)
+
+        results = pd.read_sql(commitNewContributor, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
+                                                                     'begin_date': begin_date, 'end_date': end_date})
+        return results
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
