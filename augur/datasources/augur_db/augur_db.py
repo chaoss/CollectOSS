@@ -96,6 +96,34 @@ class Augur(object):
                                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
     
+    @annotate(tag='issues-new')
+    def issues_new(self, repo_url, period='day', begin_date=None, end_date=None):
+        """Returns a timeseries of new issues opened.
+
+        :param repo_url: The repository's URL
+        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of new issues/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:00'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        issues_new_SQL = s.sql.text("""
+            SELECT date_trunc(:period, created_at::DATE) as issue_date, COUNT(issue_id) as issues
+            FROM issues
+            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1) 
+            AND created_at BETWEEN :begin_date AND :end_date
+            GROUP BY issue_date
+            ORDER  BY issue_date;
+        """)
+
+        results = pd.read_sql(issues_new_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
+                                                                'begin_date': begin_date, 'end_date': end_date})
+        return results
+        
 
     #####################################
     ###         EXPERIMENTAL          ###
