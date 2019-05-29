@@ -16,6 +16,7 @@
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ project }}</d-badge>
                 <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :source="testEndpoints[idx]" owner="twitter" repo="twemoji"></insight-chart>
+
                 <div class="card-post__author d-flex">
                   <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 2rem">
                     <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%); ">{{ getDirection(idx) }}</i>
@@ -105,7 +106,7 @@
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in repos[project].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="onGitRepo(repo)">
-                        <span class="text-semibold text-fiord-blue">{{ repo.url }}</span>
+                        <span class="text-semibold text-fiord-blue" style="font-size: .65rem">{{ repo.url }}</span>
                       </d-link> 
                       <spark-chart v-if="loaded" :color="colors[idx]" style="max-height: 50px; padding-bottom: 10px; margin-left:auto; margin-right:0;" :owner="getOwner(repo.url)" :repo="getRepo(repo.url)" source="codeCommits"/>
                     </div>

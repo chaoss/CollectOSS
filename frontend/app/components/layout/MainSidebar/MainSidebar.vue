@@ -28,9 +28,9 @@
       </form>
 
       <div class="nav-wrapper">
-          <d-nav class="flex-column" style="margin: 0 !important">
+          <d-nav class="flex-column"> <!--style="margin: 0 !important"-->
             <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
-              <d-link style="font-size: 1.4rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
+              <d-link :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
                 <span v-if="item.title">{{ item.title }}</span>
                 <div class="item-icon-wrapper" v-if="item.htmlAfter" v-html="item.htmlAfter" />
@@ -42,15 +42,15 @@
               </d-collapse>
             </li>
             <li class="nav-item dropdown" style="height: 240px !important; position: absolute; bottom: 0; margin-top: auto">
-              <d-link style="font-size: 1.4rem" class="nav-link">
+              <d-link style="font-size: 0.85rem" class="nav-link">
               <!-- <d-link style="font-size: 1.4rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`"> -->
                 <i class="material-icons">vertical_split</i>
                 <span>Comparison Manager</span>
                 <div class="item-icon-wrapper" />
               </d-link>
-              <div class="row" style="position: absolute; bottom: 0; padding-left: 15px; width: 320px !important">
+              <div class="row" style="position: absolute; bottom: 0; padding-left: 15px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
-                  <d-link class="nav-link" style="padding-left: 24px">
+                  <d-link class="nav-link" style="padding-left: 12px">
                     <i class="material-icons">autorenew</i>
                     <span>Reset</span>
                     <div class="item-icon-wrapper" />
