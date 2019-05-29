@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Data source that uses the Augur relational database of GitHub activity. 
+Data source that uses the Augur relational database of GitHub activity.
 """
 
 import pandas as pd
@@ -29,7 +29,7 @@ class Augur(object):
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
         logger.debug('GHTorrent: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
-        
+
         # try:
         #     self.userid('howderek')
         # except Exception as e:
@@ -56,22 +56,22 @@ class Augur(object):
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         code_changes_SQL = s.sql.text("""
-            SELECT date_trunc(:period, cmt_committer_date::DATE) as commit_date, COUNT(cmt_id) 
+            SELECT date_trunc(:period, cmt_committer_date::DATE) as commit_date, COUNT(cmt_id)
             FROM commits
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1) 
+            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
             AND cmt_committer_date BETWEEN :begin_date AND :end_date
             GROUP BY commit_date
             ORDER BY commit_date;
         """)
 
-        results = pd.read_sql(code_changes_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period, 
+        results = pd.read_sql(code_changes_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
 
     @annotate(tag='code-changes-lines')
     def code_changes_lines(self, repo_url, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of code changes added and removed.
-        
+
         :param repo_url: The repository's URL
         :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
@@ -86,7 +86,7 @@ class Augur(object):
         code_changes_lines_SQL = s.sql.text("""
             SELECT date_trunc(:period, cmt_author_date::DATE) as commit_date, SUM(cmt_added) AS added, SUM(cmt_removed) as removed
             FROM commits
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1) 
+            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
             AND cmt_author_date BETWEEN :begin_date AND :end_date
             GROUP BY commit_date
             ORDER BY commit_date;
@@ -95,7 +95,7 @@ class Augur(object):
         results = pd.read_sql(code_changes_lines_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
                                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
-    
+
     @annotate(tag='issues-new')
     def issues_new(self, repo_url, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of new issues opened.
@@ -114,7 +114,7 @@ class Augur(object):
         issues_new_SQL = s.sql.text("""
             SELECT date_trunc(:period, created_at::DATE) as issue_date, COUNT(issue_id) as issues
             FROM issues
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1) 
+            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
             AND created_at BETWEEN :begin_date AND :end_date
             GROUP BY issue_date
             ORDER  BY issue_date;
@@ -123,7 +123,7 @@ class Augur(object):
         results = pd.read_sql(issues_new_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
-        
+
 
     @annotate(tag='issues-closed')
     def issues_closed(self, repo_url, period='day', begin_date=None, end_date=None):
@@ -153,6 +153,24 @@ class Augur(object):
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
 
+    @annotate(tag='issue-duration')
+    def issue_duration(self, repo_url):
+        """Returns the duration of each issue.
+
+        :param repo_url: The repository's URL
+        :return: DataFrame of issue id with the corresponding duration
+        """
+        issue_duration_SQL = s.sql.text("""
+            SELECT issue_id, (closed_at - created_at) AS duration
+            FROM issues
+            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
+            AND closed_at IS NOT NULL
+            ORDER BY issue_id;
+        """)
+
+        results = pd.read_sql(issue_duration_SQL, self.db, params={'repourl': f'%{repo_url}%'})
+        return results
+
     @annotate(tag='issue-backlog')
     def issues_backlog(self, repo_url):
         """Returns number of issues currently open.
@@ -177,12 +195,12 @@ class Augur(object):
     @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):
         """
-        Returns number of lines changed per author per day 
+        Returns number of lines changed per author per day
 
         :param repo_url: the repository's URL
         """
         linesChangedByAuthorSQL = s.sql.text("""
-            SELECT cmt_author_email, cmt_author_date, cmt_author_affiliation as affiliation, 
+            SELECT cmt_author_email, cmt_author_date, cmt_author_affiliation as affiliation,
                 SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace
             FROM commits
             WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
