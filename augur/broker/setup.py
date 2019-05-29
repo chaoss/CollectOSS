@@ -10,11 +10,15 @@ with open(os.path.abspath('README.md')) as fh:
 setup(
   name='broker_test',
   version='0.0.1',
-  description=README,
-  author='Carter Landis',
-  author_email='ccarterlandis@gmail.com',
-  url='https://github.com/ccarterlandis/chambers',
-  packages=['broker_test'],
+  url="https://github.com/chaoss/augur",
+  license='MIT',
+
+  author="Augur Team",
+  author_email="s@goggins.com",
+
+  description="Augur Worker that collects GitHub data",
+  long_description=read("README.rst"),
+  packages=['broker'],
   install_requires=[
     'Flask',
     'sqlalchemy',

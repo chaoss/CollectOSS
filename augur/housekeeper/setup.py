@@ -8,12 +8,16 @@ with open(os.path.abspath('README.md')) as fh:
     README = fh.read()
 
 setup(
-  name='housekeeper_test',
+  name='housekeeper',
   version='0.0.1',
-  description=README,
-  author='Gabe Heim',
-  author_email='gabe@gabehe.im',
-  url='https://github.com/chaoss/augur',
+  url="https://github.com/chaoss/augur",
+  license='MIT',
+
+  author="Augur Team",
+  author_email="s@goggins.com",
+
+  description="Augur Worker that collects GitHub data",
+  long_description=read("README.rst"),
   packages=['housekeeper_test'],
   install_requires=[
     'Flask',
