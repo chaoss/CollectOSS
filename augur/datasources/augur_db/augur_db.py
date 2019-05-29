@@ -153,6 +153,23 @@ class Augur(object):
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
 
+    @annotate(tag='issue-backlog')
+    def issues_backlog(self, repo_url):
+        """Returns number of issues currently open.
+
+        :param repo_url: The repository's URL
+        :return: DataFrame of count of issues currently open.
+        """
+        issues_backlog_SQL = s.sql.text("""
+            SELECT COUNT(*)
+            FROM issues
+            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
+            AND issue_state='open'
+        """)
+
+        result = pd.read_sql(issues_backlog_SQL, self.db, params={'repourl': f'%{repo_url}%'})
+        return result
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
