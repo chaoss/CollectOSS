@@ -34,7 +34,7 @@
       </d-collapse>
     </li>
     <li class="nav-item dropdown" style="width: auto !important;">
-      <a class="nav-link dropdown-toggle text-nowrap px-3" v-d-toggle.user-actions style="position: relative; top: 50%; transform: translateY(-50%);font-size: 20px !important">
+      <a class="nav-link dropdown-toggle text-nowrap px-3" v-d-toggle.user-actions style="position: relative; top: 50%; transform: translateY(-50%);font-size: 0.8125rem !important">
         <!-- <img class="user-avatar rounded-circle mr-2" src="@/assets/images/avatars/0.jpg" alt="User Avatar">  -->
         <i class="material-icons">person</i>
         <span class="d-none d-md-inline-block">Gabe Gabe</span>

@@ -37,8 +37,10 @@ export default {
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 100,
-        "height": 50,
+        "width": 175,
+        "height": 55,
+        //"autosize": {"type": "fit", "contains": "padding"},
+      
       
         // "data": {"url": "https://vega.github.io/vega-lite/data/unemployment-across-industries.json"},
         "mark": {
