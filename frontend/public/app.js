@@ -9578,6 +9578,30 @@ var routes = [{
             }
       }]
 }, {
+      path: '/groups',
+      component: _Default2.default,
+      children: [{
+            path: "",
+            name: "groups",
+            components: {
+                  sidebar: _MainSidebar2.default,
+                  navbar: _MainNavbar2.default,
+                  content: _Tables2.default
+            }
+      }]
+}, {
+      path: '/insights',
+      component: _Default2.default,
+      children: [{
+            path: "",
+            name: "insights",
+            components: {
+                  sidebar: _MainSidebar2.default,
+                  navbar: _MainNavbar2.default,
+                  content: _Tables2.default
+            }
+      }]
+}, {
       path: '/repo/:owner?/:repo',
       component: _Default2.default,
       children: [{
