@@ -68,6 +68,35 @@ class Augur(object):
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
 
+    @annotate(tag='code-changes-lines')
+    def code_changes_lines(self, repo_url, period='day', begin_date=None, end_date=None):
+        """Returns a timeseries of code changes added and removed.
+        
+        :param repo_url: The repository's URL
+        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of code changes/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:00'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        code_changes_lines_SQL = s.sql.text("""
+            SELECT date_trunc(:period, cmt_author_date::DATE) as commit_date, SUM(cmt_added) AS added, SUM(cmt_removed) as removed
+            FROM commits
+            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1) 
+            AND cmt_author_date BETWEEN :begin_date AND :end_date
+            GROUP BY commit_date
+            ORDER BY commit_date;
+        """)
+
+        results = pd.read_sql(code_changes_lines_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
+                                                                        'begin_date': begin_date, 'end_date': end_date})
+        return results
+    
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
