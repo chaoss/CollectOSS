@@ -80,7 +80,7 @@ class Augur(object):
         :return: DataFrame of persons/period
         """
         if not begin_date:
-            begin_date = '1970-1-1 00:00:00:00'
+            begin_date = '1970-1-1 00:00:01'
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -112,7 +112,7 @@ class Augur(object):
         """
 
         if not begin_date:
-            begin_date = '1970-1-1 00:00:00:00'
+            begin_date = '1970-1-1 00:00:01'
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
