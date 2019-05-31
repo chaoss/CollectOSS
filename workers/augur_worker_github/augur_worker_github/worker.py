@@ -173,6 +173,11 @@ class GitHubWorker:
         """ Data collection function
         Query the github api for contributors and issues (not yet implemented)
         """
+
+        tool_source = 'AUGWOP GitHub Woker'
+        tool_version = '0.1.0' # See __init__.py
+        data_source = 'GitHup API'
+
         url = entry_info['repo_git']
 
         path = urlparse(url)
@@ -187,46 +192,48 @@ class GitHubWorker:
 
         r = requests.get(url=url)
         data = r.json()
-        data[1]['repo_id'] = entry_info['repo_id']
-        
-        modified_data = {
-            # "cntrb_login": 'test',
-            # "cntrb_email": 'test',
-            # "cntrb_company": 'test',
-            # "cntrb_type": 'test',
-            # "cntrb_fake": 1,
-            # "cntrb_deleted": 1,
-            # "cntrb_long": 1,
-            # "cntrb_lat": 1,
-            # "cntrb_country_code": 1,
-            # "cntrb_state": 'test',
-            # "cntrb_city": 'test',
-            # "cntrb_location": 'test',
-            # "cntrb_canonical": 'test',
-            "gh_user_id": data[1]['id'],
-            "gh_login": data[1]['login'],
-            "gh_url": data[1]['url'],
-            "gh_html_url": data[1]['html_url'],
-            "gh_node_id": data[1]['node_id'],
-            "gh_avatar_url": data[1]['avatar_url'],
-            "gh_gravatar_id": data[1]['gravatar_id'],
-            "gh_followers_url": data[1]['followers_url'],
-            "gh_following_url": data[1]['following_url'],
-            "gh_gists_url": data[1]['gists_url'],
-            "gh_starred_url": data[1]['starred_url'],
-            "gh_subscriptions_url": data[1]['subscriptions_url'],
-            "gh_organizationas_url": data[1]['organizations_url'],
-            "gh_repos_url": data[1]['repos_url'],
-            "gh_events_url": data[1]['events_url'],
-            "gh_received_events_url": data[1]['received_events_url'],
-            "gh_type": data[1]['type'],
-            "gh_site_admin": data[1]['site_admin'],
-            # "tool_source": 'test',
-            # "tool_version": 'test',
-            # "data_source": 'test',
-        }
 
-        # self.db.execute(self.table.insert().values(modified_data))
+        for i in range(len(data)):
+            data[item]['repo_id'] = entry_info['repo_id']
+            
+            modified_data = {
+                # "cntrb_login": 'test',
+                # "cntrb_email": 'test',
+                # "cntrb_company": 'test',
+                # "cntrb_type": 'test',
+                # "cntrb_fake": 1,
+                # "cntrb_deleted": 1,
+                # "cntrb_long": 1,
+                # "cntrb_lat": 1,
+                # "cntrb_country_code": 1,
+                # "cntrb_state": 'test',
+                # "cntrb_city": 'test',
+                # "cntrb_location": 'test',
+                # "cntrb_canonical": 'test',
+                "gh_user_id": data[i]['id'],
+                "gh_login": data[i]['login'],
+                "gh_url": data[i]['url'],
+                "gh_html_url": data[i]['html_url'],
+                "gh_node_id": data[i]['node_id'],
+                "gh_avatar_url": data[i]['avatar_url'],
+                "gh_gravatar_id": data[i]['gravatar_id'],
+                "gh_followers_url": data[i]['followers_url'],
+                "gh_following_url": data[i]['following_url'],
+                "gh_gists_url": data[i]['gists_url'],
+                "gh_starred_url": data[i]['starred_url'],
+                "gh_subscriptions_url": data[i]['subscriptions_url'],
+                "gh_organizationas_url": data[i]['organizations_url'],
+                "gh_repos_url": data[i]['repos_url'],
+                "gh_events_url": data[i]['events_url'],
+                "gh_received_events_url": data[i]['received_events_url'],
+                "gh_type": data[i]['type'],
+                "gh_site_admin": data[i]['site_admin'],
+                "tool_source": tool_source,
+                "tool_version": tool_version,
+                "data_source": data_source
+            }
+
+            # self.db.execute(self.table.insert().values(modified_data))
 
 
         ### ISSUES ###
@@ -235,36 +242,38 @@ class GitHubWorker:
 
         r = requests.get(url=url)
         data = r.json()
-        data[0]['repo_id'] = entry_info['repo_id']
 
-        modified_data = {
-            "issue_id": data[0]['number'], # primary key
-            "repo_id": data[0]['repo_id'],
-        #     "reporter_id": 1,
-            "pull_request": data[0]['number'],
-            "pull_request_id": data[0]['number'],
-            "issue_title": data[0]['title'],
-            "issue_body": data[0]['body'],
-        #     "cntrb_id": 1,
-            "comment_count": data[0]['comments'],
-            "updated_at": data[0]['updated_at'],
-            "closed_at": data[0]['closed_at'],
-            "repository_url": data[0]['repository_url'],
-            "issue_url": data[0]['url'],
-            "labels_url": data[0]['labels_url'],
-            "comments_url": data[0]['comments_url'],
-            "events_url": data[0]['events_url'],
-            "html_url": data[0]['html_url'],
-            "issue_state": data[0]['state'],
-        #    "issue_node_id": 1, #data[0]['node_id'], change to int ?
-            "gh_issue_id": data[0]['id'],
-            "gh_user_id": data[0]['user']['id']
-        #     "tool_source": 'test', # change
-        #     "tool_version": 'test', # change
-        #     "data_source": 'test' # change
-        }
+        for i in range(len(data)):
+            data[i]['repo_id'] = entry_info['repo_id']
 
-        # self.db.execute(self.table.insert().values(modified_data))
+            modified_data = {
+                "issue_id": data[i]['number'], # primary key
+                "repo_id": data[i]['repo_id'],
+            #     "reporter_id": 1,
+                "pull_request": data[i]['number'],
+                "pull_request_id": data[i]['number'],
+                "issue_title": data[i]['title'],
+                "issue_body": data[i]['body'],
+            #     "cntrb_id": 1,
+                "comment_count": data[i]['comments'],
+                "updated_at": data[i]['updated_at'],
+                "closed_at": data[i]['closed_at'],
+                "repository_url": data[i]['repository_url'],
+                "issue_url": data[i]['url'],
+                "labels_url": data[i]['labels_url'],
+                "comments_url": data[i]['comments_url'],
+                "events_url": data[i]['events_url'],
+                "html_url": data[i]['html_url'],
+                "issue_state": data[i]['state'],
+            #    "issue_node_id": 1, #data[i]['node_id'], change to int ?
+                "gh_issue_id": data[i]['id'],
+                "gh_user_id": data[i]['user']['id']
+                "tool_source": tool_source,
+                "tool_version": tool_version,
+                "data_source": data_source
+            }
+
+            # self.db.execute(self.table.insert().values(modified_data))
         
         ### ISSUE COMMENTS ####
 
@@ -295,12 +304,12 @@ class GitHubWorker:
             "events_url": data_issues['events_url'],
             "html_url": data_issues['html_url'],
             "issue_state": data_issues['state'],
-        #    "issue_node_id": 1, #data[0]['node_id'], change to int ?
+        #    "issue_node_id": 1, #data[i]['node_id'], change to int ?
             "gh_issue_id": data_issues['id'],
             "gh_user_id": data_issues['user']['id']
-        #     "tool_source": 'test',
-        #     "tool_version": 'test',
-        #     "data_source": 'test'
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source
         }
 
         # self.db.execute(self.table1.insert().values(modified_data_issues))
@@ -309,13 +318,14 @@ class GitHubWorker:
         r = requests.get(url=url)
         data_message = r.json()
 
-        modified_data_message = {
-            "pltfrm_id": 25150,
-            "msg_text": data_message[0]['body'],
-            "msg_timestamp": data_message[0]['created_at']
-        }
+        for i in range(len(data_message)):
+            modified_data_message = {
+                "pltfrm_id": 25150,
+                "msg_text": data_message[i]['body'],
+                "msg_timestamp": data_message[i]['created_at']
+            }
 
-        # self.db.execute(self.table2.insert().values(modified_data_message))
+            # self.db.execute(self.table2.insert().values(modified_data_message))
 
         ### ISSUE MESSAGE REF TABLE ###
 
