@@ -262,7 +262,6 @@ cite.metric a
   margin: auto
 
 .error:before
-  content: "\26A0"
   font-size: 3em;
   justify-content: center
   padding: 50px 50px 50px 50px
@@ -327,8 +326,7 @@ cite.metric a
 }
 
 .linechart
-  padding: 0px 0px 0px 18px
-
+  text-align: center
 
 .loader {
   width: 100%
@@ -1314,3 +1312,18 @@ code {
 .list-group-small .list-group-item {
   font-size: 1.3rem !important
 }
+
+details summary
+  text-align: center !important;
+  max-width: 113px
+  float: left
+
+details summary::after {
+  display: inline-block;
+    position: relative;
+  content: " Download Links "
+}
+
+details summary svg
+  display: none
+

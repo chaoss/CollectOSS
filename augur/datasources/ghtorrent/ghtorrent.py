@@ -479,6 +479,67 @@ class GHTorrent(object):
         """)
         return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
 
+    @annotate(tag='pull-requests-closed')
+    def pull_requests_closed(self, owner, repo=None):
+        """
+        Timeseries of pull requests closed and their associated activity
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+
+        :return: DataFrame with closed pull request information/week
+        """
+        repoid = self.repoid(owner, repo)
+        pullsSQL = s.sql.text("""
+            SELECT SUBDATE(DATE(pull_request_history.created_at), WEEKDAY(DATE(pull_request_history.created_at))) AS "date",
+            COUNT(pull_requests.id) AS "pull_requests"
+            FROM pull_request_history
+            INNER JOIN pull_requests
+            ON pull_request_history.pull_request_id = pull_requests.id
+            WHERE pull_requests.head_repo_id = :repoid
+            AND pull_request_history.action = "closed"
+            GROUP BY YEARWEEK(DATE(pull_request_history.created_at))
+        """)
+        return pd.read_sql(pullsSQL, self.db, params={"repoid": str(repoid)})
+
+    @annotate(tag='pull-request-comment-duration')
+    def pull_request_comment_duration(self, owner, repo=None):
+        """
+        Timeseries of the time to recentt comment by pull requests
+
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame of pull requests with their response information
+        """
+        repoid = self.repoid(owner, repo)
+        durationSQL = s.sql.text("""
+        SELECT
+	        pull_request_history.id AS "pull_request_id" ,
+            pull_request_history.created_at AS "opened" ,
+            MIN( pull_request_comments.created_at ) AS "first_pr_comment",
+            TIMESTAMPDIFF( MINUTE ,
+            pull_request_history.created_at ,
+            MIN( pull_request_comments.created_at )) AS "minutes_to_first_pr_comment" ,
+            MIN( pull_request_comments.created_at ) AS "most_recent_comment",
+            TIMESTAMPDIFF( MINUTE ,
+            pull_request_history.created_at ,
+            MAX( pull_request_comments.created_at )) AS "minutes_to_recent_pr_comment" 
+        FROM
+	        pull_request_history
+        JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
+        JOIN pull_request_comments ON pull_request_comments.pull_request_id = pull_requests.id
+        WHERE
+	        pull_requests.base_repo_id = :repoid  AND pull_request_history.action = 'opened'
+        GROUP BY
+	        pull_request_history.id ,
+	        pull_requests.base_repo_id ,
+	        pull_request_history.created_at
+        ORDER BY
+	        pull_request_history.created_at
+        """)
+
+        return pd.read_sql(durationSQL, self.db, params={"repoid": str(repoid)})
+
     #####################################
     ###            RISK               ###
     #####################################
@@ -1027,6 +1088,31 @@ class GHTorrent(object):
         """)
         return pd.read_sql(contributorsSQL, self.db, params={"repoid": str(repoid)})
 
+    @annotate(tag='total-watchers')
+    def total_watchers(self, owner, repo=None):
+        """
+        Timeseries of total watchers as of each week
+            
+        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
+        :param repo: The name of the repo. Unneeded if repository id was passed as owner.
+        :return: DataFrame with total watchers/week
+        """
+        
+        repoid = self.repoid(owner, repo)
+        totalWatchersSQL = s.sql.text("""
+            SELECT total_watchers.created_at AS "date", COUNT(total_watchers.user_id) total_watchers
+            FROM (
+                SELECT user_id, MIN(DATE(created_at)) created_at
+                FROM watchers
+                WHERE repo_id = :repoid
+                GROUP BY user_id
+                ORDER BY created_at ASC) AS total_watchers
+            GROUP BY YEARWEEK(total_watchers.created_at)
+        """)
+        df = pd.read_sql(totalWatchersSQL, self.db, params={"repoid": str(repoid)})
+        df['total_watchers'] = df['total_watchers'].cumsum()
+        return df
+    
     @annotate(tag='new-watchers')
     def new_watchers(self, owner, repo=None): 
         """
@@ -1044,3 +1130,14 @@ class GHTorrent(object):
             GROUP BY YEARWEEK(created_at)
         """)
         return pd.read_sql(newWatchersSQL, self.db, params={"repoid": str(repoid)})
+
+
+
+    ### Utility
+    def user(self, user_id):
+        usersSQL = s.sql.text("""
+            SELECT *
+            FROM users
+            WHERE id = :user_id
+        """)
+        return pd.read_sql(usersSQL, self.db, params={"user_id": int(user_id)})

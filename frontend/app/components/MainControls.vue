@@ -12,7 +12,8 @@
                 <div class="col col-3" align="center" id="comparetext"><h6>Compare from your repos:</h6></div>
                 <div style="text-align:center !important" class="row col col-4" v-click-outside="stopSelecting">
                   <div class="col col-6" style="display:inline !important" @click="keepSelecting">
-                    <multiselect class="" v-model="project" :options="projects" :placeholder="project"></multiselect>
+
+                    <multiselect class="search reposearch special" v-model="project" :options="projects" :placeholder="project"></multiselect>
                   </div>
                   <div class="col col-6" style="display:inline !important" @click="keepSelecting">
                     <multiselect 
@@ -116,7 +117,7 @@
                         <label>End Date
                           <div class="row gutters">
                             <div class="col col-7">
-                              <div class="form-item">
+                              <div class="form-item"> <!--month.value == thisMonth--> <!--year == thisYear--> <!--year == 2010-->
                                 <select ref="endMonth" @change=onEndDateChange>
                                   <option v-for="month in months" v-bind:value="month.value" v-bind:selected="(endMonth) == month.value">{{ month.name }}</option>
                                 </select>
@@ -166,7 +167,9 @@
         </div>
       </div>
 
-
+<!-- :checked="compared"
+:checked="!compared"
+:checked="!compared" -->
 
 
       </div>
@@ -219,7 +222,6 @@
             let last = url.lastIndexOf(".")
 
             let option = null
-
             if (first == last)
               option = url.slice(url.indexOf('/') + 1)
             else if (url.slice(last) == '.git')
@@ -234,7 +236,6 @@
         if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
         if (this.$store.state.comparedRepos.length == 1) this.compared = true
       }
-
     },
     directives: {
       'click-outside': {
@@ -269,8 +270,15 @@
         // document.querySelector('.section.collapsible').classList.toggle('collapsed')
       },
       onStartDateChange (e) {
-        var date = Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
-        console.log('Start date has been changed!')
+
+        var date = null
+        // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
+        if (e.target.value > 12) {
+          date = Date.parse((this.startMonth + "/01/" + e.target.value))
+        } else {
+          let month = (parseInt(e.target.value) + 1).toString()
+          date = Date.parse((month + "/01/" + this.startYear))
+        }
         if (this.startDateTimeout) {
           clearTimeout(this.startDateTimeout)
           delete this.startDateTimeout
@@ -286,7 +294,8 @@
         var date = null
         // Date.parse((this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value))
         if (e.target.value > 12) {
-          date = Date.parse(((parseInt(this.endMonth)+1).toString() + "/01/" + e.target.value))
+
+          date = Date.parse((this.endMonth + "/01/" + e.target.value))
         } else {
           let month = (parseInt(e.target.value) + 1).toString()
           console.log()
@@ -333,7 +342,6 @@
         this.$store.commit('setCompare', {
           compare: e.target.value
         }) 
-
       },
       onCompare (e) {
         var element = document.getElementById("invalid")

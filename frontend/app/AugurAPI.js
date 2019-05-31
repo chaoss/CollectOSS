@@ -108,9 +108,9 @@ export default class AugurAPI {
       return new Promise((resolve, reject) => {
         if (Array.isArray(data)) {
           data.forEach(response => {
-            if (response.status === 200) {
+            if (response.status === 200 && reverseMap[response.path]) {
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
-            } else {
+            } else if (reverseMap[response.path]){
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null
             }
           })
@@ -139,8 +139,7 @@ export default class AugurAPI {
         let splitURL = repo.gitURL.split('/')
         repo.owner = splitURL[1]
         repo.name = splitURL[2].split('.')[0]
-      }
-      else {
+      } else {
         let splitURL = repo.gitURL.split('/')
         repo.owner = splitURL[0]
         repo.name = splitURL[1]
@@ -290,13 +289,13 @@ export default class AugurAPI {
     if (repo.gitURL) {
       // Other
       GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'),
-      GitEndpoint(repo, 'cdRepTpIntervalLocCommits', 'cd_rep_tp_interval_loc_commits'),
-      GitEndpoint(repo, 'cdRgTpRankedLoc', 'cd_rg_tp_ranked_loc'),
-      GitEndpoint(repo, 'cdRgTpRankedCommits', 'cd_rg_tp_ranked_commits'),
-      GitEndpoint(repo, 'cdRgNewrepRankedLoc', 'cd_rg_newrep_ranked_loc'),
-      GitEndpoint(repo, 'cdRgNewrepRankedCommits', 'cd_rg_newrep_ranked_commits')
-      GitEndpoint(repo, 'facadeProject', 'facade_project')
 
+      GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped'),
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group'),
+      GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group'),
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'),
+      GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group')
+      GitEndpoint(repo, 'facadeProject', 'facade_project')
     }
 
     return repo

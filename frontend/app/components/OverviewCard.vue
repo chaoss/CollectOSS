@@ -1,33 +1,40 @@
 <template>
   <section>
     <div style="display: inline-block;">
-      <h2 style="display: inline-block; color: black !important">{{ $store.state.gitRepo }}</h2>
+
+      <h2 v-if="loaded" style="display: inline-block; color: black !important">Project Overview: {{ project }}</h2>
+      <p></p>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
       <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
-      <div class="row" style="transform: translateY(-50px) !important">
+
+      <div class="row" style="transform: translateY(-50px) !important" v-if="loaded">
 
         <div class="col col-6" style="padding-right: 35px">
           <grouped-bar-chart source="cdRgTpRankedCommits"
           title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
           field="commit"></grouped-bar-chart>
+
         </div>
         <div class="col col-6" style="padding-right: 35px">
           <grouped-bar-chart source="cdRgTpRankedLoc"
           title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
           field="loc"></grouped-bar-chart>
+
         </div>
         <div class="col col-6" style="padding-right: 35px">
           <grouped-bar-chart source="cdRgNewrepRankedCommits"
           title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
           field="commit"></grouped-bar-chart>
+
         </div>
         <div class="col col-6" style="padding-right: 35px">
           <grouped-bar-chart source="cdRgNewrepRankedLoc"
           title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
           field="loc"></grouped-bar-chart>
+
 
       </div>
     </div>
@@ -46,7 +53,11 @@ import StackedBarChart from './charts/StackedBarChart'
 module.exports = {
   data() {
     return {
-      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+
+      colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+      values: {},
+      loaded: false,
+      project: null
     }
   },
   components: {
@@ -58,6 +69,51 @@ module.exports = {
     HorizontalBarChart,
     GroupedBarChart,
     StackedBarChart
+
+  },
+  computed: {
+    repo () {
+      return this.$store.state.baseRepo
+    },
+    gitRepo () {
+      return this.$store.state.gitRepo
+    },
+    comparedRepos () {
+      return this.$store.state.comparedRepos
+    },
+    // loaded() {
+    //   return this.loaded1 && this.loaded2
+    // }
+  },
+created() {
+    let repos = []
+    if (this.repo) {
+      if (window.AugurRepos[this.repo])
+        repos.push(window.AugurRepos[this.repo])
+      // repos.push(this.repo)
+    } // end if (this.$store.repo)
+    this.comparedRepos.forEach(function(repo) {
+      repos.push(window.AugurRepos[repo])
+    });
+    let endpoints1 = [
+"cdRgTpRankedCommits",
+"cdRgTpRankedLoc",
+"cdRgNewrepRankedCommits",
+"cdRgNewrepRankedLoc",
+"facadeProject"
+    ]
+    endpoints1.forEach((source) => {
+      let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
+      repo[source]().then((data) => {
+        console.log("batch data", data)
+        this.values[source] = data
+        this.loaded=true
+        this.project = this.values["facadeProject"][0].name
+        console.log(this.project, "here", this.values["facadeProject"])     
+      }, () => {
+            //this.renderError()
+      }) // end batch request
+    })
   }
 }
 </script>

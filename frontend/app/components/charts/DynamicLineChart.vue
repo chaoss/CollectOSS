@@ -1,7 +1,8 @@
 <template>
+
   <div ref="holder">
     <div class="spacing"></div>
-    <div class="error hidden"><br>Data is missing or unavailable for metric: <p style="color: black !important">{{ title }}</p></div>
+    <div style="color: black" class="error hidden"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
     <div class="spinner loader"></div>
     <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
       <!-- <div class="row">
@@ -9,11 +10,21 @@
         <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>        
       </div> -->
-      <vega-lite :spec="spec" :data="values"></vega-lite>
+      <div v-if="mount" :id="source"></div>
+      <vega-lite v-if="!mount" :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
+      <nav class="tabs">
+        <ul>
+          <li :class="{ active: (timeperiod == '1825'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="1825" :id="source + '5year'" v-model="timeperiod"><label :for="source + '5year'">5 Years</label></li>
+          <li :class="{ active: (timeperiod == '730'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="730" :id="source + '2year'" v-model="timeperiod"><label :for="source + '2year'">2 Years</label></li>
+          <li :class="{ active: (timeperiod == '365'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="365" :id="source + 'year'" v-model="timeperiod"><label :for="source + 'year'">Year</label></li>
+          <!-- <li :class="{ active: (timeperiod == '30'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="30" :id="source + 'month'" v-model="timeperiod"><label :for="source + 'month'">Month</label></li> -->
+          <li :class="{ active: (timeperiod == 'all'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="all" :id="source + 'all'" v-model="timeperiod"><label :for="source + 'all'">All</label></li>
+        </ul>
+      </nav>
     </div>
 
-    <div class="row below-chart">
+    <div class="row below-chart" style="top: -28px !important">
       <div class="col col-1"></div>
       <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
         <span style="font-size: 12px">Data source: {{ metricSource }}</span>
@@ -22,10 +33,10 @@
         <!-- <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite> -->
         <cite class="metric"><a style="width:100px !important;height: 38px !important; position: absolute;" v-bind:href="citeUrl" target="_blank"><img style="width:100px;position: relative;" src="https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png" alt="Chaoss-Definition-Logo" border="0"></a></cite>
       </div>
-      <div class="col col-4" style="position: relative; top: -8px !important;"><button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button><button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button><a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
-      <!-- <div class="form-item form-checkboxes">
-        <label class="checkbox"><input name="hidearea" value="each" type="checkbox" v-model="ar">Individual area<sup class="warn"></sup></label><br>
-      </div> -->
+      <div class="col col-4" style="position: relative; top: -8px !important;">
+        <!-- <button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button>
+        <button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button> -->
+        <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
 
   </div>
@@ -36,8 +47,10 @@ import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
 
 export default {
+  
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
   data() {
+
     return {
       legendLabels: [],
       values: [],
@@ -46,10 +59,24 @@ export default {
       compRepos: this.$store.state.comparedRepos,
       metricSource: null,
       timeperiod: 'all',
+<<<<<<< HEAD
       forceRecomputeCounter: 0
+=======
+      mount: true
+>>>>>>> broker
     }
   },
+  
   watch: {
+    compare: function() {
+      this.spec;
+    },
+    earliest: function () {
+      this.spec;
+    },
+    data: function (newVal, oldVal) {
+      if (newVal != []) this.spec;
+    },
     compRepos: function() {
       let allFalse = true
       for(var key in this.status)
@@ -62,6 +89,7 @@ export default {
       $(this.$el).find('.hidefirst').addClass('invisDet')
       $(this.$el).find('.spinner').addClass('loader')
       $(this.$el).find('.spacing').removeClass('hidden')
+<<<<<<< HEAD
     }
   },
   beforeUpdate() {
@@ -75,6 +103,9 @@ export default {
       // // Run this callback
       // callback
     )
+=======
+    },
+>>>>>>> broker
   },
   computed: {
     repo () {
@@ -111,7 +142,12 @@ export default {
       return this.$store.state.showDetail
     },
     spec() {
+<<<<<<< HEAD
       this.forceRecomputeCounter;
+=======
+      // declare constant for vegaEmbed module since we use its cdn in index.html rather than add it to package.json
+      const vegaEmbed = window.vegaEmbed;
+>>>>>>> broker
       // Get the repos we need
       let repos = []
       if (this.repo) {
@@ -125,7 +161,6 @@ export default {
             window.AugurRepos[temp] = temp
           repos.push(temp)
         }
-        // repos.push(this.repo)
       } // end if (this.$store.repo)
       this.comparedRepos.forEach(function(repo) {
         repos.push(window.AugurRepos[repo])
@@ -137,9 +172,12 @@ export default {
 
       //COLORS TO PICK FOR EACH REPO
       var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
-      let brush = {"filter": {"selection": "brush"}}
+      let brush = this.showDetail ? {"filter": {"selection": "brush"}} : {"filter": "datum.date > 0"}
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "data": {
+          "values": []//this.data
+        },
         "config":{
               "axis":{
                 "grid": false
@@ -185,19 +223,18 @@ export default {
                   }
                 }
 
-              }
+              },
+              
             ]
           }
         ]
       }
 
-      
-      if(!this.showDetail) brush = {"filter": "datum.date > 0"}
-
       //cannot have duplicate selection, so keep track if it has already been added
       var selectionAdded = false
 
       let getStandardLine = (key, color) => {
+        // key = key.split('/').join('');
         let raw = (key.substring(key.length - 7) == "Rolling" ? false : true)
         return {
             "transform": [
@@ -224,7 +261,7 @@ export default {
             },
             "mark": {
               "type": "line",
-              //"interpolate": "basis",
+              "interpolate": "basis",
               "clip": true
             }
           }
@@ -256,60 +293,43 @@ export default {
                   },
                   "opacity": {"value": .3}
             },
-            "mark": {
-              "type": "line",
-              //"interpolate": "basis",
-              "clip": true
-            }
+            "mark": {"type": "line","clip": true}
           }
       }
 
       let getToolPoint = (key) => { 
         let selection = (!selectionAdded ? {
-              "tooltip": {
-                "type": "single",
-                "on": "mouseover",
-                "encodings": [
-                  "x"
-                ],
-                "empty": "none"
-              }
-            } : null)
+            "tooltip": {"type": "single", "on": "mouseover","nearest": false}
+          } : null
+        )
         let size = 17
         var timeDiff = Math.abs(this.latest.getTime() - this.earliest.getTime());
         var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        let field = "valueRolling" + this.repo
         size = diffDays / 150
         if (this.rawWeekly) size = 3
         selectionAdded = true
         return {
-            "transform": [
+          "transform": [
               brush
+          ],
+          "mark": "rule",
+          "selection": {
+            "tooltip": {"type": "single", "on": "mouseover","nearest": false, "empty": "none"}
+          },
+          "encoding": {
+            "size": {"value": 20},
+            "opacity": {"value": 0.001},
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": null,
+            },
+            "tooltip": [
+              {"field": field, "type": "quantitative"}
             ],
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal",
-                "axis": {"format": "%b %Y", "title": " "}
-              },
-              "opacity": {
-                "value": 0
-              },
-              "color": {
-                    // "field": "name",
-                    // "type": "nominal",
-                    // "scale": { "range": colors}
-                    "value": "black"
-                  },
-              "size": {
-                "value": size
-              }
-            },
-            "mark": {
-              "type": "rule",
-              "clip": true
-            },
-            "selection": selection
           }
+        }
       }
 
       let getStandardPoint = (key, color) => {
@@ -338,13 +358,13 @@ export default {
                   "format": "%b %Y"
                 },
               },
-              "y": {
-                "field": key,
-                "type": "quantitative",
-                "axis": {
-                  "title": null
-                }
-              },
+              // "y": {
+              //   "field": key,
+              //   "type": "quantitative",
+              //   "axis": {
+              //     "title": null
+              //   }
+              // },
               "color": {
                 // "value": color
                 "value": "black"
@@ -358,7 +378,7 @@ export default {
               }
             },
             "mark": {
-              "type": "point"
+              "type": "rule"
             },
             "selection": selection
           }
@@ -403,7 +423,7 @@ export default {
       }
     }
 
-    let rule =
+      let rule =
       {
       "transform": [
             {
@@ -427,85 +447,18 @@ export default {
       }
 
       let getValueText = function (key){
-          return {
-
-          "transform": [
-            {
-              "filter": {
-                "selection": "tooltip"
-              }
-            },
-            brush
-          ],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -5
-          },
-          "encoding": {
-            "text": {
-              "type": "quantitative",
-              "field": key
-            },
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": {"format": "%b %Y", "title": " "}
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
-            "color": {
-                "value": "green"
-              }
-          }
+        return {
+          "transform": [{"filter": {"selection": "tooltip"}},brush],
+          "mark": {"type": "text","align": "left","dx": 5,"dy": -5},
+          "encoding": {"text": {"type": "quantitative","field": key},"x": {"field": "date","type": "temporal","axis": {"format": "%b %Y", "title": " "}},"y": {"field": key,"type": "quantitative","axis": {"title": null}},"color": {"value": "green"}}              
         }
       }
 
       let getDateText = function (key) {
         return {
-
-          "transform": [
-            {
-              "filter": {
-                "selection": "tooltip"
-              }
-            },
-            brush
-          ],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -15
-            // "baseline": "top"
-          },
-          "encoding": {
-            "text": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": {"format": "%b %Y", "title": " "}
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
-            "color": {
-                "value": "black"
-              }
-          }
+          "transform": [{"filter": {"selection": "tooltip"}},brush],
+          "mark": {"type": "text","align": "left","dx": 5,"dy": -15},
+          "encoding": {"text": {"type": "temporal","field": "date"},"x": {"field": "date","type": "temporal","axis": {"format": "%b %Y", "title": " "}},"y": {"field": key,"type": "quantitative","axis": {"title": null}},"color": {"value": "black"}}
         }
       }
 
@@ -593,8 +546,8 @@ export default {
             config.vconcat[0].layer.push(getStandardPoint(key, colors[col]))
             col++
           });
-          config.vconcat[0].layer.push(getValueText(key))
-          config.vconcat[0].layer.push(getDateText(key))
+          // config.vconcat[0].layer.push(getValueText(key))
+          // config.vconcat[0].layer.push(getDateText(key))
           //push parts of layer that use "valueCompared" key if there is a comparedRepo
           if(repos.length > 1){
             config.vconcat[0].layer.push(rule)
@@ -622,61 +575,43 @@ export default {
 
       buildMetric()
 
+
       //set dates from main control options
-      if(this.showDetail) {
-        let today = new Date()
-        let startyear = (this.timeperiod && this.timeperiod != 'all') ? (() => {
-          let d = new Date()
-          switch (this.timeperiod) {
-            case "month":
-              d = new Date(d.setDate(d.getDate()-30))
-              return d.getFullYear();
-            case "year":
-              d = new Date(d.setDate(d.getDate()-365))
-              return d.getFullYear();
-          }
-        })() : this.earliest.getFullYear()
-        let startmonth = (this.timeperiod && this.timeperiod != 'all') ? (() => {
-          let d = new Date()
-          switch (this.timeperiod) {
-            case "month":
-              d = new Date(d.setDate(d.getDate()-30))
-              return d.getMonth();
-            case "year":
-              d = new Date(d.setDate(d.getDate()-365))
-              return d.getMonth();
-          }
-        })() : this.earliest.getMonth()
-        let startdate = (this.timeperiod && this.timeperiod != 'all') ? (() => {
-          let d = new Date()
-          switch (this.timeperiod) {
-            case "month":
-              d = new Date(d.setDate(d.getDate()-30))
-              return d.getDate();
-            case "year":
-              d = new Date(d.setDate(d.getDate()-365))
-              return d.getDate();
-          }
-        })() : this.earliest.getDate()
-        // for(var i = 0; i < config.vconcat[0].layer.length; i++){
-        //   config.vconcat[0].layer[i].encoding.x["scale"] =
-        //     {
-        //       "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
-        //     }
-        // }
-        config.vconcat[1].encoding.x["scale"] = {
+      let today = new Date()
+      let startyear = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+        let d = new Date()
+        return new Date(d.setDate(d.getDate()-Number(this.timeperiod))).getFullYear()
+      })() : this.earliest.getFullYear()
+      let startmonth = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+        let d = new Date()
+        return new Date(d.setDate(d.getDate()-Number(this.timeperiod))).getMonth()
+      })() : this.earliest.getMonth()
+      let startdate = (this.timeperiod && this.timeperiod != 'all') ? (() => {
+        let d = new Date()
+        return new Date(d.setDate(d.getDate()-Number(this.timeperiod))).getDate()
+      })() : this.earliest.getDate()
+      for(var i = 0; i < config.vconcat[0].layer.length; i++){
+        config.vconcat[0].layer[i].encoding.x["scale"] =
+          {
             "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
           }
       }
-      else {
-        for(var i = 0; i < config.vconcat[0].layer.length; i++){
-          config.vconcat[0].layer[i].encoding.x["scale"] =
-            {
-              "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
-            }
-        }
+      if(this.showDetail) {
+        config.vconcat[1].encoding.x["scale"] = {
+            "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+          }
+      } else {
+      //OLD ELSE KEEP for now
+        // for(var i = 0; i < config.vconcat[0].layer.length; i++){
+        //   config.vconcat[0].layer[i].encoding.x["scale"] =
+        //     {
+        //       "domain": [{"year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate()},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+        //     }
+        // }
       }
-
+      
+      // if base repo fails and it is the only repo, or if base repo AND only compared repo fails
+      // makes blank chart invisible to user
       if ((!this.status.base && !this.comparedTo) || (!this.status.compared && !this.status.base)) {
         if(!this.showDetail){
           window.$(this.$refs.holder).find('.hidefirst').removeClass('invisDet')
@@ -709,25 +644,24 @@ export default {
         }
       })
 
-      let compare = this.compare
       let processData = (data) => {
+
         // Make it so the user can save the data we are using
           this.__download_data = data
           this.__download_file = this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
-          this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.__download_data))
-          this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
+          // this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.__download_data))
+          // this.$refs.downloadJSON.setAttribute('download', this.__download_file + '.json')
 
 
           // We usually want to limit dates and convert the key to being vega-lite friendly
           let defaultProcess = (obj, key, field, count) => {
             let d = null
-            if (typeof(field) == "string") field = [field]
+            if (typeof(field) == "string") {
+              field = [field]
+            }
 
             d = AugurStats.convertKey(obj[key], field)
-
-
             d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
-
             return d
           }
 
@@ -770,23 +704,24 @@ export default {
           } // end normalize function
 
           // Build the lines we need
-          let legend = []
+          let legend = [] //repo + field strings for vega legend
           let values = []
-          let colors = []
+          let colors = [] 
           let baselineVals = null
           let baseDate = null
           repos.forEach((repo) => {
+            // let relevant = this.data ? data
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
                 
                 let rolling = null
-                if (repo == this.repo) baseDate = d[0].date
+                if (repo == this.repo && d[0]) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
-                if (this.compare == 'zscore') {
+                if (this.compare == 'zscore') { // && this.comparedRepos.length > 0
                   rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
                 } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
-                else if (this.compare == 'baseline') {
+                else if (this.compare == 'baseline') { //&& this.comparedRepos.length > 0
                   if(repo.githubURL == this.repo){
                     baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
                   }
@@ -814,18 +749,27 @@ export default {
             // this.renderError()
           } else {
             values = []
+            // let today = new Date()
             for(var i = 0; i < legend.length; i++){
               normalized[i].forEach(d => {
-                d.name = legend[i]
-                d.color = colors[i]
-                values.push(d);
+
+                if (d.date < (new Date(startyear,startmonth,startdate))){
+                  d = {}
+                } else {
+                  d.name = legend[i]
+                  d.color = colors[i]
+                  values.push(d);
+                }
               })
               if (this.rawWeekly) {
                 aggregates[i].forEach(d => {
-                  // d.name = "raw " + legend[i]
-                  d.name = legend[i]
-                  d.color = colors[i]
-                  values.push(d)
+                  if (d.date < (new Date(startyear,startmonth,startdate))){
+                    d = {}
+                  } else {
+                    d.name = legend[i]
+                    d.color = colors[i]
+                    values.push(d);
+                  }
                 })
               }
             }
@@ -834,7 +778,6 @@ export default {
                 let temp = JSON.parse(JSON.stringify(values))
                 temp = temp.map((datum) => {
                   datum.name = repo + ": data n/a"
-                  // datum.valueRolling = datum.valueComparedRolling
 
                   return datum
                 })
@@ -843,39 +786,29 @@ export default {
             })  
 
             this.legendLabels = legend
+            if(this.mount)
+              config.data = {"values": values}
             this.values = values
 
-            let allFalse = true
-            for(var key in this.status)
-              if(this.status[key]) allFalse = false
-            if(!allFalse) $(this.$el).find('.error').addClass('hidden')
-
-            // config.config.legend.offset = -(String(this.legendLabels[0]).length * 6.5) - 20
-
-            $(this.$el).find('.hidefirst').removeClass('invis')
-            $(this.$el).find('.hidefirst').removeClass('invisDet')
-            $(this.$el).find('.spinner').removeClass('loader')
-            $(this.$el).find('.spacing').addClass('hidden')
-            $(this.$el).find('.hidefirst').removeClass('invisDet')
-
-
-            //this.mgConfig.legend_target = this.$refs.legend
+            
             this.renderChart()
           }
       }
-
-      if (this.data) {
+      if (this.data && this.mount) {
         processData(this.data)
       } else {
         
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
         }, () => {
-          //this.renderError()
+          this.renderError()
         }) // end batch request
       }
+      if (this.mount)
+        this.reloadImage(config)
 
       return config
+      
     }
 
   }, // end computed
@@ -894,25 +827,50 @@ export default {
       svgsaver.asPng(svg, this.__download_file + '.png')
     },
     renderChart () {
-      this.$refs.chart.className = 'linechart intro'
-      window.$(this.$refs.holder).find('.hideme').removeClass('invis')
-      window.$(this.$refs.holder).find('.showme').removeClass('invis')
-      window.$(this.$refs.holder).find('.hideme').removeClass('invisDet')
-      window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
-      window.$(this.$refs.holder).find('.deleteme').remove()
-      this.$refs.chartholder.innerHTML = ''
-      this.$refs.chartholder.appendChild(this.mgConfig.target)
+      // this.$refs.chart.className = 'linechart intro'
+      // window.$(this.$refs.holder).find('.hideme').removeClass('invis')
+      // window.$(this.$refs.holder).find('.showme').removeClass('invis')
+      // window.$(this.$refs.holder).find('.hideme').removeClass('invisDet')
+      // window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
+      // window.$(this.$refs.holder).find('.deleteme').remove()
+      //window. each of these?
+      let allFalse = true
+      for(var key in this.status)
+        if(this.status[key]) allFalse = false
+      if(!allFalse) $(this.$el).find('.error').addClass('hidden')
+      $(this.$el).find('.hidefirst').removeClass('invis')
+      $(this.$el).find('.hidefirst').removeClass('invisDet')
+      $(this.$el).find('.spinner').removeClass('loader')
+      $(this.$el).find('.spacing').addClass('hidden')
+      $(this.$el).find('.hidefirst').removeClass('invisDet')
+      // this.$refs.chartholder.innerHTML = ''
     },
     renderError () {
         $(this.$el).find('.spinner').removeClass('loader')
         $(this.$el).find('.error').removeClass('hidden')
+    },
+    thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
+    },
+    respec(){this.spec;},
+    reloadImage (config) {
+      console.log(config.data, this.source)
+      if (config.data.length == 0){
+        this.spec;
+        this.renderError()
+        return
+      }
+      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'}) 
     }
   },// end methods
+  mounted() {
+    this.spec;
+  },
   created () {
-      var query_string = "chart_mapping=" + this.source
-      window.AugurAPI.getMetricsStatus(query_string).then((data) => {
-        this.metricSource = data[0].data_source
-      })
+    var query_string = "chart_mapping=" + this.source
+    window.AugurAPI.getMetricsStatus(query_string).then((data) => {
+      this.metricSource = data[0].data_source
+    })
   }
 }
 </script>

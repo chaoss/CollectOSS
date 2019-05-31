@@ -264,10 +264,9 @@ Using the Python Debugger
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to use an iPython shell to test your functions during
-development, in the root directory, first execute ``ipython``, which
-will drop you into an iPython shell. Then, execute
-``import augur; app = augur.Application()``, which will create an Augur
-application for you.
+development, in the root directory, first execute ``augur util shell``, which
+will drop you into an iPython shell and automatically give you an Augur
+application called ``app``.
 
 You can then test your function by first creating a new instance of that
 class, and then running your function. For example:

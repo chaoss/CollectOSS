@@ -48,7 +48,8 @@
 <span class="kn">from</span> <span class="nn">beaker.cache</span> <span class="k">import</span> <span class="n">CacheManager</span>
 <span class="kn">from</span> <span class="nn">beaker.util</span> <span class="k">import</span> <span class="n">parse_cache_config_options</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">create_engine</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">sessionmaker</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">sessionmaker</span><span class="p">,</span> <span class="n">scoped_session</span>
+<span class="kn">from</span> <span class="nn">augur.models.common</span> <span class="k">import</span> <span class="n">Base</span>
 <span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">import</span> <span class="nn">augur.plugins</span>
 <span class="kn">import</span> <span class="nn">augur.datasources</span>
@@ -57,15 +58,10 @@
 <div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initalizes all classes from Augur using a config file or environment variables&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Application.__init__"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="s1">&#39;augur.config.json&#39;</span><span class="p">,</span> <span class="n">no_config_file</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Augur application&#39;</span><span class="p">,</span> <span class="n">db_str</span><span class="o">=</span><span class="s1">&#39;sqlite:///:memory:&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="Application.__init__"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="s1">&#39;augur.config.json&#39;</span><span class="p">,</span> <span class="n">no_config_file</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Augur application&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reads config, creates DB session, and initializes cache</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Command line arguments</span>
-        <span class="c1"># TODO: make this useful</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">()</span>
-
         <span class="c1"># Open the config file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__already_exported</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__default_config</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;Plugins&#39;</span><span class="p">:</span> <span class="p">[]</span> <span class="p">}</span>
@@ -75,6 +71,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__config_location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_location</span> <span class="o">=</span> <span class="s1">&#39;runtime/&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__export_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_ENV_EXPORT&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shell_config</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AUGUR_ENV_ONLY&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;1&#39;</span> <span class="ow">and</span> <span class="n">no_config_file</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__config_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__config_file_path</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
@@ -106,6 +103,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">__using_config_file</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__default_config</span>
 
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
         <span class="c1"># List of data sources that can do periodic updates</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span> <span class="o">=</span> <span class="p">[]</span>
@@ -129,10 +129,11 @@
         <span class="c1"># Create DB Session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">db_str</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">db_str</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span><span class="p">()</span>
+        <span class="n">db_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">,</span> <span class="s1">&#39;connection_string&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_DATABASE&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite:///:memory:&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">db_str</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span><span class="p">()</span>
+        <span class="n">Base</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span><span class="o">.</span><span class="n">query_property</span><span class="p">()</span>
 
         <span class="c1"># Initalize all objects to None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="kc">None</span>
@@ -146,7 +147,7 @@
 <span class="sd">        Returns plugin matching the name of the parameter &#39;plugin_name&#39;</span>
 
 <span class="sd">        :param plugin_name: name of specified plugin</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
         <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Plugin </span><span class="si">%s</span><span class="s1"> not found.&#39;</span> <span class="o">%</span> <span class="n">plugin_name</span><span class="p">)</span>
@@ -271,6 +272,14 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1"> = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">value</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">banner1</span><span class="o">=</span><span class="s1">&#39;-- Augur Shell --&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">IPython.terminal.embed</span> <span class="k">import</span> <span class="n">InteractiveShellEmbed</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shell_config</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">init_shell_config</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__shell_config</span> <span class="o">=</span> <span class="n">init_shell_config</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">InteractiveShellEmbed</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__shell_config</span><span class="p">,</span> <span class="n">banner1</span><span class="o">=</span><span class="n">banner1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">set_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets names and values of specified config section</span>
@@ -287,8 +296,6 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parse args and generates a valid config if the given one is bad</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Parse args with help</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">arg_parser</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">()</span>
         <span class="c1"># Close files and save config</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__config_bad</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Regenerating config with missing values...&#39;</span><span class="p">)</span>
@@ -341,6 +348,7 @@
         <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__processes</span><span class="p">:</span>
             <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span></div>
 
+
 <span class="n">Application</span><span class="o">.</span><span class="n">plugins</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">Application</span><span class="o">.</span><span class="n">import_plugins</span><span class="p">()</span>
@@ -391,7 +399,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>

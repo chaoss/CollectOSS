@@ -31,9 +31,12 @@
 </template>
 
 <script>
-// import dButton from 'shards-vue/src/components/button/Button.vue'
 
 module.exports = {
+
+  components: {
+
+  },
   data () { return {
     repos: {},
     projects: []

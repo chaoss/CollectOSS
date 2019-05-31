@@ -318,6 +318,62 @@ def create_routes(server):
     """
     server.addTimeseries(ghtorrent.pull_requests_open, 'pulls')
 
+    """
+    @api {get} /:owner/:repo/timeseries/pulls/closed Pull Requests Closed
+    @apiName pull-requests-closed
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-closed.md">CHAOSS Metric Definition</a>
+    
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+    
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "date": "2013-01-09T00:00:00.000Z",
+                                "pull_requests": 3
+                            },
+                            {
+                                "date": "2016-01-14T00:00:00.000Z",
+                                "pull_requests": 1
+                            }
+                        ]
+    """
+    server.addTimeseries(ghtorrent.pull_requests_closed, 'pulls/closed')
+
+    """
+    @api {get} /:owner/:repo/timeseries/pulls/response_time Most Recent Response To Pull Requests Duration
+    @apiName pull-request-comment-duration'
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/pull-requests-comment-duration.md>CHAOSS Metric Definition</a>
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "pull_request_id": 1709,
+                                "opened": "2012-01-19T05:24:55.000Z",
+                                "first_commented": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_first_pr_comment": 5,
+                                "most_recent_comment": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_recent_pr_comment": 5
+                                
+                            },
+                            {
+                                "pull_request_id": 1721,
+                                "opened": "2012-01-19T05:24:55.000Z",
+                                "first_commented": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_first_pr_comment": 5,
+                                "most_recent_comment": "2012-01-19T05:30:13.000Z",
+                                "minutes_to_recent_pr_comment": 5
+                            }
+                        ]
+    """
+
+    server.addTimeseries(ghtorrent.pull_request_comment_duration, 'pulls/response_time')
+
     #####################################
     ###            RISK               ###
     #####################################
@@ -803,30 +859,58 @@ def create_routes(server):
                         ]
     """
     server.addTimeseries(ghtorrent.new_watchers, 'new_watchers')
+    
+    """
+    @api {get} /:owner/:repo/timeseries/total_watchers Total Watchers
+    @apiName total-watchers
+    @apiGroup Experimental
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
+        
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+        
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "date": "2005-08-26T00:00:00.000Z",
+                                "total_total_watchers": 5
+                            },
+                            {
+                                "date": "2005-09-02T00:00:00.000Z",
+                                "total_total_watchers": 6
+                            }
+                        ]
+    """
+    server.addTimeseries(ghtorrent.total_watchers, 'total_watchers')
 
     """
-    @api {get} /ghtorrent_range GHTorrent Date Range
-    @apiName GhtorrentRange
+    @api {get} /user/:userid User
+    @apiName User
     @apiGroup Utility
-    @apiDescription Utility endpoint to show the range of dates GHTorrent covers.
+    @apiDescription Utility endpoint to show information about users on GitHub.
 
     @apiSuccessExample {json} Success-Response:
                         [
                             {
-                                "date": "2008-04-10T17:25:06-07:00",
-                                "release": "v0.9.1"
-                            },
-                            {
-                                "date": "2008-04-10T17:25:07-07:00",
-                                "release": "v0.9.2"
+                                "id": 18,
+                                "login": "developertown",
+                                "company": null,
+                                "created_at": "2010-12-09T13:14:35.000Z",
+                                "type": "ORG",
+                                "fake": 0,
+                                "deleted": 0,
+                                "long": -86.158068,
+                                "lat": 39.768403,
+                                "country_code": "us",
+                                "state": "Marion County",
+                                "city": "Indianapolis",
+                                "location": "Indianapolis, IN"
                             }
                         ]
     """
-    @server.app.route('/{}/ghtorrent_range'.format(server.api_version))
-
-    def ghtorrent_range():
-        ghr = server.transform(ghtorrent.ghtorrent_range())
-        return Response(response=ghr,
+    @server.app.route('/{}/user/<user_id>'.format(server.api_version))
+    def user(user_id):
+        user = server.transform(func=ghtorrent.user, args=[user_id])
+        return Response(response=user,
                         status=200,
                         mimetype="application/json")
-    # server.updateMetricMetadata(ghtorrent.ghtorrent_range, '/{}/ghtorrent_range'.format(server.api_version))

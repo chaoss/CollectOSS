@@ -16,6 +16,78 @@ def create_routes(server):
     #####################################
 
     """
+    @api {get} /:owner/:repo/timeseries/githubapi/issues/closed Closed Issues
+    @apiName githubapi-closed-issues
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/issues-closed.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "created_at": "2019-01-09T00:00:00.000Z",
+                                "count": 1
+                            },
+                            {
+                                "created_at": "2019-01-10T00:00:00.000Z",
+                                "count": 2
+                            }
+                        ]
+    """
+    server.addTimeseries(github.closed_issues, 'githubapi/issues/closed')
+
+    """
+    @api {get} /:owner/:repo/timeseries/githubapi/commits Code Commits
+    @apiName githubapi-code-commits
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "created_at": "2017-01-30T00:00:00.000Z",
+                                "count": 6
+                            },
+                            {
+                                "created_at": "2017-01-31T00:00:00.000Z",
+                                "count": 14
+                            }
+                        ]
+    """
+    server.addTimeseries(github.code_commits, 'githubapi/commits')
+
+    """
+    @api {get} /:owner/:repo/githubapi/contributors List of Contributors & their Contributions
+    @apiName githubapi-contributors
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "login": "howderek",
+                                "contributions": 372
+                            },
+                            {
+                                "login": "ccarterlandis",
+                                "contributions": 190
+                            }
+                        ]
+    """
+    server.addMetric(github.contributors, 'githubapi/contributors')
+
+    """
     @api {get} /:owner/:repo/lines_changed Lines of Code Changed
     @apiName lines-of-code-changed
     @apiGroup Growth-Maturity-Decline
@@ -39,6 +111,75 @@ def create_routes(server):
     """
     server.addMetric(github.lines_of_code_changed, 'lines_changed')
 
+    """
+    @api {get} /:owner/:repo/timeseries/githubapi/issues Issues Opened
+    @apiName githubapi-issues-opened
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/issues-open.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "created_at": "2019-02-28T00:00:00.000Z",
+                                "count": 4
+                            },
+                            {
+                                "created_at": "2019-03-01T00:00:00.000Z",
+                                "count": 1
+                            },
+                        ]
+    """
+    server.addTimeseries(github.open_issues, 'githubapi/issues')
+
+    """
+    @api {get} /:owner/:repo/githubapi/pull_requests_closed Pull Requests Closed
+    @apiName githubapi-pull-requests-Closed
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/ComputationalMystics/wg-gmd/blob/master/activity-metrics/pull-requests-closed.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        {'count': 6}
+    """
+    server.addMetric(github.pull_requests_closed, 'githubapi/pull_requests_closed')
+
+    """
+    @api {get} /:owner/:repo/githubapi/pull_requests_merged Pull Requests Merged
+    @apiName githubapi-pull-requests-merged
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        {'count': 84}
+    """
+    server.addMetric(github.pull_requests_merged, 'githubapi/pull_requests_merged')
+
+    """
+    @api {get} /:owner/:repo/githubapi/pull_requests_open Pull Requests Open
+    @apiName githubapi-pull-requests-open
+    @apiGroup Growth-Maturity-Decline
+    @apiDescription <a href="https://github.com/ComputationalMystics/wg-gmd/blob/master/activity-metrics/pull-requests-open.md">CHAOSS Metric Definition</a>
+
+    @apiGroup Growth-Maturity-Decline
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        {'count': 3}
+    """
+    server.addMetric(github.pull_requests_open, 'githubapi/pull_requests_open')
+
     #####################################
     ###            RISK               ###
     #####################################
@@ -50,6 +191,27 @@ def create_routes(server):
     #####################################
     ###           ACTIVITY            ###
     #####################################
+
+    """
+    @api {get} /:owner/:repo/githubapi/repository_size Repository Size
+    @apiName repository-size
+    @apiGroup Activity
+    @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/archived_metrics/repository-size.md">CHAOSS Metric Definition</a>
+
+    @apiParam {String} owner Username of the owner of the GitHub repository
+    @apiParam {String} repo Name of the GitHub repository
+
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "best": "5",
+                                "worst": "1"
+                            }
+                        ]
+    """
+    server.addMetric(github.repository_size, "githubapi/repository_size")
+
+
 
     #####################################
     ###         EXPERIMENTAL          ###

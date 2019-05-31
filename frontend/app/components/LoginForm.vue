@@ -1,26 +1,15 @@
 <template>
 <div class="limiter">
-  <!-- <div class="background"></div> -->
+  <router-link to="/"><img src="static/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/></router-link>
   <div class="container-login background"> <!-- background image -->
     <div class="wrap-login">
-      <form class="login-form validate-form">
-        <div style="text-align: center; padding-right: 10px">
-          <img src="static/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
-
-        </div>
-
-        <span class="login-form-title">
-          Log in
-        </span>
-
+      <form class="login-form validate-form" :action="formAction" method="post">
         <div class="wrap-input validate-input" data-validate="Enter username">
           <input class="input" type="text" name="username" placeholder="Username">
-          <span class="focus-input" style="padding: 12px 0px 0px 10px">&#128100</span>
         </div>
 
         <div class="wrap-input validate-input" data-validate="Enter password">
-          <input class="input" type="password" placeholder="Password">
-          <span class="focus-input" style="padding: 12px 0px 0px 10px">&#128274</span>
+          <input class="input" type="password" name="password" placeholder="Password">
         </div>
 
         <div class="contact-form-checkbox">
@@ -31,9 +20,7 @@
         </div>
 
         <div class="container-login-form-btn">
-          <button class="login-form-btn">
-            Login
-          </button>
+          <input type="submit" class="login-form-btn" value="Login" />
         </div>
 
       </form>
@@ -46,7 +33,7 @@
   module.exports = {
     data() {
       return {
-
+        'formAction': '/login?next=' + encodeURI('http://' + window.location.host)
       }
     },
     methods: {

@@ -3,7 +3,7 @@ SPDX-License-Identifier: MIT
 
 Install augur package with pip.
 '''
-
+import fastentrypoints
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
@@ -40,7 +40,8 @@ setup(
         'cython', 'protobuf', 'ipdb', 'setuptools-git', 'beautifulsoup4', 'flask', 'flask-cors',
         'PyMySQL', 'requests', 'python-dateutil', 'sqlalchemy', 'pandas', 'pytest', 'PyGithub',
         'GitPython', 'gunicorn', 'traitlets', 'coloredlogs', 'tldextract', 'beaker', 'lockfile',
-        'werkzeug', 'flask-login', 'wtforms', 'Flask-WTF'],
+        'werkzeug', 'flask-login', 'wtforms', 'Flask-WTF', 'alembic', 'colored',
+        'prompt_toolkit', 'click', 'psycopg2-binary'],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],

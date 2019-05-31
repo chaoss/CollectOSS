@@ -40,25 +40,40 @@
 
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">base64</span>
-<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">send_from_directory</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">send_from_directory</span><span class="p">,</span> <span class="n">render_template</span>
 <span class="kn">from</span> <span class="nn">flask_cors</span> <span class="k">import</span> <span class="n">CORS</span>
+<span class="kn">from</span> <span class="nn">flask_login</span> <span class="k">import</span> <span class="n">current_user</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">augur</span>
 <span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span><span class="p">,</span> <span class="n">metric_metadata</span><span class="p">,</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">augur.routes</span> <span class="k">import</span> <span class="n">create_plugin_routes</span>
+<span class="kn">from</span> <span class="nn">augur.routes</span> <span class="k">import</span> <span class="n">create_routes</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="n">AUGUR_API_VERSION</span> <span class="o">=</span> <span class="s1">&#39;api/unstable&#39;</span>
+
+<span class="k">class</span> <span class="nc">VueCompatibleFlask</span><span class="p">(</span><span class="n">Flask</span><span class="p">):</span>
+  <span class="n">jinja_options</span> <span class="o">=</span> <span class="n">Flask</span><span class="o">.</span><span class="n">jinja_options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+  <span class="n">jinja_options</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">block_start_string</span><span class="o">=</span><span class="s1">&#39;(%&#39;</span><span class="p">,</span>
+    <span class="n">block_end_string</span><span class="o">=</span><span class="s1">&#39;%)&#39;</span><span class="p">,</span>
+    <span class="n">variable_start_string</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%%</span><span class="s1">&#39;</span><span class="p">,</span>
+    <span class="n">variable_end_string</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%%</span><span class="s1">&#39;</span><span class="p">,</span>
+    <span class="n">comment_start_string</span><span class="o">=</span><span class="s1">&#39;(#&#39;</span><span class="p">,</span>
+    <span class="n">comment_end_string</span><span class="o">=</span><span class="s1">&#39;#)&#39;</span><span class="p">,</span>
+  <span class="p">))</span>
+
 
 <div class="viewcode-block" id="Server"><a class="viewcode-back" href="../../application/augur.server.Server.html#augur.server.Server">[docs]</a><span class="k">class</span> <span class="nc">Server</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines Augur&#39;s server&#39;s behavior</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="Server.__init__"><a class="viewcode-back" href="../../application/augur.server.Server.html#augur.server.Server.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Server.__init__"><a class="viewcode-back" href="../../application/augur.server.Server.html#augur.server.Server.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frontend_folder</span><span class="o">=</span><span class="s1">&#39;../frontend/public&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initializes the server, creating both the Flask application and Augur application</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Create Flask application</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">static_folder</span><span class="o">=</span><span class="s1">&#39;../frontend/public&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">VueCompatibleFlask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">static_folder</span><span class="o">=</span><span class="n">frontend_folder</span><span class="p">,</span> <span class="n">template_folder</span><span class="o">=</span><span class="n">frontend_folder</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">api_version</span> <span class="o">=</span> <span class="n">AUGUR_API_VERSION</span>
         <span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span>
         <span class="n">CORS</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
@@ -73,25 +88,38 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">augur_app</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get_cache</span><span class="p">(</span><span class="s1">&#39;server&#39;</span><span class="p">,</span> <span class="n">expire</span><span class="o">=</span><span class="n">expire</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
+        <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">augur_app</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;secret_key&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_SECRET_KEY&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;WTF_CSRF_ENABLED&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">show_metadata</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="n">create_plugin_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">create_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c1">#####################################</span>
         <span class="c1">###          UTILITY              ###</span>
         <span class="c1">#####################################</span>
 
-        <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">})</span>
-        <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;path:path&gt;&#39;</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+        <span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">405</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">err</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Redirects to health check route</span>
 <span class="sd">            &quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="n">app</span><span class="o">.</span><span class="n">send_static_file</span><span class="p">(</span><span class="s1">&#39;index.html&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">AUGUR_API_VERSION</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;Not Found&#39;</span><span class="p">}),</span>
+                            <span class="n">status</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+                            <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">session_data</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">current_user</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="s1">&#39;username&#39;</span><span class="p">):</span>
+                    <span class="n">session_data</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span> <span class="p">}</span>
+                <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;index.html&#39;</span><span class="p">,</span> <span class="n">session_script</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;window.AUGUR_SESSION={json.dumps(session_data)}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/static/&lt;path:path&gt;&#39;</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">send_static</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">send_from_directory</span><span class="p">(</span><span class="s1">&#39;../frontend/public&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">send_from_directory</span><span class="p">(</span><span class="n">frontend_folder</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
         <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_version</span><span class="p">))</span>
         <span class="k">def</span> <span class="nf">status</span><span class="p">():</span>
@@ -99,7 +127,8 @@
 <span class="sd">            Health check route</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">status</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;OK&#39;</span>
+                <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;OK&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;plugins&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">_loaded_plugins</span>
             <span class="p">}</span>
             <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
                             <span class="n">status</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
@@ -306,7 +335,7 @@
                 <span class="n">data</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                
+
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;to_json&#39;</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">group_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">group_by</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">aggregate</span><span class="p">)</span>
@@ -393,8 +422,9 @@
     <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_PORT&#39;</span><span class="p">,</span> <span class="s1">&#39;5000&#39;</span><span class="p">)</span>
     <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">))</span>
 
+
 <span class="n">wsgi_app</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="k">def</span> <span class="nf">wsgi</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">wsgi</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates WSGI app</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -402,7 +432,21 @@
     <span class="k">if</span> <span class="p">(</span><span class="n">wsgi_app</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">app_instance</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span>
         <span class="n">wsgi_app</span> <span class="o">=</span> <span class="n">app_instance</span><span class="o">.</span><span class="n">app</span>
-    <span class="k">return</span> <span class="n">wsgi_app</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+    <span class="c1"># Stuff to make proxypass work</span>
+    <span class="n">script_name</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_X_SCRIPT_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">script_name</span><span class="p">:</span>
+        <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;SCRIPT_NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">script_name</span>
+        <span class="n">path_info</span> <span class="o">=</span> <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH_INFO&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">path_info</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">script_name</span><span class="p">):</span>
+            <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH_INFO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path_info</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">script_name</span><span class="p">):]</span>
+
+    <span class="n">scheme</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_X_SCHEME&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scheme</span><span class="p">:</span>
+        <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;wsgi.url_scheme&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scheme</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_X_FORWARDED_SERVER&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> 
+    <span class="k">if</span> <span class="n">server</span><span class="p">:</span> 
+        <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;HTTP_HOST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server</span>
+    <span class="k">return</span> <span class="n">wsgi_app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">run</span><span class="p">()</span>
@@ -453,7 +497,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>

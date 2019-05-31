@@ -10,7 +10,6 @@ const queryString = require('query-string')
 // Vue.use(Button)
 // import router from './router';
 
-
 export default function Augur () {
   window.jQuery = require('jquery')
   window.Vue = require('vue')
@@ -27,10 +26,10 @@ export default function Augur () {
   window.VueRouter = require('vue-router')
   window.ShardsVue = require('shards-vue')
 
-
-  
   let router = require('./router.js').default
-
+  window.vegaEmbed = require('vega-embed')
+  window.vega = require('vega')
+  window.vegaLite = require('vega-lite')
 
   window.AUGUR_CHART_STYLE = {
     brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
@@ -44,8 +43,6 @@ export default function Augur () {
   window.Vue.use(window.VueVega)
   window.Vue.use(window.VueRouter)
   window.Vue.config.productionTip = false
-
-
 
   window.augur = new window.Vuex.Store({
     state: {
@@ -62,12 +59,12 @@ export default function Augur () {
       showBelowAverage: false,
       rawWeekly: false,
       showArea: true,
-      showDetail: true,
+      showDetail: false,
       showTooltip: true,
       byDate: false
     },
     mutations: {
-      setGitRepo(state, payload) {
+      setGitRepo (state, payload) {
         state.gitRepo = payload.gitURL
         state.baseRepo = payload.gitURL
         state.hasState = true
@@ -186,7 +183,12 @@ export default function Augur () {
         state.comparedRepos = []
         router.push({
           name: state.tab,
+<<<<<<< HEAD
           params: {owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}        })
+=======
+          params: {owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
+        })
+>>>>>>> broker
       },
       resetBaseRepo (state) {
         state.baseRepo = null
@@ -210,7 +212,15 @@ export default function Augur () {
   })
 
   AugurApp.store = window.augur
+<<<<<<< HEAD
 
+=======
+
+  // AugurApp.router = router
+  // AugurApp.render = h => h(AugurApp)
+
+  // window.AugurApp = new window.Vue(AugurApp).$mount('#app')
+>>>>>>> broker
   router.beforeEach((to, from, next) => {
     if (to.params.repo || to.params.groupid){
       if (!to.params.groupid && !to.params.comparedrepo){
@@ -270,7 +280,10 @@ export default function Augur () {
     next()
   })
 
+<<<<<<< HEAD
     
+=======
+>>>>>>> broker
   window.AugurApp = new window.Vue({
     // components: { AugurApp },
     // store: window.augur,

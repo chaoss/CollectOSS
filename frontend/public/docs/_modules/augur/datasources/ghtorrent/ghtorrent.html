@@ -1078,7 +1078,18 @@
 <span class="s2">            WHERE repo_id = :repoid</span>
 <span class="s2">            GROUP BY YEARWEEK(created_at)</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">newWatchersSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span></div>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">newWatchersSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+
+
+
+    <span class="c1">### Utility</span>
+    <span class="k">def</span> <span class="nf">user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+        <span class="n">usersSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT *</span>
+<span class="s2">            FROM users</span>
+<span class="s2">            WHERE id = :user_id</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">usersSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">user_id</span><span class="p">)})</span></div>
 </pre></div>
 
           </div>
@@ -1126,7 +1137,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2018, Augur Contributors.
+      &copy;2019, Augur Contributors.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>

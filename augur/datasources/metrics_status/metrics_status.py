@@ -88,29 +88,51 @@ class ImplementedMetric(Metric):
 class MetricsStatus(object):
 
     diversity_inclusion_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_communication.md", "has_links": True},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_contribution.md", "has_links": True},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_events.md", "has_links": False},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_governance.md", "has_links": False},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_leadership.md", "has_links": False},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_project_places.md", "has_links": True},
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_recognition.md", "has_links": False}
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_communication.md",
+         "has_links": True},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_contribution.md",
+         "has_links": True},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_events.md",
+         "has_links": False},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_governance.md",
+         "has_links": False},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_leadership.md",
+         "has_links": False},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_project_places.md",
+         "has_links": True},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/goal_recognition.md",
+         "has_links": False}
     ]
 
     growth_maturity_decline_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/2_Growth-Maturity-Decline.md", "has_links": True},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/2_Growth-Maturity-Decline.md",
+         "has_links": True},
     ]
 
     risk_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/3_Risk.md", "has_links": False},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/3_Risk.md",
+         "has_links": False},
     ]
 
     value_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/4_Value.md", "has_links": False},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/4_Value.md",
+         "has_links": False},
     ]
 
     activity_urls = [
-        {"raw_content_url": "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/activity-metrics-list.md", "has_links": False},
+        {"raw_content_url":
+         "https://raw.githubusercontent.com/augurlabs/metrics/wg-gmd/activity-metrics-list.md",
+         "has_links": False},
     ]
 
     activity_repo = "augurlabs/metrics"
@@ -131,11 +153,12 @@ class MetricsStatus(object):
 
         self.implemented_metrics = []
 
-        self.diversity_inclusion_metrics = []
-        self.growth_maturity_decline_metrics = []
+        self.di_metrics = []
+        self.gmd_metrics = []
         self.risk_metrics = []
         self.value_metrics = []
         self.activity_metrics = []
+        self.experimental_metrics = []
 
         self.metrics_by_group = []
 
@@ -150,14 +173,15 @@ class MetricsStatus(object):
 
         self.build_implemented_metrics()
 
-        self.diversity_inclusion_metrics = self.create_grouped_metrics(self.diversity_inclusion_urls, "diversity-inclusion")
-        self.growth_maturity_decline_metrics = self.create_grouped_metrics(self.growth_maturity_decline_urls, "growth-maturity-decline")
+        self.di_metrics = self.create_grouped_metrics(self.diversity_inclusion_urls, "diversity-inclusion")
+        self.gmd_metrics = self.create_grouped_metrics(self.growth_maturity_decline_urls, "growth-maturity-decline")
         self.risk_metrics = self.create_grouped_metrics(self.risk_urls, "risk")
         self.value_metrics = self.create_grouped_metrics(self.value_urls, "value")
 
-        self.metrics_by_group = [self.diversity_inclusion_metrics, self.growth_maturity_decline_metrics, self.risk_metrics, self.value_metrics]
+        self.metrics_by_group = [self.di_metrics, self.gmd_metrics, self.risk_metrics, self.value_metrics]
 
-        self.activity_metrics = self.create_activity_metrics()
+        self.create_activity_metrics()
+
         self.metrics_by_group.append(self.activity_metrics)
 
         self.create_experimental_metrics()
@@ -204,9 +228,8 @@ class MetricsStatus(object):
 
         raw_activity_names = re.findall(r'\|(?:\[|)(.*)\|(?:\]|)(?:\S| )', activity_metrics_raw_text)
 
-        activity_names = [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names if '---' not in name and 'Name' not in name]
-
-        activity_metrics = []
+        activity_names = [re.sub(r'(?:\]\(.*\))', '', name) for name in raw_activity_names 
+                          if '---' not in name and 'Name' not in name]
 
         for raw_name in activity_names:
             activity_metric = GroupedMetric(raw_name, "activity")
@@ -222,9 +245,7 @@ class MetricsStatus(object):
                     is_not_grouped_metric = True
 
             if is_not_grouped_metric:
-                activity_metrics.append(activity_metric)
-
-        return activity_metrics
+                self.activity_metrics.append(activity_metric)
 
     def create_experimental_metrics(self):
         tags = []
