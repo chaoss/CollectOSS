@@ -4,21 +4,21 @@
     <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-        <h3 class="page-title" style="font-size: 2rem">Insights</h3>
+        <h3 class="page-title" style="font-size: 1rem">Insights</h3>
       </div>
     </div>
 
     <!-- First Row of Posts -->
 
         <d-row>
-          <d-col v-for="(project, idx) in projects.slice(0,3)" :key="idx" lg="3" md="6" sm="12" class="mb-4">
+          <d-col v-for="(project, idx) in projects.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             <d-card class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ project }}</d-badge>
                 <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :source="testEndpoints[idx]" owner="twitter" repo="twemoji"></insight-chart>
 
                 <div class="card-post__author d-flex">
-                  <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 2rem">
+                  <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
                     <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%); ">{{ getDirection(idx) }}</i>
                   </a>
                 </div>
@@ -91,7 +91,7 @@
           <div class="page-header row no-gutters py-4" style="padding-top: 0 !important;">
             <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
               <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-              <h3 class="page-title" style="font-size: 2rem">Most Frequent Projects</h3>
+              <h3 class="page-title" style="font-size: 1rem">Most Frequent Projects</h3>
             </div>
           </div>
           <!-- Second Row of Posts -->
