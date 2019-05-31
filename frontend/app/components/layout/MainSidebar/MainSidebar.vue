@@ -50,7 +50,7 @@
               </d-link>
               <div class="row" style="position: absolute; bottom: 0; padding-left: 0px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
-                  <d-link class="nav-link" style="padding: 0px">
+                  <d-link class="nav-link" style="padding: 0.7rem 0.7rem 0.7rem 1.5rem; margin-left: 1rem">
                     <i class="material-icons">autorenew</i>
                     <span>Reset</span>
                     <div class="item-icon-wrapper" />
@@ -58,9 +58,9 @@
                 </div>
                 
                 <div class="col col-6" style="padding: 0px">
-                  <d-link class="nav-link" style="padding-left: 0px; padding: 0">
+                  <d-link class="nav-link" style="padding: 0.7rem .7rem 0.7rem 1.5rem; margin-left: 1rem">
                     <i class="material-icons">library_add</i>
-                    <span>Add comparison</span>
+                    <span>Add</span>
                     <div class="item-icon-wrapper" />
                   </d-link>
                 </div>

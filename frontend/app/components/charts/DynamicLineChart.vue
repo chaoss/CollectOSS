@@ -59,11 +59,8 @@ export default {
       compRepos: this.$store.state.comparedRepos,
       metricSource: null,
       timeperiod: 'all',
-<<<<<<< HEAD
-      forceRecomputeCounter: 0
-=======
+      forceRecomputeCounter: 0,
       mount: true
->>>>>>> broker
     }
   },
   
@@ -89,23 +86,8 @@ export default {
       $(this.$el).find('.hidefirst').addClass('invisDet')
       $(this.$el).find('.spinner').addClass('loader')
       $(this.$el).find('.spacing').removeClass('hidden')
-<<<<<<< HEAD
-    }
-  },
-  beforeUpdate() {
-    this.$store.watch(
-      // When the returned result changes...
-      function (state) {
-        console.log("WORKED")
-        this.thisShouldTriggerRecompute()
-        return 
-      },
-      // // Run this callback
-      // callback
-    )
-=======
+
     },
->>>>>>> broker
   },
   computed: {
     repo () {
@@ -142,12 +124,9 @@ export default {
       return this.$store.state.showDetail
     },
     spec() {
-<<<<<<< HEAD
-      this.forceRecomputeCounter;
-=======
+
       // declare constant for vegaEmbed module since we use its cdn in index.html rather than add it to package.json
       const vegaEmbed = window.vegaEmbed;
->>>>>>> broker
       // Get the repos we need
       let repos = []
       if (this.repo) {

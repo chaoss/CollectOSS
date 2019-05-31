@@ -77,7 +77,7 @@ module.exports = {
     HorizontalBarChart,
     GroupedBarChart,
     DirectionalTimeChart,
-    TimeIntervalBarChart
+    TimeIntervalBarChart,
     CommitChart
   },
   computed: {

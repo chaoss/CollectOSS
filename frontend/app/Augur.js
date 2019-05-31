@@ -183,12 +183,8 @@ export default function Augur () {
         state.comparedRepos = []
         router.push({
           name: state.tab,
-<<<<<<< HEAD
-          params: {owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}        })
-=======
           params: {owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
         })
->>>>>>> broker
       },
       resetBaseRepo (state) {
         state.baseRepo = null
@@ -212,15 +208,7 @@ export default function Augur () {
   })
 
   AugurApp.store = window.augur
-<<<<<<< HEAD
 
-=======
-
-  // AugurApp.router = router
-  // AugurApp.render = h => h(AugurApp)
-
-  // window.AugurApp = new window.Vue(AugurApp).$mount('#app')
->>>>>>> broker
   router.beforeEach((to, from, next) => {
     if (to.params.repo || to.params.groupid){
       if (!to.params.groupid && !to.params.comparedrepo){
@@ -280,10 +268,6 @@ export default function Augur () {
     next()
   })
 
-<<<<<<< HEAD
-    
-=======
->>>>>>> broker
   window.AugurApp = new window.Vue({
     // components: { AugurApp },
     // store: window.augur,

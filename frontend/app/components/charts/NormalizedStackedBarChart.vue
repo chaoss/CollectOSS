@@ -1,14 +1,9 @@
 <template>
   <div ref="holder">
-<<<<<<< HEAD
-    <div style="margin-bottom: 0 !important;" class="tickchart ">
-      <!-- <h3>Lines of code added by the top 10 authors as Percentages - By Time Period</h3> -->
-      <vega-lite :spec="spec" :data="values"></vega-lite>
-=======
+
     <div style="margin-bottom: 0 !important" class="tickchart ">
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <div :id="source"></div>
->>>>>>> broker
       <p> {{ chart }} </p>
       <div style="position: relative; top: -0px !important"class="form-item form-checkboxes tickradios">
           <div class="inputGroup "  style="padding-top: 5px;">

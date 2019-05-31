@@ -181,16 +181,12 @@ function Augur() {
   window.d3 = require('d3');
   window.SvgSaver = require('svgsaver');
   window.VueRouter = require('vue-router');
-<<<<<<< HEAD
   window.ShardsVue = require('shards-vue');
 
   var router = require('./router.js').default;
-=======
   window.vegaEmbed = require('vega-embed');
   window.vega = require('vega');
   window.vegaLite = require('vega-lite');
-  var router = require('./router/router').default;
->>>>>>> broker
 
   window.AUGUR_CHART_STYLE = {
     brightColors: ['#FF3647', '#007BFF', '#DAFF4D', '#B775FF'],
@@ -345,12 +341,8 @@ function Augur() {
         state.comparedRepos = [];
         router.push({
           name: state.tab,
-<<<<<<< HEAD
-          params: { owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1) } });
-=======
           params: { owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1) }
         });
->>>>>>> broker
       },
       resetBaseRepo: function resetBaseRepo(state) {
         state.baseRepo = null;
@@ -432,66 +424,6 @@ function Augur() {
       }
     }
 
-<<<<<<< HEAD
-=======
-  // window.AugurApp = new window.Vue(AugurApp).$mount('#app')
-  router.beforeEach(function (to, from, next) {
-    if (to.params.repo || to.params.groupid) {
-      if (!to.params.groupid && !to.params.comparedrepo) {
-        AugurApp.store.commit("resetTab");
-        AugurApp.store.commit('setTab', {
-          tab: to.name
-        });
-        if (to.params.repo.includes('github') || to.params.repo.split(".").length > 2) {
-          AugurApp.store.commit('setRepo', {
-            gitURL: to.params.repo
-          });
-        } else {
-          AugurApp.store.commit('setRepo', {
-            githubURL: to.params.owner + '/' + to.params.repo
-          });
-        }
-      } else if (to.params.comparedrepo && augur.state.comparedRepos.length == 0) {
-        var tab = to.name;
-        tab = tab.substring(0, tab.length - 7);
-        AugurApp.store.commit("resetTab");
-        AugurApp.store.commit('setTab', {
-          tab: tab
-        });
-        AugurApp.store.commit('setRepo', {
-          githubURL: to.params.owner + '/' + to.params.repo
-        });
-        AugurApp.store.commit('addComparedRepo', {
-          githubURL: to.params.comparedowner + '/' + to.params.comparedrepo
-        });
-      } else if (to.params.groupid && augur.state.comparedRepos.length == 0) {
-        AugurApp.store.commit("resetTab");
-        var _tab = to.name;
-        _tab = _tab.substring(0, _tab.length - 5);
-        AugurApp.store.commit('setTab', {
-          tab: _tab
-        });
-        var repos = to.params.groupid.split('+');
-        if (repos[0].includes('github')) {
-          AugurApp.store.commit('setRepo', {
-            gitURL: repos[0]
-          });
-        } else {
-          AugurApp.store.commit('setRepo', {
-            githubURL: repos[0]
-          });
-        }
-        repos.shift();
-        // repos.pop()
-        repos.forEach(function (cmprepo) {
-          AugurApp.store.commit('addComparedRepo', {
-            githubURL: cmprepo
-          });
-        });
-      }
-    }
-
->>>>>>> broker
     next();
   });
 
@@ -847,11 +779,7 @@ var AugurAPI = function () {
 
       if (repo.gitURL) {
         // Other
-<<<<<<< HEAD
-        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'), GitEndpoint(repo, 'cdRepTpIntervalLocCommits', 'cd_rep_tp_interval_loc_commits'), GitEndpoint(repo, 'cdRgTpRankedLoc', 'cd_rg_tp_ranked_loc'), GitEndpoint(repo, 'cdRgTpRankedCommits', 'cd_rg_tp_ranked_commits'), GitEndpoint(repo, 'cdRgNewrepRankedLoc', 'cd_rg_newrep_ranked_loc'), GitEndpoint(repo, 'cdRgNewrepRankedCommits', 'cd_rg_newrep_ranked_commits');
-=======
         GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'), GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped'), GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group'), GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group'), GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'), GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group');
->>>>>>> broker
         GitEndpoint(repo, 'facadeProject', 'facade_project');
       }
 
@@ -1229,11 +1157,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('div',{staticClass:"fullwidth"},[_c('router-view',{attrs:{"name":"header"}})],1),_vm._v(" "),_c('div',{ref:"cards",staticClass:"content"},[_c('router-view',{attrs:{"name":"tabs"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"controls"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"content"}})],1)])}
-=======
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('router-view',{attrs:{"name":"header"}}),_vm._v(" "),_c('div',{ref:"cards",staticClass:"content"},[_c('router-view',{attrs:{"name":"tabs"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"controls"}}),_vm._v(" "),_c('router-view',{attrs:{"name":"content"}})],1)],1)}
->>>>>>> broker
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1249,7 +1173,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/AugurHeader.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
 
 module.exports = {
   data: function data() {
@@ -1614,11 +1538,8 @@ module.exports = {
   components: {
     DynamicLineChart: _DynamicLineChart2.default,
     BubbleChart: _BubbleChart2.default,
-<<<<<<< HEAD
     StackedBarChart: _StackedBarChart2.default,
     DualAxisContributions: _DualAxisContributions2.default
-=======
-    StackedBarChart: _StackedBarChart2.default
   },
   created: function created() {
     var _this = this;
@@ -1646,14 +1567,13 @@ module.exports = {
     }, function (error) {
       console.log("failed", error);
     });
->>>>>>> broker
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('div',{staticClass:"col col-12 spinner loader",staticStyle:{"text-align":"center","margin-left":"44.4%","position":"relative !important"}}):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments","data":_vm.values['commitComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1","data":_vm.values['totalCommitters']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance Rate","cite-url":"","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_open']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_closed_total']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1","data":_vm.values['fakes']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newWatchers","title":"New Watchers / Week","cite-url":"","cite-text":"New Watchers","data":_vm.values['newWatchers']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)]):_vm._e()])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Experimental")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments","data":_vm.values['commitComments']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1","data":_vm.values['totalCommitters']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"contributionAcceptance","title":"Contribution Acceptance Rate","cite-url":"","cite-text":"Contribution Acceptance","data":_vm.values['contributionAcceptance']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_open","title":"Community Engagement: Open Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md","cite-text":"Open Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_open']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"communityEngagement:issues_closed_total","title":"Community Engagement: Closed Issues","cite-url":"https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md","cite-text":"Closed Issues","disable-rolling-average":"1","data":_vm.values['communityEngagement:issues_closed_total']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"fakes","title":"Fakes","cite-url":"","cite-text":"Fakes","disable-rolling-average":"1","data":_vm.values['fakes']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"newWatchers","title":"New Watchers / Week","cite-url":"","cite-text":"New Watchers","data":_vm.values['newWatchers']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('stacked-bar-chart',{attrs:{"source":"issueActivity","title":"Issue Activity","cite-url":"","cite-text":"Issue Activity"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('bubble-chart',{attrs:{"source":"contributors","title":"Contributor Overview","size":"total","cite-url":"","cite-text":"Contributors"}})],1)])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1729,11 +1649,9 @@ module.exports = {
     NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
     OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
     HorizontalBarChart: _HorizontalBarChart2.default,
-<<<<<<< HEAD
     GroupedBarChart: _GroupedBarChart2.default,
     DirectionalTimeChart: _DirectionalTimeChart2.default,
-    TimeIntervalBarChart: _TimeIntervalBarChart2.default
-=======
+    TimeIntervalBarChart: _TimeIntervalBarChart2.default,
     CommitChart: _CommitChart2.default
   },
   computed: {
@@ -1766,18 +1684,13 @@ module.exports = {
         _this.loaded = true;
       }, function () {});
     });
->>>>>>> broker
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important","margin-bottom":"20px"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block","margin-bottom":"20px"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block","margin-bottom":"20px"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedCommits","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedLoc","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('time-interval-bar-chart',{attrs:{"source":"cdRepTpIntervalLocCommits","title":"Contributions in 2018 by Monthly Intervals with Baseline Averages","field":"loc"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedCommits","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedLoc","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12"},[_c('tick-chart')],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"65px"}},[_c('div',{staticStyle:{"padding-top":"35px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"type":"lines","title":"Average Lines of Code Per Commit"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-100px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('lines-of-code-chart')],1)])}
-=======
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important","margin-bottom":"20px"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block","margin-bottom":"20px"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block","margin-bottom":"20px"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('div',{staticClass:"col col-12 spinner loader",staticStyle:{"text-align":"center","margin-left":"44.4%","position":"relative !important"}}):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-10px) !important"}},[_c('div',{staticClass:"col col-12"},[_c('tick-chart',{attrs:{"source":"changesByAuthor","data":_vm.values['changesByAuthor']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px","transform":"translateY(-0px) !important"}},[_c('normalized-stacked-bar-chart',{attrs:{"title":"Lines of code added by the top 10 authors as Percentages - By Time Period","source":"changesByAuthor1","data":_vm.values['changesByAuthor']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-left":"0px","transform":"translateY(-0px) !important"}},[_c('div',{staticStyle:{"padding-top":"0px"}}),_vm._v(" "),_c('horizontal-bar-chart',{attrs:{"measure":"lines","title":"Average Lines of Code Per Commit","source":"changesByAuthor2","data":_vm.values['changesByAuthor']}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-30px) !important"}},[_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"lines","title":"Lines of Code Added by the top 10 Authors as Percentages - All Time"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('one-dimensional-stacked-bar-chart',{attrs:{"type":"commit","title":"Commits by the top 10 Authors as Percentages - All Time"}})],1)]):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-40px) !important"}},[_c('lines-of-code-chart')],1):_vm._e()])}
->>>>>>> broker
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2050,13 +1963,8 @@ module.exports = {
         var url = repo.url;
         var first = url.indexOf(".");
         var last = url.lastIndexOf(".");
-<<<<<<< HEAD
 
         var option = null;
-
-=======
-        var option = null;
->>>>>>> broker
         if (first == last) option = url.slice(url.indexOf('/') + 1);else if (url.slice(last) == '.git') option = url.slice(url.indexOf('/') + 1);else option = url.substring(first + 1, last) + repo.url.slice(url.indexOf('/'));
         _this.options.push(option);
       });
@@ -2065,10 +1973,6 @@ module.exports = {
       if (this.$store.state.comparedRepos.length < 2) this.disabled = true;
       if (this.$store.state.comparedRepos.length == 1) this.compared = true;
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> broker
   },
   directives: {
     'click-outside': {
@@ -2104,11 +2008,6 @@ module.exports = {
     },
     onStartDateChange: function onStartDateChange(e) {
       var _this2 = this;
-<<<<<<< HEAD
-
-      var date = Date.parse(this.$refs.startMonth.value + "/01/" + this.$refs.startYear.value);
-      console.log('Start date has been changed!');
-=======
 
       var date = null;
 
@@ -2118,7 +2017,6 @@ module.exports = {
         var month = (parseInt(e.target.value) + 1).toString();
         date = Date.parse(month + "/01/" + this.startYear);
       }
->>>>>>> broker
       if (this.startDateTimeout) {
         clearTimeout(this.startDateTimeout);
         delete this.startDateTimeout;
@@ -2136,11 +2034,8 @@ module.exports = {
       var date = null;
 
       if (e.target.value > 12) {
-<<<<<<< HEAD
-        date = Date.parse((parseInt(this.endMonth) + 1).toString() + "/01/" + e.target.value);
-=======
+
         date = Date.parse(this.endMonth + "/01/" + e.target.value);
->>>>>>> broker
       } else {
         var month = (parseInt(e.target.value) + 1).toString();
         console.log();
@@ -2203,22 +2098,6 @@ module.exports = {
         });
         element.classList.add("invisible");
       }
-<<<<<<< HEAD
-=======
-    },
-    onArrayCompare: function onArrayCompare() {
-      var _this4 = this;
-
-      this.compCount += this.values.length;
-      this.values.forEach(function (url) {
-        var link = url;
-        var end = url.slice(url.length - 4);
-        if (end == ".git") link = link.substring(0, url.length - 4);
-        _this4.$store.commit('addComparedRepo', {
-          githubURL: link
-        });
-      });
->>>>>>> broker
     },
     onArrayCompare: function onArrayCompare() {
       var _this4 = this;
@@ -2300,10 +2179,7 @@ module.exports = {
     window.$(this.$el).find('.multiselect__input').addClass('search');
     window.$(this.$el).find('.multiselect__input').addClass('reposearch');
     console.log("CHECKING", this.$store.state.startDate.getMonth(), this.$store.state.startDate.getUTCFullYear(), this.$store.state.endDate.getMonth(), this.$store.state.endDate.getUTCFullYear());
-<<<<<<< HEAD
 
-=======
->>>>>>> broker
     if (this.projects.length == 1) this.project = this.projects[0];
   }
 };
@@ -2311,11 +2187,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{directives:[{name:"click-outside",rawName:"v-click-outside",value:(_vm.stopSelecting),expression:"stopSelecting"}],staticClass:"row col col-4",staticStyle:{"text-align":"center !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{attrs:{"options":_vm.projects,"placeholder":_vm.project},model:{value:(_vm.project),callback:function ($$v) {_vm.project=$$v},expression:"project"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.options,"multiple":true,"group-label":"url","placeholder":"Select repos"},model:{value:(_vm.values),callback:function ($$v) {_vm.values=$$v},expression:"values"}})],1)]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Apply"},on:{"click":function($event){_vm.onArrayCompare(); _vm.onValuesClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Reset"},on:{"click":function($event){return _vm.onClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-3"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Search other GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-3",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){return _vm.collapseText()}}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){return _vm.collapseText()}}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_c('h6',[_vm._v("Line Chart Options")]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_c('h6',[_vm._v("Bubble Chart Options ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Chart Timeline Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.startMonth) == month.value}},[_vm._v(_vm._s(month.name))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.startYear == year}},[_vm._v(_vm._s(year))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.endMonth) == month.value}},[_vm._v(_vm._s(month.name))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.endYear == year}},[_vm._v(_vm._s(year))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},domProps:{"checked":_vm.compare == 'zscore'},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","type":"radio"},domProps:{"checked":_vm.compare == 'baseline'},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"rolling","type":"radio"},domProps:{"checked":_vm.compare == 'rolling'},on:{"change":_vm.onCompareChange}}),_vm._v("Rolling average")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
-=======
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{directives:[{name:"click-outside",rawName:"v-click-outside",value:(_vm.stopSelecting),expression:"stopSelecting"}],staticClass:"row col col-4",staticStyle:{"text-align":"center !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.projects,"placeholder":_vm.project},model:{value:(_vm.project),callback:function ($$v) {_vm.project=$$v},expression:"project"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.options,"multiple":true,"group-label":"url","placeholder":"Select repos"},model:{value:(_vm.values),callback:function ($$v) {_vm.values=$$v},expression:"values"}})],1)]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Apply"},on:{"click":function($event){_vm.onArrayCompare(); _vm.onValuesClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Reset"},on:{"click":function($event){return _vm.onClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-3"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Search other GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-3",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){return _vm.collapseText()}}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){return _vm.collapseText()}}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_c('h6',[_vm._v("Line Chart Options")]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_c('h6',[_vm._v("Bubble Chart Options ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Chart Timeline Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.startMonth) == month.value}},[_vm._v(_vm._s(month.name))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.startYear == year}},[_vm._v(_vm._s(year))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.endMonth) == month.value}},[_vm._v(_vm._s(month.name))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.endYear == year}},[_vm._v(_vm._s(year))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},domProps:{"checked":_vm.compare == 'zscore'},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","type":"radio"},domProps:{"checked":_vm.compare == 'baseline'},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"rolling","type":"radio"},domProps:{"checked":_vm.compare == 'rolling'},on:{"change":_vm.onCompareChange}}),_vm._v("Rolling average")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
->>>>>>> broker
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3",attrs:{"align":"center","id":"comparetext"}},[_c('h6',[_vm._v("Compare from your repos:")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-12"},[_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2455,7 +2327,6 @@ var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
 var _TickChart = require('./charts/TickChart');
 
 var _TickChart2 = _interopRequireDefault(_TickChart);
-<<<<<<< HEAD
 
 var _LinesOfCodeChart = require('./charts/LinesOfCodeChart');
 
@@ -2468,352 +2339,6 @@ var _NormalizedStackedBarChart2 = _interopRequireDefault(_NormalizedStackedBarCh
 var _OneDimensionalStackedBarChart = require('./charts/OneDimensionalStackedBarChart');
 
 var _OneDimensionalStackedBarChart2 = _interopRequireDefault(_OneDimensionalStackedBarChart);
-
-var _HorizontalBarChart = require('./charts/HorizontalBarChart');
-
-var _HorizontalBarChart2 = _interopRequireDefault(_HorizontalBarChart);
-
-var _GroupedBarChart = require('./charts/GroupedBarChart');
-
-var _GroupedBarChart2 = _interopRequireDefault(_GroupedBarChart);
-=======
->>>>>>> broker
-
-var _LinesOfCodeChart = require('./charts/LinesOfCodeChart');
-
-var _LinesOfCodeChart2 = _interopRequireDefault(_LinesOfCodeChart);
-
-var _NormalizedStackedBarChart = require('./charts/NormalizedStackedBarChart');
-
-var _NormalizedStackedBarChart2 = _interopRequireDefault(_NormalizedStackedBarChart);
-
-<<<<<<< HEAD
-  components: {
-    AugurHeader: _AugurHeader2.default,
-    TickChart: _TickChart2.default,
-    LinesOfCodeChart: _LinesOfCodeChart2.default,
-    NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
-    OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
-    HorizontalBarChart: _HorizontalBarChart2.default,
-    GroupedBarChart: _GroupedBarChart2.default,
-    StackedBarChart: _StackedBarChart2.default
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.gitRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedCommits","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedLoc","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedCommits","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedLoc","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1)])])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-7117fe96", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-7117fe96", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/RiskCard.vue", function(exports, require, module) {
-;(function(){
-"use strict";
-
-window.onload = function () {
-    document.getElementById("ciiBtn").addEventListener("click", function () {
-        document.getElementById("overcii").style.display = "block";
-        document.getElementById("overcii").class = "row";
-        document.getElementById("ciiBtn").style.visibility = "hidden";
-        var request = new XMLHttpRequest();
-        function loader() {
-            var basestr = document.getElementById("base").innerHTML;
-            var augURL = 'https://github.com/' + basestr;
-            request.open('GET', 'https://bestpractices.coreinfrastructure.org/projects.json?pq=' + augURL, true);
-            request.onload = function () {
-                var data = JSON.parse(this.response)[0];
-                if (data != undefined) {
-                    var badgeURL = 'https://bestpractices.coreinfrastructure.org/projects/' + data.id + '/badge';
-
-                    document.getElementById("CIIbadge").src = badgeURL;
-                    if (data.badge_percentage_0 < 100) {
-                        document.getElementById("CII").innerHTML = data.name + ' is currently not passing CII Best Practices.';
-                    } else if (data.badge_percentage_1 < 100) {
-                        document.getElementById("CII").innerHTML = data.name + ' is currently passing CII Best Practices.';
-                    } else if (data.badge_percentage_2 < 100) {
-                        document.getElementById("CII").innerHTML = data.name + ' is currently passing CII Best Practices. This project has a siver status.';
-                    } else if (data.badge_percentage_2 == 100) {
-                        document.getElementById("CII").innerHTML = data.name + ' is currently passing CII Best Practices. <br>' + data.name + ' maintains a gold status.';
-                    }
-                } else {
-                    document.getElementById("CII").innerHTML = 'No best practice data for this repository.';
-                }
-            };
-        }
-        loader();
-        request.send();
-    });
-};
-module.exports = {
-    data: function data() {
-        return {
-            colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
-        };
-    },
-
-    components: {}
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Risk")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"},attrs:{"id":"base"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] }),attrs:{"id":"compared"}},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('h2',{staticClass:"col",staticStyle:{"margin-bottom":"20px"}},[_vm._v("CII Best Practices")]),_vm._v(" "),_c('button',{staticStyle:{"border":"2px solid black","width":"100%"},attrs:{"id":"ciiBtn"}},[_vm._v("Retrieve CII information")]),_vm._v(" "),_vm._m(0)])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"text-align":"center","width":"100%","display":"none"},attrs:{"id":"overcii"}},[_c('img',{staticClass:"col",staticStyle:{"width":"419px","height":"146px","margin-left":"auto","margin-right":"auto"},attrs:{"width":"200px","height":"200px","src":"https://i.ibb.co/n8f7NjX/CIITPARENT.png","href":"https://bestpractices.coreinfrastructure.org/en"}}),_vm._v(" "),_c('br'),_vm._v(" "),_c('div',{staticClass:"col-6",staticStyle:{"margin-left":"auto","margin-right":"auto","margin-top":"20px"},attrs:{"id":"CIIbp"}},[_c('div',{attrs:{"size":"total"}},[_c('img',{staticStyle:{"transform":"scale(2)"},attrs:{"id":"CIIbadge"}}),_vm._v(" "),_c('br'),_vm._v(" "),_c('h2',{attrs:{"id":"CII"}})])])])}]
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-0abc386c", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-0abc386c", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/TableView.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-var _vueMultiselect = require('vue-multiselect');
-
-var _vueMultiselect2 = _interopRequireDefault(_vueMultiselect);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-module.exports = {
-  components: {
-    Multiselect: _vueMultiselect2.default
-  },
-  data: function data() {
-    return {
-      clipped: true,
-      drawer: true,
-      fixed: false,
-      items: [{ icon: 'bubble_chart', title: 'Inspire' }],
-      miniVariant: false,
-      right: true,
-      rightDrawer: false,
-      title: 'Vuetify.js',
-      dialog: false,
-      headers: [{
-        text: 'Dessert (100g serving)',
-        align: 'left',
-        sortable: false,
-        value: 'name'
-      }, { text: 'Calories', value: 'calories' }, { text: 'Fat (g)', value: 'fat' }, { text: 'Carbs (g)', value: 'carbs' }, { text: 'Protein (g)', value: 'protein' }, { text: 'Actions', value: 'name', sortable: false }],
-      desserts: [],
-      editedIndex: -1,
-      editedItem: {
-        name: '',
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0
-      },
-      defaultItem: {
-        name: '',
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0
-      },
-      listPrimitive: null
-    };
-  },
-
-  computed: {
-    formTitle: function formTitle() {
-      return this.editedIndex === -1 ? 'New Item' : 'Edit Item';
-    }
-  },
-  watch: {
-    dialog: function dialog(val) {
-      val || this.close();
-    }
-  },
-  mounted: function mounted() {},
-  methods: {
-    initialise: function initialise(hamoni) {
-      var _this = this;
-
-      hamoni.createList("vue-table", [{
-        name: 'Frozen Yogurt',
-        calories: 159,
-        fat: 6.0,
-        carbs: 24,
-        protein: 4.0
-      }, {
-        name: 'Ice cream sandwich',
-        calories: 237,
-        fat: 9.0,
-        carbs: 37,
-        protein: 4.3
-      }, {
-        name: 'Eclair',
-        calories: 262,
-        fat: 16.0,
-        carbs: 23,
-        protein: 6.0
-      }]).then(function (primitive) {
-        _this.listPrimitive = primitive;
-        _this.desserts = _this.listPrimitive.getAll();
-        _this.subscribeToUpdate();
-      }).catch(alert);
-    },
-    subscribeToUpdate: function subscribeToUpdate() {
-      var _this2 = this;
-
-      this.listPrimitive.onItemAdded(function (item) {
-        _this2.desserts.push(item.value);
-      });
-      this.listPrimitive.onItemUpdated(function (item) {
-        _this2.desserts.splice(item.index, 1, item.value);
-      });
-      this.listPrimitive.onItemRemoved(function (item) {
-        _this2.desserts.splice(item.index, 1);
-      });
-    },
-    editItem: function editItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialog = true;
-    },
-    deleteItem: function deleteItem(item) {
-      var index = this.desserts.indexOf(item);
-      confirm('Are you sure you want to delete this item?') && this.listPrimitive.remove(index);
-    },
-    close: function close() {
-      var _this3 = this;
-
-      this.dialog = false;
-      setTimeout(function () {
-        _this3.editedItem = Object.assign({}, _this3.defaultItem);
-        _this3.editedIndex = -1;
-      }, 300);
-    },
-    save: function save() {
-      if (this.editedIndex > -1) {
-        this.listPrimitive.update(this.editedIndex, this.editedItem);
-      } else {
-        this.listPrimitive.add(this.editedItem);
-      }
-      this.close();
-    }
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('v-dialog',{attrs:{"max-width":"500px"},model:{value:(_vm.dialog),callback:function ($$v) {_vm.dialog=$$v},expression:"dialog"}},[_c('v-btn',{staticClass:"mb-2",attrs:{"slot":"activator","color":"primary","dark":""},slot:"activator"},[_vm._v("New Item")]),_vm._v(" "),_c('v-card',[_c('v-card-title',[_c('span',{staticClass:"headline"},[_vm._v(_vm._s(_vm.formTitle))])]),_vm._v(" "),_c('v-card-text',[_c('v-container',{attrs:{"grid-list-md":""}},[_c('v-layout',{attrs:{"wrap":""}},[_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Dessert name"},model:{value:(_vm.editedItem.name),callback:function ($$v) {_vm.$set(_vm.editedItem, "name", $$v)},expression:"editedItem.name"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Calories"},model:{value:(_vm.editedItem.calories),callback:function ($$v) {_vm.$set(_vm.editedItem, "calories", $$v)},expression:"editedItem.calories"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Fat (g)"},model:{value:(_vm.editedItem.fat),callback:function ($$v) {_vm.$set(_vm.editedItem, "fat", $$v)},expression:"editedItem.fat"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Carbs (g)"},model:{value:(_vm.editedItem.carbs),callback:function ($$v) {_vm.$set(_vm.editedItem, "carbs", $$v)},expression:"editedItem.carbs"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Protein (g)"},model:{value:(_vm.editedItem.protein),callback:function ($$v) {_vm.$set(_vm.editedItem, "protein", $$v)},expression:"editedItem.protein"}})],1)],1)],1)],1),_vm._v(" "),_c('v-card-actions',[_c('v-spacer'),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.close($event)}}},[_vm._v("Cancel")]),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.save($event)}}},[_vm._v("Save")])],1)],1)],1),_vm._v(" "),_c('v-data-table',{staticClass:"elevation-1",attrs:{"headers":_vm.headers,"items":_vm.desserts,"hide-actions":""},scopedSlots:_vm._u([{key:"items",fn:function(props){return [_c('td',[_vm._v(_vm._s(props.item.name))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.calories))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.fat))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.carbs))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.protein))]),_vm._v(" "),_c('td',{staticClass:"justify-center layout px-0"},[_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){return _vm.editItem(props.item)}}},[_c('v-icon',{attrs:{"color":"teal"}},[_vm._v("edit")])],1),_vm._v(" "),_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){return _vm.deleteItem(props.item)}}},[_c('v-icon',{attrs:{"color":"pink"}},[_vm._v("delete")])],1)],1)]}}])})],1)}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-6147dc76", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-6147dc76", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/Tabs.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-module.exports = {
-  props: ['owner', 'repo', 'comparedowner', 'comparedrepo', 'groupid'],
-  computed: {
-    gitRepo: function gitRepo() {
-      return this.$store.state.gitRepo;
-    },
-    currentTab: function currentTab() {
-      return this.$store.state.tab;
-    },
-    baseRepo: function baseRepo() {
-      return this.$store.state.baseRepo;
-    },
-    comparedRepos: function comparedRepos() {
-      return this.$store.state.comparedRepos;
-    }
-  },
-  methods: {
-    changeTab: function changeTab(e) {
-      console.log("changing tab to: ", e.target.dataset.value);
-      this.$store.commit('setTab', {
-        tab: e.target.dataset.value
-      });
-      if (this.$store.state.comparedRepos.length == 1) {
-        var owner = this.gitRepo ? null : this.baseRepo.split('/')[0];
-        var repo = this.gitRepo ? this.gitRepo : this.baseRepo.split('/')[1];
-        var comparedowner = this.comparedRepos[0].split('/').length > 2 ? null : this.comparedRepos[0].split('/')[0];
-        var comparedrepo = this.comparedRepos[0].split('/').length > 2 ? this.comparedRepos[0] : this.comparedRepos[0].split('/')[1];
-        var name = e.target.dataset['value'] + "compare";
-        this.$router.push({
-          name: name,
-          params: { owner: owner, repo: repo, comparedowner: comparedowner, comparedrepo: comparedrepo }
-        });
-      } else if (this.$store.state.comparedRepos.length > 1) {
-        var groupid = this.gitRepo ? String(this.gitRepo) + '+' : String(state.baseRepo) + "+";
-        this.comparedRepos.forEach(function (repo) {
-          groupid += String(repo) + '+';
-        });
-        var _name = e.target.dataset['value'] + "group";
-        this.$router.push({
-          name: _name,
-          params: { groupid: groupid }
-        });
-      } else {
-        var _owner = this.gitRepo ? null : this.baseRepo.split('/')[0];
-        var _repo = this.gitRepo ? this.gitRepo : this.baseRepo.split('/')[1];
-        this.$router.push({
-          name: e.target.dataset['value'],
-          params: { owner: _owner, repo: _repo }
-        });
-      }
-    }
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Growth, Maturity, and Decline")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'diversityinclusion') }},[_c('a',{attrs:{"href":"#","data-value":"diversityinclusion"},on:{"click":_vm.changeTab}},[_vm._v("Diversity and Inclusion")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'risk') }},[_c('a',{attrs:{"href":"#","data-value":"risk"},on:{"click":_vm.changeTab}},[_vm._v("Risk")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'value') }},[_c('a',{attrs:{"href":"#","data-value":"value"},on:{"click":_vm.changeTab}},[_vm._v("Value")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Overview")])])])])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-004f2c6b", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-004f2c6b", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/ValueCard.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-=======
-var _OneDimensionalStackedBarChart = require('./charts/OneDimensionalStackedBarChart');
-
-var _OneDimensionalStackedBarChart2 = _interopRequireDefault(_OneDimensionalStackedBarChart);
->>>>>>> broker
 
 var _HorizontalBarChart = require('./charts/HorizontalBarChart');
 
@@ -2832,6 +2357,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 module.exports = {
   data: function data() {
     return {
+
       colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
       values: {},
       loaded: false,
@@ -2848,6 +2374,7 @@ module.exports = {
     HorizontalBarChart: _HorizontalBarChart2.default,
     GroupedBarChart: _GroupedBarChart2.default,
     StackedBarChart: _StackedBarChart2.default
+
   },
   computed: {
     repo: function repo() {
@@ -2887,7 +2414,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Project Overview: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedCommits","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['cdRgTpRankedCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedLoc","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['cdRgTpRankedLoc']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedCommits","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['cdRgNewrepRankedCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedLoc","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['cdRgNewrepRankedLoc']}})],1)]):_vm._e()])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Project Overview: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedCommits","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedLoc","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedCommits","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedLoc","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1)]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2901,87 +2428,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-<<<<<<< HEAD
-;require.register("components/add-new-post/Editor.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  name: 'editor',
-  mounted: function mounted() {
-    var toolbarOptions = [[{ header: [1, 2, 3, 4, 5, false] }], ['bold', 'italic', 'underline', 'strike'], ['blockquote', 'code-block'], [{ header: 1 }, { header: 2 }], [{ list: 'ordered' }, { list: 'bullet' }], [{ script: 'sub' }, { script: 'super' }], [{ indent: '-1' }, { indent: '+1' }]];
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small mb-3"},[_c('d-card-body',[_c('d-form',{staticClass:"add-new-post"},[_c('d-input',{staticClass:"mb-3",attrs:{"size":"lg","placeholder":"Your Post Title"}}),_vm._v(" "),_c('div',{ref:"editor",staticClass:"add-new-post__editor mb-1"})],1)],1)],1)}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-387a8974", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-387a8974", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/add-new-post/SidebarActions.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  name: 'sidebar-actions',
-  props: {
-    title: {
-      type: String,
-      default: 'Actions'
-    }
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small mb-3"},[_c('d-card-header',{staticClass:"border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(_vm.title))])]),_vm._v(" "),_c('d-card-body',{staticClass:"p-0"},[_c('d-list-group',{attrs:{"flush":""}},[_c('d-list-group-item',{staticClass:"p-3"},[_c('span',{staticClass:"d-flex mb-2"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("flag")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Status:")]),_vm._v(" Draft "),_c('a',{staticClass:"ml-auto",attrs:{"href":"#"}},[_vm._v("Edit")])]),_vm._v(" "),_c('span',{staticClass:"d-flex mb-2"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("visibility")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Visibility:")]),_vm._v(" "),_c('strong',{staticClass:"text-success"},[_vm._v("Public")]),_vm._v(" "),_c('a',{staticClass:"ml-auto",attrs:{"href":"#"}},[_vm._v("Edit")])]),_vm._v(" "),_c('span',{staticClass:"d-flex mb-2"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("calendar_today")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Schedule:")]),_vm._v(" Now "),_c('a',{staticClass:"ml-auto",attrs:{"href":"#"}},[_vm._v("Edit")])]),_vm._v(" "),_c('span',{staticClass:"d-flex"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("score")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Readability:")]),_vm._v(" "),_c('strong',{staticClass:"text-warning"},[_vm._v("Ok")])])]),_vm._v(" "),_c('d-list-group-item',{staticClass:"d-flex px-3"},[_c('d-button',{staticClass:"btn-outline-accent",attrs:{"size":"sm"}},[_c('i',{staticClass:"material-icons"},[_vm._v("save")]),_vm._v(" Save Draft\n        ")]),_vm._v(" "),_c('d-button',{staticClass:"btn-accent ml-auto",attrs:{"size":"sm"}},[_c('i',{staticClass:"material-icons"},[_vm._v("file_copy")]),_vm._v(" Publish\n        ")])],1)],1)],1)],1)}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-2ba5164c", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-2ba5164c", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/add-new-post/SidebarCategories.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  name: 'sidebar-categories',
-  props: {
-    title: {
-      type: String,
-      default: 'Categories'
-    }
-=======
 ;require.register("components/ProjectDropdown.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -3105,42 +2551,26 @@ module.exports = {
   },
   mounted: function mounted() {
     this.getDownloadedRepos();
->>>>>>> broker
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small mb-3"})}
-__vue__options__.staticRenderFns = []
-=======
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{directives:[{name:"click-outside",rawName:"v-click-outside"}]},[_c('div',{staticStyle:{"display":"inline-block"}},[_c('div',{staticClass:"cd-dropdown-wrapper"},[_c('a',{staticClass:"cd-dropdown-trigger",attrs:{"href":"#0"},on:{"click":_vm.toggleNav}},[_vm._v(_vm._s(_vm.project))]),_vm._v(" "),_c('nav',{staticClass:"cd-dropdown"},[_c('h2',[_vm._v("Projects")]),_vm._v(" "),_c('a',{staticClass:"cd-close",attrs:{"href":"#0"}},[_vm._v("Close")]),_vm._v(" "),_c('ul',{staticClass:"cd-dropdown-content"},[_vm._m(0),_vm._v(" "),_c('li',{staticClass:"cd-divider"},[_vm._v("Projects")]),_vm._v(" "),_vm._l((_vm.projects),function(project){return _c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"},on:{"click":_vm.toggleSecNav}},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('ul',{staticClass:"cd-secondary-dropdown  invis"},[_c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"}},[_vm._v("Repos")]),_vm._v(" "),_c('ul',{staticClass:"is-hidden"},_vm._l(((_vm.repos[project])),function(repo){return _c('li',{},[_c('a',{attrs:{"value":"","href":"#0"},on:{"click":_vm.toggleSelect}},[_vm._v(_vm._s(repo.url))])])}),0)])])])}),_vm._v(" "),_c('li',{staticClass:"has-children"}),_vm._v(" "),_c('li',{staticClass:"has-children"}),_vm._v(" "),_c('li',{staticClass:"cd-divider"},[_vm._v("Groups")]),_vm._v(" "),_vm._m(1)],2)])])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('li',[_c('form',{staticClass:"cd-search",staticStyle:{"margin":"0"}},[_c('input',{attrs:{"type":"search","placeholder":"Search..."}})])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"}},[_vm._v("Test Group")])])}]
->>>>>>> broker
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
-    hotAPI.createRecord("data-v-9e350e62", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-9e350e62", __vue__options__)
-=======
     hotAPI.createRecord("data-v-57324926", __vue__options__)
   } else {
     hotAPI.reload("data-v-57324926", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
 
-<<<<<<< HEAD
-;require.register("components/blog/Discussions.vue", function(exports, require, module) {
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-=======
 ;require.register("components/RiskCard.vue", function(exports, require, module) {
 ;(function(){
 "use strict";
@@ -3194,40 +2624,18 @@ var __vue__options__ = (typeof module.exports === "function"? module.exports.opt
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Risk")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"},attrs:{"id":"base"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] }),attrs:{"id":"compared"}},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_c('h2',{staticClass:"col",staticStyle:{"margin-bottom":"20px"}},[_vm._v("CII Best Practices")]),_vm._v(" "),_c('button',{staticStyle:{"border":"2px solid black","width":"100%"},attrs:{"id":"ciiBtn"}},[_vm._v("Retrieve CII information")]),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"text-align":"center","width":"100%","display":"none"},attrs:{"id":"overcii"}},[_c('img',{staticClass:"col",staticStyle:{"width":"419px","height":"146px","margin-left":"auto","margin-right":"auto"},attrs:{"width":"200px","height":"200px","src":"https://i.ibb.co/n8f7NjX/CIITPARENT.png","href":"https://bestpractices.coreinfrastructure.org/en"}}),_vm._v(" "),_c('br'),_vm._v(" "),_c('div',{staticClass:"col-6",staticStyle:{"margin-left":"auto","margin-right":"auto","margin-top":"20px"},attrs:{"id":"CIIbp"}},[_c('div',{attrs:{"size":"total"}},[_c('img',{staticStyle:{"transform":"scale(2)"},attrs:{"id":"CIIbadge"}}),_vm._v(" "),_c('br'),_vm._v(" "),_c('h2',{attrs:{"id":"CII"}})])])])}]
->>>>>>> broker
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
-    hotAPI.createRecord("data-v-610eab8b", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-610eab8b", __vue__options__)
-=======
     hotAPI.createRecord("data-v-0abc386c", __vue__options__)
   } else {
     hotAPI.reload("data-v-0abc386c", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
 
-<<<<<<< HEAD
-;require.register("components/blog/NewDraft.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = {
-  name: 'new-draft',
-  props: {
-    title: {
-      type: String,
-      default: 'New Draft'
-=======
 ;require.register("components/TableView.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -3356,7 +2764,6 @@ module.exports = {
         this.listPrimitive.add(this.editedItem);
       }
       this.close();
->>>>>>> broker
     }
   }
 };
@@ -3364,34 +2771,20 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small h-100"},[_c('d-card-header',{staticClass:"border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(_vm.title))])]),_vm._v(" "),_c('d-card-body',{staticClass:"d-flex flex-column"},[_c('d-form',{staticClass:"quick-post-form"},[_c('div',{staticClass:"form-group"},[_c('d-input',{staticClass:"form-control",attrs:{"placeholder":"Brave New World"}})],1),_vm._v(" "),_c('div',{staticClass:"form-group"},[_c('d-textarea',{staticClass:"form-control",attrs:{"placeholder":"Words can be like X-rays if you use them properly..."}})],1),_vm._v(" "),_c('div',{staticClass:"form-group"},[_c('d-button',{staticClass:"btn-accent",attrs:{"type":"submit"}},[_vm._v("Create Draft")])],1)])],1)],1)}
-=======
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('v-dialog',{attrs:{"max-width":"500px"},model:{value:(_vm.dialog),callback:function ($$v) {_vm.dialog=$$v},expression:"dialog"}},[_c('v-btn',{staticClass:"mb-2",attrs:{"slot":"activator","color":"primary","dark":""},slot:"activator"},[_vm._v("New Item")]),_vm._v(" "),_c('v-card',[_c('v-card-title',[_c('span',{staticClass:"headline"},[_vm._v(_vm._s(_vm.formTitle))])]),_vm._v(" "),_c('v-card-text',[_c('v-container',{attrs:{"grid-list-md":""}},[_c('v-layout',{attrs:{"wrap":""}},[_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Dessert name"},model:{value:(_vm.editedItem.name),callback:function ($$v) {_vm.$set(_vm.editedItem, "name", $$v)},expression:"editedItem.name"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Calories"},model:{value:(_vm.editedItem.calories),callback:function ($$v) {_vm.$set(_vm.editedItem, "calories", $$v)},expression:"editedItem.calories"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Fat (g)"},model:{value:(_vm.editedItem.fat),callback:function ($$v) {_vm.$set(_vm.editedItem, "fat", $$v)},expression:"editedItem.fat"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Carbs (g)"},model:{value:(_vm.editedItem.carbs),callback:function ($$v) {_vm.$set(_vm.editedItem, "carbs", $$v)},expression:"editedItem.carbs"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Protein (g)"},model:{value:(_vm.editedItem.protein),callback:function ($$v) {_vm.$set(_vm.editedItem, "protein", $$v)},expression:"editedItem.protein"}})],1)],1)],1)],1),_vm._v(" "),_c('v-card-actions',[_c('v-spacer'),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.close($event)}}},[_vm._v("Cancel")]),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.save($event)}}},[_vm._v("Save")])],1)],1)],1),_vm._v(" "),_c('v-data-table',{staticClass:"elevation-1",attrs:{"headers":_vm.headers,"items":_vm.desserts,"hide-actions":""},scopedSlots:_vm._u([{key:"items",fn:function(props){return [_c('td',[_vm._v(_vm._s(props.item.name))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.calories))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.fat))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.carbs))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.protein))]),_vm._v(" "),_c('td',{staticClass:"justify-center layout px-0"},[_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){return _vm.editItem(props.item)}}},[_c('v-icon',{attrs:{"color":"teal"}},[_vm._v("edit")])],1),_vm._v(" "),_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){return _vm.deleteItem(props.item)}}},[_c('v-icon',{attrs:{"color":"pink"}},[_vm._v("delete")])],1)],1)]}}])})],1)}
->>>>>>> broker
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
-    hotAPI.createRecord("data-v-964c745e", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-964c745e", __vue__options__)
-=======
     hotAPI.createRecord("data-v-6147dc76", __vue__options__)
   } else {
     hotAPI.reload("data-v-6147dc76", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
 
-<<<<<<< HEAD
-;require.register("components/blog/UsersByDeviceLite.vue", function(exports, require, module) {
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-=======
 ;require.register("components/Tabs.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -3455,29 +2848,18 @@ var __vue__options__ = (typeof module.exports === "function"? module.exports.opt
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Overview")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Evolution")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])])])])}
 __vue__options__.staticRenderFns = []
->>>>>>> broker
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
-    hotAPI.createRecord("data-v-02fb2a43", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-02fb2a43", __vue__options__)
-=======
     hotAPI.createRecord("data-v-004f2c6b", __vue__options__)
   } else {
     hotAPI.reload("data-v-004f2c6b", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
 
-<<<<<<< HEAD
-;require.register("components/blog/UsersOverview.vue", function(exports, require, module) {
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-=======
 ;require.register("components/ValueCard.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -3515,21 +2897,189 @@ var __vue__options__ = (typeof module.exports === "function"? module.exports.opt
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('h1',[_vm._v("Value")]),_vm._v(" "),_c('div',{staticStyle:{"display":"inline-block"}},[_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),_vm._m(0)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row"},[_c('p',[_vm._v("We currently do not have any metrics developed for this group.")])])}]
->>>>>>> broker
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
-    hotAPI.createRecord("data-v-193370e1", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-193370e1", __vue__options__)
-=======
     hotAPI.createRecord("data-v-5e0cf204", __vue__options__)
   } else {
     hotAPI.reload("data-v-5e0cf204", __vue__options__)
->>>>>>> broker
+  }
+})()}
+});
+
+;require.register("components/add-new-post/Editor.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  name: 'editor',
+  mounted: function mounted() {
+    var toolbarOptions = [[{ header: [1, 2, 3, 4, 5, false] }], ['bold', 'italic', 'underline', 'strike'], ['blockquote', 'code-block'], [{ header: 1 }, { header: 2 }], [{ list: 'ordered' }, { list: 'bullet' }], [{ script: 'sub' }, { script: 'super' }], [{ indent: '-1' }, { indent: '+1' }]];
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small mb-3"},[_c('d-card-body',[_c('d-form',{staticClass:"add-new-post"},[_c('d-input',{staticClass:"mb-3",attrs:{"size":"lg","placeholder":"Your Post Title"}}),_vm._v(" "),_c('div',{ref:"editor",staticClass:"add-new-post__editor mb-1"})],1)],1)],1)}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-387a8974", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-387a8974", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/add-new-post/SidebarActions.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  name: 'sidebar-actions',
+  props: {
+    title: {
+      type: String,
+      default: 'Actions'
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small mb-3"},[_c('d-card-header',{staticClass:"border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(_vm.title))])]),_vm._v(" "),_c('d-card-body',{staticClass:"p-0"},[_c('d-list-group',{attrs:{"flush":""}},[_c('d-list-group-item',{staticClass:"p-3"},[_c('span',{staticClass:"d-flex mb-2"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("flag")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Status:")]),_vm._v(" Draft "),_c('a',{staticClass:"ml-auto",attrs:{"href":"#"}},[_vm._v("Edit")])]),_vm._v(" "),_c('span',{staticClass:"d-flex mb-2"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("visibility")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Visibility:")]),_vm._v(" "),_c('strong',{staticClass:"text-success"},[_vm._v("Public")]),_vm._v(" "),_c('a',{staticClass:"ml-auto",attrs:{"href":"#"}},[_vm._v("Edit")])]),_vm._v(" "),_c('span',{staticClass:"d-flex mb-2"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("calendar_today")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Schedule:")]),_vm._v(" Now "),_c('a',{staticClass:"ml-auto",attrs:{"href":"#"}},[_vm._v("Edit")])]),_vm._v(" "),_c('span',{staticClass:"d-flex"},[_c('i',{staticClass:"material-icons mr-1"},[_vm._v("score")]),_c('strong',{staticClass:"mr-1"},[_vm._v("Readability:")]),_vm._v(" "),_c('strong',{staticClass:"text-warning"},[_vm._v("Ok")])])]),_vm._v(" "),_c('d-list-group-item',{staticClass:"d-flex px-3"},[_c('d-button',{staticClass:"btn-outline-accent",attrs:{"size":"sm"}},[_c('i',{staticClass:"material-icons"},[_vm._v("save")]),_vm._v(" Save Draft\n        ")]),_vm._v(" "),_c('d-button',{staticClass:"btn-accent ml-auto",attrs:{"size":"sm"}},[_c('i',{staticClass:"material-icons"},[_vm._v("file_copy")]),_vm._v(" Publish\n        ")])],1)],1)],1)],1)}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-2ba5164c", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-2ba5164c", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/add-new-post/SidebarCategories.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  name: 'sidebar-categories',
+  props: {
+    title: {
+      type: String,
+      default: 'Categories'
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small mb-3"})}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-9e350e62", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-9e350e62", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/blog/Discussions.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-610eab8b", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-610eab8b", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/blog/NewDraft.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  name: 'new-draft',
+  props: {
+    title: {
+      type: String,
+      default: 'New Draft'
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small h-100"},[_c('d-card-header',{staticClass:"border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(_vm.title))])]),_vm._v(" "),_c('d-card-body',{staticClass:"d-flex flex-column"},[_c('d-form',{staticClass:"quick-post-form"},[_c('div',{staticClass:"form-group"},[_c('d-input',{staticClass:"form-control",attrs:{"placeholder":"Brave New World"}})],1),_vm._v(" "),_c('div',{staticClass:"form-group"},[_c('d-textarea',{staticClass:"form-control",attrs:{"placeholder":"Words can be like X-rays if you use them properly..."}})],1),_vm._v(" "),_c('div',{staticClass:"form-group"},[_c('d-button',{staticClass:"btn-accent",attrs:{"type":"submit"}},[_vm._v("Create Draft")])],1)])],1)],1)}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-964c745e", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-964c745e", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/blog/UsersByDeviceLite.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-02fb2a43", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-02fb2a43", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/blog/UsersOverview.vue", function(exports, require, module) {
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-193370e1", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-193370e1", __vue__options__)
   }
 })()}
 });
@@ -4736,7 +4286,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-;require.register("components/charts/DirectionalTimeChart.vue", function(exports, require, module) {
+;require.register("components/charts/DynamicLineChart.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
 
@@ -4757,21 +4307,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 exports.default = {
-<<<<<<< HEAD
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'field'],
-=======
 
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
->>>>>>> broker
   data: function data() {
 
     return {
-<<<<<<< HEAD
-      values: []
-    };
-  },
-
-=======
       legendLabels: [],
       values: [],
       status: {},
@@ -4779,6 +4319,7 @@ exports.default = {
       compRepos: this.$store.state.comparedRepos,
       metricSource: null,
       timeperiod: 'all',
+      forceRecomputeCounter: 0,
       mount: true
     };
   },
@@ -4808,697 +4349,6 @@ exports.default = {
       $(this.$el).find('.spacing').removeClass('hidden');
     }
   },
->>>>>>> broker
-  computed: {
-    repo: function repo() {
-      return this.$store.state.baseRepo;
-    },
-    gitRepo: function gitRepo() {
-      return this.$store.state.gitRepo;
-    },
-    period: function period() {
-      return this.$store.state.trailingAverage;
-    },
-    earliest: function earliest() {
-      return this.$store.state.startDate;
-    },
-    latest: function latest() {
-      return this.$store.state.endDate;
-    },
-    compare: function compare() {
-      return this.$store.state.compare;
-    },
-    comparedRepos: function comparedRepos() {
-      return this.$store.state.comparedRepos;
-    },
-    rawWeekly: function rawWeekly() {
-      return this.$store.state.rawWeekly;
-    },
-    showArea: function showArea() {
-      return this.$store.state.showArea;
-    },
-    showTooltip: function showTooltip() {
-      return this.$store.state.showTooltip;
-    },
-    showDetail: function showDetail() {
-      return this.$store.state.showDetail;
-    },
-    months: function months() {
-      return { 1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
-      };
-    },
-    spec: function spec() {
-      var _this = this;
-
-<<<<<<< HEAD
-      var config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-        "padding": { 'left': 45, 'top': 10, 'right': 70, 'bottom': 50 },
-=======
-      var vegaEmbed = window.vegaEmbed;
-
-      var repos = [];
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
-          var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
-          if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
-          repos.push(temp);
-        }
-      }
-      this.comparedRepos.forEach(function (repo) {
-        repos.push(window.AugurRepos[repo]);
-      });
-
-      repos.forEach(function (repo) {
-        _this.status[repo] = true;
-      });
-
-      var colors = ["black", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
-      var brush = this.showDetail ? { "filter": { "selection": "brush" } } : { "filter": "datum.date > 0" };
-      var config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "data": {
-          "values": [] },
->>>>>>> broker
-        "config": {
-          "bar": {
-            "discreteBandSize": 10
-          }
-        },
-<<<<<<< HEAD
-        "title": {
-          "text": this.title,
-=======
-        "vconcat": [{
-          "title": {
-            "text": this.title,
-            "offset": 15
-          },
-          "width": 520,
-          "height": 250,
-          "layer": [{
-            "transform": [brush],
-            "mark": "rule",
-            "encoding": {
-              "x": {
-                "field": "date",
-                "type": "temporal",
-                "axis": {
-                  "labels": !this.showDetail
-                }
-              },
-              "color": {
-                "field": "name",
-                "type": "nominal",
-                "scale": { "range": colors },
-                "sort": false
-              },
-              "opacity": {
-                "value": 0
-              }
-            }
-
-          }]
-        }]
-      };
-
-      var selectionAdded = false;
->>>>>>> broker
-
-          "offset": 10
-        },
-        "width": 420,
-        "height": 250,
-        "layer": [{
-          "mark": "text",
-          "encoding": {
-            "text": {
-              "field": "month", "type": "nominal",
-              "axis": { "title": "" }
-            },
-            "y": {
-              "field": "net_lines_minus_whitespace", "type": "quantitative",
-              "axis": { "title": "net loc" }
-            },
-            "x": {
-              "field": "commits", "type": 'quantitative',
-
-              "axis": { "title": "commits" }
-            },
-            "color": {
-              "field": "month", "type": "ordinal",
-              "scale": { "range": ["black", "#CC0314", "#1403CC", "#098118", "#CCAE00", "#C24F00", "#5E0081", "#0FA1C1", "#BD00B3"] }
-            }
-<<<<<<< HEAD
-=======
-          },
-          "mark": {
-            "type": "line",
-            "interpolate": "basis",
-            "clip": true
->>>>>>> broker
-          }
-        }, {
-
-          "mark": "point",
-          "encoding": {
-            "y": {
-              "field": "next_y1", "type": "quantitative",
-              "axis": { "title": "", "labels": false }
-            },
-            "x": {
-              "field": "next_x1", "type": 'quantitative',
-              "axis": { "title": "", "labels": false }
-            },
-<<<<<<< HEAD
-            "color": {
-              "field": "month", "type": "ordinal",
-              "scale": { "range": ["black", "#CC0314", "#1403CC", "#098118", "#CCAE00", "#C24F00", "#5E0081", "#0FA1C1", "#BD00B3"] }
-            }
-          }
-        }],
-        "resolve": { "scale": { "y": "independent", "x": "independent" } }
-      };
-
-      var repos = [];
-      if (this.gitRepo) {
-        repos.push(window.AugurAPI.Repo({ gitURL: this.gitRepo }));
-      }
-      var endpoints = [];
-      var fields = {};
-      this.source.split(',').forEach(function (endpointAndFields) {
-        var split = endpointAndFields.split(':');
-        endpoints.push(split[0]);
-        if (split[1]) {
-          fields[split[0]] = split[1].split('+');
-        }
-      });
-      if (this.data) {
-        processGitData(this.data);
-      } else {
-        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        repo[this.source]().then(function (data) {
-          console.log("batch data", data);
-          processData(data);
-        }, function () {});
-      }
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
-      var processGitData = function processGitData(data) {
-        var repo = window.AugurAPI.Repo({ gitURL: _this.repo });
-        var dat = [];
-        repo.changesByAuthor().then(function (changes) {
-          dat.push(changes);
-        });
-      };
-      var defaultProcess = function defaultProcess(obj, key) {
-        var d = null;
-        if (typeof field == "string") field = [field];
-        d = _AugurStats2.default.convertKey(obj[key], key);
-        return d;
-      };
-      var processData = function processData(data) {
-        console.log(repos, data, "CHECK");
-        var sort = _this.field == 'commit' ? "patches" : "net";
-        data.sort(function (a, b) {
-          return b[sort] - a[sort];
-        });
-        console;
-        for (var i = 0; i < data.length - 1; i++) {
-          var diffLoc = data[i + 1]['net_lines_minus_whitespace'] - data[i]['net_lines_minus_whitespace'];
-          var diffCom = data[i + 1]['commits'] - data[i]['commits'];
-          data[i]['next_y1'] = data[i]['net_lines_minus_whitespace'] + diffLoc / 10;
-          data[i]['next_x1'] = data[i]['commits'] + diffCom / 10;
-          data[i]['next_y2'] = data[i]['net_lines_minus_whitespace'] + diffLoc / 10;
-          data[i]['next_x2'] = data[i]['commits'] + diffCom / 10 - data[i]['commits'] / 20;
-          data[i]['next_y3'] = data[i]['net_lines_minus_whitespace'] + (data[i + 1]['net_lines_minus_whitespace'] - data[i]['net_lines_minus_whitespace']) / 10;
-          data[i]['next_x3'] = data[i]['commits'] + (data[i + 1]['commits'] - data[i]['commits']) / 10;
-        }
-        data.forEach(function (el) {
-
-          el.month = _this.months[el.month];
-        });
-        repos.forEach(function (repo) {
-          console.log("repo data", data);
-          _this.values = data;
-        });
-      };
-      return config;
-    }
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"groupedbarchart"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-6196c9b8", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-6196c9b8", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/charts/DualAxisContributions.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _vuex = require('vuex');
-
-var _AugurStats = require('AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
-  data: function data() {
-    var years = [];
-    for (var i = 9; i >= 0; i--) {
-      years.push(new Date().getFullYear() - i);
-    }
-    var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    var monthDecimals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    return {
-      values: [],
-      contributors: [],
-      organizations: [],
-      view: 'year',
-      monthNames: monthNames,
-      monthDecimals: monthDecimals,
-      years: years,
-      setYear: 0,
-      tick: 0
-    };
-  },
-  created: function created() {
-    this.tick = 0;
-  },
-
-  computed: {
-    repo: function repo() {
-      return this.$store.state.gitRepo;
-    },
-    earliest: function earliest() {
-      return this.$store.state.startDate;
-    },
-    latest: function latest() {
-      return this.$store.state.endDate;
-    },
-    spec: function spec() {
-      var _this = this;
-
-      var type = null,
-          bin = null,
-          size = null,
-          opacity = null;
-
-      if (this.tick == 0) {
-        type = "circle";
-        bin = false;
-        size = {
-          "field": "Total lines changed",
-          "type": "quantitative",
-          "min": "15",
-          "scale": { "minSize": 30, "maxSize": 31 }
-        };
-        opacity = {};
-      }
-      if (this.tick == 1) {
-        type = "tick";
-        bin = false;
-        size = {};
-        opacity = {
-          "field": "Total lines changed",
-          "type": "quantitative",
-          "min": ".5"
-        };
-      }
-      if (this.tick == 2) {
-        type = "rect";
-        bin = { "maxbins": 40 };
-        size = {};
-        opacity = {
-          "field": "Total lines changed",
-          "type": "quantitative",
-          "min": ".5"
-        };
-      }
-
-      var config = _defineProperty({
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
-        "height": 300,
-        "config": {
-          "tick": {
-            "thickness": 8,
-            "bandSize": 23
-          },
-          "axis": {
-            "grid": false,
-            "title": null
-          },
-          "legend": {
-            "titleFontSize": 10,
-            "titlePadding": 10
-          }, "scale": { "minSize": 100, "maxSize": 500 }
-        },
-        "layer": [{
-          "transform": [],
-          "mark": "bar",
-          "encoding": {
-            "y": {
-              "field": "commits", "type": "quantitative",
-              "axis": { "grid": false }
-            },
-            "x": {
-              "field": "month", "type": "temporal",
-              "axis": { "title": "" }
-            },
-            "color": {
-              "value": "red"
-            }
-=======
-            "opacity": { "value": .3 }
-          },
-          "mark": { "type": "line", "clip": true }
-        };
-      };
-
-      var getToolPoint = function getToolPoint(key) {
-        var selection = !selectionAdded ? {
-          "tooltip": { "type": "single", "on": "mouseover", "nearest": false }
-        } : null;
-        var size = 17;
-        var timeDiff = Math.abs(_this.latest.getTime() - _this.earliest.getTime());
-        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-        var field = "valueRolling" + _this.repo;
-        size = diffDays / 150;
-        if (_this.rawWeekly) size = 3;
-        selectionAdded = true;
-        return {
-          "transform": [brush],
-          "mark": "rule",
-          "selection": {
-            "tooltip": { "type": "single", "on": "mouseover", "nearest": false, "empty": "none" }
-          },
-          "encoding": {
-            "size": { "value": 20 },
-            "opacity": { "value": 0.001 },
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": null
-            },
-            "tooltip": [{ "field": field, "type": "quantitative" }]
-          }
-        };
-      };
-
-      var getStandardPoint = function getStandardPoint(key, color) {
-        var selection = !selectionAdded ? {
-          "tooltip": {
-            "type": "single",
-            "on": "mouseover",
-            "encodings": ["x"],
-            "empty": "none"
->>>>>>> broker
-          }
-        }, {
-          "transform": [{
-            "window": [{
-              "op": "sum",
-              "field": "commits",
-              "as": "avg_commits"
-            }]
-          }],
-          "mark": "text",
-          "encoding": {
-            "text": { "field": "avg_commits", "type": "quantitative" },
-            "y": { "value": 10 },
-            "x": {
-<<<<<<< HEAD
-              "field": "month", "type": "temporal",
-              "axis": { "title": "" }
-            },
-=======
-              "field": "date",
-              "type": "temporal",
-              "axis": {
-                "title": " ",
-                "format": "%b %Y"
-              }
-            },
-
->>>>>>> broker
-            "color": {
-              "value": "black"
-            }
-<<<<<<< HEAD
-          }
-        }, {
-          "transform": [],
-          "mark": "bar",
-=======
-          },
-          "mark": {
-            "type": "rule"
-          },
-          "selection": selection
-        };
-      };
-
-      var getArea = function getArea(extension) {
-        return {
-          "transform": [brush],
-          "mark": {
-            "type": "area",
-            "interpolate": "basis",
-            "clip": true
-          },
->>>>>>> broker
-          "encoding": {
-            "y": {
-              "field": "rate", "type": "quantitative",
-              "axis": { "grid": false }
-            },
-            "x": {
-              "field": "month", "type": "temporal",
-              "axis": { "title": "" }
-            },
-            "color": {
-              "value": "blue"
-            }
-          }
-        }],
-        "resolve": { "scale": { "y": "independent" } }
-      }, 'config', {
-        "view": { "stroke": "transparent" },
-        "axis": { "domainWidth": 1 }
-      });
-
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
-      var contributors = {};
-      var organizations = {};
-
-      var addChanges = function addChanges(dest, src) {
-        if (dest && src) {
-          if ((typeof dest === 'undefined' ? 'undefined' : _typeof(dest)) !== 'object') {
-            dest['additions'] = 0;
-            dest['deletions'] = 0;
-          }
-          dest['additions'] += src['additions'] || 0;
-          dest['deletions'] += src['deletions'] || 0;
-        }
-      };
-
-<<<<<<< HEAD
-      var group = function group(obj, name, change, filter) {
-        if (filter(change)) {
-          var year = new Date(change.author_date).getFullYear();
-          var month = new Date(change.author_date).getMonth();
-          obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 };
-          addChanges(obj[change[name]], change);
-          obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 };
-          addChanges(obj[change[name]][year], change);
-          obj[change[name]][year + '-' + month] = obj[change[name]][year + '-' + month] || { additions: 0, deletions: 0 };
-          addChanges(obj[change[name]][year + '-' + month], change);
-        }
-      };
-
-      var flattenAndSort = function flattenAndSort(obj, keyName, sortField) {
-        return Object.keys(obj).map(function (key) {
-          var d = obj[key];
-          d[keyName] = key;
-          return d;
-        }).sort(function (a, b) {
-          return b[sortField] - a[sortField];
-        });
-      };
-
-      var filterDates = function filterDates(change) {
-        return new Date(change.author_date).getFullYear() > _this.years[0];
-=======
-      var getValueText = function getValueText(key) {
-        return {
-          "transform": [{ "filter": { "selection": "tooltip" } }, brush],
-          "mark": { "type": "text", "align": "left", "dx": 5, "dy": -5 },
-          "encoding": { "text": { "type": "quantitative", "field": key }, "x": { "field": "date", "type": "temporal", "axis": { "format": "%b %Y", "title": " " } }, "y": { "field": key, "type": "quantitative", "axis": { "title": null } }, "color": { "value": "green" } }
-        };
-      };
-
-      var getDateText = function getDateText(key) {
-        return {
-          "transform": [{ "filter": { "selection": "tooltip" } }, brush],
-          "mark": { "type": "text", "align": "left", "dx": 5, "dy": -15 },
-          "encoding": { "text": { "type": "temporal", "field": "date" }, "x": { "field": "date", "type": "temporal", "axis": { "format": "%b %Y", "title": " " } }, "y": { "field": key, "type": "quantitative", "axis": { "title": null } }, "color": { "value": "black" } }
-        };
->>>>>>> broker
-      };
-
-      repo.cdRepTpIntervalLocCommits().then(function (changes) {
-        console.log("CHANGE", changes);
-
-        _this.values = changes;
-      });
-
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
-
-      var repos = [];
-      if (this.repo) {
-        repos.push(window.AugurRepos[this.repo]);
-      }
-
-      return config;
-    }
-  }
-
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Contributions By Time Interval for 2018")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-2da7ab99", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-2da7ab99", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/charts/DynamicLineChart.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-<<<<<<< HEAD
-var _vuex = require('vuex');
-=======
-      var buildTooltip = function buildTooltip(key) {
-        config.vconcat[0].layer.push(getToolPoint(key));
-        if (repos.length < 3) {
-          var col = -1;
-          repos.forEach(function (repo) {
-            config.vconcat[0].layer.push(getStandardPoint(key, colors[col]));
-            col++;
-          });
->>>>>>> broker
-
-var _AugurStats = require('AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-<<<<<<< HEAD
-exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
-  data: function data() {
-    return {
-      legendLabels: [],
-      values: [],
-      status: {},
-      detail: this.$store.state.showDetail,
-      compRepos: this.$store.state.comparedRepos,
-      metricSource: null,
-      timeperiod: 'all',
-      forceRecomputeCounter: 0
-    };
-  },
-
-  watch: {
-    compRepos: function compRepos() {
-      var allFalse = true;
-      for (var key in this.status) {
-        if (this.status[key]) allFalse = false;
-      }if (allFalse) {
-        $(this.$el).find('.spinner').addClass('loader');
-        $(this.$el).find('.error').addClass('hidden');
-      }
-      $(this.$el).find('.hidefirst').addClass('invis');
-      $(this.$el).find('.hidefirst').addClass('invisDet');
-      $(this.$el).find('.spinner').addClass('loader');
-      $(this.$el).find('.spacing').removeClass('hidden');
-    }
-  },
-  beforeUpdate: function beforeUpdate() {
-    this.$store.watch(function (state) {
-      console.log("WORKED");
-      this.thisShouldTriggerRecompute();
-      return;
-    });
-  },
-=======
-      var today = new Date();
-      var startyear = this.timeperiod && this.timeperiod != 'all' ? function () {
-        var d = new Date();
-        return new Date(d.setDate(d.getDate() - Number(_this.timeperiod))).getFullYear();
-      }() : this.earliest.getFullYear();
-      var startmonth = this.timeperiod && this.timeperiod != 'all' ? function () {
-        var d = new Date();
-        return new Date(d.setDate(d.getDate() - Number(_this.timeperiod))).getMonth();
-      }() : this.earliest.getMonth();
-      var startdate = this.timeperiod && this.timeperiod != 'all' ? function () {
-        var d = new Date();
-        return new Date(d.setDate(d.getDate() - Number(_this.timeperiod))).getDate();
-      }() : this.earliest.getDate();
-      for (var i = 0; i < config.vconcat[0].layer.length; i++) {
-        config.vconcat[0].layer[i].encoding.x["scale"] = {
-          "domain": [{ "year": startyear, "month": startmonth, "date": startdate }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
-        };
-      }
-      if (this.showDetail) {
-        config.vconcat[1].encoding.x["scale"] = {
-          "domain": [{ "year": startyear, "month": startmonth, "date": startdate }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
-        };
-      } else {}
->>>>>>> broker
-
   computed: {
     repo: function repo() {
       return this.$store.state.baseRepo;
@@ -5536,7 +4386,7 @@ exports.default = {
     spec: function spec() {
       var _this = this;
 
-      this.forceRecomputeCounter;
+      var vegaEmbed = window.vegaEmbed;
 
       var repos = [];
       if (this.repo) {
@@ -5550,15 +4400,16 @@ exports.default = {
         repos.push(window.AugurRepos[repo]);
       });
 
-<<<<<<< HEAD
       repos.forEach(function (repo) {
         _this.status[repo] = true;
       });
 
       var colors = ["black", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
-      var brush = { "filter": { "selection": "brush" } };
+      var brush = this.showDetail ? { "filter": { "selection": "brush" } } : { "filter": "datum.date > 0" };
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        "data": {
+          "values": [] },
         "config": {
           "axis": {
             "grid": false
@@ -5604,24 +4455,6 @@ exports.default = {
         }]
       };
 
-      if (!this.showDetail) brush = { "filter": "datum.date > 0" };
-=======
-      var processData = function processData(data) {
-        _this.__download_data = data;
-        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
-
-        var defaultProcess = function defaultProcess(obj, key, field, count) {
-          var d = null;
-          if (typeof field == "string") {
-            field = [field];
-          }
-
-          d = _AugurStats2.default.convertKey(obj[key], field);
-          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest, 'date');
-          return d;
-        };
->>>>>>> broker
-
       var selectionAdded = false;
 
       var getStandardLine = function getStandardLine(key, color) {
@@ -5649,13 +4482,12 @@ exports.default = {
           },
           "mark": {
             "type": "line",
-
+            "interpolate": "basis",
             "clip": true
           }
         };
       };
 
-<<<<<<< HEAD
       var getRawLine = function getRawLine(key, color) {
         var raw = key.substring(key.length - 7) == "Rolling" ? false : true;
         return {
@@ -5680,64 +4512,37 @@ exports.default = {
             },
             "opacity": { "value": .3 }
           },
-          "mark": {
-            "type": "line",
-=======
-            var rolling = null;
-            if (repo == _this.repo && d[0]) baseDate = d[0].date;else d = _AugurStats2.default.alignDates(d, baseDate, _this.period);
-            if (_this.compare == 'zscore') {
-              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
-            } else if (_this.compare == 'baseline') {
-                if (repo.githubURL == _this.repo) {
-                  baselineVals = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
-                }
-                rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
-                if (baselineVals) {
->>>>>>> broker
-
-            "clip": true
-          }
+          "mark": { "type": "line", "clip": true }
         };
       };
 
       var getToolPoint = function getToolPoint(key) {
         var selection = !selectionAdded ? {
-          "tooltip": {
-            "type": "single",
-            "on": "mouseover",
-            "encodings": ["x"],
-            "empty": "none"
-          }
+          "tooltip": { "type": "single", "on": "mouseover", "nearest": false }
         } : null;
         var size = 17;
         var timeDiff = Math.abs(_this.latest.getTime() - _this.earliest.getTime());
         var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        var field = "valueRolling" + _this.repo;
         size = diffDays / 150;
         if (_this.rawWeekly) size = 3;
         selectionAdded = true;
         return {
           "transform": [brush],
+          "mark": "rule",
+          "selection": {
+            "tooltip": { "type": "single", "on": "mouseover", "nearest": false, "empty": "none" }
+          },
           "encoding": {
+            "size": { "value": 20 },
+            "opacity": { "value": 0.001 },
             "x": {
               "field": "date",
               "type": "temporal",
-              "axis": { "format": "%b %Y", "title": " " }
+              "axis": null
             },
-            "opacity": {
-              "value": 0
-            },
-            "color": {
-              "value": "black"
-            },
-            "size": {
-              "value": size
-            }
-          },
-          "mark": {
-            "type": "rule",
-            "clip": true
-          },
-          "selection": selection
+            "tooltip": [{ "field": field, "type": "quantitative" }]
+          }
         };
       };
 
@@ -5763,13 +4568,7 @@ exports.default = {
                 "format": "%b %Y"
               }
             },
-            "y": {
-              "field": key,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
+
             "color": {
               "value": "black"
             },
@@ -5782,7 +4581,7 @@ exports.default = {
             }
           },
           "mark": {
-            "type": "point"
+            "type": "rule"
           },
           "selection": selection
         };
@@ -5845,77 +4644,17 @@ exports.default = {
 
       var getValueText = function getValueText(key) {
         return {
-
-          "transform": [{
-            "filter": {
-              "selection": "tooltip"
-            }
-          }, brush],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -5
-          },
-          "encoding": {
-            "text": {
-              "type": "quantitative",
-              "field": key
-            },
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": { "format": "%b %Y", "title": " " }
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
-            "color": {
-              "value": "green"
-            }
-          }
+          "transform": [{ "filter": { "selection": "tooltip" } }, brush],
+          "mark": { "type": "text", "align": "left", "dx": 5, "dy": -5 },
+          "encoding": { "text": { "type": "quantitative", "field": key }, "x": { "field": "date", "type": "temporal", "axis": { "format": "%b %Y", "title": " " } }, "y": { "field": key, "type": "quantitative", "axis": { "title": null } }, "color": { "value": "green" } }
         };
       };
 
       var getDateText = function getDateText(key) {
         return {
-
-          "transform": [{
-            "filter": {
-              "selection": "tooltip"
-            }
-          }, brush],
-          "mark": {
-            "type": "text",
-            "align": "left",
-            "dx": 5,
-            "dy": -15
-          },
-          "encoding": {
-            "text": {
-              "type": "temporal",
-              "field": "date"
-            },
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": { "format": "%b %Y", "title": " " }
-            },
-            "y": {
-              "field": key,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
-            "color": {
-              "value": "black"
-            }
-          }
+          "transform": [{ "filter": { "selection": "tooltip" } }, brush],
+          "mark": { "type": "text", "align": "left", "dx": 5, "dy": -15 },
+          "encoding": { "text": { "type": "temporal", "field": "date" }, "x": { "field": "date", "type": "temporal", "axis": { "format": "%b %Y", "title": " " } }, "y": { "field": key, "type": "quantitative", "axis": { "title": null } }, "color": { "value": "black" } }
         };
       };
 
@@ -5994,8 +4733,6 @@ exports.default = {
             config.vconcat[0].layer.push(getStandardPoint(key, colors[col]));
             col++;
           });
-          config.vconcat[0].layer.push(getValueText(key));
-          config.vconcat[0].layer.push(getDateText(key));
 
           if (repos.length > 1) {
             config.vconcat[0].layer.push(rule);
@@ -6012,52 +4749,29 @@ exports.default = {
 
       buildMetric();
 
+      var today = new Date();
+      var startyear = this.timeperiod && this.timeperiod != 'all' ? function () {
+        var d = new Date();
+        return new Date(d.setDate(d.getDate() - Number(_this.timeperiod))).getFullYear();
+      }() : this.earliest.getFullYear();
+      var startmonth = this.timeperiod && this.timeperiod != 'all' ? function () {
+        var d = new Date();
+        return new Date(d.setDate(d.getDate() - Number(_this.timeperiod))).getMonth();
+      }() : this.earliest.getMonth();
+      var startdate = this.timeperiod && this.timeperiod != 'all' ? function () {
+        var d = new Date();
+        return new Date(d.setDate(d.getDate() - Number(_this.timeperiod))).getDate();
+      }() : this.earliest.getDate();
+      for (var i = 0; i < config.vconcat[0].layer.length; i++) {
+        config.vconcat[0].layer[i].encoding.x["scale"] = {
+          "domain": [{ "year": startyear, "month": startmonth, "date": startdate }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
+        };
+      }
       if (this.showDetail) {
-        var today = new Date();
-        var startyear = this.timeperiod && this.timeperiod != 'all' ? function () {
-          var d = new Date();
-          switch (_this.timeperiod) {
-            case "month":
-              d = new Date(d.setDate(d.getDate() - 30));
-              return d.getFullYear();
-            case "year":
-              d = new Date(d.setDate(d.getDate() - 365));
-              return d.getFullYear();
-          }
-        }() : this.earliest.getFullYear();
-        var startmonth = this.timeperiod && this.timeperiod != 'all' ? function () {
-          var d = new Date();
-          switch (_this.timeperiod) {
-            case "month":
-              d = new Date(d.setDate(d.getDate() - 30));
-              return d.getMonth();
-            case "year":
-              d = new Date(d.setDate(d.getDate() - 365));
-              return d.getMonth();
-          }
-        }() : this.earliest.getMonth();
-        var startdate = this.timeperiod && this.timeperiod != 'all' ? function () {
-          var d = new Date();
-          switch (_this.timeperiod) {
-            case "month":
-              d = new Date(d.setDate(d.getDate() - 30));
-              return d.getDate();
-            case "year":
-              d = new Date(d.setDate(d.getDate() - 365));
-              return d.getDate();
-          }
-        }() : this.earliest.getDate();
-
         config.vconcat[1].encoding.x["scale"] = {
           "domain": [{ "year": startyear, "month": startmonth, "date": startdate }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
         };
-      } else {
-        for (var i = 0; i < config.vconcat[0].layer.length; i++) {
-          config.vconcat[0].layer[i].encoding.x["scale"] = {
-            "domain": [{ "year": this.earliest.getFullYear(), "month": this.earliest.getMonth(), "date": this.earliest.getDate() }, { "year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate() }]
-          };
-        }
-      }
+      } else {}
 
       if (!this.status.base && !this.comparedTo || !this.status.compared && !this.status.base) {
         if (!this.showDetail) {
@@ -6079,21 +4793,18 @@ exports.default = {
         }
       });
 
-      var compare = this.compare;
       var processData = function processData(data) {
         _this.__download_data = data;
         _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
-        _this.$refs.downloadJSON.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(_this.__download_data));
-        _this.$refs.downloadJSON.setAttribute('download', _this.__download_file + '.json');
 
         var defaultProcess = function defaultProcess(obj, key, field, count) {
           var d = null;
-          if (typeof field == "string") field = [field];
+          if (typeof field == "string") {
+            field = [field];
+          }
 
           d = _AugurStats2.default.convertKey(obj[key], field);
-
           d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest, 'date');
-
           return d;
         };
 
@@ -6140,7 +4851,7 @@ exports.default = {
             var d = defaultProcess(obj, key, field, count);
 
             var rolling = null;
-            if (repo == _this.repo) baseDate = d[0].date;else d = _AugurStats2.default.alignDates(d, baseDate, _this.period);
+            if (repo == _this.repo && d[0]) baseDate = d[0].date;else d = _AugurStats2.default.alignDates(d, baseDate, _this.period);
             if (_this.compare == 'zscore') {
               rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
             } else if (_this.compare == 'baseline') {
@@ -6167,17 +4878,27 @@ exports.default = {
 
         if (normalized.length == 0) {} else {
           values = [];
+
           for (var i = 0; i < legend.length; i++) {
             normalized[i].forEach(function (d) {
-              d.name = legend[i];
-              d.color = colors[i];
-              values.push(d);
-            });
-            if (_this.rawWeekly) {
-              aggregates[i].forEach(function (d) {
+
+              if (d.date < new Date(startyear, startmonth, startdate)) {
+                d = {};
+              } else {
                 d.name = legend[i];
                 d.color = colors[i];
                 values.push(d);
+              }
+            });
+            if (_this.rawWeekly) {
+              aggregates[i].forEach(function (d) {
+                if (d.date < new Date(startyear, startmonth, startdate)) {
+                  d = {};
+                } else {
+                  d.name = legend[i];
+                  d.color = colors[i];
+                  values.push(d);
+                }
               });
             }
           }
@@ -6187,7 +4908,6 @@ exports.default = {
               _temp = _temp.map(function (datum) {
                 datum.name = repo + ": data n/a";
 
-
                 return datum;
               });
               values.push.apply(values, _temp);
@@ -6195,36 +4915,28 @@ exports.default = {
           });
 
           _this.legendLabels = legend;
+          if (_this.mount) config.data = { "values": values };
           _this.values = values;
-
-          var allFalse = true;
-          for (var key in _this.status) {
-            if (_this.status[key]) allFalse = false;
-          }if (!allFalse) $(_this.$el).find('.error').addClass('hidden');
-
-          $(_this.$el).find('.hidefirst').removeClass('invis');
-          $(_this.$el).find('.hidefirst').removeClass('invisDet');
-          $(_this.$el).find('.spinner').removeClass('loader');
-          $(_this.$el).find('.spacing').addClass('hidden');
-          $(_this.$el).find('.hidefirst').removeClass('invisDet');
 
           _this.renderChart();
         }
       };
-
-      if (this.data) {
+      if (this.data && this.mount) {
         processData(this.data);
       } else {
 
         window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
           processData(data);
-        }, function () {});
+        }, function () {
+          _this.renderError();
+        });
       }
+      if (this.mount) this.reloadImage(config);
 
       return config;
     }
   },
-  methods: {
+  methods: (_methods = {
     thisShouldTriggerRecompute: function thisShouldTriggerRecompute() {
       this.forceRecomputeCounter++;
     },
@@ -6239,20 +4951,36 @@ exports.default = {
       svgsaver.asPng(svg, this.__download_file + '.png');
     },
     renderChart: function renderChart() {
-      this.$refs.chart.className = 'linechart intro';
-      window.$(this.$refs.holder).find('.hideme').removeClass('invis');
-      window.$(this.$refs.holder).find('.showme').removeClass('invis');
-      window.$(this.$refs.holder).find('.hideme').removeClass('invisDet');
-      window.$(this.$refs.holder).find('.showme').removeClass('invisDet');
-      window.$(this.$refs.holder).find('.deleteme').remove();
-      this.$refs.chartholder.innerHTML = '';
-      this.$refs.chartholder.appendChild(this.mgConfig.target);
+      var allFalse = true;
+      for (var key in this.status) {
+        if (this.status[key]) allFalse = false;
+      }if (!allFalse) $(this.$el).find('.error').addClass('hidden');
+      $(this.$el).find('.hidefirst').removeClass('invis');
+      $(this.$el).find('.hidefirst').removeClass('invisDet');
+      $(this.$el).find('.spinner').removeClass('loader');
+      $(this.$el).find('.spacing').addClass('hidden');
+      $(this.$el).find('.hidefirst').removeClass('invisDet');
     },
     renderError: function renderError() {
       $(this.$el).find('.spinner').removeClass('loader');
       $(this.$el).find('.error').removeClass('hidden');
     }
-  }, created: function created() {
+  }, _defineProperty(_methods, 'thisShouldTriggerRecompute', function thisShouldTriggerRecompute() {
+    this.forceRecomputeCounter++;
+  }), _defineProperty(_methods, 'respec', function respec() {
+    this.spec;
+  }), _defineProperty(_methods, 'reloadImage', function reloadImage(config) {
+    console.log(config.data, this.source);
+    if (config.data.length == 0) {
+      this.spec;
+      this.renderError();
+      return;
+    }
+    vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -110 }, mode: 'vega-lite' });
+  }), _methods), mounted: function mounted() {
+    this.spec;
+  },
+  created: function created() {
     var _this2 = this;
 
     var query_string = "chart_mapping=" + this.source;
@@ -6265,7 +4993,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"spacing"}),_vm._v(" "),_c('div',{staticClass:"error hidden"},[_c('br'),_vm._v("Data is missing or unavailable for metric: "),_c('p',{staticStyle:{"color":"black !important"}},[_vm._v(_vm._s(_vm.title))])]),_vm._v(" "),_c('div',{staticClass:"spinner loader"}),_vm._v(" "),_c('div',{staticClass:"hidefirst linechart",class:{ invis: !_vm.detail, invisDet: _vm.detail }},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart"},[_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-3",staticStyle:{"padding-left":"10px","position":"relative","top":"-8px !important"}},[_c('span',{staticStyle:{"font-size":"12px"}},[_vm._v("Data source: "+_vm._s(_vm.metricSource))])]),_vm._v(" "),_c('div',{staticClass:"col col-2",staticStyle:{"width":"154px !important","height":"38px !important","position":"relative","top":"-12px !important"}},[_c('cite',{staticClass:"metric"},[_c('a',{staticStyle:{"width":"100px !important","height":"38px !important","position":"absolute"},attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_c('img',{staticStyle:{"width":"100px","position":"relative"},attrs:{"src":"https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png","alt":"Chaoss-Definition-Logo","border":"0"}})])])]),_vm._v(" "),_c('div',{staticClass:"col col-4",staticStyle:{"position":"relative","top":"-8px !important"}},[_c('button',{staticClass:"button download graph-download",on:{"click":_vm.downloadSVG}},[_vm._v("⬇ SVG")]),_c('button',{staticClass:"button graph-download download",on:{"click":_vm.downloadPNG}},[_vm._v("⬇ PNG")]),_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"spacing"}),_vm._v(" "),_c('div',{staticClass:"error hidden",staticStyle:{"color":"black"}},[_c('br'),_c('p',{staticStyle:{"font-size":"70px","padding-bottom":"3px"}},[_vm._v("🕵️")]),_vm._v(" Data is missing or unavailable for metric: "),_c('p',{staticStyle:{"color":"blue !important"}},[_vm._v(_vm._s(_vm.source))])]),_vm._v(" "),_c('div',{staticClass:"spinner loader"}),_vm._v(" "),_c('div',{staticClass:"hidefirst linechart",class:{ invis: !_vm.detail, invisDet: _vm.detail }},[(_vm.mount)?_c('div',{attrs:{"id":_vm.source}}):_vm._e(),_vm._v(" "),(!_vm.mount)?_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}):_vm._e(),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.timeperiod == '1825'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"1825","id":_vm.source + '5year'},domProps:{"checked":_vm._q(_vm.timeperiod,"1825")},on:{"change":[function($event){_vm.timeperiod="1825"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + '5year'}},[_vm._v("5 Years")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.timeperiod == '730'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"730","id":_vm.source + '2year'},domProps:{"checked":_vm._q(_vm.timeperiod,"730")},on:{"change":[function($event){_vm.timeperiod="730"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + '2year'}},[_vm._v("2 Years")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.timeperiod == '365'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"365","id":_vm.source + 'year'},domProps:{"checked":_vm._q(_vm.timeperiod,"365")},on:{"change":[function($event){_vm.timeperiod="365"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + 'year'}},[_vm._v("Year")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.timeperiod == 'all'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"all","id":_vm.source + 'all'},domProps:{"checked":_vm._q(_vm.timeperiod,"all")},on:{"change":[function($event){_vm.timeperiod="all"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + 'all'}},[_vm._v("All")])])])])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart",staticStyle:{"top":"-28px !important"}},[_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-3",staticStyle:{"padding-left":"10px","position":"relative","top":"-8px !important"}},[_c('span',{staticStyle:{"font-size":"12px"}},[_vm._v("Data source: "+_vm._s(_vm.metricSource))])]),_vm._v(" "),_c('div',{staticClass:"col col-2",staticStyle:{"width":"154px !important","height":"38px !important","position":"relative","top":"-12px !important"}},[_c('cite',{staticClass:"metric"},[_c('a',{staticStyle:{"width":"100px !important","height":"38px !important","position":"absolute"},attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_c('img',{staticStyle:{"width":"100px","position":"relative"},attrs:{"src":"https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png","alt":"Chaoss-Definition-Logo","border":"0"}})])])]),_vm._v(" "),_c('div',{staticClass:"col col-4",staticStyle:{"position":"relative","top":"-8px !important"}},[_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -6605,6 +5333,7 @@ exports.default = {
           processData(data);
         }, function () {});
       }
+
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
       var processGitData = function processGitData(data) {
@@ -6662,6 +5391,7 @@ exports.default = {
           _this.values = data;
         });
       };
+
       return config;
     }
   }
@@ -6703,7 +5433,7 @@ var _AugurStats2 = _interopRequireDefault(_AugurStats);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'type'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'measure'],
   data: function data() {
     var years = [];
     for (var i = 9; i >= 0; i--) {
@@ -6726,6 +5456,9 @@ exports.default = {
   },
   created: function created() {
     this.type = 1;
+  },
+  mounted: function mounted() {
+    this.spec;
   },
 
   computed: {
@@ -6754,8 +5487,9 @@ exports.default = {
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 700,
-        "height": 310,
+        "width": 450,
+        "height": 300,
+        "padding": { "left": 10, "top": 35, "right": 5, "bottom": 0 },
         "config": {
           "tick": {
             "thickness": 8,
@@ -6788,8 +5522,8 @@ exports.default = {
             "as": "totalratio"
           }],
           "mark": {
-            "type": "bar",
-            "tooltip": { "content": "data" }
+            "type": "bar"
+
           },
           "encoding": {
             "x": { "field": field, "type": "quantitative" },
@@ -6808,6 +5542,67 @@ exports.default = {
               "type": "nominal",
               "scale": { "scheme": "category10" },
               "legend": null
+            }
+          }
+
+        }, {
+          "transform": [{
+            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+            "as": "Majority type of changes"
+          }, {
+            "calculate": "(datum.additions - datum.deletions)",
+            "as": "Net lines added"
+          }, {
+            "calculate": "((datum.additions - datum.deletions) / datum.commits)",
+            "as": "netratio"
+          }, {
+            "calculate": "(datum.additions / datum.commits)",
+            "as": "addedratio"
+          }, {
+            "calculate": "(datum.lines / datum.commits)",
+            "as": "totalratio"
+          }],
+          "mark": {
+            "type": "rule",
+            "size": 20
+          },
+
+          "selection": {
+            "tooltip": {
+              "type": "multi",
+              "on": "mouseover",
+              "nearest": false,
+              "empty": "none",
+              "fields": ["_vgsid_"],
+              "toggle": "event.shiftKey",
+              "resolve": "global"
+            }
+          },
+          "encoding": {
+
+            "y": {
+              "field": "author_email",
+              "sort": {
+                "field": field,
+                "op": "mean",
+                "order": "descending"
+              },
+              "type": "nominal",
+              "axis": { "title": null }
+            },
+            "tooltip": [{ "field": field, "type": "quantitative" }, {
+              "field": "author_email",
+
+              "type": "nominal"
+            }],
+            "color": {
+              "condition": {
+                "selection": { "not": "tooltip" }, "value": "transparent"
+              },
+              "value": "black"
+            },
+            "opacity": {
+              "value": 0.05
             }
           }
 
@@ -6859,54 +5654,56 @@ exports.default = {
 
       var authors = [];
       var track = {};
-      repo.changesByAuthor().then(function (changes) {
-        changes.forEach(function (change) {
-          track[change.author_email] = track[change.author_email] ? track[change.author_email] : { 'commits': 0, 'lines': 0, 'additions': 0, 'deletions': 0 };
-          track[change.author_email]['commits'] = track[change.author_email]['commits'] ? track[change.author_email]['commits'] + 1 : 1;
+      var changes = null;
 
-          track[change.author_email]['lines'] = track[change.author_email]['lines'] ? track[change.author_email]['lines'] + change.additions + change.deletions : change.additions + change.deletions;
-          track[change.author_email]['additions'] = track[change.author_email]['additions'] ? track[change.author_email]['additions'] + change.additions : change.additions;
-          track[change.author_email]['deletions'] = track[change.author_email]['deletions'] ? track[change.author_email]['deletions'] + change.deletions : change.deletions;
-        });
+      if (this.data) changes = this.data;else changes = repo.changesByAuthor();
 
-        changes.forEach(function (change) {
-          if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates);
-            if (change.author_affiliation !== 'Unknown') {
-              group(organizations, 'affiliation', change, filterDates);
-            }
-          }
-          if (!authors.includes(change["author_email"])) {
-            authors.push(change["author_email"]);
-            change["flag"] = (track[change.author_email] / track["total"] * 100).toFixed(4);
-          }
-        });
+      changes.forEach(function (change) {
+        track[change.author_email] = track[change.author_email] ? track[change.author_email] : { 'commits': 0, 'lines': 0, 'additions': 0, 'deletions': 0 };
+        track[change.author_email]['commits'] = track[change.author_email]['commits'] ? track[change.author_email]['commits'] + 1 : 1;
 
-        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-        var careabout = [];
-        _this.contributors.slice(0, 10).forEach(function (obj) {
-          careabout.push(obj["author_email"]);
-        });
-
-        var findObjectByKey = function findObjectByKey(array, key, value) {
-          var ary = [];
-          for (var i = 0; i < array.length; i++) {
-            if (array[i][key] == value) {
-              ary.push(array[i]);
-            }
-          }
-          return ary;
-        };
-
-        var ary = [];
-
-        for (var key in track) {
-          if (careabout.includes(key)) ary.push({ "author_email": key, "commits": track[key]['commits'], "lines": track[key]['lines'], "additions": track[key]['additions'], "deletions": track[key]['deletions'] });
-        }
-
-        _this.values = ary;
-        console.log("TRACK", ary, careabout);
+        track[change.author_email]['lines'] = track[change.author_email]['lines'] ? track[change.author_email]['lines'] + change.additions + change.deletions : change.additions + change.deletions;
+        track[change.author_email]['additions'] = track[change.author_email]['additions'] ? track[change.author_email]['additions'] + change.additions : change.additions;
+        track[change.author_email]['deletions'] = track[change.author_email]['deletions'] ? track[change.author_email]['deletions'] + change.deletions : change.deletions;
       });
+
+      changes.forEach(function (change) {
+        if (isFinite(change.additions) && isFinite(change.deletions)) {
+          group(contributors, 'author_email', change, filterDates);
+          if (change.author_affiliation !== 'Unknown') {
+            group(organizations, 'affiliation', change, filterDates);
+          }
+        }
+        if (!authors.includes(change["author_email"])) {
+          authors.push(change["author_email"]);
+          change["flag"] = (track[change.author_email] / track["total"] * 100).toFixed(4);
+        }
+      });
+
+      this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+      var careabout = [];
+      this.contributors.slice(0, 10).forEach(function (obj) {
+        careabout.push(obj["author_email"]);
+      });
+
+      var findObjectByKey = function findObjectByKey(array, key, value) {
+        var ary = [];
+        for (var i = 0; i < array.length; i++) {
+          if (array[i][key] == value) {
+            ary.push(array[i]);
+          }
+        }
+        return ary;
+      };
+
+      var ary = [];
+
+      for (var key in track) {
+        if (careabout.includes(key)) ary.push({ "author_email": key, "commits": track[key]['commits'], "lines": track[key]['lines'], "additions": track[key]['additions'], "deletions": track[key]['deletions'] });
+      }
+
+      this.values = ary;
+      console.log("TRACK", ary, careabout);
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
@@ -6916,9 +5713,15 @@ exports.default = {
         repos.push(window.AugurRepos[this.repo]);
       }
 
-      var processData = function processData(data) {};
+      this.reloadImage(config);
 
       return config;
+    }
+  },
+  methods: {
+    reloadImage: function reloadImage(config) {
+      config.data = { "values": this.values };
+      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -100, offsetX: 40 }, mode: 'vega-lite' });
     }
   }
 
@@ -6927,7 +5730,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-60px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio","checked":""},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-0px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -7237,7 +6040,6 @@ exports.default = {
       if (this.group == 2) {
         timeUnit = 'yearmonth';
         format = '%y %b';
-        type = "bar";
         bin = false;
         size = 13;
         type = "area";
@@ -7246,8 +6048,9 @@ exports.default = {
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 800,
-        "height": 380,
+        "width": 450,
+        "height": 300,
+        "padding": { "left": 10, "top": 35, "right": 5, "bottom": 0 },
         "title": {
           "text": this.title,
           "offset": 15
@@ -7261,11 +6064,11 @@ exports.default = {
             "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 14,
+            "labelFontSize": 12,
             "titleFontSize": 14,
             "labelLimit": 260
           },
-          "scale": { "minSize": 100, "maxSize": 500 },
+
           "bar": {
             "continuousBandSize": size,
             "binSpacing": 0
@@ -7285,26 +6088,22 @@ exports.default = {
             "calculate": "(datum.count * 100)",
             "as": "percent"
           }],
+
           "mark": {
             "type": type,
-            "tooltip": { "content": "data" },
 
-            "cornerRadius": 45
+            "cornerRadius": 1
           },
           "encoding": {
             "x": {
               "field": "author_date",
               "type": "temporal",
-
               "timeUnit": timeUnit,
-
-<<<<<<< HEAD
               "axis": { "domain": false, "format": format }
             },
             "y": {
               "field": "count",
               "type": "quantitative",
-
               "aggregate": "sum",
               "stack": "center",
               "axis": null
@@ -7313,38 +6112,79 @@ exports.default = {
               "field": "author_email",
               "type": "nominal",
               "scale": { "scheme": "category10" }
-=======
-        if (normalized.length == 0) {} else {
-          values = [];
+            }
 
-          for (var i = 0; i < legend.length; i++) {
-            normalized[i].forEach(function (d) {
+          }
+        }, {
+          "mark": {
+            "type": type,
 
-              if (d.date < new Date(startyear, startmonth, startdate)) {
-                d = {};
-              } else {
-                d.name = legend[i];
-                d.color = colors[i];
-                values.push(d);
-              }
-            });
-            if (_this.rawWeekly) {
-              aggregates[i].forEach(function (d) {
-                if (d.date < new Date(startyear, startmonth, startdate)) {
-                  d = {};
-                } else {
-                  d.name = legend[i];
-                  d.color = colors[i];
-                  values.push(d);
-                }
-              });
->>>>>>> broker
+            "cornerRadius": 1
+          },
+          "transform": [{
+            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+            "as": "Majority type of changes"
+          }, {
+            "calculate": "(datum.additions - datum.deletions)",
+            "as": "Net lines added"
+          }, {
+            "calculate": "(datum.additions)",
+            "as": "Total lines added"
+          }, {
+            "calculate": "(datum.count * 100)",
+            "as": "percent"
+          }],
+          "selection": {
+            "tooltip": {
+              "type": "multi",
+              "on": "mouseover",
+              "nearest": false,
+              "empty": "none",
+              "fields": ["_vgsid_"],
+              "toggle": "event.shiftKey",
+              "resolve": "global"
+            }
+          },
+
+          "encoding": {
+            "opacity": { "value": 1.001 },
+            "x": {
+              "field": "author_date",
+              "type": "temporal",
+              "timeUnit": timeUnit,
+              "axis": { "domain": false, "format": format }
+            },
+            "y": {
+              "field": "count",
+              "type": "quantitative",
+              "aggregate": "sum",
+              "stack": "center",
+              "axis": null
+            },
+            "tooltip": [{
+              "aggregate": "sum",
+              "field": "Total lines added",
+              "type": "quantitative"
+            }, {
+              "aggregate": "sum",
+              "field": "Net lines added",
+              "type": "quantitative"
+            }, {
+              "field": "author_date",
+              "type": "temporal",
+              "timeUnit": timeUnit
+            }, {
+              "field": "author_email",
+              "type": "nominal"
+            }],
+            "color": {
+              "condition": {
+                "selection": { "not": "tooltip" }, "value": "transparent"
+              },
+              "value": "black"
             }
           }
-
-<<<<<<< HEAD
         }]
-
       };
 
       var repo = window.AugurAPI.Repo({ gitURL: this.repo });
@@ -7391,154 +6231,55 @@ exports.default = {
 
       var authors = [];
       var track = { "total": 0 };
-      repo.changesByAuthor().then(function (changes) {
-        changes.forEach(function (change) {
-          change.author_date = new Date(change.author_date);
-          change["count"] = change["count"] ? change["count"] + 1 : 1;
-          track[change.author_email] = track[change.author_email] ? track[change.author_email] + 1 : 1;
-          track["total"] += 1;
-        });
 
-        changes.forEach(function (change) {
-          if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates);
-            if (change.author_affiliation !== 'Unknown') {
-              group(organizations, 'affiliation', change, filterDates);
-            }
-          }
-          if (!authors.includes(change["author_email"])) {
-            authors.push(change["author_email"]);
-            change["flag"] = (track[change.author_email] / track["total"]).toFixed(4);
-          }
-        });
-=======
-                return datum;
-              });
-              values.push.apply(values, _temp);
-            }
-          });
+      var changes = null;
+      if (this.data) changes = this.data;else changes = repo.changesByAuthor();
 
-          _this.legendLabels = legend;
-          if (_this.mount) config.data = { "values": values };
-          _this.values = values;
-
-          _this.renderChart();
-        }
-      };
-      if (this.data && this.mount) {
-        processData(this.data);
-      } else {
-
-        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
-          processData(data);
-        }, function () {
-          _this.renderError();
-        });
-      }
-      if (this.mount) this.reloadImage(config);
-
-      return config;
-    }
-  },
-  methods: (_methods = {
-    thisShouldTriggerRecompute: function thisShouldTriggerRecompute() {
-      this.forceRecomputeCounter++;
-    },
-    downloadSVG: function downloadSVG(e) {
-      var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.holder).find('svg')[0];
-      svgsaver.asSvg(svg, this.__download_file + '.svg');
-    },
-    downloadPNG: function downloadPNG(e) {
-      var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.holder).find('svg')[0];
-      svgsaver.asPng(svg, this.__download_file + '.png');
-    },
-    renderChart: function renderChart() {
-      var allFalse = true;
-      for (var key in this.status) {
-        if (this.status[key]) allFalse = false;
-      }if (!allFalse) $(this.$el).find('.error').addClass('hidden');
-      $(this.$el).find('.hidefirst').removeClass('invis');
-      $(this.$el).find('.hidefirst').removeClass('invisDet');
-      $(this.$el).find('.spinner').removeClass('loader');
-      $(this.$el).find('.spacing').addClass('hidden');
-      $(this.$el).find('.hidefirst').removeClass('invisDet');
-    },
-    renderError: function renderError() {
-      $(this.$el).find('.spinner').removeClass('loader');
-      $(this.$el).find('.error').removeClass('hidden');
-    }
-  }, _defineProperty(_methods, 'thisShouldTriggerRecompute', function thisShouldTriggerRecompute() {
-    this.forceRecomputeCounter++;
-  }), _defineProperty(_methods, 'respec', function respec() {
-    this.spec;
-  }), _defineProperty(_methods, 'reloadImage', function reloadImage(config) {
-    console.log(config.data, this.source);
-    if (config.data.length == 0) {
-      this.spec;
-      this.renderError();
-      return;
-    }
-    vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -110 }, mode: 'vega-lite' });
-  }), _methods), mounted: function mounted() {
-    this.spec;
-  },
-  created: function created() {
-    var _this2 = this;
-
-    var query_string = "chart_mapping=" + this.source;
-    window.AugurAPI.getMetricsStatus(query_string).then(function (data) {
-      _this2.metricSource = data[0].data_source;
-    });
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"spacing"}),_vm._v(" "),_c('div',{staticClass:"error hidden",staticStyle:{"color":"black"}},[_c('br'),_c('p',{staticStyle:{"font-size":"70px","padding-bottom":"3px"}},[_vm._v("🕵️")]),_vm._v(" Data is missing or unavailable for metric: "),_c('p',{staticStyle:{"color":"blue !important"}},[_vm._v(_vm._s(_vm.source))])]),_vm._v(" "),_c('div',{staticClass:"spinner loader"}),_vm._v(" "),_c('div',{staticClass:"hidefirst linechart",class:{ invis: !_vm.detail, invisDet: _vm.detail }},[(_vm.mount)?_c('div',{attrs:{"id":_vm.source}}):_vm._e(),_vm._v(" "),(!_vm.mount)?_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}):_vm._e(),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.timeperiod == '1825'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"1825","id":_vm.source + '5year'},domProps:{"checked":_vm._q(_vm.timeperiod,"1825")},on:{"change":[function($event){_vm.timeperiod="1825"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + '5year'}},[_vm._v("5 Years")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.timeperiod == '730'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"730","id":_vm.source + '2year'},domProps:{"checked":_vm._q(_vm.timeperiod,"730")},on:{"change":[function($event){_vm.timeperiod="730"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + '2year'}},[_vm._v("2 Years")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.timeperiod == '365'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"365","id":_vm.source + 'year'},domProps:{"checked":_vm._q(_vm.timeperiod,"365")},on:{"change":[function($event){_vm.timeperiod="365"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + 'year'}},[_vm._v("Year")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.timeperiod == 'all'), hidden: !_vm.repo }},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.timeperiod),expression:"timeperiod"}],attrs:{"type":"radio","name":_vm.source,"value":"all","id":_vm.source + 'all'},domProps:{"checked":_vm._q(_vm.timeperiod,"all")},on:{"change":[function($event){_vm.timeperiod="all"},_vm.respec]}}),_c('label',{attrs:{"for":_vm.source + 'all'}},[_vm._v("All")])])])])],1),_vm._v(" "),_c('div',{staticClass:"row below-chart",staticStyle:{"top":"-28px !important"}},[_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-3",staticStyle:{"padding-left":"10px","position":"relative","top":"-8px !important"}},[_c('span',{staticStyle:{"font-size":"12px"}},[_vm._v("Data source: "+_vm._s(_vm.metricSource))])]),_vm._v(" "),_c('div',{staticClass:"col col-2",staticStyle:{"width":"154px !important","height":"38px !important","position":"relative","top":"-12px !important"}},[_c('cite',{staticClass:"metric"},[_c('a',{staticStyle:{"width":"100px !important","height":"38px !important","position":"absolute"},attrs:{"href":_vm.citeUrl,"target":"_blank"}},[_c('img',{staticStyle:{"width":"100px","position":"relative"},attrs:{"src":"https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png","alt":"Chaoss-Definition-Logo","border":"0"}})])])]),_vm._v(" "),_c('div',{staticClass:"col col-4",staticStyle:{"position":"relative","top":"-8px !important"}},[_c('a',{ref:"downloadJSON",staticClass:"button graph-download download",attrs:{"role":"button"}},[_vm._v("⬇ JSON")])])])])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-869af3b0", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-869af3b0", __vue__options__)
-  }
-})()}
-});
->>>>>>> broker
-
-        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-        var careabout = [];
-        _this.contributors.slice(0, 10).forEach(function (obj) {
-          careabout.push(obj["author_email"]);
-        });
-
-        var findObjectByKey = function findObjectByKey(array, key, value) {
-          var ary = [];
-          for (var i = 0; i < array.length; i++) {
-            if (array[i][key] == value) {
-              ary.push(array[i]);
-            }
-          }
-          return ary;
-        };
-
-<<<<<<< HEAD
-        var ary = [];
-
-        careabout.forEach(function (name) {
-          findObjectByKey(changes, "author_email", name).forEach(function (obj) {
-            ary.push(obj);
-          });
-        });
-
-        _this.values = ary;
+      changes.forEach(function (change) {
+        change.author_date = new Date(change.author_date);
+        change["count"] = change["count"] ? change["count"] + 1 : 1;
+        track[change.author_email] = track[change.author_email] ? track[change.author_email] + 1 : 1;
+        track["total"] += 1;
       });
+
+      changes.forEach(function (change) {
+        if (isFinite(change.additions) && isFinite(change.deletions)) {
+          group(contributors, 'author_email', change, filterDates);
+          if (change.author_affiliation !== 'Unknown') {
+            group(organizations, 'affiliation', change, filterDates);
+          }
+        }
+        if (!authors.includes(change["author_email"])) {
+          authors.push(change["author_email"]);
+          change["flag"] = (track[change.author_email] / track["total"]).toFixed(4);
+        }
+      });
+
+      this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+      var careabout = [];
+      this.contributors.slice(0, 10).forEach(function (obj) {
+        careabout.push(obj["author_email"]);
+      });
+
+      var findObjectByKey = function findObjectByKey(array, key, value) {
+        var ary = [];
+        for (var i = 0; i < array.length; i++) {
+          if (array[i][key] == value) {
+            ary.push(array[i]);
+          }
+        }
+        return ary;
+      };
+
+      var ary = [];
+
+      careabout.forEach(function (name) {
+        findObjectByKey(changes, "author_email", name).forEach(function (obj) {
+          ary.push(obj);
+        });
+      });
+
+      this.values = ary;
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
@@ -7548,387 +6289,19 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
         repos.push(window.AugurRepos[this.repo]);
       }
 
-      var processData = function processData(data) {};
-
-=======
-var _AugurStats = require('../../AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-var _d = require('d3');
-
-var d3 = _interopRequireWildcard(_d);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-  computed: {
-    chart: function chart() {
-      MG.data_graphic({
-        title: "Missing Data",
-        error: 'Data unavaliable',
-        chart_type: 'missing-data',
-        missing_text: 'Data could not be loaded',
-        target: this.$refs.chart,
-        full_width: true,
-        height: 200
-      });
-    }
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"chart",staticClass:"linechart"})}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-ebdae2a4", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-ebdae2a4", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/charts/GroupedBarChart.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _vuex = require('vuex');
-
-var _AugurStats = require('AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'field'],
-  data: function data() {
-    return {
-      values: []
-    };
-  },
-
-  computed: {
-    repo: function repo() {
-      return this.$store.state.baseRepo;
-    },
-    gitRepo: function gitRepo() {
-      return this.$store.state.gitRepo;
-    },
-    period: function period() {
-      return this.$store.state.trailingAverage;
-    },
-    earliest: function earliest() {
-      return this.$store.state.startDate;
-    },
-    latest: function latest() {
-      return this.$store.state.endDate;
-    },
-    compare: function compare() {
-      return this.$store.state.compare;
-    },
-    comparedRepos: function comparedRepos() {
-      return this.$store.state.comparedRepos;
-    },
-    rawWeekly: function rawWeekly() {
-      return this.$store.state.rawWeekly;
-    },
-    showArea: function showArea() {
-      return this.$store.state.showArea;
-    },
-    showTooltip: function showTooltip() {
-      return this.$store.state.showTooltip;
-    },
-    showDetail: function showDetail() {
-      return this.$store.state.showDetail;
-    },
-    spec: function spec() {
-      var _this = this;
-
-      var config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-        "padding": { 'left': 25, 'top': 15, 'right': 80, 'bottom': 50 },
-        "config": {
-          "bar": {
-            "discreteBandSize": 10
-          },
-          "zero": false,
-          "scale": {
-            "nice": false
-
-          },
-          "axis": {
-            "tickRound": false
-          },
-          "title": {
-            "fontSize": 1
-          }
-
-        },
-        "title": {
-          "text": this.title,
-
-          "offset": 10
-
-        },
-        "width": 420,
-        "height": 250,
-        "layer": [{
-          "transform": [{
-            "calculate": "datum.index + 0.125", "as": "loc_location"
-          }],
-          "mark": {
-            "type": "bar",
-            "clip": true
-          },
-          "encoding": {
-            "y": {
-              "field": "net", "type": "quantitative",
-              "axis": { "title": "net loc", "grid": false },
-              "scale": {
-                "nice": false
-              }
-            },
-            "y2": {
-              "field": "avg_loc", "type": "quantitative", "axis": { "title": "", "grid": false },
-              "scale": {
-                "nice": false
-              }
-            },
-            "x": {
-              "field": "loc_location", "type": 'quantitative',
-
-              "axis": { "title": "", "labels": false }
-            },
-            "color": {
-              "value": "#FF3647"
-            }
-          }
-        }, {
-          "transform": [{
-            "calculate": "datum.index - 0.125", "as": "commit_location"
-          }],
-          "mark": {
-            "type": "bar",
-            "clip": true
-          },
-          "encoding": {
-            "y": {
-              "field": "avg_commits",
-              "axis": { "title": "commits", "grid": false },
-              "scale": {
-                "nice": false
-              }
-            },
-            "y2": {
-              "field": "patches", "type": "quantitative",
-              "axis": { "title": "commits", "grid": false },
-              "scale": {
-                "nice": false
-              }
-            },
-            "x": {
-              "field": "commit_location", "type": 'quantitative',
-              "axis": { "title": "", "labels": false }
-            },
-            "color": {
-              "value": "#4736FF",
-
-              "legend": null
-            }
-          }
-        }, {
-          "transform": [{
-            "calculate": "datum.index", "as": "text_location"
-          }, {
-            "calculate": "-10", "as": "y"
-          }],
-          "mark": {
-            "type": "text",
-            "angle": 330
-          },
-          "encoding": {
-            "text": {
-              "field": "name", "type": "nominal"
-            },
-            "y": {
-              "value": 280,
-
-              "axis": {
-                "title": "",
-                "grid": false
-              },
-              "scale": {
-                "nice": false
-              }
-
-            },
-            "x": {
-              "field": "text_location", "type": 'quantitative',
-              "axis": { "title": "", "labels": false }
-            }
-
-          }
-        }, {
-          "transform": [],
-          "mark": {
-            "type": "rule"
-          },
-          "encoding": {
-
-            "y": {
-              "aggregate": "mean",
-              "field": "patches",
-              "axis": {
-                "title": "", "grid": false
-              },
-              "scale": {
-                "nice": false
-              }
-            }
-
-          }
-        }, {
-          "transform": [],
-          "mark": {
-            "type": "rule"
-          },
-          "encoding": {
-
-            "y": {
-              "aggregate": "mean",
-              "field": "net",
-              "axis": null,
-              "scale": {
-                "nice": false
-              }
-            }
-
-          }
-        }, {
-          "transform": [],
-          "mark": {
-            "type": "bar",
-            "clip": false
-          },
-          "encoding": {
-
-            "y": {
-              "aggregate": "mean",
-              "field": "net_lines_minus_whitespace",
-              "axis": null,
-              "scale": {
-                "nice": false
-              }
-
-            },
-            "opacity": { "value": 0 },
-            "color": {
-              "field": "key",
-              "type": "ordinal",
-              "scale": { "range": ["#4736FF", "#FF3647"] },
-              "legend": { "offset": -16 }
-            }
-
-          }
-        }],
-        "resolve": { "scale": { "y": "independent", "color": "independent" } }
-      };
-
-      var repos = [];
-      if (this.gitRepo) {
-        repos.push(window.AugurAPI.Repo({ gitURL: this.gitRepo }));
-      }
-      var endpoints = [];
-      var fields = {};
-      this.source.split(',').forEach(function (endpointAndFields) {
-        var split = endpointAndFields.split(':');
-        endpoints.push(split[0]);
-        if (split[1]) {
-          fields[split[0]] = split[1].split('+');
-        }
-      });
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
-      var processGitData = function processGitData(data) {
-        var repo = window.AugurAPI.Repo({ gitURL: _this.repo });
-        var dat = [];
-        repo.changesByAuthor().then(function (changes) {
-          dat.push(changes);
-        });
-      };
-      var defaultProcess = function defaultProcess(obj, key) {
-        var d = null;
-        if (typeof field == "string") field = [field];
-        d = _AugurStats2.default.convertKey(obj[key], key);
-        return d;
-      };
-      var processData = function processData(data) {
-        console.log(repos, data, "CHECK");
-        var sort = _this.field == 'commit' ? "patches" : "net";
-        data.sort(function (a, b) {
-          return b[sort] - a[sort];
-        });
-        var sum_commit = 0;
-        var sum_loc = 0;
-        var max_loc = 0;
-        var max_commit = 0;
-        var min_loc = 0;
-        var min_commit = 0;
-        for (var i = 0; i < data.length; i++) {
-          sum_commit += data[i]['patches'];
-          sum_loc += data[i]['net'];
-          data[i]['index'] = i;
-          if (data[i]['net'] > max_loc) max_loc = data[i]['net'];
-          if (data[i]['patches'] > max_commit) max_commit = data[i]['patches'];
-          if (data[i]['net'] < min_loc) min_loc = data[i]['net'];
-          if (data[i]['patches'] < min_commit) min_commit = data[i]['patches'];
-          if (i == 0) data[i].key = "commits";else data[i].key = "net lines changed";
-        }
-
-        data.forEach(function (el) {
-          el.avg_commits = sum_commit / data.length;
-          el.avg_loc = sum_loc / data.length;
-        });
-
-        var dif_loc = Math.abs(max_loc - sum_loc / data.length) > Math.abs(min_loc - sum_loc / data.length) ? Math.abs(max_loc - sum_loc / data.length) : Math.abs(min_loc - sum_loc / data.length);
-        var dif_commit = Math.abs(max_commit - sum_commit / data.length) > Math.abs(min_commit - sum_commit / data.length) ? Math.abs(max_commit - sum_commit / data.length) : Math.abs(min_commit - sum_commit / data.length);
-        config.layer[0].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-        config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
-        config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
-        config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-        config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
-        config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-
-        repos.forEach(function (repo) {
-          _this.values = data;
-        });
-      };
-      if (this.data) {
-        processData(this.data);
-      } else {
-        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        repo[this.source]().then(function (data) {
-          console.log("batch data", data);
-          processData(data);
-        }, function () {});
-      }
->>>>>>> broker
+      this.reloadImage(config);
       return config;
     }
+  },
+  mounted: function mounted() {
+    this.spec;
+  },
+
+  methods: {
+    reloadImage: function reloadImage(config) {
+      config.data = { "values": this.values };
+      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -100, offsetX: 40 }, mode: 'vega-lite' });
+    }
   }
 
 };
@@ -7936,27 +6309,16 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-80px !important"}},[_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"contradio","name":"timeframe","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"2")},on:{"change":function($event){_vm.group="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"contradio"}},[_vm._v("Continuous")])])])],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-0px !important"}},[_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"contradio","name":"timeframe","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"2")},on:{"change":function($event){_vm.group="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"contradio"}},[_vm._v("Continuous")])])])])])}
 __vue__options__.staticRenderFns = []
-=======
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"groupedbarchart"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_vm._m(0)],1)])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"padding":"0 50px 0 50px","font-size":"12px"}},[_c('p',[_vm._v("*The black \"baseline\" represents the averages of both LoC and commits across all repositories within the selected repository's overlying Facade organization during the calendar year shown. Wherever this bar stretches to shows how far above or below the raw value of the statistic is from the regular average.")])])}]
->>>>>>> broker
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
     hotAPI.createRecord("data-v-0760224e", __vue__options__)
   } else {
     hotAPI.reload("data-v-0760224e", __vue__options__)
-=======
-    hotAPI.createRecord("data-v-45bc243c", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-45bc243c", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
@@ -7980,7 +6342,7 @@ var _AugurStats2 = _interopRequireDefault(_AugurStats);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'measure'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'type'],
   data: function data() {
     var years = [];
     for (var i = 9; i >= 0; i--) {
@@ -8000,15 +6362,6 @@ exports.default = {
       tick: 0
     };
   },
-<<<<<<< HEAD
-=======
-  created: function created() {
-    this.type = 1;
-  },
-  mounted: function mounted() {
-    this.spec;
-  },
->>>>>>> broker
 
   computed: {
     repo: function repo() {
@@ -8051,14 +6404,8 @@ exports.default = {
       var colors = ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-<<<<<<< HEAD
         "width": 780,
 
-=======
-        "width": 450,
-        "height": 300,
-        "padding": { "left": 10, "top": 35, "right": 5, "bottom": 0 },
->>>>>>> broker
         "config": {
           "tick": {
             "thickness": 8,
@@ -8071,12 +6418,7 @@ exports.default = {
         },
         "title": {
           "text": this.title,
-<<<<<<< HEAD
           "offset": 40
-=======
-          "offset": 15
-
->>>>>>> broker
         },
         "layer": [{
           "transform": [{
@@ -8093,8 +6435,8 @@ exports.default = {
             "as": "percent"
           }],
           "mark": {
-            "type": "bar"
-
+            "type": "bar",
+            "tooltip": { "content": "data" }
           },
           "encoding": {
             "x": { "field": "count", "type": "quantitative", "sort": { "op": "sum", "order": "descending" }, "stack": "normalize", "axis": { "labels": false, "title": null } },
@@ -8103,67 +6445,6 @@ exports.default = {
               "type": "nominal",
               "scale": { "scheme": "category10" },
               "legend": null
-            }
-          }
-
-        }, {
-          "transform": [{
-            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
-            "as": "Majority type of changes"
-          }, {
-            "calculate": "(datum.additions - datum.deletions)",
-            "as": "Net lines added"
-          }, {
-            "calculate": "((datum.additions - datum.deletions) / datum.commits)",
-            "as": "netratio"
-          }, {
-            "calculate": "(datum.additions / datum.commits)",
-            "as": "addedratio"
-          }, {
-            "calculate": "(datum.lines / datum.commits)",
-            "as": "totalratio"
-          }],
-          "mark": {
-            "type": "rule",
-            "size": 20
-          },
-
-          "selection": {
-            "tooltip": {
-              "type": "multi",
-              "on": "mouseover",
-              "nearest": false,
-              "empty": "none",
-              "fields": ["_vgsid_"],
-              "toggle": "event.shiftKey",
-              "resolve": "global"
-            }
-          },
-          "encoding": {
-
-            "y": {
-              "field": "author_email",
-              "sort": {
-                "field": field,
-                "op": "mean",
-                "order": "descending"
-              },
-              "type": "nominal",
-              "axis": { "title": null }
-            },
-            "tooltip": [{ "field": field, "type": "quantitative" }, {
-              "field": "author_email",
-
-              "type": "nominal"
-            }],
-            "color": {
-              "condition": {
-                "selection": { "not": "tooltip" }, "value": "transparent"
-              },
-              "value": "black"
-            },
-            "opacity": {
-              "value": 0.05
             }
           }
 
@@ -8214,7 +6495,6 @@ exports.default = {
       };
 
       var authors = [];
-<<<<<<< HEAD
       var track = { "total": 0 };
       repo.changesByAuthor().then(function (changes) {
         changes.forEach(function (change) {
@@ -8229,42 +6509,38 @@ exports.default = {
             track["total"] += change.additions;
           }
         });
-=======
-      var track = {};
-      var changes = null;
 
-      if (this.data) changes = this.data;else changes = repo.changesByAuthor();
->>>>>>> broker
-
-      changes.forEach(function (change) {
-        track[change.author_email] = track[change.author_email] ? track[change.author_email] : { 'commits': 0, 'lines': 0, 'additions': 0, 'deletions': 0 };
-        track[change.author_email]['commits'] = track[change.author_email]['commits'] ? track[change.author_email]['commits'] + 1 : 1;
-
-        track[change.author_email]['lines'] = track[change.author_email]['lines'] ? track[change.author_email]['lines'] + change.additions + change.deletions : change.additions + change.deletions;
-        track[change.author_email]['additions'] = track[change.author_email]['additions'] ? track[change.author_email]['additions'] + change.additions : change.additions;
-        track[change.author_email]['deletions'] = track[change.author_email]['deletions'] ? track[change.author_email]['deletions'] + change.deletions : change.deletions;
-      });
-
-      changes.forEach(function (change) {
-        if (isFinite(change.additions) && isFinite(change.deletions)) {
-          group(contributors, 'author_email', change, filterDates);
-          if (change.author_affiliation !== 'Unknown') {
-            group(organizations, 'affiliation', change, filterDates);
+        changes.forEach(function (change) {
+          if (isFinite(change.additions) && isFinite(change.deletions)) {
+            group(contributors, 'author_email', change, filterDates);
+            if (change.author_affiliation !== 'Unknown') {
+              group(organizations, 'affiliation', change, filterDates);
+            }
           }
-        }
-        if (!authors.includes(change["author_email"])) {
-          authors.push(change["author_email"]);
-          change["flag"] = (track[change.author_email] / track["total"] * 100).toFixed(4);
-        }
-      });
+          if (!authors.includes(change["author_email"])) {
+            authors.push(change["author_email"]);
+            change["flag"] = (track[change.author_email] / track["total"] * 100).toFixed(4);
+          }
+        });
 
-      this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-      var careabout = [];
-      this.contributors.slice(0, 10).forEach(function (obj) {
-        careabout.push(obj["author_email"]);
-      });
+        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+        var careabout = [];
+        _this.contributors.slice(0, 10).forEach(function (obj) {
+          careabout.push(obj["author_email"]);
+        });
 
-<<<<<<< HEAD
+        var findObjectByKey = function findObjectByKey(array, key, value) {
+          var ary = [];
+          for (var i = 0; i < array.length; i++) {
+            if (array[i][key] == value) {
+              ary.push(array[i]);
+            }
+          }
+          return ary;
+        };
+
+        var ary = [];
+
         careabout.forEach(function (name) {
           findObjectByKey(changes, "author_email", name).forEach(function (obj) {
             ary.push(obj);
@@ -8273,26 +6549,6 @@ exports.default = {
 
         _this.values = ary;
       });
-=======
-      var findObjectByKey = function findObjectByKey(array, key, value) {
-        var ary = [];
-        for (var i = 0; i < array.length; i++) {
-          if (array[i][key] == value) {
-            ary.push(array[i]);
-          }
-        }
-        return ary;
-      };
-
-      var ary = [];
-
-      for (var key in track) {
-        if (careabout.includes(key)) ary.push({ "author_email": key, "commits": track[key]['commits'], "lines": track[key]['lines'], "additions": track[key]['additions'], "deletions": track[key]['deletions'] });
-      }
-
-      this.values = ary;
-      console.log("TRACK", ary, careabout);
->>>>>>> broker
 
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
@@ -8302,15 +6558,9 @@ exports.default = {
         repos.push(window.AugurRepos[this.repo]);
       }
 
-      this.reloadImage(config);
+      var processData = function processData(data) {};
 
       return config;
-    }
-  },
-  methods: {
-    reloadImage: function reloadImage(config) {
-      config.data = { "values": this.values };
-      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -100, offsetX: 40 }, mode: 'vega-lite' });
     }
   }
 
@@ -8319,11 +6569,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
-=======
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-0px !important"}},[_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"totalradio","name":"lines","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"1")},on:{"change":function($event){_vm.type="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"totalradio"}},[_vm._v("Total")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"netradio","name":"lines","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"0")},on:{"change":function($event){_vm.type="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"netradio"}},[_vm._v("Net")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.type),expression:"type"}],attrs:{"id":"addedradio","name":"lines","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.type,"2")},on:{"change":function($event){_vm.type="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"addedradio"}},[_vm._v("Added")])])])])])}
->>>>>>> broker
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -8333,6 +6579,319 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-5685f17a", __vue__options__)
   } else {
     hotAPI.reload("data-v-5685f17a", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/SkeletonChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
+  data: function data() {
+
+    return {
+      legendLabels: [],
+      values: [],
+      status: {},
+      detail: this.$store.state.showDetail,
+      compRepos: this.$store.state.comparedRepos,
+      metricSource: null,
+      timeperiod: 'all',
+      forceRecomputeCounter: 0
+    };
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepos: function gitRepos() {
+      return this.$store.state.gitRepo;
+    },
+    period: function period() {
+      return this.$store.state.trailingAverage;
+    },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
+    compare: function compare() {
+      return this.$store.state.compare;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    },
+    rawWeekly: function rawWeekly() {
+      return this.$store.state.rawWeekly;
+    },
+    showArea: function showArea() {
+      return this.$store.state.showArea;
+    },
+    showTooltip: function showTooltip() {
+      return this.$store.state.showTooltip;
+    },
+    showDetail: function showDetail() {
+      return this.$store.state.showDetail;
+    },
+    spec: function spec() {
+      var _this = this;
+
+      console.log(window);
+
+      this.forceRecomputeCounter;
+      var repos = [];
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
+          var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
+          repos.push(temp);
+        }
+      }
+      this.comparedRepos.forEach(function (repo) {
+        repos.push(window.AugurRepos[repo]);
+      });
+
+      repos.forEach(function (repo) {
+        _this.status[repo] = true;
+      });
+
+      var colors = ["black", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
+
+      var config = {
+        $schema: 'https://vega.github.io/schema/vega-lite/v2.0.json',
+        description: 'A simple bar chart with embedded data.',
+        data: {
+          values: this.data
+        },
+        mark: 'bar',
+        encoding: {
+          "x": { "field": "date", "type": "temporal" },
+          "y": { "field": "valueRollingrails/rails", "type": "quantitative" },
+          "tooltip": { "field": "valueRollingrails/rails", "type": "quantitative" }
+        }
+      };
+
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+
+      var compare = this.compare;
+      var processData = function processData(data) {
+        _this.__download_data = data;
+        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
+
+        var defaultProcess = function defaultProcess(obj, key, field, count) {
+          var d = null;
+          if (typeof field == "string") {
+            field = [field];
+          }
+
+          d = _AugurStats2.default.convertKey(obj[key], field);
+          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest, 'date');
+          return d;
+        };
+
+        var normalized = [];
+        var aggregates = [];
+        var buildLines = function buildLines(obj, onCreateData, repo) {
+          if (!obj) {
+            return;
+          }
+          if (!onCreateData) {
+            onCreateData = function onCreateData(obj, key, field, count) {
+              normalized.push(d);
+            };
+          }
+          var count = 0;
+          for (var key in obj) {
+
+            if (obj.hasOwnProperty(key)) {
+              if (fields[key]) {
+                fields[key].forEach(function (field) {
+                  onCreateData(obj, key, field, count);
+                  count++;
+                });
+              } else {
+                if (Array.isArray(obj[key]) && obj[key].length > 0) {
+                  var field = Object.keys(obj[key][0]).splice(1);
+                  onCreateData(obj, key, field, count);
+                  count++;
+                } else {
+                  _this.status[repo] = false;
+                  _this.renderError();
+                }
+              }
+            }
+          }
+        };
+        var legend = [];
+        var values = [];
+        var colors = [];
+        var baselineVals = null;
+        var baseDate = null;
+        repos.forEach(function (repo) {
+          buildLines(data[repo], function (obj, key, field, count) {
+            var d = defaultProcess(obj, key, field, count);
+
+            var rolling = null;
+            if (repo == _this.repo && d[0]) baseDate = d[0].date;else d = _AugurStats2.default.alignDates(d, baseDate, _this.period);
+            if (_this.compare == 'zscore') {
+              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
+            } else if (_this.compare == 'baseline') {
+                if (repo.githubURL == _this.repo) {
+                  baselineVals = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
+                }
+                rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
+                if (baselineVals) {
+
+                  for (var i = 0; i < baselineVals.length; i++) {
+                    if (rolling[i] && baselineVals[i]) rolling[i].valueRolling -= baselineVals[i].valueRolling;
+                  }
+                }
+              } else {
+                console.log("rolling");
+                rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
+              }
+
+            normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling', repo));
+            aggregates.push(_AugurStats2.default.convertKey(d, 'value', 'value' + repo));
+            legend.push(repo + " " + field);
+            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
+          }, repo);
+        });
+
+        if (normalized.length == 0) {} else {
+          values = [];
+          for (var i = 0; i < legend.length; i++) {
+            normalized[i].forEach(function (d) {
+              d.color = colors[i];
+              values.push(d);
+            });
+            if (_this.rawWeekly) {
+              aggregates[i].forEach(function (d) {
+                d.color = colors[i];
+                values.push(d);
+              });
+            }
+          }
+          repos.forEach(function (repo) {
+            if (!_this.status[repo]) {
+              var _temp = JSON.parse(JSON.stringify(values));
+              _temp = _temp.map(function (datum) {
+
+                return datum;
+              });
+              values.push.apply(values, _temp);
+            }
+          });
+
+          _this.legendLabels = legend;
+          config.data = { "values": values };
+          _this.values = values;
+
+          var allFalse = true;
+          for (var key in _this.status) {
+            if (_this.status[key]) allFalse = false;
+          }if (!allFalse) $(_this.$el).find('.error').addClass('hidden');
+
+          $(_this.$el).find('.hidefirst').removeClass('invis');
+          $(_this.$el).find('.hidefirst').removeClass('invisDet');
+          $(_this.$el).find('.spinner').removeClass('loader');
+          $(_this.$el).find('.spacing').addClass('hidden');
+          $(_this.$el).find('.hidefirst').removeClass('invisDet');
+
+          _this.renderChart();
+        }
+      };
+      if (this.data) {
+        processData(this.data);
+      } else {
+
+        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+          processData(data);
+        }, function () {});
+      }
+
+      console.log("TEST");
+
+      console.log("CONFIG", config);
+      vegaEmbed('#vis', config);
+
+      return config;
+    }
+  },
+  methods: {
+    downloadSVG: function downloadSVG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.holder).find('svg')[0];
+      svgsaver.asSvg(svg, this.__download_file + '.svg');
+    },
+    downloadPNG: function downloadPNG(e) {
+      var svgsaver = new window.SvgSaver();
+      var svg = window.$(this.$refs.holder).find('svg')[0];
+      svgsaver.asPng(svg, this.__download_file + '.png');
+    },
+    renderChart: function renderChart() {},
+    renderError: function renderError() {
+      $(this.$el).find('.spinner').removeClass('loader');
+      $(this.$el).find('.error').removeClass('hidden');
+    },
+    thisShouldTriggerRecompute: function thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
+    },
+    reloadImage: function reloadImage(config) {
+      console.log("reloading");
+      vegaEmbed('#' + this.source, config, { actions: false, tooltip: { theme: 'dark' }, mode: 'vega-lite' });
+    }
+  }, mounted: function mounted() {
+    this.spec;
+  },
+  created: function created() {
+    var _this2 = this;
+
+    var query_string = "chart_mapping=" + this.source;
+    window.AugurAPI.getMetricsStatus(query_string).then(function (data) {
+      _this2.metricSource = data[0].data_source;
+    });
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{attrs:{"id":"vis"}})])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-1cdabd84", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-1cdabd84", __vue__options__)
   }
 })()}
 });
@@ -8588,11 +7147,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"stackedbarchart hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
-=======
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('h3',[_vm._v("Lines of code added by the top 10 authors")]),_vm._v(" "),_c('table',{staticClass:"lines-of-code-table"},[_c('thead',[_c('tr',[_c('th',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = year}}},[_vm._v(_vm._s(year))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthNames),function(month){return (_vm.setYear)?_c('th',[_vm._v(_vm._s(month))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('th',[_vm._v("Total all time")]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('th',{on:{"click":function($event){_vm.setYear = 0}}},[_vm._v(_vm._s(_vm.setYear))]):_vm._e()],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.contributors.slice(0, 10)),function(contributor){return _c('tr',[_c('td',[_vm._v(_vm._s(contributor.author_email))]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[year]) ? contributor[year].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthDecimals),function(month){return (_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[_vm.setYear + '-' + month]) ? contributor[_vm.setYear + '-' + month].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('td',[_vm._v(_vm._s(contributor.additions))]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[_vm.setYear]) ? contributor[_vm.setYear].additions || 0 : 0))]):_vm._e()],2)}),0)]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h3',[_vm._v("Lines of code added by the top 5 organizations")]),_vm._v(" "),_c('table',{staticClass:"lines-of-code-table"},[_c('thead',[_c('tr',[_c('th',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = year}}},[_vm._v(_vm._s(year))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthNames),function(month){return (_vm.setYear)?_c('th',[_vm._v(_vm._s(month))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('th',[_vm._v("Total all time")]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = _vm.year}}},[_vm._v(_vm._s(_vm.setYear))]):_vm._e()],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.organizations.slice(0, 10)),function(organization){return _c('tr',[_c('td',[_vm._v(_vm._s(organization.name))]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[year]) ? organization[year].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthDecimals),function(month){return (_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[_vm.setYear + '-' + month]) ? organization[_vm.setYear + '-' + month].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('td',[_vm._v(_vm._s(organization.additions))]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[_vm.setYear]) ? organization[_vm.setYear].additions || 0 : 0))]):_vm._e()],2)}),0)]),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])])}
->>>>>>> broker
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -8645,8 +7200,8 @@ exports.default = {
       tick: 0
     };
   },
-  created: function created() {
-    this.tick = 0;
+  mounted: function mounted() {
+    this.spec;
   },
 
   computed: {
@@ -8662,11 +7217,12 @@ exports.default = {
     spec: function spec() {
       var _this = this;
 
+      console.log("test");
+      var vegaEmbed = window.vegaEmbed;
       var type = null,
           bin = null,
           size = null,
           opacity = null;
-
       if (this.tick == 0) {
         type = "circle";
         bin = false;
@@ -8688,7 +7244,6 @@ exports.default = {
           "min": ".5"
         };
       }
-<<<<<<< HEAD
       if (this.tick == 2) {
         type = "rect";
         bin = { "maxbins": 40 };
@@ -8698,30 +7253,13 @@ exports.default = {
           "type": "quantitative",
           "min": ".5"
         };
-=======
-      if (this.group == 2) {
-        timeUnit = 'yearmonth';
-        format = '%y %b';
-        bin = false;
-        size = 13;
-        type = "area";
->>>>>>> broker
       }
-
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-<<<<<<< HEAD
-        "width": 950,
-        "height": 300,
-=======
-        "width": 450,
-        "height": 300,
-        "padding": { "left": 10, "top": 35, "right": 5, "bottom": 0 },
-        "title": {
-          "text": this.title,
-          "offset": 15
-        },
->>>>>>> broker
+
+        "width": 1000,
+        "height": 360,
+        "padding": { "left": -10, "top": 35, "right": 5, "bottom": -18 },
         "config": {
           "tick": {
             "thickness": 8,
@@ -8732,25 +7270,9 @@ exports.default = {
             "title": null
           },
           "legend": {
-<<<<<<< HEAD
             "titleFontSize": 10,
             "titlePadding": 10
           }, "scale": { "minSize": 100, "maxSize": 500 }
-=======
-            "offset": -20,
-            "orient": "right",
-            "titlePadding": 10,
-            "padding": 40,
-            "labelFontSize": 12,
-            "titleFontSize": 14,
-            "labelLimit": 260
-          },
-
-          "bar": {
-            "continuousBandSize": size,
-            "binSpacing": 0
-          }
->>>>>>> broker
         },
         "layer": [{
           "transform": [{
@@ -8763,8 +7285,8 @@ exports.default = {
             "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
             "as": "Total lines changed"
           }],
-<<<<<<< HEAD
           "mark": type,
+
           "encoding": {
             "x": { "field": "author_date", "type": "temporal", "bin": bin, "axis": { "format": "%b %Y", "title": " " } },
             "y": { "field": "author_email", "type": "nominal" },
@@ -8773,43 +7295,13 @@ exports.default = {
               "type": "quantitative",
               "scale": { "range": ["#FF0000", "#00FF00"] }
             },
+
             "size": size,
             "opacity": opacity
-=======
-
-          "mark": {
-            "type": type,
-
-            "cornerRadius": 1
-          },
-          "encoding": {
-            "x": {
-              "field": "author_date",
-              "type": "temporal",
-              "timeUnit": timeUnit,
-              "axis": { "domain": false, "format": format }
-            },
-            "y": {
-              "field": "count",
-              "type": "quantitative",
-              "aggregate": "sum",
-              "stack": "center",
-              "axis": null
-            },
-            "color": {
-              "field": "author_email",
-              "type": "nominal",
-              "scale": { "scheme": "category10" }
-            }
->>>>>>> broker
-
           }
-        }, {
-          "mark": {
-            "type": type,
 
-            "cornerRadius": 1
-          },
+        }, {
+          "mark": "rule",
           "transform": [{
             "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
             "as": "Majority type of changes"
@@ -8817,69 +7309,36 @@ exports.default = {
             "calculate": "(datum.additions - datum.deletions)",
             "as": "Net lines added"
           }, {
-            "calculate": "(datum.additions)",
-            "as": "Total lines added"
-          }, {
-            "calculate": "(datum.count * 100)",
-            "as": "percent"
+            "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
+            "as": "Total lines changed"
           }],
           "selection": {
-            "tooltip": {
-              "type": "multi",
-              "on": "mouseover",
-              "nearest": false,
-              "empty": "none",
-              "fields": ["_vgsid_"],
-              "toggle": "event.shiftKey",
-              "resolve": "global"
-            }
+            "tooltip": { "type": "multi", "on": "mouseover", "nearest": false, "empty": "none" }
           },
-
           "encoding": {
-            "opacity": { "value": 1.001 },
-            "x": {
-              "field": "author_date",
-              "type": "temporal",
-              "timeUnit": timeUnit,
-              "axis": { "domain": false, "format": format }
-            },
-            "y": {
-              "field": "count",
-              "type": "quantitative",
-              "aggregate": "sum",
-              "stack": "center",
-              "axis": null
-            },
-            "tooltip": [{
-              "aggregate": "sum",
-              "field": "Total lines added",
+            "size": { "value": 8 },
+            "opacity": { "value": 1.051 },
+            "x": { "field": "author_date", "type": "temporal" },
+
+            "tooltip": [{ "field": "author_email", "type": "nominal" }, {
+              "field": "Total lines changed",
               "type": "quantitative"
             }, {
-              "aggregate": "sum",
               "field": "Net lines added",
               "type": "quantitative"
-            }, {
-              "field": "author_date",
-              "type": "temporal",
-              "timeUnit": timeUnit
-            }, {
-              "field": "author_email",
-              "type": "nominal"
             }],
             "color": {
               "condition": {
                 "selection": { "not": "tooltip" }, "value": "transparent"
-              },
-              "value": "black"
+              }
             }
           }
         }]
-      };
 
+      };
       var repo = window.AugurAPI.Repo({ gitURL: this.repo });
       var contributors = {};
       var organizations = {};
-
       var addChanges = function addChanges(dest, src) {
         if (dest && src) {
           if ((typeof dest === 'undefined' ? 'undefined' : _typeof(dest)) !== 'object') {
@@ -8890,7 +7349,6 @@ exports.default = {
           dest['deletions'] += src['deletions'] || 0;
         }
       };
-
       var group = function group(obj, name, change, filter) {
         if (filter(change)) {
           var year = new Date(change.author_date).getFullYear();
@@ -8903,7 +7361,6 @@ exports.default = {
           addChanges(obj[change[name]][year + '-' + month], change);
         }
       };
-
       var flattenAndSort = function flattenAndSort(obj, keyName, sortField) {
         return Object.keys(obj).map(function (key) {
           var d = obj[key];
@@ -8913,18 +7370,14 @@ exports.default = {
           return b[sortField] - a[sortField];
         });
       };
-
       var filterDates = function filterDates(change) {
         return new Date(change.author_date).getFullYear() > _this.years[0];
       };
-
-<<<<<<< HEAD
-      repo.changesByAuthor().then(function (changes) {
-        changes.forEach(function (change) {
+      var processData = function processData(data) {
+        data.forEach(function (change) {
           change.author_date = new Date(change.author_date);
         });
-
-        changes.forEach(function (change) {
+        data.forEach(function (change) {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
             group(contributors, 'author_email', change, filterDates);
             if (change.author_affiliation !== 'Unknown') {
@@ -8932,60 +7385,38 @@ exports.default = {
             }
           }
         });
-=======
-      var authors = [];
-      var track = { "total": 0 };
 
-      var changes = null;
-      if (this.data) changes = this.data;else changes = repo.changesByAuthor();
->>>>>>> broker
-
-      changes.forEach(function (change) {
-        change.author_date = new Date(change.author_date);
-        change["count"] = change["count"] ? change["count"] + 1 : 1;
-        track[change.author_email] = track[change.author_email] ? track[change.author_email] + 1 : 1;
-        track["total"] += 1;
-      });
-
-      changes.forEach(function (change) {
-        if (isFinite(change.additions) && isFinite(change.deletions)) {
-          group(contributors, 'author_email', change, filterDates);
-          if (change.author_affiliation !== 'Unknown') {
-            group(organizations, 'affiliation', change, filterDates);
-          }
-        }
-        if (!authors.includes(change["author_email"])) {
-          authors.push(change["author_email"]);
-          change["flag"] = (track[change.author_email] / track["total"]).toFixed(4);
-        }
-      });
-
-      this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-      var careabout = [];
-      this.contributors.slice(0, 10).forEach(function (obj) {
-        careabout.push(obj["author_email"]);
-      });
-
-      var findObjectByKey = function findObjectByKey(array, key, value) {
-        var ary = [];
-        for (var i = 0; i < array.length; i++) {
-          if (array[i][key] == value) {
-            ary.push(array[i]);
-          }
-        }
-        return ary;
-      };
-
-      var ary = [];
-
-      careabout.forEach(function (name) {
-        findObjectByKey(changes, "author_email", name).forEach(function (obj) {
-          ary.push(obj);
+        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
+        var careabout = [];
+        _this.contributors.slice(0, 10).forEach(function (obj) {
+          careabout.push(obj["author_email"]);
         });
-      });
+        var findObjectByKey = function findObjectByKey(array, key, value) {
+          var ary = [];
+          for (var i = 0; i < array.length; i++) {
+            if (array[i][key] == value) {
+              ary.push(array[i]);
+            }
+          }
+          return ary;
+        };
+        var ary = [];
 
-      this.values = ary;
+        careabout.forEach(function (name) {
+          findObjectByKey(data, "author_email", name).forEach(function (obj) {
+            ary.push(obj);
+          });
+        });
 
+        _this.values = ary;
+      };
+      if (this.data) {
+        processData(this.data);
+      } else {
+        repo.changesByAuthor().then(function (changes) {
+          processData(changes);
+        });
+      }
       $(this.$el).find('.showme, .hidefirst').removeClass('invis');
       $(this.$el).find('.stackedbarchart').removeClass('loader');
 
@@ -8993,32 +7424,22 @@ exports.default = {
       if (this.repo) {
         repos.push(window.AugurRepos[this.repo]);
       }
-
       this.reloadImage(config);
       return config;
     }
   },
-  mounted: function mounted() {
-    this.spec;
-  },
-
   methods: {
     reloadImage: function reloadImage(config) {
       config.data = { "values": this.values };
-      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -100, offsetX: 40 }, mode: 'vega-lite' });
+      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -110 }, mode: 'vega-lite' });
     }
   }
-
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder",staticStyle:{"position":"relative","z-index":"5"}},[_c('div',{staticClass:"tickchart"},[_c('h3',{staticStyle:{"text-align":"center"}},[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"transform":"translateY(-35px) !important"}},[_c('div',{staticClass:"inputGroup"},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])],1)])}
-=======
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart ",staticStyle:{"margin-bottom":"0 !important"}},[_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"position":"relative","top":"-0px !important"}},[_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"yearradio","name":"timeframe","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"0")},on:{"change":function($event){_vm.group="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"yearradio"}},[_vm._v("Year")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"monthradio","name":"timeframe","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"1")},on:{"change":function($event){_vm.group="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"monthradio"}},[_vm._v("Month")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup ",staticStyle:{"padding-top":"5px"}},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.group),expression:"group"}],attrs:{"id":"contradio","name":"timeframe","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.group,"2")},on:{"change":function($event){_vm.group="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"contradio"}},[_vm._v("Continuous")])])])])])}
->>>>>>> broker
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"transform":"translateY(-35px) !important"}},[_c('div',{staticClass:"inputGroup"},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -9430,7 +7851,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 
-<<<<<<< HEAD
 var defaultTopReferrals = [{
   title: 'GitHub',
   value: '19,291'
@@ -9471,363 +7891,22 @@ exports.default = {
         return defaultTopReferrals;
       }
     }
-=======
-        _this.values = ary;
-      });
-
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
-
-      var repos = [];
-      if (this.repo) {
-        repos.push(window.AugurRepos[this.repo]);
-      }
-
-      var processData = function processData(data) {};
-
-      return config;
-    }
-  }
-
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"normalbar"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-5685f17a", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-5685f17a", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/charts/SkeletonChart.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _vuex = require('vuex');
-
-var _AugurStats = require('AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
-  data: function data() {
-
-    return {
-      legendLabels: [],
-      values: [],
-      status: {},
-      detail: this.$store.state.showDetail,
-      compRepos: this.$store.state.comparedRepos,
-      metricSource: null,
-      timeperiod: 'all',
-      forceRecomputeCounter: 0
-    };
-  },
-
-  computed: {
-    repo: function repo() {
-      return this.$store.state.baseRepo;
-    },
-    gitRepos: function gitRepos() {
-      return this.$store.state.gitRepo;
-    },
-    period: function period() {
-      return this.$store.state.trailingAverage;
-    },
-    earliest: function earliest() {
-      return this.$store.state.startDate;
-    },
-    latest: function latest() {
-      return this.$store.state.endDate;
-    },
-    compare: function compare() {
-      return this.$store.state.compare;
-    },
-    comparedRepos: function comparedRepos() {
-      return this.$store.state.comparedRepos;
-    },
-    rawWeekly: function rawWeekly() {
-      return this.$store.state.rawWeekly;
-    },
-    showArea: function showArea() {
-      return this.$store.state.showArea;
-    },
-    showTooltip: function showTooltip() {
-      return this.$store.state.showTooltip;
-    },
-    showDetail: function showDetail() {
-      return this.$store.state.showDetail;
-    },
-    spec: function spec() {
-      var _this = this;
-
-      console.log(window);
-
-      this.forceRecomputeCounter;
-      var repos = [];
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
-          var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
-          if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
-          repos.push(temp);
-        }
-      }
-      this.comparedRepos.forEach(function (repo) {
-        repos.push(window.AugurRepos[repo]);
-      });
-
-      repos.forEach(function (repo) {
-        _this.status[repo] = true;
-      });
-
-      var colors = ["black", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"];
-
-      var config = {
-        $schema: 'https://vega.github.io/schema/vega-lite/v2.0.json',
-        description: 'A simple bar chart with embedded data.',
-        data: {
-          values: this.data
-        },
-        mark: 'bar',
-        encoding: {
-          "x": { "field": "date", "type": "temporal" },
-          "y": { "field": "valueRollingrails/rails", "type": "quantitative" },
-          "tooltip": { "field": "valueRollingrails/rails", "type": "quantitative" }
-        }
-      };
-
-      var endpoints = [];
-      var fields = {};
-      this.source.split(',').forEach(function (endpointAndFields) {
-        var split = endpointAndFields.split(':');
-        endpoints.push(split[0]);
-        if (split[1]) {
-          fields[split[0]] = split[1].split('+');
-        }
-      });
-
-      var compare = this.compare;
-      var processData = function processData(data) {
-        _this.__download_data = data;
-        _this.__download_file = _this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase();
-
-        var defaultProcess = function defaultProcess(obj, key, field, count) {
-          var d = null;
-          if (typeof field == "string") {
-            field = [field];
-          }
-
-          d = _AugurStats2.default.convertKey(obj[key], field);
-          d = _AugurStats2.default.convertDates(d, _this.earliest, _this.latest, 'date');
-          return d;
-        };
-
-        var normalized = [];
-        var aggregates = [];
-        var buildLines = function buildLines(obj, onCreateData, repo) {
-          if (!obj) {
-            return;
-          }
-          if (!onCreateData) {
-            onCreateData = function onCreateData(obj, key, field, count) {
-              normalized.push(d);
-            };
-          }
-          var count = 0;
-          for (var key in obj) {
-
-            if (obj.hasOwnProperty(key)) {
-              if (fields[key]) {
-                fields[key].forEach(function (field) {
-                  onCreateData(obj, key, field, count);
-                  count++;
-                });
-              } else {
-                if (Array.isArray(obj[key]) && obj[key].length > 0) {
-                  var field = Object.keys(obj[key][0]).splice(1);
-                  onCreateData(obj, key, field, count);
-                  count++;
-                } else {
-                  _this.status[repo] = false;
-                  _this.renderError();
-                }
-              }
-            }
-          }
-        };
-        var legend = [];
-        var values = [];
-        var colors = [];
-        var baselineVals = null;
-        var baseDate = null;
-        repos.forEach(function (repo) {
-          buildLines(data[repo], function (obj, key, field, count) {
-            var d = defaultProcess(obj, key, field, count);
-
-            var rolling = null;
-            if (repo == _this.repo && d[0]) baseDate = d[0].date;else d = _AugurStats2.default.alignDates(d, baseDate, _this.period);
-            if (_this.compare == 'zscore') {
-              rolling = _AugurStats2.default.rollingAverage(_AugurStats2.default.zscores(d, 'value'), 'value', _this.period, repo);
-            } else if (_this.compare == 'baseline') {
-                if (repo.githubURL == _this.repo) {
-                  baselineVals = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
-                }
-                rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
-                if (baselineVals) {
-
-                  for (var i = 0; i < baselineVals.length; i++) {
-                    if (rolling[i] && baselineVals[i]) rolling[i].valueRolling -= baselineVals[i].valueRolling;
-                  }
-                }
-              } else {
-                console.log("rolling");
-                rolling = _AugurStats2.default.rollingAverage(d, 'value', _this.period, repo);
-              }
-
-            normalized.push(_AugurStats2.default.standardDeviationLines(rolling, 'valueRolling', repo));
-            aggregates.push(_AugurStats2.default.convertKey(d, 'value', 'value' + repo));
-            legend.push(repo + " " + field);
-            colors.push(window.AUGUR_CHART_STYLE.brightColors[count]);
-          }, repo);
-        });
-
-        if (normalized.length == 0) {} else {
-          values = [];
-          for (var i = 0; i < legend.length; i++) {
-            normalized[i].forEach(function (d) {
-              d.color = colors[i];
-              values.push(d);
-            });
-            if (_this.rawWeekly) {
-              aggregates[i].forEach(function (d) {
-                d.color = colors[i];
-                values.push(d);
-              });
-            }
-          }
-          repos.forEach(function (repo) {
-            if (!_this.status[repo]) {
-              var _temp = JSON.parse(JSON.stringify(values));
-              _temp = _temp.map(function (datum) {
-
-                return datum;
-              });
-              values.push.apply(values, _temp);
-            }
-          });
-
-          _this.legendLabels = legend;
-          config.data = { "values": values };
-          _this.values = values;
-
-          var allFalse = true;
-          for (var key in _this.status) {
-            if (_this.status[key]) allFalse = false;
-          }if (!allFalse) $(_this.$el).find('.error').addClass('hidden');
-
-          $(_this.$el).find('.hidefirst').removeClass('invis');
-          $(_this.$el).find('.hidefirst').removeClass('invisDet');
-          $(_this.$el).find('.spinner').removeClass('loader');
-          $(_this.$el).find('.spacing').addClass('hidden');
-          $(_this.$el).find('.hidefirst').removeClass('invisDet');
-
-          _this.renderChart();
-        }
-      };
-      if (this.data) {
-        processData(this.data);
-      } else {
-
-        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
-          processData(data);
-        }, function () {});
-      }
-
-      console.log("TEST");
-
-      console.log("CONFIG", config);
-      vegaEmbed('#vis', config);
-
-      return config;
-    }
-  },
-  methods: {
-    downloadSVG: function downloadSVG(e) {
-      var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.holder).find('svg')[0];
-      svgsaver.asSvg(svg, this.__download_file + '.svg');
-    },
-    downloadPNG: function downloadPNG(e) {
-      var svgsaver = new window.SvgSaver();
-      var svg = window.$(this.$refs.holder).find('svg')[0];
-      svgsaver.asPng(svg, this.__download_file + '.png');
-    },
-    renderChart: function renderChart() {},
-    renderError: function renderError() {
-      $(this.$el).find('.spinner').removeClass('loader');
-      $(this.$el).find('.error').removeClass('hidden');
-    },
-    thisShouldTriggerRecompute: function thisShouldTriggerRecompute() {
-      this.forceRecomputeCounter++;
-    },
-    reloadImage: function reloadImage(config) {
-      console.log("reloading");
-      vegaEmbed('#' + this.source, config, { actions: false, tooltip: { theme: 'dark' }, mode: 'vega-lite' });
-    }
-  }, mounted: function mounted() {
-    this.spec;
-  },
-  created: function created() {
-    var _this2 = this;
-
-    var query_string = "chart_mapping=" + this.source;
-    window.AugurAPI.getMetricsStatus(query_string).then(function (data) {
-      _this2.metricSource = data[0].data_source;
-    });
->>>>>>> broker
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small"},[_c('d-card-header',{staticClass:"border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(_vm.title))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('d-card-body',{staticClass:"p-0"},[_c('d-list-group',{staticClass:"list-group-small",attrs:{"flush":""}},_vm._l((_vm.referralData),function(item,idx){return _c('d-list-group-item',{key:idx,staticClass:"d-flex px-3"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v(_vm._s(item.title))]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v(_vm._s(item.value))])])}),1)],1),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top"},[_c('d-row',[_c('d-col',[_c('d-select',{staticStyle:{"max-width":"130px"},attrs:{"size":"sm","value":"last-week"}},[_c('option',{attrs:{"value":"last-week"}},[_vm._v("Last Week")]),_vm._v(" "),_c('option',{attrs:{"value":"today"}},[_vm._v("Today")]),_vm._v(" "),_c('option',{attrs:{"value":"last-month"}},[_vm._v("Last Month")]),_vm._v(" "),_c('option',{attrs:{"value":"last-year"}},[_vm._v("Last Year")])])],1),_vm._v(" "),_c('d-col',{staticClass:"text-right view-report"},[_c('a',{attrs:{"href":"#"}},[_vm._v("View full report →")])])],1)],1)],1)}
-=======
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{attrs:{"id":"vis"}})])}
->>>>>>> broker
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
     hotAPI.createRecord("data-v-aafde2b0", __vue__options__)
   } else {
     hotAPI.reload("data-v-aafde2b0", __vue__options__)
-=======
-    hotAPI.createRecord("data-v-1cdabd84", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-1cdabd84", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
@@ -9910,7 +7989,6 @@ var _NavbarSearch = require('./NavbarSearch.vue');
 
 var _NavbarSearch2 = _interopRequireDefault(_NavbarSearch);
 
-<<<<<<< HEAD
 var _NavbarNav = require('./NavbarNav.vue');
 
 var _NavbarNav2 = _interopRequireDefault(_NavbarNav);
@@ -10083,70 +8161,6 @@ exports.default = {
   methods: {
     handleToggleSidebar: function handleToggleSidebar() {
       this.sidebarVisible = !this.sidebarVisible;
-=======
-        var normalized = [];
-        var buildLines = function buildLines(obj, onCreateData) {
-          if (!obj) {
-            return;
-          }
-          if (!onCreateData) {
-            onCreateData = function onCreateData(obj, key, field, count) {
-              var d = defaultProcess(obj, key, field, count);
-              normalized.push(d);
-            };
-          }
-          var count = 0;
-          for (var key in obj) {
-            if (obj.hasOwnProperty(key)) {
-              if (fields[key]) {
-                fields[key].forEach(function (field) {
-                  onCreateData(obj, key, field, count);
-                  count++;
-                });
-              } else {
-                if (Array.isArray(obj[key]) && obj[key].length > 0) {
-                  var field = Object.keys(obj[key][0]).splice(1);
-                  onCreateData(obj, key, field, count);
-                  count++;
-                } else {
-                  _this.renderError();
-                  return;
-                }
-              }
-            }
-          }
-        };
-
-        var values = [];
-
-        buildLines(data[_this.repo], function (obj, key, field, count) {
-          normalized.push(defaultProcess(obj, key, field, count));
-        });
-
-        if (normalized.length == 0) {
-          _this.renderError();
-        } else {
-          for (var i = 0; i < normalized.length; i++) {
-            normalized[i].forEach(function (d) {
-              values.push(d);
-            });
-          }
-        }
-
-        $(_this.$el).find('.showme, .hidefirst').removeClass('invis');
-        $(_this.$el).find('.stackedbarchart').removeClass('loader');
-        _this.values = values;
-      };
-
-      if (this.data) {
-        processData(this.data);
-      } else {
-        window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
-          processData(data);
-        });
-      }
-
-      return config;
     }
   }
 };
@@ -10154,683 +8168,39 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"stackedbarchart hidefirst invis"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])],1)])}
-__vue__options__.staticRenderFns = []
-if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), true)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-6c07ac85", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-6c07ac85", __vue__options__)
-  }
-})()}
-});
-
-;require.register("components/charts/TickChart.vue", function(exports, require, module) {
-;(function(){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _vuex = require('vuex');
-
-var _AugurStats = require('AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
-  data: function data() {
-    var years = [];
-    for (var i = 9; i >= 0; i--) {
-      years.push(new Date().getFullYear() - i);
-    }
-    var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    var monthDecimals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    return {
-      values: [],
-      contributors: [],
-      organizations: [],
-      view: 'year',
-      monthNames: monthNames,
-      monthDecimals: monthDecimals,
-      years: years,
-      setYear: 0,
-      tick: 0
-    };
-  },
-  mounted: function mounted() {
-    this.spec;
-  },
-
-  computed: {
-    repo: function repo() {
-      return this.$store.state.gitRepo;
-    },
-    earliest: function earliest() {
-      return this.$store.state.startDate;
-    },
-    latest: function latest() {
-      return this.$store.state.endDate;
-    },
-    spec: function spec() {
-      var _this = this;
-
-      console.log("test");
-      var vegaEmbed = window.vegaEmbed;
-      var type = null,
-          bin = null,
-          size = null,
-          opacity = null;
-      if (this.tick == 0) {
-        type = "circle";
-        bin = false;
-        size = {
-          "field": "Total lines changed",
-          "type": "quantitative",
-          "min": "15",
-          "scale": { "minSize": 30, "maxSize": 31 }
-        };
-        opacity = {};
-      }
-      if (this.tick == 1) {
-        type = "tick";
-        bin = false;
-        size = {};
-        opacity = {
-          "field": "Total lines changed",
-          "type": "quantitative",
-          "min": ".5"
-        };
-      }
-      if (this.tick == 2) {
-        type = "rect";
-        bin = { "maxbins": 40 };
-        size = {};
-        opacity = {
-          "field": "Total lines changed",
-          "type": "quantitative",
-          "min": ".5"
-        };
-      }
-      var config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 1000,
-        "height": 360,
-        "padding": { "left": -10, "top": 35, "right": 5, "bottom": -18 },
-        "config": {
-          "tick": {
-            "thickness": 8,
-            "bandSize": 23
-          },
-          "axis": {
-            "grid": false,
-            "title": null
-          },
-          "legend": {
-            "titleFontSize": 10,
-            "titlePadding": 10
-          }, "scale": { "minSize": 100, "maxSize": 500 }
-        },
-        "layer": [{
-          "transform": [{
-            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
-            "as": "Majority type of changes"
-          }, {
-            "calculate": "(datum.additions - datum.deletions)",
-            "as": "Net lines added"
-          }, {
-            "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
-            "as": "Total lines changed"
-          }],
-          "mark": type,
-
-          "encoding": {
-            "x": { "field": "author_date", "type": "temporal", "bin": bin, "axis": { "format": "%b %Y", "title": " " } },
-            "y": { "field": "author_email", "type": "nominal" },
-            "color": {
-              "field": "Net lines added",
-              "type": "quantitative",
-              "scale": { "range": ["#FF0000", "#00FF00"] }
-            },
-
-            "size": size,
-            "opacity": opacity
-          }
-
-        }, {
-          "mark": "rule",
-          "transform": [{
-            "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
-            "as": "Majority type of changes"
-          }, {
-            "calculate": "(datum.additions - datum.deletions)",
-            "as": "Net lines added"
-          }, {
-            "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
-            "as": "Total lines changed"
-          }],
-          "selection": {
-            "tooltip": { "type": "multi", "on": "mouseover", "nearest": false, "empty": "none" }
-          },
-          "encoding": {
-            "size": { "value": 8 },
-            "opacity": { "value": 1.051 },
-            "x": { "field": "author_date", "type": "temporal" },
-
-            "tooltip": [{ "field": "author_email", "type": "nominal" }, {
-              "field": "Total lines changed",
-              "type": "quantitative"
-            }, {
-              "field": "Net lines added",
-              "type": "quantitative"
-            }],
-            "color": {
-              "condition": {
-                "selection": { "not": "tooltip" }, "value": "transparent"
-              }
-            }
-          }
-        }]
-
-      };
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
-      var contributors = {};
-      var organizations = {};
-      var addChanges = function addChanges(dest, src) {
-        if (dest && src) {
-          if ((typeof dest === 'undefined' ? 'undefined' : _typeof(dest)) !== 'object') {
-            dest['additions'] = 0;
-            dest['deletions'] = 0;
-          }
-          dest['additions'] += src['additions'] || 0;
-          dest['deletions'] += src['deletions'] || 0;
-        }
-      };
-      var group = function group(obj, name, change, filter) {
-        if (filter(change)) {
-          var year = new Date(change.author_date).getFullYear();
-          var month = new Date(change.author_date).getMonth();
-          obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 };
-          addChanges(obj[change[name]], change);
-          obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 };
-          addChanges(obj[change[name]][year], change);
-          obj[change[name]][year + '-' + month] = obj[change[name]][year + '-' + month] || { additions: 0, deletions: 0 };
-          addChanges(obj[change[name]][year + '-' + month], change);
-        }
-      };
-      var flattenAndSort = function flattenAndSort(obj, keyName, sortField) {
-        return Object.keys(obj).map(function (key) {
-          var d = obj[key];
-          d[keyName] = key;
-          return d;
-        }).sort(function (a, b) {
-          return b[sortField] - a[sortField];
-        });
-      };
-      var filterDates = function filterDates(change) {
-        return new Date(change.author_date).getFullYear() > _this.years[0];
-      };
-      var processData = function processData(data) {
-        data.forEach(function (change) {
-          change.author_date = new Date(change.author_date);
-        });
-        data.forEach(function (change) {
-          if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates);
-            if (change.author_affiliation !== 'Unknown') {
-              group(organizations, 'affiliation', change, filterDates);
-            }
-          }
-        });
-
-        _this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-        var careabout = [];
-        _this.contributors.slice(0, 10).forEach(function (obj) {
-          careabout.push(obj["author_email"]);
-        });
-        var findObjectByKey = function findObjectByKey(array, key, value) {
-          var ary = [];
-          for (var i = 0; i < array.length; i++) {
-            if (array[i][key] == value) {
-              ary.push(array[i]);
-            }
-          }
-          return ary;
-        };
-        var ary = [];
-
-        careabout.forEach(function (name) {
-          findObjectByKey(data, "author_email", name).forEach(function (obj) {
-            ary.push(obj);
-          });
-        });
-
-        _this.values = ary;
-      };
-      if (this.data) {
-        processData(this.data);
-      } else {
-        repo.changesByAuthor().then(function (changes) {
-          processData(changes);
-        });
-      }
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
-
-      var repos = [];
-      if (this.repo) {
-        repos.push(window.AugurRepos[this.repo]);
-      }
-      this.reloadImage(config);
-      return config;
->>>>>>> broker
-    }
-  },
-  methods: {
-    reloadImage: function reloadImage(config) {
-      config.data = { "values": this.values };
-      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -110 }, mode: 'vega-lite' });
-    }
-  }
-};
-})()
-if (module.exports.__esModule) module.exports = module.exports.default
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-<<<<<<< HEAD
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){return _vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column"},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])}),1):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown",staticStyle:{"height":"240px !important","position":"absolute","bottom":"0","margin-top":"auto"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"0.85rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"0px","width":"240px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0px"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding-left":"0px","padding":"0"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add comparison")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){return _vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column"},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])}),1):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown",staticStyle:{"height":"240px !important","position":"absolute","bottom":"0","margin-top":"auto"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"0.85rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"0px","width":"240px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem 0.7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem .7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('a',{staticClass:"navbar-brand w-100 mr-0",staticStyle:{"line-height":"25px"},attrs:{"href":"#"}},[_c('div',{staticClass:"d-table m-auto"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"/static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('form',{staticClass:"main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none",attrs:{"action":"#"}},[_c('div',{staticClass:"input-group input-group-seamless ml-3"},[_c('div',{staticClass:"input-group-prepend"},[_c('div',{staticClass:"input-group-text"},[_c('i',{staticClass:"fas fa-search"})])]),_vm._v(" "),_c('input',{staticClass:"navbar-search form-control",attrs:{"type":"text","placeholder":"Search for something...","aria-label":"Search"}})])])}]
-=======
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart "},[_c('h3',[_vm._v("Lines of code added by the top 10 authors visualized")]),_vm._v(" "),_c('div',{attrs:{"id":_vm.source}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes tickradios",staticStyle:{"transform":"translateY(-35px) !important"}},[_c('div',{staticClass:"inputGroup"},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"circradio","name":"comparebaseline","value":"0","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"0")},on:{"change":function($event){_vm.tick="0"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"circradio"}},[_vm._v("Circle")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"tickradio","name":"comparebaseline","value":"1","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"1")},on:{"change":function($event){_vm.tick="1"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"tickradio"}},[_vm._v("Tick")])]),_vm._v(" "),_c('div',{staticClass:"inputGroup "},[_c('input',{directives:[{name:"model",rawName:"v-model",value:(_vm.tick),expression:"tick"}],attrs:{"id":"rectradio","name":"comparebaseline","value":"2","type":"radio"},domProps:{"checked":_vm._q(_vm.tick,"2")},on:{"change":function($event){_vm.tick="2"}}}),_vm._v(" "),_c('label',{attrs:{"id":"front","for":"rectradio"}},[_vm._v("Rectangle")])])])])])}
-__vue__options__.staticRenderFns = []
->>>>>>> broker
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   module.hot.dispose(__vueify_style_dispose__)
   if (!module.hot.data) {
-<<<<<<< HEAD
     hotAPI.createRecord("data-v-ac7c9dc2", __vue__options__)
   } else {
     hotAPI.rerender("data-v-ac7c9dc2", __vue__options__)
-=======
-    hotAPI.createRecord("data-v-083303b4", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-083303b4", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
 
-<<<<<<< HEAD
 ;require.register("components/user-profile-lite/UserAccountDetails.vue", function(exports, require, module) {
-=======
-;require.register("components/charts/TimeIntervalBarChart.vue", function(exports, require, module) {
->>>>>>> broker
 ;(function(){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-<<<<<<< HEAD
 exports.default = {
   name: 'user-account-details',
   props: {
     title: {
       type: String,
       default: 'Account Details'
-=======
-
-var _vuex = require('vuex');
-
-var _AugurStats = require('AugurStats');
-
-var _AugurStats2 = _interopRequireDefault(_AugurStats);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = {
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'field'],
-  data: function data() {
-    return {
-      values: []
-    };
-  },
-
-  computed: {
-    repo: function repo() {
-      return this.$store.state.baseRepo;
-    },
-    gitRepo: function gitRepo() {
-      return this.$store.state.gitRepo;
-    },
-    period: function period() {
-      return this.$store.state.trailingAverage;
-    },
-    earliest: function earliest() {
-      return this.$store.state.startDate;
-    },
-    latest: function latest() {
-      return this.$store.state.endDate;
-    },
-    compare: function compare() {
-      return this.$store.state.compare;
-    },
-    comparedRepos: function comparedRepos() {
-      return this.$store.state.comparedRepos;
-    },
-    rawWeekly: function rawWeekly() {
-      return this.$store.state.rawWeekly;
-    },
-    showArea: function showArea() {
-      return this.$store.state.showArea;
-    },
-    showTooltip: function showTooltip() {
-      return this.$store.state.showTooltip;
-    },
-    showDetail: function showDetail() {
-      return this.$store.state.showDetail;
-    },
-    months: function months() {
-      return { 1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
-      };
-    },
-    spec: function spec() {
-      var _this = this;
-
-      var config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-        "padding": { 'left': 60, 'top': 10, 'right': 70, 'bottom': 20 },
-        "config": {
-          "bar": {
-            "discreteBandSize": 24
-          },
-          "zero": false,
-          "scale": {
-            "nice": false
-
-          },
-          "axis": {
-            "tickRound": false
-          }
-
-        },
-        "title": {
-          "text": this.title,
-
-          "offset": 10,
-          "fontSize": 3
-        },
-        "width": 1000,
-        "height": 250,
-        "layer": [{
-          "transform": [{
-            "calculate": "datum.month + 0.155", "as": "loc_location"
-          }],
-          "mark": {
-            "type": "bar",
-            "clip": "true"
-          },
-          "encoding": {
-            "y": {
-              "field": "net_lines_minus_whitespace", "type": "quantitative",
-              "axis": { "title": "net loc", "grid": false },
-              "scale": {
-                "domain": [-1000000, 1000000],
-                "nice": false
-              }
-            },
-            "y2": {
-              "field": "avg_loc", "type": "quantitative", "axis": { "title": "", "grid": false },
-              "scale": {
-                "domain": [-1000000, 1000000],
-                "nice": false
-              }
-            },
-            "x": {
-              "field": "loc_location", "type": 'quantitative',
-
-              "axis": { "title": "", "labels": false }
-            },
-            "color": {
-              "value": "#FF3647"
-            }
-          }
-        }, {
-          "transform": [{
-            "calculate": "datum.month - 0.155", "as": "commit_location"
-          }],
-          "mark": {
-            "type": "bar",
-            "clip": "true"
-          },
-          "encoding": {
-            "y": {
-              "field": "avg_commits",
-              "axis": { "title": "commits", "grid": false },
-              "scale": {
-                "domain": [-100, 100],
-                "nice": false
-              }
-            },
-            "y2": {
-              "field": "commits", "type": "quantitative",
-              "axis": { "title": "commits", "grid": false },
-              "scale": {
-                "domain": [-100, 100],
-                "nice": false
-              }
-            },
-            "x": {
-              "field": "commit_location", "type": 'quantitative',
-              "axis": { "title": "", "labels": false }
-            },
-            "color": {
-              "value": "#4736FF",
-
-              "legend": null
-            }
-          }
-        }, {
-          "transform": [{
-            "calculate": "datum.month", "as": "text_location"
-          }, {
-            "calculate": "-10", "as": "y"
-          }],
-          "mark": {
-            "type": "text"
-          },
-          "encoding": {
-            "text": {
-              "field": "month_name", "type": "nominal"
-            },
-            "y": {
-              "value": 270,
-
-              "axis": {
-                "title": "",
-                "grid": false
-              },
-              "scale": {
-                "domain": [-1000000, 1000000],
-                "nice": false
-              }
-
-            },
-            "x": {
-              "field": "text_location", "type": 'quantitative',
-              "axis": { "title": "", "labels": false }
-            }
-
-          }
-        }, {
-          "transform": [],
-          "mark": {
-            "type": "rule"
-          },
-          "encoding": {
-
-            "y": {
-              "aggregate": "mean",
-              "field": "commits",
-              "axis": {
-                "title": "", "grid": false
-              },
-              "scale": {
-                "domain": [-100, 100],
-                "nice": false
-              }
-            }
-
-          }
-        }, {
-          "transform": [],
-          "mark": {
-            "type": "rule"
-          },
-          "encoding": {
-
-            "y": {
-              "aggregate": "mean",
-              "field": "net_lines_minus_whitespace",
-              "axis": null,
-              "scale": {
-                "domain": [-1000000, 1000000],
-                "nice": false
-              }
-            }
-
-          }
-        }, {
-          "transform": [],
-          "mark": {
-            "type": "bar",
-            "clip": "true"
-          },
-          "encoding": {
-
-            "y": {
-              "aggregate": "mean",
-              "field": "net_lines_minus_whitespace",
-              "axis": null,
-              "scale": {
-                "nice": false
-              }
-
-            },
-            "opacity": { "value": 0 },
-            "color": {
-              "field": "key",
-              "type": "ordinal",
-              "scale": { "range": ["#4736FF", "#FF3647"] },
-              "legend": { "offset": -16 }
-            }
-
-          }
-        }],
-        "resolve": { "scale": { "y": "independent", "color": "independent" } }
-      };
-
-      var repos = [];
-      if (this.gitRepo) {
-        repos.push(window.AugurAPI.Repo({ gitURL: this.gitRepo }));
-      }
-      var endpoints = [];
-      var fields = {};
-      this.source.split(',').forEach(function (endpointAndFields) {
-        var split = endpointAndFields.split(':');
-        endpoints.push(split[0]);
-        if (split[1]) {
-          fields[split[0]] = split[1].split('+');
-        }
-      });
-      if (this.data) {
-        processGitData(this.data);
-      } else {
-        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        repo[this.source]().then(function (data) {
-          console.log("batch data", data);
-          processData(data);
-        }, function () {});
-      }
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
-      var processGitData = function processGitData(data) {
-        var repo = window.AugurAPI.Repo({ gitURL: _this.repo });
-        var dat = [];
-        repo.changesByAuthor().then(function (changes) {
-          dat.push(changes);
-        });
-      };
-      var defaultProcess = function defaultProcess(obj, key) {
-        var d = null;
-        if (typeof field == "string") field = [field];
-        d = _AugurStats2.default.convertKey(obj[key], key);
-        return d;
-      };
-      var processData = function processData(data) {
-        console.log(repos, data, "CHECK");
-        var sum_commit = 0;
-        var sum_loc = 0;
-        var max_loc = 0;
-        var max_commit = 0;
-        var min_loc = 0;
-        var min_commit = 0;
-        for (var i = 0; i < data.length; i++) {
-          sum_commit += data[i]['commits'];
-          sum_loc += data[i]['net_lines_minus_whitespace'];
-          console.log(i, data[i]['commits'], data[i]['net_lines_minus_whitespace']);
-          data[i]['index'] = i;
-          if (data[i]['net_lines_minus_whitespace'] > max_loc) max_loc = data[i]['net_lines_minus_whitespace'];
-          if (data[i]['commits'] > max_commit) max_commit = data[i]['commits'];
-          if (data[i]['net_lines_minus_whitespace'] < min_loc) {
-            min_loc = data[i]['net_lines_minus_whitespace'];
-            console.log("min = ", data[i]['net_lines_minus_whitespace']);
-          }
-          if (data[i]['commits'] < min_commit) min_commit = data[i]['commits'];
-          if (i == 0) data[i].key = "commits";else data[i].key = "net lines changed";
-        }
-
-        data.forEach(function (el) {
-          el.avg_commits = sum_commit / data.length;
-          el.avg_loc = sum_loc / data.length;
-          el.month_name = _this.months[el.month];
-        });
-
-        var dif_loc = Math.abs(max_loc - sum_loc / data.length) > Math.abs(min_loc - sum_loc / data.length) ? Math.abs(max_loc - sum_loc / data.length) : Math.abs(min_loc - sum_loc / data.length);
-        var dif_commit = Math.abs(max_commit - sum_commit / data.length) > Math.abs(min_commit - sum_commit / data.length) ? Math.abs(max_commit - sum_commit / data.length) : Math.abs(min_commit - sum_commit / data.length);
-        console.log("HERE", sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc);
-        config.layer[0].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-        config.layer[0].encoding.y2.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-        config.layer[1].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
-        config.layer[1].encoding.y2.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
-        config.layer[2].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-        config.layer[3].encoding.y.scale.domain = [sum_commit / data.length - dif_commit, sum_commit / data.length + dif_commit];
-        config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc];
-
-        repos.forEach(function (repo) {
-          _this.values = data;
-        });
-      };
-      return config;
->>>>>>> broker
     }
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
-<<<<<<< HEAD
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-card',{staticClass:"card-small mb-4"},[_c('d-card-header',{staticClass:"border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(_vm.title))])]),_vm._v(" "),_c('d-list-group',{attrs:{"flush":""}},[_c('d-list-group-item',{staticClass:"p-3"},[_c('d-row',[_c('d-col',[_c('d-form',[_c('d-form-row',[_c('d-col',{staticClass:"form-group",attrs:{"md":"6"}},[_c('label',{attrs:{"for":"feFirstName"}},[_vm._v("First Name")]),_vm._v(" "),_c('d-form-input',{attrs:{"type":"text","id":"feFirstName","placeholder":"First Name","value":"Sierra"}})],1),_vm._v(" "),_c('d-col',{staticClass:"form-group",attrs:{"md":"6"}},[_c('label',{attrs:{"for":"feLastName"}},[_vm._v("Last Name")]),_vm._v(" "),_c('d-form-input',{attrs:{"type":"text","id":"feLastName","placeholder":"Last Name","value":"Brooks"}})],1)],1),_vm._v(" "),_c('d-form-row',[_c('d-col',{staticClass:"form-group",attrs:{"md":"6"}},[_c('label',{attrs:{"for":"feEmail"}},[_vm._v("Email")]),_vm._v(" "),_c('d-form-input',{attrs:{"type":"email","id":"feEmail","placeholder":"Email Address","value":"sierra@example.com"}})],1),_vm._v(" "),_c('d-col',{staticClass:"form-group",attrs:{"md":"6"}},[_c('label',{attrs:{"for":"fePassword"}},[_vm._v("Password")]),_vm._v(" "),_c('d-form-input',{attrs:{"type":"password","id":"fePassword","placeholder":"Last Name","value":"EX@MPL#P@$$w0RD"}})],1)],1),_vm._v(" "),_c('div',{staticClass:"form-group"},[_c('label',{attrs:{"for":"feInputAddress"}},[_vm._v("Address")]),_vm._v(" "),_c('d-form-input',{attrs:{"type":"text","id":"feInputAddress","placeholder":"1234 Main St"}})],1),_vm._v(" "),_c('d-form-row',[_c('d-col',{staticClass:"form-group",attrs:{"md":"6"}},[_c('label',{attrs:{"for":"feInputCity"}},[_vm._v("City")]),_vm._v(" "),_c('d-form-input',{attrs:{"type":"text","id":"feInputCity"}})],1),_vm._v(" "),_c('d-col',{staticClass:"form-group",attrs:{"md":"4"}},[_c('label',{attrs:{"for":"feInputState"}},[_vm._v("State")]),_vm._v(" "),_c('d-select',{attrs:{"value":null,"id":"feInputState"}},[_c('option',{attrs:{"selected":""},domProps:{"value":null}},[_vm._v("Choose...")]),_vm._v(" "),_c('option',[_vm._v("...")])])],1),_vm._v(" "),_c('d-col',{staticClass:"form-group",attrs:{"md":"2"}},[_c('label',{attrs:{"for":"inputZip"}},[_vm._v("Zip")]),_vm._v(" "),_c('input',{staticClass:"form-control",attrs:{"type":"text","id":"inputZip"}})])],1),_vm._v(" "),_c('d-form-row',[_c('d-col',{staticClass:"form-group",attrs:{"md":"12"}},[_c('label',{attrs:{"for":"feDescription"}},[_vm._v("Description")]),_vm._v(" "),_c('d-textarea',{attrs:{"name":"feDescription","rows":"5"}})],1)],1),_vm._v(" "),_c('d-button',{staticClass:"btn-accent",attrs:{"type":"submit"}},[_vm._v("Update Account")])],1)],1)],1)],1)],1)],1)}
@@ -10849,26 +8219,14 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/user-profile-lite/UserDetails.vue", function(exports, require, module) {
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-=======
-var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
-if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"groupedbarchart"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_vm._m(0)],1)])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"padding":"0 50px 0 50px","font-size":"12px"}},[_c('p',[_vm._v("*The black \"baseline\" represents the averages of both LoC and commits for this repo across all months. Wherever this bar stretches to shows how far above or below the raw value of the statistic is from the regular average.")])])}]
->>>>>>> broker
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-<<<<<<< HEAD
     hotAPI.createRecord("data-v-2744e85f", __vue__options__)
   } else {
     hotAPI.reload("data-v-2744e85f", __vue__options__)
-=======
-    hotAPI.createRecord("data-v-a041a78c", __vue__options__)
-  } else {
-    hotAPI.reload("data-v-a041a78c", __vue__options__)
->>>>>>> broker
   }
 })()}
 });
@@ -13514,6 +10872,344 @@ exports.default = new _vueRouter2.default({
 });
 });
 
+;require.register("router/router.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _vueRouter = require('vue-router');
+
+var _vueRouter2 = _interopRequireDefault(_vueRouter);
+
+var _MetricsStatusCard = require('../components/MetricsStatusCard.vue');
+
+var _MetricsStatusCard2 = _interopRequireDefault(_MetricsStatusCard);
+
+var _BaseRepoActivityCard = require('../components/BaseRepoActivityCard.vue');
+
+var _BaseRepoActivityCard2 = _interopRequireDefault(_BaseRepoActivityCard);
+
+var _BaseRepoEcosystemCard = require('../components/BaseRepoEcosystemCard.vue');
+
+var _BaseRepoEcosystemCard2 = _interopRequireDefault(_BaseRepoEcosystemCard);
+
+var _GrowthMaturityDeclineCard = require('../components/GrowthMaturityDeclineCard');
+
+var _GrowthMaturityDeclineCard2 = _interopRequireDefault(_GrowthMaturityDeclineCard);
+
+var _RiskCard = require('../components/RiskCard');
+
+var _RiskCard2 = _interopRequireDefault(_RiskCard);
+
+var _ValueCard = require('../components/ValueCard');
+
+var _ValueCard2 = _interopRequireDefault(_ValueCard);
+
+var _DiversityInclusionCard = require('../components/DiversityInclusionCard');
+
+var _DiversityInclusionCard2 = _interopRequireDefault(_DiversityInclusionCard);
+
+var _GitCard = require('../components/GitCard');
+
+var _GitCard2 = _interopRequireDefault(_GitCard);
+
+var _OverviewCard = require('../components/OverviewCard.vue');
+
+var _OverviewCard2 = _interopRequireDefault(_OverviewCard);
+
+var _ExperimentalCard = require('../components/ExperimentalCard');
+
+var _ExperimentalCard2 = _interopRequireDefault(_ExperimentalCard);
+
+var _DownloadedReposCard = require('../components/DownloadedReposCard.vue');
+
+var _DownloadedReposCard2 = _interopRequireDefault(_DownloadedReposCard);
+
+var _LoginForm = require('../components/LoginForm');
+
+var _LoginForm2 = _interopRequireDefault(_LoginForm);
+
+var _AugurCards = require('../components/AugurCards.vue');
+
+var _AugurCards2 = _interopRequireDefault(_AugurCards);
+
+var _MainControls = require('../components/MainControls.vue');
+
+var _MainControls2 = _interopRequireDefault(_MainControls);
+
+var _AugurHeader = require('../components/AugurHeader.vue');
+
+var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
+
+var _Tabs = require('../components/Tabs.vue');
+
+var _Tabs2 = _interopRequireDefault(_Tabs);
+
+var _TableView = require('../components/TableView.vue');
+
+var _TableView2 = _interopRequireDefault(_TableView);
+
+var _ProjectDropdown = require('../components/ProjectDropdown.vue');
+
+var _ProjectDropdown2 = _interopRequireDefault(_ProjectDropdown);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var routes = [{ path: '/', component: _AugurCards2.default,
+  children: [{
+    path: "",
+    name: "reposcard",
+    components: {
+      header: _AugurHeader2.default,
+      // tabs: ProjectDropdown,
+      content: _DownloadedReposCard2.default
+      // controls: OverviewCard
+    }
+  }]
+}, { path: '/login', component: _LoginForm2.default }, { path: '/metrics_status',
+  component: _MetricsStatusCard2.default
+}, { path: '/single/:owner?/:repo', name: 'single', props: true, canReuse: false, component: _AugurCards2.default,
+  children: [{
+    path: "gmd",
+    name: "gmd",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusion",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "risk",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
+    }
+  }, {
+    path: "activity",
+    name: "activity",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _BaseRepoActivityCard2.default
+    }
+  }, {
+    path: "value",
+    name: "value",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ValueCard2.default
+    }
+  }, {
+    path: "experimental",
+    name: "experimental",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ExperimentalCard2.default
+    }
+  }, {
+    path: "git",
+    name: "git",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _GitCard2.default
+    }
+  }, {
+    path: "overview",
+    name: "overview",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _OverviewCard2.default
+    }
+  }]
+},
+// {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
+{ path: '/compare/:owner?/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true, canReuse: false,
+  children: [{
+    path: "gmd",
+    name: "gmdcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusioncompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "riskcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
+    }
+  }, {
+    path: "value",
+    name: "valuecompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ValueCard2.default
+    }
+  }, {
+    path: "activity",
+    name: "activitycompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _BaseRepoActivityCard2.default
+    }
+  }, {
+    path: "experimental",
+    name: "experimentalcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ExperimentalCard2.default
+    }
+  }, {
+    path: "git",
+    name: "gitcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _GitCard2.default
+    }
+  }]
+}, { path: '/groupcompare/:groupid', component: _AugurCards2.default, name: 'group', props: true, canReuse: false,
+  children: [{
+    path: "gmd",
+    name: "gmdgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusiongroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "riskgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
+    }
+  }, {
+    path: "value",
+    name: "valuegroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ValueCard2.default
+    }
+  }, {
+    path: "activity",
+    name: "activitygroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _BaseRepoActivityCard2.default
+    }
+  }, {
+    path: "experimental",
+    name: "experimentalgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ExperimentalCard2.default
+    }
+  }, {
+    path: "git",
+    name: "gitgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _GitCard2.default
+    }
+  }, {
+    path: "overview",
+    name: "overviewgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _OverviewCard2.default
+    }
+  }]
+}];
+var downloadedRepos = [],
+    repos = [],
+    projects = [];
+window.AugurAPI.getDownloadedGitRepos().then(function (data) {
+
+  repos = window._.groupBy(data, 'project_name');
+  projects = Object.keys(repos);
+});
+// const routes = routerOptions.map(route => {
+//   // let route1 = Object.assign({}, route);
+//   return {
+//     route,
+//     component: () => require(`@/components/${route.component}.vue`)
+//   }
+// })
+
+
+exports.default = new _vueRouter2.default({
+  // routes,
+  routes: routes,
+  mode: 'history',
+  hashbang: false
+});
+});
+
 ;require.register("utils/chart.js", function(exports, require, module) {
 // import Chart from 'chart.js';
 
@@ -13743,7 +11439,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-0153c3c4", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-0153c3c4", __vue__options__)
+    hotAPI.reload("data-v-0153c3c4", __vue__options__)
   }
 })()}
 });
@@ -13782,51 +11478,22 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-<<<<<<< HEAD
 ;require.register("views/PersonalBlog.vue", function(exports, require, module) {
 ;(function(){
-=======
-require.register("router/router.js", function(exports, require, module) {
->>>>>>> broker
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-<<<<<<< HEAD
 var _SmallStats = require('../components/common/SmallStats.vue');
 
 var _SmallStats2 = _interopRequireDefault(_SmallStats);
 
 var _TopReferrals = require('../components/common/TopReferrals.vue');
-=======
-var _vue = require('vue');
-
-var _vue2 = _interopRequireDefault(_vue);
-
-var _vueRouter = require('vue-router');
-
-var _vueRouter2 = _interopRequireDefault(_vueRouter);
-
-var _MetricsStatusCard = require('../components/MetricsStatusCard.vue');
-
-var _MetricsStatusCard2 = _interopRequireDefault(_MetricsStatusCard);
-
-var _BaseRepoActivityCard = require('../components/BaseRepoActivityCard.vue');
-
-var _BaseRepoActivityCard2 = _interopRequireDefault(_BaseRepoActivityCard);
-
-var _BaseRepoEcosystemCard = require('../components/BaseRepoEcosystemCard.vue');
-
-var _BaseRepoEcosystemCard2 = _interopRequireDefault(_BaseRepoEcosystemCard);
-
-var _GrowthMaturityDeclineCard = require('../components/GrowthMaturityDeclineCard');
->>>>>>> broker
 
 var _TopReferrals2 = _interopRequireDefault(_TopReferrals);
 
-<<<<<<< HEAD
 var _UsersOverview = require('../components/blog/UsersOverview.vue');
 
 var _UsersOverview2 = _interopRequireDefault(_UsersOverview);
@@ -13842,23 +11509,9 @@ var _NewDraft2 = _interopRequireDefault(_NewDraft);
 var _Discussions = require('../components/blog/Discussions.vue');
 
 var _Discussions2 = _interopRequireDefault(_Discussions);
-=======
-var _RiskCard = require('../components/RiskCard');
 
-var _RiskCard2 = _interopRequireDefault(_RiskCard);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _ValueCard = require('../components/ValueCard');
-
-var _ValueCard2 = _interopRequireDefault(_ValueCard);
-
-var _DiversityInclusionCard = require('../components/DiversityInclusionCard');
-
-var _DiversityInclusionCard2 = _interopRequireDefault(_DiversityInclusionCard);
->>>>>>> broker
-
-var _GitCard = require('../components/GitCard');
-
-<<<<<<< HEAD
 exports.default = {
   components: {
     SmallStats: _SmallStats2.default,
@@ -13991,17 +11644,11 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;require.register("views/RepoOverview.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
-=======
-var _GitCard2 = _interopRequireDefault(_GitCard);
 
-var _OverviewCard = require('../components/OverviewCard.vue');
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var _OverviewCard2 = _interopRequireDefault(_OverviewCard);
->>>>>>> broker
-
-var _ExperimentalCard = require('../components/ExperimentalCard');
-
-<<<<<<< HEAD
 var _SparkChart = require('../components/charts/SparkChart.vue');
 
 var _SparkChart2 = _interopRequireDefault(_SparkChart);
@@ -14009,17 +11656,6 @@ var _SparkChart2 = _interopRequireDefault(_SparkChart);
 var _InsightChart = require('../components/charts/InsightChart.vue');
 
 var _InsightChart2 = _interopRequireDefault(_InsightChart);
-=======
-var _ExperimentalCard2 = _interopRequireDefault(_ExperimentalCard);
-
-var _DownloadedReposCard = require('../components/DownloadedReposCard.vue');
-
-var _DownloadedReposCard2 = _interopRequireDefault(_DownloadedReposCard);
-
-var _LoginForm = require('../components/LoginForm');
-
-var _LoginForm2 = _interopRequireDefault(_LoginForm);
->>>>>>> broker
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -14048,7 +11684,6 @@ exports.default = {
     };
   },
 
-<<<<<<< HEAD
   methods: {
     getOwner: function getOwner(url) {
       var first = url.indexOf(".");
@@ -14201,27 +11836,6 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   }
 })()}
 });
-=======
-var _MainControls = require('../components/MainControls.vue');
-
-var _MainControls2 = _interopRequireDefault(_MainControls);
-
-var _AugurHeader = require('../components/AugurHeader.vue');
-
-var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
-
-var _Tabs = require('../components/Tabs.vue');
-
-var _Tabs2 = _interopRequireDefault(_Tabs);
-
-var _TableView = require('../components/TableView.vue');
-
-var _TableView2 = _interopRequireDefault(_TableView);
-
-var _ProjectDropdown = require('../components/ProjectDropdown.vue');
-
-var _ProjectDropdown2 = _interopRequireDefault(_ProjectDropdown);
->>>>>>> broker
 
 ;require.register("views/Tables.vue", function(exports, require, module) {
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
@@ -14240,240 +11854,9 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
-<<<<<<< HEAD
 ;require.register("views/UserProfileLite.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
-=======
-var routes = [{ path: '/', component: _AugurCards2.default,
-  children: [{
-    path: "",
-    name: "reposcard",
-    components: {
-      header: _AugurHeader2.default,
-      // tabs: ProjectDropdown,
-      content: _DownloadedReposCard2.default
-      // controls: OverviewCard
-    }
-  }]
-}, { path: '/login', component: _LoginForm2.default }, { path: '/metrics_status',
-  component: _MetricsStatusCard2.default
-}, { path: '/single/:owner?/:repo', name: 'single', props: true, canReuse: false, component: _AugurCards2.default,
-  children: [{
-    path: "gmd",
-    name: "gmd",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _GrowthMaturityDeclineCard2.default
-    }
-  }, {
-    path: "diversityinclusion",
-    name: "diversityinclusion",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _DiversityInclusionCard2.default
-    }
-  }, {
-    path: "risk",
-    name: "risk",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _RiskCard2.default
-    }
-  }, {
-    path: "activity",
-    name: "activity",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _BaseRepoActivityCard2.default
-    }
-  }, {
-    path: "value",
-    name: "value",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _ValueCard2.default
-    }
-  }, {
-    path: "experimental",
-    name: "experimental",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _ExperimentalCard2.default
-    }
-  }, {
-    path: "git",
-    name: "git",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      content: _GitCard2.default
-    }
-  }, {
-    path: "overview",
-    name: "overview",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      content: _OverviewCard2.default
-    }
-  }]
-},
-// {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
-{ path: '/compare/:owner?/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true, canReuse: false,
-  children: [{
-    path: "gmd",
-    name: "gmdcompare",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _GrowthMaturityDeclineCard2.default
-    }
-  }, {
-    path: "diversityinclusion",
-    name: "diversityinclusioncompare",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _DiversityInclusionCard2.default
-    }
-  }, {
-    path: "risk",
-    name: "riskcompare",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _RiskCard2.default
-    }
-  }, {
-    path: "value",
-    name: "valuecompare",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _ValueCard2.default
-    }
-  }, {
-    path: "activity",
-    name: "activitycompare",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _BaseRepoActivityCard2.default
-    }
-  }, {
-    path: "experimental",
-    name: "experimentalcompare",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _ExperimentalCard2.default
-    }
-  }, {
-    path: "git",
-    name: "gitcompare",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      content: _GitCard2.default
-    }
-  }]
-}, { path: '/groupcompare/:groupid', component: _AugurCards2.default, name: 'group', props: true, canReuse: false,
-  children: [{
-    path: "gmd",
-    name: "gmdgroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _GrowthMaturityDeclineCard2.default
-    }
-  }, {
-    path: "diversityinclusion",
-    name: "diversityinclusiongroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _DiversityInclusionCard2.default
-    }
-  }, {
-    path: "risk",
-    name: "riskgroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _RiskCard2.default
-    }
-  }, {
-    path: "value",
-    name: "valuegroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _ValueCard2.default
-    }
-  }, {
-    path: "activity",
-    name: "activitygroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _BaseRepoActivityCard2.default
-    }
-  }, {
-    path: "experimental",
-    name: "experimentalgroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      controls: _MainControls2.default,
-      content: _ExperimentalCard2.default
-    }
-  }, {
-    path: "git",
-    name: "gitgroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      content: _GitCard2.default
-    }
-  }, {
-    path: "overview",
-    name: "overviewgroup",
-    components: {
-      header: _AugurHeader2.default,
-      tabs: _Tabs2.default,
-      content: _OverviewCard2.default
-    }
-  }]
-}];
-var downloadedRepos = [],
-    repos = [],
-    projects = [];
-window.AugurAPI.getDownloadedGitRepos().then(function (data) {
->>>>>>> broker
 
 Object.defineProperty(exports, "__esModule", {
   value: true

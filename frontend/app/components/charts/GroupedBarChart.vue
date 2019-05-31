@@ -313,7 +313,6 @@ export default {
           fields[split[0]] = split[1].split('+')
         }
       })
-<<<<<<< HEAD
       if (this.data) {
         processGitData(this.data)
       } else {
@@ -325,8 +324,7 @@ export default {
           //this.renderError()
         }) // end batch request
       }
-=======
->>>>>>> broker
+
       $(this.$el).find('.showme, .hidefirst').removeClass('invis')
       $(this.$el).find('.stackedbarchart').removeClass('loader')
       let processGitData = (data) => {
@@ -400,20 +398,7 @@ export default {
           this.values = data
         })
       }
-<<<<<<< HEAD
-=======
-      if (this.data) {
-        processData(this.data)
-      } else {
-        let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
-        repo[this.source]().then((data) => {
-          console.log("batch data", data)
-          processData(data)
-        }, () => {
-          //this.renderError()
-        }) // end batch request
-      }
->>>>>>> broker
+
       return config
     },
   }

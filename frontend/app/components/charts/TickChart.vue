@@ -1,16 +1,9 @@
 <template>
-<<<<<<< HEAD
-  <div ref="holder" style="position: relative; z-index: 5">
-    <div class="tickchart">
-      <h3 style="text-align: center">Lines of code added by the top 10 authors visualized</h3>
-      <vega-lite :spec="spec" :data="values"></vega-lite>
-=======
   <div ref="holder">
     <div class="tickchart ">
       <h3>Lines of code added by the top 10 authors visualized</h3>
       <div :id="source"></div>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
->>>>>>> broker
       <p> {{ chart }} </p>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
       <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
@@ -111,14 +104,10 @@ export default {
       }
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-<<<<<<< HEAD
-        "width": 950,
-        "height": 300,
-=======
+
         "width": 1000,
         "height": 360,
         "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},
->>>>>>> broker
         "config": {
           "tick": {
             "thickness": 8,
