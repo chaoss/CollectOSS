@@ -167,9 +167,14 @@ class GitHubWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
+                print(message.models)
+                for model in message.models:
+                    if model == "issues":
+                        self.query_issues(message.entry_info)
+
                 self.query(message.entry_info)
 
-    def query(self, entry_info):
+    def query_issues(self, entry_info):
         """ Data collection function
         Query the github api for contributors and issues (not yet implemented)
         """

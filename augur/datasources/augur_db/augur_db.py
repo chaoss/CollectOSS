@@ -10,17 +10,17 @@ import re
 import datetime
 from augur import logger
 from augur.util import annotate
+import base64
 
 class Augur(object):
     """Uses the Augur database to return dataframes with interesting GitHub indicators"""
 
-    def __init__(self, user, password, host, port, dbname, schema):
+    def __init__(self, user, password, host, port, dbname, schema, projects=None):
         """
         Connect to Augur
 
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the Augur database
         """
-        print(user, password, host, port, dbname, schema)
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
         )
@@ -30,6 +30,7 @@ class Augur(object):
 
         logger.debug('GHTorrent: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
 
+        self.projects = projects
         # try:
         #     self.userid('howderek')
         # except Exception as e:
@@ -458,4 +459,43 @@ class Augur(object):
             ORDER BY cmt_author_date ASC;
         """)
         results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
+        return results
+
+    @annotate(tag='repo-groups')
+    def repo_groups(self):
+        """
+        Returns number of lines changed per author per day
+
+        :param repo_url: the repository's URL
+        """
+        repoGroupsSQL = s.sql.text("""
+            SELECT *
+            FROM repo_groups
+        """)
+        results = pd.read_sql(repoGroupsSQL, self.db)
+        return results
+
+    @annotate(tag='downloaded-repos')
+    def downloaded_repos(self):
+        """
+        Returns all repository names, URLs, and base64 URLs in the facade database
+        """
+        downloadedReposSQL = s.sql.text("""
+            SELECT repo_git AS url, repo_status, rg_name
+            FROM repo
+            JOIN repo_groups
+            ON repo.repo_group_id = repo_groups.repo_group_id
+        """)
+        results = pd.read_sql(downloadedReposSQL, self.db)
+        results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
+        # if self.projects:
+        #     results = results[results.project_name.isin(self.projects)]
+        if self.projects:
+              results = results[results.project_name.isin(self.projects)]
+
+        b64_urls = []
+        for i in results.index:
+            b64_urls.append(base64.b64encode((results.at[i, 'url']).encode()))
+        results['base64_url'] = b64_urls
+
         return results
