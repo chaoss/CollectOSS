@@ -12,6 +12,8 @@ export default class AugurAPI {
     this.__pending = {}
 
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
+    this.getRepos = this.__EndpointFactory('repos')
+    this.getRepoGroups = this.__EndpointFactory('repo-groups')
     this.openRequests = 0
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
@@ -36,6 +38,7 @@ export default class AugurAPI {
   // }
 
   __endpointURL (endpoint) {
+    console.log(endpoint)
     return '' + this._host + this._version + '/' + endpoint
   }
 

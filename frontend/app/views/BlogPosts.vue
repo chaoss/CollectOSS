@@ -11,10 +11,10 @@
     <!-- First Row of Posts -->
 
         <d-row>
-          <d-col v-for="(project, idx) in projects.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
+          <d-col v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             <d-card class="card-small card-post card-post--1">
               <div class="card-post__image">
-                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ project }}</d-badge>
+                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group.rg_name }}</d-badge>
                 <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :source="testEndpoints[idx]" owner="twitter" repo="twemoji"></insight-chart>
 
                 <div class="card-post__author d-flex">
@@ -25,7 +25,7 @@
               </div>
               <d-card-body>
                 <h5 class="card-title">
-                  <a href="#" class="text-fiord-blue">{{ getOwner(repos[project][0].url) }}/{{ getRepo(repos[project][0].url) }}</a>
+                  <a href="#" class="text-fiord-blue">{{ getOwner(repos[0].url) }}/{{ getRepo(repos[0].url) }}</a>
                 </h5>
                 <p class="card-text d-inline-block mb-3">This repository {{ getPhrase(idx) }} in {{ testEndpoints[idx] }} in the past {{ testTimeframes[idx] }}</p>
                 <span class="text-muted">{{ testTimeframes[idx] }}</span>
@@ -91,20 +91,20 @@
           <div class="page-header row no-gutters py-4" style="padding-top: 0 !important;">
             <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
               <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-              <h3 class="page-title" style="font-size: 1rem">Most Frequent Projects</h3>
+              <h3 class="page-title" style="font-size: 1rem">Most Frequent repo_groups</h3>
             </div>
           </div>
           <!-- Second Row of Posts -->
           <d-row>
-            <d-col v-for="(project, idx) in projects.slice(0,3)" :key="idx" lg="4" sm="12" class="mb-4">
+            <d-col v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="4" sm="12" class="mb-4">
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
-                  <h6 class="m-0">{{ project }}</h6>
+                  <h6 class="m-0">{{ group.rg_name }}</h6>
                   <div class="block-handle"></div>
                 </div>
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
-                    <div v-for="(repo, i) in repos[project].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
+                    <div v-for="(repo, i) in repo_relations[group.rg_name]" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="onGitRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem">{{ repo.url }}</span>
                       </d-link> 
@@ -135,13 +135,15 @@ export default {
       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-      repos: {},
-      projects: [],
+      repos: [],
+      repo_groups: [],
+      repo_relations: {},
       themes: ['dark', 'info', 'royal-blue', 'warning'],
     }
   },
   methods: {
     getOwner(url) {
+      console.log(url)
       let first = url.indexOf(".")
       let last = url.lastIndexOf(".")
       let domain = null
@@ -223,24 +225,36 @@ export default {
       })
     },
     getDownloadedRepos() {
-      this.downloadedRepos = []
-      window.AugurAPI.getDownloadedGitRepos().then((data) => {
+      console.log("START")
+      window.AugurAPI.getRepos().then((data) => {
+
+        this.repos = data
+
+        console.log("LOADED repos", this.repos)
+
+      })
+
+      window.AugurAPI.getRepoGroups().then((data) => {
         $(this.$el).find('.spinner').removeClass('loader')
         $(this.$el).find('.spinner').removeClass('relative')
-        this.repos = window._.groupBy(data, 'project_name')
-        this.projects = Object.keys(this.repos)
-        let impRepos = []
-        for (let i = 0; i < this.projects.length; i++) {
-          impRepos.push(this.repos[this.projects[i]][0])
-        }
-        console.log("LOADED")
+
+        this.repo_groups = data
+
+        //move down between future relation endpoint
+        this.repo_groups.forEach((group) => {
+          this.repo_relations[group.rg_name] = this.repos
+          console.log(group, this.repo_relations)
+        })
+
+        console.log("LOADED repo groups")
+
         this.loaded = true
-        // window.AugurAPI.batchMapped(impRepos, ['codeCommits']).then((data) => {
-        //   console.log("DATA", data)
-        // }, () => {
-        //   //this.renderError()
-        // }) // end batch request
+
       })
+      
+      //window.AugurAPI.getRepoRelations().thn((data) => {
+
+      //})
     },
     btoa(s) {
       return window.btoa(s)

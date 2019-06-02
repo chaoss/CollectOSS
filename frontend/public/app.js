@@ -488,6 +488,8 @@ var AugurAPI = function () {
     this.__pending = {};
 
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos');
+    this.getRepos = this.__EndpointFactory('repos');
+    this.getRepoGroups = this.__EndpointFactory('repo-groups');
     this.openRequests = 0;
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter');
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata');
@@ -514,6 +516,7 @@ var AugurAPI = function () {
   _createClass(AugurAPI, [{
     key: '__endpointURL',
     value: function __endpointURL(endpoint) {
+      console.log(endpoint);
       return '' + this._host + this._version + '/' + endpoint;
     }
   }, {
@@ -8178,7 +8181,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-ac7c9dc2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-ac7c9dc2", __vue__options__)
+    hotAPI.reload("data-v-ac7c9dc2", __vue__options__)
   }
 })()}
 });
@@ -11322,14 +11325,16 @@ exports.default = {
       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-      repos: {},
-      projects: [],
+      repos: [],
+      repo_groups: [],
+      repo_relations: {},
       themes: ['dark', 'info', 'royal-blue', 'warning']
     };
   },
 
   methods: {
     getOwner: function getOwner(url) {
+      console.log(url);
       var first = url.indexOf(".");
       var last = url.lastIndexOf(".");
       var domain = null;
@@ -11404,17 +11409,27 @@ exports.default = {
     getDownloadedRepos: function getDownloadedRepos() {
       var _this = this;
 
-      this.downloadedRepos = [];
-      window.AugurAPI.getDownloadedGitRepos().then(function (data) {
+      console.log("START");
+      window.AugurAPI.getRepos().then(function (data) {
+
+        _this.repos = data;
+
+        console.log("LOADED repos", _this.repos);
+      });
+
+      window.AugurAPI.getRepoGroups().then(function (data) {
         $(_this.$el).find('.spinner').removeClass('loader');
         $(_this.$el).find('.spinner').removeClass('relative');
-        _this.repos = window._.groupBy(data, 'project_name');
-        _this.projects = Object.keys(_this.repos);
-        var impRepos = [];
-        for (var i = 0; i < _this.projects.length; i++) {
-          impRepos.push(_this.repos[_this.projects[i]][0]);
-        }
-        console.log("LOADED");
+
+        _this.repo_groups = data;
+
+        _this.repo_groups.forEach(function (group) {
+          _this.repo_relations[group.rg_name] = _this.repos;
+          console.log(group, _this.repo_relations);
+        });
+
+        console.log("LOADED repo groups");
+
         _this.loaded = true;
       });
     },
@@ -11430,7 +11445,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"4","sm":"8"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(project))]),_vm._v(" "),(_vm.loaded)?_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"color":_vm.colors[idx],"source":_vm.testEndpoints[idx],"owner":"twitter","repo":"twemoji"}}):_vm._e(),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"1rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repos[project][0].url))+"/"+_vm._s(_vm.getRepo(_vm.repos[project][0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1)}),_vm._v(" "),_c('d-col',{staticClass:"col-3"},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("7,128 / 18,432")])])])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top"},[_c('d-row',[_c('d-col',[_c('d-select',{staticStyle:{"max-width":"130px"},attrs:{"size":"sm","value":"last-week"}},[_c('option',{attrs:{"value":"last-week"}},[_vm._v("Sort")]),_vm._v(" "),_c('option',{attrs:{"value":"today"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-month"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-year"}},[_vm._v("?")])])],1),_vm._v(" "),_c('d-col',{staticClass:"text-right view-report col-8"},[_c('a',{attrs:{"href":"#"}},[_vm._v("All workers and priority options →")])])],1)],1)],1)],1)],2),_vm._v(" "),_c('div',{staticStyle:{"transform":"translateY(-20px)"}},[_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"0 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Most Frequent Projects")])])]),_vm._v(" "),_c('d-row',_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repos[project].slice(0,5)),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('d-link',{attrs:{"to":{name: 'repo_overview', params: {repo: repo.url}}},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".65rem"}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),(_vm.loaded)?_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"10px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"owner":_vm.getOwner(repo.url),"repo":_vm.getRepo(repo.url),"source":"codeCommits"}}):_vm._e()],1)}),0)])])],1)}),1)],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[_vm._l((_vm.repo_groups.slice(0,3)),function(group,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"4","sm":"8"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(group.rg_name))]),_vm._v(" "),(_vm.loaded)?_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"color":_vm.colors[idx],"source":_vm.testEndpoints[idx],"owner":"twitter","repo":"twemoji"}}):_vm._e(),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"1rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repos[0].url))+"/"+_vm._s(_vm.getRepo(_vm.repos[0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1)}),_vm._v(" "),_c('d-col',{staticClass:"col-3"},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("7,128 / 18,432")])])])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top"},[_c('d-row',[_c('d-col',[_c('d-select',{staticStyle:{"max-width":"130px"},attrs:{"size":"sm","value":"last-week"}},[_c('option',{attrs:{"value":"last-week"}},[_vm._v("Sort")]),_vm._v(" "),_c('option',{attrs:{"value":"today"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-month"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-year"}},[_vm._v("?")])])],1),_vm._v(" "),_c('d-col',{staticClass:"text-right view-report col-8"},[_c('a',{attrs:{"href":"#"}},[_vm._v("All workers and priority options →")])])],1)],1)],1)],1)],2),_vm._v(" "),_c('div',{staticStyle:{"transform":"translateY(-20px)"}},[_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"0 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Most Frequent repo_groups")])])]),_vm._v(" "),_c('d-row',_vm._l((_vm.repo_groups.slice(0,3)),function(group,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(group.rg_name))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repo_relations[group.rg_name]),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('d-link',{attrs:{"to":{name: 'repo_overview', params: {repo: repo.url}}},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".65rem"}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),(_vm.loaded)?_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"10px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"owner":_vm.getOwner(repo.url),"repo":_vm.getRepo(repo.url),"source":"codeCommits"}}):_vm._e()],1)}),0)])])],1)}),1)],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -11838,6 +11853,58 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 });
 
 ;require.register("views/Tables.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  components: {},
+  computed: {},
+  data: function data() {
+    return {
+      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
+      repos: {},
+      repo_groups: [],
+      themes: ['dark', 'info', 'royal-blue', 'warning']
+    };
+  },
+
+  methods: {
+    getDownloadedRepos: function getDownloadedRepos() {
+      var _this = this;
+
+      console.log("START");
+      window.AugurAPI.getRepos().then(function (data) {
+
+        _this.repos = data;
+
+        console.log("LOADED repos");
+      });
+
+      window.AugurAPI.getRepoGroups().then(function (data) {
+        $(_this.$el).find('.spinner').removeClass('loader');
+        $(_this.$el).find('.spinner').removeClass('relative');
+
+        _this.repo_groups = data;
+
+        console.log("LOADED repo groups");
+        _this.loaded = true;
+      });
+    },
+    btoa: function btoa(s) {
+      return window.btoa(s);
+    }
+  },
+  created: function created() {
+    this.getDownloadedRepos();
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
 __vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _vm._m(0)}

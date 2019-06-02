@@ -127,3 +127,53 @@
     </div>
   </div>
 </template>
+<script>
+
+export default {
+  components: {
+
+  },
+  computed: {
+  },
+  data() {
+    return {
+      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
+      repos: {},
+      repo_groups: [],
+      themes: ['dark', 'info', 'royal-blue', 'warning'],
+    }
+  },
+  methods: {
+    getDownloadedRepos() {
+      console.log("START")
+      window.AugurAPI.getRepos().then((data) => {
+
+        this.repos = data
+
+        console.log("LOADED repos")
+
+      })
+
+      window.AugurAPI.getRepoGroups().then((data) => {
+        $(this.$el).find('.spinner').removeClass('loader')
+        $(this.$el).find('.spinner').removeClass('relative')
+
+        this.repo_groups = data
+
+        console.log("LOADED repo groups")
+        this.loaded = true
+
+      })
+
+    },
+    btoa(s) {
+      return window.btoa(s)
+    }
+  },
+  created() {
+    this.getDownloadedRepos()
+  },
+}
+</script>
