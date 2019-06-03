@@ -9,8 +9,8 @@ directories: ``plugins/`` and ``datasources/``. ``plugins/`` is for
 generic plugins, while ``datasources/`` is specifically for plugins that
 provide a new data source, like ``ghtorrent`` or ``facade``.
 
-Inside each plugin directory are 4 required files: ``__init__.py``,
-``plugin_name.py``, ``routes.py``, and ``test_plugin_name.py``.
+Inside each plugin directory are 5 required files: ``__init__.py``,
+``plugin_name.py``, ``routes.py``, ``test_plugin_name.py``, and ``test_plugin_name_routes.py``.
 
 We will go over these more in-depth in the following sections.
 
@@ -234,7 +234,7 @@ So for our sample plugin:
 Writing tests
 ~~~~~~~~~~~~~
 
-Augur uses ``pytest`` for tests. The tests for our sample ``Chaoss``
+Augur uses ``pytest`` for its data source unit tests. The tests for our sample ``Chaoss``
 class are contained in the ``test_chaoss.py`` file inside the plugin's
 directory. You can use pytest fixtures and environment variables to pass
 data to tests.
@@ -257,6 +257,27 @@ access an instance of the class.
         assert chaoss.data_source('argument').isin(['expected_value']).any
 
 Make sure every function you write has a test.
+
+We also use ``pytest`` for our API tests. These tests are contained in ``test_chaoss_routes.py``
+and use ``requests`` to check if an API returns a valid response. 
+You'll need the following boilerplate:
+
+.. code:: python
+
+    import os
+    import pytest
+    import requests
+    import augur.server
+
+    def teardown_module(module):
+        os.system('make dev-stop')
+
+    @pytest.fixture(scope="session")
+    def plugin_name():
+        os.system('make dev-stop')
+        os.system('make dev-start &')
+
+Write a test per endpoint, checking for a valid status code, that the response is not empty, and that it contains the correct data..
 
 --------------
 

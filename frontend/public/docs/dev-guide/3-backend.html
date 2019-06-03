@@ -42,8 +42,8 @@
 directories: <code class="docutils literal notranslate"><span class="pre">plugins/</span></code> and <code class="docutils literal notranslate"><span class="pre">datasources/</span></code>. <code class="docutils literal notranslate"><span class="pre">plugins/</span></code> is for
 generic plugins, while <code class="docutils literal notranslate"><span class="pre">datasources/</span></code> is specifically for plugins that
 provide a new data source, like <code class="docutils literal notranslate"><span class="pre">ghtorrent</span></code> or <code class="docutils literal notranslate"><span class="pre">facade</span></code>.</p>
-<p>Inside each plugin directory are 4 required files: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>,
-<code class="docutils literal notranslate"><span class="pre">plugin_name.py</span></code>, <code class="docutils literal notranslate"><span class="pre">routes.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">test_plugin_name.py</span></code>.</p>
+<p>Inside each plugin directory are 5 required files: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">plugin_name.py</span></code>, <code class="docutils literal notranslate"><span class="pre">routes.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_plugin_name.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">test_plugin_name_routes.py</span></code>.</p>
 <p>We will go over these more in-depth in the following sections.</p>
 </div>
 <div class="section" id="setting-up-your-environment">
@@ -219,7 +219,7 @@ the format already outlined to build your documentation.</p>
 <hr class="docutils" />
 <div class="section" id="writing-tests">
 <h3>3.3.4. Writing tests<a class="headerlink" href="#writing-tests" title="Permalink to this headline">¶</a></h3>
-<p>Augur uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> for tests. The tests for our sample <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code>
+<p>Augur uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> for its data source unit tests. The tests for our sample <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code>
 class are contained in the <code class="docutils literal notranslate"><span class="pre">test_chaoss.py</span></code> file inside the plugin’s
 directory. You can use pytest fixtures and environment variables to pass
 data to tests.</p>
@@ -238,6 +238,24 @@ access an instance of the class.</p>
 </pre></div>
 </div>
 <p>Make sure every function you write has a test.</p>
+<p>We also use <code class="docutils literal notranslate"><span class="pre">pytest</span></code> for our API tests. These tests are contained in <code class="docutils literal notranslate"><span class="pre">test_chaoss_routes.py</span></code>
+and use <code class="docutils literal notranslate"><span class="pre">requests</span></code> to check if an API returns a valid response.
+You’ll need the following boilerplate:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pytest</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">augur.server</span>
+
+<span class="k">def</span> <span class="nf">teardown_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;make dev-stop&#39;</span><span class="p">)</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">scope</span><span class="o">=</span><span class="s2">&quot;session&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">plugin_name</span><span class="p">():</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;make dev-stop&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;make dev-start &amp;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Write a test per endpoint, checking for a valid status code, that the response is not empty, and that it contains the correct data..</p>
 </div>
 <hr class="docutils" />
 <div class="section" id="using-the-python-debugger">

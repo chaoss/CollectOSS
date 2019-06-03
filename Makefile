@@ -127,15 +127,16 @@ build: frontend docs
 	cd augur/static/ \
 	&& brunch build --production
 
-test:test-ds test-api
+test:test-ds test-routes
 
 test-ds:
 	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 
-test-api:
-	make dev-start
-	$(AUGUR_PYTHON) test/api/test_api.py
-	make dev-stop
+test-routes:
+	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE)_routes.py'
+# 	make dev-start
+# 	$(AUGUR_PYTHON) test/api/test_api.py
+# 	make dev-stop
 
 .PHONY: unlock
 unlock:

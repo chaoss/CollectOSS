@@ -128,7 +128,7 @@
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">status</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;OK&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;plugins&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">_loaded_plugins</span>
+                <span class="s1">&#39;plugins&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">_loaded_plugins</span><span class="p">]</span>
             <span class="p">}</span>
             <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">status</span><span class="p">),</span>
                             <span class="n">status</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
@@ -411,7 +411,11 @@
         <span class="c1"># Get the unbound function from the bound function&#39;s class so that we can modify metadata</span>
         <span class="c1"># across instances of that class.</span>
         <span class="n">real_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">function</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="n">annotate</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">real_func</span><span class="p">)</span></div>
+        <span class="n">annotate</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">real_func</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">admin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">current_user</span> <span class="ow">and</span> <span class="n">current_user</span><span class="o">.</span><span class="n">administrator</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;admin_token&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;admin_token&#39;</span><span class="p">,</span> <span class="s1">&#39;AUGUR_ADMIN_TOKEN&#39;</span><span class="p">,</span> <span class="s1">&#39;changeme&#39;</span><span class="p">))</span></div>
 
 <span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>

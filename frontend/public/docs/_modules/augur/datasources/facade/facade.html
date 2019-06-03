@@ -43,12 +43,16 @@
 <span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">s</span>
 <span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
+
+
+
 <span class="c1"># end imports</span>
 <span class="c1"># (don&#39;t remove the above line, it&#39;s for a script)</span>
 
 
 <div class="viewcode-block" id="Facade"><a class="viewcode-back" href="../../../../datasources/augur.datasources.facade.facade.Facade.html#augur.datasources.facade.facade.Facade">[docs]</a><span class="k">class</span> <span class="nc">Facade</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Queries Facade&quot;&quot;&quot;</span>
+
 
 <div class="viewcode-block" id="Facade.__init__"><a class="viewcode-back" href="../../../../datasources/augur.datasources.facade.facade.Facade.html#augur.datasources.facade.facade.Facade.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">,</span> <span class="n">projects</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -206,8 +210,8 @@
     <span class="c1"># rep - repo</span>
     <span class="c1"># ua - unaffiliated</span>
 
-    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cd-rg-newrep-ranked-commits&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">cd_rg_newrep_ranked_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-commit-count-ranked-by-new-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_commit_count_ranked_by_new_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized </span>
 <span class="sd">        calendar year (a new repo in that year), </span>
@@ -255,8 +259,8 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgNewrepRankedCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">,</span> <span class="s2">&quot;calendar_year&quot;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">results</span>
 
-    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cd-rg-newrep-ranked-loc&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">cd_rg_newrep_ranked_loc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-lines-of-code-count-ranked-by-new-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_lines_of_code_count_ranked_by_new_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized </span>
 <span class="sd">        calendar year (a new repo in that year), </span>
@@ -305,8 +309,8 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgNewrepRankedLocSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">,</span> <span class="s2">&quot;calendar_year&quot;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">results</span>
 
-    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cd-rg-tp-ranked-commits&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">cd_rg_tp_ranked_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-commit-count-ranked-by-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_commit_count_ranked_by_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For each repository in a collection of repositories being managed, each REPO&#39;s total commits during the current Month, </span>
 <span class="sd">        Year or Week. Result ranked from highest number of commits to lowest by default. </span>
@@ -408,8 +412,8 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgTpRankedCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">results</span>
 
-    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cd-rg-tp-ranked-loc&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">cd_rg_tp_ranked_loc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-lines-of-code-count-ranked-by-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_lines_of_code_count_ranked_by_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For each repository in a collection of repositories being managed, each REPO&#39;s total commits during the current Month, </span>
 <span class="sd">        Year or Week. Result ranked from highest number of LOC to lowest by default. </span>
@@ -512,8 +516,8 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgTpRankedLocSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">results</span>
 
-    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cd-rep-tp-interval-loc-commits&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">cd_rep_tp_interval_loc_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-of-code-commit-counts-by-calendar-year-grouped&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_of_code_commit_counts_by_calendar_year_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval (week or month)</span>
 <span class="sd">        </span>
@@ -564,8 +568,8 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRepTpIntervalLocCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s1">&#39;calendar_year&#39;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">results</span>
 
-    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cd-rep-tp-interval-loc-commits-ua&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">cd_rep_tp_interval_loc_commits_ua</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;unaffiliated-contributors-lines-of-code-commit-counts-by-calendar-year-grouped&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval </span>
 <span class="sd">        (week or month) and by the affiliation of individuals and domains that are not mapped as &quot;inside&quot; within the repositories gitdm file. </span>
@@ -667,8 +671,8 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRepTpIntervalLocCommitsUaSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">,</span> <span class="s1">&#39;calendar_year&#39;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">results</span>
 
-    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cd-rg-tp-interval-loc-commits&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">cd_rg_tp_interval_loc_commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;repo-group-lines-of-code-commit-counts-calendar-year-grouped&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">repo_group_lines_of_code_commit_counts_calendar_year_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For each repository in a collection of repositories, all the commits and lines of code occuring for the specified year, </span>
 <span class="sd">        grouped by repository and the specified interval (week or month). Results ordered by repo. </span>
@@ -767,7 +771,84 @@
 <span class="s2">                    ORDER BY week, name</span>
 <span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgTpIntervalLocCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;calendar_year&quot;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">,</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">})</span>
-        <span class="k">return</span> <span class="n">results</span> </div>
+        <span class="k">return</span> <span class="n">results</span>
+
+      
+    <span class="k">def</span> <span class="nf">cli_add_repo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_project_id</span><span class="p">,</span> <span class="n">new_git_repo</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        INSERT INTO repos (projects_id, git, status)</span>
+<span class="s2">                        VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">);</span>
+<span class="s2">                        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">new_project_id</span><span class="p">,</span> <span class="n">new_git_repo</span><span class="p">,</span> <span class="s1">&#39;New&#39;</span><span class="p">))</span>
+  
+  
+    <span class="k">def</span> <span class="nf">cli_delete_repo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">git_repo</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT status FROM repos WHERE id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">git_repo</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;New&#39;</span><span class="p">:</span>
+        <span class="c1"># Nothing was cloned, so delete it immediately</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                DELETE FROM repos WHERE id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">git_repo</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Something may have been cloned, let facade-worker.py clean it</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;UPDATE repos SET status = &#39;Delete&#39; WHERE id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">git_repo</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">cli_add_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_name</span><span class="p">,</span> <span class="n">new_description</span><span class="p">,</span> <span class="n">new_website</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                INSERT INTO projects (name,description,website) </span>
+<span class="s2">                VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">);</span>
+<span class="s2">               &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">new_description</span><span class="p">,</span> <span class="n">new_website</span><span class="p">))</span> 
+
+
+    <span class="k">def</span> <span class="nf">cli_delete_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">):</span>
+        <span class="n">repos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT id FROM repos WHERE projects_id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">project_id</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">repos</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cli_delete_repo</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+
+        <span class="c1"># Remove entries from the exclude table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            DELETE FROM exclude WHERE projects_id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">project_id</span><span class="p">))</span>
+        <span class="c1"># facade-worker.py will clean up the rest</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          UPDATE projects SET name = &#39;(Queued for removal)&#39; </span>
+<span class="s2">                          WHERE id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">project_id</span><span class="p">))</span>
+
+ 
+    <span class="k">def</span> <span class="nf">cli_add_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_alias</span><span class="p">,</span> <span class="n">new_canonical</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                     INSERT INTO aliases (alias,canonical) </span>
+<span class="s2">                     VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) </span>
+<span class="s2">                     ON DUPLICATE KEY UPDATE active = TRUE</span>
+<span class="s2">                     &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">new_alias</span><span class="p">,</span> <span class="n">new_canonical</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">cli_delete_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                     UPDATE aliases SET active = FALSE WHERE id= </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">                     &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">alias_id</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">cli_add_affiliation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ndomain</span><span class="p">,</span> <span class="n">Naffiliation</span><span class="p">,</span> <span class="n">Nstart_date</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">Nstart_date</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                INSERT INTO affiliations (domain, affiliation, start_date) </span>
+<span class="s2">                VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) ON DUPLICATE KEY UPDATE active = TRUE</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">Ndomain</span><span class="p">,</span> <span class="n">Naffiliation</span><span class="p">,</span> <span class="n">Nstart_date</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                INSERT INTO affiliations (domain, affiliation) </span>
+<span class="s2">                VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) </span>
+<span class="s2">                ON DUPLICATE KEY UPDATE active = TRUE</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">Ndomain</span><span class="p">,</span> <span class="n">Naffiliation</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">cli_delete_affiliation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">affiliation_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            UPDATE affiliations SET active = FALSE </span>
+<span class="s2">            WHERE id = </span><span class="si">%s</span><span class="s2"> </span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">affiliation_id</span><span class="p">))</span></div>
 </pre></div>
 
           </div>
