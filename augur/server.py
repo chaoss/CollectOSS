@@ -277,7 +277,7 @@ class Server(object):
                             mimetype="application/json")
 
 
-    def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records', 
+    def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records',
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
         """
         Serializes a dataframe in a JSON object and applies specified transformations
@@ -344,6 +344,36 @@ class Server(object):
             generated_function.__name__ = func.__self__.__class__.__name__ + " _" + func.__name__
             return generated_function
 
+    def routify(self, func, type_):
+        """
+        Wraps a metric function allowing it to be mapped to a route,
+        get request args and also transforms the metric functions's
+        output to json
+
+        :param func: The function to be wrapped
+        :param type_: The type of API endpoint, i.e. 'repo_group' or 'repo'
+        """
+        def generated_function(*args, **kwargs):
+            kwargs.update(request.args.to_dict())
+            data = self.transform(func, args, kwargs)
+            return Response(response=data,
+                            status=200,
+                            mimetype="application/json")
+        generated_function.__name__ = func.__self__.__class__.__name__ + f"_{type_}_" + func.__name__
+        return generated_function
+
+    def addRepoGroupMetric(self, function, endpoint, **kwargs):
+        """Simplifies adding routes that accept repo_group_id"""
+        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
+        self.app.route(endpoint)(self.routify(function, 'repo_group'))
+        self.updateMetricMetadata(function, endpoint, **kwargs)
+
+    def addRepoMetric(self, function, endpoint, **kwargs):
+        """Simplifies adding routes that accept repo_group_id and repo_id"""
+        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+        self.app.route(endpoint)(self.routify(function, 'repo'))
+        self.updateMetricMetadata(function, endpoint, **kwargs)
+
     def addMetric(self, function, endpoint, cache=True, **kwargs):
         """Simplifies adding routes that only accept owner/repo"""
         endpoint = '/{}/<owner>/<repo>/{}'.format(self.api_version, endpoint)
@@ -359,7 +389,7 @@ class Server(object):
     def addTimeseries(self, function, endpoint):
         """
         Simplifies adding routes that accept owner/repo and return timeseries
-        
+
         :param app:       Flask app
         :param function:  Function from a datasource to add
         :param endpoint:  GET endpoint to generate
@@ -412,8 +442,8 @@ def wsgi(environ, start_response):
     scheme = environ.get('HTTP_X_SCHEME', '')
     if scheme:
         environ['wsgi.url_scheme'] = scheme
-    server = environ.get('HTTP_X_FORWARDED_SERVER', '') 
-    if server: 
+    server = environ.get('HTTP_X_FORWARDED_SERVER', '')
+    if server:
         environ['HTTP_HOST'] = server
     return wsgi_app(environ, start_response)
 
