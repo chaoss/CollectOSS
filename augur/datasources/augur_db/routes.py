@@ -208,3 +208,74 @@ def create_routes(server):
     """
     server.addRepoMetric(
         augur_db.sub_projects, 'sub-projects')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/contributors
+    @apiName Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "user": 1,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        },
+                        {
+                            "user": 2,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.contributors, 'contributors')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors
+    @apiName Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                       {
+                            "user": 1,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        },
+                        {
+                            "user": 2,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.contributors, 'contributors')
