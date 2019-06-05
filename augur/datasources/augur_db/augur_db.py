@@ -181,11 +181,12 @@ class Augur(object):
         return results
 
     @annotate(tag='issues-first-time-closed')
-    def issues_first_time_closed(self, repo_url, period='day', begin_date=None, end_date=None):
+    def issues_first_time_closed(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None, ):
         """
         Returns a timeseries of the count of persons closing an issue for the first time.
 
-        :param repo_url: The repository's URL
+        :param repo_id: The repository's id
+        :param repo_group_id: The repository's group id
         :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
@@ -197,23 +198,41 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        issuesClosedSQL = s.sql.text("""
-            SELECT
-                date_trunc('day', new_date::DATE) AS issue_date, COUNT(cntrb_id)
-            FROM (
-                SELECT cntrb_id, MIN(created_at) AS new_date
-                FROM issue_events
-                WHERE
-                    issue_id IN 
-                    (SELECT issue_id FROM issues 
-                    WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1))
-                    AND action = 'closed'
-                GROUP BY cntrb_id ) AS iss_close
-            GROUP BY issue_date
-        """)
+        if repo_id:
+            issuesClosedSQL = s.sql.text("""
+                SELECT
+                    date_trunc('day', new_date::DATE) AS issue_date, COUNT(cntrb_id)
+                FROM (
+                    SELECT cntrb_id, MIN(created_at) AS new_date
+                    FROM issue_events
+                    WHERE
+                        issue_id IN 
+                        (SELECT issue_id FROM issues 
+                        WHERE repo_id = :repo_id)
+                        AND action = 'closed'
+                    GROUP BY cntrb_id ) AS iss_close
+                GROUP BY issue_date
+            """)
+            results = pd.read_sql(issuesClosedSQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+        else:
+            issuesClosedSQL = s.sql.text("""
+                 SELECT
+                    date_trunc('day', new_date::DATE) AS issue_date, COUNT(cntrb_id)
+                FROM (
+                    SELECT cntrb_id, MIN(created_at) AS new_date
+                    FROM issue_events
+                    WHERE
+                        issue_id IN 
+                        (SELECT issue_id FROM issues 
+                        WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id))
+                        AND action = 'closed'
+                    GROUP BY cntrb_id ) AS iss_close
+                GROUP BY issue_date 
+            """)
+            results = pd.read_sql(issuesClosedSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
 
-        results = pd.read_sql(issuesClosedSQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
         return results
 
     @annotate(tag='sub-projects')
