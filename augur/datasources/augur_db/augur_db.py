@@ -236,29 +236,42 @@ class Augur(object):
         return results
 
     @annotate(tag='sub-projects')
-    def sub_projects(self, repo_url, begin_date=None, end_date=None):
+    def sub_projects(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
         """
         Returns number of sub-projects
-
-        :param repo_url: the repository's URL
+        :param repo_id: The repository's id
+        :param repo_group_id: The repository's group id
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
         """
         if not begin_date:
             begin_date = '1970-1-1 00:00:01'
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        sub_projectsSQL = s.sql.text("""
-            SELECT COUNT(*) - 1 AS sub_protject_count
-            FROM repo
-            WHERE repo_group_id = (
-            SELECT repo_group_id
-            FROM repo
-            WHERE  repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1))
-            AND repo_added BETWEEN :begin_date AND :end_date
-        """)
+        if repo_id:
+            sub_projectsSQL = s.sql.text("""
+                SELECT COUNT(*)  AS sub_protject_count
+                FROM repo
+                WHERE repo_group_id = (
+                SELECT repo_group_id
+                FROM repo
+                WHERE  repo_id = :repo_id)
+                AND repo_added BETWEEN :begin_date AND :end_date
+            """)
 
-        results = pd.read_sql(sub_projectsSQL, db, params={'repourl': '%{}%'.format(repo_url),
-                                                           'begin_date': begin_date, 'end_date': end_date})
+            results = pd.read_sql(sub_projectsSQL, self.db, params={'repo_id': repo_id,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+        else:
+            sub_projectsSQL = s.sql.text("""
+                SELECT COUNT(*) AS sub_protject_count
+                FROM repo
+                WHERE repo_group_id = :repo_group_id
+                AND repo_added BETWEEN :begin_date AND :end_date
+            """)
+
+            results = pd.read_sql(sub_projectsSQL, self.db, params={'repo_group_id': repo_group_id,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
         return results
 
     @annotate(tag='contributors')
