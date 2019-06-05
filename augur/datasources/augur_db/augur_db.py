@@ -370,11 +370,12 @@ class Augur(object):
         return results
 
     @annotate(tag='contributors-new')
-    def contributors_new(self, repo_url, period='day', begin_date=None, end_date=None):
+    def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
-        Returns a timeseries of all the contributions to a project.
+        Returns a timeseries of new contributions to a project.
 
-        :param repo_url: The repository's URL
+        :param repo_id: The repository's id
+        :param repo_group_id: The repository's group id
         :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
@@ -387,41 +388,74 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        contributorsNewSQL = s.sql.text("""
-            SELECT date_trunc(:period, created_at::DATE) AS created_at, COUNT(id) AS number
-            FROM (
-            SELECT a.id as id, MIN(created_at) AS created_at
-            FROM (
-            (SELECT cntrb_id AS id, MIN(created_at) AS created_at
-            FROM issues
-            WHERE repo_id = ( SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
-            GROUP BY cntrb_id)
-            UNION ALL
-            (SELECT cmt_ght_author_id AS id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD'))  AS created_at
-            FROM commits
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND cmt_ght_author_id IS NOT NULL AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
-            GROUP BY cmt_ght_author_id)
-            UNION ALL
-            (SELECT user_id AS id, MIN(created_at) AS created_at
-            FROM commit_comment_ref
-            WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id =
-            (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1))
-            AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
-            GROUP BY user_id)
-            UNION ALL
-            (SELECT cntrb_id AS id, MIN(created_at) AS created_at
-            FROM issue_events
-            WHERE issue_id IN (SELECT issue_id FROM issues WHERE repo_id =
-            (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1))
-            AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
-            AND action = 'closed' GROUP BY cntrb_id)
-            ) a GROUP BY a.id ) b GROUP BY created_at
-            """)
+        if repo_id:
+            contributorsNewSQL = s.sql.text("""
+                SELECT date_trunc(:period, created_at::DATE) AS created_at, COUNT(id) AS number
+                FROM (
+                SELECT a.id as id, MIN(created_at) AS created_at
+                FROM (
+                (SELECT gh_user_id AS id, MIN(created_at) AS created_at
+                FROM issues
+                WHERE repo_id = :repo_id
+                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL
+                GROUP BY gh_user_id)
+                UNION ALL
+                (SELECT cmt_ght_author_id AS id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD'))  AS created_at
+                FROM commits
+                WHERE repo_id = :repo_id
+                AND cmt_ght_author_id IS NOT NULL AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
+                GROUP BY cmt_ght_author_id)
+                UNION ALL
+                (SELECT user_id AS id, MIN(created_at) AS created_at
+                FROM commit_comment_ref
+                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id = :repo_id)
+                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
+                GROUP BY user_id)
+                UNION ALL
+                (SELECT cntrb_id AS id, MIN(created_at) AS created_at
+                FROM issue_events
+                WHERE issue_id IN (SELECT issue_id FROM issues WHERE repo_id = :repo_id)
+                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
+                AND action = 'closed' GROUP BY cntrb_id)
+                ) a GROUP BY a.id ) b GROUP BY created_at
+                """)
 
-        results = pd.read_sql(contributorsNewSQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                   'begin_date': begin_date, 'end_date': end_date})
+            results = pd.read_sql(contributorsNewSQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                       'begin_date': begin_date, 'end_date': end_date})
+        else:
+            contributorsNewSQL = s.sql.text("""
+                SELECT date_trunc(:period, created_at::DATE) AS created_at, COUNT(id) AS number
+                FROM (
+                SELECT a.id as id, MIN(created_at) AS created_at
+                FROM (
+                (SELECT gh_user_id AS id, MIN(created_at) AS created_at
+                FROM issues
+                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)  
+                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL
+                GROUP BY gh_user_id)
+                UNION ALL
+                (SELECT cmt_ght_author_id AS id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD'))  AS created_at
+                FROM commits
+                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id) 
+                AND cmt_ght_author_id IS NOT NULL AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
+                GROUP BY cmt_ght_author_id)
+                UNION ALL
+                (SELECT user_id AS id, MIN(created_at) AS created_at
+                FROM commit_comment_ref
+                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)) 
+                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
+                GROUP BY user_id)
+                UNION ALL
+                (SELECT cntrb_id AS id, MIN(created_at) AS created_at
+                FROM issue_events
+                WHERE issue_id IN (SELECT issue_id FROM issues WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id))
+                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
+                AND action = 'closed' GROUP BY cntrb_id)
+                ) a GROUP BY a.id ) b GROUP BY created_at
+                """)
+
+            results = pd.read_sql(contributorsNewSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                       'begin_date': begin_date, 'end_date': end_date})
         return results
 
     @annotate(tag='code-changes-lines')
