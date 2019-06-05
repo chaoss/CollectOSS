@@ -101,11 +101,12 @@ class Augur(object):
         return results
 
     @annotate(tag='issues-first-time-opened')
-    def issues_first_time_opened(self, repo_url, period='day', begin_date=None, end_date=None):
+    def issues_first_time_opened(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
         Returns a timeseries of the count of persons opening an issue for the first time.
 
-        :param repo_url: The repository's URL
+        :param repo_id: The repository's id
+        :param repo_group_id: The repository's group id
         :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
@@ -117,27 +118,49 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        issueNewContributor = s.sql.text("""
-            SELECT
-                date_trunc(:period, new_date::DATE) as issue_date,
-                COUNT(cntrb_id)
-            FROM (
+        if repo_id:
+            issueNewContributor = s.sql.text("""
                 SELECT
-                    cntrb_id,
-                    MIN(created_at) AS new_date
-                FROM
-                    issues
-                WHERE
-                    repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-                    AND created_at BETWEEN :begin_date AND :end_date
-                GROUP BY cntrb_id
-            ) as abc
-            GROUP BY issue_date
-            ORDER BY issue_date
-        """)
-
-        results = pd.read_sql(issueNewContributor, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                    'begin_date': begin_date, 'end_date': end_date})
+                    date_trunc(:period, new_date::DATE) as issue_date,
+                    COUNT(gh_user_id)
+                FROM (
+                    SELECT
+                        gh_user_id,
+                        MIN(created_at) AS new_date
+                    FROM
+                        issues
+                    WHERE
+                        repo_id = :repo_id
+                        AND created_at BETWEEN :begin_date AND :end_date
+                    GROUP BY gh_user_id
+                ) as abc
+                GROUP BY issue_date
+                ORDER BY issue_date
+            """)
+            results = pd.read_sql(issueNewContributor, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                        'begin_date': begin_date, 'end_date': end_date})
+        else:
+            issueNewContributor = s.sql.text("""
+                SELECT
+                    date_trunc(:period, new_date::DATE) as issue_date,
+                    COUNT(gh_user_id)
+                FROM (
+                    SELECT
+                        gh_user_id,
+                        MIN(created_at) AS new_date
+                    FROM
+                        issues
+                    WHERE
+                        repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id) 
+                        AND created_at BETWEEN :begin_date AND :end_date
+                    GROUP BY gh_user_id
+                ) as abc
+                GROUP BY issue_date
+                ORDER BY issue_date
+            """)
+            results = pd.read_sql(issueNewContributor, self.db,
+                                  params={'repo_group_id': repo_group_id, 'period': period,
+                                          'begin_date': begin_date, 'end_date': end_date})
         return results
 
     @annotate(tag='issues-first-time-closed')
