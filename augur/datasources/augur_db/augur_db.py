@@ -517,21 +517,35 @@ class Augur(object):
         return results
 
     @annotate(tag='issue-backlog')
-    def issues_backlog(self, repo_url):
+    def issue_backlog(self, repo_group_id, repo_id=None):
         """Returns number of issues currently open.
 
-        :param repo_url: The repository's URL
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
         :return: DataFrame of count of issues currently open.
         """
-        issues_backlog_SQL = s.sql.text("""
-            SELECT COUNT(*)
-            FROM issues
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND issue_state='open'
-        """)
+        if not repo_id:
+            issue_backlog_SQL = s.sql.text("""
+                SELECT repo_id, COUNT(issue_id) as issue_backlog
+                FROM issues
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                AND issue_state = 'open'
+                GROUP BY repo_id
+                ORDER BY repo_id
+            """)
+            result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return result
 
-        result = pd.read_sql(issues_backlog_SQL, self.db, params={'repourl': f'%{repo_url}%'})
-        return result
+        else:
+            issue_backlog_SQL = s.sql.text("""
+                SELECT COUNT(*) as issue_backlog
+                FROM issues
+                WHERE repo_id = :repo_id
+                AND issue_state='open'
+            """)
+
+            result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_id': repo_id})
+            return result
 
     #####################################
     ###         EXPERIMENTAL          ###
