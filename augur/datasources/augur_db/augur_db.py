@@ -390,9 +390,9 @@ class Augur(object):
 
         if repo_id:
             contributorsNewSQL = s.sql.text("""
-                SELECT date_trunc(:period, created_at::DATE) AS created_at, COUNT(id) AS number
+                SELECT date_trunc(:period, created_at::DATE) AS contribute_at, COUNT(id) AS count
                 FROM (
-                SELECT a.id as id, MIN(created_at) AS created_at
+                SELECT id as id, MIN(created_at) AS created_at
                 FROM (
                 (SELECT gh_user_id AS id, MIN(created_at) AS created_at
                 FROM issues
@@ -417,16 +417,16 @@ class Augur(object):
                 WHERE issue_id IN (SELECT issue_id FROM issues WHERE repo_id = :repo_id)
                 AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
                 AND action = 'closed' GROUP BY cntrb_id)
-                ) a GROUP BY a.id ) b GROUP BY created_at
+                ) a GROUP BY a.id ) b GROUP BY contribute_at
                 """)
 
             results = pd.read_sql(contributorsNewSQL, self.db, params={'repo_id': repo_id, 'period': period,
                                                                        'begin_date': begin_date, 'end_date': end_date})
         else:
             contributorsNewSQL = s.sql.text("""
-                SELECT date_trunc(:period, created_at::DATE) AS created_at, COUNT(id) AS number
+                SELECT date_trunc(:period, created_at::DATE) AS contribute_at, COUNT(id) AS count
                 FROM (
-                SELECT a.id as id, MIN(created_at) AS created_at
+                SELECT id as id, MIN(created_at) AS created_at
                 FROM (
                 (SELECT gh_user_id AS id, MIN(created_at) AS created_at
                 FROM issues
@@ -451,7 +451,7 @@ class Augur(object):
                 WHERE issue_id IN (SELECT issue_id FROM issues WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id))
                 AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
                 AND action = 'closed' GROUP BY cntrb_id)
-                ) a GROUP BY a.id ) b GROUP BY created_at
+                ) a GROUP BY a.id ) b GROUP BY contribute_at
                 """)
 
             results = pd.read_sql(contributorsNewSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
