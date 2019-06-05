@@ -24,3 +24,52 @@ def create_routes(server):
                         status=200,
                         mimetype="application/json")
     server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-requests-merge-contributor-new
+    @apiName New Contributors of Commits
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/pull-requests-merge-contributor-new.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "commit_date": "2018-01-01T00:00:00.000Z",
+                            "count": 5140
+                        },
+                        {
+                            "commit_date": "2019-01-01T00:00:00.000Z",
+                            "commit_count": 711
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.pull_requests_merge_contributor_new, 'pull-requests-merge-contributor-new')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-requests-merge-contributor-new
+    @apiName New Contributors of Commits
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/pull-requests-merge-contributor-new.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "commit_date": "2018-01-01T00:00:00.000Z",
+                            "count": 2287
+                        },
+                        {
+                            "commit_date": "2018-02-01T00:00:00.000Z",
+                            "count": 1939
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.pull_requests_merge_contributor_new, 'pull-requests-merge-contributor-new')
