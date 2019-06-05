@@ -275,7 +275,7 @@ class Augur(object):
         return results
 
     @annotate(tag='contributors')
-    def contributors(self, repo_url, period='day', begin_date=None, end_date=None):
+    def contributors(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
         Returns a timeseries of all the contributions to a project.
 
@@ -289,7 +289,8 @@ class Augur(object):
         issue_comments
         total
 
-        :param repo_url: The repository's URL
+        :param repo_id: The repository's id
+        :param repo_group_id: The repository's group id
         :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
@@ -302,38 +303,70 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        contributorsSQL = s.sql.text("""
-            SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues, SUM(commit_comments) AS commit_comments, 
-            SUM(issue_comments) AS issue_comments, SUM(pull_requests) AS pull_requests, 
-            SUM(pull_request_comments) AS pull_request_comments,
-            SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
-            FROM (
-            (SELECT cntrb_id AS id,
-            0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-            FROM issues
-            WHERE repo_id = ( SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL 
-            GROUP BY cntrb_id)
-            UNION ALL 
-            (SELECT cmt_ght_author_id AS id,
-            COUNT(*) AS commits,  0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-            FROM commits
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND cmt_ght_author_id IS NOT NULL AND cmt_committer_date BETWEEN :begin_date AND :end_date
-            GROUP BY cmt_ght_author_id)
-            UNION ALL
-            (SELECT user_id AS id, 0 AS commits, 0 AS issues, COUNT(*) AS commit_comments, 
-            0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-            FROM commit_comment_ref 
-            WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id = 
-            (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)) 
-            AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
-            GROUP BY user_id) 
-            ) a GROUP BY a.id ORDER BY total DESC
-        """)
+        if repo_id:
+            contributorsSQL = s.sql.text("""
+                SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues, SUM(commit_comments) AS commit_comments, 
+                SUM(issue_comments) AS issue_comments, SUM(pull_requests) AS pull_requests, 
+                SUM(pull_request_comments) AS pull_request_comments,
+                SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
+                FROM (
+                (SELECT cntrb_id AS id,
+                0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
+                FROM issues
+                WHERE repo_id = :repo_id 
+                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL 
+                GROUP BY cntrb_id)
+                UNION ALL 
+                (SELECT cmt_ght_author_id AS id,
+                COUNT(*) AS commits,  0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
+                FROM commits
+                WHERE repo_id = :repo_id 
+                AND cmt_ght_author_id IS NOT NULL AND cmt_committer_date BETWEEN :begin_date AND :end_date
+                GROUP BY cmt_ght_author_id)
+                UNION ALL
+                (SELECT user_id AS id, 0 AS commits, 0 AS issues, COUNT(*) AS commit_comments, 
+                0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
+                FROM commit_comment_ref 
+                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id = :repo_id ) 
+                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
+                GROUP BY user_id) 
+                ) a GROUP BY a.id ORDER BY total DESC
+            """)
 
-        results = pd.read_sql(contributorsSQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
+            results = pd.read_sql(contributorsSQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+        else:
+            contributorsSQL = s.sql.text("""
+                SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues, SUM(commit_comments) AS commit_comments, 
+                SUM(issue_comments) AS issue_comments, SUM(pull_requests) AS pull_requests, 
+                SUM(pull_request_comments) AS pull_request_comments,
+                SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
+                FROM (
+                (SELECT cntrb_id AS id,
+                0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
+                FROM issues
+                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)  
+                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL 
+                GROUP BY cntrb_id)
+                UNION ALL 
+                (SELECT cmt_ght_author_id AS id,
+                COUNT(*) AS commits,  0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
+                FROM commits
+                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id) 
+                AND cmt_ght_author_id IS NOT NULL AND cmt_committer_date BETWEEN :begin_date AND :end_date
+                GROUP BY cmt_ght_author_id)
+                UNION ALL
+                (SELECT user_id AS id, 0 AS commits, 0 AS issues, COUNT(*) AS commit_comments, 
+                0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
+                FROM commit_comment_ref 
+                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)) 
+                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
+                GROUP BY user_id) 
+                ) a GROUP BY a.id ORDER BY total DESC
+            """)
+
+            results = pd.read_sql(contributorsSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
         return results
 
     @annotate(tag='contributors-new')
