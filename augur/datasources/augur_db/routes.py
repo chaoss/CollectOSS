@@ -227,6 +227,39 @@ def create_routes(server):
     """
     server.addRepoMetric(augur_db.issues_new, 'issues-new')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-closed Issues Closed
+    @apiName issues-closed
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Closed.md">CHAOSS Metric Definition</a>
+
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
+    @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+
+    @apiSuccessExample {json} Success-Response:
+                    TODO
+    """
+    server.addRepoGroupMetric(augur_db.issues_closed, 'issues-closed')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-closed Issues Closed
+    @apiName issues-closed
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md">CHAOSS Metric Definition</a>
+
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
+    @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+
+    @apiSuccessExample {json} Success-Response:
+                    TODO
+    """
+    server.addRepoMetric(augur_db.issues_closed, 'issues-closed')
+
     # @server.app.route('/{}/repo-groups/<repo_group_id>/code-changes'.format(server.api_version))
     # def code_changes_repo_group_route(repo_group_id):
     #     period = request.args.get('period', 'day')
