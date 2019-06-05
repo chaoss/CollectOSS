@@ -171,3 +171,40 @@ def create_routes(server):
     """
     server.addRepoMetric(
         augur_db.issues_first_time_closed, 'issues-first-time-closed')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/sub-projects
+    @apiName Sub-Projects
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "sub_protject_count": 2
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.sub_projects, 'sub-projects')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/sub-projects
+    @apiName Sub-Projects
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "sub_protject_count": 2
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.sub_projects, 'sub-projects')
