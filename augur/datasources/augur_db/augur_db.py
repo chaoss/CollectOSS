@@ -449,11 +449,12 @@ class Augur(object):
 
 
     @annotate(tag='issues-closed')
-    def issues_closed(self, repo_url, period='day', begin_date=None, end_date=None):
+    def issues_closed(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of issues closed.
 
-        :param repo_url: The repository's URL
-        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of issues closed/period
@@ -463,18 +464,39 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        issues_closed_SQL = s.sql.text("""
-            SELECT date_trunc(:period, closed_at::DATE) as issue_close_date, COUNT(issue_id) as issues
-            FROM issues
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND closed_at IS NOT NULL AND closed_at BETWEEN :begin_date AND :end_date
-            GROUP BY issue_close_date
-            ORDER BY issue_close_date;
-        """)
+        if not repo_id:
+            issues_closed_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, closed_at::DATE) as issue_close_date,
+                    repo_id,
+                    COUNT(issue_id) as issues
+                FROM issues
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND closed_at IS NOT NULL
+                AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issue_close_date, repo_id
+                ORDER BY repo_id, issue_close_date
+            """)
 
-        results = pd.read_sql(issues_closed_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
-        return results
+            results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                       'begin_date': begin_date, 'end_date': end_date})
+
+            return results
+
+        else:
+            issues_closed_SQL = s.sql.text("""
+                SELECT date_trunc(:period, closed_at::DATE) as issue_close_date, COUNT(issue_id) as issues
+                FROM issues
+                WHERE repo_id = :repo_id
+                AND closed_at IS NOT NULL
+                AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issue_close_date
+                ORDER BY issue_close_date;
+            """)
+
+            results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+            return results
 
     @annotate(tag='issue-duration')
     def issue_duration(self, repo_url):
