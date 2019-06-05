@@ -260,6 +260,46 @@ def create_routes(server):
     """
     server.addRepoMetric(augur_db.issues_closed, 'issues-closed')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/issue-backlog Issue Backlog
+    @apiName issue-backlog
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+
+    @apiParam {String} repo_group_id Repository Group ID
+
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 1,
+                            "issue_backlog": 3
+                        },
+                        {
+                            "repo_id": 25001,
+                            "issue_backlog": 32
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issue_backlog, 'issue-backlog')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-backlog Issue Backlog
+    @apiName issue-backlog
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "issue_backlog": 3
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issue_backlog, 'issue-backlog')
+
     # @server.app.route('/{}/repo-groups/<repo_group_id>/code-changes'.format(server.api_version))
     # def code_changes_repo_group_route(repo_group_id):
     #     period = request.args.get('period', 'day')
