@@ -70,11 +70,12 @@ class Augur(object):
         return results
 
     @annotate(tag='pull-requests-merge-contributor-new')
-    def pull_requests_merge_contributor_new(self, repo_url, period='day', begin_date=None, end_date=None):
+    def pull_requests_merge_contributor_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
         Returns a timeseries of the count of persons contributing with an accepted commit for the first time.
 
-        :param repo_url: The repository's URL
+        :param repo_id: The repository's id
+        :param repo_group_id: The repository's group id
         :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
@@ -85,19 +86,35 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        commitNewContributor = s.sql.text("""
-            SELECT date_trunc(:period, new_date::DATE) as commit_date, 
-            COUNT(cmt_ght_author_id)
-            FROM ( SELECT cmt_ght_author_id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
-            FROM commits WHERE
-            repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_ght_author_id IS NOT NULL
-            GROUP BY cmt_ght_author_id
-            ) as abc GROUP BY commit_date
-        """)
-
-        results = pd.read_sql(commitNewContributor, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                     'begin_date': begin_date, 'end_date': end_date})
+        if repo_id:
+            commitNewContributor = s.sql.text("""
+                SELECT date_trunc(:period, new_date::DATE) as commit_date, 
+                COUNT(cmt_ght_author_id)
+                FROM ( SELECT cmt_ght_author_id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
+                FROM commits WHERE
+                repo_id = :repo_id 
+                AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_ght_author_id IS NOT NULL
+                GROUP BY cmt_ght_author_id
+                ) as abc GROUP BY commit_date
+            """)
+            results = pd.read_sql(commitNewContributor, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                         'begin_date': begin_date,
+                                                                         'end_date': end_date})
+        else:
+            commitNewContributor = s.sql.text("""
+                SELECT date_trunc(:period, new_date::DATE) as commit_date, 
+                COUNT(cmt_ght_author_id)
+                FROM ( SELECT cmt_ght_author_id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
+                FROM commits WHERE
+                repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id) 
+                AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_ght_author_id IS NOT NULL
+                GROUP BY cmt_ght_author_id
+                ) as abc GROUP BY commit_date
+            """)
+            results = pd.read_sql(commitNewContributor, self.db,
+                                  params={'repo_group_id': repo_group_id, 'period': period,
+                                          'begin_date': begin_date,
+                                          'end_date': end_date})
         return results
 
     @annotate(tag='issues-first-time-opened')
