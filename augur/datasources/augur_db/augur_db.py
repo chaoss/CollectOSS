@@ -41,11 +41,12 @@ class Augur(object):
     #####################################
 
     @annotate(tag='code-changes')
-    def code_changes(self, repo_url, period='day', begin_date=None, end_date=None):
+    def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
         Returns a timeseries of the count of code commits.
 
-        :param repo_url: The repository's URL
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
         :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
@@ -56,18 +57,41 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        code_changes_SQL = s.sql.text("""
-            SELECT date_trunc(:period, cmt_committer_date::DATE) as commit_date, COUNT(cmt_id)
-            FROM commits
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND cmt_committer_date BETWEEN :begin_date AND :end_date
-            GROUP BY commit_date
-            ORDER BY commit_date;
-        """)
+        code_changes_SQL = ''
 
-        results = pd.read_sql(code_changes_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
-        return results
+        if not repo_id:
+            code_changes_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, cmt_committer_date::DATE) as commit_date,
+                    repo_id,
+                    COUNT(cmt_commit_hash) as commit_count
+                FROM commits
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                AND cmt_committer_date BETWEEN :begin_date AND :end_date
+                GROUP BY commit_date, repo_id
+                ORDER BY repo_id, commit_date
+            """)
+
+            results = pd.read_sql(code_changes_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                     'begin_date': begin_date, 'end_date': end_date})
+            return results
+
+        else:
+            code_changes_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, cmt_committer_date::DATE) as commit_date,
+                    COUNT(cmt_commit_hash) as commit_count
+                FROM commits
+                WHERE repo_id = :repo_id
+                AND cmt_committer_date BETWEEN :begin_date AND :end_date
+                GROUP BY commit_date
+                ORDER BY commit_date
+            """)
+
+            results = pd.read_sql(code_changes_SQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                     'begin_date': begin_date, 'end_date': end_date})
+            return results
+
 
     @annotate(tag='pull-requests-merge-contributor-new')
     def pull_requests_merge_contributor_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -459,39 +483,66 @@ class Augur(object):
         return results
 
     @annotate(tag='code-changes-lines')
-    def code_changes_lines(self, repo_url, period='day', begin_date=None, end_date=None):
+    def code_changes_lines(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of code changes added and removed.
 
-        :param repo_url: The repository's URL
-        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
-        :return: DataFrame of code changes/period
+        :return: DataFrame of code changes added and removed/period
         """
         if not begin_date:
             begin_date = '1970-1-1 00:00:00'
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        code_changes_lines_SQL = s.sql.text("""
-            SELECT date_trunc(:period, cmt_author_date::DATE) as commit_date, SUM(cmt_added) AS added, SUM(cmt_removed) as removed
-            FROM commits
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND cmt_author_date BETWEEN :begin_date AND :end_date
-            GROUP BY commit_date
-            ORDER BY commit_date;
-        """)
+        code_changes_lines_SQL = ''
 
-        results = pd.read_sql(code_changes_lines_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                        'begin_date': begin_date, 'end_date': end_date})
-        return results
+        if not repo_id:
+            code_changes_lines_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, cmt_author_date::DATE) as commit_date,
+                    repo_id,
+                    SUM(cmt_added) as added,
+                    SUM(cmt_removed) as removed
+                FROM commits
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND cmt_author_date BETWEEN :begin_date AND :end_date
+                GROUP BY commit_date, repo_id
+                ORDER BY repo_id, commit_date
+            """)
+
+            results = pd.read_sql(code_changes_lines_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                           'begin_date': begin_date, 'end_date': end_date})
+
+            return results
+
+        else:
+            code_changes_lines_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, cmt_author_date::DATE) as commit_date,
+                    SUM(cmt_added) AS added,
+                    SUM(cmt_removed) as removed
+                FROM commits
+                WHERE repo_id = :repo_id
+                AND cmt_author_date BETWEEN :begin_date AND :end_date
+                GROUP BY commit_date
+                ORDER BY commit_date;
+            """)
+
+            results = pd.read_sql(code_changes_lines_SQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                           'begin_date': begin_date, 'end_date': end_date})
+            return results
 
     @annotate(tag='issues-new')
-    def issues_new(self, repo_url, period='day', begin_date=None, end_date=None):
+    def issues_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of new issues opened.
 
-        :param repo_url: The repository's URL
-        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of new issues/period
@@ -501,26 +552,48 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        issues_new_SQL = s.sql.text("""
-            SELECT date_trunc(:period, created_at::DATE) as issue_date, COUNT(issue_id) as issues
-            FROM issues
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND created_at BETWEEN :begin_date AND :end_date
-            GROUP BY issue_date
-            ORDER  BY issue_date;
-        """)
+        issues_new_SQL = ''
 
-        results = pd.read_sql(issues_new_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
-        return results
+        if not repo_id:
+            issues_new_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, created_at::DATE) as issue_date,
+                    repo_id,
+                    COUNT(issue_id) as issues
+                FROM issues
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issue_date, repo_id
+                ORDER BY repo_id, issue_date
+            """)
+
+            results = pd.read_sql(issues_new_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                   'begin_date': begin_date, 'end_date': end_date})
+
+            return results
+
+        else:
+            issues_new_SQL = s.sql.text("""
+                SELECT date_trunc(:period, created_at::DATE) as issue_date, COUNT(issue_id) as issues
+                FROM issues
+                WHERE repo_id = :repo_id
+                AND created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issue_date
+                ORDER BY issue_date;
+            """)
+
+            results = pd.read_sql(issues_new_SQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                   'begin_date': begin_date, 'end_date': end_date})
+            return results
 
 
     @annotate(tag='issues-closed')
-    def issues_closed(self, repo_url, period='day', begin_date=None, end_date=None):
+    def issues_closed(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of issues closed.
 
-        :param repo_url: The repository's URL
-        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of issues closed/period
@@ -530,18 +603,39 @@ class Augur(object):
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        issues_closed_SQL = s.sql.text("""
-            SELECT date_trunc(:period, closed_at::DATE) as issue_close_date, COUNT(issue_id) as issues
-            FROM issues
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND closed_at IS NOT NULL AND closed_at BETWEEN :begin_date AND :end_date
-            GROUP BY issue_close_date
-            ORDER BY issue_close_date;
-        """)
+        if not repo_id:
+            issues_closed_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, closed_at::DATE) as issue_close_date,
+                    repo_id,
+                    COUNT(issue_id) as issues
+                FROM issues
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND closed_at IS NOT NULL
+                AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issue_close_date, repo_id
+                ORDER BY repo_id, issue_close_date
+            """)
 
-        results = pd.read_sql(issues_closed_SQL, self.db, params={'repourl': '%{}%'.format(repo_url), 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
-        return results
+            results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                       'begin_date': begin_date, 'end_date': end_date})
+
+            return results
+
+        else:
+            issues_closed_SQL = s.sql.text("""
+                SELECT date_trunc(:period, closed_at::DATE) as issue_close_date, COUNT(issue_id) as issues
+                FROM issues
+                WHERE repo_id = :repo_id
+                AND closed_at IS NOT NULL
+                AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issue_close_date
+                ORDER BY issue_close_date;
+            """)
+
+            results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+            return results
 
     @annotate(tag='issue-duration')
     def issue_duration(self, repo_url):
@@ -562,21 +656,35 @@ class Augur(object):
         return results
 
     @annotate(tag='issue-backlog')
-    def issues_backlog(self, repo_url):
+    def issue_backlog(self, repo_group_id, repo_id=None):
         """Returns number of issues currently open.
 
-        :param repo_url: The repository's URL
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
         :return: DataFrame of count of issues currently open.
         """
-        issues_backlog_SQL = s.sql.text("""
-            SELECT COUNT(*)
-            FROM issues
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            AND issue_state='open'
-        """)
+        if not repo_id:
+            issue_backlog_SQL = s.sql.text("""
+                SELECT repo_id, COUNT(issue_id) as issue_backlog
+                FROM issues
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                AND issue_state = 'open'
+                GROUP BY repo_id
+                ORDER BY repo_id
+            """)
+            result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return result
 
-        result = pd.read_sql(issues_backlog_SQL, self.db, params={'repourl': f'%{repo_url}%'})
-        return result
+        else:
+            issue_backlog_SQL = s.sql.text("""
+                SELECT COUNT(*) as issue_backlog
+                FROM issues
+                WHERE repo_id = :repo_id
+                AND issue_state='open'
+            """)
+
+            result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_id': repo_id})
+            return result
 
     #####################################
     ###         EXPERIMENTAL          ###
