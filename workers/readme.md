@@ -2,7 +2,7 @@
 
 ## Steps
 1. Start the broker: 
-    - `cd $AUGUR_HOME/augur/augur/broker`
+    - `cd augur/augur/broker`
     - `export FLASK_APP=broker/server.py; flask run;`
 2. Configure and Install the worker
     - `pip install -e .`
