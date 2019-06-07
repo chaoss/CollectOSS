@@ -5,6 +5,7 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
+import datetime
 
 
 class CollectorTask:
@@ -50,7 +51,7 @@ class GitHubWorker:
 
         url = "https://api.github.com/users/gabe-heim"
         response = requests.get(url=url)
-        self.rate_limit = response.headers['X-RateLimit-Remaining']
+        self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
 
         
         specs = {
@@ -216,20 +217,10 @@ class GitHubWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
-<<<<<<< Updated upstream
-                print(message.models)
-                for model in message.models:
-                    if model == "issues":
-                        self.query_issues(message.entry_info)
-
-                self.query(message.entry_info)
-
-    def query_issues(self, entry_info):
-=======
                 self.query_issues(message.entry_info)
 
     def query_contributors(self, entry_info):
->>>>>>> Stashed changes
+
         """ Data collection function
         Query the GitHub API for contributors
         """
@@ -419,6 +410,7 @@ class GitHubWorker:
                 "issue_state": issue_dict['state'],
                 "issue_node_id": issue_dict['node_id'],
                 "gh_issue_id": issue_dict['id'],
+                "gh_issue_number": issue_dict['number'],
                 "gh_user_id": issue_dict['user']['id'],
                 "tool_source": self.tool_source,
                 "tool_version": self.tool_version,
@@ -428,7 +420,7 @@ class GitHubWorker:
             # Commit insertion to the issues table
             self.db.execute(self.issues_table.insert().values(issue))
             print("Inserted issue with our issue_id being: ", self.issue_id_inc, 
-                "and title of: ", issue_dict['title'], "\n")
+                "and title of: ", issue_dict['title'], "and gh_issue_num of: ", issue_dict['number'], "\n")
 
             # Just to help me figure out cases where a..nee vs a..nees shows up
             if "assignee" in issue_dict and "assignees" in issue_dict:
@@ -559,7 +551,7 @@ class GitHubWorker:
 
             self.issue_id_inc += 1
 
-            task_completed = entry_info
+            task_completed = entry_info.to_dict()
             task_completed['worker_id'] = self.config['id']
             print("Telling broker we completed task: ", task_completed)
 
@@ -598,6 +590,7 @@ class GitHubWorker:
             """.format(login))
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)] 
+        print(data_list, login)
         try:
             return data_list[0][0]
         except:
@@ -662,10 +655,10 @@ class GitHubWorker:
             response = requests.get(url=url)
             reset_time = response.headers['X-RateLimit-Reset']
         
-            time_diff = datetime.fromtimestamp(reset_time) - datetime.datetime.now()
+            time_diff = datetime.datetime.fromtimestamp(reset_time) - datetime.datetime.now()
             print("Rate limit exceeded, waiting ", time_diff.total_seconds(), " seconds.\n")
             time.sleep(time_diff.total_seconds())
-            self.rate_limit = response.headers['X-RateLimit-Limit']
+            self.rate_limit = int(response.headers['X-RateLimit-Limit'])
         
 
 

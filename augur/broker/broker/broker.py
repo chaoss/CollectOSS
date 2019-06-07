@@ -89,6 +89,7 @@ class Broker(object):
             requests.post(worker.location + '/AUGWOP/task', json=job_received)
 
     def completed_job(self, job):
+        print("Job completed: ", completed_job, job)
         completed_job = self.connected_workers[job['worker_id']].queue.get()
         print("Job completed: ", completed_job, job)
 

@@ -13,5 +13,7 @@ def create_routes(server):
 
     @server.app.route('{}/completed_task'.format(server.API_VERSION), methods=['POST'])
     def sync_queue():
+
         job = request.json
+        print("Message recieved that worker ", job['worker_id'], " completed task: ", job)
         server.broker.completed_job(job)
