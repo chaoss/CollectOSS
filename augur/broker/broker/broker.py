@@ -20,7 +20,8 @@ class Worker():
         self.location = location
         self.qualifications = qualifications
         self.given = qualifications[0]['given'][0][0]
-        print("Worker given: " + self.given)
+        self.models = qualifications[0]['models']
+        print("Worker given: " + self.id)
         self.queue = Queue()
 
 class Job():
@@ -65,7 +66,10 @@ class Broker(object):
         # job = Job(job_type=job_received['job_type'], models=job_received['models'], given=job_received["given"])
         # for job in self.created_jobs:
         given = list(job_received['given'].keys())[0]
-        compatible_workers = [worker for worker in self.connected_workers.values() if worker.given == given]
+        model = job_received['models'][0]
+        print(self.connected_workers)
+        # print(model in self.connected_workers['com.augurlabs.core.github_worker'].models, model, worker.models)
+        compatible_workers = [worker for worker in self.connected_workers.values() if worker.given == given and model in worker.models]
 
         for worker in compatible_workers:
 
@@ -84,9 +88,9 @@ class Broker(object):
 
             requests.post(worker.location + '/AUGWOP/task', json=job_received)
 
-    def completed_job(self, worker_id, job):
-        completed_job = self.connected_workers[worker_id].queue.get()
-        print(completed_job)
+    def completed_job(self, job):
+        completed_job = self.connected_workers[job['worker_id']].queue.get()
+        print("Job completed: ", completed_job, job)
 
 def dump_queue(queue):
     """

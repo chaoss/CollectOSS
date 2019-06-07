@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 import click
-from linux_badge_worker.worker import BadgeWorker
+from augur_worker_github.worker import GitHubWorker
 import os
 import json
 
@@ -37,7 +37,7 @@ def create_server(app, gw):
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51235, help='Port')
+@click.option('--port', default=51236, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
@@ -47,8 +47,10 @@ def main(augur_url, host, port):
     credentials = read_config("Database")
 
     config = { 
+            "id": "com.augurlabs.core.github_worker",
             "connection_string": credentials["connection_string"],
             "host": credentials["host"],
+            "key": credentials["key"],
             "password": credentials["password"],
             "port": credentials["port"],
             "user": credentials["user"],
@@ -62,7 +64,8 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
+
+    app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)

@@ -5,7 +5,7 @@ def create_routes(server):
     @server.app.route('{}/workers'.format(server.API_VERSION), methods=['POST'])
     def worker():
         """ AUGWOP route responsible for interpreting HELLO messages 
-        	and telling the broker to add this worker to the set it maintains
+            and telling the broker to add this worker to the set it maintains
         """
         worker = request.json
         server.broker.add_new_worker(worker)
@@ -13,4 +13,5 @@ def create_routes(server):
 
     @server.app.route('{}/completed_task'.format(server.API_VERSION), methods=['POST'])
     def sync_queue():
-    	server.broker.completed_job()
+        job = request.json
+        server.broker.completed_job(job)
