@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'augur_worker_github=augur_worker_github.runtime:main',
+            'github-worker=augur_worker_github.runtime:main',
         ],
     },
 

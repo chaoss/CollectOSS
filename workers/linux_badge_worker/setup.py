@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'linux_badge_worker=linux_badge_worker.runtime:main',
+            'linux-badge-worker=linux_badge_worker.runtime:main',
         ],
     },
 
