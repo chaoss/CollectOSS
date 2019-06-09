@@ -32,7 +32,7 @@
             <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
               <d-link :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
-                <span v-if="item.title">{{ item.title }}</span>
+                <span v-if="item.title" style="width: 240">{{ item.title }}</span>
                 <div class="item-icon-wrapper" v-if="item.htmlAfter" v-html="item.htmlAfter" />
               </d-link>
               <d-collapse v-if="item.items && item.items.length" :id="`snc-${navItemIdx}`" class="dropdown-menu dropdown-menu-small" accordion="sidebar-items-accordion">
@@ -58,10 +58,15 @@
                 </div>
                 
                 <div class="col col-6" style="padding: 0px">
+<!-- <<<<<<< Updated upstream -->
                   <d-link class="nav-link" style="padding: 0.7rem .7rem 0.7rem 1.5rem; margin-left: 1rem">
+<!-- ======= -->
+                  <d-link class="nav-link" style="padding-left: 0px; padding: 0; display: block">
+<!-- >>>>>>> Stashed changes -->
                     <i class="material-icons">library_add</i>
                     <span>Add</span>
                     <div class="item-icon-wrapper" />
+                  </d-link>
                   </d-link>
                 </div>
               </div>
