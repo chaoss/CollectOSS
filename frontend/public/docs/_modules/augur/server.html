@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>augur.server &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -312,7 +310,7 @@
                             <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_url_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">,</span> 
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_url_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">,</span>
         <span class="n">group_by</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aggregate</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="n">resample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date_col</span><span class="o">=</span><span class="s1">&#39;date&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Serializes a dataframe in a JSON object and applies specified transformations</span>
@@ -379,6 +377,36 @@
             <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot; _&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
             <span class="k">return</span> <span class="n">generated_function</span>
 
+    <span class="k">def</span> <span class="nf">routify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">type_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps a metric function allowing it to be mapped to a route,</span>
+<span class="sd">        get request args and also transforms the metric functions&#39;s</span>
+<span class="sd">        output to json</span>
+
+<span class="sd">        :param func: The function to be wrapped</span>
+<span class="sd">        :param type_: The type of API endpoint, i.e. &#39;repo_group&#39; or &#39;repo&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">generated_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                            <span class="n">status</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                            <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span>
+        <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="n">f</span><span class="s2">&quot;_</span><span class="si">{type_}</span><span class="s2">_&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">generated_function</span>
+
+    <span class="k">def</span> <span class="nf">addRepoGroupMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simplifies adding routes that accept repo_group_id&quot;&quot;&quot;</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;/</span><span class="si">{self.api_version}</span><span class="s1">/repo-groups/&lt;repo_group_id&gt;/</span><span class="si">{endpoint}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">routify</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="s1">&#39;repo_group&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateMetricMetadata</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">addRepoMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simplifies adding routes that accept repo_group_id and repo_id&quot;&quot;&quot;</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;/</span><span class="si">{self.api_version}</span><span class="s1">/repo-groups/&lt;repo_group_id&gt;/repos/&lt;repo_id&gt;/</span><span class="si">{endpoint}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">routify</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="s1">&#39;repo&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateMetricMetadata</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">addMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Simplifies adding routes that only accept owner/repo&quot;&quot;&quot;</span>
         <span class="n">endpoint</span> <span class="o">=</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">/&lt;owner&gt;/&lt;repo&gt;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_version</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">)</span>
@@ -394,7 +422,7 @@
     <span class="k">def</span> <span class="nf">addTimeseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Simplifies adding routes that accept owner/repo and return timeseries</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param app:       Flask app</span>
 <span class="sd">        :param function:  Function from a datasource to add</span>
 <span class="sd">        :param endpoint:  GET endpoint to generate</span>
@@ -447,8 +475,8 @@
     <span class="n">scheme</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_X_SCHEME&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scheme</span><span class="p">:</span>
         <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;wsgi.url_scheme&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scheme</span>
-    <span class="n">server</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_X_FORWARDED_SERVER&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> 
-    <span class="k">if</span> <span class="n">server</span><span class="p">:</span> 
+    <span class="n">server</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_X_FORWARDED_SERVER&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">server</span><span class="p">:</span>
         <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;HTTP_HOST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server</span>
     <span class="k">return</span> <span class="n">wsgi_app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
 
@@ -464,14 +492,14 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../../index.html">Table of Contents</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../use-cases-toc.html">Use Cases</a></li>
 </ul>
@@ -485,13 +513,11 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -504,7 +530,7 @@
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

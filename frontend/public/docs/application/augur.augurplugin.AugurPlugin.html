@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>augur.augurplugin.AugurPlugin &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -38,29 +36,29 @@
 <h1>augur.augurplugin.AugurPlugin<a class="headerlink" href="#augur-augurplugin-augurplugin" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="augur.augurplugin.AugurPlugin">
-<em class="property">class </em><code class="descclassname">augur.augurplugin.</code><code class="descname">AugurPlugin</code><span class="sig-paren">(</span><em>augur_app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">augur.augurplugin.</code><code class="sig-name descname">AugurPlugin</code><span class="sig-paren">(</span><em class="sig-param">augur_app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines a base class for Augur plugins to implement</p>
 <dl class="method">
 <dt id="augur.augurplugin.AugurPlugin.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>augur_app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">augur_app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/augurplugin.html#AugurPlugin.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.augurplugin.AugurPlugin.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
+<table class="longtable docutils align-default">
 <colgroup>
-<col width="10%" />
-<col width="90%" />
+<col style="width: 10%" />
+<col style="width: 90%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#augur.augurplugin.AugurPlugin.__init__" title="augur.augurplugin.AugurPlugin.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(augur_app)</td>
-<td>Initialize self.</td>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#augur.augurplugin.AugurPlugin.__init__" title="augur.augurplugin.AugurPlugin.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(augur_app)</p></td>
+<td><p>Initialize self.</p></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_routes</span></code>(server)</td>
-<td>Creates a route for the given plugin and assigns it to the server</td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_routes</span></code>(server)</p></td>
+<td><p>Creates a route for the given plugin and assigns it to the server</p></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(shared)</td>
-<td>Should implement a function that gathers data</td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(shared)</p></td>
+<td><p>Should implement a function that gathers data</p></td>
 </tr>
 </tbody>
 </table>
@@ -77,14 +75,14 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
 </ul>
@@ -107,13 +105,11 @@
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -126,7 +122,7 @@
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

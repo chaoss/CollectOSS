@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>augur.util &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +14,7 @@
     <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Development Guide" href="../dev-guide-toc.html" />
+    <link rel="next" title="Docker Installation" href="../docker-install.html" />
     <link rel="prev" title="augur.runtime" href="augur.runtime.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -38,23 +36,23 @@
 <span id="augur-util"></span><h1>augur.util<a class="headerlink" href="#module-augur.util" title="Permalink to this headline">¶</a></h1>
 <p>Provides shared functions that do not fit in a class of their own</p>
 <p class="rubric">Functions</p>
-<table border="1" class="longtable docutils">
+<table class="longtable docutils align-default">
 <colgroup>
-<col width="10%" />
-<col width="90%" />
+<col style="width: 10%" />
+<col style="width: 90%" />
 </colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate</span></code>([metadata])</td>
-<td>Decorates a function as being a metric</td>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate</span></code>([metadata])</p></td>
+<td><p>Decorates a function as being a metric</p></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">getFileID</span></code>(path)</td>
-<td>Returns file ID of given object</td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">getFileID</span></code>(path)</p></td>
+<td><p>Returns file ID of given object</p></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cache</span></code>(namespace[,&nbsp;cache_manager])</td>
-<td>Returns cache of object called ‘namespace’</td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cache</span></code>(namespace[, cache_manager])</p></td>
+<td><p>Returns cache of object called ‘namespace’</p></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_path</span></code>(path)</td>
-<td>Returns data path of given object</td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_path</span></code>(path)</p></td>
+<td><p>Returns data path of given object</p></td>
 </tr>
 </tbody>
 </table>
@@ -69,14 +67,14 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
 </ul>
@@ -86,7 +84,7 @@
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../python.html">Augur Python Library</a><ul>
       <li>Previous: <a href="augur.runtime.html" title="previous chapter">augur.runtime</a></li>
-      <li>Next: <a href="../dev-guide-toc.html" title="next chapter">Development Guide</a></li>
+      <li>Next: <a href="../docker-install.html" title="next chapter">Docker Installation</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -99,13 +97,11 @@
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -118,7 +114,7 @@
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
