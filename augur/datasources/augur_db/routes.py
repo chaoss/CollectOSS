@@ -23,7 +23,7 @@ def create_routes(server):
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
-<<<<<<< Updated upstream
+
     server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
 
     #####################################
@@ -331,6 +331,4 @@ def create_routes(server):
     #                             kwargs=kwargs)
 
     #     return Response(response=data, status=200, mimetype='application/json')
-=======
-    server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
->>>>>>> Stashed changes
+
