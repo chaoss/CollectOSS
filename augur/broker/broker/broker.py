@@ -1,8 +1,23 @@
 import logging
 import requests
 from multiprocessing import Process, Queue
-logging.basicConfig(filename='logs/server.log')
-logger = logging.getLogger(name="broker_logger")
+
+import json
+import random
+import sys
+import time
+
+import click
+import zmq
+import multiprocessing
+
+from augur import logger
+
+# from multichannel.worker_tasks import deep_github_worker_task, github_worker_task, facade_worker_task
+# from multichannel.client_tasks import client_owner_repo_task, client_git_url_task
+
+# logging.basicConfig(filename='logs/server.log')
+# logger = logging.getLogger(name="broker_logger")
 
 class Worker():
     """Workers collect data from data sources, normalize the data into our schema, and update the database. 
@@ -46,11 +61,15 @@ class Broker(object):
     Each type of worker gets their own queue, and workers compete against other workers of 
         their own type (competing consumers) to fulfill jobs on that queue. 
     """
+    
     def __init__(self):
         """ Initialize the broker's maintained sets of connected workers and created jobs
         """
+        # self.NBR_CLIENTS = 1
+        self.num_workers = 1
         self.connected_workers = {}
         self.created_jobs = []
+        logger.info("I am working")
 
     def add_new_worker(self, worker):
         """ Method to add a new worker to the set of workers the broker is managing
@@ -89,9 +108,135 @@ class Broker(object):
             requests.post(worker.location + '/AUGWOP/task', json=job_received)
 
     def completed_job(self, job):
-        print("Job completed: ", completed_job, job)
+        logger.info("Job completed: ", completed_job, job)
         completed_job = self.connected_workers[job['worker_id']].queue.get()
-        print("Job completed: ", completed_job, job)
+        logger.info("Job completed: ", completed_job, job)
+
+    def main(pub, con):
+        """Load balancer main loop."""
+        # Prepare context and sockets
+        context = zmq.Context.instance()
+        frontend = context.socket(zmq.ROUTER)
+        frontend.bind("ipc://frontend.ipc")
+        backend = context.socket(zmq.ROUTER)
+        backend.bind("ipc://backend.ipc")
+
+        # Start background tasks
+        def start(task, *args):
+            process = multiprocessing.Process(target=task, args=args)
+            process.daemon = True
+            process.start()
+
+        for i in range(NBR_WORKERS):
+            start(deep_github_worker_task, i)
+            start(github_worker_task, i)
+            start(facade_worker_task, i)
+        for i in range(NBR_CLIENTS):
+            start(client_git_url_task, i)
+            start(client_owner_repo_task, i)
+
+        # Initialize main loop state
+        count = NBR_CLIENTS
+        workers = []
+        jobs = {}
+        client_job_ids = {}
+        poller = zmq.Poller()
+        # Only poll for requests from backend until workers are available
+        poller.register(backend, zmq.POLLIN)
+
+        while True:
+            # Identify which sockets have activity
+            sockets = dict(poller.poll())
+
+            # If the backend is the one that has activity
+            if backend in sockets:
+                # Identify the worker and the client
+                request = backend.recv_multipart()
+                worker, delimiter, client = request[:3]
+
+                # parse the message
+                message = request[2].decode('ascii').split(" ")
+
+                # If there are no workers currently available
+                if not workers:
+                    #listen on the frontend now that a worker is available (we just found one above)
+                    poller.register(frontend, zmq.POLLIN)
+
+                if 'HELLO' == message[0]:
+                    spec = json.loads(message[1])
+
+                    # Create a new augur worker
+                    augur_worker = AugurWorker(ID=worker,
+                                               given=spec['qualifications'][0]['given'][0],
+                                               models=spec['qualifications'][0]['models'])
+
+                    # Add new worker to the list of available workers
+                    workers.append(augur_worker)
+
+                # If the client's message is not READY and there are more than 3 parts to it, then that mean's a reply to a request
+                if client != b"READY" and len(request) > 3:
+                    # Identify the reply
+                    delimiter, reply = request[3:]
+
+                    if 'DONE' == reply.decode('ascii'):
+                        job_items = list(jobs.items())
+                        job_id = next(job[0] for job in job_items if worker.decode('ascii') in list(job[1].keys()))
+
+                        jobs[job_id][worker.decode('ascii')] = 'complete'
+
+                        if len([job for job in jobs[job_id].values()]) == len([job for job in jobs[job_id].values() if job == 'complete']):
+                            logger.info(f"Job {job_id} is finished")
+                            frontend.send_multipart([client_job_ids[job_id], b"", b"DONE"])
+                        else:
+                            logger.info(f"Job {job_id} is still in progress")
+
+                    # Send to the client that made the request the contents of the reply 
+                    frontend.send_multipart([client, b"", reply])
+
+                    # Note that one of the requests has been served
+                    count -= 1
+
+                    # # If there are no more requests to be served, terminate
+                    # if not count:
+                    #     break
+
+            # If there's activity on the frontend
+            if frontend in sockets:
+                # Get next client request
+                msg = frontend.recv_multipart()
+                client = msg[0]
+                delimiter = msg[1]
+                request = msg[2]
+
+                # Identify given from request
+                given = list(json.loads((request.decode('ascii')).split(" ")[1])['given'])[0]
+
+                # Find workers that can process that given
+                compatible_workers = [worker for worker in workers if worker.given[1] == given]
+
+                # If any exist, give each one a copy of the request
+                if workers is not None:
+                    job_id = random.randint(0, 100)
+                    jobs[job_id] = {}
+                    client_job_ids[job_id] = client
+                    logger.info(f"Created job {job_id} for {client.decode('ascii')}")
+                    for worker in compatible_workers:
+                        # Send to the backend the worker to use, which client requested, and the message from the client
+                        #logger.info(f"{request.decode('ascii')} is being routed to {worker.ID.decode('ascii')}")
+                        backend.send_multipart([worker.ID, b"", client, b"", request])
+
+                        # Add the job to the list of current jobs
+                        jobs[job_id][worker.ID.decode('ascii')] = 'working'
+
+                # Otherwise, let the frontend know that the request can't be served
+                else:
+                    logger.warning(f"Augur does not have knowledge of any workers that are capable of handing the request {request.decode('ascii')}. \nPlease install a worker that can serve requests given `{given}`")
+                    frontend.send_multipart([client, b"", b"NO-WORKERS"])
+
+        # Clean up
+        backend.close()
+        frontend.close()
+        context.term()
 
 def dump_queue(queue):
     """

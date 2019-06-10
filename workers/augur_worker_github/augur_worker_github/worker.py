@@ -6,7 +6,10 @@ import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 import datetime
-
+import time
+import logging
+logging.basicConfig(filename='worker.log', level=logging.INFO)
+# logger = logging.getLogger(name="worker_logger")
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -38,6 +41,7 @@ class GitHubWorker:
     config: holds info like api keys, descriptions, and database connection strings
     """
     def __init__(self, config, task=None):
+        logging.info('Worker initializing...')
         self._task = task
         self._child = None
         self._queue = Queue()
@@ -178,10 +182,10 @@ class GitHubWorker:
             self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
         
         # list_queue = dump_queue(self._queue)
-        # print("worker's queue after adding the job: " + list_queue)
+        # logging.info("worker's queue after adding the job: " + list_queue)
 
         except:
-            print("that repo is not in our database")
+            logging.info("that repo is not in our database")
         
         self._task = value
         self.run()
@@ -195,7 +199,7 @@ class GitHubWorker:
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
-        print("Running...")
+        logging.info("Running...")
         # if not self._child:
         self._child = Process(target=self.collect, args=())
         self._child.start()
@@ -224,8 +228,7 @@ class GitHubWorker:
         """ Data collection function
         Query the GitHub API for contributors
         """
-
-        print("Querying contributors with given entry info: ", entry_info, "\n")
+        logging.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
 
         # Url of repo we are querying for
         url = entry_info['repo_git']
@@ -242,14 +245,14 @@ class GitHubWorker:
             name = name[:-4]
 
         url = ("https://api.github.com/repos/" + owner + "/" + name + "/contributors")
-        print("Hitting endpoint: ", url, " ...\n")
+        logging.info("Hitting endpoint: " + url + " ...\n")
         r = requests.get(url=url)
         self.update_rate_limit()
         contributors = r.json()
 
         # Duplicate checking ...
         need_insertion = self.filter_duplicates({'cntrb_login': "login"}, ['contributors'], contributors)
-        print("Count of contributors needing insertion: ", len(need_insertion), "\n")
+        logging.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
         
         for repo_contributor in need_insertion:
 
@@ -257,7 +260,7 @@ class GitHubWorker:
             #   created at
             #   i think that's it
             cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
-            print("Hitting endpoint: ", cntrb_url, " ...\n")
+            logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
             r = requests.get(url=cntrb_url)
             self.update_rate_limit()
             contributor = r.json()
@@ -311,7 +314,7 @@ class GitHubWorker:
 
             # Commit insertion to table
             self.db.execute(self.contributors_table.insert().values(cntrb))
-            print("Inserted contributor: ", contributor['login'], "\n")
+            logging.info("Inserted contributor: " + contributor['login'] + "\n")
 
             # Increment our global track of the cntrb id for the possibility of it being used as a FK
             self.cntrb_id_inc += 1
@@ -341,7 +344,7 @@ class GitHubWorker:
             name = name[:-4]
 
         url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues")
-        print("Hitting endpoint: ", url, " ...\n")
+        logging.info("Hitting endpoint: " + url + " ...\n")
         r = requests.get(url=url)
         self.update_rate_limit()
         issues = r.json()
@@ -351,11 +354,11 @@ class GitHubWorker:
 
         # Discover and remove duplicates before we start inserting
         need_insertion = self.filter_duplicates({'gh_issue_id': 'id'}, ['issues'], issues)
-        print("Count of issues needing insertion: ", len(need_insertion), "\n")
+        logging.info("Count of issues needing insertion: " + str(len(need_insertion)) + "\n")
 
         for issue_dict in need_insertion:
 
-            print("Begin analyzing the issue with title: ", issue_dict['title'], "\n")
+            logging.info("Begin analyzing the issue with title: " + issue_dict['title'] + "\n")
             # Add the FK repo_id to the dict being inserted
             issue_dict['repo_id'] = entry_info['repo_id']
 
@@ -363,11 +366,11 @@ class GitHubWorker:
             #   still unsure about this key value pair/what it means
             pr_id = None
             if "pull_request" in issue_dict:
-                print("it is a PR\n")
+                logging.info("it is a PR\n")
                 # Right now we are just storing our issue id as the PR id if it is one
                 pr_id = self.issue_id_inc
             else:
-                print("it is not a PR\n")
+                logging.info("it is not a PR\n")
 
             # Begin on the actual issue...
 
@@ -376,14 +379,14 @@ class GitHubWorker:
 
             # Get events ready in case the issue is closed and we need to insert the closer's id
             events_url = (url + "/events")
-            print("Hitting endpoint: ", events_url, " ...\n")
+            logging.info("Hitting endpoint: " + events_url + " ...\n")
             r = requests.get(url=events_url)
             self.update_rate_limit()
             issue_events = r.json()
             
             # If the issue is closed, then we search for the closing event and store the user's id
             cntrb_id = None
-            if issue_dict['closed_at'] is not None:
+            if 'closed_at' in issue_dict:
                 for event in issue_events:
                     if event['event'] == 'closed':
                         cntrb_id = self.find_id_from_login(event['actor']['login'])
@@ -419,23 +422,23 @@ class GitHubWorker:
 
             # Commit insertion to the issues table
             self.db.execute(self.issues_table.insert().values(issue))
-            print("Inserted issue with our issue_id being: ", self.issue_id_inc, 
-                "and title of: ", issue_dict['title'], "and gh_issue_num of: ", issue_dict['number'], "\n")
+            logging.info("Inserted issue with our issue_id being: " + str(self.issue_id_inc), 
+                "and title of: " + issue_dict['title'] + "and gh_issue_num of: " + str(issue_dict['number']) + "\n")
 
             # Just to help me figure out cases where a..nee vs a..nees shows up
             if "assignee" in issue_dict and "assignees" in issue_dict:
-                print("assignee and assignees here\n")
+                logging.info("assignee and assignees here\n")
             elif "assignees" in issue_dict:
-                print("multiple assignees and no single one\n")
+                logging.info("multiple assignees and no single one\n")
             elif "assignee" in issue_dict:
-                print("single assignees and no multiples\n")
+                logging.info("single assignees and no multiples\n")
 
             # Check if the assignee key's value is already recorded in the assignees key's value
             #   Create a collective list of unique assignees
             collected_assignees = issue_dict['assignees']
             if issue_dict['assignee'] not in collected_assignees:
                 collected_assignees.append(issue_dict['assignee'])
-            print("Count of assignees for this issue: ", len(collected_assignees), "\n")
+            logging.info("Count of assignees for this issue: " + str(len(collected_assignees)) + "\n")
 
             # Handles case if there are no assignees
             if collected_assignees[0] is not None:
@@ -450,17 +453,17 @@ class GitHubWorker:
                     }
                     # Commit insertion to the assignee table
                     self.db.execute(self.issue_assignees_table.insert().values(assignee))
-                    print("Inserted assignee for issue id: ", self.issue_id_inc, 
-                        "with login/cntrb_id: ", assignee_dict['login'], assignee['cntrb_id'], "\n")
+                    logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc), 
+                        "with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
 
 
             
 
             # Insert the issue labels to the issue_labels table
             for label_dict in issue_dict['labels']:
-                print(label_dict)
+                logging.info(str(label_dict))
                 desc = None
-                if label_dict['description'] is not None:
+                if 'description' in label_dict:
                     desc = label_dict['description']
                 label = {
                     "issue_id": self.issue_id_inc,
@@ -473,13 +476,13 @@ class GitHubWorker:
                 }
 
                 self.db.execute(self.issue_labels_table.insert().values(label))
-                print("Inserted issue label with text: ", label_dict['name'], "\n")
+                logging.info("Inserted issue label with text: " + label_dict['name'] + "\n")
 
 
             #### Messages/comments and events insertion (we collected events above but never inserted them)
 
             comments_url = (url + "/comments")
-            print("Hitting endpoint: ", comments_url, " ...\n")
+            logging.info("Hitting endpoint: " + comments_url + " ...\n")
             r = requests.get(url=comments_url)
             self.update_rate_limit()
             issue_comments = r.json()
@@ -491,7 +494,7 @@ class GitHubWorker:
             # Filter duplicates before insertion
             comments_need_insertion = self.filter_duplicates({'msg_timestamp': 'created_at', 'cntrb_id': 'cntrb_id'}, ['message'], issue_comments)
     
-            print("Number of comments needing insertion: ", len(comments_need_insertion))
+            logging.info("Number of comments needing insertion: " + str(len(comments_need_insertion)))
 
             
 
@@ -508,7 +511,7 @@ class GitHubWorker:
                 }
 
                 self.db.execute(self.message_table.insert().values(issue_comment))
-                print("Inserted issue comment: ", comment['body'], "\n")
+                logging.info("Inserted issue comment: " + comment['body'] + "\n")
 
                 ### ISSUE MESSAGE REF TABLE ###
 
@@ -529,7 +532,7 @@ class GitHubWorker:
                 event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
             events_need_insertion = self.filter_duplicates({'node_id': 'node_id'}, ['issue_events'], issue_events)
         
-            print("Number of events needing insertion: ", len(events_need_insertion))
+            logging.info("Number of events needing insertion: " + str(len(events_need_insertion)))
 
             for event in issue_events:
                 issue_event = {
@@ -545,7 +548,7 @@ class GitHubWorker:
                 }
 
                 self.db.execute(self.issue_events_table.insert().values(issue_event))
-                print("Inserted issue event: ", event['event'], " ", self.issue_id_inc,"\n")
+                logging.info("Inserted issue event: " + event['event'] + " " + str(self.issue_id_inc) + "\n")
             
 
 
@@ -553,11 +556,9 @@ class GitHubWorker:
 
             task_completed = entry_info.to_dict()
             task_completed['worker_id'] = self.config['id']
-            print("Telling broker we completed task: ", task_completed)
+            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
 
             requests.post('http://localhost:5000/api/completed_task', json=task_completed)
-
-            print("\n\n")
             
     def filter_duplicates(self, cols, tables, og_data):
         need_insertion = []
@@ -566,7 +567,7 @@ class GitHubWorker:
         del tables[0]
         for table in tables:
             table_str += ", " + table
-        print(cols, tables)
+        logging.info(str(cols) + str(tables))
         for col in cols.keys():
             colSQL = s.sql.text("""
                 SELECT {} FROM {}
@@ -577,11 +578,11 @@ class GitHubWorker:
             for obj in og_data:
                 try:
                     if values.isin([obj[cols[col]]]).any().any():
-                        print("value of tuple exists: ", obj[cols[col]], "\n")
+                        logging.info("value of tuple exists: " + obj[cols[col]] + "\n")
                     else:
                         need_insertion.append(obj)
                 except:
-                    print("RATE LIMIT EXCEEDED, last response: ", og_data)
+                    logging.info("RATE LIMIT EXCEEDED, last response: " + str(og_data))
         return need_insertion
 
     def find_id_from_login(self, login):
@@ -590,11 +591,11 @@ class GitHubWorker:
             """.format(login))
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)] 
-        print(data_list, login)
+        logging.info(str(data_list) + login)
         try:
             return data_list[0][0]
         except:
-            print("contributor needs to be added...")
+            logging.info("contributor needs to be added...")
             cntrb_url = ("https://api.github.com/users/" + login)
 
             r = requests.get(url=cntrb_url)
@@ -642,7 +643,7 @@ class GitHubWorker:
                 "data_source": self.data_source
             }
             self.db.execute(self.contributors_table.insert().values(cntrb))
-            print("Inserted contributor: ", contributor['login'], "\n")
+            logging.info("Inserted contributor: " + contributor['login'] + "\n")
             self.cntrb_id_inc += 1
             self.find_id_from_login(login)
             pass
@@ -654,9 +655,8 @@ class GitHubWorker:
             url = "https://api.github.com/users/gabe-heim"
             response = requests.get(url=url)
             reset_time = response.headers['X-RateLimit-Reset']
-        
-            time_diff = datetime.datetime.fromtimestamp(reset_time) - datetime.datetime.now()
-            print("Rate limit exceeded, waiting ", time_diff.total_seconds(), " seconds.\n")
+            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
+            logging.info("Rate limit exceeded, waiting " + str(time_diff.total_seconds()) + " seconds.\n")
             time.sleep(time_diff.total_seconds())
             self.rate_limit = int(response.headers['X-RateLimit-Limit'])
         
