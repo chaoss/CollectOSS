@@ -47,7 +47,6 @@ def main(augur_url, host, port):
     credentials = read_config("Database")
 
     config = { 
-            "connection_string": credentials["connection_string"],
             "host": credentials["host"],
             "password": credentials["password"],
             "port": credentials["port"],
@@ -66,7 +65,6 @@ def main(augur_url, host, port):
     
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)
-    print("wrong one")
 
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0):

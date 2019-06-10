@@ -9,7 +9,6 @@ import datetime
 import time
 import logging
 logging.basicConfig(filename='worker.log', level=logging.INFO)
-# logger = logging.getLogger(name="worker_logger")
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -391,6 +390,8 @@ class GitHubWorker:
                     if event['event'] == 'closed':
                         cntrb_id = self.find_id_from_login(event['actor']['login'])
             
+            print(issue_dict['user'])
+            print(self.find_id_from_login(issue_dict['user']['login']))
             issue = {
                 "issue_id": self.issue_id_inc,
                 "repo_id": issue_dict['repo_id'],
@@ -422,8 +423,8 @@ class GitHubWorker:
 
             # Commit insertion to the issues table
             self.db.execute(self.issues_table.insert().values(issue))
-            logging.info("Inserted issue with our issue_id being: " + str(self.issue_id_inc), 
-                "and title of: " + issue_dict['title'] + "and gh_issue_num of: " + str(issue_dict['number']) + "\n")
+            logging.info("Inserted issue with our issue_id being: " + str(self.issue_id_inc) + 
+                " and title of: " + issue_dict['title'] + " and gh_issue_num of: " + str(issue_dict['number']) + "\n")
 
             # Just to help me figure out cases where a..nee vs a..nees shows up
             if "assignee" in issue_dict and "assignees" in issue_dict:
@@ -453,8 +454,8 @@ class GitHubWorker:
                     }
                     # Commit insertion to the assignee table
                     self.db.execute(self.issue_assignees_table.insert().values(assignee))
-                    logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc), 
-                        "with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
+                    logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
+                        " with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
 
 
             
