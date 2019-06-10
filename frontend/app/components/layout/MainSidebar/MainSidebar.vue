@@ -61,7 +61,6 @@
 <!-- <<<<<<< Updated upstream -->
                   <d-link class="nav-link" style="padding: 0.7rem .7rem 0.7rem 1.5rem; margin-left: 1rem">
 <!-- ======= -->
-                  <d-link class="nav-link" style="padding-left: 0px; padding: 0; display: block">
 <!-- >>>>>>> Stashed changes -->
                     <i class="material-icons">library_add</i>
                     <span>Add</span>

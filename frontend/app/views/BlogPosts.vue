@@ -17,11 +17,7 @@
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group.rg_name }}</d-badge>
 <!-- ======= -->
-          <d-col v-for="(project, idx) in projects.slice(0,5)" :key="idx" lg="2" md="4" sm="12" class="mb-1">
-            <d-card class="card-small card-post card-post--1">
-              <div class="card-post__image" style="font-size: .7rem">
-                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ project }}</d-badge>
-<!-- >>>>>>> Stashed changes -->
+          <!-- >>>>>>> Stashed changes -->
                 <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :source="testEndpoints[idx]" owner="twitter" repo="twemoji"></insight-chart>
 
                 <div class="card-post__author d-flex">
@@ -35,7 +31,6 @@
 <!-- <<<<<<< Updated upstream -->
                   <a href="#" class="text-fiord-blue">{{ getOwner(repos[0].url) }}/{{ getRepo(repos[0].url) }}</a>
 <!-- ======= -->
-                  <a href="#" class="text-fiord-blue" style="font-size: .875rem">{{ getOwner(repos[project][0].url) }}/{{ getRepo(repos[project][0].url) }}</a>
 <!-- >>>>>>> Stashed changes -->
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository {{ getPhrase(idx) }} in {{ testEndpoints[idx] }} in the past {{ testTimeframes[idx] }}</p>
@@ -110,8 +105,7 @@
 <!-- <<<<<<< Updated upstream -->
             <d-col v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="4" sm="12" class="mb-4">
 <!-- ======= -->
-            <d-col v-for="(project, idx) in projects.slice(0,3)" :key="idx" lg="4" sm="12" class="mb-0">
-<!-- >>>>>>> Stashed changes -->
+            <!-- >>>>>>> Stashed changes -->
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
                   <h6 class="m-0">{{ group.rg_name }}</h6>
