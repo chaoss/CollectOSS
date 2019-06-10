@@ -35,12 +35,10 @@ def create_routes(server):
     @apiName Code Changes
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Code_Changes.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -67,13 +65,11 @@ def create_routes(server):
     @apiName Code Changes
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Code_Changes.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID.
     @apiParma {String} repo_id Repository ID.
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -101,12 +97,10 @@ def create_routes(server):
     @apiName code-changes-lines
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Code_Changes_Lines.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -142,13 +136,11 @@ def create_routes(server):
     @apiName code-changes-lines
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Code_Changes_Lines.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID.
     @apiParma {String} repo_id Repository ID.
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -180,12 +172,10 @@ def create_routes(server):
     @apiName issues-new
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -207,13 +197,11 @@ def create_routes(server):
     @apiName issues-new
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID.
     @apiParma {String} repo_id Repository ID.
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -233,12 +221,10 @@ def create_routes(server):
     @apiName issues-closed
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Closed.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     TODO
     """
@@ -249,13 +235,11 @@ def create_routes(server):
     @apiName issues-closed
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_New.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID.
     @apiParma {String} repo_id Repository ID.
     @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
     @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
     @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
-
     @apiSuccessExample {json} Success-Response:
                     TODO
     """
@@ -266,9 +250,7 @@ def create_routes(server):
     @apiName issue-backlog
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -288,10 +270,8 @@ def create_routes(server):
     @apiName issue-backlog
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
-
     @apiParam {String} repo_group_id Repository Group ID.
     @apiParma {String} repo_id Repository ID.
-
     @apiSuccessExample {json} Success-Response:
                     [
                         {
@@ -332,3 +312,306 @@ def create_routes(server):
 
     #     return Response(response=data, status=200, mimetype='application/json')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-requests-merge-contributor-new
+    @apiName New Contributors of Commits
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/pull-requests-merge-contributor-new.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "commit_date": "2018-01-01T00:00:00.000Z",
+                            "count": 5140
+                        },
+                        {
+                            "commit_date": "2019-01-01T00:00:00.000Z",
+                            "commit_count": 711
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.pull_requests_merge_contributor_new, 'pull-requests-merge-contributor-new')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-requests-merge-contributor-new
+    @apiName New Contributors of Commits
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/pull-requests-merge-contributor-new.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "commit_date": "2018-01-01T00:00:00.000Z",
+                            "count": 2287
+                        },
+                        {
+                            "commit_date": "2018-02-01T00:00:00.000Z",
+                            "count": 1939
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.pull_requests_merge_contributor_new, 'pull-requests-merge-contributor-new')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-first-time-opened
+    @apiName New Contributors of Issues
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-opened.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "issue_date": "2018-05-20T00:00:00.000Z",
+                            "count": 3
+                        },
+                        {
+                            "issue_date": "2019-06-03T00:00:00.000Z",
+                            "count": 23
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.issues_first_time_opened, 'issues-first-time-opened')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened
+    @apiName New Contributors of Issues
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-opened.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "issue_date": "2018-05-20T00:00:00.000Z",
+                            "count": 3
+                        },
+                        {
+                            "issue_date": "2019-06-03T00:00:00.000Z",
+                            "count": 23
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.issues_first_time_opened, 'issues-first-time-opened')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-first-time-closed
+    @apiName Closed Issues New Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-closed.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "issue_date": "2018-05-20T00:00:00.000Z",
+                            "count": 3
+                        },
+                        {
+                            "issue_date": "2019-06-03T00:00:00.000Z",
+                            "count": 23
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.issues_first_time_closed, 'issues-first-time-closed')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-closed
+    @apiName Closed Issues New Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-closed.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "issue_date": "2018-05-20T00:00:00.000Z",
+                            "count": 3
+                        },
+                        {
+                            "issue_date": "2019-06-03T00:00:00.000Z",
+                            "count": 23
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.issues_first_time_closed, 'issues-first-time-closed')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/sub-projects
+    @apiName Sub-Projects
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "sub_protject_count": 2
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.sub_projects, 'sub-projects')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/sub-projects
+    @apiName Sub-Projects
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "sub_protject_count": 2
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.sub_projects, 'sub-projects')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/contributors
+    @apiName Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "user": 1,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        },
+                        {
+                            "user": 2,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.contributors, 'contributors')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors
+    @apiName Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                       {
+                            "user": 1,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        },
+                        {
+                            "user": 2,
+                            "commits": 0,
+                            "issues": 2,
+                            "commit_comments": 0,
+                            "issue_comments": 0,
+                            "pull_requests": 0,
+                            "pull_request_comments": 0,
+                            "total": 2
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.contributors, 'contributors')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/contributors-new
+    @apiName New Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "contribute_at": "2018-05-20T00:00:00.000Z",
+                            "count": 3
+                        },
+                        {
+                            "contribute_at": "2019-06-03T00:00:00.000Z",
+                            "count": 23
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.contributors_new, 'contributors-new')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors-new
+    @apiName New Contributors
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} [period="day"] Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} [begin_date="1970-1-1 0:0:1"] Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:1'
+    @apiParam {string} [end_date] Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "contribute_at": "2018-05-20T00:00:00.000Z",
+                            "count": 3
+                        },
+                        {
+                            "contribute_at": "2019-06-03T00:00:00.000Z",
+                            "count": 23
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.contributors_new, 'contributors-new')
