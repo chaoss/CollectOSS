@@ -203,7 +203,7 @@ class BadgeWorker:
             self.db.execute(self.table.insert().values(data[0]))
             logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")   
 
-            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
+            logging.info("Telling broker we completed task for repo_id: " + str(entry_info['repo_id']) + "\n\n")
             requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
         else:
             logging.info("Endpoint did not return any data.")
