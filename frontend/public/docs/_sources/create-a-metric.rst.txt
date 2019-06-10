@@ -4,6 +4,21 @@ Create Your First Metric
 .. role:: raw-html-m2r(raw)
    :format: html
 
+Building a new metric in Augur involves four main steps. Two steps are in the "back end" and two are in the "front end". 
+
+1. Backend: 
+	- Pull the result set you need out of the Augur Unified Schema. 
+	- Define the API Route for the endpoint. 
+2. Frontend
+	- Map the route to the front end in `augurAPI.js`
+	- Reference the endpoint from `augurAPI.js` as a datasource in a .VUE card. 
+	  
+
+.. image:: images/new-metric.png 
+*The data served by Augur comes from a variety of sources, including .git repositories, issue trackers, mailing lists, Linux Foundation Badging programs, code coverage analysis tools and others.  All of the data is persisted by Augur's workers in a unified data model. Once the data is persisted, its ready to be served as API endpoints; which can be presented in Augur's front end or by any other presentation environment chosen.  There are four basic steps, two in the front end, and two in the backend.  In the backend, there's a <datasource>.py file in the `augur/datasources/<data-source>/` directory. Several are included, like `ghtorrent`, `facade`, `augurDB` and others. Look in the `datasources` directory for specific existing implementations. API Endpoints are served by the `routes.py` file in each `<data-source>` directory. Once the API "exists", the endpoint can be mapped in Augur's frontend through the `augurAPI.js` file in `augur/frontend/app/`. VUE cards present that data graphically in `<card>.vue` files.*
+
+Follow the Steps 
+--------------------------------------
 
 
 1. augur/augur/datasources/\ :raw-html-m2r:`<directory for data source>`

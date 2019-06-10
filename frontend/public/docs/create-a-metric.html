@@ -34,6 +34,29 @@
             
   <div class="section" id="create-your-first-metric">
 <h1>Create Your First Metric<a class="headerlink" href="#create-your-first-metric" title="Permalink to this headline">¶</a></h1>
+<p>Building a new metric in Augur involves four main steps. Two steps are in the “back end” and two are in the “front end”.</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Backend:</dt><dd><ul class="simple">
+<li><p>Pull the result set you need out of the Augur Unified Schema.</p></li>
+<li><p>Define the API Route for the endpoint.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Frontend</dt><dd><ul class="simple">
+<li><p>Map the route to the front end in <cite>augurAPI.js</cite></p></li>
+<li><p>Reference the endpoint from <cite>augurAPI.js</cite> as a datasource in a .VUE card.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<img alt="_images/new-metric.png" src="_images/new-metric.png" />
+<p><em>The data served by Augur comes from a variety of sources, including .git repositories, issue trackers, mailing lists, Linux Foundation Badging programs, code coverage analysis tools and others.  All of the data is persisted by Augur’s workers in a unified data model. Once the data is persisted, its ready to be served as API endpoints; which can be presented in Augur’s front end or by any other presentation environment chosen.  There are four basic steps, two in the front end, and two in the backend.  In the backend, there’s a &lt;datasource&gt;.py file in the `augur/datasources/&lt;data-source&gt;/` directory. Several are included, like `ghtorrent`, `facade`, `augurDB` and others. Look in the `datasources` directory for specific existing implementations. API Endpoints are served by the `routes.py` file in each `&lt;data-source&gt;` directory. Once the API “exists”, the endpoint can be mapped in Augur’s frontend through the `augurAPI.js` file in `augur/frontend/app/`. VUE cards present that data graphically in `&lt;card&gt;.vue` files.</em></p>
+<div class="section" id="follow-the-steps">
+<h2>Follow the Steps<a class="headerlink" href="#follow-the-steps" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p>augur/augur/datasources/<span class="raw-html-m2r"><directory for data source></span></p>
 <ol class="arabic simple">
@@ -407,6 +430,7 @@
    <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
+</div>
 </div>
 
 
