@@ -309,7 +309,6 @@ class Augur(object):
                 WHERE  repo_id = :repo_id)
                 AND repo_added BETWEEN :begin_date AND :end_date
             """)
-<<<<<<< Updated upstream
 
             results = pd.read_sql(sub_projectsSQL, self.db, params={'repo_id': repo_id,
                                                                     'begin_date': begin_date, 'end_date': end_date})
@@ -321,19 +320,6 @@ class Augur(object):
                 AND repo_added BETWEEN :begin_date AND :end_date
             """)
 
-=======
-
-            results = pd.read_sql(sub_projectsSQL, self.db, params={'repo_id': repo_id,
-                                                                    'begin_date': begin_date, 'end_date': end_date})
-        else:
-            sub_projectsSQL = s.sql.text("""
-                SELECT COUNT(*) AS sub_protject_count
-                FROM repo
-                WHERE repo_group_id = :repo_group_id
-                AND repo_added BETWEEN :begin_date AND :end_date
-            """)
-
->>>>>>> Stashed changes
             results = pd.read_sql(sub_projectsSQL, self.db, params={'repo_group_id': repo_group_id,
                                                                     'begin_date': begin_date, 'end_date': end_date})
         return results
