@@ -15,9 +15,6 @@ import sys
 import atexit
 import click
 
-
-
-
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     """
     Loads configurations, initializes Gunicorn, loads server
@@ -44,12 +41,13 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
         server = Server()
         return server.app
 
-
-
 @click.command('run', short_help='Run the Augur server')
 @pass_application
 def cli(app):
-    mp.set_start_method('forkserver')
+    try:
+        mp.set_start_method('forkserver')
+    except RuntimeError:
+        pass
     logger.info('Loading...')
     # app.init_all()
     app.schedule_updates()
