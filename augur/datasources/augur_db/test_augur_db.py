@@ -42,6 +42,23 @@ def test_issues_first_time_opened(augur_db):
 
 
 
+def test_issues_first_time_closed(augur_db):
+
+    # repo id
+    assert augur_db.issues_first_time_closed(24, repo_id=21524, period='year').isin(
+        [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
+    # repo_group_id
+    assert augur_db.issues_first_time_closed(24, period='year').isin(
+        [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
+    # begin_date and end_date
+    assert augur_db.issues_first_time_closed(24, period='year', begin_date='2019-1-1 00:00:00',
+                                             end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
+    assert augur_db.issues_first_time_closed(24, repo_id=21524, period='year', begin_date='2019-1-1 00:00:00',
+                                             end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
 def test_sub_projects(augur_db):
 
     # repo group
