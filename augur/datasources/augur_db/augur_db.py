@@ -251,7 +251,7 @@ class Augur(object):
         if repo_id:
             issuesClosedSQL = s.sql.text("""
                 SELECT
-                    date_trunc('day', new_date::DATE) AS issue_date, COUNT(cntrb_id)
+                    date_trunc(:period, new_date::DATE) AS issue_date, COUNT(cntrb_id)
                 FROM (
                     SELECT cntrb_id, MIN(created_at) AS new_date
                     FROM issue_events
@@ -268,7 +268,7 @@ class Augur(object):
         else:
             issuesClosedSQL = s.sql.text("""
                  SELECT
-                    date_trunc('day', new_date::DATE) AS issue_date, COUNT(cntrb_id)
+                    date_trunc(:period, new_date::DATE) AS issue_date, COUNT(cntrb_id)
                 FROM (
                     SELECT cntrb_id, MIN(created_at) AS new_date
                     FROM issue_events
