@@ -74,3 +74,10 @@ def test_issues_new(augur_db):
                                end_date='2017-05').iloc[1]['issues'] == 4
     assert augur_db.issues_new(24, period='month', begin_date='2017-05',
                                end_date='2018').iloc[2]['issues'] == 7
+
+def test_issue_backlog(augur_db):
+    #repo_id
+    assert augur_db.issue_backlog(21, 21166).iloc[0]['issue_backlog']  == 4
+
+    #repo_group_id
+    assert augur_db.issue_backlog(21).iloc[2]['issue_backlog'] == 3
