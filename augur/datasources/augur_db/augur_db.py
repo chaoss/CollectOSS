@@ -139,12 +139,12 @@ class Augur(object):
         if repo_id:
             commitNewContributor = s.sql.text("""
                 SELECT date_trunc(:period, new_date::DATE) as commit_date, 
-                COUNT(cmt_ght_author_id)
-                FROM ( SELECT cmt_ght_author_id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
+                COUNT(cmt_author_email)
+                FROM ( SELECT cmt_author_email, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
                 FROM commits WHERE
                 repo_id = :repo_id 
-                AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_ght_author_id IS NOT NULL
-                GROUP BY cmt_ght_author_id
+                AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_author_email IS NOT NULL
+                GROUP BY cmt_author_email
                 ) as abc GROUP BY commit_date
             """)
             results = pd.read_sql(commitNewContributor, self.db, params={'repo_id': repo_id, 'period': period,
@@ -153,12 +153,12 @@ class Augur(object):
         else:
             commitNewContributor = s.sql.text("""
                 SELECT date_trunc(:period, new_date::DATE) as commit_date, 
-                COUNT(cmt_ght_author_id)
-                FROM ( SELECT cmt_ght_author_id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
+                COUNT(cmt_author_email)
+                FROM ( SELECT cmt_author_email, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
                 FROM commits WHERE
                 repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id) 
-                AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_ght_author_id IS NOT NULL
-                GROUP BY cmt_ght_author_id
+                AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_author_email IS NOT NULL
+                GROUP BY cmt_author_email
                 ) as abc GROUP BY commit_date
             """)
             results = pd.read_sql(commitNewContributor, self.db,
