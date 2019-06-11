@@ -74,3 +74,17 @@ def test_sub_projects(augur_db):
 
     assert augur_db.sub_projects(24, repo_id=21441, begin_date='2019-6-1 00:00:01',
                                  end_date='2019-06-10 23:59:59').iloc[0]['sub_protject_count'] < 5
+
+def test_pull_requests_merge_contributor_new(augur_db):
+    # repo id
+    assert augur_db.pull_requests_merge_contributor_new(24, repo_id=21524, period='year').isin(
+        [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
+    # repo_group_id
+    assert augur_db.pull_requests_merge_contributor_new(24, period='year').isin(
+        [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
+    # begin_date and end_date
+    assert augur_db.pull_requests_merge_contributor_new(24, period='year', begin_date='2019-1-1 00:00:00',
+                                                        end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
