@@ -360,12 +360,12 @@ class Augur(object):
                 SUM(pull_request_comments) AS pull_request_comments,
                 SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
                 FROM (
-                (SELECT cntrb_id AS id,
+                (SELECT gh_user_id AS id,
                 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
                 FROM issues
                 WHERE repo_id = :repo_id 
-                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL 
-                GROUP BY cntrb_id)
+                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL 
+                GROUP BY gh_user_id)
                 UNION ALL 
                 (SELECT cmt_ght_author_id AS id,
                 COUNT(*) AS commits,  0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
@@ -392,12 +392,12 @@ class Augur(object):
                 SUM(pull_request_comments) AS pull_request_comments,
                 SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
                 FROM (
-                (SELECT cntrb_id AS id,
+                (SELECT gh_user_id AS id,
                 0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
                 FROM issues
                 WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)  
-                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL 
-                GROUP BY cntrb_id)
+                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL 
+                GROUP BY gh_user_id)
                 UNION ALL 
                 (SELECT cmt_ght_author_id AS id,
                 COUNT(*) AS commits,  0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
