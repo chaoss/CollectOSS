@@ -1,16 +1,22 @@
 import os
+import subprocess
+import time
+from subprocess import Popen
 import pytest
 import requests
-import augur.server
 
-def teardown_module(module):
-    os.system('make dev-stop')
+process = None
 
 @pytest.fixture(scope="session")
 def metrics_status():
-    os.system('make dev-stop')
-    os.system('make dev-start &')
+    process = subprocess.Popen(['make', 'backend-restart'])
+    time.sleep(5)
+    return process
 
-def test_metrics_statu(metrics_status):
+def test_api_status(metrics_status):
     result = requests.get('http://localhost:5000/api/unstable').json()
     assert result['status'] == 'OK'
+    # metrics_status.terminate()
+
+# def teardown_module(metrics_status):
+#     print(f"ending: {metrics_status}")

@@ -286,7 +286,6 @@ class Application(object):
         """
         Updates all plugins
         """
-        print(self.__updatable)
         for updatable in self.__updatable:
             logger.info('Updating {}...'.format(updatable['name']))
             updatable['update']()

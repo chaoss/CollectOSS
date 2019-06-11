@@ -292,7 +292,6 @@ class Server(object):
 
             if repo_url_base:
                 kwargs['repo_url'] = str(base64.b64decode(repo_url_base).decode())
-                print(kwargs['repo_url'])
 
             if not args and not kwargs:
                 data = func()

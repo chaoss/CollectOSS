@@ -115,6 +115,17 @@ server:
 frontend:
 	bash -c 'cd frontend; brunch build'
 
+backend-stop:
+	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
+	@ echo
+
+backend-start: backend-stop
+	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
+
+backend-restart: backend-stop backend-start
+
+backend: backend-restart
+
 python-docs:
 	@ bash -c '$(CONDAACTIVATE) cd docs/python && rm -rf _build && make html; rm -rf ../../frontend/public/docs; mv build/html ../../frontend/public/docs'
 
@@ -133,10 +144,10 @@ test-ds:
 	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 
 test-routes:
-	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE)_routes.py'
-# 	make dev-start
-# 	$(AUGUR_PYTHON) test/api/test_api.py
-# 	make dev-stop
+# 	@ $(AUGUR_PYTHON) -m augur.server & > /dev/null
+# 	@ sleep 10
+	@ bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE)_routes.py'
+# 	@ kill `cat logs/backend.pid`
 
 .PHONY: unlock
 unlock:
