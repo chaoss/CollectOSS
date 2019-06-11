@@ -61,3 +61,16 @@ def test_code_changes_lines(augur_db):
                                        end_date='2016-05').isin([pd.Timestamp('2016-02-01T00:00:00+00:00'), 196, 108]).any().any()
     assert augur_db.code_changes_lines(22, period='month', begin_date='2016-05',
                                        end_date='2016-08-15').isin([pd.Timestamp('2016-06-01T00:00:00+00:00'), 21331, 70, 20]).any().any()
+
+def test_issues_new(augur_db):
+    #repo_id
+    assert augur_db.issues_new(23, 21430, period='year').iloc[0]['issues'] == 2
+
+    #repo_group_id
+    assert augur_db.issues_new(23, period='year').iloc[0]['issues'] == 2
+
+    #begin_date & end_date
+    assert augur_db.issues_new(24, 21979, period='week', begin_date='2017',
+                               end_date='2017-05').iloc[1]['issues'] == 4
+    assert augur_db.issues_new(24, period='month', begin_date='2017-05',
+                               end_date='2018').iloc[2]['issues'] == 7
