@@ -48,6 +48,7 @@ def main(augur_url, host, port):
 
     config = { 
             "id": "com.augurlabs.core.github_worker",
+            "zombie_id": credentials["zombie_id"],
             "connection_string": credentials["connection_string"],
             "host": credentials["host"],
             "key": credentials["key"],

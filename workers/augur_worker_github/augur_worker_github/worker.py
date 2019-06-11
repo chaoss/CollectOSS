@@ -51,6 +51,7 @@ class GitHubWorker:
         self.tool_source = 'GitHub API Worker'
         self.tool_version = '0.0.1' # See __init__.py
         self.data_source = 'GitHub API'
+        self.results_counter = 0
 
         url = "https://api.github.com/users/gabe-heim"
         response = requests.get(url=url)
@@ -72,20 +73,29 @@ class GitHubWorker:
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
         )
-        
+
+        #Database connections
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
+        helper_schema = 'augur_operations'
+        self.helper_db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+
         metadata = MetaData()
+        helper_metadata = MetaData()
 
         metadata.reflect(self.db, only=['contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events',
             'issue_assignees'])
+        helper_metadata.reflect(self.helper_db, only=['gh_worker_history', 'gh_worker_job'])
 
         Base = automap_base(metadata=metadata)
+        HelperBase = automap_base(metadata=helper_metadata)
 
         Base.prepare()
+        HelperBase.prepare()
 
         self.contributors_table = Base.classes.contributors.__table__
         self.issues_table = Base.classes.issues.__table__
@@ -95,19 +105,40 @@ class GitHubWorker:
         self.issues_message_ref_table = Base.classes.issue_message_ref.__table__
         self.issue_assignees_table = Base.classes.issue_assignees.__table__
 
+        self.history_table = HelperBase.classes.gh_worker_history.__table__
+        self.job_table = HelperBase.classes.gh_worker_job.__table__
 
-        # Query all repos // CHANGE THIS
+
+        # Query all repos and last repo id
         repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo
+            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
             """)
 
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
+        repoIdSQL = s.sql.text("""
+            SELECT since_id_str FROM gh_worker_job
+            """)
+
+        df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+        last_id = int(df.iloc[0]['since_id_str'])
+        before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
+        after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
+
+        reorganized_repos = after_repos.append(before_repos)
+        logging.info("BEFORE: " + str(before_repos) + " AFTER: " + str(after_repos))
+        logging.info("FIRST REPO TO WORK ON: " + str(reorganized_repos))
+
+        # Reorganize so that the repo after the last repo we completed is first
+
+
         # Populate queue
-        for index, row in rs.iterrows():
+        for index, row in reorganized_repos.iterrows():
             self._queue.put(CollectorTask(message_type='TASK', entry_info=row))
 
-        #
+
+
+        # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
         maxIssueCntrbSQL = s.sql.text("""
             SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
             FROM issues, contributors
@@ -137,6 +168,8 @@ class GitHubWorker:
             msg_start = 25150
         else:
             msg_start = msg_start.item()
+
+        # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.issue_id_inc = (issue_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
@@ -313,6 +346,8 @@ class GitHubWorker:
 
             # Commit insertion to table
             self.db.execute(self.contributors_table.insert().values(cntrb))
+            self.results_counter += 1
+
             logging.info("Inserted contributor: " + contributor['login'] + "\n")
 
             # Increment our global track of the cntrb id for the possibility of it being used as a FK
@@ -324,6 +359,8 @@ class GitHubWorker:
         """ Data collection function
         Query the GitHub API for issues
         """
+        logging.info("Beginning filling the issues model for repo: " + entry_info['repo_git'] + "\n")
+        self.record_model_process('issues')
 
         # Contributors are part of this model, and finding all for the repo saves us 
         #   from having to add them as we discover committers in the issue process
@@ -390,8 +427,6 @@ class GitHubWorker:
                     if event['event'] == 'closed':
                         cntrb_id = self.find_id_from_login(event['actor']['login'])
             
-            print(issue_dict['user'])
-            print(self.find_id_from_login(issue_dict['user']['login']))
             issue = {
                 "issue_id": self.issue_id_inc,
                 "repo_id": issue_dict['repo_id'],
@@ -423,6 +458,8 @@ class GitHubWorker:
 
             # Commit insertion to the issues table
             self.db.execute(self.issues_table.insert().values(issue))
+            self.results_counter += 1
+
             logging.info("Inserted issue with our issue_id being: " + str(self.issue_id_inc) + 
                 " and title of: " + issue_dict['title'] + " and gh_issue_num of: " + str(issue_dict['number']) + "\n")
 
@@ -454,6 +491,8 @@ class GitHubWorker:
                     }
                     # Commit insertion to the assignee table
                     self.db.execute(self.issue_assignees_table.insert().values(assignee))
+                    self.results_counter += 1
+
                     logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
                         " with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
 
@@ -477,6 +516,8 @@ class GitHubWorker:
                 }
 
                 self.db.execute(self.issue_labels_table.insert().values(label))
+                self.results_counter += 1
+
                 logging.info("Inserted issue label with text: " + label_dict['name'] + "\n")
 
 
@@ -505,13 +546,14 @@ class GitHubWorker:
                     "msg_text": comment['body'],
                     "msg_timestamp": comment['created_at'],
                     "cntrb_id": self.find_id_from_login(comment['user']['login']),
-                    # "cntrb_id": self.find_id_from_login(comment['user']['login']),
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
                     "data_source": self.data_source
                 }
 
                 self.db.execute(self.message_table.insert().values(issue_comment))
+                self.results_counter += 1
+
                 logging.info("Inserted issue comment: " + comment['body'] + "\n")
 
                 ### ISSUE MESSAGE REF TABLE ###
@@ -525,6 +567,9 @@ class GitHubWorker:
                 }
 
                 self.db.execute(self.issues_message_ref_table.insert().values(issue_message_ref))
+                self.results_counter += 1
+
+                logging.info("Inserted issue comment with msg_id of: " + str(self.msg_id_inc) + "\n")
 
                 self.msg_id_inc += 1
 
@@ -549,17 +594,17 @@ class GitHubWorker:
                 }
 
                 self.db.execute(self.issue_events_table.insert().values(issue_event))
+                self.results_counter += 1
+
                 logging.info("Inserted issue event: " + event['event'] + " " + str(self.issue_id_inc) + "\n")
             
 
 
             self.issue_id_inc += 1
 
-            task_completed = entry_info.to_dict()
-            task_completed['worker_id'] = self.config['id']
-            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
-
-            requests.post('http://localhost:5000/api/completed_task', json=task_completed)
+        #Register this task as completed
+        self.register_task_completion(entry_info, "issues")
+            
             
     def filter_duplicates(self, cols, tables, og_data):
         need_insertion = []
@@ -568,22 +613,17 @@ class GitHubWorker:
         del tables[0]
         for table in tables:
             table_str += ", " + table
-        logging.info(str(cols) + str(tables))
         for col in cols.keys():
             colSQL = s.sql.text("""
                 SELECT {} FROM {}
                 """.format(col, table_str))
 
             values = pd.read_sql(colSQL, self.db, params={})
-            # logins = rs.json()
             for obj in og_data:
-                try:
-                    if values.isin([obj[cols[col]]]).any().any():
-                        logging.info("value of tuple exists: " + obj[cols[col]] + "\n")
-                    else:
-                        need_insertion.append(obj)
-                except:
-                    logging.info("RATE LIMIT EXCEEDED, last response: " + str(og_data))
+                if values.isin([obj[cols[col]]]).any().any():
+                    logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
+                else:
+                    need_insertion.append(obj)
         return need_insertion
 
     def find_id_from_login(self, login):
@@ -603,9 +643,15 @@ class GitHubWorker:
             self.update_rate_limit()
             contributor = r.json()
 
-            # "company": contributor['company'],
-            # "location": contributor['location'],
-            # "email": contributor['email'],
+            company = None
+            location = None
+            email = None
+            if 'company' in contributor:
+                company = contributor['company']
+            if 'location' in contributor:
+                location = contributor['location']
+            if 'email' in contributor:
+                email = contributor['email']
 
             # aliasSQL = s.sql.text("""
             #     SELECT canonical_email
@@ -618,8 +664,10 @@ class GitHubWorker:
 
             cntrb = {
                 "cntrb_login": contributor['login'],
-                "cntrb_created_at": contributor['created_at'],
-                # "cntrb_type": , ?asking sean
+                "cntrb_email": email,
+                "cntrb_company": company,
+                "cntrb_location": location,
+                "cntrb_created_at": contributor['created_at'],                
                 "cntrb_canonical": canonical_email,
                 "gh_user_id": contributor['id'],
                 "gh_login": contributor['login'],
@@ -644,6 +692,8 @@ class GitHubWorker:
                 "data_source": self.data_source
             }
             self.db.execute(self.contributors_table.insert().values(cntrb))
+            self.results_counter += 1
+
             logging.info("Inserted contributor: " + contributor['login'] + "\n")
             self.cntrb_id_inc += 1
             self.find_id_from_login(login)
@@ -661,8 +711,51 @@ class GitHubWorker:
             time.sleep(time_diff.total_seconds())
             self.rate_limit = int(response.headers['X-RateLimit-Limit'])
         
+    def register_task_completion(self, entry_info, model):
 
+        #add to history table
+        task_completed = entry_info.to_dict()
+        task_completed['worker_id'] = self.config['id']
 
+        task_history = {
+            "repo_id": entry_info['repo_id'],
+            "worker": self.config['id'],
+            "job_model": entry_info['repo_git'],
+            "oauth_id": self.config['zombie_id'],
+            "timestamp": datetime.datetime.now(),
+            "status": "Success",
+            "total_results": self.results_counter
+        }
+        self.helper_db.execute(self.history_table.insert().values(task_history))
+        logging.info("Recorded job completion for model: " + model + "\n")
+        logging.info(task_completed)
+
+        #update job process table
+        updated_job = {
+            "since_id_str": entry_info['repo_id'],
+            "last_count": self.results_counter,
+            "last_run": datetime.datetime.now(),
+            "analysis_state": 0
+        }
+        self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==model).values(updated_job))
+        logging.info("Update job process for model: " + model + "\n")
+
+        # Notify broker of completion
+        logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
+            "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
+
+        requests.post('http://localhost:5000/api/completed_task', json=task_completed)
+
+        # Reset results counter for next task
+        self.results_counter = 0
+
+    def record_model_process(self, model):
+        updated_job = {
+            "oauth_id": self.config['zombie_id'],
+            "analysis_state": '1'
+        }
+        self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==model).values(updated_job))
+        logging.info("Update job process for model: " + model + "\n")
             
 
         
