@@ -28,13 +28,18 @@ def test_issues_first_time_opened(augur_db):
 
     # repo_id
     assert augur_db.issues_first_time_opened(
-        1, repo_id=25001, period='day').isin(["2019-05-23 00:00:00+00:00"]).any
-    assert augur_db.issues_first_time_opened(
-        1, repo_id=25001, period='week').isin(["2019-05-20 00:00:00+00:00"]).any
+        24, repo_id=22054, period='year').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
     # repo_gorup_id
-    assert augur_db.issues_first_time_opened(1, period='day').isin([
-        "2019-05-23 00:00:00+00:00"]).any
+    assert augur_db.issues_first_time_opened(24, period='year').isin(
+        [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
+    # begin_date and end_date
+    assert augur_db.issues_first_time_opened(24, period='year', begin_date='2019-1-1 00:00:01',
+                                             end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+    assert augur_db.issues_first_time_opened(24, repo_id=22054, period='year', begin_date='2019-1-1 00:00:01',
+                                             end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+
 
 
 def test_sub_projects(augur_db):
