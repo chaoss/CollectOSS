@@ -281,7 +281,8 @@ class GitHubWorker:
         logging.info("Hitting endpoint: " + url + " ...\n")
         r = requests.get(url=url, headers=self.headers)
         self.update_rate_limit()
-        contributors = r.json()
+        if r.status_code != 204:
+            contributors = r.json()
 
         # Duplicate checking ...
         need_insertion = self.filter_duplicates({'cntrb_login': "login"}, ['contributors'], contributors)
