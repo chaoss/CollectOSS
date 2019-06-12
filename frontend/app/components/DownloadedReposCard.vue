@@ -20,7 +20,7 @@
                 <td><!-- <router-link :to="'git/' + (repo.url).slice(11)" @click.prevent="onGitRepo(repo)" class="repolink fade">{{ repo.url }}</router-link> --><!-- <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> -->
                   <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                 </td>
-                <td>{{ repo.status }}</td>
+                <td>{{ repo.repo_status }}</td>
               </tr>
             </tbody>
           </table>
@@ -69,7 +69,9 @@ module.exports = {
         repo = e.url.slice(e.url.lastIndexOf('/') + 1)
       }
       this.$store.commit('setRepo', {
-        gitURL: e.url
+        gitURL: e.url,
+        repoID: e.repo_id,
+        repoGroupID: e.repo_group_id
       })
 
       this.$store.commit('setTab', {
@@ -78,7 +80,7 @@ module.exports = {
 
       this.$router.push({
         name: 'git',
-        params: {repo: e.url}
+        params: {repo: e.url, repoID: e.repo_id, repoGroupID: e.repo_group_id}
       })
     },
     getDownloadedRepos() {
@@ -86,7 +88,7 @@ module.exports = {
       window.AugurAPI.getDownloadedGitRepos().then((data) => {
         $(this.$el).find('.spinner').removeClass('loader')
         $(this.$el).find('.spinner').removeClass('relative')
-        this.repos = window._.groupBy(data, 'project_name')
+        this.repos = window._.groupBy(data, 'rg_name')
         this.projects = Object.keys(this.repos)
       })
     },
