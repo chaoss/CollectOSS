@@ -530,8 +530,9 @@ class GitHubWorker:
             issue_comments = r.json()
 
             # Add the FK of our cntrb_id to each comment dict to be inserted
-            for comment in issue_comments:
-                comment['cntrb_id'] = self.find_id_from_login(comment['user']['login'])
+            if len(issue_comments) != 0:
+                for comment in issue_comments:
+                    comment['cntrb_id'] = self.find_id_from_login(comment['user']['login'])
 
             # Filter duplicates before insertion
             comments_need_insertion = self.filter_duplicates({'msg_timestamp': 'created_at', 'cntrb_id': 'cntrb_id'}, ['message'], issue_comments)
@@ -701,6 +702,7 @@ class GitHubWorker:
 
     def update_rate_limit(self):
         self.rate_limit -= 1
+        logging.info("Updated rate limit, you have: " + str(self.rate_limit) + " requests remaining.\n")
         if self.rate_limit <= 0:
 
             url = "https://api.github.com/users/gabe-heim"
