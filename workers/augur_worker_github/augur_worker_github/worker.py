@@ -578,7 +578,8 @@ class GitHubWorker:
 
 
             for event in issue_events:
-                event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
+                if event['actor'] is not None:
+                    event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
             events_need_insertion = self.filter_duplicates({'node_id': 'node_id'}, ['issue_events'], issue_events)
         
             logging.info("Number of events needing insertion: " + str(len(events_need_insertion)))
