@@ -52,9 +52,10 @@ class GitHubWorker:
         self.tool_version = '0.0.1' # See __init__.py
         self.data_source = 'GitHub API'
         self.results_counter = 0
+        self.headers = {'Authorization': 'token %s' % self.config['key']}
 
         url = "https://api.github.com/users/gabe-heim"
-        response = requests.get(url=url)
+        response = requests.get(url=url, headers=self.headers)
         self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
 
         
@@ -176,7 +177,7 @@ class GitHubWorker:
 
         self.run()
 
-        requests.post('http://localhost:5000/api/workers', json=specs) #hello message
+        requests.post('http://localhost:5000/api/unstable/workers', json=specs, headers=self.headers) #hello message
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -278,7 +279,7 @@ class GitHubWorker:
 
         url = ("https://api.github.com/repos/" + owner + "/" + name + "/contributors")
         logging.info("Hitting endpoint: " + url + " ...\n")
-        r = requests.get(url=url)
+        r = requests.get(url=url, headers=self.headers)
         self.update_rate_limit()
         contributors = r.json()
 
@@ -293,7 +294,7 @@ class GitHubWorker:
             #   i think that's it
             cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
             logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
-            r = requests.get(url=cntrb_url)
+            r = requests.get(url=cntrb_url, headers=self.headers)
             self.update_rate_limit()
             contributor = r.json()
 
@@ -381,7 +382,7 @@ class GitHubWorker:
 
         url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues")
         logging.info("Hitting endpoint: " + url + " ...\n")
-        r = requests.get(url=url)
+        r = requests.get(url=url, headers=self.headers)
         self.update_rate_limit()
         issues = r.json()
 
@@ -416,7 +417,7 @@ class GitHubWorker:
             # Get events ready in case the issue is closed and we need to insert the closer's id
             events_url = (url + "/events")
             logging.info("Hitting endpoint: " + events_url + " ...\n")
-            r = requests.get(url=events_url)
+            r = requests.get(url=events_url, headers=self.headers)
             self.update_rate_limit()
             issue_events = r.json()
             
@@ -525,7 +526,7 @@ class GitHubWorker:
 
             comments_url = (url + "/comments")
             logging.info("Hitting endpoint: " + comments_url + " ...\n")
-            r = requests.get(url=comments_url)
+            r = requests.get(url=comments_url, headers=self.headers)
             self.update_rate_limit()
             issue_comments = r.json()
 
@@ -640,7 +641,7 @@ class GitHubWorker:
             logging.info("contributor needs to be added...")
             cntrb_url = ("https://api.github.com/users/" + login)
 
-            r = requests.get(url=cntrb_url)
+            r = requests.get(url=cntrb_url, headers=self.headers)
             self.update_rate_limit()
             contributor = r.json()
 
@@ -706,7 +707,7 @@ class GitHubWorker:
         if self.rate_limit <= 0:
 
             url = "https://api.github.com/users/gabe-heim"
-            response = requests.get(url=url)
+            response = requests.get(url=url, headers=self.headers)
             reset_time = response.headers['X-RateLimit-Reset']
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
             logging.info("Rate limit exceeded, waiting " + str(time_diff.total_seconds()) + " seconds.\n")
@@ -746,7 +747,7 @@ class GitHubWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        requests.post('http://localhost:5000/api/completed_task', json=task_completed)
+        requests.post('http://localhost:5000/api/unstable/completed_task', json=task_completed, headers=self.headers)
 
         # Reset results counter for next task
         self.results_counter = 0
