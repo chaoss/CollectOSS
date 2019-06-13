@@ -589,7 +589,7 @@ class GitHubWorker:
             for event in issue_events:
                 if event['actor'] is not None:
                     event['cntrb_id'] = self.find_id_from_login(event['actor']['login'])
-                else:
+                if event['cntrb_id'] is None:
                     event['cntrb_id'] = 1
             events_need_insertion = self.filter_duplicates({'node_id': 'node_id'}, ['issue_events'], issue_events)
         
