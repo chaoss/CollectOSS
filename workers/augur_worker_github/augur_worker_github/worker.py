@@ -283,78 +283,85 @@ class GitHubWorker:
         self.update_rate_limit()
         if r.status_code != 204:
             contributors = r.json()
-
-        # Duplicate checking ...
-        need_insertion = self.filter_duplicates({'cntrb_login': "login"}, ['contributors'], contributors)
-        logging.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
         
-        for repo_contributor in need_insertion:
+        try:
+            # Duplicate checking ...
+            need_insertion = self.filter_duplicates({'cntrb_login': "login"}, ['contributors'], contributors)
+            logging.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
 
-            # Need to hit this single contributor endpoint to get extra data including...
-            #   created at
-            #   i think that's it
-            cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
-            logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
-            r = requests.get(url=cntrb_url, headers=self.headers)
-            self.update_rate_limit()
-            contributor = r.json()
+            for repo_contributor in need_insertion:
 
-
-            # NEED TO FIGURE OUT IF THIS STUFF IS EVER AVAILABLE
-            #    if so, the null case will need to be handled
-
-            # "company": contributor['company'],
-            # "location": contributor['location'],
-            # "email": contributor['email'],
-
-            # aliasSQL = s.sql.text("""
-            #     SELECT canonical_email
-            #     FROM contributors_aliases
-            #     WHERE alias_email = {}
-            # """.format(contributor['email']))
-            # rs = pd.read_sql(aliasSQL, self.db, params={})
-
-            canonical_email = None#rs.iloc[0]["canonical_email"]
+                # Need to hit this single contributor endpoint to get extra data including...
+                #   created at
+                #   i think that's it
+                cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
+                logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
+                r = requests.get(url=cntrb_url, headers=self.headers)
+                self.update_rate_limit()
+                contributor = r.json()
 
 
+                # NEED TO FIGURE OUT IF THIS STUFF IS EVER AVAILABLE
+                #    if so, the null case will need to be handled
 
-            cntrb = {
-                "cntrb_login": contributor['login'],
-                "cntrb_created_at": contributor['created_at'],
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                "cntrb_canonical": canonical_email,
-                "gh_user_id": contributor['id'],
-                "gh_login": contributor['login'],
-                "gh_url": contributor['url'],
-                "gh_html_url": contributor['html_url'],
-                "gh_node_id": contributor['node_id'],
-                "gh_avatar_url": contributor['avatar_url'],
-                "gh_gravatar_id": contributor['gravatar_id'],
-                "gh_followers_url": contributor['followers_url'],
-                "gh_following_url": contributor['following_url'],
-                "gh_gists_url": contributor['gists_url'],
-                "gh_starred_url": contributor['starred_url'],
-                "gh_subscriptions_url": contributor['subscriptions_url'],
-                "gh_organizations_url": contributor['organizations_url'],
-                "gh_repos_url": contributor['repos_url'],
-                "gh_events_url": contributor['events_url'],
-                "gh_received_events_url": contributor['received_events_url'],
-                "gh_type": contributor['type'],
-                "gh_site_admin": contributor['site_admin'],
-                "tool_source": self.tool_source,
-                "tool_version": self.tool_version,
-                "data_source": self.data_source
-            }
+                # "company": contributor['company'],
+                # "location": contributor['location'],
+                # "email": contributor['email'],
+
+                # aliasSQL = s.sql.text("""
+                #     SELECT canonical_email
+                #     FROM contributors_aliases
+                #     WHERE alias_email = {}
+                # """.format(contributor['email']))
+                # rs = pd.read_sql(aliasSQL, self.db, params={})
+
+                canonical_email = None#rs.iloc[0]["canonical_email"]
+
+
+
+                cntrb = {
+                    "cntrb_login": contributor['login'],
+                    "cntrb_created_at": contributor['created_at'],
+                    # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                    "cntrb_canonical": canonical_email,
+                    "gh_user_id": contributor['id'],
+                    "gh_login": contributor['login'],
+                    "gh_url": contributor['url'],
+                    "gh_html_url": contributor['html_url'],
+                    "gh_node_id": contributor['node_id'],
+                    "gh_avatar_url": contributor['avatar_url'],
+                    "gh_gravatar_id": contributor['gravatar_id'],
+                    "gh_followers_url": contributor['followers_url'],
+                    "gh_following_url": contributor['following_url'],
+                    "gh_gists_url": contributor['gists_url'],
+                    "gh_starred_url": contributor['starred_url'],
+                    "gh_subscriptions_url": contributor['subscriptions_url'],
+                    "gh_organizations_url": contributor['organizations_url'],
+                    "gh_repos_url": contributor['repos_url'],
+                    "gh_events_url": contributor['events_url'],
+                    "gh_received_events_url": contributor['received_events_url'],
+                    "gh_type": contributor['type'],
+                    "gh_site_admin": contributor['site_admin'],
+                    "tool_source": self.tool_source,
+                    "tool_version": self.tool_version,
+                    "data_source": self.data_source
+                }
 
             # Commit insertion to table
-            self.db.execute(self.contributors_table.insert().values(cntrb))
-            self.results_counter += 1
-
-            logging.info("Inserted contributor: " + contributor['login'] + "\n")
+                self.db.execute(self.contributors_table.insert().values(cntrb))
+                self.results_counter += 1
+    
+                logging.info("Inserted contributor: " + contributor['login'] + "\n")
 
             # Increment our global track of the cntrb id for the possibility of it being used as a FK
-            self.cntrb_id_inc += 1
-            
+                self.cntrb_id_inc += 1
+
+        except:
+            logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
+            logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
+        else:
+            logging.info("Well, that contributor just don't except because we hit the else-block yo")    
+
 
     def query_issues(self, entry_info):
 
