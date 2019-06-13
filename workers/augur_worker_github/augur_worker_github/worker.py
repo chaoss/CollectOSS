@@ -600,10 +600,6 @@ class GitHubWorker:
                     "issue_id": self.issue_id_inc,
                     "node_id": event['node_id'],
                     "node_url": event['url'],
-<<<<<<< Updated upstream
-                    # "cntrb_id": self.find_id_from_login(event['actor']['login']), #need to insert this cntrb and check for dupe
-=======
->>>>>>> Stashed changes
                     "cntrb_id": event['cntrb_id'],
                     "action": event["event"],
                     "action_commit_hash": event["commit_id"],
