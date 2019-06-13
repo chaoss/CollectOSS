@@ -1,9 +1,11 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Development Guide &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -70,7 +72,10 @@ on how we review pull requests. tl;dr: Fork our repo. Make a change. Use the mai
 <li class="toctree-l2"><a class="reference internal" href="dev-guide/4-frontend.html#adding-a-chart-type">4.6. Adding a chart type</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="dev-guide/5-testing.html">5. Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev-guide/5-testing.html">5. Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dev-guide/5-testing.html#writing-tests">5.1. Writing tests</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -112,11 +117,13 @@ on how we review pull requests. tl;dr: Fork our repo. Make a change. Use the mai
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
+  <h3>Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -129,7 +136,7 @@ on how we review pull requests. tl;dr: Fork our repo. Make a change. Use the mai
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -1,9 +1,11 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>augur.application &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -51,6 +53,8 @@
 <span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
 <span class="kn">import</span> <span class="nn">augur.plugins</span>
 <span class="kn">import</span> <span class="nn">augur.datasources</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;test.log&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -137,6 +141,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span> <span class="o">=</span> <span class="p">{}</span>
 
+        <span class="c1"># Application.default_plugins</span>
         <span class="k">for</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span><span class="p">:</span>
             <span class="bp">self</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span></div>
 
@@ -160,7 +165,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">):</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">[</span><span class="n">augur</span><span class="o">.</span><span class="n">plugins</span><span class="p">,</span> <span class="n">augur</span><span class="o">.</span><span class="n">datasources</span><span class="p">]:</span>
+        <span class="n">plugins</span> <span class="o">=</span> <span class="p">[</span><span class="n">augur</span><span class="o">.</span><span class="n">plugins</span><span class="p">,</span> <span class="n">augur</span><span class="o">.</span><span class="n">datasources</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">importer</span><span class="p">,</span> <span class="n">modname</span><span class="p">,</span> <span class="n">ispkg</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">__path__</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">ispkg</span><span class="p">:</span>
                     <span class="k">try</span><span class="p">:</span>
@@ -319,7 +325,6 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates all plugins</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">updatable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__updatable</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">updatable</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
             <span class="n">updatable</span><span class="p">[</span><span class="s1">&#39;update&#39;</span><span class="p">]()</span>
@@ -381,11 +386,13 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
+  <h3>Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -398,7 +405,7 @@
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
