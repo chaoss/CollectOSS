@@ -44,10 +44,10 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
 @click.command('run', short_help='Run the Augur server')
 @pass_application
 def cli(app):
-    try:
-        mp.set_start_method('forkserver')
-    except RuntimeError:
-        pass
+    # try:
+    mp.set_start_method('forkserver', force=True)
+    # except RuntimeError:
+    #     pass
     logger.info('Loading...')
     # app.init_all()
     app.schedule_updates()
