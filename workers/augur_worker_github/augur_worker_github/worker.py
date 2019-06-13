@@ -540,6 +540,7 @@ class GitHubWorker:
             issue_comments = r.json()
 
             # Add the FK of our cntrb_id to each comment dict to be inserted
+            logging.info("length of commit comments " + str(len(issue_comments)))
             if len(issue_comments) != 0:
                 for comment in issue_comments:
                     comment['cntrb_id'] = self.find_id_from_login(comment['user']['login'])
