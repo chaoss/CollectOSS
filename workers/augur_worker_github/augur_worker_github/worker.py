@@ -434,6 +434,7 @@ class GitHubWorker:
             if 'closed_at' in issue_dict:
                 for event in issue_events:
                     if event['event'] == 'closed':
+                        logging.info('event-issue ' + event + ' event seems missing somethinga' + event['event'] + "\n") 
                         cntrb_id = self.find_id_from_login(event['actor']['login'])
             
             issue = {
