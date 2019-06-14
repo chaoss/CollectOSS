@@ -1,9 +1,11 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>4. OSS Community &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -51,65 +53,65 @@ that indicate the health and sustainability of the repository.</p>
 <div class="section" id="triggers-what-prompts-the-use-case-to-start">
 <h2>4.3. Triggers (What prompts the use case to start?)<a class="headerlink" href="#triggers-what-prompts-the-use-case-to-start" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>A user (leader) seeks to understand the current health and
-sustainability of a repository to devise actions.</p></li>
+<li>A user (leader) seeks to understand the current health and
+sustainability of a repository to devise actions.</li>
 </ol>
 </div>
 <div class="section" id="actors-who-is-involved">
 <h2>4.4. Actors (Who is involved?)<a class="headerlink" href="#actors-who-is-involved" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>User</p></li>
+<li>User</li>
 </ol>
 </div>
 <div class="section" id="preconditions-this-includes-things-like-data-loaded-or-project-is-flagged-as-of-interest-etc">
 <h2>4.5. Preconditions (This includes things like “data loaded”. Or, project is flagged as “of interest”; etc.)<a class="headerlink" href="#preconditions-this-includes-things-like-data-loaded-or-project-is-flagged-as-of-interest-etc" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>User provides URL to a GitHub repository</p></li>
+<li>User provides URL to a GitHub repository</li>
 </ol>
 </div>
 <div class="section" id="main-success-scenario">
 <h2>4.6. Main Success Scenario<a class="headerlink" href="#main-success-scenario" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>All metrics that can be computed from the provided repository are
-displayed.</p></li>
+<li>All metrics that can be computed from the provided repository are
+displayed.</li>
 </ol>
 </div>
 <div class="section" id="alternate-success-scenarios">
 <h2>4.7. Alternate Success Scenarios<a class="headerlink" href="#alternate-success-scenarios" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>N/A</p></li>
+<li>N/A</li>
 </ol>
 </div>
 <div class="section" id="failed-end-condition">
 <h2>4.8. Failed End Condition<a class="headerlink" href="#failed-end-condition" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>The provided URL points to a non-existent GitHub repository, metrics
+<li>The provided URL points to a non-existent GitHub repository, metrics
 cannot be calculated, and an error message explaining the condition
-is shown to user.</p></li>
+is shown to user.</li>
 </ol>
 </div>
 <div class="section" id="extensions">
 <h2>4.9. Extensions<a class="headerlink" href="#extensions" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>Compare metrics between repositories.</p></li>
+<li>Compare metrics between repositories.</li>
 </ol>
 </div>
 <div class="section" id="steps-of-execution-requirements">
 <h2>4.10. Steps of Execution (Requirements)<a class="headerlink" href="#steps-of-execution-requirements" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>The use enters and submits the URL to a GitHub repository.</p></li>
-<li><p>Metrics computed from the provided repository are displayed.</p></li>
+<li>The use enters and submits the URL to a GitHub repository.</li>
+<li>Metrics computed from the provided repository are displayed.</li>
 </ol>
 </div>
 <div class="section" id="dependent-use-cases">
 <h2>4.11. Dependent Use Cases<a class="headerlink" href="#dependent-use-cases" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>N/A</p></li>
+<li>N/A</li>
 </ol>
 </div>
 <div class="section" id="a-use-case-diagram-following-the-uml-standard-for-expressing-use-cases">
 <h2>4.12. A use case diagram, following the UML Standard for expressing use cases.<a class="headerlink" href="#a-use-case-diagram-following-the-uml-standard-for-expressing-use-cases" title="Permalink to this headline">¶</a></h2>
-<div class="figure align-default">
+<div class="figure">
 <img alt="use case diagram" src="../_images/ViewMetrics.png" />
 </div>
 </div>
@@ -153,11 +155,13 @@ is shown to user.</p></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
+  <h3>Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -170,7 +174,7 @@ is shown to user.</p></li>
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

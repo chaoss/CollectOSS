@@ -106,6 +106,7 @@ class Application(object):
         self.__metrics_status = None
         self._loaded_plugins = {}
 
+        # Application.default_plugins
         for plugin_name in Application.default_plugins:
             self[plugin_name]
 
