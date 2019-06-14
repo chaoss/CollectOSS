@@ -203,6 +203,11 @@ export default class AugurAPI {
       return __Endpoint(r, jsName, url)
     }
 
+    var AugurEndpoint = (r, jsName, endpoint) => {
+      var url = this.__endpointURL('/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL))
+      return __Endpoint(r, jsName, url)
+    }
+
     repo.batch = (jsNameArray, noExecute) => {
       var routes = jsNameArray.map((e) => { return repo.__endpointMap[e] })
       if (noExecute) {

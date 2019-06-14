@@ -182,6 +182,7 @@ function Augur() {
   window.SvgSaver = require('svgsaver');
   window.VueRouter = require('vue-router');
   window.ShardsVue = require('shards-vue');
+  window.VueSpinners = require('vue-spinners');
 
   var router = require('./router.js').default;
   window.vegaEmbed = require('vega-embed');
@@ -196,6 +197,7 @@ function Augur() {
   var AugurApp = require('./components/AugurApp');
 
   window.Vue.use(window.ShardsVue);
+  window.Vue.use(window.VueSpinners);
   window.Vue.use(window.Vuex);
   window.Vue.use(window.VueVega);
   window.Vue.use(window.VueRouter);
@@ -689,6 +691,11 @@ var AugurAPI = function () {
 
       var GitEndpoint = function GitEndpoint(r, jsName, endpoint) {
         var url = _this3.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL));
+        return __Endpoint(r, jsName, url);
+      };
+
+      var AugurEndpoint = function AugurEndpoint(r, jsName, endpoint) {
+        var url = _this3.__endpointURL('/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL));
         return __Endpoint(r, jsName, url);
       };
 
@@ -8104,7 +8111,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 });
 
 ;require.register("components/layout/MainSidebar/MainSidebar.vue", function(exports, require, module) {
-var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 150, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 153, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
+var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 147, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 150, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
 ;(function(){
 'use strict';
 
@@ -8130,9 +8137,9 @@ exports.default = {
         htmlBefore: '<i class="material-icons">vertical_split</i>',
         htmlAfter: ''
       }, {
-        title: 'Projects',
+        title: 'Repos',
         to: {
-          name: 'projects'
+          name: 'repos'
         },
         htmlBefore: '<i class="material-icons">table_chart</i>',
         htmlAfter: ''
@@ -8144,9 +8151,9 @@ exports.default = {
         htmlBefore: '<i class="material-icons">assignment</i>',
         htmlAfter: ''
       }, {
-        title: 'Groups',
+        title: 'Repo Groups',
         to: {
-          name: 'groups'
+          name: 'repo_groups'
         },
         htmlBefore: '<i class="material-icons">group_work</i>',
         htmlAfter: ''
@@ -8171,7 +8178,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){return _vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column"},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',{staticStyle:{"width":"240"}},[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                  "+_vm._s(subItem.title)+"\n                ")])}),1):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown",staticStyle:{"height":"240px !important","position":"absolute","bottom":"0","margin-top":"auto"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"0.85rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"0px","width":"240px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem 0.7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem .7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){return _vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column"},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',{staticStyle:{"width":"240"}},[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])}),1):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown",staticStyle:{"height":"240px !important","position":"absolute","bottom":"0","margin-top":"auto"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"0.85rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"0px","width":"240px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem 0.7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem .7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('a',{staticClass:"navbar-brand w-100 mr-0",staticStyle:{"line-height":"25px"},attrs:{"href":"#"}},[_c('div',{staticClass:"d-table m-auto"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"/static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('form',{staticClass:"main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none",attrs:{"action":"#"}},[_c('div',{staticClass:"input-group input-group-seamless ml-3"},[_c('div',{staticClass:"input-group-prepend"},[_c('div',{staticClass:"input-group-text"},[_c('i',{staticClass:"fas fa-search"})])]),_vm._v(" "),_c('input',{staticClass:"navbar-search form-control",attrs:{"type":"text","placeholder":"Search for something...","aria-label":"Search"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -10744,6 +10751,14 @@ var _RepoOverview = require('./views/RepoOverview.vue');
 
 var _RepoOverview2 = _interopRequireDefault(_RepoOverview);
 
+var _RepoGroups = require('./views/RepoGroups.vue');
+
+var _RepoGroups2 = _interopRequireDefault(_RepoGroups);
+
+var _Repos = require('./views/Repos.vue');
+
+var _Repos2 = _interopRequireDefault(_Repos);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var routes = [{
@@ -10759,15 +10774,15 @@ var routes = [{
             }
       }]
 }, {
-      path: '/projects',
+      path: '/repo_groups',
       component: _Default2.default,
       children: [{
             path: "",
-            name: "projects",
+            name: "repo_groups",
             components: {
                   sidebar: _MainSidebar2.default,
                   navbar: _MainNavbar2.default,
-                  content: _Tables2.default
+                  content: _RepoGroups2.default
             }
       }]
 }, {
@@ -10783,15 +10798,15 @@ var routes = [{
             }
       }]
 }, {
-      path: '/groups',
+      path: '/repos',
       component: _Default2.default,
       children: [{
             path: "",
-            name: "groups",
+            name: "repos",
             components: {
                   sidebar: _MainSidebar2.default,
                   navbar: _MainNavbar2.default,
-                  content: _Tables2.default
+                  content: _Repos2.default
             }
       }]
 }, {
@@ -11411,15 +11426,11 @@ exports.default = {
 
       console.log("START");
       window.AugurAPI.getRepos().then(function (data) {
-
         _this.repos = data;
-
         console.log("LOADED repos", _this.repos);
-
         window.AugurAPI.getRepoGroups().then(function (data) {
           $(_this.$el).find('.spinner').removeClass('loader');
           $(_this.$el).find('.spinner').removeClass('relative');
-
           _this.repo_groups = data;
 
           _this.repo_groups.forEach(function (group) {
@@ -11427,10 +11438,7 @@ exports.default = {
               return repo.rg_name == group.rg_name;
             });
           });
-
           console.log("LOADED repo groups", _this.repo_relations);
-
-          _this.loaded = true;
         });
       });
     },
@@ -11657,6 +11665,77 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("views/RepoGroups.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  components: {},
+  computed: {},
+  data: function data() {
+    return {
+      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
+      repos: [],
+      repo_groups: [],
+      repo_relations: {},
+      themes: ['dark', 'info', 'royal-blue', 'warning']
+    };
+  },
+
+  methods: {
+    getRepoGroups: function getRepoGroups() {
+      var _this = this;
+
+      console.log("START");
+      window.AugurAPI.getRepos().then(function (data) {
+        _this.repos = data;
+        console.log("LOADED repos", _this.repos);
+        window.AugurAPI.getRepoGroups().then(function (data) {
+          $(_this.$el).find('.spinner').removeClass('loader');
+          $(_this.$el).find('.spinner').removeClass('relative');
+          _this.repo_groups = data;
+
+          _this.repo_groups.forEach(function (group) {
+            _this.repo_relations[group.rg_name] = _this.repos.filter(function (repo) {
+              return repo.rg_name == group.rg_name;
+            });
+            group.repo_count = _this.repo_relations[group.rg_name].length;
+          });
+          console.log("LOADED repo groups", _this.repo_relations);
+        });
+      });
+    },
+    btoa: function btoa(s) {
+      return window.btoa(s);
+    }
+  },
+  created: function created() {
+    this.getRepoGroups();
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0"},[_vm._m(2),_vm._v(" "),_c('tbody',_vm._l((_vm.repo_groups),function(group){return _c('tr',[_c('td',[_vm._v(_vm._s(group.repo_group_id))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_website))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_last_modified))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_type))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.repo_count))])])}),0)])])])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Viewing all")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Repo Groups")])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"card-header border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v("Currently Stored Groups")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo Group ID")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Name")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Description")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Website")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Last Modified")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Type")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo Count")])])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-2a6a4e83", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-2a6a4e83", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("views/RepoOverview.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -11849,6 +11928,79 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-3e965de8", __vue__options__)
   } else {
     hotAPI.reload("data-v-3e965de8", __vue__options__)
+  }
+})()}
+});
+
+;require.register("views/Repos.vue", function(exports, require, module) {
+;(function(){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  components: {},
+  computed: {},
+  data: function data() {
+    return {
+      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
+      repos: [],
+      repo_groups: [],
+      repo_relations: {},
+      themes: ['dark', 'info', 'royal-blue', 'warning'],
+      loading: true
+    };
+  },
+
+  methods: {
+    getRepoGroups: function getRepoGroups() {
+      var _this = this;
+
+      console.log("START");
+      window.AugurAPI.getRepos().then(function (data) {
+        _this.repos = data;
+        console.log("LOADED repos", _this.repos);
+        window.AugurAPI.getRepoGroups().then(function (data) {
+          $(_this.$el).find('.spinner').removeClass('loader');
+          $(_this.$el).find('.spinner').removeClass('relative');
+          _this.repo_groups = data;
+
+          _this.repo_groups.forEach(function (group) {
+            _this.repo_relations[group.rg_name] = _this.repos.filter(function (repo) {
+              return repo.rg_name == group.rg_name;
+            });
+            group.repo_count = _this.repo_relations[group.rg_name].length;
+          });
+          console.log("LOADED repo groups", _this.repo_relations);
+          _this.loading = false;
+        });
+      });
+    },
+    btoa: function btoa(s) {
+      return window.btoa(s);
+    }
+  },
+  created: function created() {
+    this.getRepoGroups();
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('bar-loader',{attrs:{"color":"#bada55","loading":_vm.loading,"size":150}}),_vm._v(" "),_c('div',{staticClass:"row",attrs:{"v-show":!_vm.loading}},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0"},[_vm._m(2),_vm._v(" "),_c('tbody',_vm._l((_vm.repos),function(repo){return _c('tr',[_c('td',[_vm._v(_vm._s(repo.repo_id))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.url))])])}),0)])])])])])],1)}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Viewing all")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Repos")])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"card-header border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v("Currently Stored Repos")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo ID")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Group Name")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo Name")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Git URL")])])])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-57e7f334", __vue__options__)
+  } else {
+    hotAPI.rerender("data-v-57e7f334", __vue__options__)
   }
 })()}
 });

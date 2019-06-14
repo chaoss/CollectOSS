@@ -25,6 +25,7 @@ export default function Augur () {
   window.SvgSaver = require('svgsaver')
   window.VueRouter = require('vue-router')
   window.ShardsVue = require('shards-vue')
+  window.VueSpinners = require('vue-spinners')
 
   let router = require('./router.js').default
   window.vegaEmbed = require('vega-embed')
@@ -39,6 +40,7 @@ export default function Augur () {
   let AugurApp = require('./components/AugurApp')
 
   window.Vue.use(window.ShardsVue);
+  window.Vue.use(window.VueSpinners);
   window.Vue.use(window.Vuex)
   window.Vue.use(window.VueVega)
   window.Vue.use(window.VueRouter)

@@ -227,37 +227,21 @@ export default {
     getDownloadedRepos() {
       console.log("START")
       window.AugurAPI.getRepos().then((data) => {
-
         this.repos = data
-
         console.log("LOADED repos", this.repos)
-
         window.AugurAPI.getRepoGroups().then((data) => {
           $(this.$el).find('.spinner').removeClass('loader')
           $(this.$el).find('.spinner').removeClass('relative')
-
           this.repo_groups = data
-
           //move down between future relation endpoint
           this.repo_groups.forEach((group) => {
             this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
               return repo.rg_name == group.rg_name
             })
           })
-
           console.log("LOADED repo groups", this.repo_relations)
-
-          this.loaded = true
-
         })
-
       })
-
-      
-      
-      //window.AugurAPI.getRepoRelations().thn((data) => {
-
-      //})
     },
     btoa(s) {
       return window.btoa(s)

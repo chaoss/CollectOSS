@@ -29,6 +29,8 @@ import Default from './layouts/Default.vue';
 import MainSidebar from './components/layout/MainSidebar/MainSidebar.vue';
 import MainNavbar from './components/layout/MainNavbar/MainNavbar.vue';
 import RepoOverview from './views/RepoOverview.vue';
+import RepoGroups from './views/RepoGroups.vue';
+import Repos from './views/Repos.vue';
 
 let routes = [
       {
@@ -47,16 +49,16 @@ let routes = [
             ]
       },
       {
-            path: '/projects',
+            path: '/repo_groups',
             component: Default,
             children: [
                   {
                         path: "",
-                        name: "projects",
+                        name: "repo_groups",
                         components: {
                               sidebar: MainSidebar,
                               navbar: MainNavbar,
-                              content: Tables
+                              content: RepoGroups
                         }
                   }
             ]
@@ -77,16 +79,16 @@ let routes = [
             ]
       },
       {
-            path: '/groups',
+            path: '/repos',
             component: Default,
             children: [
                   {
                         path: "",
-                        name: "groups",
+                        name: "repos",
                         components: {
                               sidebar: MainSidebar,
                               navbar: MainNavbar,
-                              content: Tables
+                              content: Repos
                         }
                   }
             ]

@@ -58,10 +58,7 @@
                 </div>
                 
                 <div class="col col-6" style="padding: 0px">
-<!-- <<<<<<< Updated upstream -->
                   <d-link class="nav-link" style="padding: 0.7rem .7rem 0.7rem 1.5rem; margin-left: 1rem">
-<!-- ======= -->
-<!-- >>>>>>> Stashed changes -->
                     <i class="material-icons">library_add</i>
                     <span>Add</span>
                     <div class="item-icon-wrapper" />
@@ -102,9 +99,9 @@ export default {
           htmlBefore: '<i class="material-icons">vertical_split</i>',
           htmlAfter: '',
         }, {
-          title: 'Projects',
+          title: 'Repos',
           to: {
-            name: 'projects',
+            name: 'repos',
           },
           htmlBefore: '<i class="material-icons">table_chart</i>',
           htmlAfter: '',
@@ -118,9 +115,9 @@ export default {
           htmlAfter: '',
         },
         {
-          title: 'Groups',
+          title: 'Repo Groups',
           to: {
-            name: 'groups',
+            name: 'repo_groups',
           },
           htmlBefore: '<i class="material-icons">group_work</i>',
           htmlAfter: '',
