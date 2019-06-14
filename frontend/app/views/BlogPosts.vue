@@ -11,13 +11,10 @@
     <!-- First Row of Posts -->
 
         <d-row>
-<!-- <<<<<<< Updated upstream -->
           <d-col v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             <d-card class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group.rg_name }}</d-badge>
-<!-- ======= -->
-          <!-- >>>>>>> Stashed changes -->
                 <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :source="testEndpoints[idx]" owner="twitter" repo="twemoji"></insight-chart>
 
                 <div class="card-post__author d-flex">
@@ -28,17 +25,14 @@
               </div>
               <d-card-body>
                 <h5 class="card-title">
-<!-- <<<<<<< Updated upstream -->
-                  <a href="#" class="text-fiord-blue">{{ getOwner(repos[0].url) }}/{{ getRepo(repos[0].url) }}</a>
-<!-- ======= -->
-<!-- >>>>>>> Stashed changes -->
+                  <a href="#" class="text-fiord-blue">{{ getOwner(repo_relations[group.rg_name][0].url) }}/{{ getRepo(repo_relations[group.rg_name][0].url) }}</a>
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository {{ getPhrase(idx) }} in {{ testEndpoints[idx] }} in the past {{ testTimeframes[idx] }}</p>
                 <span class="text-muted" style="font-size: .75rem">{{ testTimeframes[idx] }}</span>
               </d-card-body>
             </d-card>
           </d-col>
-          <d-col class="col-3" style="font-size: .7rem" :lg="2">
+          <d-col lg="3" md="4" sm="8" class="mb-4" style="font-size: .7rem">
             <d-card class="card-small card">
               <div class="border-bottom card-header">
                 <h6 class="m-0" style="font-size: .7rem">Worker Status</h6>
@@ -97,15 +91,12 @@
           <div class="page-header row no-gutters py-4" style="padding-top: 5 !important;">
             <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
               <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-              <h3 class="page-title" style="font-size: 1rem">Most Frequent repo_groups</h3>
+              <h3 class="page-title" style="font-size: 1rem">Most Frequent Repo Groups</h3>
             </div>
           </div>
           <!-- Second Row of Posts -->
           <d-row>
-<!-- <<<<<<< Updated upstream -->
-            <d-col v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="4" sm="12" class="mb-4">
-<!-- ======= -->
-            <!-- >>>>>>> Stashed changes -->
+            <d-col v-for="(group, idx) in repo_groups.slice(0,6)" :key="idx" lg="4" sm="12" class="mb-4">
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
                   <h6 class="m-0">{{ group.rg_name }}</h6>
@@ -113,7 +104,7 @@
                 </div>
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
-                    <div v-for="(repo, i) in repo_relations[group.rg_name]" class="d-flex px-3 list-group-item" style="text-align: left">
+                    <div v-for="(repo, i) in repo_relations[group.rg_name].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="onGitRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo.url }}</span>
                       </d-link> 
@@ -241,25 +232,28 @@ export default {
 
         console.log("LOADED repos", this.repos)
 
-      })
+        window.AugurAPI.getRepoGroups().then((data) => {
+          $(this.$el).find('.spinner').removeClass('loader')
+          $(this.$el).find('.spinner').removeClass('relative')
 
-      window.AugurAPI.getRepoGroups().then((data) => {
-        $(this.$el).find('.spinner').removeClass('loader')
-        $(this.$el).find('.spinner').removeClass('relative')
+          this.repo_groups = data
 
-        this.repo_groups = data
+          //move down between future relation endpoint
+          this.repo_groups.forEach((group) => {
+            this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
+              return repo.rg_name == group.rg_name
+            })
+          })
 
-        //move down between future relation endpoint
-        this.repo_groups.forEach((group) => {
-          this.repo_relations[group.rg_name] = this.repos
-          console.log(group, this.repo_relations)
+          console.log("LOADED repo groups", this.repo_relations)
+
+          this.loaded = true
+
         })
 
-        console.log("LOADED repo groups")
-
-        this.loaded = true
-
       })
+
+      
       
       //window.AugurAPI.getRepoRelations().thn((data) => {
 
