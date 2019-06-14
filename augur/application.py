@@ -18,6 +18,8 @@ from augur.models.common import Base
 from augur import logger
 import augur.plugins
 import augur.datasources
+import logging
+logging.basicConfig(filename='test.log', level=logging.INFO)
 
 
 class Application(object):
@@ -104,6 +106,7 @@ class Application(object):
         self.__metrics_status = None
         self._loaded_plugins = {}
 
+        # Application.default_plugins
         for plugin_name in Application.default_plugins:
             self[plugin_name]
 
@@ -127,7 +130,8 @@ class Application(object):
         """
         if not hasattr(cls, 'plugins'):
             setattr(cls, 'plugins', {})
-        for module in [augur.plugins, augur.datasources]:
+        plugins = [augur.plugins, augur.datasources]
+        for module in plugins:
             for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
                 if ispkg:
                     try:

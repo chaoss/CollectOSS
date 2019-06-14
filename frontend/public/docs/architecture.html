@@ -1,9 +1,11 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Architecture &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -38,22 +40,22 @@
 <div class="section" id="backend">
 <h2>Backend:<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>Python plugins that know how to produce metrics from a given
+<li>Python plugins that know how to produce metrics from a given
 datasource (<code class="docutils literal notranslate"><span class="pre">augur.datasources.GHTorrent</span></code>,
-<code class="docutils literal notranslate"><span class="pre">augur.datasources.Facade</span></code>, etc.) or provide a given functionality</p></li>
-<li><p>A main class that’s in charge of caching, registering plugins, and
-reading the configuration file (<code class="docutils literal notranslate"><span class="pre">augur.Application</span></code>)</p></li>
-<li><p>A WSGI server built with Flask that exposes the datasources as a REST
-API (<code class="docutils literal notranslate"><span class="pre">augur.Server</span></code>, <code class="docutils literal notranslate"><span class="pre">augur.runtime</span></code>)</p></li>
+<code class="docutils literal notranslate"><span class="pre">augur.datasources.Facade</span></code>, etc.) or provide a given functionality</li>
+<li>A main class that’s in charge of caching, registering plugins, and
+reading the configuration file (<code class="docutils literal notranslate"><span class="pre">augur.Application</span></code>)</li>
+<li>A WSGI server built with Flask that exposes the datasources as a REST
+API (<code class="docutils literal notranslate"><span class="pre">augur.Server</span></code>, <code class="docutils literal notranslate"><span class="pre">augur.runtime</span></code>)</li>
 </ol>
 </div>
 <div class="section" id="frontend">
 <h2>Frontend:<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple" start="4">
-<li><p>Vue frontend to display visualizations and controls, compiled with
-Brunch</p></li>
-<li><p>Visualizations made with Vega-Lite for the metrics exposed by the
-backend</p></li>
+<li>Vue frontend to display visualizations and controls, compiled with
+Brunch</li>
+<li>Visualizations made with Vega-Lite for the metrics exposed by the
+backend</li>
 </ol>
 <div class="section" id="technologies">
 <h3>Technologies<a class="headerlink" href="#technologies" title="Permalink to this headline">¶</a></h3>
@@ -62,31 +64,31 @@ backend</p></li>
 <div class="section" id="id1">
 <h2>Backend:<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/index.html">Python</a></p></li>
-<li><p><a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/">Pandas</a></p></li>
-<li><p><a class="reference external" href="http://flask.pocoo.org/">Flask</a></p></li>
-<li><p><a class="reference external" href="http://docs.python-requests.org/en/master/">Requests</a></p></li>
-<li><p><a class="reference external" href="https://dev.mysql.com/doc/refman/8.0/en/select.html">MySQL</a></p></li>
-<li><p><a class="reference external" href="http://docs.gunicorn.org/en/stable/">Gunicorn</a></p></li>
-<li><p><a class="reference external" href="https://docs.docker.com/">Docker</a></p></li>
-<li><p><a class="reference external" href="https://docs.pytest.org/en/latest/">pytest</a></p></li>
+<li><a class="reference external" href="https://docs.python.org/3/index.html">Python</a></li>
+<li><a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/">Pandas</a></li>
+<li><a class="reference external" href="http://flask.pocoo.org/">Flask</a></li>
+<li><a class="reference external" href="http://docs.python-requests.org/en/master/">Requests</a></li>
+<li><a class="reference external" href="https://dev.mysql.com/doc/refman/8.0/en/select.html">MySQL</a></li>
+<li><a class="reference external" href="http://docs.gunicorn.org/en/stable/">Gunicorn</a></li>
+<li><a class="reference external" href="https://docs.docker.com/">Docker</a></li>
+<li><a class="reference external" href="https://docs.pytest.org/en/latest/">pytest</a></li>
 </ul>
 </div>
 <div class="section" id="id2">
 <h2>Frontend:<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference external" href="https://vuejs.org/v2/guide/">VueJS</a></p></li>
-<li><p><a class="reference external" href="https://vega.github.io/vega-lite/">Vega-Lite</a></p></li>
-<li><p><a class="reference external" href="https://brunch.io/">Brunch</a></p></li>
-<li><p><a class="reference external" href="http://stylus-lang.com/">Stylus</a></p></li>
-<li><p><a class="reference external" href="https://babeljs.io/docs/setup/">Babel</a></p></li>
+<li><a class="reference external" href="https://vuejs.org/v2/guide/">VueJS</a></li>
+<li><a class="reference external" href="https://vega.github.io/vega-lite/">Vega-Lite</a></li>
+<li><a class="reference external" href="https://brunch.io/">Brunch</a></li>
+<li><a class="reference external" href="http://stylus-lang.com/">Stylus</a></li>
+<li><a class="reference external" href="https://babeljs.io/docs/setup/">Babel</a></li>
 </ul>
 </div>
 <div class="section" id="documentation">
 <h2>Documentation:<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference external" href="http://www.sphinx-doc.org/en/master/">Sphinx</a></p></li>
-<li><p><a class="reference external" href="http://apidocjs.com/">apidocjs</a></p></li>
+<li><a class="reference external" href="http://www.sphinx-doc.org/en/master/">Sphinx</a></li>
+<li><a class="reference external" href="http://apidocjs.com/">apidocjs</a></li>
 </ul>
 </div>
 </div>
@@ -128,11 +130,13 @@ backend</p></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
+  <h3>Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -145,7 +149,7 @@ backend</p></li>
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

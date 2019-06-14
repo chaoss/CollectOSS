@@ -144,10 +144,8 @@ test-ds:
 	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 
 test-routes:
-# 	@ $(AUGUR_PYTHON) -m augur.server & > /dev/null
-# 	@ sleep 10
 	@ bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE)_routes.py'
-# 	@ kill `cat logs/backend.pid`
+	@ kill `cat logs/backend.pid`
 
 .PHONY: unlock
 unlock:

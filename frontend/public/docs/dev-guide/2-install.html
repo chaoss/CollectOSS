@@ -1,9 +1,11 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>2. Installation &#8212; Augur  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -39,76 +41,76 @@
 <div class="section" id="install-dependencies-os-specific-instructions-below">
 <h3>2.1.1. 1. Install Dependencies (OS Specific Instructions Below)<a class="headerlink" href="#install-dependencies-os-specific-instructions-below" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>Anaconda</p></li>
-<li><p>NodeJS Version 8.0 or newer, which includes <code class="docutils literal notranslate"><span class="pre">npm</span></code></p></li>
+<li>Anaconda</li>
+<li>NodeJS Version 8.0 or newer, which includes <code class="docutils literal notranslate"><span class="pre">npm</span></code></li>
 </ul>
 <p>Also remember the database dependency in the <a class="reference external" href="http://ghtorrent.org/msr14.html">README</a>.</p>
 <ol class="arabic simple">
-<li><p><a class="reference external" href="#Ubuntu">Dependency Installation for Ubuntu</a></p></li>
-<li><p><a class="reference external" href="#Fedora">Dependency Installation for Fedora</a></p></li>
-<li><p><a class="reference external" href="#MacOSX">Dependency Installation for OS X</a></p></li>
-<li><p><a class="reference external" href="#Install">Install Augur</a></p></li>
+<li><a class="reference external" href="#Ubuntu">Dependency Installation for Ubuntu</a></li>
+<li><a class="reference external" href="#Fedora">Dependency Installation for Fedora</a></li>
+<li><a class="reference external" href="#MacOSX">Dependency Installation for OS X</a></li>
+<li><a class="reference external" href="#Install">Install Augur</a></li>
 </ol>
 <hr class="docutils" />
 <div class="section" id="ubuntu-dependency-installation-instructions">
 <h4>2.1.1.1. Ubuntu Dependency Installation Instructions<a class="headerlink" href="#ubuntu-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install NodeSource</span>
-curl -sL https://deb.nodesource.com/setup_8.x <span class="p">|</span> sudo -E bash -
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install NodeSource</span>
+<span class="n">curl</span> <span class="o">-</span><span class="n">sL</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">deb</span><span class="o">.</span><span class="n">nodesource</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">setup_8</span><span class="o">.</span><span class="n">x</span> <span class="o">|</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="n">bash</span> <span class="o">-</span>
 
 <span class="c1"># Install NodeJS</span>
-sudo apt-get install -y nodejs
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">nodejs</span>
 
 <span class="c1"># Install MariaDB (if needed on the same machine for the GHTorrent/msr14 dataset)</span>
-sudo apt-get install -y mariadb-server
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">mariadb</span><span class="o">-</span><span class="n">server</span>
 
 <span class="c1"># Install Anaconda</span>
-curl https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh &gt; Anaconda.sh
-chmod +x Anaconda.sh
+<span class="n">curl</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">repo</span><span class="o">.</span><span class="n">anaconda</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">archive</span><span class="o">/</span><span class="n">Anaconda3</span><span class="o">-</span><span class="mf">5.1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">Linux</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">sh</span> <span class="o">&gt;</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">chmod</span> <span class="o">+</span><span class="n">x</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
 
 <span class="c1"># You must agree to Anaconda&#39;s license terms to proceed</span>
-./Anaconda.sh -b
-rm Anaconda.sh
+<span class="o">./</span><span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">b</span>
+<span class="n">rm</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="fedora-dependency-installation-instructions">
 <h4>2.1.1.2. Fedora Dependency Installation Instructions<a class="headerlink" href="#fedora-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install NodeSource</span>
-curl -sL https://rpm.nodesource.com/setup_10.x <span class="p">|</span> sudo -E bash -
-sudo yum install -y nodejs
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install NodeSource</span>
+<span class="n">curl</span> <span class="o">-</span><span class="n">sL</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">rpm</span><span class="o">.</span><span class="n">nodesource</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">setup_10</span><span class="o">.</span><span class="n">x</span> <span class="o">|</span> <span class="n">sudo</span> <span class="o">-</span><span class="n">E</span> <span class="n">bash</span> <span class="o">-</span>
+<span class="n">sudo</span> <span class="n">yum</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">nodejs</span>
 
 
 <span class="c1"># Install NodeJS</span>
-sudo apt-get install -y nodejs
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">nodejs</span>
 
 <span class="c1"># Install MariaDB (if needed on the same machine for the GHTorrent/msr14 dataset)</span>
-sudo apt-get install -y mariadb-server
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">mariadb</span><span class="o">-</span><span class="n">server</span>
 
 <span class="c1"># Install Anaconda</span>
-curl https://repo.anaconda.com/archive/Anaconda3-5.1.0-Linux-x86_64.sh &gt; Anaconda.sh
-chmod +x Anaconda.sh
+<span class="n">curl</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">repo</span><span class="o">.</span><span class="n">anaconda</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">archive</span><span class="o">/</span><span class="n">Anaconda3</span><span class="o">-</span><span class="mf">5.1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">Linux</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">sh</span> <span class="o">&gt;</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">chmod</span> <span class="o">+</span><span class="n">x</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
 
 <span class="c1"># You must agree to Anaconda&#39;s license terms to proceed</span>
-./Anaconda.sh -b
-rm Anaconda.sh
+<span class="o">./</span><span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">b</span>
+<span class="n">rm</span> <span class="n">Anaconda</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="macos-dependency-installation-instructions">
 <h4>2.1.1.3. macOS Dependency Installation Instructions<a class="headerlink" href="#macos-dependency-installation-instructions" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install Homebrew</span>
-/usr/bin/ruby -e <span class="s2">&quot;</span><span class="k">$(</span>curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install<span class="k">)</span><span class="s2">&quot;</span>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install Homebrew</span>
+<span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ruby</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</span>
 
 <span class="c1"># Install NodeJS</span>
-brew install wget node
+<span class="n">brew</span> <span class="n">install</span> <span class="n">wget</span> <span class="n">node</span>
 
 <span class="c1"># Install MariaDB (if needed on the same machine for the GHTorrent/msr14 dataset)</span>
-brew install wget mariadb
+<span class="n">brew</span> <span class="n">install</span> <span class="n">wget</span> <span class="n">mariadb</span>
 
 <span class="c1"># Install Anaconda</span>
-<span class="nb">cd</span> ~/Downloads
-wget https://repo.anaconda.com/archive/Anaconda3-5.1.0-MacOSX-x86_64.pkg
-open Anaconda3-5.1.0-MacOSX-x86_64.pkg
+<span class="n">cd</span> <span class="o">~/</span><span class="n">Downloads</span>
+<span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">repo</span><span class="o">.</span><span class="n">anaconda</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">archive</span><span class="o">/</span><span class="n">Anaconda3</span><span class="o">-</span><span class="mf">5.1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">MacOSX</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">pkg</span>
+<span class="nb">open</span> <span class="n">Anaconda3</span><span class="o">-</span><span class="mf">5.1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">MacOSX</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">pkg</span>
 </pre></div>
 </div>
 </div>
@@ -122,20 +124,20 @@ as no longer doing so means mainting detailed builds for each package manager, w
 However, we still want people to work on Augur, and so here are a few tips and tricks to making sure Anaconda
 works for you.</p>
 <ol class="arabic simple">
-<li><p>Make sure Anaconda is installed in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. This varies from shell to shell, so here are a few examples:</p></li>
+<li>Make sure Anaconda is installed in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. This varies from shell to shell, so here are a few examples:</li>
 </ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># BASH</span>
-<span class="c1"># Add this line to your .bash_profile.</span>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span># BASH
+# Add this line to your .bash_profile.
 . /Users/carterlandis/anaconda3/etc/profile.d/conda.sh
 
-<span class="c1"># ZSH</span>
-<span class="c1"># Add this line to your .zshrc.</span>
-<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/Users/carterlandis/anaconda3/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+# ZSH
+# Add this line to your .zshrc.
+export PATH=&quot;/Users/carterlandis/anaconda3/bin:$PATH&quot;
 
-<span class="c1"># FISH</span>
-<span class="c1"># Add these lines to your config.fish file.</span>
-<span class="nb">set</span> PATH /Users/carterlandis/anaconda3/bin <span class="nv">$PATH</span>
-<span class="nb">source</span> <span class="o">(</span>conda info --root<span class="o">)</span>/etc/fish/conf.d/conda.fish
+# FISH
+# Add these lines to your config.fish file.
+set PATH /Users/carterlandis/anaconda3/bin $PATH
+source (conda info --root)/etc/fish/conf.d/conda.fish
 </pre></div>
 </div>
 <p>2. Make sure your shell is configured to use <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span></code>. To do so, type <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span></code>, and one of
@@ -148,19 +150,19 @@ officially support and build our installations and <code class="docutils literal
 <div class="section" id="macos-high-sierra-and-possibly-older-os-x-versions-errata">
 <h2>2.3. macOS High Sierra (and possibly older OS X Versions) Errata:<a class="headerlink" href="#macos-high-sierra-and-possibly-older-os-x-versions-errata" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
-<li><p>If you check the logs/frontend.log and find that “brunch” was not
+<li><p class="first">If you check the logs/frontend.log and find that “brunch” was not
 found:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew install npm
-npm install -g brunch
-brew install yarn
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">install</span> <span class="n">npm</span>
+<span class="n">npm</span> <span class="n">install</span> <span class="o">-</span><span class="n">g</span> <span class="n">brunch</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">yarn</span>
 </pre></div>
 </div>
 </li>
-<li><p>If the logs look good but the webpage at localhost:3333 is empty, it
+<li><p class="first">If the logs look good but the webpage at localhost:3333 is empty, it
 could be that Yarn installed the wrong version of some libraries. In
 that case:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> frontend
-npm install
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">frontend</span>
+<span class="n">npm</span> <span class="n">install</span>
 </pre></div>
 </div>
 </li>
@@ -169,19 +171,19 @@ npm install
 <div class="section" id="id1">
 <h2>2.4. macOS High Sierra (and possibly older OS X Versions) Errata:<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
-<li><p>If you check the logs/frontend.log and find that “brunch” was not
+<li><p class="first">If you check the logs/frontend.log and find that “brunch” was not
 found:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew install npm
-npm install -g brunch
-brew install yarn
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">install</span> <span class="n">npm</span>
+<span class="n">npm</span> <span class="n">install</span> <span class="o">-</span><span class="n">g</span> <span class="n">brunch</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">yarn</span>
 </pre></div>
 </div>
 </li>
-<li><p>If the logs look good but the webpage at localhost:3333 is empty, it
+<li><p class="first">If the logs look good but the webpage at localhost:3333 is empty, it
 could be that Yarn installed the wrong version of some libraries. In
 that case:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> frontend
-npm install
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">frontend</span>
+<span class="n">npm</span> <span class="n">install</span>
 </pre></div>
 </div>
 </li>
@@ -190,17 +192,17 @@ npm install
 <div class="section" id="augur-installation-instructions">
 <h2>2.5. Augur Installation Instructions<a class="headerlink" href="#augur-installation-instructions" title="Permalink to this headline">¶</a></h2>
 <p>Clone the repo and install the libraries and tools needed by Augur</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/chaoss/augur/
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">chaoss</span><span class="o">/</span><span class="n">augur</span><span class="o">/</span>
 
 <span class="c1">## Assume you are in the root from which you cloned augur</span>
 
-<span class="nb">cd</span> augur <span class="c1">## To get to augur root, where the make files live</span>
+<span class="n">cd</span> <span class="n">augur</span> <span class="c1">## To get to augur root, where the make files live</span>
 
 <span class="c1"># If you are going to do active development, please use the dev branch</span>
-git checkout dev
+<span class="n">git</span> <span class="n">checkout</span> <span class="n">dev</span>
 
 <span class="c1"># Install the Python and Node tools and libraries needed</span>
-sudo make install-dev <span class="c1"># some libraries require a root install.</span>
+<span class="n">sudo</span> <span class="n">make</span> <span class="n">install</span><span class="o">-</span><span class="n">dev</span> <span class="c1"># some libraries require a root install.</span>
 
 <span class="c1"># Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way.</span>
 </pre></div>
@@ -208,17 +210,17 @@ sudo make install-dev <span class="c1"># some libraries require a root install.<
 <p><strong>Make sure you have a database user that has select access to the
 database where you installed `GHTorrent &lt;http://ghtorrent.org/&gt;`__ and
 all privileges on another database for Augur.</strong></p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;password&#39;</span><span class="p">;</span>
-<span class="k">GRANT</span> <span class="k">SELECT</span> <span class="k">ON</span> <span class="n">ghtorrent</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<div class="code sql highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CREATE</span> <span class="n">USER</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="n">BY</span> <span class="s1">&#39;password&#39;</span><span class="p">;</span>
+<span class="n">GRANT</span> <span class="n">SELECT</span> <span class="n">ON</span> <span class="n">ghtorrent</span><span class="o">.*</span> <span class="n">TO</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 
-<span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">augur</span><span class="p">;</span>
-<span class="k">GRANT</span> <span class="k">ALL</span> <span class="k">PRIVILEGES</span> <span class="k">ON</span> <span class="n">augur</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<span class="n">CREATE</span> <span class="n">DATABASE</span> <span class="n">augur</span><span class="p">;</span>
+<span class="n">GRANT</span> <span class="n">ALL</span> <span class="n">PRIVILEGES</span> <span class="n">ON</span> <span class="n">augur</span><span class="o">.*</span> <span class="n">TO</span> <span class="s1">&#39;augur&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Augur runs in an Anaconda environment. To get started, activate the environment and then
 run <code class="docutils literal notranslate"><span class="pre">augur</span> <span class="pre">run</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate augur
-augur run
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">augur</span>
+<span class="n">augur</span> <span class="n">run</span>
 </pre></div>
 </div>
 <p>After you run the <code class="docutils literal notranslate"><span class="pre">augur</span> <span class="pre">run</span></code> command for the first time, a configuration file called <code class="docutils literal notranslate"><span class="pre">augur.config.json</span></code> will automatically be generated.</p>
@@ -226,9 +228,9 @@ augur run
 set up the server, development, and cache options, as well as the plugin connections.</p>
 <p>For <strong>all</strong> the API’s and visualiazations to work, you will need to include:</p>
 <ul class="simple">
-<li><p>A <a class="reference external" href="https://developer.github.com/v3/">GitHub</a> API Key,</p></li>
-<li><p>A connection to a <a class="reference external" href="https://opendata.missouri.edu">Facade</a> database,</p></li>
-<li><p>A connection to a <a class="reference external" href="https://ghtorrent.org">GHTorrent</a> database.</p></li>
+<li>A <a class="reference external" href="https://developer.github.com/v3/">GitHub</a> API Key,</li>
+<li>A connection to a <a class="reference external" href="https://opendata.missouri.edu">Facade</a> database,</li>
+<li>A connection to a <a class="reference external" href="https://ghtorrent.org">GHTorrent</a> database.</li>
 </ul>
 <p>For local API testing, you will need a <a class="reference external" href="https://www.getpostman.com">Postman</a> API key.</p>
 <p><strong>You’re ready to rock! To start both the frontend and backend, run:</strong>
@@ -275,11 +277,13 @@ set up the server, development, and cache options, as well as the plugin connect
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
+  <h3>Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -292,7 +296,7 @@ set up the server, development, and cache options, as well as the plugin connect
       &copy;2019, Augur Contributors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

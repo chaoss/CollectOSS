@@ -1,12 +1,12 @@
 import os
+import subprocess
+import time
+from subprocess import Popen
 import pytest
 import requests
-import augur.server
-
-def teardown_module(module):
-    os.system('make dev-stop')
 
 @pytest.fixture(scope="session")
 def librariesio_routes():
-    os.system('make dev-stop')
-    os.system('make dev-start &')
+    process = subprocess.Popen(['make', 'backend-restart'])
+    time.sleep(5)
+    return process
