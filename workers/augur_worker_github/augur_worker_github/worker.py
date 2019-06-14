@@ -370,7 +370,8 @@ class GitHubWorker:
             # Increment our global track of the cntrb id for the possibility of it being used as a FK
                 self.cntrb_id_inc += 1
 
-        except:
+        except Exception as e:
+            logging.info("Caught exception: " + str(e))
             logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
             logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
         else:
@@ -415,9 +416,6 @@ class GitHubWorker:
                 break
             issues += j
             i += 1
-
-        # To store GH's issue numbers that are used in other endpoints for events and comments
-        issue_numbers = []
 
         # Discover and remove duplicates before we start inserting
         need_insertion = self.filter_duplicates({'gh_issue_id': 'id'}, ['issues'], issues)
@@ -685,14 +683,15 @@ class GitHubWorker:
             colSQL = s.sql.text("""
                 SELECT {} FROM {}
                 """.format(col, table_str))
-
+            logging.info(str(colSQL) + "\n\n")
             values = pd.read_sql(colSQL, self.db, params={})
 
             for obj in og_data:
                 if values.isin([obj[cols[col]]]).any().any():
                     logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
-                else:
+                elif obj not in need_insertion:
                     need_insertion.append(obj)
+        logging.info(str(len(og_data)) + str(len(need_insertion)) + "\n\n")
         return need_insertion
 
     def find_id_from_login(self, login):
@@ -772,7 +771,7 @@ class GitHubWorker:
     def update_rate_limit(self, response):
         # self.rate_limit -= 1
         # logging.info("OUR TRACK OF LIMIT: " + str(self.rate_limit) + " ACTUAL: " + str(response.headers['X-RateLimit-Remaining']))
-        self.rate_limit = response.headers['X-RateLimit-Remaining']
+        self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
         logging.info("Updated rate limit, you have: " + str(self.rate_limit) + " requests remaining.\n")
         if self.rate_limit <= 0:
 
