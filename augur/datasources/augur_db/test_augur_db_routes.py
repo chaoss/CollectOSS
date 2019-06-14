@@ -29,6 +29,78 @@ def test_repo_groups(augur_db_routes):
 ###           EVOLUTION           ###
 #####################################
 
+def test_code_changes_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/code-changes')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['commit_count'] > 0
+
+def test_code_changes_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21350/code-changes')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['commit_count'] > 0
+
+def test_code_changes_lines_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/code-changes-lines')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['added'] >= 0
+    assert data[0]['removed'] >= 0
+
+def test_code_changes_lines_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21350/code-changes-lines')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['added'] >= 0
+    assert data[0]['removed'] >= 0
+
+def test_issues_new_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issues-new')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['issues'] > 0
+
+def test_issues_new_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21350/issues-new')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['issues'] >= 1
+
+def test_issues_closed_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issues-closed')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['issues'] > 0
+
+def test_issues_closed_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21350/issues-closed')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['issues'] > 0
+
+def test_issue_backlog_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issue-backlog')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['issue_backlog'] > 0
+
+def test_issue_backlog_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21350/issue-backlog')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]['issue_backlog'] > 0
+
 def test_pull_requests_merge_contributor_new_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/pull-requests-merge-contributor-new')
     data = response.json()
@@ -114,4 +186,3 @@ def test_contributors_new_by_repo(augur_db_routes):
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]["count"] > 0
-
