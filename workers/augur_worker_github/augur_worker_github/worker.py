@@ -466,7 +466,6 @@ class GitHubWorker:
                         cntrb_id = self.find_id_from_login(event['actor']['login'])
             
             issue = {
-                "issue_id": self.issue_id_inc,
                 "repo_id": issue_dict['repo_id'],
                 "reporter_id": self.find_id_from_login(issue_dict['user']['login']),
                 "pull_request": pr_id,
@@ -683,7 +682,6 @@ class GitHubWorker:
             colSQL = s.sql.text("""
                 SELECT {} FROM {}
                 """.format(col, table_str))
-            logging.info(str(colSQL) + "\n\n")
             values = pd.read_sql(colSQL, self.db, params={})
 
             for obj in og_data:
@@ -691,7 +689,8 @@ class GitHubWorker:
                     logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
                 elif obj not in need_insertion:
                     need_insertion.append(obj)
-        logging.info(str(len(og_data)) + str(len(need_insertion)) + "\n\n")
+        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) + 
+            " to " + str(len(need_insertion)) + "\n")
         return need_insertion
 
     def find_id_from_login(self, login):
@@ -700,7 +699,6 @@ class GitHubWorker:
             """.format(login))
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)] 
-        logging.info(str(data_list) + login)
         try:
             return data_list[0][0]
         except:
