@@ -19,7 +19,9 @@ from augur import logger
 import augur.plugins
 import augur.datasources
 import logging
+
 logging.basicConfig(filename='test.log', level=logging.INFO)
+
 
 
 class Application(object):
@@ -109,6 +111,8 @@ class Application(object):
         # Application.default_plugins
         for plugin_name in Application.default_plugins:
             self[plugin_name]
+
+
 
     def __getitem__(self, plugin_name):
         """
