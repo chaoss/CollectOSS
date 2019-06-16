@@ -287,7 +287,14 @@ class GitHubWorker:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
             self.update_rate_limit(r)
-            j = r.json()
+            try:
+                j = r.json()
+            except Exception as e:
+                logging.info("Caught exception: " + str(e) + "....\n")
+                logging.info("Some kind of issue CHECKTHIS  " + url + " ...\n")
+            else:
+                logging.info("JSON seems ill-formed " + str(r) + "....\n")
+
             if r.status_code != 204:
                 contributors = r.json()
             if len(j) == 0:
