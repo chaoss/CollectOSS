@@ -292,12 +292,17 @@ class GitHubWorker:
             except Exception as e:
                 logging.info("Caught exception: " + str(e) + "....\n")
                 logging.info("Some kind of issue CHECKTHIS  " + url + " ...\n")
+                j = ""
+                logging.info("set j to an empty string " + str(j) + "...\n ")
             else:
                 logging.info("JSON seems ill-formed " + str(r) + "....\n")
+                logging.info("value of j is " + str(j) + "....\n")
 
             if r.status_code != 204:
                 contributors = r.json()
+                logging.info("length of j is " + str(len(j)))
             if len(j) == 0:
+                logging.info("length of j is " + str(len(j)))
                 break
             contributors += j
             i += 1
