@@ -16,6 +16,8 @@
                 <th v-on:click="sortTable('rg_name')">  Repo Group Name <div class="arrow" v-if="'rg_name' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('rg_description')">  Repo Group Description <div class="arrow" v-if="'rg_description' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('repo_count')">  Repo Count for this Group <div class="arrow" v-if="'repo_count' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('commits_all_time')">  Total Commit Count <div class="arrow" v-if="'commits_all_time' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('issues_all_time')">  Total Issue Count <div class="arrow" v-if="'issues_all_time' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('repo_status')">  Status <div class="arrow" v-if="'repo_status' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
               </tr>
             </thead>
@@ -27,6 +29,8 @@
                 <td>{{ repo.rg_name }}</td>
                 <td>{{ repo.rg_description }}</td>
                 <td>{{ repo.repo_count }}</td>
+                <td>{{ repo.commits_all_time }}</td>
+                <td>{{ repo.issues_all_time }}</td>
                 <td>{{ repo.repo_status }}</td>
               </tr>
             </tbody>
@@ -138,6 +142,10 @@ module.exports = {
             group.repo_count = this.repo_relations[group.rg_name].length
           })
           this.repos.forEach((repo) => {
+            if (repo.commits_all_time == null) 
+              repo.commits_all_time = 0
+            if (repo.issues_all_time == null) 
+              repo.issues_all_time = 0
             repo.repo_count = this.repo_relations[repo.rg_name].length
           })
           console.log("LOADED repo groups", this.repo_relations)

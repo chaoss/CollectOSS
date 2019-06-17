@@ -148,7 +148,7 @@ class Broker(object):
         poller = zmq.Poller()
         # Only poll for requests from backend 
         poller.register(backend, zmq.POLLIN)
-        logging.info("Beginning to listen...")
+        
         while True:
             # Identify which sockets have activity
             # sockets = dict(poller.poll(1000))
@@ -159,11 +159,12 @@ class Broker(object):
             #     if backend in sockets:
 
             # Identify the worker and the client
-            logging.info("ye we listenin")
+            logging.info("Broker is waiting for a new message...\n")
             worker = backend.recv()
-            logging.info(str(worker))
+            logging.info("Broker recieved a new message.")
+            logging.info("Message sender: " + str(worker))
             request = backend.recv_multipart()
-            logging.info("REQUEST: " + str(request) + str(type(request[len(request) - 1])))
+            logging.info("Message request: " + str(request))
             # worker, delimiter, client = request[:3]
             delimiter = request[0]
             client = request[1]

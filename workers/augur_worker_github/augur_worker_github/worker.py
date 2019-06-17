@@ -374,7 +374,7 @@ class GitHubWorker:
 
             # Commit insertion to table
                 result = self.db.execute(self.contributors_table.insert().values(cntrb))
-                logging.info("PKEY: " + str(result.inserted_primary_key))
+                logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
     
                 logging.info("Inserted contributor: " + contributor['login'] + "\n")
@@ -512,13 +512,13 @@ class GitHubWorker:
 
             # Commit insertion to the issues table
             result = self.db.execute(self.issues_table.insert().values(issue))
-            logging.info("PKEY: " + str(result.inserted_primary_key))
+            logging.info("Primary key inserted into the issues table: " + str(result.inserted_primary_key))
             self.results_counter += 1
+
+            self.issue_id_inc = int(result.inserted_primary_key[0])
 
             logging.info("Inserted issue with our issue_id being: " + str(self.issue_id_inc) + 
                 " and title of: " + issue_dict['title'] + " and gh_issue_num of: " + str(issue_dict['number']) + "\n")
-
-            self.issue_id_inc = int(result.inserted_primary_key[0])
 
             # Just to help me figure out cases where a..nee vs a..nees shows up
             if "assignee" in issue_dict and "assignees" in issue_dict:
@@ -548,7 +548,7 @@ class GitHubWorker:
                     }
                     # Commit insertion to the assignee table
                     result = self.db.execute(self.issue_assignees_table.insert().values(assignee))
-                    logging.info("PKEY: " + str(result.inserted_primary_key))
+                    logging.info("Primary key inserted to the issues_assignees table: " + str(result.inserted_primary_key))
                     self.results_counter += 1
 
                     logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
@@ -574,7 +574,7 @@ class GitHubWorker:
                 }
 
                 result = self.db.execute(self.issue_labels_table.insert().values(label))
-                logging.info("PKEY: " + str(result.inserted_primary_key))
+                logging.info("Primary key inserted into the issue_labels table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
 
                 logging.info("Inserted issue label with text: " + label_dict['name'] + "\n")
@@ -623,7 +623,7 @@ class GitHubWorker:
                 }
 
                 result = self.db.execute(self.message_table.insert().values(issue_comment))
-                logging.info("PKEY: " + str(result.inserted_primary_key))
+                logging.info("Primary key inserted into the message table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
 
                 logging.info("Inserted issue comment: " + comment['body'] + "\n")
@@ -639,7 +639,7 @@ class GitHubWorker:
                 }
 
                 result = self.db.execute(self.issues_message_ref_table.insert().values(issue_message_ref))
-                logging.info("PKEY: " + str(result.inserted_primary_key))
+                logging.info("Primary key inserted into the issue_message_ref table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
 
                 logging.info("Inserted issue comment with msg_id of: " + str(self.msg_id_inc) + "\n")
@@ -675,7 +675,7 @@ class GitHubWorker:
                 }
 
                 result = self.db.execute(self.issue_events_table.insert().values(issue_event))
-                logging.info("PKEY: " + str(result.inserted_primary_key))
+                logging.info("Primary key inserted into the issue_events table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
 
                 logging.info("Inserted issue event: " + event['event'] + " " + str(self.issue_id_inc) + "\n")
@@ -775,7 +775,7 @@ class GitHubWorker:
                 "data_source": self.data_source
             }
             result = self.db.execute(self.contributors_table.insert().values(cntrb))
-            logging.info("PKEY: " + str(result.inserted_primary_key))
+            logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
             self.results_counter += 1
 
             logging.info("Inserted contributor: " + contributor['login'] + "\n")
