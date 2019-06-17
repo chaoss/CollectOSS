@@ -12,10 +12,10 @@
           <table class="is-responsive">
             <thead class="repo-link-table repo-link-table-body">
               <tr>
-                <th v-on:click="sortTable('url')">URL</th>
-                <th v-on:click="sortTable('rg_name')">Repo Group Name</th>
-                <th v-on:click="sortTable('rg_name')">Repo Group Description</th>
-                <th v-on:click="sortTable('repo_status')">Status</th>
+                <th v-on:click="sortTable('url')">  URL <div class="arrow" v-if="'url' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('rg_name')">  Repo Group Name <div class="arrow" v-if="'rg_name' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('rg_description')">  Repo Group Description <div class="arrow" v-if="'rg_description' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('repo_status')">  Status <div class="arrow" v-if="'repo_status' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
               </tr>
             </thead>
             <tbody class="repo-link-table repo-link-table-body">
@@ -24,7 +24,7 @@
                   <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                 </td>
                 <td>{{ repo.rg_name }}</td>
-                <td>{{ repo.description }}</td>
+                <td>{{ repo.rg_description }}</td>
                 <td>{{ repo.repo_status }}</td>
               </tr>
             </tbody>
@@ -46,15 +46,26 @@ module.exports = {
     repos: {},
     repo_groups: [],
     repo_relations: {},
-    loaded: false
+    loaded: false,
+    ascending: false,
+    sortColumn: '',
   }},
   methods: {
     sortTable(col) {
-      this.repos[col].sort(function(a, b) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+
+      var ascending = this.ascending;
+
+      this.repos.sort(function(a, b) {
         if (a[col] > b[col]) {
-          return 1;
+          return ascending ? 1 : -1
         } else if (a[col] < b[col]) {
-          return  -1;
+          return ascending ? -1 : 1
         }
         return 0;
       })

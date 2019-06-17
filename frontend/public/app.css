@@ -4655,6 +4655,21 @@ header {
   border-bottom: 2px solid #ebebeb;
   color: #000 !important;
 }
+.arrow_down:before {
+  content: '▼';
+}
+.arrow_up:before {
+  content: '▲';
+}
+.arrow {
+  float: right;
+  width: 12px;
+  height: 15px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position-y: bottom;
+  padding-right: 2rem;
+}
 @-moz-keyframes spin {
   0% {
     transform: rotate(0deg);
