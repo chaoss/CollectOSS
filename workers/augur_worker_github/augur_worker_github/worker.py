@@ -398,12 +398,9 @@ class GitHubWorker:
         logging.info("Beginning filling the issues model for repo: " + entry_info['repo_git'] + "\n")
         self.record_model_process('issues')
 
-<<<<<<< HEAD
         #if str.find('github.com', str(entry_info['repo_git']) < 0
-=======
         ### I have repos not on github and I need to skip them 
         #@if str.find('github.com', str(entry_info['repo_git']) < 0
->>>>>>> 51baab0cfe3864e4bd2feb6a75c27f7eba695280
         #    return 
 
         # Contributors are part of this model, and finding all for the repo saves us 
