@@ -398,7 +398,7 @@ class GitHubWorker:
         logging.info("Beginning filling the issues model for repo: " + entry_info['repo_git'] + "\n")
         self.record_model_process('issues')
 
-        if is_git_hub = str.find('github.com', str(entry_info['repo_git']) < 0:
+        if str.find('github.com', str(entry_info['repo_git']) < 0:
             return 
 
         # Contributors are part of this model, and finding all for the repo saves us 
