@@ -595,8 +595,8 @@ class GitHubWorker:
             logging.info("length of commit comments " + str(len(issue_comments)))
             if len(issue_comments) != 0:
                 for comment in issue_comments:
+                    logging.info("user: "+str(comment['user']) + "...\n") 
                     comment['cntrb_id'] = self.find_id_from_login(comment['user']['login'])
-
             # Filter duplicates before insertion
             comments_need_insertion = self.filter_duplicates({'msg_timestamp': 'created_at', 'cntrb_id': 'cntrb_id'}, ['message'], issue_comments)
     
