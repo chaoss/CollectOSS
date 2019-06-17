@@ -67,13 +67,12 @@ class Broker(object):
         """
         # self.NBR_CLIENTS = 1
         self.num_workers = 1
-        self.connected_workers = {'com.augurlabs.core.github_worker': Worker(id='com.augurlabs.core.github_worker')}
+        self.connected_workers = {}
         self.created_jobs = []
         logging.info("Broker spawned and is ready to accept tasks.")
-        logging.info("Recieved worker and opened up pool to hold sockets")
-        process = multiprocessing.Process(target=self.main)
-        process.daemon = True
-        process.start()
+        # process = multiprocessing.Process(target=self.main)
+        # process.daemon = True
+        # process.start()
         
 
     def add_new_worker(self, worker):
@@ -170,8 +169,10 @@ class Broker(object):
             client = request[1]
             # parse the message
             message = request[len(request) - 1].decode('ascii').split(" ")
+
             # delimiter = request[0].decode('ascii')#.split(" ")
             logging.info("Parsed message: " + str(message))
+            logging.info("Client: " + str(client))
 
             # If there are no workers currently available
             # if not workers:
@@ -187,7 +188,7 @@ class Broker(object):
                                            models=spec['qualifications'][0]['models'])
 
                 # Add new worker to the list of available workers
-                workers.append(augur_worker)
+                self.connected_workers.append(augur_worker)
 
             # If the client's message is not READY and there are more than 3 parts to it, then that mean's a reply to a request
             if client != b"READY" and len(request) > 3:
@@ -215,6 +216,8 @@ class Broker(object):
                 # # If there are no more requests to be served, terminate
                 # if not count:
                 #     break
+
+
 
         # If there's activity on the frontend
         if frontend in sockets:

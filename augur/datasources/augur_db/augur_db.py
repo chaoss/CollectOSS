@@ -754,7 +754,7 @@ class Augur(object):
         Returns all repository names, URLs, and base64 URLs in the facade database
         """
         downloadedReposSQL = s.sql.text("""
-            SELECT repo_git AS url, repo_status, rg_name
+            SELECT repo_id, repo_name, repo_git AS url, repo_status, rg_name, description
             FROM repo
             JOIN repo_groups
             ON repo.repo_group_id = repo_groups.repo_group_id
