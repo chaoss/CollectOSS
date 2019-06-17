@@ -1,25 +1,21 @@
 matrix:
   include:
-  - name: Python Datasource Tests
+  - name: Python Datasource Unit Tests
     install: pip install .
     language: python
     python: '3.6'
     script: python -m pytest augur/datasources/**/test_**.py
-  - name: API Tests
-    before_script:
-    - node --version
-    - npm --version
-    - node_modules/.bin/newman --version
-    install: pip install . && npm install newman
+
+  - name: API Unit Tests
+    install: pip install .
     language: python
     python: '3.6'
     notifications:
       slack: augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS
     script:
-    - python3 -m augur.server &
-    - sleep 15
-    - node_modules/.bin/newman run https://api.getpostman.com/collections/4566755-87d14f65-6fa1-4a0b-949f-55ca5f35320e?apikey=$POSTMAN_API_KEY
-      -e https://api.getpostman.com/environments/4566755-2eb8f02c-642f-4f12-892f-d75f4c5faa24?apikey=$POSTMAN_API_KEY
+      - augur run > /dev/null 2>&1 &
+      - sleep 10
+      - pytest augur/datasources/**/test_**_routes.py
 
 notifications:
   slack:

@@ -3,7 +3,6 @@ import subprocess
 import pytest
 import sys
 
-
 SOURCE = "**"
 if len(sys.argv) == 2:
     SOURCE = str(sys.argv[1])
