@@ -24,20 +24,14 @@ In this file, you'll need the following boilerplate:
 
 .. code:: python
 
-    import os
-    import subprocess
-    import time
-    from subprocess import Popen
     import pytest
     import requests
 
-    @pytest.fixture(scope="session")
+    @pytest.fixture(scope="module")
     def <plugin_name>_routes():
-        process = subprocess.Popen(['make', 'backend-restart'])
-        time.sleep(5) #allow some time for the server to start
-        return process
+        pass
 
-This will automatically spin up the web server when running your tests so that you don't have to do it yourself!
+The web server will be automatically spun up and down when running your tests.
 
 For the actual tests, for the most part not much logic is needed. Each endpoint should already have a unit test asserting that the 
 metric is being calculate correctly: in most cases the endpoint tests exist primarily to make sure they're reachable and that the routes

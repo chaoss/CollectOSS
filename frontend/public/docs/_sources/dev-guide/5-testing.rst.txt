@@ -31,7 +31,7 @@ In this file, you'll need the following boilerplate:
     import pytest
     import requests
 
-    @pytest.fixture(scope="session")
+    @pytest.fixture(scope="module")
     def <plugin_name>_routes():
         process = subprocess.Popen(['make', 'backend-restart'])
         time.sleep(5) #allow some time for the server to start
