@@ -5,11 +5,9 @@ from subprocess import Popen
 import pytest
 import requests
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def githubapi_routes():
-    process = subprocess.Popen(['make', 'backend-restart'])
-    time.sleep(5)
-    return process
+    pass
 
 # def test_issues_closed_route(githubapi_routes):
 #     response = requests.get('http://localhost:5000/api/unstable/rails/rails/timeseries/githubapi/issues/closed')

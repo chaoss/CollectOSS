@@ -5,11 +5,9 @@ from subprocess import Popen
 import pytest
 import requests
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def ghtorrent_routes():
-    process = subprocess.Popen(['make', 'backend-restart'])
-    time.sleep(5)
-    return process
+    pass
 
 def test_commits_route(ghtorrent_routes):
     response = requests.get('http://localhost:5000/api/unstable/rails/rails/timeseries/commits')
