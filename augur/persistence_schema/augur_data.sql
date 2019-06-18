@@ -1,18 +1,18 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : newaugur
+ Source Server         : mudcats augur
  Source Server Type    : PostgreSQL
  Source Server Version : 110003
- Source Host           : nekocase.augurlabs.io:5433
- Source Catalog        : augur
+ Source Host           : mudcats.augurlabs.io:5433
+ Source Catalog        : augur_science
  Source Schema         : augur_data
 
  Target Server Type    : PostgreSQL
  Target Server Version : 110003
  File Encoding         : 65001
 
- Date: 11/06/2019 08:01:07
+ Date: 18/06/2019 13:48:20
 */
 
 
@@ -147,6 +147,18 @@ MAXVALUE 9223372036854775807
 START 25150
 CACHE 1;
 ALTER SEQUENCE "augur_data"."issue_message_ref_issue_msg_ref_id_seq" OWNER TO "augur";
+
+-- ----------------------------
+-- Sequence structure for issue_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "augur_data"."issue_seq";
+CREATE SEQUENCE "augur_data"."issue_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 31000
+CACHE 1;
+ALTER SEQUENCE "augur_data"."issue_seq" OWNER TO "augur";
 
 -- ----------------------------
 -- Sequence structure for libraries_library_id_seq
@@ -779,7 +791,7 @@ ALTER TABLE "augur_data"."issue_message_ref" OWNER TO "augur";
 -- ----------------------------
 DROP TABLE IF EXISTS "augur_data"."issues";
 CREATE TABLE "augur_data"."issues" (
-  "issue_id" int8 NOT NULL,
+  "issue_id" int8 NOT NULL DEFAULT nextval('"augur_data".issue_seq'::regclass),
   "repo_id" int8,
   "reporter_id" int8,
   "pull_request" int8,
@@ -934,7 +946,7 @@ CREATE TABLE "augur_data"."repo" (
   "repo_type" varchar COLLATE "pg_catalog"."default" DEFAULT ''::character varying,
   "url" varchar(255) COLLATE "pg_catalog"."default",
   "owner_id" int4,
-  "description" varchar(255) COLLATE "pg_catalog"."default",
+  "description" varchar COLLATE "pg_catalog"."default",
   "primary_language" varchar(255) COLLATE "pg_catalog"."default",
   "created_at" varchar(255) COLLATE "pg_catalog"."default",
   "forked_from" int8,
@@ -1526,42 +1538,43 @@ ALTER TABLE "augur_data"."working_commits" OWNER TO "augur";
 -- ----------------------------
 ALTER SEQUENCE "augur_data"."chaoss_metric_status_cms_id_seq"
 OWNED BY "augur_data"."chaoss_metric_status"."cms_id";
-SELECT setval('"augur_data"."chaoss_metric_status_cms_id_seq"', 2, false);
-SELECT setval('"augur_data"."commit_comment_ref_cmt_comment_id_seq"', 25151, false);
-SELECT setval('"augur_data"."commit_parents_parent_id_seq"', 25151, false);
-SELECT setval('"augur_data"."commits_cmt_id_seq"', 25152, true);
-SELECT setval('"augur_data"."contributor_affiliations_ca_id_seq"', 25151, false);
-SELECT setval('"augur_data"."contributors_aliases_cntrb_a_id_seq"', 25151, false);
-SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 25151, false);
+SELECT setval('"augur_data"."chaoss_metric_status_cms_id_seq"', 3, false);
+SELECT setval('"augur_data"."commit_comment_ref_cmt_comment_id_seq"', 25152, false);
+SELECT setval('"augur_data"."commit_parents_parent_id_seq"', 25152, false);
+SELECT setval('"augur_data"."commits_cmt_id_seq"', 28065076, true);
+SELECT setval('"augur_data"."contributor_affiliations_ca_id_seq"', 25152, false);
+SELECT setval('"augur_data"."contributors_aliases_cntrb_a_id_seq"', 25152, false);
+SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 37355, true);
 ALTER SEQUENCE "augur_data"."issue_assignees_issue_assignee_id_seq"
 OWNED BY "augur_data"."issue_assignees"."issue_assignee_id";
-SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 2, false);
-SELECT setval('"augur_data"."issue_events_event_id_seq"', 25151, false);
-SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 25151, false);
-SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 25151, false);
-SELECT setval('"augur_data"."libraries_library_id_seq"', 25151, false);
-SELECT setval('"augur_data"."library_dependencies_lib_dependency_id_seq"', 25151, false);
-SELECT setval('"augur_data"."library_version_library_version_id_seq"', 25151, false);
-SELECT setval('"augur_data"."message_msg_id_seq"', 25151, false);
-SELECT setval('"augur_data"."platform_pltfrm_id_seq"', 25151, true);
-SELECT setval('"augur_data"."repo_badging_badge_collection_id_seq"', 25016, true);
+SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 636, true);
+SELECT setval('"augur_data"."issue_events_event_id_seq"', 62062, true);
+SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 28113, true);
+SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 50081, true);
+SELECT setval('"augur_data"."issue_seq"', 34437, true);
+SELECT setval('"augur_data"."libraries_library_id_seq"', 25152, false);
+SELECT setval('"augur_data"."library_dependencies_lib_dependency_id_seq"', 25152, false);
+SELECT setval('"augur_data"."library_version_library_version_id_seq"', 25152, false);
+SELECT setval('"augur_data"."message_msg_id_seq"', 50082, true);
+SELECT setval('"augur_data"."platform_pltfrm_id_seq"', 25152, true);
+SELECT setval('"augur_data"."repo_badging_badge_collection_id_seq"', 25018, true);
 ALTER SEQUENCE "augur_data"."repo_group_insights_rgi_id_seq"
 OWNED BY "augur_data"."repo_group_insights"."rgi_id";
-SELECT setval('"augur_data"."repo_group_insights_rgi_id_seq"', 2, false);
-SELECT setval('"augur_data"."repo_groups_list_serve_rgls_id_seq"', 25151, false);
-SELECT setval('"augur_data"."repo_groups_repo_group_id_seq"', 25151, false);
-SELECT setval('"augur_data"."repo_info_repo_info_id_seq"', 25151, false);
+SELECT setval('"augur_data"."repo_group_insights_rgi_id_seq"', 3, false);
+SELECT setval('"augur_data"."repo_groups_list_serve_rgls_id_seq"', 25152, false);
+SELECT setval('"augur_data"."repo_groups_repo_group_id_seq"', 25154, true);
+SELECT setval('"augur_data"."repo_info_repo_info_id_seq"', 25152, false);
 ALTER SEQUENCE "augur_data"."repo_insights_ri_id_seq"
 OWNED BY "augur_data"."repo_insights"."ri_id";
-SELECT setval('"augur_data"."repo_insights_ri_id_seq"', 2, false);
-SELECT setval('"augur_data"."repo_labor_repo_labor_id_seq"', 25151, false);
-SELECT setval('"augur_data"."repo_meta_rmeta_id_seq"', 25151, false);
-SELECT setval('"augur_data"."repo_repo_id_seq"', 25151, false);
-SELECT setval('"augur_data"."repo_stats_rstat_id_seq"', 25151, false);
-SELECT setval('"augur_data"."utility_log_id_seq"', 2, false);
+SELECT setval('"augur_data"."repo_insights_ri_id_seq"', 3, false);
+SELECT setval('"augur_data"."repo_labor_repo_labor_id_seq"', 25152, false);
+SELECT setval('"augur_data"."repo_meta_rmeta_id_seq"', 25152, false);
+SELECT setval('"augur_data"."repo_repo_id_seq"', 26094, true);
+SELECT setval('"augur_data"."repo_stats_rstat_id_seq"', 25152, false);
+SELECT setval('"augur_data"."utility_log_id_seq"', 3, false);
 ALTER SEQUENCE "augur_data"."utility_log_id_seq1"
 OWNED BY "augur_data"."utility_log"."id";
-SELECT setval('"augur_data"."utility_log_id_seq1"', 13896, true);
+SELECT setval('"augur_data"."utility_log_id_seq1"', 33572, true);
 
 -- ----------------------------
 -- Indexes structure for table analysis_log

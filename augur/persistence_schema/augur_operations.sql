@@ -1,18 +1,18 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : newaugur
+ Source Server         : mudcats augur
  Source Server Type    : PostgreSQL
  Source Server Version : 110003
- Source Host           : nekocase.augurlabs.io:5433
- Source Catalog        : augur
+ Source Host           : mudcats.augurlabs.io:5433
+ Source Catalog        : augur_science
  Source Schema         : augur_operations
 
  Target Server Type    : PostgreSQL
  Target Server Version : 110003
  File Encoding         : 65001
 
- Date: 11/06/2019 08:07:26
+ Date: 18/06/2019 13:48:54
 */
 
 
@@ -27,6 +27,25 @@ MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 ALTER SEQUENCE "augur_operations"."gh_worker_history_history_id_seq" OWNER TO "augur";
+
+-- ----------------------------
+-- Table structure for all
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_operations"."all";
+CREATE TABLE "augur_operations"."all" (
+  "Name" varchar COLLATE "pg_catalog"."default",
+  "Bytes" varchar COLLATE "pg_catalog"."default",
+  "Lines" varchar COLLATE "pg_catalog"."default",
+  "Code" varchar COLLATE "pg_catalog"."default",
+  "Comment" varchar COLLATE "pg_catalog"."default",
+  "Blank" varchar COLLATE "pg_catalog"."default",
+  "Complexity" varchar COLLATE "pg_catalog"."default",
+  "Count" varchar COLLATE "pg_catalog"."default",
+  "WeightedComplexity" varchar COLLATE "pg_catalog"."default",
+  "Files" varchar COLLATE "pg_catalog"."default"
+)
+;
+ALTER TABLE "augur_operations"."all" OWNER TO "augur";
 
 -- ----------------------------
 -- Table structure for gh_worker_history
@@ -79,11 +98,32 @@ CREATE TABLE "augur_operations"."gh_worker_oauth" (
 ALTER TABLE "augur_operations"."gh_worker_oauth" OWNER TO "augur";
 
 -- ----------------------------
+-- Table structure for science
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_operations"."science";
+CREATE TABLE "augur_operations"."science" (
+  "name" varchar COLLATE "pg_catalog"."default",
+  "description" varchar COLLATE "pg_catalog"."default",
+  "details" varchar COLLATE "pg_catalog"."default",
+  "maintainer" varchar COLLATE "pg_catalog"."default",
+  "keywords" varchar COLLATE "pg_catalog"."default",
+  "github" varchar COLLATE "pg_catalog"."default",
+  "status" varchar COLLATE "pg_catalog"."default",
+  "onboarding" varchar COLLATE "pg_catalog"."default",
+  "on_cran" varchar COLLATE "pg_catalog"."default",
+  "on_bioc" varchar COLLATE "pg_catalog"."default",
+  "url" varchar COLLATE "pg_catalog"."default",
+  "ropensci_category" varchar COLLATE "pg_catalog"."default"
+)
+;
+ALTER TABLE "augur_operations"."science" OWNER TO "augur";
+
+-- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "augur_operations"."gh_worker_history_history_id_seq"
 OWNED BY "augur_operations"."gh_worker_history"."history_id";
-SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 2, false);
+SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 2631, true);
 
 -- ----------------------------
 -- Primary Key structure for table gh_worker_history
