@@ -22,6 +22,7 @@ The tests check if a value is anywhere in the dataframe
 
 """
 
+
 def test_issues_first_time_opened(augur_db):
 
     # repo_id

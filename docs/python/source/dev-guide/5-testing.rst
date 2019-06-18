@@ -7,15 +7,43 @@ To test augur, set up your environment for testing:
 
     export DB_TEST_URL=mysql+pymysql://<username>:<pass>@<host>:<post>/<database>
 
-After that, run ``make test`` to run the plugin/data source unit tests.
+After that, run ``make test`` to run the plugin/data source unit tests and the Python API tests.
 
-To test the API, run ``make test-routes``.
+To run the Python data source unit tests alone: ``make test-functions``.
+To run the Python API tests alone: ``make test-routes``.
 
-Writing tests
--------------------------
+For both these plugins, you can specify a single plugin for which to run the designated tests. You can do this
+like so: ``make test-routes PLUGIN=<plugin_name>``. The plugin name should exactly match the name of the plugin directory.
+
+Metrics
+*******
+Augur uses ``pytest`` for its data source unit tests. The tests for our sample ``Chaoss``
+class are contained in the ``test_chaoss_functions.py`` file inside the plugin's
+directory. You can use pytest fixtures and environment variables to pass
+data to tests.
+
+.. code:: python
+
+    @pytest.fixture
+    def chaoss():
+        import augur
+        chaoss = os.getenv("PLUGIN_TEST_URL")
+        assert chaoss is not None and len(chaoss) > 8
+        return augur.Chaoss(chaoss)
+
+Now any test that tests functions in the Chaoss class will be able to
+access an instance of the class.
+
+.. code:: python
+
+    def test_data_source(chaoss):
+        assert chaoss.data_source('argument').isin(['expected_value']).any
+
+Make sure every function you write has a test.
+
 
 Endpoints
-^^^^^^^^^
+*******
 
 As with our unit tests, we write our API tests in Python using the ``pytest`` framework.
 

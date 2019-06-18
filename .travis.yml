@@ -4,18 +4,16 @@ matrix:
     install: pip install .
     language: python
     python: '3.6'
-    script: python -m pytest augur/datasources/**/test_**.py
+    script: python -m pytest augur/datasources/**/test_**_functions.py
 
   - name: API Unit Tests
     install: pip install .
     language: python
     python: '3.6'
-    notifications:
-      slack: augurlabs:T5g5uaEPLwSiTUTRH1kiXGcS
     script:
       - augur run > /dev/null 2>&1 &
       - sleep 10
-      - pytest augur/datasources/**/test_**_routes.py
+      - python -m pytest augur/datasources/**/test_**_routes.py
 
 notifications:
   slack:
