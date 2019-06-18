@@ -23,24 +23,52 @@ The tests check if a value is anywhere in the dataframe
 
 """
 
+def test_code_changes(augur_db):
+    #repo_id
+    assert augur_db.code_changes(23, 21350, period='year').isin([pd.Timestamp('2009-01-01T00:00:00+00:00'), 2]).any().any()
 
-def test_issues_first_time_opened(augur_db):
+    # repo_group_id
+    assert augur_db.code_changes(23, period='year').isin([pd.Timestamp('2009-01-01T00:00:00+00:00'), 21350, 2]).any().any()
 
-    # repo_id
-    assert augur_db.issues_first_time_opened(
-        24, repo_id=22054, period='year').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+    #begin_date & end_date
+    assert augur_db.code_changes(23, 21350, period='month', begin_date='2009',
+                                 end_date='2011-05').isin([pd.Timestamp('2009-02-01T00:00:00+00:00'), 2]).any().any()
+    assert augur_db.code_changes(23, period='month', begin_date='2009',
+                                 end_date='2011-05').isin([pd.Timestamp('2011-02-01T00:00:00+00:00'), 21420, 4]).any().any()
 
-    # repo_gorup_id
-    assert augur_db.issues_first_time_opened(24, period='year').isin(
-        [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+def test_code_changes_lines(augur_db):
+    #repo_id
+    assert augur_db.code_changes_lines(22, 21331, period='year').isin([pd.Timestamp('2016-01-01T00:00:00+00:00'), 27190, 3163]).any().any()
 
-    # begin_date and end_date
-    assert augur_db.issues_first_time_opened(24, period='year', begin_date='2019-1-1 00:00:01',
-                                             end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
-    assert augur_db.issues_first_time_opened(24, repo_id=22054, period='year', begin_date='2019-1-1 00:00:01',
-                                             end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
+    #repo_group_id
+    assert augur_db.code_changes_lines(23, period='year').isin([pd.Timestamp('2016-01-01T00:00:00+00:00'), 21420, 31, 3]).any().any()
 
+    #begin_date & end_date
+    assert augur_db.code_changes_lines(22, 21331, period='month', begin_date='2016',
+                                       end_date='2016-05').isin([pd.Timestamp('2016-02-01T00:00:00+00:00'), 196, 108]).any().any()
+    assert augur_db.code_changes_lines(22, period='month', begin_date='2016-05',
+                                       end_date='2016-08-15').isin([pd.Timestamp('2016-06-01T00:00:00+00:00'), 21331, 70, 20]).any().any()
 
+def test_issues_new(augur_db):
+    #repo_id
+    assert augur_db.issues_new(23, 21430, period='year').iloc[0]['issues'] == 2
+
+    #repo_group_id
+    assert augur_db.issues_new(23, period='year').iloc[0]['issues'] == 2
+
+    #begin_date & end_date
+    assert augur_db.issues_new(24, 21979, period='week', begin_date='2017',
+                               end_date='2017-05').iloc[1]['issues'] == 4
+    assert augur_db.issues_new(24, period='month', begin_date='2017-05',
+                               end_date='2018').iloc[2]['issues'] == 7
+
+def test_issue_backlog(augur_db):
+    #repo_id
+    assert augur_db.issue_backlog(21, 21166).iloc[0]['issue_backlog']  == 4
+
+    #repo_group_id
+    assert augur_db.issue_backlog(21).iloc[2]['issue_backlog'] == 3
+    
 
 def test_issues_first_time_closed(augur_db):
 

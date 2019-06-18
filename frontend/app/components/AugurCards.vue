@@ -32,7 +32,7 @@ import MainControls from '../components/MainControls.vue'
 import LoginForm from '../components/LoginForm'
 import { mapState } from 'vuex'
 module.exports = {
-  props: ['owner', 'repo', 'domain', 'comparedowner', 'comparedrepo', 'groupid'],
+  props: ['owner', 'repo', 'repoID', 'repoGroupID','domain', 'comparedowner', 'comparedrepo', 'groupid'],
   components: {
     MainControls,
     AugurHeader,
@@ -69,7 +69,7 @@ module.exports = {
         })
         this.$router.push({
           name: 'gmd',
-          params: {owner: repo.owner, repo: repo.name}
+          params: {owner: repo.owner, repo: repo.name, repoID: repo.repoID, repoGroupID: repo.repoGroupID}
         })
 
       }
