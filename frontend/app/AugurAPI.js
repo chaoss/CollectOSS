@@ -14,6 +14,8 @@ export default class AugurAPI {
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.getRepos = this.__EndpointFactory('repos')
     this.getRepoGroups = this.__EndpointFactory('repo-groups')
+    this.getOpenIssues = this.__EndpointFactory('repo-groups/25153/rg-open-issues-count')
+    this.getClosedIssues = this.__EndpointFactory('repo-groups/25153/rg-closed-issues-count')
     this.openRequests = 0
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
@@ -125,6 +127,10 @@ export default class AugurAPI {
   }
 
   Repo (repo) {
+    if (repo.repo_id) {
+
+    }
+
     if (repo.githubURL) {
       let splitURL = repo.githubURL.split('/')
       if (splitURL.length < 3) {
@@ -199,6 +205,11 @@ export default class AugurAPI {
 
     var GitEndpoint = (r, jsName, endpoint) => {
       var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL))
+      return __Endpoint(r, jsName, url)
+    }
+
+    var RepoGroupEndpoint = (r, jsName, endpoint) => {
+      var url = this.__endpointURL('repo-groups/' + repo.repo_group_id + '/' + endpoint)
       return __Endpoint(r, jsName, url)
     }
 
@@ -286,6 +297,14 @@ export default class AugurAPI {
       Timeseries(repo, 'majorTags', 'tags/major')
       Timeseries(repo, 'newWatchers', 'new_watchers')
       Timeseries(repo, 'tags', 'tags')
+    }
+
+    if (repo.repo_id) {
+      RepoEndpoint(repo, 'currentGroup', 'current_group')
+    }
+
+    if (repo.repo_group_id) {
+      // RepoGroupEndpoint(repo, 'rgOpenIssuesCount', 'rg_open_issues_count')
     }
 
     if (repo.gitURL) {

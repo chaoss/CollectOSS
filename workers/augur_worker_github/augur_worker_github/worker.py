@@ -420,7 +420,7 @@ class GitHubWorker:
         if ".git" in name:
             name = name[:-4]
 
-        url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues?page={}&?state=all")
+        url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues?state=closed&page={}")
         issues = []
         i = 0
         # Paginate through all the issues
@@ -429,6 +429,7 @@ class GitHubWorker:
             r = requests.get(url=url.format(i), headers=self.headers)
             self.update_rate_limit(r)
             j = r.json()
+            logging.info(str(j))
             if len(j) == 0:
                 break
             issues += j
@@ -600,7 +601,7 @@ class GitHubWorker:
             logging.info("length of commit comments " + str(len(issue_comments)))
             if len(issue_comments) != 0:
                 for comment in issue_comments:
-                    logging.info("user: "+str(comment['user']) + "...\n") 
+                    # logging.info("user: "+str(comment['user']) + "...\n") 
                     comment['cntrb_id'] = self.find_id_from_login(comment['user']['login'])
             # Filter duplicates before insertion
             comments_need_insertion = self.filter_duplicates({'msg_timestamp': 'created_at', 'cntrb_id': 'cntrb_id'}, ['message'], issue_comments)

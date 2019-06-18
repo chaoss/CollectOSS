@@ -33,4 +33,4 @@ def create_broker_routes(server):
         #job = request.json
         # logging.info("Message recieved that worker " + job['worker_id'] + " completed task: " + str(job))
         # server.broker.completed_job(job)
-        return jsonify({"status": "success", "job": job})
+        return jsonify({"status": "success"})#, "job": job})
