@@ -316,8 +316,8 @@ def create_routes(server):
     #     return Response(response=data, status=200, mimetype='application/json')
 
     """
-    @api {get} /repo-groups/:repo_group_id/pull-requests-merge-contributor-new
-    @apiName New Contributors of Commits
+    @api {get} /repo-groups/:repo_group_id/pull-requests-merge-contributor-new New Contributors of Commits(Repo Group)
+    @apiName New Contributors of Commits(Repo Group)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/pull-requests-merge-contributor-new.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID
@@ -340,8 +340,8 @@ def create_routes(server):
         augur_db.pull_requests_merge_contributor_new, 'pull-requests-merge-contributor-new')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-requests-merge-contributor-new
-    @apiName New Contributors of Commits
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-requests-merge-contributor-new New Contributors of Commits(Repo)
+    @apiName New Contributors of Commits(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/pull-requests-merge-contributor-new.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID.
@@ -365,8 +365,8 @@ def create_routes(server):
         augur_db.pull_requests_merge_contributor_new, 'pull-requests-merge-contributor-new')
 
     """
-    @api {get} /repo-groups/:repo_group_id/issues-first-time-opened
-    @apiName New Contributors of Issues
+    @api {get} /repo-groups/:repo_group_id/issues-first-time-opened New Contributors of Issues(Repo Group)
+    @apiName New Contributors of Issues(Repo Group)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-opened.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID
@@ -389,8 +389,8 @@ def create_routes(server):
         augur_db.issues_first_time_opened, 'issues-first-time-opened')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened
-    @apiName New Contributors of Issues
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened New Contributors of Issues(Repo) 
+    @apiName New Contributors of Issues(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-opened.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID.
@@ -414,8 +414,8 @@ def create_routes(server):
         augur_db.issues_first_time_opened, 'issues-first-time-opened')
 
     """
-    @api {get} /repo-groups/:repo_group_id/issues-first-time-closed
-    @apiName Closed Issues New Contributors
+    @api {get} /repo-groups/:repo_group_id/issues-first-time-closed Closed Issues New Contributor(Repo Group)
+    @apiName Closed Issues New Contributors(Repo Group)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-closed.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID
@@ -438,8 +438,8 @@ def create_routes(server):
         augur_db.issues_first_time_closed, 'issues-first-time-closed')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-closed
-    @apiName Closed Issues New Contributors
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-closed Closed Issues New Contributors(Repo)
+    @apiName Closed Issues New Contributors(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-closed.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID.
@@ -463,8 +463,8 @@ def create_routes(server):
         augur_db.issues_first_time_closed, 'issues-first-time-closed')
 
     """
-    @api {get} /repo-groups/:repo_group_id/sub-projects
-    @apiName Sub-Projects
+    @api {get} /repo-groups/:repo_group_id/sub-projects Sub-Projects(Repo Group)
+    @apiName Sub-Projects(Repo Group)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID
@@ -481,8 +481,8 @@ def create_routes(server):
         augur_db.sub_projects, 'sub-projects')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/sub-projects
-    @apiName Sub-Projects
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/sub-projects Sub-Projects(Repo)
+    @apiName Sub-Projects(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/sub-projects.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID.
@@ -500,8 +500,8 @@ def create_routes(server):
         augur_db.sub_projects, 'sub-projects')
 
     """
-    @api {get} /repo-groups/:repo_group_id/contributors
-    @apiName Contributors
+    @api {get} /repo-groups/:repo_group_id/contributors Contributors(Repo Group)
+    @apiName Contributors(Repo Group)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID
@@ -535,8 +535,8 @@ def create_routes(server):
         augur_db.contributors, 'contributors')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors
-    @apiName Contributors
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors Contributors(Repo)
+    @apiName Contributors(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID.
@@ -571,8 +571,8 @@ def create_routes(server):
         augur_db.contributors, 'contributors')
 
     """
-    @api {get} /repo-groups/:repo_group_id/contributors-new
-    @apiName New Contributors
+    @api {get} /repo-groups/:repo_group_id/contributors-new New Contributors(Repo Group)
+    @apiName New Contributors(Repo Group)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID
@@ -595,8 +595,8 @@ def create_routes(server):
         augur_db.contributors_new, 'contributors-new')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors-new
-    @apiName New Contributors
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/contributors-new New Contributors(Repo)
+    @apiName New Contributors(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md">CHAOSS Metric Definition</a>
     @apiParam {String} repo_group_id Repository Group ID.
