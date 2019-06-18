@@ -1,19 +1,17 @@
 import os
+import subprocess
+import time
+from subprocess import Popen
 import pytest
 import requests
-import augur.server
 
-def teardown_module(module):
-    os.system('make dev-stop')
-
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def githubapi_routes():
-    os.system('make dev-stop')
-    os.system('make server &')
+    pass
 
-def test_issues_closed_route(githubapi_routes):
-    response = requests.get('http://localhost:5000/api/unstable/rails/rails/timeseries/githubapi/issues/closed')
-    assert response.status_code == 200
+# def test_issues_closed_route(githubapi_routes):
+#     response = requests.get('http://localhost:5000/api/unstable/rails/rails/timeseries/githubapi/issues/closed')
+#     assert response.status_code == 200
 
 # def test_commits_route(githubapi_routes):
 #     response = requests.get('http://localhost:5000/api/unstable/rails/rails/timeseries/githubapi/commits')

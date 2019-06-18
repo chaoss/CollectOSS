@@ -69,6 +69,26 @@ Follow the Steps
            df = pd.read_sql(codeReviewIterationSQL, self.db, params={"repoid": str(repoid)})
            return pd.DataFrame({'date': df['created_at'], 'iterations': df['iterations']})
 
+	* Need the New API Documentation Here. 
+
+`server.py`
+
+.. code-block:: python 
+	:linenos:
+
+	    def addRepoGroupMetric(self, function, endpoint, **kwargs):
+	        """Simplifies adding routes that accept repo_group_id"""
+	        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
+	        self.app.route(endpoint)(self.routify(function, 'repo_group'))
+	        self.updateMetricMetadata(function, endpoint, **kwargs)
+
+	    def addRepoMetric(self, function, endpoint, **kwargs):
+	        """Simplifies adding routes that accept repo_group_id and repo_id"""
+	        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+	        self.app.route(endpoint)(self.routify(function, 'repo'))
+	        self.updateMetricMetadata(function, endpoint, **kwargs)
+
+
 
 2. example file 2: ``routes.py`` in the same directory, ``augur/augur/datasources/ghtorrent/``
 

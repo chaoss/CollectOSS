@@ -28,11 +28,11 @@
 ######################
 *.log
 *.pid
-*.sql
 *.sqlite
 *.cfg
 *.cfg.old
 *.cfg.sh
+*.err
 
 # OS generated files #
 ######################

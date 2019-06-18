@@ -6,7 +6,7 @@ import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 import logging
-logging.basicConfig(filename='worker.log', level=logging.INFO)
+logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -203,7 +203,10 @@ class BadgeWorker:
             self.db.execute(self.table.insert().values(data[0]))
             logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")   
 
-            logging.info("Telling broker we completed task for repo_id: " + str(entry_info['repo_id']) + "\n\n")
+            task_completed = entry_info.to_dict()
+            task_completed['worker_id'] = self.config['id']
+
+            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
             requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
         else:
             logging.info("Endpoint did not return any data.")

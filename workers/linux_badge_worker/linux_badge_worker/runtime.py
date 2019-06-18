@@ -47,6 +47,7 @@ def main(augur_url, host, port):
     credentials = read_config("Database")
 
     config = { 
+            "id": "com.augurlabs.core.badge_worker",
             "host": credentials["host"],
             "password": credentials["password"],
             "port": credentials["port"],

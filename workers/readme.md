@@ -30,17 +30,17 @@
 ```
 3. Configure the `augur.config.json` file for the worker. For example, in most cases you will need what is in the `sample.augur.config.json` file only. 
 ```json 
-        {   
-            "Database": {
-                "connection_string": "sqlite:///:memory:",
-                "database": "augur",
-                "host": "sample.augurlabs.io",
-                "pass": "password",
-                "port": "5433",
-                "schema": "augur_data",
-                "user": "augur"
-            }
-        }
+{   
+    "Database": {
+        "connection_string": "sqlite:///:memory:",
+        "database": "augur",
+        "host": "sample.augurlabs.io",
+        "pass": "password",
+        "port": "5433",
+        "schema": "augur_data",
+        "user": "augur"
+    }
+}
 ```
 4. Start the worker:
     - `cd workers/<worker-dir>` 

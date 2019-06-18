@@ -754,10 +754,26 @@ class Augur(object):
         Returns all repository names, URLs, and base64 URLs in the facade database
         """
         downloadedReposSQL = s.sql.text("""
-            SELECT repo_id, repo_git AS url, repo_status, repo.repo_group_id, rg_name
-            FROM repo
-            JOIN repo_groups
-            ON repo.repo_group_id = repo_groups.repo_group_id
+            SELECT
+                repo.repo_id,
+                repo.repo_name,
+                repo.description,
+                repo.repo_git AS url,
+                repo.repo_status,
+                a.commits_all_time, 
+                b.issues_all_time ,
+                rg_name
+            FROM
+                repo
+                left outer join  
+                (select repo_id,    COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on 
+                repo.repo_id = a.repo_id
+                left outer join  
+                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b 
+                on 
+                repo.repo_id = b.repo_id 
+                JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
+            order by commits_all_time desc 
         """)
         results = pd.read_sql(downloadedReposSQL, self.db)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
