@@ -14,6 +14,8 @@ export default class AugurAPI {
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.getRepos = this.__EndpointFactory('repos')
     this.getRepoGroups = this.__EndpointFactory('repo-groups')
+    this.getOpenIssues = this.__EndpointFactory('repo-groups/25153/rg-open-issues-count')
+    this.getClosedIssues = this.__EndpointFactory('repo-groups/25153/rg-closed-issues-count')
     this.openRequests = 0
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
