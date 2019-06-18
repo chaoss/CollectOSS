@@ -831,7 +831,7 @@ class GitHubWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        requests.post('http://localhost:5000/api/unstable/completed_task', json=task_completed, headers=self.headers)
+        # requests.post('http://localhost:5000/api/unstable/completed_task', json=task_completed, headers=self.headers)
 
         # Reset results counter for next task
         self.results_counter = 0

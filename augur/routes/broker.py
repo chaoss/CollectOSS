@@ -30,7 +30,7 @@ def create_broker_routes(server):
 
     @server.app.route('/{}/completed_task'.format(server.api_version), methods=['POST'])
     def sync_queue():
-        job = request.json
-        logging.info("Message recieved that worker " + job['worker_id'] + " completed task: " + str(job))
-        server.broker.completed_job(job)
-        return jsonify({"status": "success", "job": job})
+        # job = request.json
+        # logging.info("Message recieved that worker " + job['worker_id'] + " completed task: " + str(job))
+        # server.broker.completed_job(job)
+        return jsonify({"status": "success"}#, "job": job})

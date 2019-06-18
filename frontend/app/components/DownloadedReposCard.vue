@@ -14,7 +14,7 @@
               <tr>
                 <th v-on:click="sortTable('url')">  URL <div class="arrow" v-if="'url' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('rg_name')">  Repo Group Name <div class="arrow" v-if="'rg_name' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
-                <th v-on:click="sortTable('rg_description')">  Repo Group Description <div class="arrow" v-if="'rg_description' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('description')">  Repo Description <div class="arrow" v-if="'description' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('repo_count')">  Repo Count for this Group <div class="arrow" v-if="'repo_count' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('commits_all_time')">  Total Commit Count <div class="arrow" v-if="'commits_all_time' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('issues_all_time')">  Total Issue Count <div class="arrow" v-if="'issues_all_time' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
@@ -27,7 +27,7 @@
                   <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                 </td>
                 <td>{{ repo.rg_name }}</td>
-                <td>{{ repo.rg_description }}</td>
+                <td>{{ repo.description }}</td>
                 <td>{{ repo.repo_count }}</td>
                 <td>{{ repo.commits_all_time }}</td>
                 <td>{{ repo.issues_all_time }}</td>
