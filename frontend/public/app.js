@@ -2046,7 +2046,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Overview of Project Issues for Project: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":"Issue count","fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['issues']}})],1)]):_vm._e()])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Overview of Issue Counts for Repo Group: All repositories")]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":"Issue Counts for All Repositories - Grouped by Week","fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['issues']}})],1)]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4296,7 +4296,8 @@ exports.default = {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'fieldone', 'fieldtwo'],
   data: function data() {
     return {
-      values: []
+      values: [],
+      colors: ['red', 'green']
     };
   },
 
@@ -4374,7 +4375,10 @@ exports.default = {
               }
             },
             "color": {
-              "value": 'red'
+              "field": "type",
+              "type": "nominal",
+              "scale": { "range": this.colors },
+              "sort": false
             }
           },
           "mark": {
@@ -4399,7 +4403,10 @@ exports.default = {
               }
             },
             "color": {
-              "value": 'green'
+              "field": "type",
+              "type": "nominal",
+              "scale": { "range": this.colors },
+              "sort": false
             }
           },
           "mark": {
@@ -4443,8 +4450,14 @@ exports.default = {
 
 
         data.forEach(function (el) {
-          if ('closed_count' in el) _this.total_closed += el.closed_count;
-          if ('open_count' in el) _this.total_open += el.open_count;
+          if ('closed_count' in el) {
+            el.type = 'closed';
+            _this.total_closed += el.closed_count;
+          }
+          if ('open_count' in el) {
+            el.type = 'open';
+            _this.total_open += el.open_count;
+          }
         });
 
         repos.forEach(function (repo) {

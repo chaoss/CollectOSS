@@ -1,7 +1,7 @@
 <template>
   <section>
     <div style="display: inline-block;">
-      <h2 v-if="loaded" style="display: inline-block; color: black !important">Overview of Project Issues for Project: {{ project }}</h2>
+      <h2 v-if="loaded" style="display: inline-block; color: black !important">Overview of Issue Counts for Repo Group: All repositories</h2>
       <p></p>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
       <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
@@ -12,7 +12,7 @@
 
         <div class="col col-12" style="padding-right: 35px">
           <dual-line-chart source=""
-          title="Issue count"
+          title="Issue Counts for All Repositories - Grouped by Week"
           fieldone="open_count"
           fieldtwo="closed_count"
           :data="values['issues']"></dual-line-chart>

@@ -18,7 +18,8 @@ export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'fieldone', 'fieldtwo'],
   data() {
     return {
-      values: []
+      values: [],
+      colors: ['red', 'green']
     }
   },
   computed: {
@@ -102,8 +103,11 @@ export default {
                   }
                 },
                 "color": {
-                      "value": 'red'
-                    },
+                    "field": "type",
+                    "type": "nominal",
+                    "scale": { "range": this.colors},
+                    "sort": false
+                  },
               },
               "mark": {
                 "type": "line",
@@ -128,8 +132,11 @@ export default {
                   }
                 },
                 "color": {
-                      "value": 'green'
-                    },
+                    "field": "type",
+                    "type": "nominal",
+                    "scale": { "range": this.colors},
+                    "sort": false
+                  },
               },
               "mark": {
                 "type": "line",
@@ -214,10 +221,14 @@ export default {
         
 
         data.forEach((el) => {
-          if('closed_count' in el)
+          if('closed_count' in el){
+            el.type = 'closed'
             this.total_closed += el.closed_count
-          if('open_count' in el)
+          }
+          if('open_count' in el){
+            el.type = 'open'
             this.total_open += el.open_count
+          }
         })
         
 
