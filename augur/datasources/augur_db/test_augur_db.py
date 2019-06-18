@@ -68,6 +68,7 @@ def test_issue_backlog(augur_db):
 
     #repo_group_id
     assert augur_db.issue_backlog(21).iloc[2]['issue_backlog'] == 3
+    
 
 def test_issues_first_time_closed(augur_db):
 

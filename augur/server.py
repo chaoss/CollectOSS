@@ -13,6 +13,9 @@ import augur
 from augur.util import annotate, metric_metadata, logger
 from augur.routes import create_routes
 import os
+from augur.broker.broker import Broker
+from augur.housekeeper.housekeeper import Housekeeper
+import logging
 
 AUGUR_API_VERSION = 'api/unstable'
 
@@ -57,6 +60,15 @@ class Server(object):
         app.config['WTF_CSRF_ENABLED'] = False
 
         self.show_metadata = False
+
+        self.broker = Broker()
+        # self.housekeeper = Housekeeper(
+        #     user=self._augur.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
+        #     password=self._augur.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
+        #     host=self._augur.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+        #     port=self._augur.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
+        #     dbname=self._augur.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
+        # )
 
         create_routes(self)
 

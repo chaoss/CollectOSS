@@ -140,7 +140,6 @@ section.status
 
 .section
   height: auto
-  max-height: 600px
   overflow: hidden
   position: relative
   transition: max-height 0.3s ease-out // transitioning max-height, not height
@@ -180,12 +179,14 @@ section.status
 
 .repo-link-holder
   background: rgb(234, 234, 234)
-  height: 300px
-  overflow-y: scroll
   padding: 10px
 
 .repo-link-table-body
   background: rgb(234, 234, 234)
+
+thead tr {
+  border-bottom: 10px solid rgb(234, 234, 234);
+}
 
 th,td
   padding: 0
@@ -2104,4 +2105,20 @@ header {
 .cd-divider {
   border-bottom: 2px solid #ebebeb;
   color: #000000 !important
+}
+
+.arrow_down:before {
+  content: '▼'
+}
+.arrow_up:before {
+  content: '▲'
+}
+.arrow {
+  float: right;
+  width: 12px;
+  height: 15px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position-y: bottom;
+  padding-right: 2rem
 }

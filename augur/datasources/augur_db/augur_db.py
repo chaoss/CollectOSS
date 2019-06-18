@@ -28,7 +28,7 @@ class Augur(object):
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
-        logger.debug('GHTorrent: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
 
         self.projects = projects
         # try:
@@ -754,10 +754,26 @@ class Augur(object):
         Returns all repository names, URLs, and base64 URLs in the facade database
         """
         downloadedReposSQL = s.sql.text("""
-            SELECT repo_id, repo_git AS url, repo_status, repo.repo_group_id, rg_name
-            FROM repo
-            JOIN repo_groups
-            ON repo.repo_group_id = repo_groups.repo_group_id
+            SELECT
+                repo.repo_id,
+                repo.repo_name,
+                repo.description,
+                repo.repo_git AS url,
+                repo.repo_status,
+                a.commits_all_time, 
+                b.issues_all_time ,
+                rg_name
+            FROM
+                repo
+                left outer join  
+                (select repo_id,    COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on 
+                repo.repo_id = a.repo_id
+                left outer join  
+                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b 
+                on 
+                repo.repo_id = b.repo_id 
+                JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
+            order by commits_all_time desc 
         """)
         results = pd.read_sql(downloadedReposSQL, self.db)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
@@ -771,4 +787,42 @@ class Augur(object):
             b64_urls.append(base64.b64encode((results.at[i, 'url']).encode()))
         results['base64_url'] = b64_urls
 
+        return results
+
+    @annotate(tag='rg-closed-issues-count')
+    def rg_open_issues_count(self, repo_group_id):
+        """
+        Returns number of lines changed per author per day
+
+        :param repo_url: the repository's URL
+        """
+        openIssueCountSQL = s.sql.text("""
+            SELECT rg_name, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE
+            FROM issues, repo, repo_groups
+            WHERE issue_state = 'open'
+            AND repo.repo_id = issues.repo_id
+            AND repo.repo_group_id = repo_groups.repo_group_id
+            GROUP BY date, repo_groups.rg_name
+            ORDER BY date
+        """)
+        results = pd.read_sql(openIssueCountSQL, self.db)#, params={"rg_id": '{}'.format(rg_id)})
+        return results
+
+    @annotate(tag='rg-closed-issues-count')
+    def rg_closed_issues_count(self, repo_group_id):
+        """
+        Returns number of lines changed per author per day
+
+        :param repo_url: the repository's URL
+        """
+        closedIssueCountSQL = s.sql.text("""
+            SELECT rg_name, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE
+            FROM issues, repo, repo_groups
+            WHERE issue_state = 'closed'
+            AND repo.repo_id = issues.repo_id
+            AND repo.repo_group_id = repo_groups.repo_group_id
+            GROUP BY date, repo_groups.rg_name
+            ORDER BY date
+        """)
+        results = pd.read_sql(closedIssueCountSQL, self.db)#, params={"rg_id": '{}'.format(rg_id)})
         return results

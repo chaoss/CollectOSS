@@ -186,3 +186,4 @@ def test_contributors_new_by_repo(augur_db_routes):
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]["count"] > 0
+

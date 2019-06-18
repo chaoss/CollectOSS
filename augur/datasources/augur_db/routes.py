@@ -26,9 +26,12 @@ def create_routes(server):
         
     server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
 
+
     #####################################
     ###           EVOLUTION           ###
     #####################################
+    server.addRepoGroupMetric(augur_db.rg_open_issues_count, 'rg-open-issues-count')
+    server.addRepoGroupMetric(augur_db.rg_closed_issues_count, 'rg-closed-issues-count')
 
     """
     @api {get} /repo-groups/:repo_group_id/code-changes

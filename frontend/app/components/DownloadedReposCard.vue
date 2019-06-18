@@ -5,26 +5,38 @@
   <div class="row section">
     <hr>
     <div style=" margin-left: 42.4%" class="col col-12 relative spinner loader"></div>
-    <div v-for="project in projects" class="col-6">
+    <!-- <div v-for="project in projects" class="col-6"> -->
+    <div v-if="loaded" class="col-12">
       <h4>{{ project }}</h4>
         <div class="repo-link-holder">
           <table class="is-responsive">
-            <thead class="repo-link-table repo-link-table-body">
+            <thead class="repo-link-table repo-link-table-body repo-link-table-header">
               <tr>
-                <th>URL</th>
-                <th>Status</th>
+                <th v-on:click="sortTable('url')">  URL <div class="arrow" v-if="'url' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('rg_name')">  Repo Group Name <div class="arrow" v-if="'rg_name' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('description')">  Repo Description <div class="arrow" v-if="'description' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('repo_count')">  Repo Count for this Group <div class="arrow" v-if="'repo_count' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('commits_all_time')">  Total Commit Count <div class="arrow" v-if="'commits_all_time' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('issues_all_time')">  Total Issue Count <div class="arrow" v-if="'issues_all_time' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('repo_status')">  Status <div class="arrow" v-if="'repo_status' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
               </tr>
             </thead>
             <tbody class="repo-link-table repo-link-table-body">
-              <tr v-for="repo in repos[project]">
-                <td><!-- <router-link :to="'git/' + (repo.url).slice(11)" @click.prevent="onGitRepo(repo)" class="repolink fade">{{ repo.url }}</router-link> --><!-- <a :href="'?git=' + btoa(repo.url)" class="repolink fade">{{ repo.url }}</a> -->
+              <tr v-for="repo in repos">
+                <td>
                   <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                 </td>
+                <td>{{ repo.rg_name }}</td>
+                <td>{{ repo.description }}</td>
+                <td>{{ repo.repo_count }}</td>
+                <td>{{ repo.commits_all_time }}</td>
+                <td>{{ repo.issues_all_time }}</td>
                 <td>{{ repo.repo_status }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+      <!-- </div> -->
       </div>
     </div>
   </section>
@@ -38,9 +50,32 @@ module.exports = {
   },
   data () { return {
     repos: {},
-    projects: []
+    repo_groups: [],
+    repo_relations: {},
+    loaded: false,
+    ascending: false,
+    sortColumn: '',
   }},
   methods: {
+    sortTable(col) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+
+      var ascending = this.ascending;
+
+      this.repos.sort(function(a, b) {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1
+        }
+        return 0;
+      })
+    },
     onRepo (e) {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
@@ -92,12 +127,40 @@ module.exports = {
         this.projects = Object.keys(this.repos)
       })
     },
+    getRepoGroups() {
+      console.log("START")
+      window.AugurAPI.getRepos().then((data) => {
+        this.repos = data
+        console.log("LOADED repos", this.repos)
+        window.AugurAPI.getRepoGroups().then((data) => {
+          $(this.$el).find('.spinner').removeClass('loader')
+          $(this.$el).find('.spinner').removeClass('relative')
+          this.repo_groups = data
+          //move down between future relation endpoint
+          this.repo_groups.forEach((group) => {
+            this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
+              return repo.rg_name == group.rg_name
+            })
+            group.repo_count = this.repo_relations[group.rg_name].length
+          })
+          this.repos.forEach((repo) => {
+            if (repo.commits_all_time == null) 
+              repo.commits_all_time = 0
+            if (repo.issues_all_time == null) 
+              repo.issues_all_time = 0
+            repo.repo_count = this.repo_relations[repo.rg_name].length
+          })
+          console.log("LOADED repo groups", this.repo_relations)
+          this.loaded = true
+        })
+      })
+    },
     btoa(s) {
       return window.btoa(s)
     }
   },
   mounted() {
-    this.getDownloadedRepos()
+    this.getRepoGroups()
   } 
 };
 

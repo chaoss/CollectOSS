@@ -482,6 +482,10 @@ var AugurAPI = function () {
     this.__pending = {};
 
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos');
+    this.getRepos = this.__EndpointFactory('repos');
+    this.getRepoGroups = this.__EndpointFactory('repo-groups');
+    this.getOpenIssues = this.__EndpointFactory('repo-groups/25153/rg-open-issues-count');
+    this.getClosedIssues = this.__EndpointFactory('repo-groups/25153/rg-closed-issues-count');
     this.openRequests = 0;
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter');
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata');
@@ -606,6 +610,8 @@ var AugurAPI = function () {
     value: function Repo(repo) {
       var _this3 = this;
 
+      if (repo.repo_id) {}
+
       if (repo.githubURL) {
         var splitURL = repo.githubURL.split('/');
         if (splitURL.length < 3) {
@@ -680,6 +686,11 @@ var AugurAPI = function () {
 
       var GitEndpoint = function GitEndpoint(r, jsName, endpoint) {
         var url = _this3.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL));
+        return __Endpoint(r, jsName, url);
+      };
+
+      var RepoGroupEndpoint = function RepoGroupEndpoint(r, jsName, endpoint) {
+        var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/' + endpoint);
         return __Endpoint(r, jsName, url);
       };
 
@@ -771,9 +782,22 @@ var AugurAPI = function () {
         Timeseries(repo, 'tags', 'tags');
       }
 
+      if (repo.repo_id) {
+        RepoEndpoint(repo, 'currentGroup', 'current_group');
+      }
+
+      if (repo.repo_group_id) {
+        // RepoGroupEndpoint(repo, 'rgOpenIssuesCount', 'rg_open_issues_count')
+      }
+
       if (repo.gitURL) {
         // Other
-        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'), GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped'), GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group'), GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group'), GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'), GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group');
+        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author');
+        GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped');
+        GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group');
+        GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group');
+        GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group');
+        GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group');
         GitEndpoint(repo, 'facadeProject', 'facade_project');
       }
 
@@ -1362,7 +1386,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/DownloadedReposCard.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
 
 module.exports = {
 
@@ -1370,11 +1394,34 @@ module.exports = {
   data: function data() {
     return {
       repos: {},
-      projects: []
+      repo_groups: [],
+      repo_relations: {},
+      loaded: false,
+      ascending: false,
+      sortColumn: ''
     };
   },
 
   methods: {
+    sortTable: function sortTable(col) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+
+      var ascending = this.ascending;
+
+      this.repos.sort(function (a, b) {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1;
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1;
+        }
+        return 0;
+      });
+    },
     onRepo: function onRepo(e) {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
@@ -1426,20 +1473,48 @@ module.exports = {
         _this.projects = Object.keys(_this.repos);
       });
     },
+    getRepoGroups: function getRepoGroups() {
+      var _this2 = this;
+
+      console.log("START");
+      window.AugurAPI.getRepos().then(function (data) {
+        _this2.repos = data;
+        console.log("LOADED repos", _this2.repos);
+        window.AugurAPI.getRepoGroups().then(function (data) {
+          $(_this2.$el).find('.spinner').removeClass('loader');
+          $(_this2.$el).find('.spinner').removeClass('relative');
+          _this2.repo_groups = data;
+
+          _this2.repo_groups.forEach(function (group) {
+            _this2.repo_relations[group.rg_name] = _this2.repos.filter(function (repo) {
+              return repo.rg_name == group.rg_name;
+            });
+            group.repo_count = _this2.repo_relations[group.rg_name].length;
+          });
+          _this2.repos.forEach(function (repo) {
+            if (repo.commits_all_time == null) repo.commits_all_time = 0;
+            if (repo.issues_all_time == null) repo.issues_all_time = 0;
+            repo.repo_count = _this2.repo_relations[repo.rg_name].length;
+          });
+          console.log("LOADED repo groups", _this2.repo_relations);
+          _this2.loaded = true;
+        });
+      });
+    },
     btoa: function btoa(s) {
       return window.btoa(s);
     }
   },
   mounted: function mounted() {
-    this.getDownloadedRepos();
+    this.getRepoGroups();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git Repos by Project")]),_vm._v(" "),_c('div',{staticClass:"row section"},[_c('hr'),_vm._v(" "),_c('div',{staticClass:"col col-12 relative spinner loader",staticStyle:{"margin-left":"42.4%"}}),_vm._v(" "),_vm._l((_vm.projects),function(project){return _c('div',{staticClass:"col-6"},[_c('h4',[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"repo-link-holder"},[_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_c('tbody',{staticClass:"repo-link-table repo-link-table-body"},_vm._l((_vm.repos[project]),function(repo){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){_vm.onGitRepo(repo)}}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.status))])])}))])])])})],2)])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticClass:"repo-link-table repo-link-table-body"},[_c('tr',[_c('th',[_vm._v("URL")]),_vm._v(" "),_c('th',[_vm._v("Status")])])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git Repos by Project")]),_vm._v(" "),_c('div',{staticClass:"row section"},[_c('hr'),_vm._v(" "),_c('div',{staticClass:"col col-12 relative spinner loader",staticStyle:{"margin-left":"42.4%"}}),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"col-12"},[_c('h4',[_vm._v(_vm._s(_vm.project))]),_vm._v(" "),_c('div',{staticClass:"repo-link-holder"},[_c('table',{staticClass:"is-responsive"},[_c('thead',{staticClass:"repo-link-table repo-link-table-body repo-link-table-header"},[_c('tr',[_c('th',{on:{"click":function($event){return _vm.sortTable('url')}}},[_vm._v("  URL "),('url' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_vm._v("  Repo Group Name "),('rg_name' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('description')}}},[_vm._v("  Repo Description "),('description' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_vm._v("  Repo Count for this Group "),('repo_count' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('commits_all_time')}}},[_vm._v("  Total Commit Count "),('commits_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('issues_all_time')}}},[_vm._v("  Total Issue Count "),('issues_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_status')}}},[_vm._v("  Status "),('repo_status' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])])]),_vm._v(" "),_c('tbody',{staticClass:"repo-link-table repo-link-table-body"},_vm._l((_vm.repos),function(repo){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_count))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.commits_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.issues_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_status))])])}),0)])])]):_vm._e()])])}
+__vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -1877,6 +1952,114 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/IssuesCard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _AugurHeader = require('./AugurHeader');
+
+var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
+
+var _TickChart = require('./charts/TickChart');
+
+var _TickChart2 = _interopRequireDefault(_TickChart);
+
+var _LinesOfCodeChart = require('./charts/LinesOfCodeChart');
+
+var _LinesOfCodeChart2 = _interopRequireDefault(_LinesOfCodeChart);
+
+var _NormalizedStackedBarChart = require('./charts/NormalizedStackedBarChart');
+
+var _NormalizedStackedBarChart2 = _interopRequireDefault(_NormalizedStackedBarChart);
+
+var _OneDimensionalStackedBarChart = require('./charts/OneDimensionalStackedBarChart');
+
+var _OneDimensionalStackedBarChart2 = _interopRequireDefault(_OneDimensionalStackedBarChart);
+
+var _HorizontalBarChart = require('./charts/HorizontalBarChart');
+
+var _HorizontalBarChart2 = _interopRequireDefault(_HorizontalBarChart);
+
+var _GroupedBarChart = require('./charts/GroupedBarChart');
+
+var _GroupedBarChart2 = _interopRequireDefault(_GroupedBarChart);
+
+var _StackedBarChart = require('./charts/StackedBarChart');
+
+var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
+
+var _DualLineChart = require('./charts/DualLineChart');
+
+var _DualLineChart2 = _interopRequireDefault(_DualLineChart);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  data: function data() {
+    return {
+      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      values: { 'issues': [] },
+      loaded: false,
+      project: null
+    };
+  },
+
+  components: {
+    AugurHeader: _AugurHeader2.default,
+    TickChart: _TickChart2.default,
+    LinesOfCodeChart: _LinesOfCodeChart2.default,
+    NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
+    OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
+    HorizontalBarChart: _HorizontalBarChart2.default,
+    GroupedBarChart: _GroupedBarChart2.default,
+    StackedBarChart: _StackedBarChart2.default,
+    DualLineChart: _DualLineChart2.default
+  },
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
+      return this.$store.state.gitRepo;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    }
+  },
+  created: function created() {
+    var _this = this;
+
+    window.AugurAPI.getOpenIssues().then(function (data) {
+      console.log("DATA: ", data);
+      _this.values['issues'] = _this.values['issues'].concat(data);
+      console.log("DATA: ", _this.values['issues']);
+    });
+    window.AugurAPI.getClosedIssues().then(function (data) {
+      console.log("DATA: ", data);
+      _this.values['issues'] = _this.values['issues'].concat(data);
+      console.log("DATA: ", _this.values['issues']);
+      _this.loaded = true;
+    });
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Overview of Issue Counts for Repo Group: All repositories")]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":"Issue Counts for All Repositories - Grouped by Week","fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['issues']}})],1)]):_vm._e()])}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-1e43c417", __vue__options__)
+  } else {
+    hotAPI.rerender("data-v-1e43c417", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/LoginForm.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -2171,7 +2354,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{directives:[{name:"click-outside",rawName:"v-click-outside",value:(_vm.stopSelecting),expression:"stopSelecting"}],staticClass:"row col col-4",staticStyle:{"text-align":"center !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.projects,"placeholder":_vm.project},model:{value:(_vm.project),callback:function ($$v) {_vm.project=$$v},expression:"project"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.options,"multiple":true,"group-label":"url","placeholder":"Select repos"},model:{value:(_vm.values),callback:function ($$v) {_vm.values=$$v},expression:"values"}})],1)]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Apply"},on:{"click":function($event){_vm.onArrayCompare(); _vm.onValuesClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Reset"},on:{"click":function($event){_vm.onClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-3"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Search other GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-3",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){_vm.collapseText()}}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){_vm.collapseText()}}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_c('h6',[_vm._v("Line Chart Options")]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_c('h6',[_vm._v("Bubble Chart Options ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Chart Timeline Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.startMonth) == month.value}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.startYear == year}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.endMonth) == month.value}},[_vm._v(_vm._s(month.name))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.endYear == year}},[_vm._v(_vm._s(year))])})),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},domProps:{"checked":_vm.compare == 'zscore'},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","type":"radio"},domProps:{"checked":_vm.compare == 'baseline'},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"rolling","type":"radio"},domProps:{"checked":_vm.compare == 'rolling'},on:{"change":_vm.onCompareChange}}),_vm._v("Rolling average")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row",attrs:{"id":"controls"}},[_c('div',{staticClass:"col col-12"},[_c('div',{staticClass:"form"},[_c('div',{staticClass:"topic"},[_c('div',{staticClass:"container"},[_c('div',{staticClass:"row justify-content-md-center"},[_c('div',{staticClass:"col col-9"},[_c('div',{staticClass:"row"},[_vm._m(0),_vm._v(" "),_c('div',{directives:[{name:"click-outside",rawName:"v-click-outside",value:(_vm.stopSelecting),expression:"stopSelecting"}],staticClass:"row col col-4",staticStyle:{"text-align":"center !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.projects,"placeholder":_vm.project},model:{value:(_vm.project),callback:function ($$v) {_vm.project=$$v},expression:"project"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"display":"inline !important"},on:{"click":_vm.keepSelecting}},[_c('multiselect',{staticClass:"search reposearch special",attrs:{"options":_vm.options,"multiple":true,"group-label":"url","placeholder":"Select repos"},model:{value:(_vm.values),callback:function ($$v) {_vm.values=$$v},expression:"values"}})],1)]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Apply"},on:{"click":function($event){_vm.onArrayCompare(); _vm.onValuesClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-1"},[_c('input',{staticStyle:{"max-width":"69.9px"},attrs:{"type":"button","value":"Reset"},on:{"click":function($event){return _vm.onClear()}}})]),_vm._v(" "),_c('div',{staticClass:"col col-3"},[_c('input',{staticClass:"search reposearch",attrs:{"type":"text","placeholder":"Search other GitHub URL"},on:{"change":_vm.onCompare}}),_vm._v(" "),_c('p')])])]),_vm._v(" "),_c('div',{staticClass:"col col-3",attrs:{"id":"collapse"}},[_c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.isCollapsed),expression:"isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){return _vm.collapseText()}}},[_vm._v("Less configuration options ▼")]),_vm._v(" "),_c('div',{directives:[{name:"show",rawName:"v-show",value:(!_vm.isCollapsed),expression:"!isCollapsed"}],staticClass:"col col-12 align-bottom",attrs:{"align":"right"},on:{"click":function($event){return _vm.collapseText()}}},[_vm._v("More configuration options ▶")])])])]),_vm._v(" "),_c('div',{staticClass:"row gutters section collapsible collapsed"},[_c('div',{staticClass:"col col-5"},[_c('label',[_c('h6',[_vm._v("Line Chart Options")]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onRawWeeklyChange}}),_vm._v("Raw weekly values"),_c('sup',{staticClass:"warn"})])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onAreaChange}}),_vm._v("Standard deviation")])])]),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","disabled":!_vm.disabled,"checked":""},domProps:{"checked":_vm.disabled},on:{"change":_vm.onTooltipChange}}),_vm._v("Show tooltip")])]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox","checked":""},on:{"change":_vm.onDetailChange}}),_vm._v("Enable detail")])])]),_vm._v(" "),_c('label',[_c('h6',[_vm._v("Bubble Chart Options ")]),_vm._v(" "),_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"each","type":"checkbox"},on:{"change":_vm.onShowBelowAverageChange}}),_vm._v("Show users with below-average total contributions"),_c('sup',{staticClass:"warn"})]),_c('br')])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"col col-11"},[_c('small',[_vm._v("1. Line charts show a rolling mean over "+_vm._s(_vm.info.days)+" days with data points at each "+_vm._s(_vm.info.points)+"-day interval")])])])])]),_vm._v(" "),_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('h6',[_vm._v("Chart Timeline Configuration")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("Start Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startMonth",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.startMonth) == month.value}},[_vm._v(_vm._s(month.name))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"startYear",on:{"change":_vm.onStartDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.startYear == year}},[_vm._v(_vm._s(year))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-11"},[_c('div',{staticClass:"form-item"},[_c('label',[_vm._v("End Date\n                          "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-7"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endMonth",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.months),function(month){return _c('option',{domProps:{"value":month.value,"selected":(_vm.endMonth) == month.value}},[_vm._v(_vm._s(month.name))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Month")])])]),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('div',{staticClass:"form-item"},[_c('select',{ref:"endYear",on:{"change":_vm.onEndDateChange}},_vm._l((_vm.years),function(year){return _c('option',{domProps:{"value":year,"selected":_vm.endYear == year}},[_vm._v(_vm._s(year))])}),0),_vm._v(" "),_c('div',{staticClass:"desc"},[_vm._v("Year")])])])])])])])]),_vm._v(" "),_c('br')]),_vm._v(" "),_c('div',{staticClass:"col col-1"}),_vm._v(" "),_c('div',{staticClass:"col col-5"},[_c('h6',[_vm._v("Rendering")]),_vm._v(" "),_c('label',[_vm._v("Line Charts"),_c('sup',[_vm._v("1")]),_c('sup',{staticClass:"warn"}),_vm._v(" "),_c('div',{staticClass:"append col col-10"},[_c('input',{ref:"info",attrs:{"type":"number","min":"20","id":"averagetimespan","value":"180","placeholder":"180"},on:{"change":_vm.onTrailingAverageChange}}),_c('span',[_vm._v("day average")])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('h6',[_vm._v("Comparison Type")]),_vm._v(" "),_c('label',[_c('div',{staticClass:"form-item form-checkboxes"},[_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"zscore","type":"radio"},domProps:{"checked":_vm.compare == 'zscore'},on:{"change":_vm.onCompareChange}}),_vm._v("Z-score")]),_c('br'),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"baseline","type":"radio"},domProps:{"checked":_vm.compare == 'baseline'},on:{"change":_vm.onCompareChange}}),_vm._v("Baseline is compared")]),_vm._v(" "),_c('label',{staticClass:"checkbox"},[_c('input',{attrs:{"name":"comparebaseline","value":"rolling","type":"radio"},domProps:{"checked":_vm.compare == 'rolling'},on:{"change":_vm.onCompareChange}}),_vm._v("Rolling average")])])])]),_vm._v(" "),_c('br')])])])])])])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-3",attrs:{"align":"center","id":"comparetext"}},[_c('h6',[_vm._v("Compare from your repos:")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-12"},[_c('small',{staticClass:"warn"},[_vm._v(" - These options affect performance")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2285,7 +2468,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_c('div',{staticClass:"fullwidth"},[_c('augur-header')],1),_vm._v(" "),_c('section',[_c('h3',[_vm._v("CHAOSS Metrics Implementation Status")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Group:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_group),expression:"selected_group"}],attrs:{"id":"metric_group"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_group=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['groups']),function(group){return _c('option',{domProps:{"value":group}},[_vm._v("\n        "+_vm._s(group)+"\n       ")])}))])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Source:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_source),expression:"selected_source"}],attrs:{"id":"metric_source"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_source=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['data_sources']),function(data_source){return _c('option',{domProps:{"value":data_source}},[_vm._v("\n        "+_vm._s(data_source)+"\n       ")])}))])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Metric Type:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_metric_type),expression:"selected_metric_type"}],attrs:{"id":"metric_type"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_metric_type=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['metric_types']),function(metric_type){return _c('option',{domProps:{"value":metric_type}},[_vm._v("\n        "+_vm._s(metric_type)+"\n       ")])}))])]),_vm._v(" "),_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Backend Status:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_backend_status),expression:"selected_backend_status"}],attrs:{"id":"metric_backend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_backend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])])])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Frontend Status:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_frontend_status),expression:"selected_frontend_status"}],attrs:{"id":"metric_frontend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_frontend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])])])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Defined:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_is_defined),expression:"selected_is_defined"}],attrs:{"id":"metric_is_defined"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_is_defined=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){_vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"true"}},[_vm._v("true")]),_vm._v(" "),_c('option',{attrs:{"value":"false"}},[_vm._v("false")])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(1),_vm._v(" "),_c('tbody',{staticStyle:{"display":"block","height":"400px","overflow-y":"scroll","text-align":"center","background":"#eaeaea"}},_vm._l((_vm.metricsStatus),function(metric){return _c('tr',[_c('div',{staticStyle:{"overflow":"hidden"}},[_c('td',{staticStyle:{"width":"119px !important"},style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{staticStyle:{"width":"135px !important"},style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',{staticStyle:{"width":"170px !important"}},[_c('a',{attrs:{"href":metric.documentation_url}},[_vm._v(_vm._s(metric.display_name))])])]:[_c('td',{staticStyle:{"width":"170px !important"}},[_vm._v(_vm._s(metric.display_name))])],_vm._v(" "),_c('td',{staticStyle:{"width":"121px !important"}},[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',{staticStyle:{"width":"569px !important"}},[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',{staticStyle:{"width":"120px !important"}},[_vm._v(_vm._s(metric.data_source))]),_vm._v(" "),_c('td',{staticStyle:{"width":"85px !important"}},[_vm._v(_vm._s(metric.metric_type))])],2)])}))])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"is-table-container"},[_c('div',{staticClass:"fullwidth"},[_c('augur-header')],1),_vm._v(" "),_c('section',[_c('h3',[_vm._v("CHAOSS Metrics Implementation Status")]),_vm._v(" "),_c('div',{staticClass:"row gutters"},[_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Group:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_group),expression:"selected_group"}],attrs:{"id":"metric_group"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_group=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){return _vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['groups']),function(group){return _c('option',{domProps:{"value":group}},[_vm._v("\n        "+_vm._s(group)+"\n       ")])}),0)])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Source:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_source),expression:"selected_source"}],attrs:{"id":"metric_source"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_source=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){return _vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['data_sources']),function(data_source){return _c('option',{domProps:{"value":data_source}},[_vm._v("\n        "+_vm._s(data_source)+"\n       ")])}),0)])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Metric Type:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_metric_type),expression:"selected_metric_type"}],attrs:{"id":"metric_type"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_metric_type=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){return _vm.getMetricsStatus()}]}},_vm._l((_vm.metadata['metric_types']),function(metric_type){return _c('option',{domProps:{"value":metric_type}},[_vm._v("\n        "+_vm._s(metric_type)+"\n       ")])}),0)])]),_vm._v(" "),_vm._m(0),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Backend Status:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_backend_status),expression:"selected_backend_status"}],attrs:{"id":"metric_backend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_backend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){return _vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])])])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Frontend Status:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_frontend_status),expression:"selected_frontend_status"}],attrs:{"id":"metric_frontend_status"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_frontend_status=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){return _vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"unimplemented"}},[_vm._v("unimplemented")]),_vm._v(" "),_c('option',{attrs:{"value":"implemented"}},[_vm._v("implemented")])])])]),_vm._v(" "),_c('div',{staticClass:"col col-4"},[_c('label',[_vm._v("Defined:\n      "),_c('select',{directives:[{name:"model",rawName:"v-model",value:(_vm.selected_is_defined),expression:"selected_is_defined"}],attrs:{"id":"metric_is_defined"},on:{"change":[function($event){var $$selectedVal = Array.prototype.filter.call($event.target.options,function(o){return o.selected}).map(function(o){var val = "_value" in o ? o._value : o.value;return val}); _vm.selected_is_defined=$event.target.multiple ? $$selectedVal : $$selectedVal[0]},function($event){return _vm.getMetricsStatus()}]}},[_c('option',{attrs:{"value":"all"}},[_vm._v("all")]),_vm._v(" "),_c('option',{attrs:{"value":"true"}},[_vm._v("true")]),_vm._v(" "),_c('option',{attrs:{"value":"false"}},[_vm._v("false")])])])])]),_vm._v(" "),_c('p'),_vm._v(" "),_c('table',{staticClass:"is-responsive"},[_vm._m(1),_vm._v(" "),_c('tbody',{staticStyle:{"display":"block","height":"400px","overflow-y":"scroll","text-align":"center","background":"#eaeaea"}},_vm._l((_vm.metricsStatus),function(metric){return _c('tr',[_c('div',{staticStyle:{"overflow":"hidden"}},[_c('td',{staticStyle:{"width":"119px !important"},style:({ color: _vm.getBackendStatusColor(metric) })},[_vm._v(_vm._s(metric.backend_status))]),_vm._v(" "),_c('td',{staticStyle:{"width":"135px !important"},style:({ color: _vm.getFrontendStatusColor(metric) })},[_vm._v(_vm._s(metric.frontend_status))]),_vm._v(" "),(metric.url != '/')?[_c('td',{staticStyle:{"width":"170px !important"}},[_c('a',{attrs:{"href":metric.documentation_url}},[_vm._v(_vm._s(metric.display_name))])])]:[_c('td',{staticStyle:{"width":"170px !important"}},[_vm._v(_vm._s(metric.display_name))])],_vm._v(" "),_c('td',{staticStyle:{"width":"121px !important"}},[_vm._v(_vm._s(metric.group))]),_vm._v(" "),_c('td',{staticStyle:{"width":"569px !important"}},[_vm._v(_vm._s(metric.endpoint))]),_vm._v(" "),_c('td',{staticStyle:{"width":"120px !important"}},[_vm._v(_vm._s(metric.data_source))]),_vm._v(" "),_c('td',{staticStyle:{"width":"85px !important"}},[_vm._v(_vm._s(metric.metric_type))])],2)])}),0)])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"col col-12"},[_c('br')])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticStyle:{"display":"block"}},[_c('tr',{staticStyle:{"font-weight":"600","text-align":"center"}},[_c('td',{staticStyle:{"width":"119px !important"}},[_vm._v("Backend Status")]),_vm._v(" "),_c('td',{staticStyle:{"width":"135px !important"}},[_vm._v("Frontend Status")]),_vm._v(" "),_c('td',{staticStyle:{"width":"170px !important"}},[_vm._v("Name")]),_vm._v(" "),_c('td',{staticStyle:{"width":"121px !important"}},[_vm._v("Group")]),_vm._v(" "),_c('td',{staticStyle:{"width":"569px !important"}},[_vm._v("Endpoint")]),_vm._v(" "),_c('td',{staticStyle:{"width":"120px !important"}},[_vm._v("Source")]),_vm._v(" "),_c('td',{staticStyle:{"width":"85px !important"}},[_vm._v("Metric Type")])])])}]
 __vue__options__._scopeId = "data-v-99cabfb0"
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
@@ -2379,7 +2562,7 @@ module.exports = {
     this.comparedRepos.forEach(function (repo) {
       repos.push(window.AugurRepos[repo]);
     });
-    var endpoints1 = ["cdRgTpRankedCommits", "cdRgTpRankedLoc", "cdRgNewrepRankedCommits", "cdRgNewrepRankedLoc", "facadeProject"];
+    var endpoints1 = ['annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annualCommitCountRankedByRepoInRepoGroup', 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annualCommitCountRankedByNewRepoInRepoGroup', "facadeProject"];
     endpoints1.forEach(function (source) {
       var repo = window.AugurAPI.Repo({ gitURL: _this.gitRepo });
       repo[source]().then(function (data) {
@@ -2396,7 +2579,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Project Overview: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedCommits","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['cdRgTpRankedCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedLoc","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['cdRgTpRankedLoc']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedCommits","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['cdRgNewrepRankedCommits']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedLoc","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['cdRgNewrepRankedLoc']}})],1)]):_vm._e()])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Project Overview: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualCommitCountRankedByRepoInRepoGroup","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['annualCommitCountRankedByRepoInRepoGroup']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualLinesOfCodeCountRankedByRepoInRepoGroup","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['annualLinesOfCodeCountRankedByRepoInRepoGroup']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualCommitCountRankedByNewRepoInRepoGroup","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['annualCommitCountRankedByNewRepoInRepoGroup']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualLinesOfCodeCountRankedByNewRepoInRepoGroup","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['annualLinesOfCodeCountRankedByNewRepoInRepoGroup']}})],1)]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2539,7 +2722,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{directives:[{name:"click-outside",rawName:"v-click-outside"}]},[_c('div',{staticStyle:{"display":"inline-block"}},[_c('div',{staticClass:"cd-dropdown-wrapper"},[_c('a',{staticClass:"cd-dropdown-trigger",attrs:{"href":"#0"},on:{"click":_vm.toggleNav}},[_vm._v(_vm._s(_vm.project))]),_vm._v(" "),_c('nav',{staticClass:"cd-dropdown"},[_c('h2',[_vm._v("Projects")]),_vm._v(" "),_c('a',{staticClass:"cd-close",attrs:{"href":"#0"}},[_vm._v("Close")]),_vm._v(" "),_c('ul',{staticClass:"cd-dropdown-content"},[_vm._m(0),_vm._v(" "),_c('li',{staticClass:"cd-divider"},[_vm._v("Projects")]),_vm._v(" "),_vm._l((_vm.projects),function(project){return _c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"},on:{"click":_vm.toggleSecNav}},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('ul',{staticClass:"cd-secondary-dropdown  invis"},[_c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"}},[_vm._v("Repos")]),_vm._v(" "),_c('ul',{staticClass:"is-hidden"},_vm._l(((_vm.repos[project])),function(repo){return _c('li',{},[_c('a',{attrs:{"value":"","href":"#0"},on:{"click":_vm.toggleSelect}},[_vm._v(_vm._s(repo.url))])])}))])])])}),_vm._v(" "),_c('li',{staticClass:"has-children"}),_vm._v(" "),_c('li',{staticClass:"has-children"}),_vm._v(" "),_c('li',{staticClass:"cd-divider"},[_vm._v("Groups")]),_vm._v(" "),_vm._m(1)],2)])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{directives:[{name:"click-outside",rawName:"v-click-outside"}]},[_c('div',{staticStyle:{"display":"inline-block"}},[_c('div',{staticClass:"cd-dropdown-wrapper"},[_c('a',{staticClass:"cd-dropdown-trigger",attrs:{"href":"#0"},on:{"click":_vm.toggleNav}},[_vm._v(_vm._s(_vm.project))]),_vm._v(" "),_c('nav',{staticClass:"cd-dropdown"},[_c('h2',[_vm._v("Projects")]),_vm._v(" "),_c('a',{staticClass:"cd-close",attrs:{"href":"#0"}},[_vm._v("Close")]),_vm._v(" "),_c('ul',{staticClass:"cd-dropdown-content"},[_vm._m(0),_vm._v(" "),_c('li',{staticClass:"cd-divider"},[_vm._v("Projects")]),_vm._v(" "),_vm._l((_vm.projects),function(project){return _c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"},on:{"click":_vm.toggleSecNav}},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('ul',{staticClass:"cd-secondary-dropdown  invis"},[_c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"}},[_vm._v("Repos")]),_vm._v(" "),_c('ul',{staticClass:"is-hidden"},_vm._l(((_vm.repos[project])),function(repo){return _c('li',{},[_c('a',{attrs:{"value":"","href":"#0"},on:{"click":_vm.toggleSelect}},[_vm._v(_vm._s(repo.url))])])}),0)])])])}),_vm._v(" "),_c('li',{staticClass:"has-children"}),_vm._v(" "),_c('li',{staticClass:"has-children"}),_vm._v(" "),_c('li',{staticClass:"cd-divider"},[_vm._v("Groups")]),_vm._v(" "),_vm._m(1)],2)])])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('li',[_c('form',{staticClass:"cd-search",staticStyle:{"margin":"0"}},[_c('input',{attrs:{"type":"search","placeholder":"Search..."}})])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('li',{staticClass:"has-children"},[_c('a',{attrs:{"href":"#0"}},[_vm._v("Test Group")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2753,7 +2936,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('v-dialog',{attrs:{"max-width":"500px"},model:{value:(_vm.dialog),callback:function ($$v) {_vm.dialog=$$v},expression:"dialog"}},[_c('v-btn',{staticClass:"mb-2",attrs:{"slot":"activator","color":"primary","dark":""},slot:"activator"},[_vm._v("New Item")]),_vm._v(" "),_c('v-card',[_c('v-card-title',[_c('span',{staticClass:"headline"},[_vm._v(_vm._s(_vm.formTitle))])]),_vm._v(" "),_c('v-card-text',[_c('v-container',{attrs:{"grid-list-md":""}},[_c('v-layout',{attrs:{"wrap":""}},[_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Dessert name"},model:{value:(_vm.editedItem.name),callback:function ($$v) {_vm.$set(_vm.editedItem, "name", $$v)},expression:"editedItem.name"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Calories"},model:{value:(_vm.editedItem.calories),callback:function ($$v) {_vm.$set(_vm.editedItem, "calories", $$v)},expression:"editedItem.calories"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Fat (g)"},model:{value:(_vm.editedItem.fat),callback:function ($$v) {_vm.$set(_vm.editedItem, "fat", $$v)},expression:"editedItem.fat"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Carbs (g)"},model:{value:(_vm.editedItem.carbs),callback:function ($$v) {_vm.$set(_vm.editedItem, "carbs", $$v)},expression:"editedItem.carbs"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Protein (g)"},model:{value:(_vm.editedItem.protein),callback:function ($$v) {_vm.$set(_vm.editedItem, "protein", $$v)},expression:"editedItem.protein"}})],1)],1)],1)],1),_vm._v(" "),_c('v-card-actions',[_c('v-spacer'),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.close($event)}}},[_vm._v("Cancel")]),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.save($event)}}},[_vm._v("Save")])],1)],1)],1),_vm._v(" "),_c('v-data-table',{staticClass:"elevation-1",attrs:{"headers":_vm.headers,"items":_vm.desserts,"hide-actions":""},scopedSlots:_vm._u([{key:"items",fn:function(props){return [_c('td',[_vm._v(_vm._s(props.item.name))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.calories))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.fat))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.carbs))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.protein))]),_vm._v(" "),_c('td',{staticClass:"justify-center layout px-0"},[_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){_vm.editItem(props.item)}}},[_c('v-icon',{attrs:{"color":"teal"}},[_vm._v("edit")])],1),_vm._v(" "),_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){_vm.deleteItem(props.item)}}},[_c('v-icon',{attrs:{"color":"pink"}},[_vm._v("delete")])],1)],1)]}}])})],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',[_c('v-dialog',{attrs:{"max-width":"500px"},model:{value:(_vm.dialog),callback:function ($$v) {_vm.dialog=$$v},expression:"dialog"}},[_c('v-btn',{staticClass:"mb-2",attrs:{"slot":"activator","color":"primary","dark":""},slot:"activator"},[_vm._v("New Item")]),_vm._v(" "),_c('v-card',[_c('v-card-title',[_c('span',{staticClass:"headline"},[_vm._v(_vm._s(_vm.formTitle))])]),_vm._v(" "),_c('v-card-text',[_c('v-container',{attrs:{"grid-list-md":""}},[_c('v-layout',{attrs:{"wrap":""}},[_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Dessert name"},model:{value:(_vm.editedItem.name),callback:function ($$v) {_vm.$set(_vm.editedItem, "name", $$v)},expression:"editedItem.name"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Calories"},model:{value:(_vm.editedItem.calories),callback:function ($$v) {_vm.$set(_vm.editedItem, "calories", $$v)},expression:"editedItem.calories"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Fat (g)"},model:{value:(_vm.editedItem.fat),callback:function ($$v) {_vm.$set(_vm.editedItem, "fat", $$v)},expression:"editedItem.fat"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Carbs (g)"},model:{value:(_vm.editedItem.carbs),callback:function ($$v) {_vm.$set(_vm.editedItem, "carbs", $$v)},expression:"editedItem.carbs"}})],1),_vm._v(" "),_c('v-flex',{attrs:{"xs12":"","sm6":"","md4":""}},[_c('v-text-field',{attrs:{"label":"Protein (g)"},model:{value:(_vm.editedItem.protein),callback:function ($$v) {_vm.$set(_vm.editedItem, "protein", $$v)},expression:"editedItem.protein"}})],1)],1)],1)],1),_vm._v(" "),_c('v-card-actions',[_c('v-spacer'),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.close($event)}}},[_vm._v("Cancel")]),_vm._v(" "),_c('v-btn',{attrs:{"color":"blue darken-1","flat":""},nativeOn:{"click":function($event){return _vm.save($event)}}},[_vm._v("Save")])],1)],1)],1),_vm._v(" "),_c('v-data-table',{staticClass:"elevation-1",attrs:{"headers":_vm.headers,"items":_vm.desserts,"hide-actions":""},scopedSlots:_vm._u([{key:"items",fn:function(props){return [_c('td',[_vm._v(_vm._s(props.item.name))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.calories))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.fat))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.carbs))]),_vm._v(" "),_c('td',{staticClass:"text-xs-right"},[_vm._v(_vm._s(props.item.protein))]),_vm._v(" "),_c('td',{staticClass:"justify-center layout px-0"},[_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){return _vm.editItem(props.item)}}},[_c('v-icon',{attrs:{"color":"teal"}},[_vm._v("edit")])],1),_vm._v(" "),_c('v-btn',{staticClass:"mx-0",attrs:{"icon":""},on:{"click":function($event){return _vm.deleteItem(props.item)}}},[_c('v-icon',{attrs:{"color":"pink"}},[_vm._v("delete")])],1)],1)]}}])})],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2828,7 +3011,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Overview")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Evolution")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Overview")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Evolution")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'issues') }},[_c('a',{attrs:{"href":"#","data-value":"issues"},on:{"click":_vm.changeTab}},[_vm._v("Issues")])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4089,6 +4272,225 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-2da7ab99", __vue__options__)
   } else {
     hotAPI.reload("data-v-2da7ab99", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/DualLineChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'fieldone', 'fieldtwo'],
+  data: function data() {
+    return {
+      values: [],
+      colors: ['red', 'green']
+    };
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
+      return this.$store.state.gitRepo;
+    },
+    period: function period() {
+      return this.$store.state.trailingAverage;
+    },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
+    compare: function compare() {
+      return this.$store.state.compare;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    },
+    rawWeekly: function rawWeekly() {
+      return this.$store.state.rawWeekly;
+    },
+    showArea: function showArea() {
+      return this.$store.state.showArea;
+    },
+    showTooltip: function showTooltip() {
+      return this.$store.state.showTooltip;
+    },
+    showDetail: function showDetail() {
+      return this.$store.state.showDetail;
+    },
+    spec: function spec() {
+      var _this = this;
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+        "padding": { 'left': 25, 'top': 15, 'right': 80, 'bottom': 50 },
+        "config": {
+          "axis": {
+            "tickRound": false
+          },
+          "title": {
+            "fontSize": 1
+          }
+
+        },
+        "title": {
+          "text": this.title,
+
+          "offset": 10
+
+        },
+        "width": 1000,
+        "height": 360,
+        "layer": [{
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": {
+                "format": "%b %Y", "title": " "
+              }
+            },
+            "y": {
+              "field": this.fieldone,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "field": "type",
+              "type": "nominal",
+              "scale": { "range": this.colors },
+              "sort": false
+            }
+          },
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          }
+        }, {
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": {
+                "format": "%b %Y", "title": " "
+              }
+            },
+            "y": {
+              "field": this.fieldtwo,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "field": "type",
+              "type": "nominal",
+              "scale": { "range": this.colors },
+              "sort": false
+            }
+          },
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          }
+        }]
+      };
+
+      var repos = [];
+      if (this.gitRepo) {
+        repos.push(window.AugurAPI.Repo({ gitURL: this.gitRepo }));
+      }
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
+      var processGitData = function processGitData(data) {
+        var repo = window.AugurAPI.Repo({ gitURL: _this.repo });
+        var dat = [];
+        repo.changesByAuthor().then(function (changes) {
+          dat.push(changes);
+        });
+      };
+      var defaultProcess = function defaultProcess(obj, key) {
+        var d = null;
+        if (typeof field == "string") field = [field];
+        d = _AugurStats2.default.convertKey(obj[key], key);
+        return d;
+      };
+      var processData = function processData(data) {
+        console.log(repos, data, "CHECK");
+
+
+        data.forEach(function (el) {
+          if ('closed_count' in el) {
+            el.type = 'closed';
+            _this.total_closed += el.closed_count;
+          }
+          if ('open_count' in el) {
+            el.type = 'open';
+            _this.total_open += el.open_count;
+          }
+        });
+
+        repos.forEach(function (repo) {
+          _this.values = data;
+        });
+      };
+      if (this.data) {
+        processData(this.data);
+      } else {
+        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        repo[this.source]().then(function (data) {
+          console.log("batch data", data);
+          processData(data);
+        }, function () {});
+      }
+      return config;
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_vm._m(0)],1)])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"padding":"0 50px 0 50px","font-size":"12px"}},[_c('p')])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-004452a1", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-004452a1", __vue__options__)
   }
 })()}
 });
@@ -5645,7 +6047,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('h3',[_vm._v("Lines of code added by the top 10 authors")]),_vm._v(" "),_c('table',{staticClass:"lines-of-code-table"},[_c('thead',[_c('tr',[_c('th',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = year}}},[_vm._v(_vm._s(year))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthNames),function(month){return (_vm.setYear)?_c('th',[_vm._v(_vm._s(month))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('th',[_vm._v("Total all time")]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('th',{on:{"click":function($event){_vm.setYear = 0}}},[_vm._v(_vm._s(_vm.setYear))]):_vm._e()],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.contributors.slice(0, 10)),function(contributor){return _c('tr',[_c('td',[_vm._v(_vm._s(contributor.author_email))]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[year]) ? contributor[year].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthDecimals),function(month){return (_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[_vm.setYear + '-' + month]) ? contributor[_vm.setYear + '-' + month].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('td',[_vm._v(_vm._s(contributor.additions))]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[_vm.setYear]) ? contributor[_vm.setYear].additions || 0 : 0))]):_vm._e()],2)}))]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h3',[_vm._v("Lines of code added by the top 5 organizations")]),_vm._v(" "),_c('table',{staticClass:"lines-of-code-table"},[_c('thead',[_c('tr',[_c('th',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = year}}},[_vm._v(_vm._s(year))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthNames),function(month){return (_vm.setYear)?_c('th',[_vm._v(_vm._s(month))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('th',[_vm._v("Total all time")]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = _vm.year}}},[_vm._v(_vm._s(_vm.setYear))]):_vm._e()],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.organizations.slice(0, 10)),function(organization){return _c('tr',[_c('td',[_vm._v(_vm._s(organization.name))]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[year]) ? organization[year].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthDecimals),function(month){return (_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[_vm.setYear + '-' + month]) ? organization[_vm.setYear + '-' + month].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('td',[_vm._v(_vm._s(organization.additions))]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[_vm.setYear]) ? organization[_vm.setYear].additions || 0 : 0))]):_vm._e()],2)}))]),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('h3',[_vm._v("Lines of code added by the top 10 authors")]),_vm._v(" "),_c('table',{staticClass:"lines-of-code-table"},[_c('thead',[_c('tr',[_c('th',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = year}}},[_vm._v(_vm._s(year))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthNames),function(month){return (_vm.setYear)?_c('th',[_vm._v(_vm._s(month))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('th',[_vm._v("Total all time")]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('th',{on:{"click":function($event){_vm.setYear = 0}}},[_vm._v(_vm._s(_vm.setYear))]):_vm._e()],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.contributors.slice(0, 10)),function(contributor){return _c('tr',[_c('td',[_vm._v(_vm._s(contributor.author_email))]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[year]) ? contributor[year].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthDecimals),function(month){return (_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[_vm.setYear + '-' + month]) ? contributor[_vm.setYear + '-' + month].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('td',[_vm._v(_vm._s(contributor.additions))]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('td',[_vm._v(_vm._s((contributor[_vm.setYear]) ? contributor[_vm.setYear].additions || 0 : 0))]):_vm._e()],2)}),0)]),_vm._v(" "),_c('br'),_vm._v(" "),_c('h3',[_vm._v("Lines of code added by the top 5 organizations")]),_vm._v(" "),_c('table',{staticClass:"lines-of-code-table"},[_c('thead',[_c('tr',[_c('th',[_vm._v("Author")]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = year}}},[_vm._v(_vm._s(year))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthNames),function(month){return (_vm.setYear)?_c('th',[_vm._v(_vm._s(month))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('th',[_vm._v("Total all time")]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('th',{staticClass:"clickable-header",on:{"click":function($event){_vm.setYear = _vm.year}}},[_vm._v(_vm._s(_vm.setYear))]):_vm._e()],2)]),_vm._v(" "),_c('tbody',_vm._l((_vm.organizations.slice(0, 10)),function(organization){return _c('tr',[_c('td',[_vm._v(_vm._s(organization.name))]),_vm._v(" "),_vm._l((_vm.years),function(year){return (!_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[year]) ? organization[year].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),_vm._l((_vm.monthDecimals),function(month){return (_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[_vm.setYear + '-' + month]) ? organization[_vm.setYear + '-' + month].additions || 0 : 0))]):_vm._e()}),_vm._v(" "),(!_vm.setYear)?_c('td',[_vm._v(_vm._s(organization.additions))]):_vm._e(),_vm._v(" "),(_vm.setYear)?_c('td',[_vm._v(_vm._s((organization[_vm.setYear]) ? organization[_vm.setYear].additions || 0 : 0))]):_vm._e()],2)}),0)]),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -9748,6 +10150,10 @@ var _OverviewCard = require('../components/OverviewCard.vue');
 
 var _OverviewCard2 = _interopRequireDefault(_OverviewCard);
 
+var _IssuesCard = require('../components/IssuesCard');
+
+var _IssuesCard2 = _interopRequireDefault(_IssuesCard);
+
 var _ExperimentalCard = require('../components/ExperimentalCard');
 
 var _ExperimentalCard2 = _interopRequireDefault(_ExperimentalCard);
@@ -9869,6 +10275,14 @@ var routes = [{ path: '/', component: _AugurCards2.default,
       header: _AugurHeader2.default,
       tabs: _Tabs2.default,
       content: _OverviewCard2.default
+    }
+  }, {
+    path: "issues",
+    name: "issues",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _IssuesCard2.default
     }
   }]
 },

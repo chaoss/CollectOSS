@@ -11,8 +11,12 @@ export default class AugurAPI {
     this.__timeout = null
     this.__pending = {}
 
-    this.getDownloadedGitRepos = this.__EndpointFactory('repos')
+    this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
+    this.getRepos = this.__EndpointFactory('repos')
     this.getRepoGroups = this.__EndpointFactory('repo-groups')
+    this.getOpenIssues = this.__EndpointFactory('repo-groups/25153/rg-open-issues-count')
+    this.getClosedIssues = this.__EndpointFactory('repo-groups/25153/rg-closed-issues-count')
+
     this.openRequests = 0
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
@@ -299,11 +303,11 @@ export default class AugurAPI {
 
     if (repo.gitURL) {
       // Other
-      GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'),
-      GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped'),
-      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group'),
-      GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group'),
-      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'),
+      GitEndpoint(repo, 'changesByAuthor', 'changes_by_author')
+      GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped')
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group')
+      GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group')
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group')
       GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group')
       GitEndpoint(repo, 'facadeProject', 'facade_project')
     }

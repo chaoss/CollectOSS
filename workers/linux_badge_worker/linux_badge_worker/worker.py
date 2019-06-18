@@ -6,7 +6,7 @@ import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 import logging
-logging.basicConfig(filename='worker.log', level=logging.INFO)
+logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
 
 class CollectorTask:
     """ Worker's perception of a task in its queue

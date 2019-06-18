@@ -11,28 +11,28 @@
       <div class="row" style="transform: translateY(-50px) !important" v-if="loaded">
 
         <div class="col col-6" style="padding-right: 35px">
-          <grouped-bar-chart source="cdRgTpRankedCommits"
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
           title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
           field="commit"
-          :data="values['cdRgTpRankedCommits']"></grouped-bar-chart>
+          :data="values['annualCommitCountRankedByRepoInRepoGroup']"></grouped-bar-chart>
         </div>
         <div class="col col-6" style="padding-right: 35px">
-          <grouped-bar-chart source="cdRgTpRankedLoc"
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
           title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
           field="loc"
-          :data="values['cdRgTpRankedLoc']"></grouped-bar-chart>
+          :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']"></grouped-bar-chart>
         </div>
         <div class="col col-6" style="padding-right: 35px">
-          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          <grouped-bar-chart source="annualCommitCountRankedByNewRepoInRepoGroup"
           title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
           field="commit"
-          :data="values['cdRgNewrepRankedCommits']"></grouped-bar-chart>
+          :data="values['annualCommitCountRankedByNewRepoInRepoGroup']"></grouped-bar-chart>
         </div>
         <div class="col col-6" style="padding-right: 35px">
-          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByNewRepoInRepoGroup"
           title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
           field="loc"
-          :data="values['cdRgNewrepRankedLoc']"></grouped-bar-chart>
+          :data="values['annualLinesOfCodeCountRankedByNewRepoInRepoGroup']"></grouped-bar-chart>
 
       </div>
     </div>
@@ -92,10 +92,10 @@ created() {
       repos.push(window.AugurRepos[repo])
     });
     let endpoints1 = [
-"cdRgTpRankedCommits",
-"cdRgTpRankedLoc",
-"cdRgNewrepRankedCommits",
-"cdRgNewrepRankedLoc",
+'annualLinesOfCodeCountRankedByRepoInRepoGroup',
+      'annualCommitCountRankedByRepoInRepoGroup',
+      'annualLinesOfCodeCountRankedByNewRepoInRepoGroup',
+      'annualCommitCountRankedByNewRepoInRepoGroup',
 "facadeProject"
     ]
     endpoints1.forEach((source) => {
