@@ -10,7 +10,7 @@
       <h4>{{ project }}</h4>
         <div class="repo-link-holder">
           <table class="is-responsive">
-            <thead class="repo-link-table repo-link-table-body">
+            <thead class="repo-link-table repo-link-table-body repo-link-table-header">
               <tr>
                 <th v-on:click="sortTable('url')">  URL <div class="arrow" v-if="'url' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
                 <th v-on:click="sortTable('rg_name')">  Repo Group Name <div class="arrow" v-if="'rg_name' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
