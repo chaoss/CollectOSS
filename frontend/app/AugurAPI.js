@@ -203,12 +203,12 @@ export default class AugurAPI {
     }
 
     var addRepoMetric = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('repo-groups/'+ repo.repoGroupID + '/repos'+ repo.repoID + '/' + endpoint)
+      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/repos'+ repo.repo_id + '/' + endpoint)
       return __Endpoint(r, jsName, url)
     }
 
     var addRepoGroupMetric = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('repo-groups/'+ repo.repoGroupID + '/' + endpoint)
+      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/' + endpoint)
       return __Endpoint(r, jsName, url)
     }
 
@@ -309,7 +309,7 @@ export default class AugurAPI {
       GitEndpoint(repo, 'facadeProject', 'facade_project')
     }
 
-    if (repo.repoGroupID && repo.repoID) {
+    if (repo.repo_group_id && repo.repo_id) {
       addRepoMetric(repo, 'codeChanges', 'code-changes')
       addRepoMetric(repo, 'codeChangesLines', 'code-changes-lines')
       addRepoMetric(repo, 'issueNew', 'issues-new')
@@ -323,7 +323,7 @@ export default class AugurAPI {
       addRepoMetric(repo, 'contributorsNew', 'contributors-new')
     }
 
-    if (repo.repoGroupID && repo.repoID == null) {
+    if (repo.repo_group_id && repo.repo_id == null) {
       addRepoGroupMetric(repo, 'codeChanges', 'code-changes')
       addRepoGroupMetric(repo, 'codeChangesLines', 'code-changes-lines')
       addRepoGroupMetric(repo, 'issueNew', 'issues-new')
