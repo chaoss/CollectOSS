@@ -779,6 +779,38 @@ class Augur(object):
             return result
 
     #####################################
+    ###              RISK             ###
+    #####################################
+
+    @annotate(tag='cii-best-practices-badge')
+    def cii_best_practices_badge(self, repo_group_id, repo_id=None):
+        """Returns the CII best practices badge level
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: CII best parctices badge level
+        """
+        if not repo_id:
+            cii_best_practices_badge_SQL = s.sql.text("""
+                SELECT repo_id, badge_level
+                FROM repo_badging
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+            """)
+
+            results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            cii_best_practices_badge_SQL = s.sql.text("""
+                SELECT badge_level
+                FROM repo_badging
+                WHERE repo_id = :repo_id
+            """)
+
+            results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
+            return results
+
+    #####################################
     ###         EXPERIMENTAL          ###
     #####################################
 
