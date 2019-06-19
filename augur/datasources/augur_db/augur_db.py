@@ -612,6 +612,56 @@ class Augur(object):
                                                                    'begin_date': begin_date, 'end_date': end_date})
             return results
 
+    @annotate(tag='issues-active')
+    def issues_active(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+        """Returns a timeseries of issues active.
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of issues active/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:00'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        if not repo_id:
+            issues_active_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, issue_events.created_at) as date,
+                    repo_id,
+                    COUNT(issues.issue_id) AS issues
+                FROM issues
+                JOIN issue_events ON issues.issue_id = issue_events.issue_id
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY date, repo_id
+                ORDER BY repo_id, date
+            """)
+
+            results = pd.read_sql(issues_active_SQL, self.db, params={'repo_group_id': repo_group_id, 'period':period,
+                                                                      'begin_date': begin_date, 'end_date':end_date})
+            return results
+
+        else:
+            issues_active_SQL = s.sql.text("""
+                SELECT
+                    date_trunc(:period, issue_events.created_at) as date,
+                    COUNT(issues.issue_id) AS issues
+                FROM issues
+                JOIN issue_events ON issues.issue_id = issue_events.issue_id
+                WHERE repo_id = :repo_id
+                AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY date, repo_id
+                ORDER BY repo_id, date
+            """)
+
+            results = pd.read_sql(issues_active_SQL, self.db, params={'repo_id': repo_id, 'period':period,
+                                                                      'begin_date': begin_date, 'end_date':end_date})
+            return results
 
     @annotate(tag='issues-closed')
     def issues_closed(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
