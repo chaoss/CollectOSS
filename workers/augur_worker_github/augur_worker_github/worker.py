@@ -623,10 +623,6 @@ class GitHubWorker:
     
             logging.info("Number of comments needing insertion: " + str(len(comments_need_insertion)))
 
-            
-
-
-            logging.info(str(comments_need_insertion))
             for comment in comments_need_insertion:
                 issue_comment = {
                     "pltfrm_id": 25150,
@@ -801,7 +797,12 @@ class GitHubWorker:
 
     def update_rate_limit(self, response):
         logging.info(str(response.headers))
-        self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
+        try:
+            self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
+            logging.info("Recieved rate limit from headers\n")
+        except:
+            self.rate_limit -= 1
+            logging.info("Headers did not work, had to decrement\n")
         logging.info("Updated rate limit, you have: " + str(self.rate_limit) + " requests remaining.\n")
         if self.rate_limit <= 0:
 
