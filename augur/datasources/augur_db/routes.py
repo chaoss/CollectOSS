@@ -712,3 +712,43 @@ def create_routes(server):
     """
     server.addRepoMetric(
         augur_db.contributors_new, 'contributors-new')
+
+    #####################################
+    ###              RISK             ###
+    #####################################
+
+    """
+    @api {get} /repo-groups/:repo_group_id/cii-best-practices-badge CII Best Practices Badge
+    @apiName cii-best-practices-badge
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21277,
+                            "badge_level": "passing"
+                        },
+                        {
+                            "repo_id": 21252,
+                            "badge_level": "in_progress"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/cii-best-practices-badge CII Best Practices Badge
+    @apiName cii-best-practices-badge
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "badge_level": "gold"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
