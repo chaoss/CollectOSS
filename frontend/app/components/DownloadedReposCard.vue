@@ -4,7 +4,8 @@
   <h3>Downloaded Git Repos by Project</h3>
   <div class="row section">
     <hr>
-    <div style=" margin-left: 42.4%" class="col col-12 relative spinner loader"></div>
+    <!-- <div style=" margin-left: 42.4%" class="col col-12 relative spinner loader"></div> -->
+    <spinner v-if="!loaded"></spinner>
     <!-- <div v-for="project in projects" class="col-6"> -->
     <div v-if="loaded" class="col-12">
       <h4>{{ project }}</h4>
@@ -43,10 +44,11 @@
 </template>
 
 <script>
+import Spinner from './Spinner'
 module.exports = {
 
   components: {
-
+    Spinner
   },
   data () { return {
     repos: {},

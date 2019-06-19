@@ -152,19 +152,21 @@ export default class AugurAPI {
       }
     }
 
-    if (repo.repo_id == null || repo.repo_group_id == null){
-      let res = []
-      $.ajax({
-        type:"GET",
-        url:this._version+ '/repos/'+repo.owner+'/'+repo.name,
-        async:false,
-        success:function (data)
-        {
-          res = data;
-        }
-      })
-      repo.repo_id = res[0].repo_id
-      repo.repo_group_id = res[0].repo_group_id
+    if (repo.owner && repo.name){
+      if (repo.repo_id == null || repo.repo_group_id == null){
+        let res = []
+        $.ajax({
+          type:"GET",
+          url:this._version+ '/repos/'+repo.owner+'/'+repo.name,
+          async:false,
+          success:function (data)
+          {
+            res = data;
+          }
+        })
+        repo.repo_id = res[0].repo_id
+        repo.repo_group_id = res[0].repo_group_id
+      }
     }
 
     repo.toString = () => {
@@ -222,7 +224,7 @@ export default class AugurAPI {
     }
 
     var addRepoMetric = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/repos'+ repo.repo_id + '/' + endpoint)
+      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/repos/'+ repo.repo_id + '/' + endpoint)
       return __Endpoint(r, jsName, url)
     }
 
@@ -340,6 +342,8 @@ export default class AugurAPI {
       addRepoMetric(repo, 'subProject', 'sub-projects')
       addRepoMetric(repo, 'contributors', 'contributors')
       addRepoMetric(repo, 'contributorsNew', 'contributors-new')
+      addRepoMetric(repo, 'openIssuesCount', 'open-issues-count')
+      addRepoMetric(repo, 'closedIssuesCount', 'closed-issues-count')
     }
 
     if (repo.repo_group_id && repo.repo_id == null) {
@@ -354,8 +358,8 @@ export default class AugurAPI {
       addRepoGroupMetric(repo, 'subProject', 'sub-projects')
       addRepoGroupMetric(repo, 'contributors', 'contributors')
       addRepoGroupMetric(repo, 'contributorsNew', 'contributors-new')
-      addRepoGroupMetric(repo, 'rgOpenIssuesCount', 'rg-open-issues-count')
-      addRepoGroupMetric(repo, 'rgClosedIssuesCount', 'rg-closed-issues-count')
+      addRepoGroupMetric(repo, 'openIssuesCount', 'open-issues-count')
+      addRepoGroupMetric(repo, 'closedIssuesCount', 'closed-issues-count')
     }
 
     return repo

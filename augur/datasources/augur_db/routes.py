@@ -39,8 +39,11 @@ def create_routes(server):
     #####################################
     ###           EVOLUTION           ###
     #####################################
-    server.addRepoGroupMetric(augur_db.rg_open_issues_count, 'rg-open-issues-count')
-    server.addRepoGroupMetric(augur_db.rg_closed_issues_count, 'rg-closed-issues-count')
+    server.addRepoGroupMetric(augur_db.open_issues_count, 'open-issues-count')
+    server.addRepoMetric(augur_db.open_issues_count, 'open-issues-count')
+
+    server.addRepoGroupMetric(augur_db.closed_issues_count, 'closed-issues-count')
+    server.addRepoMetric(augur_db.closed_issues_count, 'closed-issues-count')
 
     """
     @api {get} /repo-groups/:repo_group_id/code-changes
