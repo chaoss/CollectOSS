@@ -338,6 +338,8 @@ export default class AugurAPI {
       addRepoGroupMetric(repo, 'subProject', 'sub-projects')
       addRepoGroupMetric(repo, 'contributors', 'contributors')
       addRepoGroupMetric(repo, 'contributorsNew', 'contributors-new')
+      addRepoGroupMetric(repo, 'rgOpenIssuesCount', 'rg-open-issues-count')
+      addRepoGroupMetric(repo, 'rgClosedIssuesCount', 'rg-closed-issues-count')
     }
 
     return repo

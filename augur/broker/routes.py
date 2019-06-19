@@ -16,7 +16,7 @@ def create_routes(server, broker):
         logging.info("Recieved a new job to distribute for model: " + job['models'][0])
         logging.info(job['given'])
         broker.create_job(job)
-        # return jsonify({"job": job})
+        return jsonify({"status": "success"})
 
     @server.app.route('/{}/workers'.format(server.api_version), methods=['POST'])
     def worker():
@@ -26,10 +26,11 @@ def create_routes(server, broker):
         worker = request.json
         logging.info("Recieved HELLO message from worker: " + worker['id'])
         broker.add_new_worker(worker)
-        # return jsonify({"status": "success"})
+        return jsonify({"status": "success"})
 
     @server.app.route('/{}/completed_task'.format(server.api_version), methods=['POST'])
     def sync_queue():
         job = request.json
         logging.info("Message recieved that worker " + job['worker_id'] + " completed task: " + str(job))
         broker.completed_job(job)
+        return jsonify({"status": "success"})

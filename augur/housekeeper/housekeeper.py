@@ -50,13 +50,14 @@ class Housekeeper:
 
         # List repo subsections that may have special update requirements
         subsection_test = ['https://github.com/rails/exception_notification.git']
+        all_sorted_by_issues = sort_issue_repos()
 
         # List of tasks that need periodic updates
         self.__updatable = [
             {
                 'model': 'issues',
                 'started': False,
-                'delay': 5,
+                'delay': 15,
                 'section': subsection_test
             }
         ]
@@ -140,8 +141,8 @@ class Housekeeper:
         for process in self.__processes:
             process.terminate()
 
-
-
+    def sort_issue_repos(self):
+        
     # def run(self):
 
 
