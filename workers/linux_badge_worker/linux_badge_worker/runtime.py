@@ -47,7 +47,7 @@ def main(augur_url, host, port):
     credentials = read_config("Database")
 
     config = { 
-            "connection_string": credentials["connection_string"],
+            "id": "com.augurlabs.core.badge_worker",
             "host": credentials["host"],
             "password": credentials["password"],
             "port": credentials["port"],
@@ -60,13 +60,12 @@ def main(augur_url, host, port):
             "required": 1,
             "type": "string"
         }
-
+    
     #create instance of the worker
     app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)
-    
 
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0):

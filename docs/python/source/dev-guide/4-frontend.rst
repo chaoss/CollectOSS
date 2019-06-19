@@ -4,21 +4,21 @@ Frontend
 Structure
 ---------
 
-Augur uses Vue.js, MetricsGraphics, and Kube for its frontend. The
-frontend is stored in the ``frontend`` directory, but the parts that are
-relevant to adding new metrics are in the ``frontend/app/`` directory,
-which contains the following parts: \* ``frontend/app/AugurAPI.js``
-which interfaces with the backend \* ``frontend/app/AugurStats.js``
-which performs statistical operations on the data \*
-``frontend/app/Augur.js`` which renders the page \*
-``frontend/app/assets/`` which contains the assets, such as images, for
-the frontend \* ``frontend/app/include/`` which contains the Kube and
-MetricsGraphics resources \* ``frontend/styles/`` which contains the
-stylesheet for Augur \* ``frontend/components/`` which contains the
-Vue.js components (referred to a 'Cards'\*) \*
-``frontend/components/charts/`` contains the different chart templetes
-\* ``frontend/components/BaseRepoActivityCard.vue`` contains the repo
-activity time series charts
+Augur uses Vue.js, MetricsGraphics, and Kube for its frontend. 
+1. The frontend is stored in the ``frontend`` directory. 
+2. The files needed to add new metrics are in the ``frontend/app/`` directory. This directory contains the following parts: 
+
+   a)  \* ``frontend/app/AugurAPI.js``
+   b)  which interfaces with the backend:  \* ``frontend/app/AugurStats.js``
+   c)  which performs statistical operations on the data \*
+   d)  ``frontend/app/Augur.js`` which renders the page \*
+   e)  ``frontend/app/assets/`` which contains the assets, such as images, for the frontend 
+   f)  \* ``frontend/app/include/`` which contains the Kube and MetricsGraphics resources 
+   g)  \* ``frontend/styles/`` which contains the stylesheet for Augur 
+   h)  \* ``frontend/components/`` which contains the
+   i)  Vue.js components (referred to a 'Cards'\*) 
+   j)  \* ``frontend/components/charts/`` contains the different chart templates
+   k)  \* ``frontend/components/BaseRepoActivityCard.vue`` contains the repo activity time series charts
 
 \* The Cards that have the name of a metric grouping are each their own
 separate tab; pay attention to which card you are adding your graph to!

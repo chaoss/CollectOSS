@@ -6,7 +6,7 @@
           <li :class="{ active: (currentTab == 'gmd') }"><a href="#" @click="changeTab" data-value="gmd">Evolution</a></li>
           <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
           <li :class="{ active: (currentTab == 'experimental') }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li> 
-          <!-- <li :class="{ active: (currentTab == 'git'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="git">Git</a></li> -->
+          <li :class="{ active: (currentTab == 'issues') }"><a href="#" @click="changeTab" data-value="issues">Issues</a></li>
         </ul>
       </nav>
 </template>
@@ -32,8 +32,8 @@ module.exports = {
     changeTab (e) {
       console.log("changing tab to: ", e.target.dataset.value)
       this.$store.commit('setTab', {
-            tab: e.target.dataset.value
-          })
+        tab: e.target.dataset.value
+      })
       if(this.$store.state.comparedRepos.length == 1) {
         let owner = this.gitRepo ? null : this.baseRepo.split('/')[0]
         let repo = this.gitRepo ? this.gitRepo : this.baseRepo.split('/')[1]

@@ -165,17 +165,10 @@ section.status
 .below-chart
   position: relative
   z-index: 2
-  width: 100%;
-  margin: 10px auto;
-  padding: 0px 30px 0px 25px
-  //transform: translateY(-10px)
-  transform: translateY(-26px)
 
-.section {
-  overflow:hidden;
-  transition:max-height 0.3s ease-out; // transitioning max-height, not height
-  height:auto;
-  max-height:600px;
+.section
+  height: auto
+  overflow: hidden
   position: relative
 }
 .section.collapsed {
@@ -216,15 +209,16 @@ section.status
 .repo-link-holder
   background: rgb(234, 234, 234)
   padding: 10px
-  height: 300px
-  overflow-y: scroll
 
 .repo-link-table-body
   background: rgb(234, 234, 234)
 
-th, td {
-    padding: 0;
+thead tr {
+  border-bottom: 10px solid rgb(234, 234, 234);
 }
+
+th,td
+  padding: 0
 
 cite.metric
   display: block;
@@ -1331,3 +1325,23 @@ details summary svg
   margin: 0 !important
 }
 
+.cd-divider {
+  border-bottom: 2px solid #ebebeb;
+  color: #000000 !important
+}
+
+.arrow_down:before {
+  content: '▼'
+}
+.arrow_up:before {
+  content: '▲'
+}
+.arrow {
+  float: right;
+  width: 12px;
+  height: 15px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position-y: bottom;
+  padding-right: 2rem
+}

@@ -189,6 +189,92 @@
 
         <span class="k">return</span> <span class="n">df</span>
 
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull_requests_closed&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pull_requests_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Total number of pull requests closed</span>
+
+<span class="sd">      :param owner: The username of the repository owner</span>
+<span class="sd">      :param repo: The name of the repository</span>
+<span class="sd">      :return: Total count of pull requests closed</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/graphql&quot;</span>
+      <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">              query($owner: String!, $name: String!) {</span>
+<span class="s1">                repository (owner: $owner, name:$name) {</span>
+<span class="s1">                  pullRequests (states: CLOSED) {</span>
+<span class="s1">                    totalCount</span>
+<span class="s1">                  }</span>
+<span class="s1">                }</span>
+<span class="s1">              }</span>
+<span class="s1">              &#39;&#39;&#39;</span>
+      <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">repo</span><span class="p">}</span>
+
+      <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+                        <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">),</span>
+                        <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;query&#39;</span> <span class="p">:</span> <span class="n">query</span><span class="p">,</span> <span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+
+      <span class="n">count</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;totalCount&#39;</span><span class="p">]</span>
+
+      <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;count&#39;</span> <span class="p">:</span> <span class="n">count</span><span class="p">}</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull_requests_merged&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pull_requests_merged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Total number of pull requests_merged</span>
+
+<span class="sd">      :param owner: The username of the repository owner</span>
+<span class="sd">      :param repo: The name of the repository</span>
+<span class="sd">      :return: Total count of pull requests_merged</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/graphql&quot;</span>
+      <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">              query($owner: String!, $name: String!) {</span>
+<span class="s1">                repository (owner: $owner, name:$name) {</span>
+<span class="s1">                  pullRequests (states: MERGED) {</span>
+<span class="s1">                    totalCount</span>
+<span class="s1">                  }</span>
+<span class="s1">                }</span>
+<span class="s1">              }</span>
+<span class="s1">              &#39;&#39;&#39;</span>
+      <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">repo</span><span class="p">}</span>
+
+      <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+                        <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">),</span>
+                        <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;query&#39;</span> <span class="p">:</span> <span class="n">query</span><span class="p">,</span> <span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+
+      <span class="n">count</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;totalCount&#39;</span><span class="p">]</span>
+
+      <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;count&#39;</span> <span class="p">:</span> <span class="n">count</span><span class="p">}</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;pull_requests_open&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pull_requests_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Total number of pull requests open</span>
+
+<span class="sd">      :param owner: The username of the repository owner</span>
+<span class="sd">      :param repo: The name of the repository</span>
+<span class="sd">      :return: Total count of pull requests open</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.github.com/graphql&quot;</span>
+      <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">              query($owner: String!, $name: String!) {</span>
+<span class="s1">                repository (owner: $owner, name:$name) {</span>
+<span class="s1">                  pullRequests (states: OPEN) {</span>
+<span class="s1">                    totalCount</span>
+<span class="s1">                  }</span>
+<span class="s1">                }</span>
+<span class="s1">              }</span>
+<span class="s1">              &#39;&#39;&#39;</span>
+      <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">repo</span><span class="p">}</span>
+
+      <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span>
+                        <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_API_KEY</span><span class="p">),</span>
+                        <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;query&#39;</span> <span class="p">:</span> <span class="n">query</span><span class="p">,</span> <span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+
+      <span class="n">count</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;totalCount&#39;</span><span class="p">]</span>
+
+      <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;count&#39;</span> <span class="p">:</span> <span class="n">count</span><span class="p">}</span>
 
 
     <span class="c1">#####################################</span>
@@ -209,7 +295,7 @@
     <span class="k">def</span> <span class="nf">repository_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
       <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      Calculate the repository size.</span>
-<span class="sd">      </span>
+
 <span class="sd">      :param owner: Username of the repository owner.</span>
 <span class="sd">      :param repo: Name of the repository.</span>
 <span class="sd">      :return: Size of repository in KBs.</span>
@@ -502,14 +588,14 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../../../../index.html">Table of Contents</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../python.html">Augur Python Library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../use-cases-toc.html">Use Cases</a></li>
 </ul>

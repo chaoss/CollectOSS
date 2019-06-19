@@ -14,6 +14,7 @@ export default class AugurAPI {
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.getRepos = this.__EndpointFactory('repos')
     this.getRepoGroups = this.__EndpointFactory('repo-groups')
+
     this.openRequests = 0
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
@@ -125,6 +126,7 @@ export default class AugurAPI {
     })
   }
 
+
   Repo (repo) {
     if (repo.githubURL) {
       let splitURL = repo.githubURL.split('/')
@@ -146,6 +148,23 @@ export default class AugurAPI {
         let splitURL = repo.gitURL.split('/')
         repo.owner = splitURL[0]
         repo.name = splitURL[1]
+      }
+    }
+
+    if (repo.owner && repo.name){
+      if (repo.repo_id == null || repo.repo_group_id == null){
+        let res = []
+        $.ajax({
+          type:"GET",
+          url:this._version+ '/repos/'+repo.owner+'/'+repo.name,
+          async:false,
+          success:function (data)
+          {
+            res = data;
+          }
+        })
+        repo.repo_id = res[0].repo_id
+        repo.repo_group_id = res[0].repo_group_id
       }
     }
 
@@ -203,8 +222,13 @@ export default class AugurAPI {
       return __Endpoint(r, jsName, url)
     }
 
-    var AugurEndpoint = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL))
+    var addRepoMetric = (r, jsName, endpoint) => {
+      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/repos/'+ repo.repo_id + '/' + endpoint)
+      return __Endpoint(r, jsName, url)
+    }
+
+    var addRepoGroupMetric = (r, jsName, endpoint) => {
+      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/' + endpoint)
       return __Endpoint(r, jsName, url)
     }
 
@@ -296,14 +320,45 @@ export default class AugurAPI {
 
     if (repo.gitURL) {
       // Other
-      GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'),
-
-      GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped'),
-      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group'),
-      GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group'),
-      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'),
+      GitEndpoint(repo, 'changesByAuthor', 'changes_by_author')
+      GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped')
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group')
+      GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group')
+      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group')
       GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group')
       GitEndpoint(repo, 'facadeProject', 'facade_project')
+    }
+
+    if (repo.repo_group_id && repo.repo_id) {
+      addRepoMetric(repo, 'codeChanges', 'code-changes')
+      addRepoMetric(repo, 'codeChangesLines', 'code-changes-lines')
+      addRepoMetric(repo, 'issueNew', 'issues-new')
+      addRepoMetric(repo, 'issuesClosed', 'issues-closed')
+      addRepoMetric(repo, 'issueBacklog', 'issue-backlog')
+      addRepoMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
+      addRepoMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened')
+      addRepoMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed')
+      addRepoMetric(repo, 'subProject', 'sub-projects')
+      addRepoMetric(repo, 'contributors', 'contributors')
+      addRepoMetric(repo, 'contributorsNew', 'contributors-new')
+      addRepoMetric(repo, 'openIssuesCount', 'open-issues-count')
+      addRepoMetric(repo, 'closedIssuesCount', 'closed-issues-count')
+    }
+
+    if (repo.repo_group_id && repo.repo_id == null) {
+      addRepoGroupMetric(repo, 'codeChanges', 'code-changes')
+      addRepoGroupMetric(repo, 'codeChangesLines', 'code-changes-lines')
+      addRepoGroupMetric(repo, 'issueNew', 'issues-new')
+      addRepoGroupMetric(repo, 'issuesClosed', 'issues-closed')
+      addRepoGroupMetric(repo, 'issueBacklog', 'issue-backlog')
+      addRepoGroupMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
+      addRepoGroupMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened')
+      addRepoGroupMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed')
+      addRepoGroupMetric(repo, 'subProject', 'sub-projects')
+      addRepoGroupMetric(repo, 'contributors', 'contributors')
+      addRepoGroupMetric(repo, 'contributorsNew', 'contributors-new')
+      addRepoGroupMetric(repo, 'openIssuesCount', 'open-issues-count')
+      addRepoGroupMetric(repo, 'closedIssuesCount', 'closed-issues-count')
     }
 
     return repo

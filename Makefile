@@ -13,38 +13,38 @@ AUGUR_PYTHON?='python'
 
 default:
 	@ echo "Installation Commands:"
-	@ echo "    install                    Installs augur using pip"
-	@ echo "    install-dev                Installs augur's developer dependencies (requires npm and pip)"
-	@ echo "    install-msr                Installs MSR14 dataset"
-	@ echo "    clean                      Cleans the developer environment"
-	@ echo "    upgrade                    Pulls newest version, installs, performs migrations"
-	@ echo "    version                    Print the currently installed version"
+	@ echo "    install                         Installs augur using pip"
+	@ echo "    install-dev                     Installs augur's developer dependencies (requires npm and pip)"
+	@ echo "    install-msr                     Installs MSR14 dataset"
+	@ echo "    clean                           Cleans the developer environment"
+	@ echo "    upgrade                         Pulls newest version, installs, performs migrations"
+	@ echo "    version                         Print the currently installed version"
 	@ echo
 	@ echo "Development Commands:"
-	@ echo "    dev                        Starts the full stack and monitors the logs"
-	@ echo "    dev-start                  Runs 'make serve' and 'brunch w -s' in the background"
-	@ echo "    dev-stop                   Stops the backgrounded commands"
-	@ echo "    dev-restart                Runs dev-stop then dev-restart"
-	@ echo "    server            	       Runs a single instance of the server (useful for debugging)"
-	@ echo "    test    			             Runs all pytest unit tests and API tests"
-	@ echo "    test-ds SOURCE={source}    Run pytest unit tests for the specified data source. Defaults to all"
-	@ echo "    test-api   			           Run API tests locally using newman"
-	@ echo "    build                      Builds documentation and frontend - use before pushing"
-	@ echo "    frontend                   Builds frontend with Brunch"
-	@ echo "    update-deps                Generates updated requirements.txt and environment.yml"
-	@ echo "    python-docs                Generates new Sphinx documentation"
-	@ echo "    api-docs                   Generates new apidocjs documentation"
-	@ echo "    docs                       Generates all documentation"
+	@ echo "    dev                             Starts the full stack and monitors the logs"
+	@ echo "    dev-start                       Runs 'make serve' and 'brunch w -s' in the background"
+	@ echo "    dev-stop                        Stops the backgrounded commands"
+	@ echo "    dev-restart                     Runs dev-stop then dev-restart"
+	@ echo "    server                          Runs a single instance of the server (useful for debugging)"
+	@ echo "    test                            Runs all pytest unit tests and API tests"
+	@ echo "    test-ds SOURCE={source}         Run pytest unit tests for the specified data source. Defaults to all"
+	@ echo "    test-routes SOURCE={source}     Run API tests"
+	@ echo "    build                           Builds documentation and frontend - use before pushing"
+	@ echo "    frontend                        Builds frontend with Brunch"
+	@ echo "    update-deps                     Generates updated requirements.txt and environment.yml"
+	@ echo "    python-docs                     Generates new Sphinx documentation"
+	@ echo "    api-docs                        Generates new apidocjs documentation"
+	@ echo "    docs                            Generates all documentation"
 	@ echo "Git commands"
-	@ echo "    update                     Pull the latest version of your current branch"
+	@ echo "    update                          Pull the latest version of your current branch"
 	@ echo
 	@ echo "Prototyping:"
-	@ echo "    jupyter                    Launches the jupyter"
-	@ echo "    create-jupyter-env         Creates a jupyter environment for Augur"
+	@ echo "    jupyter                         Launches the jupyter"
+	@ echo "    create-jupyter-env              Creates a jupyter environment for Augur"
 	@ echo 
 	@ echo "Upgrade/Migration Helpers:"
-	@ echo "    to-json                    Converts old augur.cfg to new augur.config.json"
-	@ echo "    to-env                     Converts augur.config.json to a script that exports those values as environment variables"
+	@ echo "    to-json                         Converts old augur.cfg to new augur.config.json"
+	@ echo "    to-env                          Converts augur.config.json to a script that exports those values as environment variables"
 
 
 
@@ -114,6 +114,17 @@ server:
 frontend:
 	bash -c 'cd frontend; brunch build'
 
+backend-stop:
+	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
+	@ echo
+
+backend-start: backend-stop
+	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
+
+backend-restart: backend-stop backend-start
+
+backend: backend-restart
+
 python-docs:
 	@ bash -c '$(CONDAACTIVATE) cd docs/python && rm -rf _build && make html; rm -rf ../../frontend/public/docs; mv build/html ../../frontend/public/docs'
 
@@ -126,15 +137,15 @@ build: frontend docs
 	cd augur/static/ \
 	&& brunch build --production
 
-test:test-ds test-api
+test:test-ds test-routes
 
 test-ds:
 	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE).py'
 
-test-api:
-	make dev-start
-	$(AUGUR_PYTHON) test/api/test_api.py
-	make dev-stop
+test-routes:
+	@ python test/api/test_api.py $(SOURCE)
+#     @ bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(SOURCE)/test_$(SOURCE)_routes.py'
+#     @ kill `cat logs/backend.pid`
 
 .PHONY: unlock
 unlock:

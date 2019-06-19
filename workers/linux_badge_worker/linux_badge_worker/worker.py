@@ -5,6 +5,8 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
+import logging
+logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -85,17 +87,17 @@ class BadgeWorker:
 
 
         # """ Query all repos """
-        # repoUrlSQL = s.sql.text("""
-        #     SELECT repo_git, repo_id FROM repo
-        #     """)
-        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_git, repo_id FROM repo
+            """)
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
-        # #fill queue
-        # for index, row in rs.iterrows():
-        #     entry_info = {"git_url": row["repo_git"], "repo_id": row["repo_id"]}
-        #     self._queue.put(CollectorTask(message_type='TASK', entry_info=entry_info))
+        #fill queue
+        for index, row in rs.iterrows():
+            entry_info = {"git_url": row["repo_git"], "repo_id": row["repo_id"]}
+            self._queue.put(CollectorTask(message_type='TASK', entry_info=entry_info))
 
-        # self.run()
+        self.run()
 
         requests.post('http://localhost:5000/api/workers', json=specs) #hello message
         
@@ -125,7 +127,6 @@ class BadgeWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        print("VALUE", value)
         git_url = value['given']['git_url']
 
         """ Query all repos """
@@ -133,15 +134,14 @@ class BadgeWorker:
             SELECT repo_id FROM repo WHERE repo_git = '{}'
             """.format(git_url))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
-        print(rs, repoUrlSQL)
         try:
             self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs.iloc[0]["repo_id"]}))
         
         # list_queue = dump_queue(self._queue)
-        # print("worker's queue after adding the job: " + list_queue)
+        # logging.info("worker's queue after adding the job: " + list_queue)
 
         except:
-            print("that repo is not in our database")
+            logging.info("that repo is not in our database")
         if self._queue.empty(): 
             if 'github.com' in git_url:
                 self._task = value
@@ -157,9 +157,9 @@ class BadgeWorker:
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
-        if not self._child:
-            self._child = Process(target=self.collect, args=())
-            self._child.start()
+        # if not self._child:
+        self._child = Process(target=self.collect, args=())
+        self._child.start()
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -180,18 +180,36 @@ class BadgeWorker:
                 self.query(message.entry_info)
 
     def query(self, entry_info):
-        """ Data collection function
+        """ Data collection and storage method
         Query the github api for contributors and issues (not yet implemented)
         """
-        extension = "?pq=" + entry_info['git_url']
-        url = self.config['endpoint'] + extension
 
+        git_url = entry_info['git_url']
+
+        # Handles git url case by removing the extension
+        if ".git" in git_url:
+            git_url = git_url[:-4]
+
+        extension = "?pq=" + git_url
+
+        url = self.config['endpoint'] + extension
+        logging.info("Hitting endpoint: " + url + " ...\n")
         r = requests.get(url=url)
         data = r.json()
-        data[0]['repo_id'] = entry_info['repo_id']
-        print(self.table)
-        self.db.execute(self.table.insert().values(data[0]))
-        requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
+        if len(data) != 0:
+        
+            data[0]['repo_id'] = entry_info['repo_id']
+                 
+            self.db.execute(self.table.insert().values(data[0]))
+            logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")   
+
+            task_completed = entry_info.to_dict()
+            task_completed['worker_id'] = self.config['id']
+
+            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
+            requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
+        else:
+            logging.info("Endpoint did not return any data.")
 
 
 

@@ -492,6 +492,9 @@ var AugurAPI = function () {
     this.getDownloadedGitRepos = this.__EndpointFactory('git/repos');
     this.getRepos = this.__EndpointFactory('repos');
     this.getRepoGroups = this.__EndpointFactory('repo-groups');
+    this.getOpenIssues = this.__EndpointFactory('repo-groups/25153/rg-open-issues-count');
+    this.getClosedIssues = this.__EndpointFactory('repo-groups/25153/rg-closed-issues-count');
+
     this.openRequests = 0;
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter');
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata');
@@ -640,6 +643,22 @@ var AugurAPI = function () {
         }
       }
 
+      if (repo.owner && repo.name) {
+        if (repo.repo_id == null || repo.repo_group_id == null) {
+          var res = [];
+          $.ajax({
+            type: "GET",
+            url: this._version + '/repos/' + repo.owner + '/' + repo.name,
+            async: false,
+            success: function success(data) {
+              res = data;
+            }
+          });
+          repo.repo_id = res[0].repo_id;
+          repo.repo_group_id = res[0].repo_group_id;
+        }
+      }
+
       repo.toString = function () {
         if (repo.owner && repo.name) {
           return repo.owner + '/' + repo.name;
@@ -694,8 +713,13 @@ var AugurAPI = function () {
         return __Endpoint(r, jsName, url);
       };
 
-      var AugurEndpoint = function AugurEndpoint(r, jsName, endpoint) {
-        var url = _this3.__endpointURL('/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL));
+      var addRepoMetric = function addRepoMetric(r, jsName, endpoint) {
+        var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/repos/' + repo.repo_id + '/' + endpoint);
+        return __Endpoint(r, jsName, url);
+      };
+
+      var addRepoGroupMetric = function addRepoGroupMetric(r, jsName, endpoint) {
+        var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/' + endpoint);
         return __Endpoint(r, jsName, url);
       };
 
@@ -789,8 +813,45 @@ var AugurAPI = function () {
 
       if (repo.gitURL) {
         // Other
-        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author'), GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped'), GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group'), GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group'), GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'), GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group');
+        GitEndpoint(repo, 'changesByAuthor', 'changes_by_author');
+        GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped');
+        GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group');
+        GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group');
+        GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group');
+        GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group');
         GitEndpoint(repo, 'facadeProject', 'facade_project');
+      }
+
+      if (repo.repo_group_id && repo.repo_id) {
+        addRepoMetric(repo, 'codeChanges', 'code-changes');
+        addRepoMetric(repo, 'codeChangesLines', 'code-changes-lines');
+        addRepoMetric(repo, 'issueNew', 'issues-new');
+        addRepoMetric(repo, 'issuesClosed', 'issues-closed');
+        addRepoMetric(repo, 'issueBacklog', 'issue-backlog');
+        addRepoMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new');
+        addRepoMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened');
+        addRepoMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed');
+        addRepoMetric(repo, 'subProject', 'sub-projects');
+        addRepoMetric(repo, 'contributors', 'contributors');
+        addRepoMetric(repo, 'contributorsNew', 'contributors-new');
+        addRepoMetric(repo, 'openIssuesCount', 'open-issues-count');
+        addRepoMetric(repo, 'closedIssuesCount', 'closed-issues-count');
+      }
+
+      if (repo.repo_group_id && repo.repo_id == null) {
+        addRepoGroupMetric(repo, 'codeChanges', 'code-changes');
+        addRepoGroupMetric(repo, 'codeChangesLines', 'code-changes-lines');
+        addRepoGroupMetric(repo, 'issueNew', 'issues-new');
+        addRepoGroupMetric(repo, 'issuesClosed', 'issues-closed');
+        addRepoGroupMetric(repo, 'issueBacklog', 'issue-backlog');
+        addRepoGroupMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new');
+        addRepoGroupMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened');
+        addRepoGroupMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed');
+        addRepoGroupMetric(repo, 'subProject', 'sub-projects');
+        addRepoGroupMetric(repo, 'contributors', 'contributors');
+        addRepoGroupMetric(repo, 'contributorsNew', 'contributors-new');
+        addRepoGroupMetric(repo, 'openIssuesCount', 'open-issues-count');
+        addRepoGroupMetric(repo, 'closedIssuesCount', 'closed-issues-count');
       }
 
       return repo;
@@ -1207,7 +1268,7 @@ module.exports = {
         });
         this.$router.push({
           name: 'gmd',
-          params: { owner: repo.owner, repo: repo.name }
+          params: { owner: repo.owner, repo: repo.name, repoID: repo.repoID, repoGroupID: repo.repoGroupID }
         });
         window.location.reload();
       }
@@ -1381,19 +1442,51 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 
 ;require.register("components/DownloadedReposCard.vue", function(exports, require, module) {
 ;(function(){
-"use strict";
+'use strict';
+
+var _Spinner = require('./Spinner');
+
+var _Spinner2 = _interopRequireDefault(_Spinner);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = {
 
-  components: {},
+  components: {
+    Spinner: _Spinner2.default
+  },
   data: function data() {
     return {
       repos: {},
-      projects: []
+      repo_groups: [],
+      repo_relations: {},
+      loaded: false,
+      ascending: false,
+      sortColumn: '',
+      group_id_name_map: {}
     };
   },
 
   methods: {
+    sortTable: function sortTable(col) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+
+      var ascending = this.ascending;
+
+      this.repos.sort(function (a, b) {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1;
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1;
+        }
+        return 0;
+      });
+    },
     onRepo: function onRepo(e) {
       this.$store.commit('setRepo', {
         githubURL: e.target.value
@@ -1422,7 +1515,9 @@ module.exports = {
         repo = e.url.slice(e.url.lastIndexOf('/') + 1);
       }
       this.$store.commit('setRepo', {
-        gitURL: e.url
+        gitURL: e.url,
+        repo_id: e.repo_id,
+        repo_group_id: e.repo_group_id
       });
 
       this.$store.commit('setTab', {
@@ -1441,8 +1536,38 @@ module.exports = {
       window.AugurAPI.getDownloadedGitRepos().then(function (data) {
         $(_this.$el).find('.spinner').removeClass('loader');
         $(_this.$el).find('.spinner').removeClass('relative');
-        _this.repos = window._.groupBy(data, 'project_name');
+        _this.repos = window._.groupBy(data, 'rg_name');
         _this.projects = Object.keys(_this.repos);
+      });
+    },
+    getRepoGroups: function getRepoGroups() {
+      var _this2 = this;
+
+      console.log("START");
+      window.AugurAPI.getRepos().then(function (data) {
+        _this2.repos = data;
+        console.log("LOADED repos", _this2.repos);
+        window.AugurAPI.getRepoGroups().then(function (data) {
+          $(_this2.$el).find('.spinner').removeClass('loader');
+          $(_this2.$el).find('.spinner').removeClass('relative');
+          _this2.repo_groups = data;
+
+          _this2.repo_groups.forEach(function (group) {
+            _this2.group_id_name_map[group.rg_name] = group.repo_group_id;
+            _this2.repo_relations[group.rg_name] = _this2.repos.filter(function (repo) {
+              return repo.rg_name == group.rg_name;
+            });
+            group.repo_count = _this2.repo_relations[group.rg_name].length;
+          });
+          _this2.repos.forEach(function (repo) {
+            if (repo.commits_all_time == null) repo.commits_all_time = 0;
+            if (repo.issues_all_time == null) repo.issues_all_time = 0;
+            repo.repo_count = _this2.repo_relations[repo.rg_name].length;
+            repo.repo_group_id = _this2.group_id_name_map[repo.rg_name];
+          });
+          console.log("LOADED repo groups", _this2.repo_relations);
+          _this2.loaded = true;
+        });
       });
     },
     btoa: function btoa(s) {
@@ -1450,15 +1575,15 @@ module.exports = {
     }
   },
   mounted: function mounted() {
-    this.getDownloadedRepos();
+    this.getRepoGroups();
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git Repos by Project")]),_vm._v(" "),_c('div',{staticClass:"row section"},[_c('hr'),_vm._v(" "),_c('div',{staticClass:"col col-12 relative spinner loader",staticStyle:{"margin-left":"42.4%"}}),_vm._v(" "),_vm._l((_vm.projects),function(project){return _c('div',{staticClass:"col-6"},[_c('h4',[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"repo-link-holder"},[_c('table',{staticClass:"is-responsive"},[_vm._m(0,true),_vm._v(" "),_c('tbody',{staticClass:"repo-link-table repo-link-table-body"},_vm._l((_vm.repos[project]),function(repo){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.status))])])}),0)])])])})],2)])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticClass:"repo-link-table repo-link-table-body"},[_c('tr',[_c('th',[_vm._v("URL")]),_vm._v(" "),_c('th',[_vm._v("Status")])])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git Repos by Project")]),_vm._v(" "),_c('div',{staticClass:"row section"},[_c('hr'),_vm._v(" "),(!_vm.loaded)?_c('spinner'):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"col-12"},[_c('h4',[_vm._v(_vm._s(_vm.project))]),_vm._v(" "),_c('div',{staticClass:"repo-link-holder"},[_c('table',{staticClass:"is-responsive"},[_c('thead',{staticClass:"repo-link-table repo-link-table-body repo-link-table-header"},[_c('tr',[_c('th',{on:{"click":function($event){return _vm.sortTable('url')}}},[_vm._v("  URL "),('url' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_vm._v("  Repo Group Name "),('rg_name' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('description')}}},[_vm._v("  Repo Description "),('description' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_vm._v("  Repo Count for this Group "),('repo_count' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('commits_all_time')}}},[_vm._v("  Total Commit Count "),('commits_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('issues_all_time')}}},[_vm._v("  Total Issue Count "),('issues_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_status')}}},[_vm._v("  Status "),('repo_status' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])])]),_vm._v(" "),_c('tbody',{staticClass:"repo-link-table repo-link-table-body"},_vm._l((_vm.repos),function(repo){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_count))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.commits_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.issues_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_status))])])}),0)])])]):_vm._e()],1)])}
+__vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -1896,6 +2021,132 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-429b02f1", __vue__options__)
   } else {
     hotAPI.reload("data-v-429b02f1", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/IssuesCard.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+var _Spinner = require('./Spinner');
+
+var _Spinner2 = _interopRequireDefault(_Spinner);
+
+var _AugurHeader = require('./AugurHeader');
+
+var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
+
+var _TickChart = require('./charts/TickChart');
+
+var _TickChart2 = _interopRequireDefault(_TickChart);
+
+var _LinesOfCodeChart = require('./charts/LinesOfCodeChart');
+
+var _LinesOfCodeChart2 = _interopRequireDefault(_LinesOfCodeChart);
+
+var _NormalizedStackedBarChart = require('./charts/NormalizedStackedBarChart');
+
+var _NormalizedStackedBarChart2 = _interopRequireDefault(_NormalizedStackedBarChart);
+
+var _OneDimensionalStackedBarChart = require('./charts/OneDimensionalStackedBarChart');
+
+var _OneDimensionalStackedBarChart2 = _interopRequireDefault(_OneDimensionalStackedBarChart);
+
+var _HorizontalBarChart = require('./charts/HorizontalBarChart');
+
+var _HorizontalBarChart2 = _interopRequireDefault(_HorizontalBarChart);
+
+var _GroupedBarChart = require('./charts/GroupedBarChart');
+
+var _GroupedBarChart2 = _interopRequireDefault(_GroupedBarChart);
+
+var _StackedBarChart = require('./charts/StackedBarChart');
+
+var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
+
+var _DualLineChart = require('./charts/DualLineChart');
+
+var _DualLineChart2 = _interopRequireDefault(_DualLineChart);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  data: function data() {
+    return {
+      colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
+      values: { 'group_issues': [], 'repo_issues': [] },
+      loaded: false,
+      project: null,
+      group: null
+    };
+  },
+
+  components: {
+    AugurHeader: _AugurHeader2.default,
+    Spinner: _Spinner2.default,
+    TickChart: _TickChart2.default,
+    LinesOfCodeChart: _LinesOfCodeChart2.default,
+    NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
+    OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
+    HorizontalBarChart: _HorizontalBarChart2.default,
+    GroupedBarChart: _GroupedBarChart2.default,
+    StackedBarChart: _StackedBarChart2.default,
+    DualLineChart: _DualLineChart2.default
+  },
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
+      return this.$store.state.gitRepo;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    }
+  },
+  mounted: function mounted() {
+    var _this = this;
+
+    var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+    var group = window.AugurAPI.Repo({ repo_group_id: repo.repo_group_id });
+
+    group.openIssuesCount().then(function (data) {
+      _this.group = data[0]['rg_name'];
+      _this.values['group_issues'] = _this.values['group_issues'].concat(data);
+      console.log("group DATA: ", _this.values['group_issues']);
+    });
+    group.closedIssuesCount().then(function (data) {
+      _this.values['group_issues'] = _this.values['group_issues'].concat(data);
+      console.log("group DATA: ", _this.values['group_issues']);
+    });
+
+    repo.openIssuesCount().then(function (data) {
+      _this.values['repo_issues'] = _this.values['repo_issues'].concat(data);
+      console.log("repo DATA: ", _this.values['repo_issues']);
+    });
+    repo.closedIssuesCount().then(function (data) {
+      _this.values['repo_issues'] = _this.values['repo_issues'].concat(data);
+      console.log("repo DATA: ", _this.values['repo_issues']);
+    });
+
+    this.loaded = true;
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Overview of Issue Counts for Repo Group: All repositories")]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('spinner'):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":'Issue Count History for ' + _vm.repo + ' - Grouped by Week',"fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['repo_issues']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":'Issue Count History for this Repo Group:  ' + _vm.group + ' - Grouped by Week',"fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['group_issues']}})],1)]):_vm._e()],1)}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-1e43c417", __vue__options__)
+  } else {
+    hotAPI.rerender("data-v-1e43c417", __vue__options__)
   }
 })()}
 });
@@ -2407,7 +2658,7 @@ module.exports = {
     this.comparedRepos.forEach(function (repo) {
       repos.push(window.AugurRepos[repo]);
     });
-    var endpoints1 = ["cdRgTpRankedCommits", "cdRgTpRankedLoc", "cdRgNewrepRankedCommits", "cdRgNewrepRankedLoc", "facadeProject"];
+    var endpoints1 = ['annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annualCommitCountRankedByRepoInRepoGroup', 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annualCommitCountRankedByNewRepoInRepoGroup', "facadeProject"];
     endpoints1.forEach(function (source) {
       var repo = window.AugurAPI.Repo({ gitURL: _this.gitRepo });
       repo[source]().then(function (data) {
@@ -2424,7 +2675,8 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Project Overview: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedCommits","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgTpRankedLoc","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedCommits","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"cdRgNewrepRankedLoc","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc"}})],1)]):_vm._e()])}
+
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Project Overview: "+_vm._s(_vm.project))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualCommitCountRankedByRepoInRepoGroup","title":"Top Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['annualCommitCountRankedByRepoInRepoGroup']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualLinesOfCodeCountRankedByRepoInRepoGroup","title":"Top Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['annualLinesOfCodeCountRankedByRepoInRepoGroup']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualCommitCountRankedByNewRepoInRepoGroup","title":"Top New Repos in 2018 by Commits with Baseline Averages - Sorted","field":"commit","data":_vm.values['annualCommitCountRankedByNewRepoInRepoGroup']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding-right":"35px"}},[_c('grouped-bar-chart',{attrs:{"source":"annualLinesOfCodeCountRankedByNewRepoInRepoGroup","title":"Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted","field":"loc","data":_vm.values['annualLinesOfCodeCountRankedByNewRepoInRepoGroup']}})],1)]):_vm._e()])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2646,6 +2898,116 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 })()}
 });
 
+;require.register("components/Spinner.vue", function(exports, require, module) {
+var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 96, stdin */\n.sl-spinner {\n  border-style: solid;\n  -webkit-transform: translateZ(0);\n  -ms-transform: translateZ(0);\n  transform: translateZ(0);\n  animation-iteration-count: infinite;\n  animation-timing-function: linear;\n  border-radius: 50%;\n  width: 30px;\n  height: 30px; }\n\n@keyframes forward {\n  0% {\n    -webkit-transform: rotate(0deg);\n    transform: rotate(0deg); }\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg); } }\n\n@keyframes backward {\n  0% {\n    -webkit-transform: rotate(0deg);\n    transform: rotate(0deg); }\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(-360deg); } }")
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  props: {
+    status: {
+      type: Boolean,
+      default: true
+    },
+
+    rotation: {
+      type: Boolean,
+      default: true
+    },
+
+    size: {
+      type: Number,
+      default: 80
+    },
+
+    depth: {
+      type: Number,
+      default: 3
+    },
+
+    speed: {
+      type: Number,
+      default: 1.0
+    },
+
+    color: {
+      type: String,
+      default: '#6589b6'
+    }
+  },
+
+  data: function data() {
+    return {
+      rotationAnimations: ['forward', 'backward'],
+      sizeUnits: 'px',
+      timeUnits: 's'
+    };
+  },
+
+
+  computed: {
+    rotationDirection: function rotationDirection() {
+      return this.rotation ? this.rotationAnimations[0] : this.rotationAnimations[1];
+    },
+    spinnerSize: function spinnerSize() {
+      return this.size + this.sizeUnits;
+    },
+    spinnerDepth: function spinnerDepth() {
+      return this.depth + this.sizeUnits;
+    },
+    spinnerSpeed: function spinnerSpeed() {
+      return this.speed + this.timeUnits;
+    },
+    spinnerStyle: function spinnerStyle() {
+      return {
+        borderTopColor: this.hexToRGB(this.color, 0.15),
+        borderRightColor: this.hexToRGB(this.color, 0.15),
+        borderBottomColor: this.hexToRGB(this.color, 0.15),
+        borderLeftColor: this.color,
+        width: this.spinnerSize,
+        height: this.spinnerSize,
+        borderWidth: this.spinnerDepth,
+        animationName: this.rotationDirection,
+        animationDuration: this.spinnerSpeed
+      };
+    }
+  },
+  methods: {
+    hexToRGB: function hexToRGB(hex, alpha) {
+      var r = parseInt(hex.slice(1, 3), 16),
+          g = parseInt(hex.slice(3, 5), 16),
+          b = parseInt(hex.slice(5, 7), 16);
+
+      if (alpha) {
+        return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+      } else {
+        return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+      }
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.status),expression:"status"}],staticClass:"sl-spinner",staticStyle:{"margin":"0 auto"},style:(_vm.spinnerStyle)})}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  module.hot.dispose(__vueify_style_dispose__)
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-48a20288", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-48a20288", __vue__options__)
+  }
+})()}
+});
+
 ;require.register("components/TableView.vue", function(exports, require, module) {
 ;(function(){
 'use strict';
@@ -2856,7 +3218,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Overview")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Evolution")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('nav',{staticClass:"tabs"},[_c('ul',[_c('li',{class:{ active: (_vm.currentTab == 'git'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"git"},on:{"click":_vm.changeTab}},[_vm._v("Git")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'overview'), hidden: !_vm.gitRepo }},[_c('a',{attrs:{"href":"#","data-value":"overview"},on:{"click":_vm.changeTab}},[_vm._v("Overview")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'gmd') }},[_c('a',{attrs:{"href":"#","data-value":"gmd"},on:{"click":_vm.changeTab}},[_vm._v("Evolution")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'activity') }},[_c('a',{attrs:{"href":"#","data-value":"activity"},on:{"click":_vm.changeTab}},[_vm._v("Activity")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'experimental') }},[_c('a',{attrs:{"href":"#","data-value":"experimental"},on:{"click":_vm.changeTab}},[_vm._v("Experimental")])]),_vm._v(" "),_c('li',{class:{ active: (_vm.currentTab == 'issues') }},[_c('a',{attrs:{"href":"#","data-value":"issues"},on:{"click":_vm.changeTab}},[_vm._v("Issues")])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4292,6 +4654,225 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-2da7ab99", __vue__options__)
   } else {
     hotAPI.reload("data-v-2da7ab99", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/charts/DualLineChart.vue", function(exports, require, module) {
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vuex = require('vuex');
+
+var _AugurStats = require('AugurStats');
+
+var _AugurStats2 = _interopRequireDefault(_AugurStats);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'fieldone', 'fieldtwo'],
+  data: function data() {
+    return {
+      values: [],
+      colors: ['red', 'green']
+    };
+  },
+
+  computed: {
+    repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
+      return this.$store.state.gitRepo;
+    },
+    period: function period() {
+      return this.$store.state.trailingAverage;
+    },
+    earliest: function earliest() {
+      return this.$store.state.startDate;
+    },
+    latest: function latest() {
+      return this.$store.state.endDate;
+    },
+    compare: function compare() {
+      return this.$store.state.compare;
+    },
+    comparedRepos: function comparedRepos() {
+      return this.$store.state.comparedRepos;
+    },
+    rawWeekly: function rawWeekly() {
+      return this.$store.state.rawWeekly;
+    },
+    showArea: function showArea() {
+      return this.$store.state.showArea;
+    },
+    showTooltip: function showTooltip() {
+      return this.$store.state.showTooltip;
+    },
+    showDetail: function showDetail() {
+      return this.$store.state.showDetail;
+    },
+    spec: function spec() {
+      var _this = this;
+
+      var config = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+        "padding": { 'left': 25, 'top': 15, 'right': 80, 'bottom': 50 },
+        "config": {
+          "axis": {
+            "tickRound": false
+          },
+          "title": {
+            "fontSize": 1
+          }
+
+        },
+        "title": {
+          "text": this.title,
+
+          "offset": 10
+
+        },
+        "width": 1000,
+        "height": 360,
+        "layer": [{
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": {
+                "format": "%b %Y", "title": " "
+              }
+            },
+            "y": {
+              "field": this.fieldone,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "field": "type",
+              "type": "nominal",
+              "scale": { "range": this.colors },
+              "sort": false
+            }
+          },
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          }
+        }, {
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "axis": {
+                "format": "%b %Y", "title": " "
+              }
+            },
+            "y": {
+              "field": this.fieldtwo,
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "color": {
+              "field": "type",
+              "type": "nominal",
+              "scale": { "range": this.colors },
+              "sort": false
+            }
+          },
+          "mark": {
+            "type": "line",
+            "interpolate": "basis",
+            "clip": true
+          }
+        }]
+      };
+
+      var repos = [];
+      if (this.gitRepo) {
+        repos.push(window.AugurAPI.Repo({ gitURL: this.gitRepo }));
+      }
+      var endpoints = [];
+      var fields = {};
+      this.source.split(',').forEach(function (endpointAndFields) {
+        var split = endpointAndFields.split(':');
+        endpoints.push(split[0]);
+        if (split[1]) {
+          fields[split[0]] = split[1].split('+');
+        }
+      });
+      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
+      $(this.$el).find('.stackedbarchart').removeClass('loader');
+      var processGitData = function processGitData(data) {
+        var repo = window.AugurAPI.Repo({ gitURL: _this.repo });
+        var dat = [];
+        repo.changesByAuthor().then(function (changes) {
+          dat.push(changes);
+        });
+      };
+      var defaultProcess = function defaultProcess(obj, key) {
+        var d = null;
+        if (typeof field == "string") field = [field];
+        d = _AugurStats2.default.convertKey(obj[key], key);
+        return d;
+      };
+      var processData = function processData(data) {
+        console.log(repos, data, "CHECK");
+
+
+        data.forEach(function (el) {
+          if ('closed_count' in el) {
+            el.type = 'closed';
+            _this.total_closed += el.closed_count;
+          }
+          if ('open_count' in el) {
+            el.type = 'open';
+            _this.total_open += el.open_count;
+          }
+        });
+
+        repos.forEach(function (repo) {
+          _this.values = data;
+        });
+      };
+      if (this.data) {
+        processData(this.data);
+      } else {
+        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        repo[this.source]().then(function (data) {
+          console.log("batch data", data);
+          processData(data);
+        }, function () {});
+      }
+      return config;
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"tickchart"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_vm._m(0)],1)])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"padding":"0 50px 0 50px","font-size":"12px"}},[_c('p')])}]
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-004452a1", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-004452a1", __vue__options__)
   }
 })()}
 });
@@ -9975,7 +10556,8 @@ if (typeof jQuery === 'undefined') {
 			this.callback('close');
 			this.disableEvents();
 
-			this.$modal.animation(this.opts.animationClose, $.proxy(this.onClosed, this));
+
+var _MetricsStatusCard = require('../components/MetricsStatusCard');
 
 			if (this.opts.overlay) this.$overlay.animation(this.opts.animationClose);
 		},
@@ -9983,10 +10565,8 @@ if (typeof jQuery === 'undefined') {
 			this.$modal.addClass('open');
 			this.callback('opened');
 
-			$.modalcurrent = this;
-		},
-		onClosed: function onClosed() {
-			this.callback('closed');
+
+var _BaseRepoActivityCard = require('../components/BaseRepoActivityCard');
 
 			this.$target.addClass('hide');
 			this.$modal.removeClass('open');
@@ -10125,11 +10705,12 @@ if (typeof jQuery === 'undefined') {
 	// Inheritance
 	Kube.Modal.inherits(Kube);
 
-	// Plugin
-	Kube.Plugin.create('Modal');
-	Kube.Plugin.autoload('Modal');
-})(Kube);
-});
+
+var _IssuesCard = require('../components/IssuesCard');
+
+var _IssuesCard2 = _interopRequireDefault(_IssuesCard);
+
+var _ExperimentalCard = require('../components/ExperimentalCard');
 
 require.register("include/svgsaver.js", function(exports, require, module) {
 'use strict';
@@ -10475,23 +11056,116 @@ var SvgSaver = function () {
     * @api public
     */
   }, {
-    key: 'getHTML',
-    value: function getHTML(el) {
-      var svg = this.cloneSVG(el);
 
-      var html = svg.outerHTML;
-      if (html) {
-        return html;
-      }
-
-      // see http://stackoverflow.com/questions/19610089/unwanted-namespaces-on-svg-markup-when-using-xmlserializer-in-javascript-with-ie
-      svg.removeAttribute('xmlns');
-      svg.removeAttribute('xmlns:xlink');
-
-      svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns', 'http://www.w3.org/2000/svg');
-      svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
-
-      return new window.XMLSerializer().serializeToString(svg);
+    path: "overview",
+    name: "overview",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _OverviewCard2.default
+    }
+  }, {
+    path: "issues",
+    name: "issues",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _IssuesCard2.default
+    }
+  }]
+},
+// {path: '/:tab/:domain/:owner/:repo/comparedto/:comparedowner/:comparedrepo', component: AugurCards, name: 'gitsinglecompare'},
+{ path: '/compare/:owner?/:repo/comparedto/:comparedowner/:comparedrepo', component: _AugurCards2.default, name: 'singlecompare', props: true, canReuse: false,
+  children: [{
+    path: "gmd",
+    name: "gmdcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusioncompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "riskcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
+    }
+  }, {
+    path: "value",
+    name: "valuecompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ValueCard2.default
+    }
+  }, {
+    path: "activity",
+    name: "activitycompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _BaseRepoActivityCard2.default
+    }
+  }, {
+    path: "experimental",
+    name: "experimentalcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _ExperimentalCard2.default
+    }
+  }, {
+    path: "git",
+    name: "gitcompare",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      content: _GitCard2.default
+    }
+  }]
+}, { path: '/groupcompare/:groupid', component: _AugurCards2.default, name: 'group', props: true, canReuse: false,
+  children: [{
+    path: "gmd",
+    name: "gmdgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _GrowthMaturityDeclineCard2.default
+    }
+  }, {
+    path: "diversityinclusion",
+    name: "diversityinclusiongroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _DiversityInclusionCard2.default
+    }
+  }, {
+    path: "risk",
+    name: "riskgroup",
+    components: {
+      header: _AugurHeader2.default,
+      tabs: _Tabs2.default,
+      controls: _MainControls2.default,
+      content: _RiskCard2.default
     }
 
     /**

@@ -38,21 +38,24 @@
 <h1>4. Frontend<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="structure">
 <h2>4.1. Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>Augur uses Vue.js, MetricsGraphics, and Kube for its frontend. The
-frontend is stored in the <code class="docutils literal notranslate"><span class="pre">frontend</span></code> directory, but the parts that are
-relevant to adding new metrics are in the <code class="docutils literal notranslate"><span class="pre">frontend/app/</span></code> directory,
-which contains the following parts: * <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurAPI.js</span></code>
-which interfaces with the backend * <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurStats.js</span></code>
-which performs statistical operations on the data *
-<code class="docutils literal notranslate"><span class="pre">frontend/app/Augur.js</span></code> which renders the page *
-<code class="docutils literal notranslate"><span class="pre">frontend/app/assets/</span></code> which contains the assets, such as images, for
-the frontend * <code class="docutils literal notranslate"><span class="pre">frontend/app/include/</span></code> which contains the Kube and
-MetricsGraphics resources * <code class="docutils literal notranslate"><span class="pre">frontend/styles/</span></code> which contains the
-stylesheet for Augur * <code class="docutils literal notranslate"><span class="pre">frontend/components/</span></code> which contains the
-Vue.js components (referred to a ‘Cards’*) *
-<code class="docutils literal notranslate"><span class="pre">frontend/components/charts/</span></code> contains the different chart templetes
-* <code class="docutils literal notranslate"><span class="pre">frontend/components/BaseRepoActivityCard.vue</span></code> contains the repo
-activity time series charts</p>
+<p>Augur uses Vue.js, MetricsGraphics, and Kube for its frontend.
+1. The frontend is stored in the <code class="docutils literal notranslate"><span class="pre">frontend</span></code> directory.
+2. The files needed to add new metrics are in the <code class="docutils literal notranslate"><span class="pre">frontend/app/</span></code> directory. This directory contains the following parts:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li>* <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurAPI.js</span></code></li>
+<li>which interfaces with the backend:  * <code class="docutils literal notranslate"><span class="pre">frontend/app/AugurStats.js</span></code></li>
+<li>which performs statistical operations on the data *</li>
+<li><code class="docutils literal notranslate"><span class="pre">frontend/app/Augur.js</span></code> which renders the page *</li>
+<li><code class="docutils literal notranslate"><span class="pre">frontend/app/assets/</span></code> which contains the assets, such as images, for the frontend</li>
+<li>* <code class="docutils literal notranslate"><span class="pre">frontend/app/include/</span></code> which contains the Kube and MetricsGraphics resources</li>
+<li>* <code class="docutils literal notranslate"><span class="pre">frontend/styles/</span></code> which contains the stylesheet for Augur</li>
+<li>* <code class="docutils literal notranslate"><span class="pre">frontend/components/</span></code> which contains the</li>
+<li>Vue.js components (referred to a ‘Cards’*)</li>
+<li>* <code class="docutils literal notranslate"><span class="pre">frontend/components/charts/</span></code> contains the different chart templates</li>
+<li>* <code class="docutils literal notranslate"><span class="pre">frontend/components/BaseRepoActivityCard.vue</span></code> contains the repo activity time series charts</li>
+</ol>
+</div></blockquote>
 <p>* The Cards that have the name of a metric grouping are each their own
 separate tab; pay attention to which card you are adding your graph to!</p>
 </div>
@@ -201,14 +204,14 @@ wanted to add the <code class="docutils literal notranslate"><span class="pre">f
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
 </ul>

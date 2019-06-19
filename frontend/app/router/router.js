@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import MetricsStatusCard from '../components/MetricsStatusCard.vue'
-import BaseRepoActivityCard from '../components/BaseRepoActivityCard.vue'
+import MetricsStatusCard from '../components/MetricsStatusCard'
+import BaseRepoActivityCard from '../components/BaseRepoActivityCard'
 import BaseRepoEcosystemCard from '../components/BaseRepoEcosystemCard.vue'
 import GrowthMaturityDeclineCard from '../components/GrowthMaturityDeclineCard'
 import RiskCard from '../components/RiskCard'
@@ -9,6 +9,7 @@ import ValueCard from '../components/ValueCard'
 import DiversityInclusionCard from '../components/DiversityInclusionCard'
 import GitCard from '../components/GitCard'
 import OverviewCard from '../components/OverviewCard.vue'
+import IssuesCard from '../components/IssuesCard'
 import ExperimentalCard from '../components/ExperimentalCard'
 import DownloadedReposCard from '../components/DownloadedReposCard.vue'
 import LoginForm from '../components/LoginForm'
@@ -116,6 +117,15 @@ let routes = [
               header: AugurHeader,
               tabs: Tabs,
               content: OverviewCard
+            }
+          },
+          {
+            path: "issues",
+            name: "issues",
+            components: {
+              header: AugurHeader,
+              tabs: Tabs,
+              content: IssuesCard
             }
           },
         ]

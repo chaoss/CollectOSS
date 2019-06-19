@@ -16,7 +16,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="What is Augur?" href="whatisaugur.html" />
+    <link rel="next" title="Installation" href="installation.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,17 +35,41 @@
             
   <div class="section" id="augur">
 <h1>Augur<a class="headerlink" href="#augur" title="Permalink to this headline">¶</a></h1>
-<p>Augur is a software suite that provides open source health and sustainability metrics through a web app, REST API, and Python library. See <a class="reference internal" href="whatisaugur.html"><span class="doc">What is Augur?</span></a> for more information about our philosophy and <a class="reference internal" href="architecture.html"><span class="doc">Architecture</span></a> for more information about our architecture.</p>
+<p>Augur is a software suite that provides open source health and sustainability metrics through a web app, REST API, and Python library. See <a class="reference internal" href="architecture.html"><span class="doc">Architecture</span></a> for more information about our architecture.</p>
+<p>The latest version of Augur includes an <a class="reference internal" href="images/Augur-Unified-Data-Model.html"><span class="doc">Augur Unified Data Model</span></a> that brings together data from :</p>
+<ol class="arabic simple">
+<li>git repositories, including GitHub</li>
+<li>issue trackers</li>
+<li>mailing lists</li>
+<li>library dependency trees</li>
+<li>the Linux Foundation’s badging program</li>
+<li>code complexity and contribution counting … and MUCH MUCH MORE.</li>
+</ol>
+</div>
+<div class="section" id="what-is-augur">
+<h1>What is Augur?<a class="headerlink" href="#what-is-augur" title="Permalink to this headline">¶</a></h1>
+<p>Our project is focused on building <strong>human centered open source software
+health metrics</strong> defined by collaborations with the Linux Foundation’s
+<a class="reference external" href="http://chaoss.community">CHAOSS Project</a> and other open source
+stakeholders. augur is software focused on making sense of data using
+Four key <strong>human centered data science</strong> strategies:</p>
+<ol class="arabic simple">
+<li><strong>Enable comparisons</strong>. People navigate complex unknowns analogically. Let folks see how their project compares with others they are familiar with. - This is not ranking - If you start thinking about “metrics” like “rankings”, you are probably going to create suboptimal metrics.</li>
+<li>Make <strong>time a fundamental dimension in all metrics</strong> from the start. “Point in time scores” are useful. They are more useful if we can see how they compare historically and can be used to anticipate a trajectory.</li>
+<li>All <strong>data</strong> driving visualizations <strong>should be down-loadable</strong> as a .csv or other data exchange format. This is because - People trust metrics when they can see the underlying data - Proving traceability back to the CHAOSS Project’s metrics standards requires easy transparency.</li>
+<li>Make <strong>all the visualizations downloadable as .svg’s</strong>. People want to put your visualizations in reports to explain things they care about. And ask for money. Give them the tools. That’s what makes folks care about metrics.</li>
+</ol>
+<p>Our core team has a long standing interest in social computing, software engineering measurement and the ethical instrumentation of online human behavior.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python.html">Augur Python Library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="use-cases-toc.html">Use Cases</a></li>
 </ul>
@@ -61,14 +85,14 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="#">Table of Contents</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python.html">Augur Python Library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="use-cases-toc.html">Use Cases</a></li>
 </ul>
@@ -76,7 +100,7 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="whatisaugur.html" title="next chapter">What is Augur?</a></li>
+      <li>Next: <a href="installation.html" title="next chapter">Installation</a></li>
   </ul></li>
 </ul>
 </div>

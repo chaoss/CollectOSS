@@ -16,7 +16,7 @@
     <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Docker Installation" href="../docker-install.html" />
+    <link rel="next" title="Deployment Guide" href="../deployment.html" />
     <link rel="prev" title="4. Frontend" href="4-frontend.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -41,14 +41,47 @@
 </pre></div>
 </div>
 <p>After that, run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code> to run the plugin/data source unit tests.</p>
-<p>To test the Augur API, run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test-api</span></code>. - You will need to add a Postman API key to your <code class="docutils literal notranslate"><span class="pre">augur.config.json</span></code>.
-It’ll look like this:</p>
-<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
-<span class="s2">&quot;Postman&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;apikey&quot;</span><span class="p">:</span> <span class="s2">&quot;your apikey goes here&quot;</span>
-<span class="p">},</span>
-<span class="o">...</span>
+<p>To test the API, run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test-routes</span></code>.</p>
+<div class="section" id="writing-tests">
+<h2>5.1. Writing tests<a class="headerlink" href="#writing-tests" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="endpoints">
+<h3>5.1.1. Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">¶</a></h3>
+<p>As with our unit tests, we write our API tests in Python using the <code class="docutils literal notranslate"><span class="pre">pytest</span></code> framework.</p>
+<p>API tests for a plugin live in the <code class="docutils literal notranslate"><span class="pre">test_&lt;plugin_name&gt;_routes.py</span></code> folder in the <code class="docutils literal notranslate"><span class="pre">&lt;plugin_name&gt;/</span></code> directory.
+In this file, you’ll need the following boilerplate:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span>import os
+import subprocess
+import time
+from subprocess import Popen
+import pytest
+import requests
+
+@pytest.fixture(scope=&quot;session&quot;)
+def &lt;plugin_name&gt;_routes():
+    process = subprocess.Popen([&#39;make&#39;, &#39;backend-restart&#39;])
+    time.sleep(5) #allow some time for the server to start
+    return process
 </pre></div>
+</div>
+<p>This will automatically spin up the web server when running your tests so that you don’t have to do it yourself!</p>
+<p>For the actual tests, for the most part not much logic is needed. Each endpoint should already have a unit test asserting that the
+metric is being calculate correctly: in most cases the endpoint tests exist primarily to make sure they’re reachable and that the routes
+we’ve documented are correct. These unit tests should not be strictly re-implemented, but each test needs to make sure that the output of the
+corresponding metric is correct: since most endpoints are nothing more than a wrapper this usually means the test will just mirror the test cases of the corresponding unit test.</p>
+<p>In some cases, endpoints will provide additional functionality beyond just the metric they’re mapped to
+(e.g. aggregation and filtering), and in these scenarios test cases are needed to cover these capabilities.</p>
+<p>Let’s look at a sample test:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_api_status</span><span class="p">(</span><span class="n">metrics_status</span><span class="p">):</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:5000/api/unstable&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span>
+    <span class="k">assert</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+</pre></div>
+</div>
+<p>This is just making sure that the API is up and running by parsing the response from the <code class="docutils literal notranslate"><span class="pre">/api/unstable</span></code>
+health check endpoint. In this case simply checking the status code and that the response is not empty/has some data in it
+is all that’s really needed. If this were a metric endpoint, an appropriate assertion might be something like
+<code class="docutils literal notranslate"><span class="pre">assert</span> <span class="pre">response[0]['commits']</span> <span class="pre">=</span> <span class="pre">20</span></code>.</p>
+</div>
 </div>
 </div>
 
@@ -61,14 +94,14 @@ It’ll look like this:</p>
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../whatisaugur.html">What is Augur?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../augurcontext.html">Augur Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
 </ul>
@@ -78,7 +111,7 @@ It’ll look like this:</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../dev-guide-toc.html">Development Guide</a><ul>
       <li>Previous: <a href="4-frontend.html" title="previous chapter">4. Frontend</a></li>
-      <li>Next: <a href="../docker-install.html" title="next chapter">Docker Installation</a></li>
+      <li>Next: <a href="../deployment.html" title="next chapter">Deployment Guide</a></li>
   </ul></li>
   </ul></li>
 </ul>

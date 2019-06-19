@@ -9,8 +9,8 @@ directories: ``plugins/`` and ``datasources/``. ``plugins/`` is for
 generic plugins, while ``datasources/`` is specifically for plugins that
 provide a new data source, like ``ghtorrent`` or ``facade``.
 
-Inside each plugin directory are 4 required files: ``__init__.py``,
-``plugin_name.py``, ``routes.py``, and ``test_plugin_name.py``.
+Inside each plugin directory are 5 required files: ``__init__.py``,
+``plugin_name.py``, ``routes.py``, ``test_plugin_name.py``, and ``test_plugin_name_routes.py``.
 
 We will go over these more in-depth in the following sections.
 
@@ -234,7 +234,9 @@ So for our sample plugin:
 Writing tests
 ~~~~~~~~~~~~~
 
-Augur uses ``pytest`` for tests. The tests for our sample ``Chaoss``
+Metrics
+*******
+Augur uses ``pytest`` for its data source unit tests. The tests for our sample ``Chaoss``
 class are contained in the ``test_chaoss.py`` file inside the plugin's
 directory. You can use pytest fixtures and environment variables to pass
 data to tests.
@@ -257,6 +259,47 @@ access an instance of the class.
         assert chaoss.data_source('argument').isin(['expected_value']).any
 
 Make sure every function you write has a test.
+
+Endpoints
+*********
+As with our unit tests, we write our API tests in Python using the ``pytest`` framework.
+
+API tests for a plugin live in the ``test_<plugin_name>_routes.py`` folder in the ``<plugin_name>/`` directory.
+In this file, you'll need the following boilerplate:
+
+.. code:: python
+
+    import pytest
+    import requests
+
+    @pytest.fixture(scope="module")
+    def <plugin_name>_routes():
+        pass
+
+The web server will be automatically spun up and down when running your tests.
+
+For the actual tests, for the most part not much logic is needed. Each endpoint should already have a unit test asserting that the 
+metric is being calculate correctly: in most cases the endpoint tests exist primarily to make sure they're reachable and that the routes
+we've documented are correct. These unit tests should not be strictly re-implemented, but each test needs to make sure that the output of the
+corresponding metric is correct: since most endpoints are nothing more than a wrapper this usually means the test will just mirror the test cases of the corresponding unit test.
+
+In some cases, endpoints will provide additional functionality beyond just the metric they're mapped to
+(e.g.) aggregation and filtering), and in these scenarios test cases are needed to cover these capabilities.
+
+Let's look at a sample test:
+
+.. code:: python
+
+    def test_api_status(metrics_status):
+        response = requests.get('http://localhost:5000/api/unstable').json()
+        assert response['status'] == 'OK'
+        assert response.status_code == 200
+
+
+This is just making sure that the API is up and running by parsing the response from the ``/api/unstable``
+health check endpoint. In this case simply checking the status code and that the response is not empty/has some data in it
+is all that's really needed. If this were a metric endpoint, an appropriate assertion might be something like
+``assert response[0]['commits'] = 20``.
 
 --------------
 
