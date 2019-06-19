@@ -220,6 +220,55 @@ def create_routes(server):
     server.addRepoMetric(augur_db.issues_new, 'issues-new')
 
     """
+    @api {get} /repo-groups/:repo_group_id/issues-active Issues Active
+    @apiName issues-active
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Active.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
+    @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-05-01T00:00:00.000Z",
+                            "repo_id": 21326,
+                            "issues": 27
+                        },
+                        {
+                            "date": "2019-05-01T00:00:00.000Z",
+                            "repo_id": 21327,
+                            "issues": 54
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issues_active, 'issues-active')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-active Issues Active
+    @apiName issues-active
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Active.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
+    @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-07-01T00:00:00.000Z",
+                            "issues": 32
+                        },
+                        {
+                            "date": "2015-08-01T00:00:00.000Z",
+                            "issues": 62
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issues_active, 'issues-active')
+
+    """
     @api {get} /repo-groups/:repo_group_id/issues-closed Issues Closed
     @apiName issues-closed
     @apiGroup Evolution
