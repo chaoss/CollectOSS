@@ -41,8 +41,6 @@ export default function Augur () {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
-      repoID: null,
-      repoGroupID: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 February 2011'),
@@ -87,10 +85,6 @@ export default function Augur () {
           // state.tab = 'git'
           state.gitRepo = repo.gitURL
           state.tab = state.tab ? state.tab : 'git'
-        }
-        if (repo.repoID && repo.repoGroupID) {
-          state.repoID = repo.repoID,
-          state.repoGroupID = repo.repoGroupID
         }
       },
       // removeComparedRepo (state, payload) {

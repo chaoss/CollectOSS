@@ -127,6 +127,7 @@ export default class AugurAPI {
     })
   }
 
+
   Repo (repo) {
     if (repo.githubURL) {
       let splitURL = repo.githubURL.split('/')
@@ -149,6 +150,21 @@ export default class AugurAPI {
         repo.owner = splitURL[0]
         repo.name = splitURL[1]
       }
+    }
+
+    if (repo.repo_id == null || repo.repo_group_id == null){
+      let res = []
+      $.ajax({
+        type:"GET",
+        url:this._version+ '/repos/'+repo.owner+'/'+repo.name,
+        async:false,
+        success:function (data)
+        {
+          res = data;
+        }
+      })
+      repo.repo_id = res[0].repo_id
+      repo.repo_group_id = res[0].repo_group_id
     }
 
     repo.toString = () => {
@@ -206,12 +222,12 @@ export default class AugurAPI {
     }
 
     var addRepoMetric = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('repo-groups/'+ repo.repoGroupID + '/repos'+ repo.repoID + '/' + endpoint)
+      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/repos'+ repo.repo_id + '/' + endpoint)
       return __Endpoint(r, jsName, url)
     }
 
     var addRepoGroupMetric = (r, jsName, endpoint) => {
-      var url = this.__endpointURL('repo-groups/'+ repo.repoGroupID + '/' + endpoint)
+      var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/' + endpoint)
       return __Endpoint(r, jsName, url)
     }
 
@@ -312,7 +328,7 @@ export default class AugurAPI {
       GitEndpoint(repo, 'facadeProject', 'facade_project')
     }
 
-    if (repo.repoGroupID && repo.repoID) {
+    if (repo.repo_group_id && repo.repo_id) {
       addRepoMetric(repo, 'codeChanges', 'code-changes')
       addRepoMetric(repo, 'codeChangesLines', 'code-changes-lines')
       addRepoMetric(repo, 'issueNew', 'issues-new')
@@ -326,7 +342,7 @@ export default class AugurAPI {
       addRepoMetric(repo, 'contributorsNew', 'contributors-new')
     }
 
-    if (repo.repoGroupID && repo.repoID == null) {
+    if (repo.repo_group_id && repo.repo_id == null) {
       addRepoGroupMetric(repo, 'codeChanges', 'code-changes')
       addRepoGroupMetric(repo, 'codeChangesLines', 'code-changes-lines')
       addRepoGroupMetric(repo, 'issueNew', 'issues-new')

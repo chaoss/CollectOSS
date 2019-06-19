@@ -826,3 +826,21 @@ class Augur(object):
         """)
         results = pd.read_sql(closedIssueCountSQL, self.db)#, params={"rg_id": '{}'.format(rg_id)})
         return results
+
+    @annotate(tag='get-repo')
+    def get_repo(self, owner, repo):
+        """
+        Returns repo id and repo group id by owner and repo
+
+        :param owner: the owner of the repo
+        :param repo: the name of the repo
+        """
+        getRepoSQL = s.sql.text("""
+            SELECT repo_id, repo_group_id
+            FROM repo
+            WHERE repo_name = :repo AND repo_path LIKE :owner
+        """)
+
+        results = pd.read_sql(getRepoSQL, self.db, params={'owner': '%{}_'.format(owner), 'repo': repo,})
+
+        return results

@@ -55,6 +55,7 @@ module.exports = {
     loaded: false,
     ascending: false,
     sortColumn: '',
+    group_id_name_map: {},
   }},
   methods: {
     sortTable(col) {
@@ -105,8 +106,8 @@ module.exports = {
       }
       this.$store.commit('setRepo', {
         gitURL: e.url,
-        repoID: e.repo_id,
-        repoGroupID: e.repo_group_id
+        repo_id: e.repo_id,
+        repo_group_id: e.repo_group_id
       })
 
       this.$store.commit('setTab', {
@@ -115,7 +116,7 @@ module.exports = {
 
       this.$router.push({
         name: 'git',
-        params: {repo: e.url, repoID: e.repo_id, repoGroupID: e.repo_group_id}
+        params: {repo: e.url}
       })
     },
     getDownloadedRepos() {
@@ -138,6 +139,7 @@ module.exports = {
           this.repo_groups = data
           //move down between future relation endpoint
           this.repo_groups.forEach((group) => {
+            this.group_id_name_map[group.rg_name] = group.repo_group_id  
             this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
               return repo.rg_name == group.rg_name
             })
@@ -149,6 +151,7 @@ module.exports = {
             if (repo.issues_all_time == null) 
               repo.issues_all_time = 0
             repo.repo_count = this.repo_relations[repo.rg_name].length
+            repo.repo_group_id = this.group_id_name_map[repo.rg_name]
           })
           console.log("LOADED repo groups", this.repo_relations)
           this.loaded = true
