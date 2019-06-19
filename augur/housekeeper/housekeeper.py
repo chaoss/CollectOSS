@@ -142,6 +142,24 @@ class Housekeeper:
             process.terminate()
 
     def sort_issue_repos(self):
+        # Query all repos and last repo id
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+            """)
+
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+
+        repoIdSQL = s.sql.text("""
+            SELECT since_id_str FROM gh_worker_job
+            """)
+
+        df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+        last_id = int(df.iloc[0]['since_id_str'])
+        before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
+        after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
+
+        reorganized_repos = after_repos.append(before_repos)
+        return reorganized_repos
         
     # def run(self):
 

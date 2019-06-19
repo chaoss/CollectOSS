@@ -117,7 +117,7 @@ class Broker(object):
         if job['action'] == "UPDATE":
             completed_job = self.connected_workers[job['worker_id']].queue.get()
         elif job['action'] == "MAINTAIN":
-        logging.info("Job completed: ", job)
+            logging.info("Job completed: ", job)
 
     def main(self):
         """Load balancer main loop."""

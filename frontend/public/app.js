@@ -198,6 +198,8 @@ function Augur() {
       tab: 'gmd',
       baseRepo: null,
       gitRepo: null,
+      repoID: null,
+      repoGroupID: null,
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 February 2011'),
@@ -242,6 +244,9 @@ function Augur() {
           // state.tab = 'git'
           state.gitRepo = repo.gitURL;
           state.tab = state.tab ? state.tab : 'git';
+        }
+        if (repo.repoID && repo.repoGroupID) {
+          state.repoID = repo.repoID, state.repoGroupID = repo.repoGroupID;
         }
       },
 
@@ -486,6 +491,7 @@ var AugurAPI = function () {
     this.getRepoGroups = this.__EndpointFactory('repo-groups');
     this.getOpenIssues = this.__EndpointFactory('repo-groups/25153/rg-open-issues-count');
     this.getClosedIssues = this.__EndpointFactory('repo-groups/25153/rg-closed-issues-count');
+
     this.openRequests = 0;
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter');
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata');
@@ -688,12 +694,12 @@ var AugurAPI = function () {
       };
 
       var addRepoMetric = function addRepoMetric(r, jsName, endpoint) {
-        var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/repos' + repo.repo_id + '/' + endpoint);
+        var url = _this3.__endpointURL('repo-groups/' + repo.repoGroupID + '/repos' + repo.repoID + '/' + endpoint);
         return __Endpoint(r, jsName, url);
       };
 
       var addRepoGroupMetric = function addRepoGroupMetric(r, jsName, endpoint) {
-        var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/' + endpoint);
+        var url = _this3.__endpointURL('repo-groups/' + repo.repoGroupID + '/' + endpoint);
         return __Endpoint(r, jsName, url);
       };
 
@@ -796,7 +802,7 @@ var AugurAPI = function () {
         GitEndpoint(repo, 'facadeProject', 'facade_project');
       }
 
-      if (repo.repo_group_id && repo.repo_id) {
+      if (repo.repoGroupID && repo.repoID) {
         addRepoMetric(repo, 'codeChanges', 'code-changes');
         addRepoMetric(repo, 'codeChangesLines', 'code-changes-lines');
         addRepoMetric(repo, 'issueNew', 'issues-new');
@@ -810,7 +816,7 @@ var AugurAPI = function () {
         addRepoMetric(repo, 'contributorsNew', 'contributors-new');
       }
 
-      if (repo.repo_group_id && repo.repo_id == null) {
+      if (repo.repoGroupID && repo.repoID == null) {
         addRepoGroupMetric(repo, 'codeChanges', 'code-changes');
         addRepoGroupMetric(repo, 'codeChangesLines', 'code-changes-lines');
         addRepoGroupMetric(repo, 'issueNew', 'issues-new');
@@ -1237,7 +1243,7 @@ module.exports = {
         });
         this.$router.push({
           name: 'gmd',
-          params: { owner: repo.owner, repo: repo.name }
+          params: { owner: repo.owner, repo: repo.name, repoID: repo.repoID, repoGroupID: repo.repoGroupID }
         });
         window.location.reload();
       }

@@ -306,6 +306,7 @@ class GitHubWorker:
                 logging.info("setting j to an empty string " + str(j) + "...\n ")
             else:
                 logging.info("JSON seems ill-formed " + str(r) + "....\n")
+                logging.info("Keys of r: " + str(r.__dict__.keys()))
                 logging.info("setting value of j as " + str(j) + "....\n")
 
             if r.status_code != 204:
@@ -439,7 +440,6 @@ class GitHubWorker:
             r = requests.get(url=url.format(i), headers=self.headers)
             self.update_rate_limit(r)
             j = r.json()
-            logging.info(str(j))
             if len(j) == 0:
                 break
             issues += j
