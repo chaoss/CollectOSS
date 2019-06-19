@@ -752,3 +752,39 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/languages Languages
+    @apiName languages
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21277,
+                            "primary_language": "Go"
+                        },
+                        {
+                            "repo_id": 21252,
+                            "primary_language": "PHP"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.languages, 'languages')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/languages Languages
+    @apiName languages
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "primary_language":"PHP"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.languages, 'languages')
