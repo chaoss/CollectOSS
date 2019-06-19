@@ -23,7 +23,7 @@ def create_routes(server):
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
-        
+
     server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
 
 
@@ -249,6 +249,51 @@ def create_routes(server):
     server.addRepoMetric(augur_db.issues_closed, 'issues-closed')
 
     """
+    @api {get} /repo-groups/:repo_group_id/issue-duration Issue Duration
+    @apiName issue-duration
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41786,
+                            "duration": "0 days 00:56:26.000000000"
+                        },
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41787,
+                            "duration": "0 days 13:25:04.000000000"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issue_duration, 'issue-duration')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-backlog Issue Duration
+    @apiName issue-duration
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41792,
+                            "duration": "2 days 19:13:23.000000000"
+                        },
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41793,
+                            "duration": "0 days 00:11:26.000000000"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issue_duration, 'issue-duration')
+
+    """
     @api {get} /repo-groups/:repo_group_id/issue-backlog Issue Backlog
     @apiName issue-backlog
     @apiGroup Evolution
@@ -389,7 +434,7 @@ def create_routes(server):
         augur_db.issues_first_time_opened, 'issues-first-time-opened')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened New Contributors of Issues(Repo) 
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened New Contributors of Issues(Repo)
     @apiName New Contributors of Issues(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-opened.md">CHAOSS Metric Definition</a>
