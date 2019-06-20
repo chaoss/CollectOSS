@@ -21,3 +21,5 @@ Thumbs.db
 
 # NPM packages folder.
 node_modules/
+
+docs/python/build/doctrees/AugurContext.doctree

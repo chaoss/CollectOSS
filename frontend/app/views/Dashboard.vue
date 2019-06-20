@@ -11,11 +11,15 @@
     <!-- First Row of Posts -->
 
         <d-row>
-          <d-col v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
-            <d-card class="card-small card-post card-post--1">
+          <div v-if="!loadedGroups" class="col-md-8 col-lg-9">
+            <spinner style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
+          </div>
+          <d-col v-if="loadedGroups" v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
+            <spinner v-if="!values[testEndpoints[idx]]['loaded']"style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
+            <d-card v-if="values[testEndpoints[idx]]['loaded']" class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group.rg_name }}</d-badge>
-                <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :source="testEndpoints[idx]" owner="twitter" repo="twemoji"></insight-chart>
+                <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :data="values[testEndpoints[idx]]"></insight-chart>
 
                 <div class="card-post__author d-flex">
                   <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
@@ -67,7 +71,7 @@
                 <d-row>
 
                   <!-- Time Frame -->
-                  <d-col>
+                  <d-col class="col-5">
                     <d-select size="sm" value="last-week" style="max-width: 130px;">
                       <option value="last-week">Sort</option>
                       <option value="today">?</option>
@@ -77,8 +81,8 @@
                   </d-col>
 
                   <!-- View Full Report -->
-                  <d-col class="text-right view-report col-8" style="font-size: .6rem">
-                    <a href="#">All workers and priority options &rarr;</a>
+                  <d-col class="text-right view-report col-7" style="font-size: .6rem">
+                    <a href="#">Overview of all workers &rarr;</a>
                   </d-col>
 
                 </d-row>
@@ -96,7 +100,12 @@
           </div>
           <!-- Second Row of Posts -->
           <d-row>
-            <d-col v-for="(group, idx) in repo_groups.slice(0,6)" :key="idx" lg="4" sm="12" class="mb-4">
+            <div style="padding-top: 3rem" v-if="!loadedGroups" class="col-md-8 col-lg-9">
+              <spinner></spinner>
+            </div>
+
+            <d-col v-if="loadedGroups" v-for="(group, idx) in repo_groups.slice(0,6)" :key="idx" lg="4" sm="12" class="mb-4">
+              
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
                   <h6 class="m-0">{{ group.rg_name }}</h6>
@@ -107,8 +116,12 @@
                     <div v-for="(repo, i) in repo_relations[group.rg_name].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="onGitRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo.url }}</span>
-                      </d-link> 
-                      <spark-chart v-if="loaded" :color="colors[idx]" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;" :owner="getOwner(repo.url)" :repo="getRepo(repo.url)" source="codeCommits"/>
+                      </d-link>
+
+                      <div v-if="!values[repo.url]['loaded']" class="col-12">
+                        <spinner style="top: 80%; position: relative; transform: translateY(-50%);"></spinner>
+                      </div>
+                      <spark-chart v-if="values[repo.url]['values'] != null" :color="colors[idx]" :owner="repo.url" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;" :data="values[repo.url]['values']"/>
                     </div>
                   </div>
                 </div>
@@ -122,11 +135,13 @@
 <script>
 import SparkChart from '../components/charts/SparkChart.vue';
 import InsightChart from '../components/charts/InsightChart.vue';
+import Spinner from '../components/Spinner.vue';
 
 export default {
   components: {
     SparkChart,
     InsightChart,
+    Spinner
   },
   computed: {
   },
@@ -139,6 +154,8 @@ export default {
       repo_groups: [],
       repo_relations: {},
       themes: ['dark', 'info', 'royal-blue', 'warning'],
+      values: {},
+      loadedGroups: false
     }
   },
   methods: {
@@ -224,10 +241,16 @@ export default {
         gitURL: e.url
       })
     },
-    getDownloadedRepos() {
+    getDownloadedRepos () {
       console.log("START")
       window.AugurAPI.getRepos().then((data) => {
         this.repos = data
+        data.forEach((repo) => {
+          // set loaded's to false
+          this.values[repo.url] = {}
+          this.values[repo.url].loaded = true
+        })
+        
         console.log("LOADED repos", this.repos)
         window.AugurAPI.getRepoGroups().then((data) => {
           $(this.$el).find('.spinner').removeClass('loader')
@@ -239,8 +262,39 @@ export default {
               return repo.rg_name == group.rg_name
             })
           })
+          this.loadedGroups = true
+          this.loadMetrics()
           console.log("LOADED repo groups", this.repo_relations)
         })
+      })
+    },
+    loadMetrics () {
+      // Load data for insights
+      let count = 0
+      this.repo_groups.slice(0,3).forEach((group) => {
+        
+        let repo = window.AugurAPI.Repo({ gitURL: this.repo_relations[group.rg_name][0]['url'] })
+        repo[this.testEndpoints[count]]().then((data) => {
+          this.values[this.testEndpoints[count]]["values"] = data
+          this.values[this.testEndpoints[count]]["loaded"] = true
+          console.log("loaded insights for: ", this.testEndpoints[count], this.values[this.testEndpoints[count]])
+        })
+        count++
+      })
+      // Load data for spark charts
+      this.repo_groups.forEach((group) => {
+        this.repo_relations[group.rg_name].slice(0,6).forEach((repo) => {
+          let api_repo = window.AugurAPI.Repo({ gitURL: repo['url'] })
+          api_repo.codeCommits().then((data) => {
+            console.log("about to load sparks")
+            console.log(this.values[repo.url]['values'] != null)//values[repo.url]['values']
+
+            this.values[repo.url]['values'] = data
+            console.log("loaded sparks for: ", this.values[repo['url']])
+            this.values[repo.url]['loaded'] = true
+          })
+        })
+        
       })
     },
     btoa(s) {
@@ -248,7 +302,15 @@ export default {
     }
   },
   created() {
+    // Set all loaded's to false
+    this.testEndpoints.forEach((endpoint) => {
+      this.values[endpoint] = {}
+      this.values[endpoint]['loaded'] = false
+    })
+
+    // Call our data collection methods
     this.getDownloadedRepos()
+    
   },
 }
 </script>

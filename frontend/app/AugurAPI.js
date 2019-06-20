@@ -39,7 +39,6 @@ export default class AugurAPI {
   // }
 
   __endpointURL (endpoint) {
-    console.log(endpoint)
     return '' + this._host + this._version + '/' + endpoint
   }
 

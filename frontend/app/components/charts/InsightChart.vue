@@ -25,22 +25,16 @@ export default {
   },
   computed: {
     spec() {
-      let repo = window.AugurAPI.Repo({ githubURL: this.owner + '/' + this.repo })
-      if (!this.data){
-        repo[this.source]().then((data) => {
-          
-          this.values = this.convertKey(data)
-          console.log(this.values)
-        })
-        
-      }
+
+      this.values = this.convertKey(this.data)
+      console.log(this.values)
+
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": 263.7,
         "height": 166,
         "padding": {'left': 0, 'top': 0, 'right': 0, 'bottom': 0},
-        // "data": {"url": "https://vega.github.io/vega-lite/data/unemployment-across-industries.json"},
         "mark": {
           "type":"line",
           "interpolate": "basis"
@@ -57,18 +51,12 @@ export default {
           },
           "color": {"value": this.color}
         }
-        
-
-        
       }
 
-      
       $(this.$el).find('.showme, .hidefirst').removeClass('invis')
       $(this.$el).find('.spinner').removeClass('loader')
 
-
       return config
-
     }
   },
   methods: {

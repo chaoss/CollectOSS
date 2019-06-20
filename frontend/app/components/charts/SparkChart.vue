@@ -25,15 +25,9 @@ export default {
   },
   computed: {
     spec() {
-      let repo = window.AugurAPI.Repo({ githubURL: this.owner + '/' + this.repo })
-      if (!this.data){
-        repo[this.source]().then((data) => {
-          
-          this.values = this.convertKey(data)
-          console.log(this.values)
-        })
-        
-      }
+      console.log(this.owner)
+      console.log(this.data)
+      this.values = this.convertKey(this.data)
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",

@@ -24,7 +24,7 @@ import AddNewPost from './views/AddNewPost.vue';
 import Errors from './views/Errors.vue';
 import ComponentsOverview from './views/ComponentsOverview.vue';
 import Tables from './views/Tables.vue';
-import BlogPosts from './views/BlogPosts.vue';
+import Dashboard from './views/Dashboard.vue';
 import Default from './layouts/Default.vue';
 import MainSidebar from './components/layout/MainSidebar/MainSidebar.vue';
 import MainNavbar from './components/layout/MainNavbar/MainNavbar.vue';
@@ -43,7 +43,7 @@ let routes = [
                         components: {
                               sidebar: MainSidebar,
                               navbar: MainNavbar,
-                              content: BlogPosts
+                              content: Dashboard
                         }
                   }
             ]
@@ -156,7 +156,7 @@ let routes = [
     {
       path: '/blog-posts',
       name: 'blog-posts',
-      component: BlogPosts,
+      component: Dashboard,
     }, {
       path: '*',
       redirect: '/errors',
