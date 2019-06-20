@@ -1,7 +1,7 @@
 <template>
-  <div ref="holder" style="position: relative; z-index: 5">
-    <!-- <div class="spinner "></div> -->
-    <div class="chart hidefirst ">
+  <div ref="holder" style="position: relative; z-index: 5; transform: translateY(-50%); ">
+    <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 3.9rem 0px auto;"></spinner>
+    <div v-if="loaded" class="chart hidefirst ">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
 
@@ -14,21 +14,26 @@
 <script>
 import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
+import Spinner from '../Spinner.vue'
 
 export default {
-  props: ['repo', 'owner', 'source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'color'],
+  props: ['url', 'source', 'title', 'color'],
+  components: {
+    Spinner
+  },
   data() {
     return {
       values: [],
-      user: null
+      user: null,
+      loaded: false
     }
   },
   computed: {
     spec() {
-
-      this.values = this.convertKey(this.data)
-      console.log(this.values)
-
+      let repo = window.AugurAPI.Repo({"gitURL": this.url})
+      repo[this.source]().then((data) => {
+        this.values = this.convertKey(data)
+      })
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -52,10 +57,8 @@ export default {
           "color": {"value": this.color}
         }
       }
-
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-      $(this.$el).find('.spinner').removeClass('loader')
-
+      //show the chart again
+      this.loaded = true
       return config
     }
   },

@@ -15,11 +15,11 @@
             <spinner style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
           </div>
           <d-col v-if="loadedGroups" v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
-            <spinner v-if="!values[testEndpoints[idx]]['loaded']"style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
-            <d-card v-if="values[testEndpoints[idx]]['loaded']" class="card-small card-post card-post--1">
+            
+            <d-card class="card-small card-post card-post--1">
               <div class="card-post__image">
-                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group.rg_name }}</d-badge>
-                <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :data="values[testEndpoints[idx]]"></insight-chart>
+                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
+                <insight-chart style="transform: translateX(-30px)" :source="testEndpoints[idx]" :url="repo_relations[group][0].url" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
                   <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
@@ -29,7 +29,7 @@
               </div>
               <d-card-body>
                 <h5 class="card-title">
-                  <a href="#" class="text-fiord-blue">{{ getOwner(repo_relations[group.rg_name][0].url) }}/{{ getRepo(repo_relations[group.rg_name][0].url) }}</a>
+                  <a href="#" class="text-fiord-blue">{{ getOwner(repo_relations[group][0].url) }}/{{ getRepo(repo_relations[group][0].url) }}</a>
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository {{ getPhrase(idx) }} in {{ testEndpoints[idx] }} in the past {{ testTimeframes[idx] }}</p>
                 <span class="text-muted" style="font-size: .75rem">{{ testTimeframes[idx] }}</span>
@@ -113,20 +113,19 @@
                 </div>
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
-                    <div v-for="(repo, i) in repo_relations[group.rg_name].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
+                    <div v-for="(repo, i) in repo_relations[group].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="onGitRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo.url }}</span>
                       </d-link>
 
-                      <div v-if="!values[repo.url]['loaded']" class="col-12">
-                        <spinner style="top: 80%; position: relative; transform: translateY(-50%);"></spinner>
-                      </div>
-                      <spark-chart v-if="values[repo.url]['values'] != null" :color="colors[idx]" :owner="repo.url" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;" :data="values[repo.url]['values']"/>
+                      <spark-chart :color="colors[idx]" :url="repo.url" source="codeCommits" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;"/>
                     </div>
                   </div>
                 </div>
               </d-card>
             </d-col>
+
+
           </d-row>
         </div>
   </d-container>
@@ -148,14 +147,16 @@ export default {
   data() {
     return {
       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+      testEndpoints: ['issuesClosed', 'codeChangesLines', 'issueNew'],
       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
       repos: [],
+      api_repos: [],
       repo_groups: [],
       repo_relations: {},
       themes: ['dark', 'info', 'royal-blue', 'warning'],
       values: {},
-      loadedGroups: false
+      loadedGroups: false,
+      loadedSparks: false
     }
   },
   methods: {
@@ -243,65 +244,16 @@ export default {
     },
     getDownloadedRepos () {
       console.log("START")
-      window.AugurAPI.getRepos().then((data) => {
-        this.repos = data
-        data.forEach((repo) => {
-          // set loaded's to false
-          this.values[repo.url] = {}
-          this.values[repo.url].loaded = true
-        })
-        
-        console.log("LOADED repos", this.repos)
-        window.AugurAPI.getRepoGroups().then((data) => {
-          $(this.$el).find('.spinner').removeClass('loader')
-          $(this.$el).find('.spinner').removeClass('relative')
-          this.repo_groups = data
-          //move down between future relation endpoint
-          this.repo_groups.forEach((group) => {
-            this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
-              return repo.rg_name == group.rg_name
-            })
-          })
-          this.loadedGroups = true
-          this.loadMetrics()
-          console.log("LOADED repo groups", this.repo_relations)
-        })
-      })
+      
     },
     loadMetrics () {
-      // Load data for insights
-      let count = 0
-      this.repo_groups.slice(0,3).forEach((group) => {
-        
-        let repo = window.AugurAPI.Repo({ gitURL: this.repo_relations[group.rg_name][0]['url'] })
-        repo[this.testEndpoints[count]]().then((data) => {
-          this.values[this.testEndpoints[count]]["values"] = data
-          this.values[this.testEndpoints[count]]["loaded"] = true
-          console.log("loaded insights for: ", this.testEndpoints[count], this.values[this.testEndpoints[count]])
-        })
-        count++
-      })
-      // Load data for spark charts
-      this.repo_groups.forEach((group) => {
-        this.repo_relations[group.rg_name].slice(0,6).forEach((repo) => {
-          let api_repo = window.AugurAPI.Repo({ gitURL: repo['url'] })
-          api_repo.codeCommits().then((data) => {
-            console.log("about to load sparks")
-            console.log(this.values[repo.url]['values'] != null)//values[repo.url]['values']
-
-            this.values[repo.url]['values'] = data
-            console.log("loaded sparks for: ", this.values[repo['url']])
-            this.values[repo.url]['loaded'] = true
-          })
-        })
-        
-      })
+      
     },
     btoa(s) {
       return window.btoa(s)
     }
   },
-  created() {
+  mounted() {
     // Set all loaded's to false
     this.testEndpoints.forEach((endpoint) => {
       this.values[endpoint] = {}
@@ -309,7 +261,69 @@ export default {
     })
 
     // Call our data collection methods
-    this.getDownloadedRepos()
+    window.AugurAPI.getRepos().then((data) => {
+        this.repos = data
+        data.forEach((repo) => {
+          // set loaded's to false
+          this.values[repo.url] = []
+        })
+        
+
+        console.log("LOADED repos", this.repos)
+        this.repos.forEach((repo) => {
+          if (this.repo) {
+            if (window.AugurRepos[this.repo])
+              this.api_repos.push(window.AugurRepos[this.repo])
+            else if (this.gitRepo){
+              let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+              if (window.AugurRepos[temp.toString()])
+                temp = window.AugurRepos[temp.toString()]
+              else
+                window.AugurRepos[temp.toString()] = temp
+              this.api_repos.push(temp)
+            }
+          }
+          if (this.repo_groups.indexOf(repo.rg_name) < 0)
+            this.repo_groups.push(repo.rg_name)
+        })
+
+        //move down between future relation endpoint
+        this.repo_groups.forEach((group) => {
+          this.repo_relations[group] = this.repos.filter(function(repo){
+            return repo.rg_name == group
+          })
+        })
+        this.loadedGroups = true
+        console.log("LOADED repo groups", this.repo_relations)
+      })
+
+    // Load data for insights
+      // let count = 0
+      // this.repo_groups.slice(0,3).forEach((group) => {
+        
+      //   let repo = window.AugurAPI.Repo({ gitURL: this.repo_relations[group][0]['url'] })
+      //   console.log(repo)
+      //   repo[this.testEndpoints[count]]().then((data) => {
+      //     this.values[this.testEndpoints[count]]["values"] = data
+      //     this.values[this.testEndpoints[count]]["loaded"] = true
+      //     console.log("loaded insights for: ", this.testEndpoints[count], this.values[this.testEndpoints[count]])
+      //   })
+      //   count++
+      // })
+      // // Load data for spark charts
+      // console.log("CHECKCHECK")
+      // this.repo_groups.forEach((group) => {
+      //   this.repo_relations[group].slice(0,6).forEach((repo) => {
+      //     let api_repo = window.AugurAPI.Repo({ gitURL: repo['url'] })
+          
+      //     api_repo.codeCommits().then((data) => {
+      //       console.log("about to load sparks")
+      //       this.values[repo.url] = data
+      //       console.log("loaded sparks for: ", this.values[repo['url']])
+      //     })
+      //   })
+      // })
+      
     
   },
 }

@@ -1,10 +1,9 @@
 <template>
   <div ref="holder" style="position: relative; z-index: 5">
-    <!-- <div class="spinner "></div> -->
-    <div class="chart hidefirst ">
+    <spinner v-if="!loaded" :size="30" style="top: 5%; position: relative; transform: translateY(-50%);"></spinner>
+    <div class="chart hidefirst">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
-
     </div>
 
   </div>
@@ -14,31 +13,32 @@
 <script>
 import { mapState } from 'vuex'
 import AugurStats from 'AugurStats'
+import Spinner from '../Spinner.vue'
 
 export default {
-  props: ['repo', 'owner', 'source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'color'],
+  props: ['url', 'source', 'title', 'data', 'color'],
+  components: {
+    Spinner
+  },
   data() {
     return {
       values: [],
-      user: null
+      user: null,
+      loaded: false
     }
   },
   computed: {
     spec() {
-      console.log(this.owner)
-      console.log(this.data)
-      this.values = this.convertKey(this.data)
+      let repo = window.AugurAPI.Repo({"gitURL": this.url})
+      repo[this.source]().then((data) => {
+        this.values = this.convertKey(data)
+      })
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": 80,
         "height": 50,
         "padding": 0,
-
-        //"autosize": {"type": "fit", "contains": "padding"},
-      
-      
-        // "data": {"url": "https://vega.github.io/vega-lite/data/unemployment-across-industries.json"},
         "mark": {
           "type":"line",
           "interpolate": "basis"
@@ -49,21 +49,16 @@ export default {
             "axis": {"labels": false, "grid": false, "title": false, "ticks": false}
           },
           "y": {
-            // "aggregate": "sum", 
             "field": "value","type": "quantitative",
             "axis": {"labels": false, "grid": false, "title": false, "ticks": false},
           },
           "color": {"value": this.color}
         }
-        
 
-        
       }
 
-      
       $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-      $(this.$el).find('.spinner').removeClass('loader')
-
+      this.loaded = true
 
       return config
 
@@ -90,7 +85,6 @@ export default {
       return ary
     }
   }
-  
 }
 
 </script>
