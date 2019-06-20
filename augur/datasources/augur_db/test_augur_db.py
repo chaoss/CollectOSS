@@ -148,6 +148,11 @@ def test_contributors_new(augur_db):
     assert augur_db.contributors_new(24, repo_id=21524, period='year', begin_date='2019-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
+def test_issues_open_age(augur_db):
+    #repo group
+    assert augur_db.issues_open_age(24).iloc[0]['datedifference'] > 100
+    # repo 
+    assert augur_db.issues_open_age(20,21000).iloc[0]['datedifference'] > 100
 
 def test_get_repo(augur_db):
     assert augur_db.get_repo_by_name('Comcast','zucchini').iloc[0].repo_id == 21116

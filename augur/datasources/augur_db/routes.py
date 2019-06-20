@@ -630,3 +630,54 @@ def create_routes(server):
     """
     server.addRepoMetric(
         augur_db.contributors_new, 'contributors-new')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-open-age Open Issue Age(Repo Group)
+    @apiName Open Issue Age(Repo Group)
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-open-age.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "gh_issue_number":1,
+                            "issue_title":"Property Place holder for namespaced attributes is not working",
+                            "repo_name":"jrugged",
+                            "datedifference":2414.0
+                        },
+                        {
+                            "gh_issue_number":2,
+                            "issue_title":"Update custom namespace to work with annotation driven config",
+                            "repo_name":"jrugged",
+                            "datedifference":2414.0
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.issues_open_age, 'issues-open-age')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-open-age Open Issue Age(Repo)
+    @apiName Open Issue Age(Repo)
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-open-age.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+            [
+                {
+                    "gh_issue_number":2045,
+                    "issue_title":"Add possibility to render partial from subfolder with inheritance",
+                    "repo_name":"rails",
+                    "datedifference":2899.0
+                },
+                {
+                    "gh_issue_number":2686,
+                    "issue_title":"Attachments not visible in mail clients when additional inline attachments present",
+                    "repo_name":"rails",
+                    "datedifference":2856.0
+                }
+            ]
+    """
+    server.addRepoMetric(
+        augur_db.issues_open_age, 'issues-open-age')
