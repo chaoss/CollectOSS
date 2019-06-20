@@ -838,6 +838,34 @@ class Augur(object):
             results = pd.read_sql(languages_SQL, self.db, params={'repo_id': repo_id})
             return results
 
+    @annotate(tag='license-declared')
+    def license_declared(self, repo_group_id, repo_id=None):
+        """Returns the declared license
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Declared License
+        """
+        if not repo_id:
+            license_declared_SQL = s.sql.text("""
+                SELECT repo_id, license
+                FROM repo_badging
+                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id);
+            """)
+
+            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            license_declared_SQL = s.sql.text("""
+                SELECT license
+                FROM repo_badging
+                WHERE repo_id = :repo_id;
+            """)
+
+            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_id': repo_id})
+            return results
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
