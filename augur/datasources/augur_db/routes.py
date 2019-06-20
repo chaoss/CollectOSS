@@ -630,3 +630,113 @@ def create_routes(server):
     """
     server.addRepoMetric(
         augur_db.contributors_new, 'contributors-new')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-open-age Open Issue Age(Repo Group)
+    @apiName Open Issue Age(Repo Group)
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-open-age.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "gh_issue_number":1,
+                            "issue_title":"Property Place holder for namespaced attributes is not working",
+                            "repo_name":"jrugged",
+                            "datedifference":2414.0
+                        },
+                        {
+                            "gh_issue_number":2,
+                            "issue_title":"Update custom namespace to work with annotation driven config",
+                            "repo_name":"jrugged",
+                            "datedifference":2414.0
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.issues_open_age, 'issues-open-age')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-open-age Open Issue Age(Repo)
+    @apiName Open Issue Age(Repo)
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-open-age.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "gh_issue_number":2045,
+                            "issue_title":"Add possibility to render partial from subfolder with inheritance",
+                            "repo_name":"rails",
+                            "datedifference":2899.0
+                        },
+                        {
+                            "gh_issue_number":2686,
+                            "issue_title":"Attachments not visible in mail clients when additional inline attachments present",
+                            "repo_name":"rails",
+                            "datedifference":2856.0
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.issues_open_age, 'issues-open-age')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-closed-resolution-duration Closed Issue Resolution Duration(Repo Group)
+    @apiName Closed Issue Resolution Duration(Repo Group)
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-closed-resolution-duration.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                   [
+                        {
+                            "repo_name":"incubator-dubbo",
+                            "gh_issue_number":4110,
+                            "issue_title":"rm incubating word",
+                            "created_at":"2019-05-22T03:18:13.000Z",
+                            "closed_at":"2019-05-22T05:27:29.000Z",
+                            "diffdate":0.0
+                        },
+                        {
+                            "repo_name":"incubator-dubbo",
+                            "gh_issue_number":4111,
+                            "issue_title":"nacos registry serviceName may conflict",
+                            "created_at":"2019-05-22T03:30:23.000Z",
+                            "closed_at":"2019-05-23T14:36:17.000Z",
+                            "diffdate":1.0
+                        }
+                    ] 
+    """
+    server.addRepoGroupMetric(
+        augur_db.issues_closed_resolution_duration, 'issues-closed-resolution-duration')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-closed-resolution-duration Closed Issue Resolution Duration(Repo)
+    @apiName Closed Issue Resolution Duration(Repo)
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-closed-resolution-duration.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "gh_issue_number":4223,
+                            "issue_title":"Cloud Native PR",
+                            "created_at":"2019-05-31T07:55:44.000Z",
+                            "closed_at":"2019-06-17T03:12:48.000Z",
+                            "diffdate":16.0
+                        },
+                        {
+                            "gh_issue_number":4131,
+                            "issue_title":"Reduce context switching cost by optimizing thread model on consumer side.",
+                            "created_at":"2019-05-23T06:18:21.000Z",
+                            "closed_at":"2019-06-03T08:07:27.000Z",
+                            "diffdate":11.0
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.issues_closed_resolution_duration, 'issues-closed-resolution-duration')
+
+    
