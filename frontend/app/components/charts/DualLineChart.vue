@@ -148,9 +148,18 @@ export default {
       }
       // Get the repos we need
       let repos = []
-      if (this.gitRepo) {
-        repos.push(window.AugurAPI.Repo({ gitURL: this.gitRepo }))
-      } // end if (this.$store.repo)
+      if (this.repo) {
+        if (window.AugurRepos[this.repo])
+          repos.push(window.AugurRepos[this.repo])
+        else if (this.gitRepo){
+          let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+          if (window.AugurRepos[temp.toString()])
+            temp = window.AugurRepos[temp.toString()]
+          else
+            window.AugurRepos[temp.toString()] = temp
+          repos.push(temp)
+        }
+      }// end if (this.$store.repo)
 
             /*
        * Takes a string like "commits,lines_changed:additions+deletions"

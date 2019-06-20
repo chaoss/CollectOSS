@@ -131,10 +131,10 @@ export default {
           repos.push(window.AugurRepos[this.repo])
         else if (this.domain){
           let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-          if (window.AugurRepos[temp])
-            temp = window.AugurRepos[temp]
+          if (window.AugurRepos[temp.toString()])
+            temp = window.AugurRepos[temp.toString()]
           else
-            window.AugurRepos[temp] = temp
+            window.AugurRepos[temp.toString()] = temp
           repos.push(temp)
         }
       } // end if (this.$store.repo)
