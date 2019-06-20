@@ -71,9 +71,9 @@ class Broker(object):
         self.connected_workers = {}
         self.created_jobs = []
         logging.info("Broker spawned and is ready to accept tasks.")
-        process = multiprocessing.Process(target=self.main)
-        process.daemon = True
-        process.start()
+        # process = multiprocessing.Process(target=self.main)
+        # process.daemon = True
+        # process.start()
         
 
     def add_new_worker(self, worker):

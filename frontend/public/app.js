@@ -216,6 +216,7 @@ function Augur() {
         state.baseRepo = payload.gitURL;
         state.hasState = true;
         var repo = window.AugurAPI.Repo(payload);
+        state.baseRepo = repo.toString();
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo;
         } else {
@@ -827,6 +828,8 @@ var AugurAPI = function () {
         addRepoMetric(repo, 'contributorsNew', 'contributors-new');
         addRepoMetric(repo, 'openIssuesCount', 'open-issues-count');
         addRepoMetric(repo, 'closedIssuesCount', 'closed-issues-count');
+        addRepoMetric(repo, 'issuesOpenAge', 'issues-open-age');
+        addRepoMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration');
       }
 
       if (repo.repo_group_id && repo.repo_id == null) {
@@ -843,6 +846,8 @@ var AugurAPI = function () {
         addRepoGroupMetric(repo, 'contributorsNew', 'contributors-new');
         addRepoGroupMetric(repo, 'openIssuesCount', 'open-issues-count');
         addRepoGroupMetric(repo, 'closedIssuesCount', 'closed-issues-count');
+        addRepoGroupMetric(repo, 'issuesOpenAge', 'issues-open-age');
+        addRepoGroupMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration');
       }
 
       return repo;
@@ -2130,7 +2135,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-1e43c417", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-1e43c417", __vue__options__)
+    hotAPI.reload("data-v-1e43c417", __vue__options__)
   }
 })()}
 });
@@ -4603,8 +4608,12 @@ exports.default = {
       };
 
       var repos = [];
-      if (this.gitRepo) {
-        repos.push(window.AugurAPI.Repo({ gitURL: this.gitRepo }));
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.gitRepo) {
+          var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          if (window.AugurRepos[temp.toString()]) temp = window.AugurRepos[temp.toString()];else window.AugurRepos[temp.toString()] = temp;
+          repos.push(temp);
+        }
       }
       var endpoints = [];
       var fields = {};
@@ -4785,7 +4794,7 @@ exports.default = {
       if (this.repo) {
         if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.domain) {
           var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
-          if (window.AugurRepos[temp]) temp = window.AugurRepos[temp];else window.AugurRepos[temp] = temp;
+          if (window.AugurRepos[temp.toString()]) temp = window.AugurRepos[temp.toString()];else window.AugurRepos[temp.toString()] = temp;
           repos.push(temp);
         }
       }
