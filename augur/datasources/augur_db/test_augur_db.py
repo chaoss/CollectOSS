@@ -154,5 +154,11 @@ def test_issues_open_age(augur_db):
     # repo 
     assert augur_db.issues_open_age(20,21000).iloc[0]['datedifference'] > 100
 
+def test_issues_closed_resolution_duration(augur_db):
+    # repo group 
+    assert augur_db.issues_closed_resolution_duration(24).iloc[0]['diffdate'] >= 0
+    # repo 
+    assert augur_db.issues_closed_resolution_duration(24,21682).iloc[0]['diffdate'] >= 0
+
 def test_get_repo(augur_db):
     assert augur_db.get_repo_by_name('Comcast','zucchini').iloc[0].repo_id == 21116

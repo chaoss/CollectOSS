@@ -200,3 +200,18 @@ def test_issues_open_age_by_repo(augur_db_routes):
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]["datedifference"] > 1
+
+def test_issues_closed_resolution_duration_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/issues-closed-resolution-duration/')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]["diffdate"] >= 0
+
+
+def test_issues_closed_resolution_duration_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/repos/21682/issues-closed-resolution-duration/')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]["diffdate"] >= 0
