@@ -5,6 +5,8 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
+import logging
+logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -40,6 +42,8 @@ class InsightWorker:
         self.config = config
         self.db = None
         self.table = None
+
+        logging.info("Worker initializing...\n")
         
         specs = {
             "id": "com.augurlabs.core.badge_worker",
@@ -72,7 +76,7 @@ class InsightWorker:
 
         # we can reflect it ourselves from a database, using options
         # such as 'only' to limit what tables we look at...
-        metadata.reflect(self.db, only=[self.config['table']])
+        metadata.reflect(self.db, only=['chaoss_metric_status'])#self.config['table']])
 
         # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
@@ -81,21 +85,22 @@ class InsightWorker:
         Base.prepare()
 
         # mapped classes are ready
-        self.table = Base.classes[self.config['table']].__table__
+        # self.insight_table = Base.classes[self.config['table']].__table__
+        self.metrics_table = Base.classes['chaoss_metric_status'].__table__
 
 
-        # """ Query all repos """
-        # repoUrlSQL = s.sql.text("""
-        #     SELECT repo_git, repo_id FROM repo
-        #     """)
-        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        """ Query all repos """
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_git, repo_id FROM repo
+            """)
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
-        # #fill queue
-        # for index, row in rs.iterrows():
-        #     entry_info = {"git_url": row["repo_git"], "repo_id": row["repo_id"]}
-        #     self._queue.put(CollectorTask(message_type='TASK', entry_info=entry_info))
+        #fill queue
+        for index, row in rs.iterrows():
+            entry_info = {"git_url": row["repo_git"], "repo_id": row["repo_id"]}
+            self._queue.put(CollectorTask(message_type='TASK', entry_info=entry_info))
 
-        # self.run()
+        self.run()
 
         requests.post('http://localhost:5000/api/workers', json=specs) #hello message
         
@@ -105,7 +110,6 @@ class InsightWorker:
         """
         self.config = {
             'database_connection_string': 'psql://localhost:5432/augur',
-            "key": "",
             "display_name": "",
             "description": "",
             "required": 1,
@@ -156,6 +160,7 @@ class InsightWorker:
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
+        logging.info("Running...\n")
         if not self._child:
             self._child = Process(target=self.collect, args=())
             self._child.start()
@@ -182,18 +187,21 @@ class InsightWorker:
         """ Data collection function
         Query the github api for contributors and issues (not yet implemented)
         """
-        url = self.config['endpoint']
+        self.update_metrics()
 
-        r = requests.get(url=url)
-        data = r.json()
-        data[0]['repo_id'] = entry_info['repo_id']
-        metrics = []
-        for obj in data:
-            metrics.append(obj['tag'])
+
+        # data[0]['repo_id'] = entry_info['repo_id']
+        # metrics = []
+        # for obj in data:
+        #     metrics.append(obj['tag'])
 
         
         # self.db.execute(self.table.insert().values(data[0]))
         # requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
 
+    def update_metrics(self):
+        r = requests.get(url='http://localhost:5000/api/unstable/metrics/status')
+        data = r.json()
+        logging.info(str(data))
 
 

@@ -68,7 +68,10 @@ def main(augur_url, host, port):
     app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
+    print("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=port)
+    print("Killing Flask App: " + str(os.getpid()))
+    os.kill(os.getpid(), 9)
     
 
 

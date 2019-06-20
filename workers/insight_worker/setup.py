@@ -14,7 +14,7 @@ def read(filename):
 
 
 setup(
-    name="linux_badge_worker",
+    name="insight_worker",
     version="0.1.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'linux_badge_worker=linux_badge_worker.runtime:main',
+            'worker_start=insight_worker.runtime:main',
         ],
     },
 

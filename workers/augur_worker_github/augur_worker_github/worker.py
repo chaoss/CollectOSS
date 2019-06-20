@@ -10,7 +10,7 @@ import time
 import logging
 import json
 import ast
-logging.basicConfig(filename='worker.log', level=logging.INFO)
+logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 class CollectorTask:
     """ Worker's perception of a task in its queue

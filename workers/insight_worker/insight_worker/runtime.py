@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 import click
-from linux_badge_worker.worker import BadgeWorker
+from insight_worker.worker import InsightWorker
 import os
 import json
 
@@ -47,14 +47,12 @@ def main(augur_url, host, port):
     credentials = read_config("Database")
 
     config = { 
-            "connection_string": credentials["connection_string"],
             "host": credentials["host"],
             "password": credentials["password"],
             "port": credentials["port"],
             "user": credentials["user"],
             "database": credentials["database"],
             "table": "insights",
-            "endpoint": "localhost:5000/api/unstable/metrics/status"
             "display_name": "",
             "description": "",
             "required": 1,
@@ -62,7 +60,7 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
+    app.gh_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)
