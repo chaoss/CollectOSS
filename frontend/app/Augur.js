@@ -59,6 +59,7 @@ export default function Augur () {
         state.baseRepo = payload.gitURL
         state.hasState = true
         let repo = window.AugurAPI.Repo(payload)
+        state.baseRepo = repo.toString()
         if (!window.AugurRepos[repo.toString()]) {
           window.AugurRepos[repo.toString()] = repo
         } else {

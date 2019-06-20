@@ -778,6 +778,86 @@ class Augur(object):
             result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_id': repo_id})
             return result
 
+    @annotate(tag='issues-open-age')
+    def issues_open_age(self, repo_group_id, repo_id=None):
+        """
+        Retrun the age of open issues
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame of age of open issues.
+        """
+        if not repo_id:
+            openAgeSQL = s.sql.text("""
+                SELECT issues.gh_issue_number, issues.issue_title, repo_name, issues.created_at, EXTRACT(DAY FROM NOW() - issues.created_at) AS DateDifference
+                FROM issues,
+                    repo,
+                    repo_groups
+                WHERE issue_state = 'open'
+                AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND repo.repo_id = issues.repo_id
+                GROUP BY gh_issue_number, issue_title, issues.repo_id, repo_name, issues.created_at, DateDifference
+                ORDER BY DateDifference DESC
+            """)
+            results = pd.read_sql(openAgeSQL, self.db, params={
+                                 'repo_group_id': repo_group_id})
+        else:
+            openAgeSQL = s.sql.text("""
+                SELECT issues.gh_issue_number, issues.issue_title, repo_name, issues.created_at, EXTRACT(DAY FROM NOW() - issues.created_at) AS DateDifference
+                FROM issues,
+                    repo,
+                    repo_groups
+                WHERE issue_state = 'open'
+                AND issues.repo_id = :repo_id
+                AND repo.repo_id = issues.repo_id
+                GROUP BY gh_issue_number, issue_title, issues.repo_id, repo_name, issues.created_at, DateDifference
+                ORDER BY DateDifference DESC
+            """)
+            results = pd.read_sql(openAgeSQL, self.db,
+                                 params={'repo_id': repo_id})
+
+        return results
+
+    @annotate(tag='issues-closed-resolution-duration')
+    def issues_closed_resolution_duration(self, repo_group_id, repo_id=None):
+        """
+        Retrun Time duration of time for issues to be resolved
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame of time duration of time for issues to be resolved
+        """
+        if not repo_id:
+            issueSQL = s.sql.text("""
+                SELECT repo_name,
+                gh_issue_number,
+                issue_title,
+                issues.created_at,
+                issues.closed_at,
+                EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
+            FROM issues,
+                repo
+            WHERE issues.closed_at NOTNULL
+                AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND repo.repo_id = issues.repo_id
+            GROUP BY repo.repo_name, gh_issue_number, issue_title, issues.created_at, issues.closed_at, DIFFDATE
+            ORDER BY gh_issue_number
+            """)
+            results = pd.read_sql(issueSQL, self.db, params={
+                                 'repo_group_id': repo_group_id})
+        else:
+            issueSQL = s.sql.text("""
+                SELECT gh_issue_number, issue_title, created_at, closed_at, EXTRACT(DAY FROM closed_at - created_at) AS DIFFDATE
+                FROM issues
+                WHERE closed_at NOTNULL AND repo_id = :repo_id
+                GROUP BY gh_issue_number, issue_title, created_at, closed_at, DIFFDATE
+                ORDER BY DIFFDATE DESC 
+            """)
+            results = pd.read_sql(issueSQL, self.db,
+                                 params={'repo_id': repo_id})
+
+        return results
+        
     #####################################
     ###              RISK             ###
     #####################################
