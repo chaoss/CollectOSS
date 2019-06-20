@@ -23,7 +23,7 @@ def create_routes(server):
         return Response(response=drs,
                         status=200,
                         mimetype="application/json")
-        
+
     server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
 
     @server.app.route('/{}/repos/<owner>/<repo>'.format(server.api_version))
@@ -232,6 +232,55 @@ def create_routes(server):
     server.addRepoMetric(augur_db.issues_new, 'issues-new')
 
     """
+    @api {get} /repo-groups/:repo_group_id/issues-active Issues Active
+    @apiName issues-active
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Active.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
+    @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-05-01T00:00:00.000Z",
+                            "repo_id": 21326,
+                            "issues": 27
+                        },
+                        {
+                            "date": "2019-05-01T00:00:00.000Z",
+                            "repo_id": 21327,
+                            "issues": 54
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issues_active, 'issues-active')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-active Issues Active
+    @apiName issues-active
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Active.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiParam {string} period Periodicity specification. Possible values: 'day', 'week', 'month', 'year'. Defaults to 'day'
+    @apiParam {string} begin_date Beginning date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to '1970-1-1 0:0:0'
+    @apiParam {string} end_date Ending date specification. Possible values: '2018', '2018-05', '2019-05-01', ..., ' 2017-03-02 05:34:19'. Defaults to current date & time.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2015-07-01T00:00:00.000Z",
+                            "issues": 32
+                        },
+                        {
+                            "date": "2015-08-01T00:00:00.000Z",
+                            "issues": 62
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issues_active, 'issues-active')
+
+    """
     @api {get} /repo-groups/:repo_group_id/issues-closed Issues Closed
     @apiName issues-closed
     @apiGroup Evolution
@@ -259,6 +308,51 @@ def create_routes(server):
                     TODO
     """
     server.addRepoMetric(augur_db.issues_closed, 'issues-closed')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issue-duration Issue Duration
+    @apiName issue-duration
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41786,
+                            "duration": "0 days 00:56:26.000000000"
+                        },
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41787,
+                            "duration": "0 days 13:25:04.000000000"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issue_duration, 'issue-duration')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-backlog Issue Duration
+    @apiName issue-duration
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41792,
+                            "duration": "2 days 19:13:23.000000000"
+                        },
+                        {
+                            "repo_id": 21682,
+                            "issue_id": 41793,
+                            "duration": "0 days 00:11:26.000000000"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issue_duration, 'issue-duration')
 
     """
     @api {get} /repo-groups/:repo_group_id/issue-backlog Issue Backlog
@@ -401,7 +495,7 @@ def create_routes(server):
         augur_db.issues_first_time_opened, 'issues-first-time-opened')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened New Contributors of Issues(Repo) 
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-first-time-opened New Contributors of Issues(Repo)
     @apiName New Contributors of Issues(Repo)
     @apiGroup Evolution
     @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-first-time-opened.md">CHAOSS Metric Definition</a>
@@ -706,7 +800,7 @@ def create_routes(server):
                             "closed_at":"2019-05-23T14:36:17.000Z",
                             "diffdate":1.0
                         }
-                    ] 
+                    ]
     """
     server.addRepoGroupMetric(
         augur_db.issues_closed_resolution_duration, 'issues-closed-resolution-duration')
@@ -739,4 +833,115 @@ def create_routes(server):
     server.addRepoMetric(
         augur_db.issues_closed_resolution_duration, 'issues-closed-resolution-duration')
 
-    
+
+    #####################################
+    ###              RISK             ###
+    #####################################
+
+    """
+    @api {get} /repo-groups/:repo_group_id/cii-best-practices-badge CII Best Practices Badge
+    @apiName cii-best-practices-badge
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21277,
+                            "badge_level": "passing"
+                        },
+                        {
+                            "repo_id": 21252,
+                            "badge_level": "in_progress"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/cii-best-practices-badge CII Best Practices Badge
+    @apiName cii-best-practices-badge
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "badge_level": "gold"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/languages Languages
+    @apiName languages
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21277,
+                            "primary_language": "Go"
+                        },
+                        {
+                            "repo_id": 21252,
+                            "primary_language": "PHP"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.languages, 'languages')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/languages Languages
+    @apiName languages
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/security.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "primary_language":"PHP"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.languages, 'languages')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/license-declared License Declared
+    @apiName license-declared
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21277,
+                            "license": "Apache-2.0"
+                        },
+                        {
+                            "repo_id": 21252,
+                            "license": "Apache-2.0"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.license_declared, 'license-declared')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/license-declared License Declared
+    @apiName license-declared
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "license": "Apache-2.0"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.license_declared, 'license-declared')
