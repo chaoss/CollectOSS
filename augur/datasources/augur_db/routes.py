@@ -788,3 +788,39 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.languages, 'languages')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/license-declared License Declared
+    @apiName license-declared
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21277,
+                            "license": "Apache-2.0"
+                        },
+                        {
+                            "repo_id": 21252,
+                            "license": "Apache-2.0"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.license_declared, 'license-declared')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/license-declared License Declared
+    @apiName license-declared
+    @apiGroup Risk
+    @apiDescription <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "license": "Apache-2.0"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.license_declared, 'license-declared')
