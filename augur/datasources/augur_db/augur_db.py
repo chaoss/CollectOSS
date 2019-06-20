@@ -943,40 +943,89 @@ class Augur(object):
 
         return results
 
-    @annotate(tag='rg-closed-issues-count')
-    def rg_open_issues_count(self, repo_group_id):
+    @annotate(tag='closed-issues-count')
+    def open_issues_count(self, repo_group_id, repo_id=None):
         """
         Returns number of lines changed per author per day
 
         :param repo_url: the repository's URL
         """
-        openIssueCountSQL = s.sql.text("""
-            SELECT rg_name, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE
-            FROM issues, repo, repo_groups
-            WHERE issue_state = 'open'
-            AND repo.repo_id = issues.repo_id
-            AND repo.repo_group_id = repo_groups.repo_group_id
-            GROUP BY date, repo_groups.rg_name
-            ORDER BY date
-        """)
-        results = pd.read_sql(openIssueCountSQL, self.db)#, params={"rg_id": '{}'.format(rg_id)})
-        return results
+        if not repo_id:
+            openIssueCountSQL = s.sql.text("""
+                SELECT rg_name, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE
+                FROM issues, repo, repo_groups
+                WHERE issue_state = 'open'
+                AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                AND repo.repo_id = issues.repo_id
+                AND repo.repo_group_id = repo_groups.repo_group_id
+                GROUP BY date, repo_groups.rg_name
+                ORDER BY date
+            """)
+            results = pd.read_sql(openIssueCountSQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+        else:
+            openIssueCountSQL = s.sql.text("""
+                SELECT repo.repo_id, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE
+                FROM issues, repo, repo_groups
+                WHERE issue_state = 'open'
+                AND issues.repo_id = :repo_id
+                AND repo.repo_id = issues.repo_id
+                AND repo.repo_group_id = repo_groups.repo_group_id
+                GROUP BY date, repo.repo_id
+                ORDER BY date
+            """)
+            results = pd.read_sql(openIssueCountSQL, self.db, params={'repo_id': repo_id})
+            return results
+        
 
-    @annotate(tag='rg-closed-issues-count')
-    def rg_closed_issues_count(self, repo_group_id):
+    @annotate(tag='closed-issues-count')
+    def closed_issues_count(self, repo_group_id, repo_id=None):
         """
         Returns number of lines changed per author per day
 
         :param repo_url: the repository's URL
         """
-        closedIssueCountSQL = s.sql.text("""
-            SELECT rg_name, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE
-            FROM issues, repo, repo_groups
-            WHERE issue_state = 'closed'
-            AND repo.repo_id = issues.repo_id
-            AND repo.repo_group_id = repo_groups.repo_group_id
-            GROUP BY date, repo_groups.rg_name
-            ORDER BY date
+        if not repo_id:
+            closedIssueCountSQL = s.sql.text("""
+                SELECT rg_name, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE
+                FROM issues, repo, repo_groups
+                WHERE issue_state = 'closed'
+                AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                AND repo.repo_id = issues.repo_id
+                AND repo.repo_group_id = repo_groups.repo_group_id
+                GROUP BY date, repo_groups.rg_name
+                ORDER BY date
+            """)
+            results = pd.read_sql(closedIssueCountSQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+        else:
+            closedIssueCountSQL = s.sql.text("""
+                SELECT repo.repo_id, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE
+                FROM issues, repo, repo_groups
+                WHERE issue_state = 'closed'
+                AND issues.repo_id = :repo_id
+                AND repo.repo_id = issues.repo_id
+                AND repo.repo_group_id = repo_groups.repo_group_id
+                GROUP BY date, repo.repo_id
+                ORDER BY date
+            """)
+            results = pd.read_sql(closedIssueCountSQL, self.db, params={'repo_id': repo_id})
+            return results
+
+    @annotate(tag='get-repo')
+    def get_repo(self, owner, repo):
+        """
+        Returns repo id and repo group id by owner and repo
+
+        :param owner: the owner of the repo
+        :param repo: the name of the repo
+        """
+        getRepoSQL = s.sql.text("""
+            SELECT repo_id, repo_group_id
+            FROM repo
+            WHERE repo_name = :repo AND repo_path LIKE :owner
         """)
-        results = pd.read_sql(closedIssueCountSQL, self.db)#, params={"rg_id": '{}'.format(rg_id)})
+
+        results = pd.read_sql(getRepoSQL, self.db, params={'owner': '%{}_'.format(owner), 'repo': repo,})
+
         return results

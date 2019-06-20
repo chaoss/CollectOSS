@@ -67,7 +67,7 @@ class Server(object):
         #     password=self._augur.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
         #     host=self._augur.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
         #     port=self._augur.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-        #     dbname=self._augur.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
+        #     dbname=self._augur.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
         # )
 
         create_routes(self)

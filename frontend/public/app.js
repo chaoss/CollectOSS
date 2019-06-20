@@ -486,6 +486,7 @@ var AugurAPI = function () {
     this.getRepoGroups = this.__EndpointFactory('repo-groups');
     this.getOpenIssues = this.__EndpointFactory('repo-groups/25153/rg-open-issues-count');
     this.getClosedIssues = this.__EndpointFactory('repo-groups/25153/rg-closed-issues-count');
+
     this.openRequests = 0;
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter');
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata');
@@ -610,8 +611,6 @@ var AugurAPI = function () {
     value: function Repo(repo) {
       var _this3 = this;
 
-      if (repo.repo_id) {}
-
       if (repo.githubURL) {
         var splitURL = repo.githubURL.split('/');
         if (splitURL.length < 3) {
@@ -632,6 +631,22 @@ var AugurAPI = function () {
           var _splitURL2 = repo.gitURL.split('/');
           repo.owner = _splitURL2[0];
           repo.name = _splitURL2[1];
+        }
+      }
+
+      if (repo.owner && repo.name) {
+        if (repo.repo_id == null || repo.repo_group_id == null) {
+          var res = [];
+          $.ajax({
+            type: "GET",
+            url: this._version + '/repos/' + repo.owner + '/' + repo.name,
+            async: false,
+            success: function success(data) {
+              res = data;
+            }
+          });
+          repo.repo_id = res[0].repo_id;
+          repo.repo_group_id = res[0].repo_group_id;
         }
       }
 
@@ -689,7 +704,12 @@ var AugurAPI = function () {
         return __Endpoint(r, jsName, url);
       };
 
-      var RepoGroupEndpoint = function RepoGroupEndpoint(r, jsName, endpoint) {
+      var addRepoMetric = function addRepoMetric(r, jsName, endpoint) {
+        var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/repos/' + repo.repo_id + '/' + endpoint);
+        return __Endpoint(r, jsName, url);
+      };
+
+      var addRepoGroupMetric = function addRepoGroupMetric(r, jsName, endpoint) {
         var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/' + endpoint);
         return __Endpoint(r, jsName, url);
       };
@@ -782,14 +802,6 @@ var AugurAPI = function () {
         Timeseries(repo, 'tags', 'tags');
       }
 
-      if (repo.repo_id) {
-        RepoEndpoint(repo, 'currentGroup', 'current_group');
-      }
-
-      if (repo.repo_group_id) {
-        // RepoGroupEndpoint(repo, 'rgOpenIssuesCount', 'rg_open_issues_count')
-      }
-
       if (repo.gitURL) {
         // Other
         GitEndpoint(repo, 'changesByAuthor', 'changes_by_author');
@@ -799,6 +811,38 @@ var AugurAPI = function () {
         GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group');
         GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group');
         GitEndpoint(repo, 'facadeProject', 'facade_project');
+      }
+
+      if (repo.repo_group_id && repo.repo_id) {
+        addRepoMetric(repo, 'codeChanges', 'code-changes');
+        addRepoMetric(repo, 'codeChangesLines', 'code-changes-lines');
+        addRepoMetric(repo, 'issueNew', 'issues-new');
+        addRepoMetric(repo, 'issuesClosed', 'issues-closed');
+        addRepoMetric(repo, 'issueBacklog', 'issue-backlog');
+        addRepoMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new');
+        addRepoMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened');
+        addRepoMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed');
+        addRepoMetric(repo, 'subProject', 'sub-projects');
+        addRepoMetric(repo, 'contributors', 'contributors');
+        addRepoMetric(repo, 'contributorsNew', 'contributors-new');
+        addRepoMetric(repo, 'openIssuesCount', 'open-issues-count');
+        addRepoMetric(repo, 'closedIssuesCount', 'closed-issues-count');
+      }
+
+      if (repo.repo_group_id && repo.repo_id == null) {
+        addRepoGroupMetric(repo, 'codeChanges', 'code-changes');
+        addRepoGroupMetric(repo, 'codeChangesLines', 'code-changes-lines');
+        addRepoGroupMetric(repo, 'issueNew', 'issues-new');
+        addRepoGroupMetric(repo, 'issuesClosed', 'issues-closed');
+        addRepoGroupMetric(repo, 'issueBacklog', 'issue-backlog');
+        addRepoGroupMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new');
+        addRepoGroupMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened');
+        addRepoGroupMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed');
+        addRepoGroupMetric(repo, 'subProject', 'sub-projects');
+        addRepoGroupMetric(repo, 'contributors', 'contributors');
+        addRepoGroupMetric(repo, 'contributorsNew', 'contributors-new');
+        addRepoGroupMetric(repo, 'openIssuesCount', 'open-issues-count');
+        addRepoGroupMetric(repo, 'closedIssuesCount', 'closed-issues-count');
       }
 
       return repo;
@@ -1212,7 +1256,7 @@ module.exports = {
         });
         this.$router.push({
           name: 'gmd',
-          params: { owner: repo.owner, repo: repo.name }
+          params: { owner: repo.owner, repo: repo.name, repoID: repo.repoID, repoGroupID: repo.repoGroupID }
         });
         window.location.reload();
       }
@@ -1388,9 +1432,17 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
+var _Spinner = require('./Spinner');
+
+var _Spinner2 = _interopRequireDefault(_Spinner);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 module.exports = {
 
-  components: {},
+  components: {
+    Spinner: _Spinner2.default
+  },
   data: function data() {
     return {
       repos: {},
@@ -1398,7 +1450,8 @@ module.exports = {
       repo_relations: {},
       loaded: false,
       ascending: false,
-      sortColumn: ''
+      sortColumn: '',
+      group_id_name_map: {}
     };
   },
 
@@ -1450,7 +1503,9 @@ module.exports = {
         repo = e.url.slice(e.url.lastIndexOf('/') + 1);
       }
       this.$store.commit('setRepo', {
-        gitURL: e.url
+        gitURL: e.url,
+        repo_id: e.repo_id,
+        repo_group_id: e.repo_group_id
       });
 
       this.$store.commit('setTab', {
@@ -1469,7 +1524,7 @@ module.exports = {
       window.AugurAPI.getDownloadedGitRepos().then(function (data) {
         $(_this.$el).find('.spinner').removeClass('loader');
         $(_this.$el).find('.spinner').removeClass('relative');
-        _this.repos = window._.groupBy(data, 'project_name');
+        _this.repos = window._.groupBy(data, 'rg_name');
         _this.projects = Object.keys(_this.repos);
       });
     },
@@ -1486,6 +1541,7 @@ module.exports = {
           _this2.repo_groups = data;
 
           _this2.repo_groups.forEach(function (group) {
+            _this2.group_id_name_map[group.rg_name] = group.repo_group_id;
             _this2.repo_relations[group.rg_name] = _this2.repos.filter(function (repo) {
               return repo.rg_name == group.rg_name;
             });
@@ -1495,6 +1551,7 @@ module.exports = {
             if (repo.commits_all_time == null) repo.commits_all_time = 0;
             if (repo.issues_all_time == null) repo.issues_all_time = 0;
             repo.repo_count = _this2.repo_relations[repo.rg_name].length;
+            repo.repo_group_id = _this2.group_id_name_map[repo.rg_name];
           });
           console.log("LOADED repo groups", _this2.repo_relations);
           _this2.loaded = true;
@@ -1513,7 +1570,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git Repos by Project")]),_vm._v(" "),_c('div',{staticClass:"row section"},[_c('hr'),_vm._v(" "),_c('div',{staticClass:"col col-12 relative spinner loader",staticStyle:{"margin-left":"42.4%"}}),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"col-12"},[_c('h4',[_vm._v(_vm._s(_vm.project))]),_vm._v(" "),_c('div',{staticClass:"repo-link-holder"},[_c('table',{staticClass:"is-responsive"},[_c('thead',{staticClass:"repo-link-table repo-link-table-body repo-link-table-header"},[_c('tr',[_c('th',{on:{"click":function($event){return _vm.sortTable('url')}}},[_vm._v("  URL "),('url' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_vm._v("  Repo Group Name "),('rg_name' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('description')}}},[_vm._v("  Repo Description "),('description' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_vm._v("  Repo Count for this Group "),('repo_count' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('commits_all_time')}}},[_vm._v("  Total Commit Count "),('commits_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('issues_all_time')}}},[_vm._v("  Total Issue Count "),('issues_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_status')}}},[_vm._v("  Status "),('repo_status' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])])]),_vm._v(" "),_c('tbody',{staticClass:"repo-link-table repo-link-table-body"},_vm._l((_vm.repos),function(repo){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_count))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.commits_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.issues_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_status))])])}),0)])])]):_vm._e()])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',{staticClass:"unmaterialized"},[_c('h3',[_vm._v("Downloaded Git Repos by Project")]),_vm._v(" "),_c('div',{staticClass:"row section"},[_c('hr'),_vm._v(" "),(!_vm.loaded)?_c('spinner'):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"col-12"},[_c('h4',[_vm._v(_vm._s(_vm.project))]),_vm._v(" "),_c('div',{staticClass:"repo-link-holder"},[_c('table',{staticClass:"is-responsive"},[_c('thead',{staticClass:"repo-link-table repo-link-table-body repo-link-table-header"},[_c('tr',[_c('th',{on:{"click":function($event){return _vm.sortTable('url')}}},[_vm._v("  URL "),('url' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_vm._v("  Repo Group Name "),('rg_name' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('description')}}},[_vm._v("  Repo Description "),('description' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_vm._v("  Repo Count for this Group "),('repo_count' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('commits_all_time')}}},[_vm._v("  Total Commit Count "),('commits_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('issues_all_time')}}},[_vm._v("  Total Issue Count "),('issues_all_time' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()]),_vm._v(" "),_c('th',{on:{"click":function($event){return _vm.sortTable('repo_status')}}},[_vm._v("  Status "),('repo_status' == _vm.sortColumn)?_c('div',{staticClass:"arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])])]),_vm._v(" "),_c('tbody',{staticClass:"repo-link-table repo-link-table-body"},_vm._l((_vm.repos),function(repo){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_count))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.commits_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.issues_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_status))])])}),0)])])]):_vm._e()],1)])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -1956,6 +2013,10 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 ;(function(){
 'use strict';
 
+var _Spinner = require('./Spinner');
+
+var _Spinner2 = _interopRequireDefault(_Spinner);
+
 var _AugurHeader = require('./AugurHeader');
 
 var _AugurHeader2 = _interopRequireDefault(_AugurHeader);
@@ -1998,14 +2059,16 @@ module.exports = {
   data: function data() {
     return {
       colors: ["#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
-      values: { 'issues': [] },
+      values: { 'group_issues': [], 'repo_issues': [] },
       loaded: false,
-      project: null
+      project: null,
+      group: null
     };
   },
 
   components: {
     AugurHeader: _AugurHeader2.default,
+    Spinner: _Spinner2.default,
     TickChart: _TickChart2.default,
     LinesOfCodeChart: _LinesOfCodeChart2.default,
     NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
@@ -2026,27 +2089,39 @@ module.exports = {
       return this.$store.state.comparedRepos;
     }
   },
-  created: function created() {
+  mounted: function mounted() {
     var _this = this;
 
-    window.AugurAPI.getOpenIssues().then(function (data) {
-      console.log("DATA: ", data);
-      _this.values['issues'] = _this.values['issues'].concat(data);
-      console.log("DATA: ", _this.values['issues']);
+    var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+    var group = window.AugurAPI.Repo({ repo_group_id: repo.repo_group_id });
+
+    group.openIssuesCount().then(function (data) {
+      _this.group = data[0]['rg_name'];
+      _this.values['group_issues'] = _this.values['group_issues'].concat(data);
+      console.log("group DATA: ", _this.values['group_issues']);
     });
-    window.AugurAPI.getClosedIssues().then(function (data) {
-      console.log("DATA: ", data);
-      _this.values['issues'] = _this.values['issues'].concat(data);
-      console.log("DATA: ", _this.values['issues']);
-      _this.loaded = true;
+    group.closedIssuesCount().then(function (data) {
+      _this.values['group_issues'] = _this.values['group_issues'].concat(data);
+      console.log("group DATA: ", _this.values['group_issues']);
     });
+
+    repo.openIssuesCount().then(function (data) {
+      _this.values['repo_issues'] = _this.values['repo_issues'].concat(data);
+      console.log("repo DATA: ", _this.values['repo_issues']);
+    });
+    repo.closedIssuesCount().then(function (data) {
+      _this.values['repo_issues'] = _this.values['repo_issues'].concat(data);
+      console.log("repo DATA: ", _this.values['repo_issues']);
+    });
+
+    this.loaded = true;
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Overview of Issue Counts for Repo Group: All repositories")]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":"Issue Counts for All Repositories - Grouped by Week","fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['issues']}})],1)]):_vm._e()])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(_vm.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v("Overview of Issue Counts for Repo Group: All repositories")]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!_vm.loaded)?_c('spinner'):_vm._e(),_vm._v(" "),(_vm.loaded)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-50px) !important"}},[_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":'Issue Count History for ' + _vm.repo + ' - Grouped by Week',"fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['repo_issues']}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":'Issue Count History for this Repo Group:  ' + _vm.group + ' - Grouped by Week',"fieldone":"open_count","fieldtwo":"closed_count","data":_vm.values['group_issues']}})],1)]):_vm._e()],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2797,6 +2872,116 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
     hotAPI.createRecord("data-v-0abc386c", __vue__options__)
   } else {
     hotAPI.reload("data-v-0abc386c", __vue__options__)
+  }
+})()}
+});
+
+;require.register("components/Spinner.vue", function(exports, require, module) {
+var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 96, stdin */\n.sl-spinner {\n  border-style: solid;\n  -webkit-transform: translateZ(0);\n  -ms-transform: translateZ(0);\n  transform: translateZ(0);\n  animation-iteration-count: infinite;\n  animation-timing-function: linear;\n  border-radius: 50%;\n  width: 30px;\n  height: 30px; }\n\n@keyframes forward {\n  0% {\n    -webkit-transform: rotate(0deg);\n    transform: rotate(0deg); }\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg); } }\n\n@keyframes backward {\n  0% {\n    -webkit-transform: rotate(0deg);\n    transform: rotate(0deg); }\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(-360deg); } }")
+;(function(){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = {
+  props: {
+    status: {
+      type: Boolean,
+      default: true
+    },
+
+    rotation: {
+      type: Boolean,
+      default: true
+    },
+
+    size: {
+      type: Number,
+      default: 80
+    },
+
+    depth: {
+      type: Number,
+      default: 3
+    },
+
+    speed: {
+      type: Number,
+      default: 1.0
+    },
+
+    color: {
+      type: String,
+      default: '#6589b6'
+    }
+  },
+
+  data: function data() {
+    return {
+      rotationAnimations: ['forward', 'backward'],
+      sizeUnits: 'px',
+      timeUnits: 's'
+    };
+  },
+
+
+  computed: {
+    rotationDirection: function rotationDirection() {
+      return this.rotation ? this.rotationAnimations[0] : this.rotationAnimations[1];
+    },
+    spinnerSize: function spinnerSize() {
+      return this.size + this.sizeUnits;
+    },
+    spinnerDepth: function spinnerDepth() {
+      return this.depth + this.sizeUnits;
+    },
+    spinnerSpeed: function spinnerSpeed() {
+      return this.speed + this.timeUnits;
+    },
+    spinnerStyle: function spinnerStyle() {
+      return {
+        borderTopColor: this.hexToRGB(this.color, 0.15),
+        borderRightColor: this.hexToRGB(this.color, 0.15),
+        borderBottomColor: this.hexToRGB(this.color, 0.15),
+        borderLeftColor: this.color,
+        width: this.spinnerSize,
+        height: this.spinnerSize,
+        borderWidth: this.spinnerDepth,
+        animationName: this.rotationDirection,
+        animationDuration: this.spinnerSpeed
+      };
+    }
+  },
+  methods: {
+    hexToRGB: function hexToRGB(hex, alpha) {
+      var r = parseInt(hex.slice(1, 3), 16),
+          g = parseInt(hex.slice(3, 5), 16),
+          b = parseInt(hex.slice(5, 7), 16);
+
+      if (alpha) {
+        return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+      } else {
+        return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+      }
+    }
+  }
+};
+})()
+if (module.exports.__esModule) module.exports = module.exports.default
+var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
+if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{directives:[{name:"show",rawName:"v-show",value:(_vm.status),expression:"status"}],staticClass:"sl-spinner",staticStyle:{"margin":"0 auto"},style:(_vm.spinnerStyle)})}
+__vue__options__.staticRenderFns = []
+if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), true)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  module.hot.dispose(__vueify_style_dispose__)
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-48a20288", __vue__options__)
+  } else {
+    hotAPI.reload("data-v-48a20288", __vue__options__)
   }
 })()}
 });
@@ -10114,11 +10299,11 @@ var _vueRouter = require('vue-router');
 
 var _vueRouter2 = _interopRequireDefault(_vueRouter);
 
-var _MetricsStatusCard = require('../components/MetricsStatusCard.vue');
+var _MetricsStatusCard = require('../components/MetricsStatusCard');
 
 var _MetricsStatusCard2 = _interopRequireDefault(_MetricsStatusCard);
 
-var _BaseRepoActivityCard = require('../components/BaseRepoActivityCard.vue');
+var _BaseRepoActivityCard = require('../components/BaseRepoActivityCard');
 
 var _BaseRepoActivityCard2 = _interopRequireDefault(_BaseRepoActivityCard);
 

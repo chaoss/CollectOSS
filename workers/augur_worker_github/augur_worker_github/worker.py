@@ -46,6 +46,8 @@ class GitHubWorker:
         self._task = task
         self._child = None
         self._queue = Queue()
+        self._maintain_queue = Queue()
+        self.working_on = None
         self.config = config
         self.db = None
         self.table = None
@@ -137,7 +139,7 @@ class GitHubWorker:
 
         # Populate queue
         for index, row in reorganized_repos.iterrows():
-            self._queue.put(CollectorTask(message_type='TASK', entry_info=row))
+            self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
 
 
 
@@ -179,7 +181,7 @@ class GitHubWorker:
 
         self.run()
 
-        requests.post('http://localhost:5000/api/unstable/workers', json=specs, headers=self.headers) #hello message
+        requests.post('http://localhost:5000/api/unstable/workers', json=specs) #hello message
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -214,7 +216,10 @@ class GitHubWorker:
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
         try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
+            if value['action'] == "UPDATE":
+                self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
+            else:
+                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
         
         # list_queue = dump_queue(self._queue)
         # logging.info("worker's queue after adding the job: " + list_queue)
@@ -246,8 +251,13 @@ class GitHubWorker:
         while True:
             if not self._queue.empty():
                 message = self._queue.get()
+                self.working_on = "UPDATE"
             else:
-                break
+                if not self._maintain_queue.empty():
+                    message = self._maintain_queue.get()
+                    self.working_on = "MAINTAIN"
+                else:
+                    break
 
             if message.type == 'EXIT':
                 break
@@ -293,16 +303,17 @@ class GitHubWorker:
                 logging.info("Caught exception: " + str(e) + "....\n")
                 logging.info("Some kind of issue CHECKTHIS  " + url + " ...\n")
                 j = ""
-                logging.info("set j to an empty string " + str(j) + "...\n ")
+                logging.info("setting j to an empty string " + str(j) + "...\n ")
             else:
                 logging.info("JSON seems ill-formed " + str(r) + "....\n")
-                logging.info("value of j is " + str(j) + "....\n")
+                logging.info("Keys of r: " + str(r.__dict__.keys()))
+                logging.info("setting value of j as " + str(j) + "....\n")
 
             if r.status_code != 204:
                 contributors = r.json()
                 logging.info("length of j is " + str(len(j)))
             if len(j) == 0:
-                logging.info("length of j is " + str(len(j)))
+                logging.info("length of j is " + str(len(j)) + "... breaking from pagination")
                 break
             contributors += j
             i += 1
@@ -420,7 +431,7 @@ class GitHubWorker:
         if ".git" in name:
             name = name[:-4]
 
-        url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues?state=closed&page={}")
+        url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues?state=all&page={}")
         issues = []
         i = 0
         # Paginate through all the issues
@@ -429,7 +440,6 @@ class GitHubWorker:
             r = requests.get(url=url.format(i), headers=self.headers)
             self.update_rate_limit(r)
             j = r.json()
-            logging.info(str(j))
             if len(j) == 0:
                 break
             issues += j
@@ -480,8 +490,13 @@ class GitHubWorker:
             if 'closed_at' in issue_dict:
                 for event in issue_events:
                     if event['event'] == 'closed':
-                        logging.info('event-issue '  ' event seems missing somethinga '  + "..... \n") 
-                        cntrb_id = self.find_id_from_login(event['actor']['login'])
+                        logging.info('event-issue '  ' event seems missing somethinga '  + "..... \n")
+                        if event['actor'] is not None:
+                            cntrb_id = self.find_id_from_login(event['actor']['login'])
+                            if cntrb_id is None:
+                                logging.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN... using alt id of 1")
+                                cntrb_id = 1
+                        
             
             issue = {
                 "repo_id": issue_dict['repo_id'],
@@ -608,10 +623,6 @@ class GitHubWorker:
     
             logging.info("Number of comments needing insertion: " + str(len(comments_need_insertion)))
 
-            
-
-
-            logging.info(str(comments_need_insertion))
             for comment in comments_need_insertion:
                 issue_comment = {
                     "pltfrm_id": 25150,
@@ -785,9 +796,13 @@ class GitHubWorker:
             pass
 
     def update_rate_limit(self, response):
-        # self.rate_limit -= 1
-        # logging.info("OUR TRACK OF LIMIT: " + str(self.rate_limit) + " ACTUAL: " + str(response.headers['X-RateLimit-Remaining']))
-        self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
+        logging.info(str(response.headers))
+        try:
+            self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
+            logging.info("Recieved rate limit from headers\n")
+        except:
+            self.rate_limit -= 1
+            logging.info("Headers did not work, had to decrement\n")
         logging.info("Updated rate limit, you have: " + str(self.rate_limit) + " requests remaining.\n")
         if self.rate_limit <= 0:
 
@@ -801,9 +816,10 @@ class GitHubWorker:
         
     def register_task_completion(self, entry_info, model):
 
-        #add to history table
+        # Add to history table
         task_completed = entry_info.to_dict()
         task_completed['worker_id'] = self.config['id']
+        task_completed['action'] = self.working_on
 
         task_history = {
             "repo_id": entry_info['repo_id'],
@@ -818,7 +834,7 @@ class GitHubWorker:
         logging.info("Recorded job completion for model: " + model + "\n")
         logging.info(task_completed)
 
-        #update job process table
+        # Update job process table
         updated_job = {
             "since_id_str": entry_info['repo_id'],
             "last_count": self.results_counter,
@@ -832,7 +848,7 @@ class GitHubWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        # requests.post('http://localhost:5000/api/unstable/completed_task', json=task_completed, headers=self.headers)
+        requests.post('http://localhost:5000/api/unstable/completed_task', json=task_completed)
 
         # Reset results counter for next task
         self.results_counter = 0

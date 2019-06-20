@@ -50,13 +50,14 @@ class Housekeeper:
 
         # List repo subsections that may have special update requirements
         subsection_test = ['https://github.com/rails/exception_notification.git']
+        all_sorted_by_issues = sort_issue_repos()
 
         # List of tasks that need periodic updates
         self.__updatable = [
             {
                 'model': 'issues',
                 'started': False,
-                'delay': 5,
+                'delay': 15,
                 'section': subsection_test
             }
         ]
@@ -140,8 +141,26 @@ class Housekeeper:
         for process in self.__processes:
             process.terminate()
 
+    def sort_issue_repos(self):
+        # Query all repos and last repo id
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+            """)
 
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
+        repoIdSQL = s.sql.text("""
+            SELECT since_id_str FROM gh_worker_job
+            """)
+
+        df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+        last_id = int(df.iloc[0]['since_id_str'])
+        before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
+        after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
+
+        reorganized_repos = after_repos.append(before_repos)
+        return reorganized_repos
+        
     # def run(self):
 
 
