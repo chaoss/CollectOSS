@@ -61,12 +61,7 @@
                       <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_status' == sortColumn"></div>
                     </div>
                   </th> -->
-                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
-                    <div class="row">
-                      <div class="col col-9">Options</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
-                    </div>
-                  </th>
+                  <th scope="col" class="border-0">Options</th>
                 </tr>
               </thead>
               <tbody>
@@ -174,6 +169,16 @@ export default {
         })
       })
     },
+    onCompare (e) {
+      var element = document.getElementById("invalid")
+      this.compCount++
+      let repo = window.AugurAPI.Repo({
+        gitURL: e.target.value
+      })
+      this.$store.commit('addComparedRepo', {
+        gitURL: e.target.value
+      })
+    }, 
     btoa(s) {
       return window.btoa(s)
     }

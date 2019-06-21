@@ -55,12 +55,7 @@
                       <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
-                    <div class="row">
-                      <div class="col col-9">Options</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
-                    </div>
-                  </th>
+                  <th width="20%" scope="col" class="border-0">Options</th>
                 </tr>
               </thead>
               <tbody>

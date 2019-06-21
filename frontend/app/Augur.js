@@ -53,6 +53,7 @@ export default function Augur () {
       page: 'dashboard',
       baseRepo: null,
       gitRepo: null,
+      comparedRepoGroups: [],
       comparedRepos: [],
       trailingAverage: 180,
       startDate: new Date('1 February 2011'),

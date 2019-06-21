@@ -41,13 +41,29 @@
                 </d-dropdown-item>
               </d-collapse>
             </li>
-            <li class="nav-item dropdown" style="height: 240px !important; position: absolute; bottom: 0; margin-top: auto">
+            <li class="nav-item dropdown comp_manager" >
               <d-link style="font-size: 0.85rem" class="nav-link">
               <!-- <d-link style="font-size: 1.4rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`"> -->
                 <i class="material-icons">vertical_split</i>
                 <span>Comparison Manager</span>
                 <div class="item-icon-wrapper" />
               </d-link>
+
+              <div style="text-align: center; border-bottom: 1px solid #e1e5eb;">
+                <div class="comp_info">
+                  Comparison type N/A
+                </div>
+
+                <div class="comp_info">
+                  {{ repo.url }}
+                </div>
+
+                <div class="comp_info">
+                  No comparison(s) selected
+                </div>
+              </div>
+              
+
               <div class="row" style="position: absolute; bottom: 0; padding-left: 0px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
                   <d-link class="nav-link" style="padding: 0.7rem 0.7rem 0.7rem 1.5rem; margin-left: 1rem">
@@ -85,6 +101,25 @@ export default {
       type: Boolean,
       default: false,
     },
+  },
+  computed: {
+    comparison_type () {
+
+    },
+    repo () {
+      return this.$store.state.baseRepo || {'url': 'No base repo selected'}
+    },
+    comparison () {
+      if (this.$store.state.comparedRepos.length == 1) {
+        return this.$store.state.comparedRepos[0].gitURL
+      }
+      else if (this.$store.state.comparedRepoGroups.length == 1) {
+        return this.$store.state.comparedRepoGroups[0].rg_name
+      }
+      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
+
+      }
+    }
   },
   data() {
     return {

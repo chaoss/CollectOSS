@@ -3706,6 +3706,15 @@ details summary svg {
   background-position-y: bottom;
   padding-right: 2rem;
 }
+.comp_info {
+  padding: 10px;
+}
+.comp_manager {
+  height: 13.5rem !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  margin-top: auto !important;
+}
 @-moz-keyframes spin {
   0% {
     transform: rotate(0deg);
