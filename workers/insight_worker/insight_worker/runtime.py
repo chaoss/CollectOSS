@@ -37,7 +37,7 @@ def create_server(app, gw):
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51235, help='Port')
+@click.option('--port', default=51242, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
@@ -51,6 +51,7 @@ def main(augur_url, host, port):
             "password": credentials["password"],
             "port": credentials["port"],
             "user": credentials["user"],
+            "endpoint": "http://localhost:5000/api/unstable/metrics/status",
             "database": credentials["database"],
             "table": "insights",
             "display_name": "",
@@ -63,7 +64,9 @@ def main(augur_url, host, port):
     app.gh_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
+    print("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=port)
+    print("Killing Flask App: " + str(os.getpid()))
     
 
 

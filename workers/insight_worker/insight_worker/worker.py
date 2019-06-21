@@ -41,7 +41,8 @@ class InsightWorker:
         self._queue = Queue()
         self.config = config
         self.db = None
-        self.table = None
+        self.tool_source = 'Insight Worker'
+        self.tool_version = '0.0.1' # See __init__.py
 
         logging.info("Worker initializing...\n")
         
@@ -56,6 +57,9 @@ class InsightWorker:
             ],
             "config": [self.config]
         }
+
+        self.metric_results_counter = 0
+        self.insight_results_counter = 0
 
         """
         Connect to GHTorrent
@@ -133,12 +137,12 @@ class InsightWorker:
 
         """ Query all repos """
         repoUrlSQL = s.sql.text("""
-            SELECT repo_id FROM repo WHERE repo_git = '{}'
+            SELECT repo_id, repo_group_id FROM repo WHERE repo_git = '{}'
             """.format(git_url))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
-        print(rs, repoUrlSQL)
         try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs.iloc[0]["repo_id"]}))
+            self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, 
+                "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]}))
         
         # list_queue = dump_queue(self._queue)
         # print("worker's queue after adding the job: " + list_queue)
@@ -187,7 +191,27 @@ class InsightWorker:
         """ Data collection function
         Query the github api for contributors and issues (not yet implemented)
         """
+        # Update table of endpoints before we query them all
         self.update_metrics()
+
+        """ Query all endpoints """
+        endpointSQL = s.sql.text("""
+            SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
+            """)
+        endpoints = pd.read_sql(endpointSQL, self.db, params={}).to_json()
+        logging.info(str(endpoints))
+
+        base_url = 'http://localhost:5000/api/unstable/repo-groups/%s/repos/%s/' % (
+            entry_info['repo_id'], entry_info['repo_group_id'])
+        for endpoint in endpoints:
+            url = base_url + endpoint['cm_info']
+            logging.info("Hitting endpoint: " + url + "\n")
+            r = requests.get(url=url)
+            data = r.json()
+            
+
+        
+
 
 
         # data[0]['repo_id'] = entry_info['repo_id']
@@ -200,8 +224,61 @@ class InsightWorker:
         # requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
 
     def update_metrics(self):
+        logging.info("Preparing to update metrics ...\n\n" + 
+            "Hitting endpoint: http://localhost:5000/api/unstable/metrics/status ...\n")
         r = requests.get(url='http://localhost:5000/api/unstable/metrics/status')
         data = r.json()
-        logging.info(str(data))
 
+        active_metrics = [metric for metric in data if metric['backend_status'] == 'implemented']
+
+        # Duplicate checking ...
+        need_insertion = self.filter_duplicates({'cm_api_endpoint_repo': "endpoint"}, ['chaoss_metric_status'], active_metrics)
+        logging.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
+
+        for metric in need_insertion:
+
+            tuple = {
+                "cm_group": metric['group'],
+                "cm_source": metric['data_source'],
+                "cm_type": metric['metric_type'],
+                "cm_backend_status": metric['backend_status'],
+                "cm_frontend_status": metric['frontend_status'],
+                "cm_defined": True if metric['is_defined'] == 'true' else False,
+                "cm_api_endpoint_repo": metric['endpoint'],
+                "cm_api_endpoint_rg": None,
+                "cm_name": metric['display_name'],
+                "cm_working_group": metric['group'],
+                "cm_info": metric['tag'],
+                "tool_source": self.tool_source,
+                "tool_version": self.tool_version,
+                "data_source": metric['data_source']
+            }
+            # Commit metric insertion to the chaoss metrics table
+            result = self.db.execute(self.metrics_table.insert().values(tuple))
+            logging.info("Primary key inserted into the metrics table: " + str(result.inserted_primary_key))
+            self.metric_results_counter += 1
+
+            logging.info("Inserted metric: " + metric['display_name'] + "\n")
+
+    def filter_duplicates(self, cols, tables, og_data):
+        need_insertion = []
+
+        table_str = tables[0]
+        del tables[0]
+        for table in tables:
+            table_str += ", " + table
+        for col in cols.keys():
+            colSQL = s.sql.text("""
+                SELECT {} FROM {}
+                """.format(col, table_str))
+            values = pd.read_sql(colSQL, self.db, params={})
+
+            for obj in og_data:
+                if values.isin([obj[cols[col]]]).any().any():
+                    logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
+                elif obj not in need_insertion:
+                    need_insertion.append(obj)
+        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) + 
+            " to " + str(len(need_insertion)) + "\n")
+        return need_insertion
 
