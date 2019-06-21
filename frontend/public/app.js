@@ -6433,7 +6433,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-1bac4f83", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-1bac4f83", __vue__options__)
+    hotAPI.reload("data-v-1bac4f83", __vue__options__)
   }
 })()}
 });
@@ -8690,7 +8690,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 });
 
 ;require.register("components/layout/MainSidebar/MainSidebar.vue", function(exports, require, module) {
-var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 147, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 150, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
+var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 146, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 149, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
 ;(function(){
 'use strict';
 
@@ -8767,7 +8767,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-ac7c9dc2", __vue__options__)
   } else {
-    hotAPI.reload("data-v-ac7c9dc2", __vue__options__)
+    hotAPI.rerender("data-v-ac7c9dc2", __vue__options__)
   }
 })()}
 });
@@ -12095,7 +12095,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-fc12f8f2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-fc12f8f2", __vue__options__)
+    hotAPI.reload("data-v-fc12f8f2", __vue__options__)
   }
 })()}
 });
@@ -12337,8 +12337,8 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0"},[_vm._m(2),_vm._v(" "),_c('tbody',_vm._l((_vm.repo_groups),function(group){return _c('tr',[_c('td',[_vm._v(_vm._s(group.repo_group_id))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_website))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_last_modified))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_type))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.repo_count))])])}),0)])])])])])])}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Viewing all")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Repo Groups")])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"card-header border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v("Currently Stored Groups")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo Group ID")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Name")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Description")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Website")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Last Modified")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Type")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo Count")])])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"row",attrs:{"v-show":_vm.loaded}},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0",staticStyle:{"table-layout":"fixed"}},[_c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Name")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_description')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Description")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_website')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Website")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_last_modified')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Last Modified")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_type')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Type")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Repo Count")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Options")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])])])]),_vm._v(" "),_c('tbody',_vm._l((_vm.repo_groups),function(group){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(_vm.repo)}}},[_vm._v(_vm._s(group.rg_name))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_website))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_last_modified))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_type))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.repo_count))]),_vm._v(" "),_c('td',[_c('div',{staticClass:"row"},[_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"margin-left":"2rem","margin-right":"1rem","padding":"0"},attrs:{"id":"favorite"}},[_c('i',{staticClass:"material-icons"},[_vm._v("star_rate")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#favorite","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Consider this repo group as a \"favorite\" and our workers will regulaly update its metrics' data before others\n                    ")]),_vm._v(" "),_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"padding":"0"},attrs:{"id":"add_compare"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#add_compare","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Add this repo group to your current compared repos\n                    ")])],1)])])}),0)])])])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Viewing all")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Repo Groups")])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"card-header border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v("Currently Stored Groups")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -12346,7 +12346,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-2a6a4e83", __vue__options__)
   } else {
-    hotAPI.reload("data-v-2a6a4e83", __vue__options__)
+    hotAPI.rerender("data-v-2a6a4e83", __vue__options__)
   }
 })()}
 });
@@ -12566,11 +12566,33 @@ exports.default = {
       repo_groups: [],
       repo_relations: {},
       themes: ['dark', 'info', 'royal-blue', 'warning'],
-      loading: true
+      loaded: false,
+      ascending: false,
+      sortColumn: '',
+      group_id_name_map: {}
     };
   },
 
   methods: {
+    sortTable: function sortTable(col) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+
+      var ascending = this.ascending;
+
+      this.repos.sort(function (a, b) {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1;
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1;
+        }
+        return 0;
+      });
+    },
     getRepoGroups: function getRepoGroups() {
       var _this = this;
 
@@ -12589,6 +12611,7 @@ exports.default = {
             });
             group.repo_count = _this.repo_relations[group.rg_name].length;
           });
+          _this.sortTable('commits_all_time');
           console.log("LOADED repo groups", _this.repo_relations);
           _this.loading = false;
         });
@@ -12606,8 +12629,8 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('bar-loader',{attrs:{"color":"#bada55","loading":_vm.loading,"size":150}}),_vm._v(" "),_c('div',{staticClass:"row",attrs:{"v-show":!_vm.loading}},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0"},[_vm._m(2),_vm._v(" "),_c('tbody',_vm._l((_vm.repos),function(repo){return _c('tr',[_c('td',[_vm._v(_vm._s(repo.repo_id))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.url))])])}),0)])])])])])],1)}
-__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Viewing all")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Repos")])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"card-header border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v("Currently Stored Repos")])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo ID")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Group Name")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Repo Name")]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Git URL")])])])}]
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"row",attrs:{"v-show":_vm.loaded}},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0",staticStyle:{"table-layout":"fixed"}},[_c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('url')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("URL")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Repo Group Name")]),_vm._v(" "),('rg_name' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"30%","scope":"col"},on:{"click":function($event){return _vm.sortTable('description')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Repo Description")]),_vm._v(" "),('description' == _vm.sortColumn)?_c('div',{staticClass:"col col-2 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Group's Repo Count")]),_vm._v(" "),('repo_count' == _vm.sortColumn)?_c('div',{staticClass:"col col-2 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('commits_all_time')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Total Commit Count")]),_vm._v(" "),('commits_all_time' == _vm.sortColumn)?_c('div',{staticClass:"col col-2 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('issues_all_time')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-0"},[_vm._v("Total Issue Count")]),_vm._v(" "),('issues_all_time' == _vm.sortColumn)?_c('div',{staticClass:"col col-2 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Options")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])])])]),_vm._v(" "),_c('tbody',_vm._l((_vm.repos),function(repo){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.rg_name))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.repo_count))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.commits_all_time))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(repo.issues_all_time))]),_vm._v(" "),_c('td',[_c('div',{staticClass:"row"},[_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"margin-left":"2rem","margin-right":"1rem","padding":"0"},attrs:{"id":"favorite_repo"}},[_c('i',{staticClass:"material-icons"},[_vm._v("star_rate")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#favorite_repo","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Consider this repo group as a \"favorite\" and our workers will regulaly update its metrics' data before others\n                    ")]),_vm._v(" "),_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"padding":"0"},attrs:{"id":"add_compare_repo"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#add_compare_repo","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Add this repo group to your current compared repos\n                    ")])],1)])])}),0)])])])])])])}
+__vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Viewing all")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Repos")])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"card-header border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v("Currently Stored Repos")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
@@ -12615,7 +12638,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-57e7f334", __vue__options__)
   } else {
-    hotAPI.reload("data-v-57e7f334", __vue__options__)
+    hotAPI.rerender("data-v-57e7f334", __vue__options__)
   }
 })()}
 });

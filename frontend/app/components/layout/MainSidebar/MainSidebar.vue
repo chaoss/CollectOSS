@@ -63,7 +63,6 @@
                     <span>Add</span>
                     <div class="item-icon-wrapper" />
                   </d-link>
-                  </d-link>
                 </div>
               </div>
               

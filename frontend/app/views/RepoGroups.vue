@@ -9,34 +9,90 @@
     </div>
 
     <!-- Default Light Table -->
-    <div class="row">
+    <div :v-show="loaded" class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
             <h6 class="m-0">Currently Stored Groups</h6>
           </div>
           <div class="card-body p-0 pb-3 text-center">
-            <table class="table mb-0">
+            <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th scope="col" class="border-0">Repo Group ID</th>
-                  <th scope="col" class="border-0">Name</th>
-                  <th scope="col" class="border-0">Description</th>
-                  <th scope="col" class="border-0">Website</th>
-                  <th scope="col" class="border-0">Last Modified</th>
-                  <th scope="col" class="border-0">Type</th>
-                  <th scope="col" class="border-0">Repo Count</th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
+                    <div class="row">
+                      <div class="col col-9">Name</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_description')"> 
+                    <div class="row">
+                      <div class="col col-9">Description</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_website')"> 
+                    <div class="row">
+                      <div class="col col-9">Website</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')"> 
+                    <div class="row">
+                      <div class="col col-9">Last Modified</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_type')"> 
+                    <div class="row">
+                      <div class="col col-9">Type</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
+                    <div class="row">
+                      <div class="col col-9">Repo Count</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
+                    <div class="row">
+                      <div class="col col-9">Options</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="group in repo_groups">
-                  <td>{{ group.repo_group_id }}</td>
-                  <td>{{ group.rg_name }}</td>
+                  <td>
+                    <a href="#" @click="onGitRepo(repo)">{{ group.rg_name }}</a>
+                  </td>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
                   <td>{{ group.rg_last_modified }}</td>
                   <td>{{ group.rg_type }}</td>
                   <td>{{ group.repo_count }}</td>
+                  <td>
+                    <div class="row">
+                      <d-link id="favorite" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0">
+                        <i class="material-icons">star_rate</i>
+                        <div class="item-icon-wrapper" />
+                      </d-link>
+                      <d-tooltip target="#favorite"
+                        container=".shards-demo--example--tooltip-01">
+                        Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
+                      </d-tooltip>
+                      <d-link id="add_compare" class="nav-link col col-2" style="padding: 0">
+                        <i class="material-icons">library_add</i>
+                        <div class="item-icon-wrapper" />
+                      </d-link>
+                      <d-tooltip target="#add_compare"
+                        container=".shards-demo--example--tooltip-01">
+                        Add this repo group to your current compared repos
+                      </d-tooltip>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>

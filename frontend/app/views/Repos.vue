@@ -8,30 +8,98 @@
       </div>
     </div>
 
-    <bar-loader class="" color="#bada55" :loading="loading" :size="150"></bar-loader>
     <!-- Default Light Table -->
-    <div :v-show="!loading" class="row">
+    <div :v-show="loaded" class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
             <h6 class="m-0">Currently Stored Repos</h6>
           </div>
           <div class="card-body p-0 pb-3 text-center">
-            <table class="table mb-0">
+            <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th scope="col" class="border-0">Repo ID</th>
-                  <th scope="col" class="border-0">Group Name</th>
-                  <th scope="col" class="border-0">Repo Name</th>
-                  <th scope="col" class="border-0">Git URL</th>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('url')"> 
+                    <div class="row">
+                      <div class="col col-9">URL</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
+                    <div class="row">
+                      <div class="col col-9">Repo Group Name</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
+                    <div class="row">
+                      <div class="col col-9">Repo Description</div>
+                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'description' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
+                    <div class="row">
+                      <div class="col col-9">Group's Repo Count</div>
+                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('commits_all_time')">
+                    <div class="row">
+                      <div class="col col-9">Total Commit Count</div>
+                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'commits_all_time' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('issues_all_time')">
+                    <div class="row">
+                      <div class="col col-0">Total Issue Count</div>
+                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'issues_all_time' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_status')">
+                    <div class="row">
+                      <div class="col col-9">Status</div>
+                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_status' == sortColumn"></div>
+                    </div>
+                  </th> -->
+                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
+                    <div class="row">
+                      <div class="col col-9">Options</div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="repo in repos">
-                  <td>{{ repo.repo_id }}</td>
+                  <td>
+                    <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
+                  </td>
                   <td>{{ repo.rg_name }}</td>
-                  <td>{{ repo.repo_name }}</td>
-                  <td>{{ repo.url }}</td>
+                  <td>{{ repo.description }}</td>
+                  <td>{{ repo.repo_count }}</td>
+                  <td>{{ repo.commits_all_time }}</td>
+                  <td>{{ repo.issues_all_time }}</td>
+                  <!-- <td>{{ repo.repo_status }}</td> -->
+                  <td>
+                    <div class="row">
+                      <d-link id="favorite_repo" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0">
+                        <i class="material-icons">star_rate</i>
+                        <div class="item-icon-wrapper" />
+                      </d-link>
+                      <d-tooltip target="#favorite_repo"
+                        container=".shards-demo--example--tooltip-01">
+                        Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
+                      </d-tooltip>
+                      <d-link id="add_compare_repo" class="nav-link col col-2" style="padding: 0">
+                        <i class="material-icons">library_add</i>
+                        <div class="item-icon-wrapper" />
+                      </d-link>
+                      <d-tooltip target="#add_compare_repo"
+                        container=".shards-demo--example--tooltip-01">
+                        Add this repo group to your current compared repos
+                      </d-tooltip>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -58,10 +126,32 @@ export default {
       repo_groups: [],
       repo_relations: {},
       themes: ['dark', 'info', 'royal-blue', 'warning'],
-      loading: true
+      loaded: false,
+      ascending: false,
+      sortColumn: '',
+      group_id_name_map: {},
     }
   },
   methods: {
+    sortTable(col) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+
+      var ascending = this.ascending;
+
+      this.repos.sort(function(a, b) {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1
+        }
+        return 0;
+      })
+    },
     getRepoGroups() {
       console.log("START")
       window.AugurAPI.getRepos().then((data) => {
@@ -78,6 +168,7 @@ export default {
             })
             group.repo_count = this.repo_relations[group.rg_name].length
           })
+          this.sortTable('commits_all_time')
           console.log("LOADED repo groups", this.repo_relations)
           this.loading = false
         })
