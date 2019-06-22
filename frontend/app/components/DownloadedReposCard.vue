@@ -108,8 +108,6 @@ module.exports = {
       }
       this.$store.commit('setRepo', {
         gitURL: e.url,
-        repo_id: e.repo_id,
-        repo_group_id: e.repo_group_id
       })
 
       this.$store.commit('setTab', {
