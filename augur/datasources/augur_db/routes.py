@@ -355,6 +355,49 @@ def create_routes(server):
     server.addRepoMetric(augur_db.issue_duration, 'issue-duration')
 
     """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-participants Issue Participants
+    @apiName issue-participants
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21326,
+                            "issue_id": 38803,
+                            "participants": 11
+                        },
+                        {
+                            "repo_id": 21327,
+                            "issue_id": 26422,
+                            "participants": 4
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issue_participants, 'issue-participants')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-participants Issue Participants
+    @apiName issue-participants
+    @apiGroup Evolution
+    @apiDescription <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
+    @apiParam {String} repo_group_id Repository Group ID.
+    @apiParma {String} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "issue_id": 38829,
+                            "participants": 23
+                        },
+                        {
+                            "issue_id": 38830,
+                            "participants": 8
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issue_participants, 'issue-participants')
+
+    """
     @api {get} /repo-groups/:repo_group_id/issue-backlog Issue Backlog
     @apiName issue-backlog
     @apiGroup Evolution
