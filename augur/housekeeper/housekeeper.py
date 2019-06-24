@@ -7,9 +7,9 @@ import sqlalchemy as s
 import pandas as pd
 import os
 import zmq
+import json
 
-logging.basicConfig(filename='housekeeper.log')
-# logging = logging.getlogging(name="housekeeper_logging")
+logging.basicConfig(filename='housekeeper.log', filemode='w', level=logging.INFO)
 
 
 UPDATE_DELAY = 5 #5 sec for testing # 86400 (1 day)
@@ -17,17 +17,13 @@ UPDATE_DELAY = 5 #5 sec for testing # 86400 (1 day)
 def client_git_url_task(identity, model, git_url):
     """Basic request-reply client using REQ socket."""
     socket = zmq.Context().socket(zmq.REQ)
-    socket.identity = u"git-url-client-{}".format(identity).encode("ascii")
+    socket.identity = u"git-url-client-{}-{}".format(identity, os.getpid()).encode("ascii")
     socket.connect("ipc://backend.ipc")
-    # socket.connect("tcp://localhost:5558")
+
     # Send request, get reply
-    request = b'UPDATE {"models":[model],"given":{"git_url": git_url}}'
+    request = b'UPDATE {"model":"%s","given":{"git_url":"%s"}}' % (model.encode(), git_url.encode())
     logging.info("sent request: " + str(request))
-    #logging.info(f'{socket.identity.decode("ascii")}: sending {request.decode("ascii")}')
     socket.send(request)
-    # reply = socket.recv()
-    # logging.info("Reply: " + str(reply))
-    #logging.info("{}: {}".format(socket.identity.decode("ascii"), reply.decode("ascii")))
 
 class Housekeeper:
 
@@ -40,6 +36,11 @@ class Housekeeper:
         dbschema='augur_data'
         self.db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
+
+        helper_schema = 'augur_operations'
+        self.helper_db = s.create_engine(DB_STR, poolclass = s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
+
         repoUrlSQL = s.sql.text("""
             SELECT repo_git FROM repo
         """)
@@ -50,7 +51,7 @@ class Housekeeper:
 
         # List repo subsections that may have special update requirements
         subsection_test = ['https://github.com/rails/exception_notification.git']
-        all_sorted_by_issues = sort_issue_repos()
+        all_repo_issues_sorted = self.sort_issue_repos()['repo_git'].values#.tolist()
 
         # List of tasks that need periodic updates
         self.__updatable = [
@@ -58,12 +59,13 @@ class Housekeeper:
                 'model': 'issues',
                 'started': False,
                 'delay': 15,
-                'section': subsection_test
+                'section': all_repo_issues_sorted
             }
         ]
         self.__processes = []
 
         self.__updater()
+        
 
     @staticmethod
     def updater_process(model, delay, repos):
@@ -76,23 +78,20 @@ class Housekeeper:
         """
         logging.info('Spawned {} model updater process with PID {}'.format(model, os.getpid()))
         try:
+            iter = 0
             while True:
                 logging.info('Updating {} model...'.format(model))
                 
                 # Send task to broker through 0mq
-                client_git_url_task('housekeeper', model, repos[0])
-                # job = {
-                #     "job_type": "MAINTAIN", 
-                #     "models": [model], 
-                #     "given": {
-                #         "git_url": repos[0]
-                #     }
-                # }
-
-                # requests.post('http://localhost:5000/api/unstable/job', json=job)
+                print("repos:",repos[iter])
+                client_git_url_task('housekeeper', model, repos[iter])
 
                 time.sleep(delay)
+                iter += 1
         except KeyboardInterrupt:
+            logging.info("quit new")
+            self.shutdown_updates()
+            os.kill(os.getpid(), 9)
             os._exit(0)
         except:
             raise
@@ -116,7 +115,6 @@ class Housekeeper:
         Updates all plugins
         """
         for updatable in self.__updatable:
-            # logging.info('Updating {} model...'.format(updatable['model']))
             updatable['update']()
 
     def schedule_updates(self):
