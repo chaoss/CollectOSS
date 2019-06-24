@@ -16,7 +16,7 @@ For both these plugins, you can specify a single plugin for which to run the des
 like so: ``make test-routes PLUGIN=<plugin_name>``. The plugin name should exactly match the name of the plugin directory.
 
 Metrics
-*******
+*********
 Augur uses ``pytest`` for its data source unit tests. The tests for our sample ``Chaoss``
 class are contained in the ``test_chaoss_functions.py`` file inside the plugin's
 directory. You can use pytest fixtures and environment variables to pass
@@ -43,7 +43,7 @@ Make sure every function you write has a test.
 
 
 Endpoints
-*******
+**********
 
 As with our unit tests, we write our API tests in Python using the ``pytest`` framework.
 

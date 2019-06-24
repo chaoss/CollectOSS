@@ -10,7 +10,7 @@ generic plugins, while ``datasources/`` is specifically for plugins that
 provide a new data source, like ``ghtorrent`` or ``facade``.
 
 Inside each plugin directory are 5 required files: ``__init__.py``,
-``plugin_name.py``, ``routes.py``, ``test_plugin_name.py``, and ``test_plugin_name_routes.py``.
+``plugin_name.py``, ``routes.py``, ``test_plugin_name_functions.py``, and ``test_plugin_name_routes.py``.
 
 We will go over these more in-depth in the following sections.
 
@@ -237,7 +237,7 @@ Writing tests
 Metrics
 *******
 Augur uses ``pytest`` for its data source unit tests. The tests for our sample ``Chaoss``
-class are contained in the ``test_chaoss.py`` file inside the plugin's
+class are contained in the ``test_chaoss_functions.py`` file inside the plugin's
 directory. You can use pytest fixtures and environment variables to pass
 data to tests.
 
@@ -269,20 +269,25 @@ In this file, you'll need the following boilerplate:
 
 .. code:: python
 
-    import os
-    import subprocess
-    import time
-    from subprocess import Popen
     import pytest
     import requests
 
     @pytest.fixture(scope="module")
     def <plugin_name>_routes():
-        process = subprocess.Popen(['make', 'backend-restart'])
-        time.sleep(5) #allow some time for the server to start
-        return process
+        pass
 
-This will automatically spin up the web server when running your tests so that you don't have to do it yourself!
+So for our CHAOSS example, the following code would go in ``test_chaoss_routes.py``:
+
+.. code:: python
+
+    import pytest
+    import requests
+
+    @pytest.fixture(scope="module")
+    def chaoss_routes():
+        pass
+
+The web server will be automatically spun up and down when running your tests.
 
 For the actual tests, for the most part not much logic is needed. Each endpoint should already have a unit test asserting that the 
 metric is being calculate correctly: in most cases the endpoint tests exist primarily to make sure they're reachable and that the routes

@@ -40,30 +40,47 @@
 <div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">DB_TEST_URL</span><span class="o">=</span><span class="n">mysql</span><span class="o">+</span><span class="n">pymysql</span><span class="p">:</span><span class="o">//&lt;</span><span class="n">username</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="k">pass</span><span class="o">&gt;@&lt;</span><span class="n">host</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">post</span><span class="o">&gt;/&lt;</span><span class="n">database</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>After that, run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code> to run the plugin/data source unit tests.</p>
-<p>To test the API, run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test-routes</span></code>.</p>
-<div class="section" id="writing-tests">
-<h2>5.1. Writing tests<a class="headerlink" href="#writing-tests" title="Permalink to this headline">¶</a></h2>
+<p>After that, run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code> to run the plugin/data source unit tests and the Python API tests.</p>
+<p>To run the Python data source unit tests alone: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test-functions</span></code>.
+To run the Python API tests alone: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test-routes</span></code>.</p>
+<p>For both these plugins, you can specify a single plugin for which to run the designated tests. You can do this
+like so: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test-routes</span> <span class="pre">PLUGIN=&lt;plugin_name&gt;</span></code>. The plugin name should exactly match the name of the plugin directory.</p>
+<div class="section" id="metrics">
+<h2>5.1. Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h2>
+<p>Augur uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> for its data source unit tests. The tests for our sample <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code>
+class are contained in the <code class="docutils literal notranslate"><span class="pre">test_chaoss_functions.py</span></code> file inside the plugin’s
+directory. You can use pytest fixtures and environment variables to pass
+data to tests.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span> <span class="nf">chaoss</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">augur</span>
+    <span class="n">chaoss</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;PLUGIN_TEST_URL&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">chaoss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">chaoss</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">8</span>
+    <span class="k">return</span> <span class="n">augur</span><span class="o">.</span><span class="n">Chaoss</span><span class="p">(</span><span class="n">chaoss</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now any test that tests functions in the Chaoss class will be able to
+access an instance of the class.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_data_source</span><span class="p">(</span><span class="n">chaoss</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">chaoss</span><span class="o">.</span><span class="n">data_source</span><span class="p">(</span><span class="s1">&#39;argument&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;expected_value&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">any</span>
+</pre></div>
+</div>
+<p>Make sure every function you write has a test.</p>
+</div>
 <div class="section" id="endpoints">
-<h3>5.1.1. Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">¶</a></h3>
+<h2>5.2. Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">¶</a></h2>
 <p>As with our unit tests, we write our API tests in Python using the <code class="docutils literal notranslate"><span class="pre">pytest</span></code> framework.</p>
 <p>API tests for a plugin live in the <code class="docutils literal notranslate"><span class="pre">test_&lt;plugin_name&gt;_routes.py</span></code> folder in the <code class="docutils literal notranslate"><span class="pre">&lt;plugin_name&gt;/</span></code> directory.
 In this file, you’ll need the following boilerplate:</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span>import os
-import subprocess
-import time
-from subprocess import Popen
-import pytest
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span>import pytest
 import requests
 
-@pytest.fixture(scope=&quot;session&quot;)
+@pytest.fixture(scope=&quot;module&quot;)
 def &lt;plugin_name&gt;_routes():
-    process = subprocess.Popen([&#39;make&#39;, &#39;backend-restart&#39;])
-    time.sleep(5) #allow some time for the server to start
-    return process
+    pass
 </pre></div>
 </div>
-<p>This will automatically spin up the web server when running your tests so that you don’t have to do it yourself!</p>
+<p>The web server will be automatically spun up and down when running your tests.</p>
 <p>For the actual tests, for the most part not much logic is needed. Each endpoint should already have a unit test asserting that the
 metric is being calculate correctly: in most cases the endpoint tests exist primarily to make sure they’re reachable and that the routes
 we’ve documented are correct. These unit tests should not be strictly re-implemented, but each test needs to make sure that the output of the
@@ -81,7 +98,6 @@ corresponding metric is correct: since most endpoints are nothing more than a wr
 health check endpoint. In this case simply checking the status code and that the response is not empty/has some data in it
 is all that’s really needed. If this were a metric endpoint, an appropriate assertion might be something like
 <code class="docutils literal notranslate"><span class="pre">assert</span> <span class="pre">response[0]['commits']</span> <span class="pre">=</span> <span class="pre">20</span></code>.</p>
-</div>
 </div>
 </div>
 
