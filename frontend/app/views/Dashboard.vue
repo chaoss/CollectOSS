@@ -114,7 +114,7 @@
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in repo_relations[group].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="onGitRepo(repo)">
+                      <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="setBaseRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo.url }}</span>
                       </d-link>
 
@@ -143,6 +143,47 @@ export default {
     Spinner
   },
   computed: {
+    repoRelations () {
+      // Call our data collection methods
+      window.AugurAPI.getRepos().then((data) => {
+        let relations = {}
+        this.repos = data
+        data.forEach((repo) => {
+          // set loaded's to false
+          this.values[repo.url] = []
+        })
+        
+
+        console.log("LOADED repos", this.repos)
+        this.repos.forEach((repo) => {
+          if (this.repo) {
+            if (window.AugurRepos[this.repo])
+              this.api_repos.push(window.AugurRepos[this.repo])
+            else if (this.gitRepo){
+              let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+              if (window.AugurRepos[temp.toString()])
+                temp = window.AugurRepos[temp.toString()]
+              else
+                window.AugurRepos[temp.toString()] = temp
+              this.api_repos.push(temp)
+            }
+          }
+          if (this.repo_groups.indexOf(repo.rg_name) < 0)
+            this.repo_groups.push(repo.rg_name)
+        })
+
+        //move down between future relation endpoint
+        this.repo_groups.forEach((group) => {
+          relations[group] = this.repos.filter(function(repo){
+            return repo.rg_name == group
+          })
+        })
+        this.loadedGroups = true
+        this.repo_relations = relations
+        console.log("LOADED repo groups", this.repo_relations)
+        return relations
+      }) 
+    }
   },
   data() {
     return {
@@ -232,70 +273,32 @@ export default {
       else
         return 'declined'
     },
-    onRepo (e) {
-      this.$store.commit('setRepo', {
-        githubURL: e.target.value
-      })
-    },
-    onGitRepo (e) {
-      this.$store.commit('setRepo', {
-        gitURL: e.url
-      })
-    },
-    getDownloadedRepos () {
-      console.log("START")
-      
-    },
-    loadMetrics () {
-      
+    setBaseRepo (e) {
+      this.$store.commit('setBaseRepo', window.AugurAPI.Repo({ gitURL: e.url}))
     },
     btoa(s) {
       return window.btoa(s)
     }
   },
+  created() {
+    let repos = [window.AugurAPI.Repo({ gitURL: 'github.com/ropensci/plotly' })]
+
+    let endpoints = this.testEndpoints
+    console.log("repos: ",repos, endpoints)
+    window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+      this.values = data
+      console.log("DATA: ", data, typeof(data))
+      console.log(data[repos[0].toString()])
+    })
+  },
   mounted() {
     // Set all loaded's to false
-    this.testEndpoints.forEach((endpoint) => {
-      this.values[endpoint] = {}
-      this.values[endpoint]['loaded'] = false
-    })
+    // this.testEndpoints.forEach((endpoint) => {
+    //   this.values[endpoint] = {}
+    //   this.values[endpoint]['loaded'] = false
+    // })
 
-    // Call our data collection methods
-    window.AugurAPI.getRepos().then((data) => {
-        this.repos = data
-        data.forEach((repo) => {
-          // set loaded's to false
-          this.values[repo.url] = []
-        })
-        
-
-        console.log("LOADED repos", this.repos)
-        this.repos.forEach((repo) => {
-          if (this.repo) {
-            if (window.AugurRepos[this.repo])
-              this.api_repos.push(window.AugurRepos[this.repo])
-            else if (this.gitRepo){
-              let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-              if (window.AugurRepos[temp.toString()])
-                temp = window.AugurRepos[temp.toString()]
-              else
-                window.AugurRepos[temp.toString()] = temp
-              this.api_repos.push(temp)
-            }
-          }
-          if (this.repo_groups.indexOf(repo.rg_name) < 0)
-            this.repo_groups.push(repo.rg_name)
-        })
-
-        //move down between future relation endpoint
-        this.repo_groups.forEach((group) => {
-          this.repo_relations[group] = this.repos.filter(function(repo){
-            return repo.rg_name == group
-          })
-        })
-        this.loadedGroups = true
-        console.log("LOADED repo groups", this.repo_relations)
-      })
+    
 
     // Load data for insights
       // let count = 0

@@ -1,136 +1,217 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px" :items="breadcrumbItems">
-      <d-breadcrumb-item :active="false" text="Products" href="#" />
       <d-breadcrumb-item :active="false" :text="project" href="#" />
       <d-breadcrumb-item :active="true" :text="gitRepo" href="#" />
     </d-breadcrumb>
     <!-- Page Header -->
-    <div class="page-header row no-gutters py-4" style="padding-top: 0px !important">
+    <!-- <div class="page-header row no-gutters py-4">
+      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+        <h3 class="page-title" style="font-size: 1rem">Insights</h3>
+      </div>
+    </div> -->
+
+    <!-- Overview Section -->
+    <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-        <h3 class="page-title" style="font-size: 2rem">Insights</h3>
+        <h3 class="page-title" style="font-size: 1rem">Overview</h3>
       </div>
     </div>
 
-    <!-- First Row of Posts -->
+    <!-- <spinner :v-show="!loaded_overview"></spinner> -->
+    
+    <!-- <div class="row" :v-show="loaded_overview"> -->
+    <!-- <div class="row"> -->
 
-        <d-row>
-          <d-col v-for="(project, idx) in projects.slice(0,3)" :key="idx" lg="3" md="6" sm="12" class="mb-4">
-            <d-card class="card-small card-post card-post--1">
-              <div class="card-post__image">
-                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ project }}</d-badge>
-                <insight-chart style="transform: translateX(-30px)" :color="colors[idx]" v-if="loaded" :source="testEndpoints[idx]" owner="twitter" repo="twemoji"></insight-chart>
-                <div class="card-post__author d-flex">
-                  <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 2rem">
-                    <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%); ">{{ getDirection(idx) }}</i>
-                  </a>
-                </div>
-              </div>
-              <d-card-body>
-                <h5 class="card-title">
-                  <a href="#" class="text-fiord-blue">{{ getOwner(repos[project][0].url) }}/{{ getRepo(repos[project][0].url) }}</a>
-                </h5>
-                <p class="card-text d-inline-block mb-3">This repository {{ getPhrase(idx) }} in {{ testEndpoints[idx] }} in the past {{ testTimeframes[idx] }}</p>
-                <span class="text-muted">{{ testTimeframes[idx] }}</span>
-              </d-card-body>
-            </d-card>
-          </d-col>
-          <d-col class="col-3">
-            <d-card class="card-small card">
-              <div class="border-bottom card-header">
-                <h6 class="m-0">Worker Status</h6>
-                <span class="ml-auto text-right text-semibold text-reagent-gray">Tasks Completed</span>
-                <div class="block-handle"></div>
-              </div>
-              <div class="p-0 card-body">
-                <div class="list-group-small list-group list-group-flush">
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue">GitHub Shallow</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray">19,291 / 21,512</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue">BugZilla</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray">11,201 / 14,213</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue">Facade</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray">9,291 / 10,634</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue">Github API</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray">8,281 / 15,351</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue">GitHub Deep</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray">7,128 / 18,432</span>
-                  </div>
-                </div>
-              </div>
-              <d-card-footer class="border-top">
-                <d-row>
+        <!-- <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+            field="commit"
+            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
+          </grouped-bar-chart>
+        </div> -->
+     <!--    <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+            field="loc"> -->
+            <!-- :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']"> -->
+          <!-- </grouped-bar-chart>
+        </div> -->
 
-                  <!-- Time Frame -->
-                  <d-col>
-                    <d-select size="sm" value="last-week" style="max-width: 130px;">
-                      <option value="last-week">Sort</option>
-                      <option value="today">?</option>
-                      <option value="last-month">?</option>
-                      <option value="last-year">?</option>
-                    </d-select>
-                  </d-col>
+    <!-- </div> -->
 
-                  <!-- View Full Report -->
-                  <d-col class="text-right view-report col-8">
-                    <a href="#">All workers and priority options &rarr;</a>
-                  </d-col>
+    <!-- Evolution section -->
+    <div class="page-header row no-gutters py-4">
+      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+        <h3 class="page-title" style="font-size: 1rem">Evolution</h3>
+      </div>
+    </div>
 
-                </d-row>
-              </d-card-footer>
-            </d-card>
-          </d-col>
-        </d-row>
+    <spinner :v-show="!loaded_evolution"></spinner>
+    
+    <!-- <div class="row" :v-show="loaded_evolution"> -->
+    <div class="row">
 
-        <div style="transform: translateY(-20px)">
-          <div class="page-header row no-gutters py-4" style="padding-top: 0 !important;">
-            <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
-              <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-              <h3 class="page-title" style="font-size: 2rem">Most Frequent Projects</h3>
-            </div>
-          </div>
-          <!-- Second Row of Posts -->
-          <d-row>
-            <d-col v-for="(project, idx) in projects.slice(0,3)" :key="idx" lg="4" sm="12" class="mb-4">
-              <d-card class="card-small card">
-                <div class="border-bottom card-header">
-                  <h6 class="m-0">{{ project }}</h6>
-                  <div class="block-handle"></div>
-                </div>
-                <div class="p-0 card-body">
-                  <div class="list-group-small list-group list-group-flush">
-                    <div v-for="(repo, i) in repos[project].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <d-link :to="repo_overview">
-                        <span class="text-semibold text-fiord-blue">{{ repo.url }}</span>
-                      </d-link> 
-                      <spark-chart v-if="loaded" :color="colors[idx]" style="max-height: 50px; padding-bottom: 10px; margin-left:auto; margin-right:0;" :owner="getOwner(repo.url)" :repo="getRepo(repo.url)" source="codeCommits"/>
-                    </div>
-                  </div>
-                </div>
-              </d-card>
-            </d-col>
-          </d-row>
-        </div>
+      <div class="col col-6">
+        <dynamic-line-chart source="issuesClosed"
+                      title="Number of issuesClosed"
+                      size="total"
+                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md"
+                      cite-text="issuesClosed"
+                      :data="values['issuesClosed']">
+        </dynamic-line-chart>
+      </div>
+
+      <!-- <div class="col col-6">
+        <dynamic-line-chart source="closedIssues"
+                    title="Closed Issues / Week"
+                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
+                    cite-text="Issues Closed"> -->
+                    <!-- :data="values['closedIssues']"> -->
+        <!-- </dynamic-line-chart>
+      </div>
+ -->
+    </div>
+
+    <!-- Issues Section -->
+    <div class="page-header row no-gutters py-4">
+      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+        <h3 class="page-title" style="font-size: 1rem">Issues</h3>
+      </div>
+    </div>
+
+    <!-- <spinner :v-show="!loaded_issues"></spinner> -->
+    
+    <!-- <div class="row" :v-show="loaded_issues"> -->
+    <div class="row">
+
+      <div class="col col-12" style="padding-right: 35px">
+        <dual-line-chart source=""
+          :title="'Issue Count History for ' + repo + ' - Grouped by Week'"
+          fieldone="open_count"
+          fieldtwo="closed_count">
+          <!-- :data="values['repo_issues']"> -->
+        </dual-line-chart>
+      </div>
+
+      <div class="col col-12" style="padding-right: 35px">
+        <dual-line-chart source=""
+          :title="'Issue Count History for this Repo Group:  ' + group + ' - Grouped by Week'"
+          fieldone="open_count"
+          fieldtwo="closed_count">
+        </dual-line-chart>
+        <!-- :data="values['group_issues']"></dual-line-chart> -->
+      </div>
+
+    </div>
+
+    <!-- Experimental section -->
+    <div class="page-header row no-gutters py-4">
+      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+        <h3 class="page-title" style="font-size: 1rem">Experimental</h3>
+      </div>
+    </div>
+
+    <!-- <spinner :v-show="!loaded_experimental"></spinner> -->
+    
+    <!-- <div class="row" :v-show="loaded_experimental"> -->
+    <div class="row">
+
+      <div class="col col-6">
+        <dynamic-line-chart source="commitComments"
+                    title="Commit Comments / Week "
+                    cite-url=""
+                    cite-text="Commit Comments">
+                    <!-- :data="values['commitComments']"> -->
+        </dynamic-line-chart>
+      </div>
+
+      <div class="col col-6">
+        <dynamic-line-chart source="totalCommitters"
+                    title="Committers"
+                    cite-url=""
+                    cite-text="Total Commiters"
+                    disable-rolling-average=1>
+                    <!-- :data="values['totalCommitters']"> -->
+        </dynamic-line-chart>
+      </div>
+
+    </div>
+
+    <!-- Activity section -->
+    <!-- <div class="page-header row no-gutters py-4">
+      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+        <h3 class="page-title" style="font-size: 1rem">Activity</h3>
+      </div>
+    </div> -->
+
+    <!-- <spinner :v-show="!loaded_activity"></spinner> -->
+    
+    <!-- <div class="row" :v-show="loaded_activity"> -->
+    <!-- <div class="row">
+
+      <div class="col col-6">
+        <dynamic-line-chart source="issueComments" 
+                    title="Issue Comments / Week " 
+                    cite-url="https://github.com/augurlabs/wg-gmd/tree/master/activity-metrics/issue-comments.md"
+                    cite-text="Issue Comments"> 
+        </dynamic-line-chart>
+      </div>
+
+      <div class="col col-6">
+        <dynamic-line-chart source="pullRequestsMadeClosed" 
+                    title="Pull Requests Made/ Closed per Week " 
+                    cite-url="https://github.com/augurlabs/wg-gmd/tree/master/activity-metrics/pull-requests-made-closed.md"
+                    cite-text="Pull Requests Made/Closed"> 
+        </dynamic-line-chart>
+      </div>
+
+      <div class="col col-12">
+        <dynamic-line-chart source="watchers" 
+                    title="Watchers / Week " 
+                    cite-url="https://github.com/augurlabs/wg-gmd/tree/master/activity-metrics/watchers.md"
+                    cite-text="Watchers"> 
+        </dynamic-line-chart>
+      </div>
+       
+    </div> -->
+    
+
+
+
+    
   </d-container>
 </template>
 
 <script>
 import SparkChart from '../components/charts/SparkChart.vue';
 import InsightChart from '../components/charts/InsightChart.vue';
+import TickChart from '../components/charts/TickChart'
+import LinesOfCodeChart from '../components/charts/LinesOfCodeChart'
+import NormalizedStackedBarChart from '../components/charts/NormalizedStackedBarChart'
+import OneDimensionalStackedBarChart from '../components/charts/OneDimensionalStackedBarChart'
+import HorizontalBarChart from '../components/charts/HorizontalBarChart'
+import GroupedBarChart from '../components/charts/GroupedBarChart'
+import StackedBarChart from '../components/charts/StackedBarChart'
+import DynamicLineChart from '../components/charts/DynamicLineChart'
+import DualLineChart from '../components/charts/DualLineChart'
+import Spinner from '../components/Spinner'
 
 export default {
   components: {
     SparkChart,
     InsightChart,
+    TickChart,
+    LinesOfCodeChart,
+    NormalizedStackedBarChart,
+    OneDimensionalStackedBarChart,
+    HorizontalBarChart,
+    GroupedBarChart,
+    DynamicLineChart,
+    StackedBarChart,
+    DualLineChart,
+    Spinner
   },
   computed: {
     repo () {
@@ -139,6 +220,16 @@ export default {
     gitRepo () {
       return this.$store.state.gitRepo
     },
+    values () {
+      console.log("getting values")
+      let values = {}
+      let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
+      repo.issuesClosed().then((data) => {
+        values['issuesClosed'] = data
+        this.loaded_overview = true
+      })
+      return values
+    }
   },
   data() {
     return {
@@ -148,7 +239,12 @@ export default {
       repos: {},
       projects: [],
       themes: ['dark', 'info', 'royal-blue', 'warning'],
-      project: null
+      project: null,
+      loaded_overview: false,
+      loaded_evolution: false,
+      loaded_issues: false,
+      loaded_experimental: false,
+      loaded_activity: false
     };
   },
   methods: {
@@ -288,12 +384,12 @@ export default {
     }
   },
   created() {
-    this.getDownloadedRepos()
+    // this.getDownloadedRepos()
     let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
-    repo.facadeProject().then((data) => {
-      this.project = data[0].name
-      this.loaded=true
-    })
+    this.project = repo.rg_name
+    // repo.facadeProject().then((data) => {
+      // this.loaded=true
+    // })
   },
 }
 </script>

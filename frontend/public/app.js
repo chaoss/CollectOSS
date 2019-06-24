@@ -224,6 +224,17 @@ function Augur() {
       byDate: false
     },
     mutations: {
+      setBaseRepo: function setBaseRepo(state, payload) {
+        state.gitRepo = payload.gitURL;
+        state.baseRepo = payload.gitURL;
+        state.hasState = true;
+        var repo = window.AugurAPI.Repo(payload);
+        if (!window.AugurRepos[repo.toString()]) {
+          window.AugurRepos[repo.toString()] = repo;
+        } else {
+          repo = window.AugurRepos[repo.toString()];
+        }
+      },
       setGitRepo: function setGitRepo(state, payload) {
         state.gitRepo = payload.gitURL;
         state.baseRepo = payload.gitURL;
@@ -471,6 +482,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -559,6 +572,7 @@ var AugurAPI = function () {
       var _this2 = this;
 
       var str = '[{"method": "GET", "path": "' + endpoints.join('"},{"method": "GET", "path": "') + '"}]';
+      console.log(str);
       this.openRequests++;
       var url = this.__endpointURL('batch');
       // Check cached
@@ -591,26 +605,39 @@ var AugurAPI = function () {
       var reverseMap = {};
       var processedData = {};
       repos.forEach(function (repo) {
-        Array.prototype.push.apply(endpoints, repo.batch(fields, true));
-        _.assign(reverseMap, repo.__reverseEndpointMap);
+        // Array.prototype.push.apply(endpoints, repo.batch(fields, true))
+        // _.assign(reverseMap, repo.__reverseEndpointMap)
         processedData[repo.toString()] = {};
+        fields.forEach(function (field) {
+          console.log("endpoint_map: ", field, repo, repo.__endpointMap[field]);
+          endpoints.push(repo.__endpointMap[field]);
+          reverseMap[repo.__endpointMap[field]] = repo.__reverseEndpointMap[repo.__endpointMap[field]];
+        });
       });
+      console.log("before batch:", endpoints, reverseMap);
       return this.batch(endpoints).then(function (data) {
 
-        return new Promise(function (resolve, reject) {
+        var newdat = new Promise(function (resolve, reject) {
           if (Array.isArray(data)) {
             data.forEach(function (response) {
               if (response.status === 200 && reverseMap[response.path]) {
+                processedData[reverseMap[response.path].owner] = {};
+                processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = [];
                 processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response);
+                console.log("pdata after response", processedData, _typeof(reverseMap[response.path].owner), _typeof(reverseMap[response.path].name), JSON.parse(response.response), response.response);
               } else if (reverseMap[response.path]) {
+                console.log('failed null');
                 processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null;
               }
             });
+            console.log(processedData);
             resolve(processedData);
           } else {
             reject(new Error('data-not-array'));
           }
         });
+        console.log(newdat, "newdata");
+        return newdat;
       });
     }
   }, {
@@ -654,6 +681,7 @@ var AugurAPI = function () {
           });
           repo.repo_id = res[0].repo_id;
           repo.repo_group_id = res[0].repo_group_id;
+          repo.rg_name = res[0].rg_name;
         }
       }
 
@@ -712,7 +740,12 @@ var AugurAPI = function () {
       };
 
       var addRepoMetric = function addRepoMetric(r, jsName, endpoint) {
+        var fullEndpoint = _this3._version + '/repo-groups/' + repo.repo_group_id + '/repos/' + repo.repo_id + '/' + endpoint;
         var url = _this3.__endpointURL('repo-groups/' + repo.repo_group_id + '/repos/' + repo.repo_id + '/' + endpoint);
+
+        r.__endpointMap[jsName] = fullEndpoint;
+        r.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: repo.toString() };
+        console.log("maps: ", r.__reverseEndpointMap);
         return __Endpoint(r, jsName, url);
       };
 
@@ -732,15 +765,19 @@ var AugurAPI = function () {
           return new Promise(function (resolve, reject) {
             if (Array.isArray(data)) {
               var mapped = {};
+              console.log();
               data.forEach(function (response) {
                 if (response.status === 200) {
                   mapped[repo.__reverseEndpointMap[response.path].name] = JSON.parse(response.response);
+                  console.log('mapped:', mapped);
                 } else {
                   mapped[repo.__reverseEndpointMap[response.path].name] = null;
+                  console.log('mapped null:', mapped, repo.__reverseEndpointMap[response.path]);
                 }
               });
               resolve(mapped);
             } else {
+              console.log("didnt work");
               reject(new Error('data-not-array'));
             }
           });
@@ -5662,16 +5699,24 @@ var _AugurStats = require('AugurStats');
 
 var _AugurStats2 = _interopRequireDefault(_AugurStats);
 
+var _Spinner = require('../Spinner.vue');
+
+var _Spinner2 = _interopRequireDefault(_Spinner);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'field'],
   data: function data() {
     return {
-      values: []
+      values: [],
+      loaded: false
     };
   },
 
+  components: {
+    Spinner: _Spinner2.default
+  },
   computed: {
     repo: function repo() {
       return this.$store.state.baseRepo;
@@ -5761,7 +5806,6 @@ exports.default = {
             },
             "x": {
               "field": "loc_location", "type": 'quantitative',
-
               "axis": { "title": "", "labels": false }
             },
             "color": {
@@ -5797,7 +5841,6 @@ exports.default = {
             },
             "color": {
               "value": "#4736FF",
-
               "legend": null
             }
           }
@@ -5817,7 +5860,6 @@ exports.default = {
             },
             "y": {
               "value": 280,
-
               "axis": {
                 "title": "",
                 "grid": false
@@ -5850,7 +5892,6 @@ exports.default = {
                 "nice": false
               }
             }
-
           }
         }, {
           "transform": [],
@@ -5893,7 +5934,6 @@ exports.default = {
               "scale": { "range": ["#4736FF", "#FF3647"] },
               "legend": { "offset": -16 }
             }
-
           }
         }],
         "resolve": { "scale": { "y": "independent", "color": "independent" } }
@@ -5977,18 +6017,37 @@ exports.default = {
 
         repos.forEach(function (repo) {
           _this.values = data;
+          config.data = { "values": _this.values };
         });
       };
-
+      this.loaded = true;
+      this.reloadImage(config);
       return config;
     }
+  },
+  methods: {
+    respec: function respec() {
+      this.spec;
+    },
+    reloadImage: function reloadImage(config) {
+      console.log(config.data, this.source);
+      if (config.data.length == 0) {
+        this.spec;
+        this.renderError();
+        return;
+      }
+      vegaEmbed('#' + this.source, config, { tooltip: { offsetY: -110 }, mode: 'vega-lite' });
+    }
+  },
+  mounted: function mounted() {
+    this.spec;
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"groupedbarchart"},[_c('vega-lite',{attrs:{"spec":_vm.spec,"data":_vm.values}}),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_vm._m(0)],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"holder"},[_c('div',{staticClass:"groupedbarchart"},[(_vm.mount)?_c('div',{attrs:{"id":_vm.source}}):_vm._e(),_vm._v(" "),_c('p',[_vm._v(" "+_vm._s(_vm.chart)+" ")]),_vm._v(" "),_vm._m(0)])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticStyle:{"padding":"0 50px 0 50px","font-size":"12px"}},[_c('p',[_vm._v("*The black \"baseline\" represents the averages of both LoC and commits across all repositories within the selected repository's overlying Facade organization during the calendar year shown. Wherever this bar stretches to shows how far above or below the raw value of the statistic is from the regular average.")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -8691,7 +8750,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
 });
 
 ;require.register("components/layout/MainSidebar/MainSidebar.vue", function(exports, require, module) {
-var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 181, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 184, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
+var __vueify_style_dispose__ = require("vueify/lib/insert-css").insert("/* line 213, stdin */\n.main-sidebar .item-icon-wrapper {\n  display: inline-block; }\n\n/* line 216, stdin */\n.main-sidebar .dropdown-menu {\n  display: block; }")
 ;(function(){
 'use strict';
 
@@ -8707,7 +8766,26 @@ exports.default = {
     }
   },
   computed: {
-    comparison_type: function comparison_type() {},
+    comparison_type: function comparison_type() {
+      if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
+        return 'Single Repo';
+      }
+      if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
+        return 'Single Repo Group';
+      } else if (this.$store.state.comparedRepos.length == 1 && this.$store.state.comparedRepoGroups.length == 0) {
+        return '1-on-1 repo comparison';
+      } else if (this.$store.state.comparedRepoGroups.length == 1 && this.$store.state.comparedRepos.length == 0) {
+        return '1-on-1 group comparison';
+      } else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
+        return "Multiple Groups";
+      } else if (this.$store.state.comparedRepos.length > 1 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "Custom Group";
+      } else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "Comparison Type N/A";
+      } else {
+        return "Invalid comparison type";
+      }
+    },
     repo: function repo() {
       return this.$store.state.baseRepo || { 'url': 'No base repo selected' };
     },
@@ -8716,7 +8794,15 @@ exports.default = {
         return this.$store.state.comparedRepos[0].gitURL;
       } else if (this.$store.state.comparedRepoGroups.length == 1) {
         return this.$store.state.comparedRepoGroups[0].rg_name;
-      } else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {}
+      } else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
+        return "Multiple Groups";
+      } else if (this.$store.state.comparedRepos.length > 1 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "Custom Group";
+      } else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "No comparison(s) selected";
+      } else {
+        return "Invalid comparison type";
+      }
     }
   },
   data: function data() {
@@ -8771,7 +8857,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){return _vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column"},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',{staticStyle:{"width":"240"}},[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])}),1):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown comp_manager"},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"0.85rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticStyle:{"text-align":"center","border-bottom":"1px solid #e1e5eb"}},[_c('div',{staticClass:"comp_info"},[_vm._v("\n                Comparison type N/A\n              ")]),_vm._v(" "),_c('div',{staticClass:"comp_info"},[_vm._v("\n                "+_vm._s(_vm.repo.url)+"\n              ")]),_vm._v(" "),_c('div',{staticClass:"comp_info"},[_vm._v("\n                No comparison(s) selected\n              ")])]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"0px","width":"240px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem 0.7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem .7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('aside',{staticClass:"main-sidebar col-2 px-0",staticStyle:{"position":"fixed !important"}},[_c('div',{staticClass:"main-navbar"},[_c('nav',{staticClass:"navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0"},[_vm._m(0),_vm._v(" "),_c('a',{staticClass:"toggle-sidebar d-lg-none",on:{"click":function($event){return _vm.handleToggleSidebar()}}},[_c('i',{staticClass:"material-icons"},[_vm._v("sfdaf")])])])]),_vm._v(" "),_vm._m(1),_vm._v(" "),_c('div',{staticClass:"nav-wrapper"},[_c('d-nav',{staticClass:"flex-column"},[_vm._l((_vm.items),function(item,navItemIdx){return _c('li',{key:navItemIdx,staticClass:"nav-item dropdown"},[_c('d-link',{directives:[{name:"d-toggle",rawName:"v-d-toggle",value:(("snc-" + navItemIdx)),expression:"`snc-${navItemIdx}`"}],class:['nav-link', item.items && item.items.length ? 'dropdown-toggle' : ''],attrs:{"to":item.to}},[(item.htmlBefore)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlBefore)}}):_vm._e(),_vm._v(" "),(item.title)?_c('span',{staticStyle:{"width":"240"}},[_vm._v(_vm._s(item.title))]):_vm._e(),_vm._v(" "),(item.htmlAfter)?_c('div',{staticClass:"item-icon-wrapper",domProps:{"innerHTML":_vm._s(item.htmlAfter)}}):_vm._e()]),_vm._v(" "),(item.items && item.items.length)?_c('d-collapse',{staticClass:"dropdown-menu dropdown-menu-small",attrs:{"id":("snc-" + navItemIdx),"accordion":"sidebar-items-accordion"}},_vm._l((item.items),function(subItem,subItemIdx){return _c('d-dropdown-item',{key:subItemIdx,attrs:{"href":subItem.href,"to":subItem.to}},[_vm._v("\n                "+_vm._s(subItem.title)+"\n              ")])}),1):_vm._e()],1)}),_vm._v(" "),_c('li',{staticClass:"nav-item dropdown comp_manager"},[_c('d-link',{staticClass:"nav-link",staticStyle:{"font-size":"0.85rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("vertical_split")]),_vm._v(" "),_c('span',[_vm._v("Comparison Manager")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('div',{staticStyle:{"text-align":"center","border-bottom":"1px solid #e1e5eb"}},[_c('div',{staticClass:"comp_info"},[_vm._v("\n                Comparison type N/A\n              ")]),_vm._v(" "),_c('div',{staticClass:"comp_info"},[_vm._v("\n                "+_vm._s(_vm.repo)+"\n              ")]),_vm._v(" "),_c('div',{staticClass:"comp_info"},[_vm._v("\n                No comparison(s) selected\n              ")])]),_vm._v(" "),_c('div',{staticClass:"row",staticStyle:{"position":"absolute","bottom":"0","padding-left":"0px","width":"240px !important"}},[_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem 0.7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("autorenew")]),_vm._v(" "),_c('span',[_vm._v("Reset")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1),_vm._v(" "),_c('div',{staticClass:"col col-6",staticStyle:{"padding":"0px"}},[_c('d-link',{staticClass:"nav-link",staticStyle:{"padding":"0.7rem .7rem 0.7rem 1.5rem","margin-left":"1rem"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('span',[_vm._v("Add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})])],1)])],1)],2)],1)])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('a',{staticClass:"navbar-brand w-100 mr-0",staticStyle:{"line-height":"25px"},attrs:{"href":"#"}},[_c('div',{staticClass:"d-table m-auto"},[_c('a',{attrs:{"href":"/"}},[_c('img',{attrs:{"src":"/static/logo.png","id":"logo","alt":"CHAOSS: Community Health Analytics for Open Source Software"}})])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('form',{staticClass:"main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none",attrs:{"action":"#"}},[_c('div',{staticClass:"input-group input-group-seamless ml-3"},[_c('div',{staticClass:"input-group-prepend"},[_c('div',{staticClass:"input-group-text"},[_c('i',{staticClass:"fas fa-search"})])]),_vm._v(" "),_c('input',{staticClass:"navbar-search form-control",attrs:{"type":"text","placeholder":"Search for something...","aria-label":"Search"}})])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -11941,6 +12027,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _SparkChart = require('../components/charts/SparkChart.vue');
 
 var _SparkChart2 = _interopRequireDefault(_SparkChart);
@@ -11961,7 +12049,41 @@ exports.default = {
     InsightChart: _InsightChart2.default,
     Spinner: _Spinner2.default
   },
-  computed: {},
+  computed: {
+    repoRelations: function repoRelations() {
+      var _this = this;
+
+      window.AugurAPI.getRepos().then(function (data) {
+        var relations = {};
+        _this.repos = data;
+        data.forEach(function (repo) {
+          _this.values[repo.url] = [];
+        });
+
+        console.log("LOADED repos", _this.repos);
+        _this.repos.forEach(function (repo) {
+          if (_this.repo) {
+            if (window.AugurRepos[_this.repo]) _this.api_repos.push(window.AugurRepos[_this.repo]);else if (_this.gitRepo) {
+              var temp = window.AugurAPI.Repo({ "gitURL": _this.gitRepo });
+              if (window.AugurRepos[temp.toString()]) temp = window.AugurRepos[temp.toString()];else window.AugurRepos[temp.toString()] = temp;
+              _this.api_repos.push(temp);
+            }
+          }
+          if (_this.repo_groups.indexOf(repo.rg_name) < 0) _this.repo_groups.push(repo.rg_name);
+        });
+
+        _this.repo_groups.forEach(function (group) {
+          relations[group] = _this.repos.filter(function (repo) {
+            return repo.rg_name == group;
+          });
+        });
+        _this.loadedGroups = true;
+        _this.repo_relations = relations;
+        console.log("LOADED repo groups", _this.repo_relations);
+        return relations;
+      });
+    }
+  },
   data: function data() {
     return {
       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"],
@@ -12042,65 +12164,33 @@ exports.default = {
     getPhrase: function getPhrase(idx) {
       if (idx % 2 == 0) return 'increased';else return 'declined';
     },
-    onRepo: function onRepo(e) {
-      this.$store.commit('setRepo', {
-        githubURL: e.target.value
-      });
+    setBaseRepo: function setBaseRepo(e) {
+      this.$store.commit('setBaseRepo', window.AugurAPI.Repo({ gitURL: e.url }));
     },
-    onGitRepo: function onGitRepo(e) {
-      this.$store.commit('setRepo', {
-        gitURL: e.url
-      });
-    },
-    getDownloadedRepos: function getDownloadedRepos() {
-      console.log("START");
-    },
-    loadMetrics: function loadMetrics() {},
     btoa: function btoa(s) {
       return window.btoa(s);
     }
   },
-  mounted: function mounted() {
-    var _this = this;
+  created: function created() {
+    var _this2 = this;
 
-    this.testEndpoints.forEach(function (endpoint) {
-      _this.values[endpoint] = {};
-      _this.values[endpoint]['loaded'] = false;
+    var repos = [window.AugurAPI.Repo({ gitURL: 'github.com/ropensci/plotly' })];
+
+    var endpoints = this.testEndpoints;
+    console.log("repos: ", repos, endpoints);
+    window.AugurAPI.batchMapped(repos, endpoints).then(function (data) {
+      _this2.values = data;
+      console.log("DATA: ", data, typeof data === 'undefined' ? 'undefined' : _typeof(data));
+      console.log(data[repos[0].toString()]);
     });
-
-    window.AugurAPI.getRepos().then(function (data) {
-      _this.repos = data;
-      data.forEach(function (repo) {
-        _this.values[repo.url] = [];
-      });
-
-      console.log("LOADED repos", _this.repos);
-      _this.repos.forEach(function (repo) {
-        if (_this.repo) {
-          if (window.AugurRepos[_this.repo]) _this.api_repos.push(window.AugurRepos[_this.repo]);else if (_this.gitRepo) {
-            var temp = window.AugurAPI.Repo({ "gitURL": _this.gitRepo });
-            if (window.AugurRepos[temp.toString()]) temp = window.AugurRepos[temp.toString()];else window.AugurRepos[temp.toString()] = temp;
-            _this.api_repos.push(temp);
-          }
-        }
-        if (_this.repo_groups.indexOf(repo.rg_name) < 0) _this.repo_groups.push(repo.rg_name);
-      });
-
-      _this.repo_groups.forEach(function (group) {
-        _this.repo_relations[group] = _this.repos.filter(function (repo) {
-          return repo.rg_name == group;
-        });
-      });
-      _this.loadedGroups = true;
-      console.log("LOADED repo groups", _this.repo_relations);
-    });
-  }
+  },
+  mounted: function mounted() {}
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[(!_vm.loadedGroups)?_c('div',{staticClass:"col-md-8 col-lg-9"},[_c('spinner',{staticStyle:{"top":"30%","position":"relative","transform":"translateY(-50%)"}})],1):_vm._e(),_vm._v(" "),_vm._l((_vm.repo_groups.slice(0,3)),function(group,idx){return (_vm.loadedGroups)?_c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"4","sm":"8"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(group))]),_vm._v(" "),_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"source":_vm.testEndpoints[idx],"url":_vm.repo_relations[group][0].url,"color":_vm.colors[idx]}}),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"1rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repo_relations[group][0].url))+"/"+_vm._s(_vm.getRepo(_vm.repo_relations[group][0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-1",staticStyle:{"font-size":".75rem"}},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted",staticStyle:{"font-size":".75rem"}},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1):_vm._e()}),_vm._v(" "),_c('d-col',{staticClass:"mb-4",staticStyle:{"font-size":".7rem"},attrs:{"lg":"3","md":"4","sm":"8"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0",staticStyle:{"font-size":".7rem"}},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("7,128 / 18,432")])])])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top"},[_c('d-row',[_c('d-col',{staticClass:"col-5"},[_c('d-select',{staticStyle:{"max-width":"130px"},attrs:{"size":"sm","value":"last-week"}},[_c('option',{attrs:{"value":"last-week"}},[_vm._v("Sort")]),_vm._v(" "),_c('option',{attrs:{"value":"today"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-month"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-year"}},[_vm._v("?")])])],1),_vm._v(" "),_c('d-col',{staticClass:"text-right view-report col-7",staticStyle:{"font-size":".6rem"}},[_c('a',{attrs:{"href":"#"}},[_vm._v("Overview of all workers →")])])],1)],1)],1)],1)],2),_vm._v(" "),_c('div',{staticStyle:{"transform":"translateY(-20px)"}},[_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"5 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Most Frequent Repo Groups")])])]),_vm._v(" "),_c('d-row',[(!_vm.loadedGroups)?_c('div',{staticClass:"col-md-8 col-lg-9",staticStyle:{"padding-top":"3rem"}},[_c('spinner')],1):_vm._e(),_vm._v(" "),_vm._l((_vm.repo_groups.slice(0,6)),function(group,idx){return (_vm.loadedGroups)?_c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(group.rg_name))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repo_relations[group].slice(0,5)),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('d-link',{attrs:{"to":{name: 'repo_overview', params: {repo: repo.url}}},on:{"click":function($event){return _vm.onGitRepo(repo)}}},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".65rem","padding":"0"}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"0px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"url":repo.url,"source":"codeCommits"}})],1)}),0)])])],1):_vm._e()})],2)],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[(!_vm.loadedGroups)?_c('div',{staticClass:"col-md-8 col-lg-9"},[_c('spinner',{staticStyle:{"top":"30%","position":"relative","transform":"translateY(-50%)"}})],1):_vm._e(),_vm._v(" "),_vm._l((_vm.repo_groups.slice(0,3)),function(group,idx){return (_vm.loadedGroups)?_c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"4","sm":"8"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(group))]),_vm._v(" "),_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"source":_vm.testEndpoints[idx],"url":_vm.repo_relations[group][0].url,"color":_vm.colors[idx]}}),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"1rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repo_relations[group][0].url))+"/"+_vm._s(_vm.getRepo(_vm.repo_relations[group][0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-1",staticStyle:{"font-size":".75rem"}},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted",staticStyle:{"font-size":".75rem"}},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1):_vm._e()}),_vm._v(" "),_c('d-col',{staticClass:"mb-4",staticStyle:{"font-size":".7rem"},attrs:{"lg":"3","md":"4","sm":"8"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0",staticStyle:{"font-size":".7rem"}},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".85rem"}},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray",staticStyle:{"font-size":".85rem"}},[_vm._v("7,128 / 18,432")])])])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top"},[_c('d-row',[_c('d-col',{staticClass:"col-5"},[_c('d-select',{staticStyle:{"max-width":"130px"},attrs:{"size":"sm","value":"last-week"}},[_c('option',{attrs:{"value":"last-week"}},[_vm._v("Sort")]),_vm._v(" "),_c('option',{attrs:{"value":"today"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-month"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-year"}},[_vm._v("?")])])],1),_vm._v(" "),_c('d-col',{staticClass:"text-right view-report col-7",staticStyle:{"font-size":".6rem"}},[_c('a',{attrs:{"href":"#"}},[_vm._v("Overview of all workers →")])])],1)],1)],1)],1)],2),_vm._v(" "),_c('div',{staticStyle:{"transform":"translateY(-20px)"}},[_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"5 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Most Frequent Repo Groups")])])]),_vm._v(" "),_c('d-row',[(!_vm.loadedGroups)?_c('div',{staticClass:"col-md-8 col-lg-9",staticStyle:{"padding-top":"3rem"}},[_c('spinner')],1):_vm._e(),_vm._v(" "),_vm._l((_vm.repo_groups.slice(0,6)),function(group,idx){return (_vm.loadedGroups)?_c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(group.rg_name))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repo_relations[group].slice(0,5)),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('d-link',{attrs:{"to":{name: 'repo_overview', params: {repo: repo.url}}},on:{"click":function($event){return _vm.setBaseRepo(repo)}}},[_c('span',{staticClass:"text-semibold text-fiord-blue",staticStyle:{"font-size":".65rem","padding":"0"}},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"0px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"url":repo.url,"source":"codeCommits"}})],1)}),0)])])],1):_vm._e()})],2)],1)],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -12109,7 +12199,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-fc12f8f2", __vue__options__)
   } else {
-    hotAPI.reload("data-v-fc12f8f2", __vue__options__)
+    hotAPI.rerender("data-v-fc12f8f2", __vue__options__)
   }
 })()}
 });
@@ -12351,7 +12441,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"row",attrs:{"v-show":_vm.loaded}},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0",staticStyle:{"table-layout":"fixed"}},[_c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Name")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_description')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Description")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_website')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Website")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_last_modified')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Last Modified")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_type')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Type")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"},on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Repo Count")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"width":"20%","scope":"col"}},[_vm._v("Options")])])]),_vm._v(" "),_c('tbody',_vm._l((_vm.repo_groups),function(group){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(_vm.repo)}}},[_vm._v(_vm._s(group.rg_name))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_website))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_last_modified))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_type))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.repo_count))]),_vm._v(" "),_c('td',[_c('div',{staticClass:"row"},[_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"margin-left":"2rem","margin-right":"1rem","padding":"0"},attrs:{"id":"favorite"}},[_c('i',{staticClass:"material-icons"},[_vm._v("star_rate")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#favorite","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Consider this repo group as a \"favorite\" and our workers will regulaly update its metrics' data before others\n                    ")]),_vm._v(" "),_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"padding":"0"},attrs:{"id":"add_compare"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#add_compare","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Add this repo group to your current compared repos\n                    ")])],1)])])}),0)])])])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"main-content-container container-fluid px-4"},[_vm._m(0),_vm._v(" "),_c('div',{staticClass:"row",attrs:{"v-show":_vm.loaded}},[_c('div',{staticClass:"col"},[_c('div',{staticClass:"card card-small mb-4"},[_vm._m(1),_vm._v(" "),_c('div',{staticClass:"card-body p-0 pb-3 text-center"},[_c('table',{staticClass:"table mb-0",staticStyle:{"table-layout":"fixed"}},[_c('thead',{staticClass:"bg-light"},[_c('tr',[_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_name')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Name")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_description')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Description")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_website')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Website")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_last_modified')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Last Modified")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('rg_type')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Type")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"},on:{"click":function($event){return _vm.sortTable('repo_count')}}},[_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-9"},[_vm._v("Repo Count")]),_vm._v(" "),('url' == _vm.sortColumn)?_c('div',{staticClass:"col col-3 arrow",class:_vm.ascending ? 'arrow_up' : 'arrow_down'}):_vm._e()])]),_vm._v(" "),_c('th',{staticClass:"border-0",attrs:{"scope":"col"}},[_vm._v("Options")])])]),_vm._v(" "),_c('tbody',_vm._l((_vm.repo_groups),function(group){return _c('tr',[_c('td',[_c('a',{attrs:{"href":"#"},on:{"click":function($event){return _vm.onGitRepo(_vm.repo)}}},[_vm._v(_vm._s(group.rg_name))])]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_description))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_website))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_last_modified))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.rg_type))]),_vm._v(" "),_c('td',[_vm._v(_vm._s(group.repo_count))]),_vm._v(" "),_c('td',[_c('div',{staticClass:"row"},[_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"margin-left":"2rem","margin-right":"1rem","padding":"0"},attrs:{"id":"favorite"}},[_c('i',{staticClass:"material-icons"},[_vm._v("star_rate")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#favorite","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Consider this repo group as a \"favorite\" and our workers will regulaly update its metrics' data before others\n                    ")]),_vm._v(" "),_c('d-link',{staticClass:"nav-link col col-2",staticStyle:{"padding":"0"},attrs:{"id":"add_compare"}},[_c('i',{staticClass:"material-icons"},[_vm._v("library_add")]),_vm._v(" "),_c('div',{staticClass:"item-icon-wrapper"})]),_vm._v(" "),_c('d-tooltip',{attrs:{"target":"#add_compare","container":".shards-demo--example--tooltip-01"}},[_vm._v("\n                      Add this repo group to your current compared repos\n                    ")])],1)])])}),0)])])])])])])}
 __vue__options__.staticRenderFns = [function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('span',{staticClass:"text-uppercase page-subtitle"},[_vm._v("Viewing all")]),_vm._v(" "),_c('h3',{staticClass:"page-title"},[_vm._v("Repo Groups")])])])},function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"card-header border-bottom"},[_c('h6',{staticClass:"m-0"},[_vm._v("Currently Stored Groups")])])}]
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -12381,12 +12471,62 @@ var _InsightChart = require('../components/charts/InsightChart.vue');
 
 var _InsightChart2 = _interopRequireDefault(_InsightChart);
 
+var _TickChart = require('../components/charts/TickChart');
+
+var _TickChart2 = _interopRequireDefault(_TickChart);
+
+var _LinesOfCodeChart = require('../components/charts/LinesOfCodeChart');
+
+var _LinesOfCodeChart2 = _interopRequireDefault(_LinesOfCodeChart);
+
+var _NormalizedStackedBarChart = require('../components/charts/NormalizedStackedBarChart');
+
+var _NormalizedStackedBarChart2 = _interopRequireDefault(_NormalizedStackedBarChart);
+
+var _OneDimensionalStackedBarChart = require('../components/charts/OneDimensionalStackedBarChart');
+
+var _OneDimensionalStackedBarChart2 = _interopRequireDefault(_OneDimensionalStackedBarChart);
+
+var _HorizontalBarChart = require('../components/charts/HorizontalBarChart');
+
+var _HorizontalBarChart2 = _interopRequireDefault(_HorizontalBarChart);
+
+var _GroupedBarChart = require('../components/charts/GroupedBarChart');
+
+var _GroupedBarChart2 = _interopRequireDefault(_GroupedBarChart);
+
+var _StackedBarChart = require('../components/charts/StackedBarChart');
+
+var _StackedBarChart2 = _interopRequireDefault(_StackedBarChart);
+
+var _DynamicLineChart = require('../components/charts/DynamicLineChart');
+
+var _DynamicLineChart2 = _interopRequireDefault(_DynamicLineChart);
+
+var _DualLineChart = require('../components/charts/DualLineChart');
+
+var _DualLineChart2 = _interopRequireDefault(_DualLineChart);
+
+var _Spinner = require('../components/Spinner');
+
+var _Spinner2 = _interopRequireDefault(_Spinner);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = {
   components: {
     SparkChart: _SparkChart2.default,
-    InsightChart: _InsightChart2.default
+    InsightChart: _InsightChart2.default,
+    TickChart: _TickChart2.default,
+    LinesOfCodeChart: _LinesOfCodeChart2.default,
+    NormalizedStackedBarChart: _NormalizedStackedBarChart2.default,
+    OneDimensionalStackedBarChart: _OneDimensionalStackedBarChart2.default,
+    HorizontalBarChart: _HorizontalBarChart2.default,
+    GroupedBarChart: _GroupedBarChart2.default,
+    DynamicLineChart: _DynamicLineChart2.default,
+    StackedBarChart: _StackedBarChart2.default,
+    DualLineChart: _DualLineChart2.default,
+    Spinner: _Spinner2.default
   },
   computed: {
     repo: function repo() {
@@ -12394,6 +12534,18 @@ exports.default = {
     },
     gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
+    },
+    values: function values() {
+      var _this = this;
+
+      console.log("getting values");
+      var values = {};
+      var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+      repo.issuesClosed().then(function (data) {
+        values['issuesClosed'] = data;
+        _this.loaded_overview = true;
+      });
+      return values;
     }
   },
   data: function data() {
@@ -12404,7 +12556,12 @@ exports.default = {
       repos: {},
       projects: [],
       themes: ['dark', 'info', 'royal-blue', 'warning'],
-      project: null
+      project: null,
+      loaded_overview: false,
+      loaded_evolution: false,
+      loaded_issues: false,
+      loaded_experimental: false,
+      loaded_activity: false
     };
   },
 
@@ -12512,20 +12669,20 @@ exports.default = {
       });
     },
     getDownloadedRepos: function getDownloadedRepos() {
-      var _this = this;
+      var _this2 = this;
 
       this.downloadedRepos = [];
       window.AugurAPI.getDownloadedGitRepos().then(function (data) {
-        $(_this.$el).find('.spinner').removeClass('loader');
-        $(_this.$el).find('.spinner').removeClass('relative');
-        _this.repos = window._.groupBy(data, 'project_name');
-        _this.projects = Object.keys(_this.repos);
+        $(_this2.$el).find('.spinner').removeClass('loader');
+        $(_this2.$el).find('.spinner').removeClass('relative');
+        _this2.repos = window._.groupBy(data, 'project_name');
+        _this2.projects = Object.keys(_this2.repos);
         var impRepos = [];
-        for (var i = 0; i < _this.projects.length; i++) {
-          impRepos.push(_this.repos[_this.projects[i]][0]);
+        for (var i = 0; i < _this2.projects.length; i++) {
+          impRepos.push(_this2.repos[_this2.projects[i]][0]);
         }
         console.log("LOADED");
-        _this.loaded = true;
+        _this2.loaded = true;
       });
     },
     btoa: function btoa(s) {
@@ -12533,21 +12690,15 @@ exports.default = {
     }
   },
   created: function created() {
-    var _this2 = this;
-
-    this.getDownloadedRepos();
     var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-    repo.facadeProject().then(function (data) {
-      _this2.project = data[0].name;
-      _this2.loaded = true;
-    });
+    this.project = repo.rg_name;
   }
 };
 })()
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('d-breadcrumb',{staticStyle:{"margin":"0","padding-top":"26px","padding-left":"0px"},attrs:{"items":_vm.breadcrumbItems}},[_c('d-breadcrumb-item',{attrs:{"active":false,"text":"Products","href":"#"}}),_vm._v(" "),_c('d-breadcrumb-item',{attrs:{"active":false,"text":_vm.project,"href":"#"}}),_vm._v(" "),_c('d-breadcrumb-item',{attrs:{"active":true,"text":_vm.gitRepo,"href":"#"}})],1),_vm._v(" "),_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"0px !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Insights")])])]),_vm._v(" "),_c('d-row',[_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"3","md":"6","sm":"12"}},[_c('d-card',{staticClass:"card-small card-post card-post--1"},[_c('div',{staticClass:"card-post__image"},[_c('d-badge',{class:['card-post__category', 'bg-' + _vm.themes[idx] ],attrs:{"pill":""}},[_vm._v(_vm._s(project))]),_vm._v(" "),(_vm.loaded)?_c('insight-chart',{staticStyle:{"transform":"translateX(-30px)"},attrs:{"color":_vm.colors[idx],"source":_vm.testEndpoints[idx],"owner":"twitter","repo":"twemoji"}}):_vm._e(),_vm._v(" "),_c('div',{staticClass:"card-post__author d-flex"},[_c('a',{staticClass:"card-post__author-avatar card-post__author-avatar--small",staticStyle:{"text-indent":"0","text-align":"center","font-size":"2rem"},style:(_vm.getColor(idx)),attrs:{"href":"#"}},[_c('i',{staticClass:"material-icons",staticStyle:{"position":"relative","top":"50%","transform":"translateY(-60%)"}},[_vm._v(_vm._s(_vm.getDirection(idx)))])])])],1),_vm._v(" "),_c('d-card-body',[_c('h5',{staticClass:"card-title"},[_c('a',{staticClass:"text-fiord-blue",attrs:{"href":"#"}},[_vm._v(_vm._s(_vm.getOwner(_vm.repos[project][0].url))+"/"+_vm._s(_vm.getRepo(_vm.repos[project][0].url)))])]),_vm._v(" "),_c('p',{staticClass:"card-text d-inline-block mb-3"},[_vm._v("This repository "+_vm._s(_vm.getPhrase(idx))+" in "+_vm._s(_vm.testEndpoints[idx])+" in the past "+_vm._s(_vm.testTimeframes[idx]))]),_vm._v(" "),_c('span',{staticClass:"text-muted"},[_vm._v(_vm._s(_vm.testTimeframes[idx]))])])],1)],1)}),_vm._v(" "),_c('d-col',{staticClass:"col-3"},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v("Worker Status")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("Tasks Completed")]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},[_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Shallow")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("19,291 / 21,512")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("BugZilla")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("11,201 / 14,213")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Facade")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("9,291 / 10,634")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("Github API")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("8,281 / 15,351")])]),_vm._v(" "),_c('div',{staticClass:"d-flex px-3 list-group-item"},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v("GitHub Deep")]),_vm._v(" "),_c('span',{staticClass:"ml-auto text-right text-semibold text-reagent-gray"},[_vm._v("7,128 / 18,432")])])])]),_vm._v(" "),_c('d-card-footer',{staticClass:"border-top"},[_c('d-row',[_c('d-col',[_c('d-select',{staticStyle:{"max-width":"130px"},attrs:{"size":"sm","value":"last-week"}},[_c('option',{attrs:{"value":"last-week"}},[_vm._v("Sort")]),_vm._v(" "),_c('option',{attrs:{"value":"today"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-month"}},[_vm._v("?")]),_vm._v(" "),_c('option',{attrs:{"value":"last-year"}},[_vm._v("?")])])],1),_vm._v(" "),_c('d-col',{staticClass:"text-right view-report col-8"},[_c('a',{attrs:{"href":"#"}},[_vm._v("All workers and priority options →")])])],1)],1)],1)],1)],2),_vm._v(" "),_c('div',{staticStyle:{"transform":"translateY(-20px)"}},[_c('div',{staticClass:"page-header row no-gutters py-4",staticStyle:{"padding-top":"0 !important"}},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"2rem"}},[_vm._v("Most Frequent Projects")])])]),_vm._v(" "),_c('d-row',_vm._l((_vm.projects.slice(0,3)),function(project,idx){return _c('d-col',{key:idx,staticClass:"mb-4",attrs:{"lg":"4","sm":"12"}},[_c('d-card',{staticClass:"card-small card"},[_c('div',{staticClass:"border-bottom card-header"},[_c('h6',{staticClass:"m-0"},[_vm._v(_vm._s(project))]),_vm._v(" "),_c('div',{staticClass:"block-handle"})]),_vm._v(" "),_c('div',{staticClass:"p-0 card-body"},[_c('div',{staticClass:"list-group-small list-group list-group-flush"},_vm._l((_vm.repos[project].slice(0,5)),function(repo,i){return _c('div',{staticClass:"d-flex px-3 list-group-item",staticStyle:{"text-align":"left"}},[_c('d-link',{attrs:{"to":_vm.repo_overview}},[_c('span',{staticClass:"text-semibold text-fiord-blue"},[_vm._v(_vm._s(repo.url))])]),_vm._v(" "),(_vm.loaded)?_c('spark-chart',{staticStyle:{"max-height":"50px","padding-bottom":"10px","margin-left":"auto","margin-right":"0"},attrs:{"color":_vm.colors[idx],"owner":_vm.getOwner(repo.url),"repo":_vm.getRepo(repo.url),"source":"codeCommits"}}):_vm._e()],1)}),0)])])],1)}),1)],1)],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('d-container',{staticClass:"main-content-container px-4",attrs:{"fluid":""}},[_c('d-breadcrumb',{staticStyle:{"margin":"0","padding-top":"26px","padding-left":"0px"},attrs:{"items":_vm.breadcrumbItems}},[_c('d-breadcrumb-item',{attrs:{"active":false,"text":_vm.project,"href":"#"}}),_vm._v(" "),_c('d-breadcrumb-item',{attrs:{"active":true,"text":_vm.gitRepo,"href":"#"}})],1),_vm._v(" "),_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Overview")])])]),_vm._v(" "),_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Evolution")])])]),_vm._v(" "),_c('spinner',{attrs:{"v-show":!_vm.loaded_evolution}}),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"issuesClosed","title":"Number of issuesClosed","size":"total","cite-url":"https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md","cite-text":"issuesClosed","data":_vm.values['issuesClosed']}})],1)]),_vm._v(" "),_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Issues")])])]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":'Issue Count History for ' + _vm.repo + ' - Grouped by Week',"fieldone":"open_count","fieldtwo":"closed_count"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-12",staticStyle:{"padding-right":"35px"}},[_c('dual-line-chart',{attrs:{"source":"","title":'Issue Count History for this Repo Group:  ' + _vm.group + ' - Grouped by Week',"fieldone":"open_count","fieldtwo":"closed_count"}})],1)]),_vm._v(" "),_c('div',{staticClass:"page-header row no-gutters py-4"},[_c('div',{staticClass:"col-12 col-sm-4 text-center text-sm-left mb-0"},[_c('h3',{staticClass:"page-title",staticStyle:{"font-size":"1rem"}},[_vm._v("Experimental")])])]),_vm._v(" "),_c('div',{staticClass:"row"},[_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"commitComments","title":"Commit Comments / Week ","cite-url":"","cite-text":"Commit Comments"}})],1),_vm._v(" "),_c('div',{staticClass:"col col-6"},[_c('dynamic-line-chart',{attrs:{"source":"totalCommitters","title":"Committers","cite-url":"","cite-text":"Total Commiters","disable-rolling-average":"1"}})],1)])],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)

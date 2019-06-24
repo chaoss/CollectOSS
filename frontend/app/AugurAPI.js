@@ -71,6 +71,7 @@ export default class AugurAPI {
 
   batch (endpoints) {
     let str = '[{"method": "GET", "path": "' + endpoints.join('"},{"method": "GET", "path": "') + '"}]'
+    console.log(str)
     this.openRequests++
     let url = this.__endpointURL('batch')
     // Check cached
@@ -102,26 +103,39 @@ export default class AugurAPI {
     let reverseMap = {}
     let processedData = {}
     repos.forEach((repo) => {
-      Array.prototype.push.apply(endpoints, repo.batch(fields, true))
-      _.assign(reverseMap, repo.__reverseEndpointMap)
+      // Array.prototype.push.apply(endpoints, repo.batch(fields, true))
+      // _.assign(reverseMap, repo.__reverseEndpointMap)
       processedData[repo.toString()] = {}
+      fields.forEach((field) => {
+        console.log("endpoint_map: ", field, repo, repo.__endpointMap[field])
+        endpoints.push(repo.__endpointMap[field])
+        reverseMap[repo.__endpointMap[field]] = repo.__reverseEndpointMap[repo.__endpointMap[field]]
+      })
     })
+    console.log("before batch:", endpoints, reverseMap)
     return this.batch(endpoints).then((data) => {
-
-      return new Promise((resolve, reject) => {
+      
+      let newdat = new Promise((resolve, reject) => {
         if (Array.isArray(data)) {
-          data.forEach(response => {
+          data.forEach((response) => {
             if (response.status === 200 && reverseMap[response.path]) {
+              processedData[reverseMap[response.path].owner] = {}
+              processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = []
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
+              console.log("pdata after response", processedData, typeof(reverseMap[response.path].owner), typeof(reverseMap[response.path].name), JSON.parse(response.response), response.response)
             } else if (reverseMap[response.path]){
+              console.log('failed null')
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null
             }
           })
+          console.log(processedData)
           resolve(processedData)
         } else {
           reject(new Error('data-not-array'))
         }
       })
+      console.log(newdat, "newdata")
+      return newdat
     })
   }
 
@@ -164,6 +178,7 @@ export default class AugurAPI {
         })
         repo.repo_id = res[0].repo_id
         repo.repo_group_id = res[0].repo_group_id
+        repo.rg_name = res[0].rg_name
       }
     }
 
@@ -222,7 +237,12 @@ export default class AugurAPI {
     }
 
     var addRepoMetric = (r, jsName, endpoint) => {
+      var fullEndpoint = this._version + '/repo-groups/'+ repo.repo_group_id + '/repos/'+ repo.repo_id + '/' + endpoint
       var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/repos/'+ repo.repo_id + '/' + endpoint)
+
+      r.__endpointMap[jsName] = fullEndpoint
+      r.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: repo.toString() }
+      console.log("maps: ", r.__reverseEndpointMap)
       return __Endpoint(r, jsName, url)
     }
 
@@ -240,15 +260,19 @@ export default class AugurAPI {
         return new Promise((resolve, reject) => {
           if (Array.isArray(data)) {
             let mapped = {}
+            console.log()
             data.forEach(response => {
               if (response.status === 200) {
                 mapped[repo.__reverseEndpointMap[response.path].name] = JSON.parse(response.response)
+                console.log('mapped:', mapped)
               } else {
                 mapped[repo.__reverseEndpointMap[response.path].name] = null
+                console.log('mapped null:', mapped, repo.__reverseEndpointMap[response.path])
               }
             })
             resolve(mapped)
           } else {
+            console.log("didnt work")
             reject(new Error('data-not-array'))
           }
         })

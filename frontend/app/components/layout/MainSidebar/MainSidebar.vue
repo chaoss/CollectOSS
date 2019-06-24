@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="comp_info">
-                  {{ repo.url }}
+                  {{ repo }}
                 </div>
 
                 <div class="comp_info">
@@ -104,7 +104,30 @@ export default {
   },
   computed: {
     comparison_type () {
-
+      if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0 ) {
+        return 'Single Repo'
+      }
+      if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
+        return 'Single Repo Group'
+      }
+      else if (this.$store.state.comparedRepos.length == 1 && this.$store.state.comparedRepoGroups.length == 0) {
+        return '1-on-1 repo comparison'
+      }
+      else if (this.$store.state.comparedRepoGroups.length == 1 && this.$store.state.comparedRepos.length == 0) {
+        return '1-on-1 group comparison'
+      }
+      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
+        return "Multiple Groups"
+      }
+      else if (this.$store.state.comparedRepos.length > 1 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "Custom Group"
+      }
+      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "Comparison Type N/A"
+      }
+      else {
+        return "Invalid comparison type"
+      }
     },
     repo () {
       return this.$store.state.baseRepo || {'url': 'No base repo selected'}
@@ -117,7 +140,16 @@ export default {
         return this.$store.state.comparedRepoGroups[0].rg_name
       }
       else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
-
+        return "Multiple Groups"
+      }
+      else if (this.$store.state.comparedRepos.length > 1 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "Custom Group"
+      }
+      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
+        return "No comparison(s) selected"
+      }
+      else {
+        return "Invalid comparison type"
       }
     }
   },

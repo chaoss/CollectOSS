@@ -19,43 +19,43 @@
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
                     <div class="row">
                       <div class="col col-9">Name</div>
                       <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_description')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_description')"> 
                     <div class="row">
                       <div class="col col-9">Description</div>
                       <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_website')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_website')"> 
                     <div class="row">
                       <div class="col col-9">Website</div>
                       <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')"> 
                     <div class="row">
                       <div class="col col-9">Last Modified</div>
                       <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('rg_type')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_type')"> 
                     <div class="row">
                       <div class="col col-9">Type</div>
                       <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
                     <div class="row">
                       <div class="col col-9">Repo Count</div>
                       <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="20%" scope="col" class="border-0">Options</th>
+                  <th scope="col" class="border-0">Options</th>
                 </tr>
               </thead>
               <tbody>

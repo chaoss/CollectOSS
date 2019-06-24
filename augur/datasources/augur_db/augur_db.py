@@ -94,8 +94,8 @@ class Augur(object):
                 FROM commits
                 WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY commit_date, repo_id
-                ORDER BY repo_id, commit_date
+                GROUP BY date, repo_id
+                ORDER BY repo_id, date
             """)
 
             results = pd.read_sql(code_changes_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -867,8 +867,8 @@ class Augur(object):
         :param repo: the name of the repo
         """
         getRepoSQL = s.sql.text("""
-            SELECT repo_id, repo_group_id
-            FROM repo
+            SELECT repo.repo_id, repo.repo_group_id, rg_name
+            FROM repo JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
             WHERE repo_name = :repo AND repo_path LIKE :owner
         """)
 
