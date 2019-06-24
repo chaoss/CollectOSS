@@ -747,6 +747,54 @@ class Augur(object):
             results['duration'] = results['duration'].astype(str)
             return results
 
+    @annotate(tag='issue-participants')
+    def issue_participants(self, repo_group_id, repo_id=None):
+        """Returns number of participants per issue.
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame of count of participants per issue.
+        """
+        if not repo_id:
+            issue_participants_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    derived.issue_id,
+                    COUNT(DISTINCT derived.cntrb_id) AS participants
+                FROM (
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    UNION
+                    (SELECT issue_id, cntrb_id FROM issue_message_ref, message
+                    WHERE issue_message_ref.msg_id = message.msg_id)
+                ) AS derived, issues
+                WHERE derived.issue_id = issues.issue_id
+                AND repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                GROUP BY repo_id, derived.issue_id
+                ORDER BY repo_id
+            """)
+
+            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return result
+        else:
+            issue_participants_SQL = s.sql.text("""
+                SELECT
+                    derived.issue_id,
+                    COUNT(DISTINCT derived.cntrb_id) AS participants
+                FROM (
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    UNION
+                    (SELECT issue_id, cntrb_id FROM issue_message_ref, message
+                    WHERE issue_message_ref.msg_id = message.msg_id)
+                ) AS derived, issues
+                WHERE derived.issue_id = issues.issue_id
+                AND repo_id = :repo_id
+                GROUP BY repo_id, derived.issue_id
+                ORDER BY repo_id
+            """)
+
+            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_id': repo_id})
+            return result
+
     @annotate(tag='issue-backlog')
     def issue_backlog(self, repo_group_id, repo_id=None):
         """Returns number of issues currently open.
@@ -851,13 +899,13 @@ class Augur(object):
                 FROM issues
                 WHERE closed_at NOTNULL AND repo_id = :repo_id
                 GROUP BY gh_issue_number, issue_title, created_at, closed_at, DIFFDATE
-                ORDER BY DIFFDATE DESC 
+                ORDER BY DIFFDATE DESC
             """)
             results = pd.read_sql(issueSQL, self.db,
                                  params={'repo_id': repo_id})
 
         return results
-        
+
     #####################################
     ###              RISK             ###
     #####################################
@@ -1056,7 +1104,7 @@ class Augur(object):
             """)
             results = pd.read_sql(openIssueCountSQL, self.db, params={'repo_id': repo_id})
             return results
-        
+
 
     @annotate(tag='closed-issues-count')
     def closed_issues_count(self, repo_group_id, repo_id=None):
