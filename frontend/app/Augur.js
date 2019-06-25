@@ -58,20 +58,25 @@ export default function Augur () {
         state.gitRepo = payload.gitURL
         state.baseRepo = payload.gitURL
         state.hasState = true
-        let repo = window.AugurAPI.Repo(payload)
-        state.baseRepo = repo.toString()
-        if (!window.AugurRepos[repo.toString()]) {
+        let repo = null
+        let repoName = gitUrlToString(payload)
+        if (!window.AugurRepos[repoName]) {
+          repo = window.AugurAPI.Repo(payload)
           window.AugurRepos[repo.toString()] = repo
         } else {
-          repo = window.AugurRepos[repo.toString()]
+          repo = window.AugurRepos[repoName]
         }
+        state.baseRepo = repo.toString()
       },
       setRepo (state, payload) {
-        let repo = window.AugurAPI.Repo(payload)
-        if (!window.AugurRepos[repo.toString()]) {
+        let repoName = gitUrlToString(payload)
+        let repo = null
+        // let repo = window.AugurAPI.Repo(payload)
+        if (!window.AugurRepos[repoName]) {
+          repo = window.AugurAPI.Repo(payload)
           window.AugurRepos[repo.toString()] = repo
         } else {
-          repo = window.AugurRepos[repo.toString()]
+          repo = window.AugurRepos[repoName]
         }
         state.queryObject = {}
         state.hasState = true
@@ -292,4 +297,37 @@ export default function Augur () {
   //     window.AugurApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') })
   //   })
   // }
+
+  function gitUrlToString(optipns){
+    let owner = null
+    let name = null
+    if (optipns.githubURL) {
+      let splitURL = optipns.githubURL.split('/')
+      if (splitURL.length < 3) {
+        owner = splitURL[0]
+        name = splitURL[1]
+      } else {
+        owner = splitURL[3]
+        name = splitURL[4]
+      }
+    }
+
+    if (optipns.gitURL) {
+      if (optipns.gitURL.includes('github.com')) {
+        let splitURL = optipns.gitURL.split('/')
+        owner = splitURL[1]
+        name = splitURL[2].split('.')[0]
+      } else {
+        let splitURL = optipns.gitURL.split('/')
+        owner = splitURL[0]
+        name = splitURL[1]
+      }
+    }
+
+    if (owner && name) {
+      return owner + '/' + name
+    } else {
+      return JSON.stringify(optipns)
+    }
+  }
 }
