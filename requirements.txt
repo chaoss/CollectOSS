@@ -93,4 +93,5 @@ Werkzeug==0.14.1
 wrapt==1.10.11
 WTForms==2.2.1
 yarg==0.1.9
+zmq
 zope.interface==4.5.0
