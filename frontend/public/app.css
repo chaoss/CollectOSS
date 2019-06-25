@@ -3707,7 +3707,7 @@ details summary svg {
   padding-right: 2rem;
 }
 .comp_info {
-  padding: 10px;
+  padding: 10px !important;
 }
 .comp_manager {
   height: 13.5rem !important;

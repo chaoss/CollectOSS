@@ -28,7 +28,7 @@
       </form>
 
       <div class="nav-wrapper">
-          <d-nav class="flex-column"> <!--style="margin: 0 !important"-->
+          <d-nav class="flex-column" style="margin: 0 !important"> <!--style="margin: 0 !important"-->
             <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
               <d-link :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="comp_info">
-                  {{ repo }}
+                  {{ repo.url }}
                 </div>
 
                 <div class="comp_info">
@@ -74,7 +74,7 @@
                 </div>
                 
                 <div class="col col-6" style="padding: 0px">
-                  <d-link class="nav-link" style="padding: 0.7rem .7rem 0.7rem 1.5rem; margin-left: 1rem">
+                  <d-link class="nav-link" style="padding: 0.7rem .7rem 0.7rem 1.5rem; margin-left: 0rem">
                     <i class="material-icons">library_add</i>
                     <span>Add</span>
                     <div class="item-icon-wrapper" />
