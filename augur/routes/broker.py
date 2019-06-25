@@ -2,7 +2,7 @@
 """
 Creates routes for the broker
 """
-from flask import request, jsonify
+from flask import request, jsonify, Response
 import logging
 
 def create_broker_routes(server):
@@ -25,8 +25,10 @@ def create_broker_routes(server):
         """
         worker = request.json
         logging.info("Recieved HELLO message from worker: " + worker['id'])
-        server.broker.add_new_worker(worker)
-        return jsonify({"status": "success", "worker": worker['id']})
+        server.broker.add_new_worker(worker, server.broker.connected_workers)
+        return Response(response=worker['id'],
+                        status=200,
+                        mimetype="application/json")
 
     @server.app.route('/{}/completed_task'.format(server.api_version), methods=['POST'])
     def sync_queue():
