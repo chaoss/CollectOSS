@@ -21,7 +21,7 @@ def client_git_url_task(identity, model, git_url):
     socket.connect("ipc://backend.ipc")
 
     # Send request, get reply
-    request = b'UPDATE {"model":"%s","given":{"git_url":"%s"}}' % (model.encode(), git_url.encode())
+    request = b'UPDATE {"models":["%s"],"given":{"git_url":"%s"}}' % (model.encode(), git_url.encode())
     logging.info("sent request: " + str(request))
     socket.send(request)
 
@@ -105,6 +105,7 @@ class Housekeeper:
             updates = self.__updatable
         for update in updates:
             if update['started'] != True:
+                update['started'] = True
                 up = Process(target=self.updater_process, args=(update['model'], update['delay'], update['section']), daemon=True)
                 up.start()
                 self.__processes.append(up)

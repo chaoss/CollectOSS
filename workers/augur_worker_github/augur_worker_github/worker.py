@@ -114,32 +114,32 @@ class GitHubWorker:
         self.job_table = HelperBase.classes.gh_worker_job.__table__
 
 
-        # # Query all repos and last repo id
-        # repoUrlSQL = s.sql.text("""
-        #     SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
-        #     """)
+        # Query all repos and last repo id
+        repoUrlSQL = s.sql.text("""
+            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+            """)
 
-        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
-        # repoIdSQL = s.sql.text("""
-        #     SELECT since_id_str FROM gh_worker_job
-        #     """)
+        repoIdSQL = s.sql.text("""
+            SELECT since_id_str FROM gh_worker_job
+            """)
 
-        # df = pd.read_sql(repoIdSQL, self.helper_db, params={})
-        # last_id = int(df.iloc[0]['since_id_str'])
-        # before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
-        # after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
+        df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+        last_id = int(df.iloc[0]['since_id_str'])
+        before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
+        after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
 
-        # reorganized_repos = after_repos.append(before_repos)
-        # # logging.info("BEFORE: " + str(before_repos) + " AFTER: " + str(after_repos))
-        # # logging.info("FIRST REPO TO WORK ON: " + str(reorganized_repos))
+        reorganized_repos = after_repos.append(before_repos)
+        # logging.info("BEFORE: " + str(before_repos) + " AFTER: " + str(after_repos))
+        # logging.info("FIRST REPO TO WORK ON: " + str(reorganized_repos))
 
         
 
 
-        # # Populate queue
-        # for index, row in reorganized_repos.iterrows():
-        #     self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
+        # Populate queue
+        for index, row in reorganized_repos.iterrows():
+            self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
 
 
 
