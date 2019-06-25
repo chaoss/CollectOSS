@@ -114,32 +114,32 @@ class GitHubWorker:
         self.job_table = HelperBase.classes.gh_worker_job.__table__
 
 
-        # Query all repos and last repo id
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
-            """)
+        # # Query all repos and last repo id
+        # repoUrlSQL = s.sql.text("""
+        #     SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+        #     """)
 
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
-        repoIdSQL = s.sql.text("""
-            SELECT since_id_str FROM gh_worker_job
-            """)
+        # repoIdSQL = s.sql.text("""
+        #     SELECT since_id_str FROM gh_worker_job
+        #     """)
 
-        df = pd.read_sql(repoIdSQL, self.helper_db, params={})
-        last_id = int(df.iloc[0]['since_id_str'])
-        before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
-        after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
+        # df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+        # last_id = int(df.iloc[0]['since_id_str'])
+        # before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
+        # after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
 
-        reorganized_repos = after_repos.append(before_repos)
-        # logging.info("BEFORE: " + str(before_repos) + " AFTER: " + str(after_repos))
-        # logging.info("FIRST REPO TO WORK ON: " + str(reorganized_repos))
+        # reorganized_repos = after_repos.append(before_repos)
+        # # logging.info("BEFORE: " + str(before_repos) + " AFTER: " + str(after_repos))
+        # # logging.info("FIRST REPO TO WORK ON: " + str(reorganized_repos))
 
-        # Reorganize so that the repo after the last repo we completed is first
+        
 
 
-        # Populate queue
-        for index, row in reorganized_repos.iterrows():
-            self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
+        # # Populate queue
+        # for index, row in reorganized_repos.iterrows():
+        #     self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
 
 
 
@@ -307,6 +307,7 @@ class GitHubWorker:
             else:
                 logging.info("JSON seems ill-formed " + str(r) + "....\n")
                 logging.info("Keys of r: " + str(r.__dict__.keys()))
+                j = json.loads(json.dumps(j))
                 logging.info("setting value of j as " + str(j) + "....\n")
 
             if r.status_code != 204:
@@ -315,10 +316,10 @@ class GitHubWorker:
             if len(j) == 0:
                 logging.info("length of j is " + str(len(j)) + "... breaking from pagination")
                 break
+            logging.info("Contributor list before adding j: " + str(contributors) + "\n")
             contributors += j
+            logging.info("Contributor list after adding j: " + str(contributors))
             i += 1
-        
-        
         
         try:
             # Duplicate checking ...
@@ -398,6 +399,7 @@ class GitHubWorker:
             logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
             logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
         else:
+            logging.info(need_insertion)
             logging.info("Well, that contributor just don't except because we hit the else-block yo")    
 
 
@@ -474,7 +476,7 @@ class GitHubWorker:
             events_url = (url + "/events?page={}")
             issue_events = []
             i = 0
-            # Paginate through all the issues
+            # Paginate through all the issue events
             while True:
                 logging.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
                 r = requests.get(url=events_url.format(i), headers=self.headers)
@@ -798,7 +800,6 @@ class GitHubWorker:
             pass
 
     def update_rate_limit(self, response):
-        logging.info(str(response.headers))
         try:
             self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
             logging.info("Recieved rate limit from headers\n")

@@ -7,16 +7,16 @@ import logging
 
 def create_routes(server, broker):
 
-    @server.app.route('/{}/job'.format(server.api_version), methods=['POST'])
-    def job():
-        """ AUGWOP route that is hit when data needs to be added to the database
-        Retrieves a json consisting of job specifications that the broker will use to assign a worker
-        """
-        job = request.json
-        logging.info("Recieved a new job to distribute for model: " + job['models'][0])
-        logging.info(job['given'])
-        broker.create_job(job)
-        return jsonify({"status": "success"})
+    # @server.app.route('/{}/job'.format(server.api_version), methods=['POST'])
+    # def job():
+    #     """ AUGWOP route that is hit when data needs to be added to the database
+    #     Retrieves a json consisting of job specifications that the broker will use to assign a worker
+    #     """
+    #     job = request.json
+    #     logging.info("Recieved a new job to distribute for model: " + job['models'][0])
+    #     logging.info(job['given'])
+    #     broker.create_job(job)
+    #     return jsonify({"status": "success"})
 
     @server.app.route('/{}/workers'.format(server.api_version), methods=['POST'])
     def worker():

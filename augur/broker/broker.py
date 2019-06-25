@@ -11,7 +11,7 @@ import zmq
 import multiprocessing
 
 import logging
-logging.basicConfig(filename='broker.log', level=logging.INFO)
+logging.basicConfig(filename='broker.log', filemode='w', level=logging.INFO)
 
 # from multichannel.worker_tasks import deep_github_worker_task, github_worker_task, facade_worker_task
 # from multichannel.client_tasks import client_owner_repo_task, client_git_url_task
@@ -36,7 +36,6 @@ class Worker():
         if qualifications is not None:
             self.given = qualifications[0]['given'][0][0]
             self.models = qualifications[0]['models']
-        print("Worker given: " + self.id)
         self.user_queue = Queue()
         self.maintain_queue = Queue()
 
@@ -71,9 +70,9 @@ class Broker(object):
         self.connected_workers = {}
         self.created_jobs = []
         logging.info("Broker spawned and is ready to accept tasks.")
-        # process = multiprocessing.Process(target=self.main)
-        # process.daemon = True
-        # process.start()
+        process = multiprocessing.Process(target=self.main)
+        process.daemon = True
+        process.start()
         
 
     def add_new_worker(self, worker):
@@ -115,9 +114,10 @@ class Broker(object):
 
     def completed_job(self, job):
         if job['action'] == "UPDATE":
-            completed_job = self.connected_workers[job['worker_id']].queue.get()
+            completed_job = self.connected_workers[job['worker_id']].user_queue.get()
         elif job['action'] == "MAINTAIN":
-            logging.info("Job completed: ", job)
+            completed_job = self.connected_workers[job['worker_id']].maintain_queue.get()
+        logging.info("Popped off broker's worker's queue the job: " + str(completed_job))
 
     def main(self):
         """Load balancer main loop."""
@@ -129,7 +129,7 @@ class Broker(object):
         backend = context.socket(zmq.ROUTER)
         backend.bind("ipc://backend.ipc")
         # backend.bind("tcp://*:5558")
-
+        print("hi")
 
         # Initialize main loop state
         count = NBR_CLIENTS
@@ -154,9 +154,10 @@ class Broker(object):
             logging.info("Broker is waiting for a new message...\n")
             client_id = backend.recv().decode('ascii')
             logging.info("Broker recieved a new message.\n")
-            logging.info("Message sender: " + str(worker))
+            logging.info("Message sender: " + str(client_id))
             request = backend.recv_multipart()
             logging.info("Message request: " + str(request))
+
             # worker, delimiter, client = request[:3]
             delimiter = request[0]
             client = request[1]
@@ -166,87 +167,98 @@ class Broker(object):
             # delimiter = request[0].decode('ascii')#.split(" ")
             logging.info("Parsed message: " + str(message))
             action = message[0]
-            job_received = json.loads(message[1])
-            # logging.info("Client: " + str(client))
-
-            # If there are no workers currently available
-            # if not workers:
-                #listen on the frontend now that a worker is available (we just found one above)
-                # poller.register(frontend, zmq.POLLIN)
-
-
-            # If the client's message is UPDATE, it is a message to maintain a model 
-            #   from the housekeeper or update from frontend
-            if action == "UPDATE" or action == "MAINTAIN":
-                job_received['action'] = action
-                create_job(job_received)
-                # Send to the client that made the request the contents of the reply 
-                # backend.send_multipart([client, b"", reply])
-
-
-            # # If the client's message is not READY and there are more than 3 parts to it, then that mean's a reply to a request
-            # if client != b"READY" and len(request) > 3:
-            #     # Identify the reply
-            #     delimiter, reply = request[3:]
-
-            #     if 'DONE' == reply.decode('ascii'):
-            #         job_items = list(jobs.items())
-            #         job_id = next(job[0] for job in job_items if worker.decode('ascii') in list(job[1].keys()))
-
-            #         self.connected_workers[job['worker_id']].queue.get()
-
-            #         if len([job for job in jobs[job_id].values()]) == len([job for job in jobs[job_id].values() if job == 'complete']):
-            #             logging.info(f"Job {job_id} is finished")
-            #             frontend.send_multipart([client_job_ids[job_id], b"", b"DONE"])
-            #         else:
-            #             logging.info(f"Job {job_id} is still in progress")
-
-                # # Send to the client that made the request the contents of the reply 
-                # frontend.send_multipart([client, b"", reply])
-
-                # # Note that one of the requests has been served
-                # count -= 1
-
-                # # If there are no more requests to be served, terminate
-                # if not count:
-                #     break
+            logging.info("messsage:" + str(message[1]))
+            print("printed", message, type(message[1]))
+            try:
+                job_received = json.loads(message[1])
+            
 
 
 
-        # If there's activity on the frontend
-        # if frontend in sockets:
-        #     # Get next client request
-        #     msg = frontend.recv_multipart()
-        #     client = msg[0]
-        #     delimiter = msg[1]
-        #     request = msg[2]
+                # logging.info("Client: " + str(client))
 
-        #     # Identify given from request
-        #     given = list(json.loads((request.decode('ascii')).split(" ")[1])['given'])[0]
+                # If there are no workers currently available
+                # if not workers:
+                    #listen on the frontend now that a worker is available (we just found one above)
+                    # poller.register(frontend, zmq.POLLIN)
 
-        #     # Find workers that can process that given
-        #     compatible_workers = [worker for worker in workers if worker.given[1] == given]
 
-        #     # If any exist, give each one a copy of the request
-        #     if workers is not None:
-        #         job_id = random.randint(0, 100)
-        #         jobs[job_id] = {}
-        #         client_job_ids[job_id] = client
-        #         logging.info(f"Created job {job_id} for {client.decode('ascii')}")
-        #         for worker in compatible_workers:
-        #             # Send to the backend the worker to use, which client requested, and the message from the client
-        #             #logging.info(f"{request.decode('ascii')} is being routed to {worker.ID.decode('ascii')}")
-        #             backend.send_multipart([worker.ID, b"", client, b"", request])
+                # If the client's message is UPDATE, it is a message to maintain a model 
+                #   from the housekeeper or update from frontend
+                if action == "UPDATE" or action == "MAINTAIN":
+                    # job_received['action'] = action
+                    self.create_job(job_received)
+                    # Send to the client that made the request the contents of the reply 
+                    # backend.send_multipart([client, b"", reply])
 
-        #             # Add the job to the list of current jobs
-        #             jobs[job_id][worker.ID.decode('ascii')] = 'working'
 
-        #     # Otherwise, let the frontend know that the request can't be served
-        #     else:
-        #         logging.warning(f"Augur does not have knowledge of any workers that are capable of handing the request {request.decode('ascii')}. \nPlease install a worker that can serve requests given `{given}`")
-        #         frontend.send_multipart([client, b"", b"NO-WORKERS"])
-        #     # else:
-        #     #     logging.info("TIMEOUT")
+                # # If the client's message is not READY and there are more than 3 parts to it, then that mean's a reply to a request
+                # if client != b"READY" and len(request) > 3:
+                #     # Identify the reply
+                #     delimiter, reply = request[3:]
+
+                #     if 'DONE' == reply.decode('ascii'):
+                #         job_items = list(jobs.items())
+                #         job_id = next(job[0] for job in job_items if worker.decode('ascii') in list(job[1].keys()))
+
+                #         self.connected_workers[job['worker_id']].queue.get()
+
+                #         if len([job for job in jobs[job_id].values()]) == len([job for job in jobs[job_id].values() if job == 'complete']):
+                #             logging.info(f"Job {job_id} is finished")
+                #             frontend.send_multipart([client_job_ids[job_id], b"", b"DONE"])
+                #         else:
+                #             logging.info(f"Job {job_id} is still in progress")
+
+                    # # Send to the client that made the request the contents of the reply 
+                    # frontend.send_multipart([client, b"", reply])
+
+                    # # Note that one of the requests has been served
+                    # count -= 1
+
+                    # # If there are no more requests to be served, terminate
+                    # if not count:
+                    #     break
+
+
+
+            # If there's activity on the frontend
+            # if frontend in sockets:
+            #     # Get next client request
+            #     msg = frontend.recv_multipart()
+            #     client = msg[0]
+            #     delimiter = msg[1]
+            #     request = msg[2]
+
+            #     # Identify given from request
+            #     given = list(json.loads((request.decode('ascii')).split(" ")[1])['given'])[0]
+
+            #     # Find workers that can process that given
+            #     compatible_workers = [worker for worker in workers if worker.given[1] == given]
+
+            #     # If any exist, give each one a copy of the request
+            #     if workers is not None:
+            #         job_id = random.randint(0, 100)
+            #         jobs[job_id] = {}
+            #         client_job_ids[job_id] = client
+            #         logging.info(f"Created job {job_id} for {client.decode('ascii')}")
+            #         for worker in compatible_workers:
+            #             # Send to the backend the worker to use, which client requested, and the message from the client
+            #             #logging.info(f"{request.decode('ascii')} is being routed to {worker.ID.decode('ascii')}")
+            #             backend.send_multipart([worker.ID, b"", client, b"", request])
+
+            #             # Add the job to the list of current jobs
+            #             jobs[job_id][worker.ID.decode('ascii')] = 'working'
+
+            #     # Otherwise, let the frontend know that the request can't be served
+            #     else:
+            #         logging.warning(f"Augur does not have knowledge of any workers that are capable of handing the request {request.decode('ascii')}. \nPlease install a worker that can serve requests given `{given}`")
+            #         frontend.send_multipart([client, b"", b"NO-WORKERS"])
+            #     # else:
+            #     #     logging.info("TIMEOUT")
+            except Exception as e:
+                logging.info(str(e))
+                logging.info(str(message))
+                job_received = None
 
         # Clean up
         backend.close()

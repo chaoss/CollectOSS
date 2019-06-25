@@ -61,6 +61,9 @@ export default {
   },
   computed: {
     repo() {
+      return this.$store.state.baseRepo
+    },
+    gitRepo() {
       return this.$store.state.gitRepo
     },
     earliest () {
@@ -260,7 +263,19 @@ export default {
         
       }
 
-      let repo = window.AugurAPI.Repo({ gitURL: this.repo })
+      let repo = null
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo]
+        } else {
+          let repo = window.AugurAPI.Repo({"gitURL": this.gitRepo})
+          window.AugurRepos[repo.toString] = repo
+        }
+      } else {
+        repo =  window.AugurAPI.Repo({ gitURL: this.gitRepo })
+        window.AugurRepos[repo.toString()] = repo
+      }
+
       let contributors = {}
       let organizations = {}
 
