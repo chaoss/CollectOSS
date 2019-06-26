@@ -61,7 +61,7 @@ class Server(object):
 
         self.show_metadata = False
 
-        self.broker = Broker()
+        # self.broker = Broker()
         # self.housekeeper = Housekeeper(
         #     user=self._augur.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
         #     password=self._augur.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),

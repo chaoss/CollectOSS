@@ -14,8 +14,8 @@ def create_broker_routes(server):
         """
         job = request.json
         logging.info("Recieved a new job to distribute for model: " + job['models'][0])
-        logging.info(job['given'])
-        server.broker.create_job(job)
+        # logging.info(job['given'])
+        # server.broker.create_job(job)
         return jsonify({"status": "success", "job": job})
 
     @server.app.route('/{}/workers'.format(server.api_version), methods=['POST'])
@@ -25,7 +25,7 @@ def create_broker_routes(server):
         """
         worker = request.json
         logging.info("Recieved HELLO message from worker: " + worker['id'])
-        server.broker.add_new_worker(worker, server.broker.connected_workers)
+        # server.broker.add_new_worker(worker, server.broker.connected_workers)
         return Response(response=worker['id'],
                         status=200,
                         mimetype="application/json")
@@ -39,7 +39,7 @@ def create_broker_routes(server):
 
     @server.app.route('/{}/status/<worker>'.format(server.api_version), methods=['POST'])
     def get_status(worker):
-        status = server.broker.get_status(worker)
+        # status = server.broker.get_status(worker)
         return Response(response=status,
                         status=200,
                         mimetype="application/json")
