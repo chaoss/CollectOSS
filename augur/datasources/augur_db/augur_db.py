@@ -826,6 +826,45 @@ class Augur(object):
             result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_id': repo_id})
             return result
 
+    @annotate(tag='issue-throughput')
+    def issue_throughput(self, repo_group_id, repo_id=None):
+        """Returns the ratio of issues closed to total issues
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame of ratio of issues closed to total issues.
+        """
+        if not repo_id:
+            issue_throughput_SQL = s.sql.text("""
+                SELECT table1.repo_id, (tot1 / tot2) AS throughput
+                FROM
+                    (SELECT repo_id, COUNT(issue_id)::REAL AS tot1
+                    FROM issues WHERE issue_state='closed'
+                    AND repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY repo_id) AS table1,
+                    (SELECT repo_id, COUNT(issue_id)::REAL AS tot2
+                    FROM issues
+                    WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY repo_id) AS table2
+                WHERE table1.repo_id = table2.repo_id
+            """)
+
+            results = pd.read_sql(issue_throughput_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            issue_throughput_SQL = s.sql.text("""
+                SELECT (tot1 / tot2) AS throughput
+                FROM
+                    (SELECT COUNT(issue_id)::REAL AS tot1 FROM issues
+                    WHERE issue_state='closed' AND repo_id=:repo_id) AS table1,
+                    (SELECT COUNT(issue_id)::REAL AS tot2 FROM issues
+                    WHERE repo_id=:repo_id) AS table2
+            """)
+
+            result = pd.read_sql(issue_throughput_SQL, self.db, params={'repo_id': repo_id})
+            return result
+
     @annotate(tag='issues-open-age')
     def issues_open_age(self, repo_group_id, repo_id=None):
         """
