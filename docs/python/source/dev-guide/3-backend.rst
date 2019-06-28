@@ -10,7 +10,7 @@ generic plugins, while ``datasources/`` is specifically for plugins that
 provide a new data source, like ``ghtorrent`` or ``facade``.
 
 Inside each plugin directory are 5 required files: ``__init__.py``,
-``plugin_name.py``, ``routes.py``, ``test_plugin_name.py``, and ``test_plugin_name_routes.py``.
+``plugin_name.py``, ``routes.py``, ``test_plugin_name_functions.py``, and ``test_plugin_name_routes.py``.
 
 We will go over these more in-depth in the following sections.
 
@@ -237,7 +237,7 @@ Writing tests
 Metrics
 *******
 Augur uses ``pytest`` for its data source unit tests. The tests for our sample ``Chaoss``
-class are contained in the ``test_chaoss.py`` file inside the plugin's
+class are contained in the ``test_chaoss_functions.py`` file inside the plugin's
 directory. You can use pytest fixtures and environment variables to pass
 data to tests.
 
@@ -274,6 +274,17 @@ In this file, you'll need the following boilerplate:
 
     @pytest.fixture(scope="module")
     def <plugin_name>_routes():
+        pass
+
+So for our CHAOSS example, the following code would go in ``test_chaoss_routes.py``:
+
+.. code:: python
+
+    import pytest
+    import requests
+
+    @pytest.fixture(scope="module")
+    def chaoss_routes():
         pass
 
 The web server will be automatically spun up and down when running your tests.

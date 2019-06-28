@@ -215,20 +215,25 @@ function Augur() {
         state.gitRepo = payload.gitURL;
         state.baseRepo = payload.gitURL;
         state.hasState = true;
-        var repo = window.AugurAPI.Repo(payload);
-        state.baseRepo = repo.toString();
-        if (!window.AugurRepos[repo.toString()]) {
+        var repo = null;
+        var repoName = gitUrlToString(payload);
+        if (!window.AugurRepos[repoName]) {
+          repo = window.AugurAPI.Repo(payload);
           window.AugurRepos[repo.toString()] = repo;
         } else {
-          repo = window.AugurRepos[repo.toString()];
+          repo = window.AugurRepos[repoName];
         }
+        state.baseRepo = repo.toString();
       },
       setRepo: function setRepo(state, payload) {
-        var repo = window.AugurAPI.Repo(payload);
-        if (!window.AugurRepos[repo.toString()]) {
+        var repoName = gitUrlToString(payload);
+        var repo = null;
+        // let repo = window.AugurAPI.Repo(payload)
+        if (!window.AugurRepos[repoName]) {
+          repo = window.AugurAPI.Repo(payload);
           window.AugurRepos[repo.toString()] = repo;
         } else {
-          repo = window.AugurRepos[repo.toString()];
+          repo = window.AugurRepos[repoName];
         }
         state.queryObject = {};
         state.hasState = true;
@@ -453,6 +458,39 @@ function Augur() {
   //     window.AugurApp.$store.commit('addComparedRepo', { githubURL: repo.replace(' ', '/') })
   //   })
   // }
+
+  function gitUrlToString(optipns) {
+    var owner = null;
+    var name = null;
+    if (optipns.githubURL) {
+      var splitURL = optipns.githubURL.split('/');
+      if (splitURL.length < 3) {
+        owner = splitURL[0];
+        name = splitURL[1];
+      } else {
+        owner = splitURL[3];
+        name = splitURL[4];
+      }
+    }
+
+    if (optipns.gitURL) {
+      if (optipns.gitURL.includes('github.com')) {
+        var _splitURL = optipns.gitURL.split('/');
+        owner = _splitURL[1];
+        name = _splitURL[2].split('.')[0];
+      } else {
+        var _splitURL2 = optipns.gitURL.split('/');
+        owner = _splitURL2[0];
+        name = _splitURL2[1];
+      }
+    }
+
+    if (owner && name) {
+      return owner + '/' + name;
+    } else {
+      return JSON.stringify(optipns);
+    }
+  }
 }
 });
 
@@ -1508,9 +1546,7 @@ module.exports = {
         repo = e.url.slice(e.url.lastIndexOf('/') + 1);
       }
       this.$store.commit('setRepo', {
-        gitURL: e.url,
-        repo_id: e.repo_id,
-        repo_group_id: e.repo_group_id
+        gitURL: e.url
       });
 
       this.$store.commit('setTab', {
@@ -1801,7 +1837,18 @@ module.exports = {
     });
     var endpoints1 = ["changesByAuthor"];
     endpoints1.forEach(function (source) {
-      var repo = window.AugurAPI.Repo({ gitURL: _this.gitRepo });
+      var repo = null;
+      if (_this.repo) {
+        if (window.AugurRepos[_this.repo]) {
+          repo = window.AugurRepos[_this.repo];
+        } else {
+          repo = window.AugurAPI.Repo({ "gitURL": _this.gitRepo });
+          window.AugurRepos[repo.toString] = repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: _this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
       repo[source]().then(function (data) {
         console.log("batch data", data);
         _this.values[source] = data;
@@ -3621,6 +3668,9 @@ exports.default = {
 
   computed: {
     repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
     },
     earliest: function earliest() {
@@ -3776,7 +3826,19 @@ exports.default = {
 
       };
 
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var repo = null;
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo];
+        } else {
+          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          window.AugurRepos[_repo.toString] = _repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
+
       var contributors = {};
       var organizations = {};
 
@@ -5861,6 +5923,9 @@ exports.default = {
 
   computed: {
     repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
     },
     earliest: function earliest() {
@@ -6008,7 +6073,18 @@ exports.default = {
 
       };
 
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var repo = null;
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo];
+        } else {
+          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          window.AugurRepos[_repo.toString] = _repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
       var contributors = {};
       var organizations = {};
 
@@ -6174,12 +6250,26 @@ exports.default = {
 
   computed: {
     repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
     },
     chart: function chart() {
       var _this = this;
 
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var repo = null;
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo];
+        } else {
+          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          window.AugurRepos[_repo.toString] = _repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
       var contributors = {};
       var organizations = {};
 
@@ -6297,6 +6387,9 @@ exports.default = {
 
   computed: {
     repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
     },
     earliest: function earliest() {
@@ -6478,7 +6571,18 @@ exports.default = {
         }]
       };
 
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var repo = null;
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo];
+        } else {
+          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          window.AugurRepos[_repo.toString] = _repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
       var contributors = {};
       var organizations = {};
 
@@ -6656,6 +6760,9 @@ exports.default = {
 
   computed: {
     repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
     },
     earliest: function earliest() {
@@ -6743,7 +6850,19 @@ exports.default = {
 
       };
 
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var repo = null;
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo];
+        } else {
+          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          window.AugurRepos[_repo.toString] = _repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
+
       var contributors = {};
       var organizations = {};
 
@@ -7390,6 +7509,9 @@ exports.default = {
 
   computed: {
     repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
     },
     earliest: function earliest() {
@@ -7519,7 +7641,19 @@ exports.default = {
         }]
 
       };
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var repo = null;
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo];
+        } else {
+          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          window.AugurRepos[_repo.toString] = _repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
+
       var contributors = {};
       var organizations = {};
       var addChanges = function addChanges(dest, src) {

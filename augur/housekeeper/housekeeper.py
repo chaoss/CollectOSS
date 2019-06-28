@@ -21,8 +21,8 @@ def client_git_url_task(identity, model, git_url):
     socket.connect("ipc://backend.ipc")
 
     # Send request, get reply
-    request = b'UPDATE {"model":"%s","given":{"git_url":"%s"}}' % (model.encode(), git_url.encode())
-    logging.info("sent request: " + str(request))
+    request = b'UPDATE {"models":["%s"],"given":{"git_url":"%s"}}' % (model.encode(), git_url.encode())
+    logging.info("Sent request: " + str(request) + "\n")
     socket.send(request)
 
 class Housekeeper:
@@ -53,13 +53,14 @@ class Housekeeper:
         subsection_test = ['https://github.com/rails/exception_notification.git']
         all_repo_issues_sorted = self.sort_issue_repos()['repo_git'].values#.tolist()
 
-        # List of tasks that need periodic updates
+        # List of jobs that need periodic updates
         self.__updatable = [
             {
                 'model': 'issues',
                 'started': False,
-                'delay': 15,
-                'section': all_repo_issues_sorted
+                'delay': 15000,
+                'section': all_repo_issues_sorted,
+                'tag': 'All stored repositories'
             }
         ]
         self.__processes = []
@@ -68,7 +69,7 @@ class Housekeeper:
         
 
     @staticmethod
-    def updater_process(model, delay, repos):
+    def updater_process(model, delay, repos, tag):
         """
         Controls a given plugin's update process
 
@@ -76,20 +77,19 @@ class Housekeeper:
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
-        logging.info('Spawned {} model updater process with PID {}'.format(model, os.getpid()))
+        logging.info('Housekeeper spawned {} model updater process with PID {} for subsection {}'.format(
+            model, os.getpid(), tag))
         try:
-            iter = 0
             while True:
-                logging.info('Updating {} model...'.format(model))
+                logging.info('Housekeeper preparing to send update request(s) for {} model for subsection {}...'.format(model, tag))
                 
                 # Send task to broker through 0mq
-                print("repos:",repos[iter])
-                client_git_url_task('housekeeper', model, repos[iter])
+                for repo in repos:
+                    client_git_url_task('housekeeper', model, repo)
+                    time.sleep(15)
 
                 time.sleep(delay)
-                iter += 1
         except KeyboardInterrupt:
-            logging.info("quit new")
             self.shutdown_updates()
             os.kill(os.getpid(), 9)
             os._exit(0)
@@ -105,7 +105,8 @@ class Housekeeper:
             updates = self.__updatable
         for update in updates:
             if update['started'] != True:
-                up = Process(target=self.updater_process, args=(update['model'], update['delay'], update['section']), daemon=True)
+                update['started'] = True
+                up = Process(target=self.updater_process, args=(update['model'], update['delay'], update['section'], update['tag']), daemon=True)
                 up.start()
                 self.__processes.append(up)
                 update['started'] = True
