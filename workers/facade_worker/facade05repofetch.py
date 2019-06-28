@@ -147,7 +147,7 @@ def git_repo_initialize(cfg):
 
         else:
             # If cloning failed, log it and set the status back to new
-            cfg.update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
+            update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
 
             query = ("UPDATE repo SET repo_status='New (failed)' WHERE repo_id=%s")
 

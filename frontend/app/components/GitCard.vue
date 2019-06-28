@@ -7,6 +7,7 @@
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
+
         <div v-if="!loaded" style="text-align: center; margin-left: 44.4%; position: relative !important" class="col col-12 spinner loader"></div>
 
       
@@ -74,6 +75,9 @@ module.exports = {
     NormalizedStackedBarChart,
     OneDimensionalStackedBarChart,
     HorizontalBarChart,
+    GroupedBarChart,
+    DirectionalTimeChart,
+    TimeIntervalBarChart,
     CommitChart
   },
   computed: {

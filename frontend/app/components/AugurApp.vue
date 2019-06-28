@@ -28,3 +28,9 @@ module.exports = {
 }
 
 </script>
+
+<style scoped>
+@import 'shards-ui/dist/css/shards.css';
+@import 'bootstrap/dist/css/bootstrap.css';
+@import 'quill/dist/quill.snow.css';
+</style>

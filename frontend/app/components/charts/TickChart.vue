@@ -107,6 +107,7 @@ export default {
       }
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+
         "width": 1000,
         "height": 360,
         "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},

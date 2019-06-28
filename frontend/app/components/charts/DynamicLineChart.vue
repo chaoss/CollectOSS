@@ -59,6 +59,7 @@ export default {
       compRepos: this.$store.state.comparedRepos,
       metricSource: null,
       timeperiod: 'all',
+      forceRecomputeCounter: 0,
       mount: true
     }
   },
@@ -85,6 +86,7 @@ export default {
       $(this.$el).find('.hidefirst').addClass('invisDet')
       $(this.$el).find('.spinner').addClass('loader')
       $(this.$el).find('.spacing').removeClass('hidden')
+
     },
   },
   computed: {
@@ -122,6 +124,7 @@ export default {
       return this.$store.state.showDetail
     },
     spec() {
+
       // declare constant for vegaEmbed module since we use its cdn in index.html rather than add it to package.json
       const vegaEmbed = window.vegaEmbed;
       // Get the repos we need
@@ -183,7 +186,9 @@ export default {
                     "field": "date",
                     "type": "temporal",
                     "axis": {
-                      "labels": !this.showDetail
+                      "labels": this.showDetail,
+                      "format": "%b %Y",
+                      "title": " "
                     }
                   },
                   "color": {

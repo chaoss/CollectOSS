@@ -75,6 +75,7 @@ class Facade(object):
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
         # if self.projects:
         #     results = results[results.project_name.isin(self.projects)]
+
         if self.projects:
               results = results[results.project_name.isin(self.projects)]
 
@@ -155,7 +156,6 @@ class Facade(object):
     def facade_project(self, repo_url):
         """
         Returns number of patches per commiter per week
-
         :param repo_url: the repository's URL
         """
         facadeProjectSQL = s.sql.text("""
