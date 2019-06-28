@@ -17,11 +17,11 @@ class GHTorrentPlugin(AugurPlugin):
         if self.__ghtorrent is None:
             logger.debug('Initializing GHTorrent')
             self.__ghtorrent = GHTorrent(
-                user=self._augur.read_config('GHTorrent', 'user', 'AUGUR_DB_USER', 'root'),
-                password=self._augur.read_config('GHTorrent', 'pass', 'AUGUR_DB_PASS', 'password'),
-                host=self._augur.read_config('GHTorrent', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-                port=self._augur.read_config('GHTorrent', 'port', 'AUGUR_DB_PORT', '3306'),
-                dbname=self._augur.read_config('GHTorrent', 'name', 'AUGUR_DB_NAME', 'msr14')
+                user=self._augur.read_config('GHTorrent', 'user', 'AUGUR_GHTORRENT_DB_USER', 'root'),
+                password=self._augur.read_config('GHTorrent', 'pass', 'AUGUR_GHTORRENT_DB_PASS', 'password'),
+                host=self._augur.read_config('GHTorrent', 'host', 'AUGUR_GHTORRENT_DB_HOST', '127.0.0.1'),
+                port=self._augur.read_config('GHTorrent', 'port', 'AUGUR_GHTORRENT_DB_PORT', '3306'),
+                dbname=self._augur.read_config('GHTorrent', 'name', 'AUGUR_GHTORRENT_DB_NAME', 'msr14')
             )
         return self.__ghtorrent
 

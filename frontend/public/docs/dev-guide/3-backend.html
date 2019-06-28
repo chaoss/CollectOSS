@@ -43,7 +43,7 @@ directories: <code class="docutils literal notranslate"><span class="pre">plugin
 generic plugins, while <code class="docutils literal notranslate"><span class="pre">datasources/</span></code> is specifically for plugins that
 provide a new data source, like <code class="docutils literal notranslate"><span class="pre">ghtorrent</span></code> or <code class="docutils literal notranslate"><span class="pre">facade</span></code>.</p>
 <p>Inside each plugin directory are 5 required files: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>,
-<code class="docutils literal notranslate"><span class="pre">plugin_name.py</span></code>, <code class="docutils literal notranslate"><span class="pre">routes.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_plugin_name.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">test_plugin_name_routes.py</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">plugin_name.py</span></code>, <code class="docutils literal notranslate"><span class="pre">routes.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_plugin_name_functions.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">test_plugin_name_routes.py</span></code>.</p>
 <p>We will go over these more in-depth in the following sections.</p>
 </div>
 <div class="section" id="setting-up-your-environment">
@@ -222,7 +222,7 @@ the format already outlined to build your documentation.</p>
 <div class="section" id="metrics">
 <h4>3.3.4.1. Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h4>
 <p>Augur uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> for its data source unit tests. The tests for our sample <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code>
-class are contained in the <code class="docutils literal notranslate"><span class="pre">test_chaoss.py</span></code> file inside the plugin’s
+class are contained in the <code class="docutils literal notranslate"><span class="pre">test_chaoss_functions.py</span></code> file inside the plugin’s
 directory. You can use pytest fixtures and environment variables to pass
 data to tests.</p>
 <div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
@@ -246,21 +246,24 @@ access an instance of the class.</p>
 <p>As with our unit tests, we write our API tests in Python using the <code class="docutils literal notranslate"><span class="pre">pytest</span></code> framework.</p>
 <p>API tests for a plugin live in the <code class="docutils literal notranslate"><span class="pre">test_&lt;plugin_name&gt;_routes.py</span></code> folder in the <code class="docutils literal notranslate"><span class="pre">&lt;plugin_name&gt;/</span></code> directory.
 In this file, you’ll need the following boilerplate:</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span>import os
-import subprocess
-import time
-from subprocess import Popen
-import pytest
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span>import pytest
 import requests
 
-@pytest.fixture(scope=&quot;session&quot;)
+@pytest.fixture(scope=&quot;module&quot;)
 def &lt;plugin_name&gt;_routes():
-    process = subprocess.Popen([&#39;make&#39;, &#39;backend-restart&#39;])
-    time.sleep(5) #allow some time for the server to start
-    return process
+    pass
 </pre></div>
 </div>
-<p>This will automatically spin up the web server when running your tests so that you don’t have to do it yourself!</p>
+<p>So for our CHAOSS example, the following code would go in <code class="docutils literal notranslate"><span class="pre">test_chaoss_routes.py</span></code>:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pytest</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">scope</span><span class="o">=</span><span class="s2">&quot;module&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">chaoss_routes</span><span class="p">():</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The web server will be automatically spun up and down when running your tests.</p>
 <p>For the actual tests, for the most part not much logic is needed. Each endpoint should already have a unit test asserting that the
 metric is being calculate correctly: in most cases the endpoint tests exist primarily to make sure they’re reachable and that the routes
 we’ve documented are correct. These unit tests should not be strictly re-implemented, but each test needs to make sure that the output of the
