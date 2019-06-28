@@ -5,7 +5,6 @@ Creates routes for the facade data source plugin
 
 from flask import Response, request, jsonify
 
-
 def create_routes(server):
 
     facade = server._augur['facade']()
@@ -255,6 +254,7 @@ def create_routes(server):
                        mimetype="application/json")
 
     # server.addGitMetric(facade.top_repos_commits, 'top_repos_commits')
+
     @server.app.route('/{}/git/annual_commit_count_ranked_by_repo_in_repo_group'.format(server.api_version))
     def annual_commit_count_ranked_by_repo_in_repo_group():
 
@@ -265,9 +265,11 @@ def create_routes(server):
 
         data = server.transform(facade.annual_commit_count_ranked_by_repo_in_repo_group, args=([]), repo_url_base=repo_url_base, kwargs=({'timeframe': timeframe, 'repo_group': repo_group}))
 
+
         return Response(response=data,
                        status=200,
                        mimetype="application/json")
+
 
     @server.app.route('/{}/git/annual_lines_of_code_count_ranked_by_new_repo_in_repo_group'.format(server.api_version))
     def annual_lines_of_code_count_ranked_by_new_repo_in_repo_group():
@@ -305,6 +307,7 @@ def create_routes(server):
 
         calendar_year = request.args.get('calendar_year')
         interval = request.args.get('interval')
+
         # repo_group = request.args.get('repo_group')
 
         data = server.transform(facade.lines_of_code_commit_counts_by_calendar_year_grouped, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))
@@ -320,6 +323,7 @@ def create_routes(server):
 
         calendar_year = request.args.get('calendar_year')
         interval = request.args.get('interval')
+
         # repo_group = request.args.get('repo_group')
 
         data = server.transform(facade.unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped, args=([]), repo_url_base=repo_url_base, kwargs=({'calendar_year': calendar_year, 'interval': interval}))

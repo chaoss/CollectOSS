@@ -161,6 +161,27 @@ macOS High Sierra (and possibly older OS X Versions) Errata:
        cd frontend 
        npm install
 
+macOS High Sierra (and possibly older OS X Versions) Errata:
+------------------------------------------------------------
+
+1. If you check the logs/frontend.log and find that "brunch" was not
+   found:
+
+   .. code:: bash
+
+       brew install npm
+       npm install -g brunch
+       brew install yarn
+
+2. If the logs look good but the webpage at localhost:3333 is empty, it
+   could be that Yarn installed the wrong version of some libraries. In
+   that case:
+
+   .. code:: bash
+
+       cd frontend 
+       npm install
+
 Augur Installation Instructions
 -------------------------------
 
@@ -178,6 +199,7 @@ Clone the repo and install the libraries and tools needed by Augur
     git checkout dev
 
     # Install the Python and Node tools and libraries needed
+
     sudo make install-dev # some libraries require a root install.
 
     # Ignore node-pre-gyp install errors asking for cairo library or install cairo library. Augur works either way. 

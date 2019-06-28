@@ -88,14 +88,14 @@ class Augur(object):
         if not repo_id:
             code_changes_SQL = s.sql.text("""
                 SELECT
-                    date_trunc(:period, cmt_committer_date::DATE) as commit_date,
+                    date_trunc(:period, cmt_committer_date::DATE) as date,
                     repo_id,
                     COUNT(cmt_commit_hash) as commit_count
                 FROM commits
                 WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY commit_date, repo_id
-                ORDER BY repo_id, commit_date
+                GROUP BY date, repo_id
+                ORDER BY repo_id, date
             """)
 
             results = pd.read_sql(code_changes_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -105,7 +105,7 @@ class Augur(object):
         else:
             code_changes_SQL = s.sql.text("""
                 SELECT
-                    date_trunc(:period, cmt_committer_date::DATE) as commit_date,
+                    date_trunc(:period, cmt_committer_date::DATE) as date,
                     COUNT(cmt_commit_hash) as commit_count
                 FROM commits
                 WHERE repo_id = :repo_id
@@ -682,15 +682,15 @@ class Augur(object):
         if not repo_id:
             issues_closed_SQL = s.sql.text("""
                 SELECT
-                    date_trunc(:period, closed_at::DATE) as issue_close_date,
+                    date_trunc(:period, closed_at::DATE) as date,
                     repo_id,
                     COUNT(issue_id) as issues
                 FROM issues
                 WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY issue_close_date, repo_id
-                ORDER BY repo_id, issue_close_date
+                GROUP BY date, repo_id
+                ORDER BY repo_id, date
             """)
 
             results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -700,13 +700,13 @@ class Augur(object):
 
         else:
             issues_closed_SQL = s.sql.text("""
-                SELECT date_trunc(:period, closed_at::DATE) as issue_close_date, COUNT(issue_id) as issues
+                SELECT date_trunc(:period, closed_at::DATE) as date, COUNT(issue_id) as issues
                 FROM issues
                 WHERE repo_id = :repo_id
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY issue_close_date
-                ORDER BY issue_close_date;
+                GROUP BY date
+                ORDER BY date;
             """)
 
             results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_id': repo_id, 'period': period,
@@ -1101,8 +1101,8 @@ class Augur(object):
         :param repo: the name of the repo
         """
         getRepoSQL = s.sql.text("""
-            SELECT repo_id, repo_group_id
-            FROM repo
+            SELECT repo.repo_id, repo.repo_group_id, rg_name
+            FROM repo JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
             WHERE repo_name = :repo AND repo_path LIKE :owner
         """)
 

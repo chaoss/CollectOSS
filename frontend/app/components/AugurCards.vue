@@ -1,7 +1,10 @@
 <template>
    
   <div>
-    <router-view name="header"></router-view>
+    <div class="fullwidth">
+      <router-view name="header"></router-view>
+      <!-- <augur-header></augur-header> -->
+    </div>
 
     <div ref="cards" class="content">
       
@@ -48,6 +51,7 @@ module.exports = {
     DownloadedReposCard,
     LoginForm,
   },
+
   watch: {
     '$route': function (to, from) {
       if (to.path != from.path)

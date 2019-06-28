@@ -57,7 +57,6 @@ install:
 install-dev:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
-
 install-msr:
 	@ ./util/install-msr.sh
 
@@ -154,6 +153,7 @@ update-deps:
 	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; $(AUGUR_PIP) install pipreqs; exit 1; }
 	pipreqs ./augur/
 	bash -c "$(CONDAACTIVATE) conda env  --no-builds > environment.yml"
+
 vagrant:
 	@ vagrant up
 	@ vagrant ssh
@@ -167,6 +167,12 @@ clean:
 	find . -name \*.pyc -delete
 	@ echo "Run sudo make install-dev again to reinstall the environment."
 
+vagrant:
+	@ vagrant up
+	@ vagrant ssh
+	@ echo "****************************************************"
+	@ echo "Don't forget to shutdown the VM with 'vagrant halt'!"
+	@ echo "****************************************************"
 
 #
 # Git

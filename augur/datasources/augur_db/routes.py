@@ -26,6 +26,7 @@ def create_routes(server):
 
     server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
 
+
     @server.app.route('/{}/repos/<owner>/<repo>'.format(server.api_version))
     def get_repo(owner, repo):
         a = [owner, repo]
