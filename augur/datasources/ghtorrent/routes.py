@@ -5,7 +5,7 @@ Creates routes for the GHTorrent data source plugin
 
 from flask import request, Response
 
-def create_routes(server):  
+def create_routes(server):
 
     ghtorrent = server._augur['ghtorrent']()
 
@@ -20,7 +20,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/issues/closed Closed Issues
     @apiName closed-issues
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issues-closed.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -44,7 +44,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/commits?group_by=:group_by Code Commits
     @apiName code-commits
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="com/chaoss/metrics/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -68,7 +68,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/code_review_iteration Code Review Iteration
     @apiName code-review-iteration
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -91,7 +91,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/contribution_acceptance Contribution Acceptance
     @apiName contribution-acceptance
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://www.github.com/chaoss/metrics/blob/master/activity-metrics/contribution-acceptance.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -114,7 +114,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/contributing_github_organizations Contributing Github Organizations
     @apiName contributing-github-organizations
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="com/chaoss/metrics/blob/master/activity-metrics/contributing-organizations.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -151,7 +151,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/issues/response_time First Response To Issue Duration
     @apiName first-response-to-issue-duration
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/first-response-to-issue-duration.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -180,7 +180,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/forks?group_by=:group_by Forks
     @apiName forks
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiParam {String} group_by (Default to week) Allows for results to be grouped by day, week, month, or year
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/forks.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
@@ -204,7 +204,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/pulls/maintainer_response_time Maintainer Response to Merge Request Duration
     @apiName maintainer-response-to-merge-request-duration
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/maintainer-response-to-merge-request-duration.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -227,7 +227,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/pulls/new_contributing_github_organizations New Contributing Github Organizations
     @apiName new-github-contributing-organizations
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/new-contributing-organizations.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -250,7 +250,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/issues Open Issues
     @apiName open-issues
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/open-issues.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {string} group_by (default to week) allows for results to be grouped by day, week, month, or year
@@ -274,7 +274,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/pulls/comments?group_by=:group_by Pull Request Comments
     @apiName pull-request-comments
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-request-comments.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -298,7 +298,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/pulls Pull Requests Open
     @apiName pull-requests-open
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-open.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -321,12 +321,12 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/pulls/closed Pull Requests Closed
     @apiName pull-requests-closed
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-closed.md">CHAOSS Metric Definition</a>
-    
+
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
-    
+
     @apiSuccessExample {json} Success-Response:
                         [
                             {
@@ -344,7 +344,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/pulls/response_time Most Recent Response To Pull Requests Duration
     @apiName pull-request-comment-duration'
-    @apiGroup Growth-Maturity-Decline
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/pull-requests-comment-duration.md>CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -359,7 +359,7 @@ def create_routes(server):
                                 "minutes_to_first_pr_comment": 5,
                                 "most_recent_comment": "2012-01-19T05:30:13.000Z",
                                 "minutes_to_recent_pr_comment": 5
-                                
+
                             },
                             {
                                 "pull_request_id": 1721,
@@ -389,7 +389,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/issue_comments Issue Comments
     @apiName issue-comments
-    @apiGroup Activity
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/issue-comments.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -412,7 +412,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/pulls/made_closed Pull Requests Made/Closed
     @apiName pull-requests-made-closed
-    @apiGroup Activity
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/pull-requests-made-closed.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -435,7 +435,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/watchers Watchers
     @apiName watchers
-    @apiGroup Activity
+    @apiGroup GHTorrent (Legacy)
     @apiDescription <a href="https://github.com/chaoss/metrics/blob/master/activity-metrics/activity-metrics-list.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -462,7 +462,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/commits100 Commits100
     @apiName commits100
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -485,7 +485,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/commits/comments Commit Comments
     @apiName commit-comments
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -509,7 +509,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/committer_locations Committer Locations
     @apiName committer-locations
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -534,7 +534,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/total_committers Total Committers
     @apiName total-committers
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -557,7 +557,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/issues/activity Issue Activity
     @apiName issue-activity
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -613,7 +613,7 @@ def create_routes(server):
     @api {get} /:owner/:repo/timeseries/pulls/acceptance_rate Pull Request Acceptance Rate
     @apiDeprecated This endpoint was removed. Please use (#Experimental:community-engagement)
     @apiName pull-request-acceptance-rate
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -636,8 +636,9 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/community_age Community Age
     @apiName community-age
-    @apiGroup Experimental
-    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
+    @apiGroup GHTorrent (Legacy)
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally.
+                    Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
@@ -661,7 +662,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/community_engagement Community Engagement
     @apiName community-engagement
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -716,7 +717,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/contributors Total Contributions by User
     @apiName contributors
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -751,7 +752,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/contributions Contributions
     @apiName contributions
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -797,7 +798,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/project_age Project Age
     @apiName project-age
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -817,7 +818,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/fakes Fakes
     @apiName fakes
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -840,7 +841,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/new_watchers New Watchers
     @apiName new_watchers
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -859,16 +860,16 @@ def create_routes(server):
                         ]
     """
     server.addTimeseries(ghtorrent.new_watchers, 'new_watchers')
-    
+
     """
     @api {get} /:owner/:repo/timeseries/total_watchers Total Watchers
     @apiName total-watchers
-    @apiGroup Experimental
+    @apiGroup GHTorrent (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
-        
+
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
-        
+
     @apiSuccessExample {json} Success-Response:
                         [
                             {
