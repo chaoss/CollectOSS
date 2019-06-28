@@ -36,7 +36,6 @@ import xlsxwriter
 import configparser
 import pymysql
 import psycopg2
-import json
 # if platform.python_implementation() == 'PyPy':
 #     import pymysql
 # else:
@@ -59,9 +58,9 @@ class Config:
         self.db_people = None
 
         self.repo_base_directory = None
-        self.tool_source = "Facade-Augur" 
-        self.tool_version = "0.0.1"
-        self.data_source = "git repository"
+        self.tool_source = '\'FacadeAugur\'' 
+        self.tool_version = '\'0.1\''
+        self.data_source = '\'git_repository\''
 
     #### Database update functions ####
 
@@ -221,102 +220,49 @@ class Config:
 
         print("No further database updates.\n")
 
-    def migrate_database_config(self, section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0):
-
-
-
-
-        """
-        Read a variable in specified section of the config file, unless provided an environment variable
-        :param section: location of given variable
-        :param name: name of variable
-        """
-
-        __config_bad = False
-        __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
-        __config_location = os.path.dirname(__config_file_path)
-        __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
-        __default_config = { 'Database': {"host": "nekocase.augurlabs.io"} }
-
-        if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
-            try:
-                __config_file = open(__config_file_path, 'r+')
-            except:
-                # logger.info('Couldn\'t open {}, attempting to create. If you have a augur.cfg, you can convert it to a json file using "make to-json"'.format(config_file))
-                if not os.path.exists(__config_location):
-                    os.makedirs(__config_location)
-                __config_file = open(__config_file_path, 'w+')
-                __config_bad = True
-
-
-            # Options to export the loaded configuration as environment variables for Docker
-           
-            if __export_env:
-                
-                export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
-                __export_file = open(export_filename, 'w+')
-                # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
-                __export_file.write('#!/bin/bash\n')
-
-            # Load the config file and return [section][name]
-            try:
-                config_text = __config_file.read()
-                print(config_text)
-                __config = json.loads(config_text)
-                if name is not None:
-                    return(__config[section][name])
-                else:
-                    return(__config[section])
-
-            except json.decoder.JSONDecodeError as e:
-                if not __config_bad:
-                    __using_config_file = False
-                    # logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', __config_file_path, str(e))
-
-                __config = __default_config
-                return(__config[section][name])
+    def migrate_database_config(self):
 
     # Since we're changing the way we store database credentials, we need a way to
     # transparently migrate anybody who was using the old file. Someday after a long
     # while this can disappear.
 
-        # try:
-        #     # If the old database config was found, write a new config
-        #     imp.find_module('db')
+        try:
+            # If the old database config was found, write a new config
+            imp.find_module('db')
 
-        #     db_config = configparser.ConfigParser()
+            db_config = configparser.ConfigParser()
 
-        #     from db import db_user,db_pass,db_name,db_host
-        #     from db import db_user_people,db_pass_people,db_name_people,db_host_people
+            from db import db_user,db_pass,db_name,db_host
+            from db import db_user_people,db_pass_people,db_name_people,db_host_people
 
-        #     db_config.add_section('main_database')
-        #     db_config.set('main_database','user',db_user)
-        #     db_config.set('main_database','pass',db_pass)
-        #     db_config.set('main_database','name',db_name)
-        #     db_config.set('main_database','host',db_host)
+            db_config.add_section('main_database')
+            db_config.set('main_database','user',db_user)
+            db_config.set('main_database','pass',db_pass)
+            db_config.set('main_database','name',db_name)
+            db_config.set('main_database','host',db_host)
 
-        #     db_config.add_section('people_database')
-        #     db_config.set('people_database','user',db_user_people)
-        #     db_config.set('people_database','pass',db_pass_people)
-        #     db_config.set('people_database','name',db_name_people)
-        #     db_config.set('people_database','host',db_host_people)
+            db_config.add_section('people_database')
+            db_config.set('people_database','user',db_user_people)
+            db_config.set('people_database','pass',db_pass_people)
+            db_config.set('people_database','name',db_name_people)
+            db_config.set('people_database','host',db_host_people)
 
-        #     with open('db.cfg','w') as db_file:
-        #         db_config.write(db_file)
+            with open('db.cfg','w') as db_file:
+                db_config.write(db_file)
 
-        #     print("Migrated old style config file to new.")
-        # except:
-        #     # If nothing is found, the user probably hasn't run setup yet.
-        #     sys.exit("Can't find database config. Have you run setup.py?")
+            print("Migrated old style config file to new.")
+        except:
+            # If nothing is found, the user probably hasn't run setup yet.
+            sys.exit("Can't find database config. Have you run setup.py?")
 
-        # try:
-        #     os.remove('db.py')
-        #     os.remove('db.pyc')
-        #     print("Removed unneeded config files")
-        # except:
-        #     print("Attempted to remove unneeded config files")
+        try:
+            os.remove('db.py')
+            os.remove('db.pyc')
+            print("Removed unneeded config files")
+        except:
+            print("Attempted to remove unneeded config files")
 
-        # return db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people
+        return db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people
 
     #### Global helper functions ####
 
