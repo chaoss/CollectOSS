@@ -161,4 +161,4 @@ def test_issues_closed_resolution_duration(augur_db):
     assert augur_db.issues_closed_resolution_duration(24,21682).iloc[0]['diffdate'] >= 0
 
 def test_get_repo(augur_db):
-    assert augur_db.get_repo_by_name('Comcast','zucchini').iloc[0].repo_id == 21116
+    assert augur_db.get_repo('Comcast','zucchini').iloc[0].repo_id == 21116

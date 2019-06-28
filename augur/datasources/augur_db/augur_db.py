@@ -1104,8 +1104,50 @@ class Augur(object):
             SELECT repo_id, repo_group_id
             FROM repo
             WHERE repo_name = :repo AND repo_path LIKE :owner
+            GROUP BY repo_id
         """)
 
         results = pd.read_sql(getRepoSQL, self.db, params={'owner': '%{}_'.format(owner), 'repo': repo,})
 
         return results
+
+    @annotate(tag="issues-overview")
+    def issues_overview(self, repo_group_id, repo_id=None):
+        if not repo_id:
+            issuesSQL = s.sql.text("""
+                SELECT issue_title,
+                    issues.issue_id,
+                    issues.repo_id,
+                    issue_state                                 AS STATUS,
+                    issues.created_at                           AS DATE,
+                    count(issue_events.event_id),
+                    MAX(issue_events.created_at)                AS LAST_EVENT_DATE,
+                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY
+                FROM issues,
+                    issue_events
+                WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND issues.issue_id = issue_events.issue_id
+                GROUP BY issues.issue_id
+                ORDER by OPEN_DAY DESC
+            """)
+            results = pd.read_sql(issuesSQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+        else:
+            issuesSQL = s.sql.text("""
+                SELECT issue_title,
+                    issues.issue_id,
+                    issues.repo_id,
+                    issue_state                                 AS STATUS,
+                    issues.created_at                           AS DATE,
+                    count(issue_events.event_id),
+                    MAX(issue_events.created_at)                AS LAST_EVENT_DATE,
+                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY
+                FROM issues, issue_events
+                WHERE issues.repo_id = :repo_id
+                AND issues.issue_id = issue_events.issue_id
+                GROUP BY issues.issue_id
+                ORDER by OPEN_DAY DESC
+            """)
+            results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
+            return results
+        

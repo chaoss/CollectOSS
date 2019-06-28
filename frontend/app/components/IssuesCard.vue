@@ -1,7 +1,7 @@
 <template>
   <section>
     <div style="display: inline-block;">
-      <h2 v-if="loaded" style="display: inline-block; color: black !important">Overview of Issue Counts for Repo Group: All repositories</h2>
+      <h2 v-if="this.loaded" style="display: inline-block; color: black !important">{{$store.state.baseRepo}}</h2>
       <p></p>
       <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
       <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
@@ -9,28 +9,16 @@
       </h2>
     </div>
 
-    <spinner v-if="!loaded"></spinner>
+    <spinner v-if="!this.loaded"></spinner>
     
 
-    <div class="row" style="transform: translateY(-50px) !important" v-if="loaded">
-      
-      <div class="col col-12" style="padding-right: 35px">
-        <dual-line-chart source=""
-        :title="'Issue Count History for ' + repo + ' - Grouped by Week'"
-        fieldone="open_count"
-        fieldtwo="closed_count"
-        :data="values['repo_issues']"></dual-line-chart>
-      </div>
-
-      <div class="col col-12" style="padding-right: 35px">
-        <dual-line-chart source=""
-        :title="'Issue Count History for this Repo Group:  ' + group + ' - Grouped by Week'"
-        fieldone="open_count"
-        fieldtwo="closed_count"
-        :data="values['group_issues']"></dual-line-chart>
-      </div>
-
+    <div class="row" style="transform: translateY(-40px) !important" v-if="loaded1">
+        <issue-chart source="issuesOverview" 
+                    title = "issue Overview"
+                    :data="values['issuesOverview']">
+        </issue-chart>
     </div>
+
   </section>
 </template>
 
@@ -45,12 +33,15 @@ import HorizontalBarChart from './charts/HorizontalBarChart'
 import GroupedBarChart from './charts/GroupedBarChart'
 import StackedBarChart from './charts/StackedBarChart'
 import DualLineChart from './charts/DualLineChart'
+import LineChart from './charts/LineChart'
+import IssueChart from './charts/IssueChart'
+
 module.exports = {
   data() {
     return {
       colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      values: {'group_issues': [], 'repo_issues': []},
-      loaded: false,
+      values: {},
+      loaded1: false,
       project: null,
       group: null
     }
@@ -65,7 +56,9 @@ module.exports = {
     HorizontalBarChart,
     GroupedBarChart,
     StackedBarChart,
-    DualLineChart
+    DualLineChart,
+    LineChart,
+    IssueChart
   },
   computed: {
     repo () {
@@ -77,34 +70,44 @@ module.exports = {
     comparedRepos () {
       return this.$store.state.comparedRepos
     },
-    // loaded() {
-    //   return this.loaded1 && this.loaded2
-    // }
+    loaded() {
+      return this.loaded1
+    }
   },
   mounted() {
-    let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
-    let group = window.AugurAPI.Repo({ repo_group_id: repo.repo_group_id })
+    // repo.issueActive().then((data) => {
+    //   this.values['issueActive'] = data
+    //   console.log("repo DATA: ", this.values['issueActive'])
+    // })
+    let repos = []
+    if (this.repo) {
+      if (window.AugurRepos[this.repo])
+        repos.push(window.AugurRepos[this.repo])
+      // repos.push(this.repo)
+    } // end if (this.$store.repo)
+    this.comparedRepos.forEach(function(repo) {
+      repos.push(window.AugurRepos[repo])
+    }); 
 
-    group.openIssuesCount().then((data) => {
-      this.group = data[0]['rg_name']
-      this.values['group_issues'] = this.values['group_issues'].concat(data)
-      console.log("group DATA: ", this.values['group_issues'])
-    })
-    group.closedIssuesCount().then((data) => {
-      this.values['group_issues'] = this.values['group_issues'].concat(data)
-      console.log("group DATA: ", this.values['group_issues'])
-    })
-
-    repo.openIssuesCount().then((data) => {
-      this.values['repo_issues'] = this.values['repo_issues'].concat(data)
-      console.log("repo DATA: ", this.values['repo_issues'])
-    })
-    repo.closedIssuesCount().then((data) => {
-      this.values['repo_issues'] = this.values['repo_issues'].concat(data)
-      console.log("repo DATA: ", this.values['repo_issues'])
-    })
-
-    this.loaded = true
+    let endpoints1 = [
+      "issuesOverview"
+    ]
+    
+    window.AugurAPI.batchMapped(repos, endpoints1).then((data) => {
+      console.log("here",data)
+      endpoints1.forEach((endpoint) => {
+        this.values[endpoint] = {}
+        this.values[endpoint][this.repo] = {}
+        this.values[endpoint][this.repo][endpoint] = data[this.repo][endpoint]
+      })
+      // this.values=data
+      this.loaded1=true
+      // return data
+    }, (error) => {
+      this.loaded1=false
+      console.log("failed", error)
+    }) // end batch
+  
   }
 }
 </script>

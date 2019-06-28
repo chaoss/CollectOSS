@@ -36,6 +36,8 @@ def create_routes(server):
 
     server.updateMetricMetadata(function=augur_db.get_repo, endpoint='/{}/repos/<owner>/<repo>'.format(server.api_version), metric_type='git')
 
+    server.addRepoGroupMetric(augur_db.issues_overview, 'issues-overview')
+    server.addRepoMetric(augur_db.issues_overview, 'issues-overview')
     #####################################
     ###           EVOLUTION           ###
     #####################################

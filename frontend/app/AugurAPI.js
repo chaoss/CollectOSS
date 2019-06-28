@@ -225,11 +225,17 @@ export default class AugurAPI {
 
     var addRepoMetric = (r, jsName, endpoint) => {
       var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/repos/'+ repo.repo_id + '/' + endpoint)
+      var fullEndpoint = this._version +'/repo-groups/'+ repo.repo_group_id + '/repos/'+ repo.repo_id + '/' + endpoint
+      r.__endpointMap[jsName] = fullEndpoint
+      r.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: repo.toString() }
       return __Endpoint(r, jsName, url)
     }
 
     var addRepoGroupMetric = (r, jsName, endpoint) => {
       var url = this.__endpointURL('repo-groups/'+ repo.repo_group_id + '/' + endpoint)
+      var fullEndpoint = this._version + '/' + 'repo-groups/'+ repo.repo_group_id + '/' + endpoint
+      r.__endpointMap[jsName] = fullEndpoint
+      r.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: repo.toString() }
       return __Endpoint(r, jsName, url)
     }
 
@@ -346,6 +352,8 @@ export default class AugurAPI {
       addRepoMetric(repo, 'closedIssuesCount', 'closed-issues-count')
       addRepoMetric(repo, 'issuesOpenAge', 'issues-open-age')
       addRepoMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
+      addRepoMetric(repo, 'issueActive', 'issues-active')
+      addRepoMetric(repo, 'issuesOverview', 'issues-overview')
     }
 
     if (repo.repo_group_id && repo.repo_id == null) {
@@ -364,6 +372,8 @@ export default class AugurAPI {
       addRepoGroupMetric(repo, 'closedIssuesCount', 'closed-issues-count')
       addRepoGroupMetric(repo, 'issuesOpenAge', 'issues-open-age')
       addRepoGroupMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
+      addRepoGroupMetric(repo, 'issueActive', 'issues-active')
+      addRepoGroupMetric(repo, 'issuesOverview', 'issues-overview')
     }
 
     return repo
