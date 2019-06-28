@@ -107,17 +107,22 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		author_email = strip_extra_amp(author_email)
 		committer_email = strip_extra_amp(committer_email)
 
-		store = ("INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,"
-			"cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,"
-			"cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,"
-			"cmt_added,cmt_removed,cmt_whitespace, tool_source, tool_version, data_source, data_collection_date) "
-			"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s, %s, %s, %s)")
+		store = ("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
+			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,
+			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,
+			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source, data_collection_date)
+			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
 
 		cursor_local.execute(store, (
-			repos_id,commit,filename,
-			author_name,author_email,discover_alias(author_email),author_date,
+			repos_id,str(commit),filename,
+			str(author_name),author_email,discover_alias(author_email),author_date,
 			committer_name,committer_email,discover_alias(committer_email),committer_date,
-			added,removed,whitespace, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
+			added,removed,whitespace, committer_date, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),))
+		# , (
+		# 	repos_id,commit,filename,
+		# 	author_name,author_email,discover_alias(author_email),author_date,
+		# 	committer_name,committer_email,discover_alias(committer_email),committer_date,
+		# 	added,removed,whitespace, cfg.tool_source, committer_date, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
 
 		db_local.commit()
 
