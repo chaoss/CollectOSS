@@ -32,8 +32,6 @@ def dump_queue(queue):
     # time.sleep(.1)
     return result
 
-
-
 class GitHubWorker:
     """ Worker that collects data from the Github API and stores it in our database
     task: most recent task the broker added to the worker's queue
@@ -57,6 +55,8 @@ class GitHubWorker:
         self.data_source = 'GitHub API'
         self.results_counter = 0
         self.headers = {'Authorization': 'token %s' % self.config['key']}
+        self.history_id = None
+        self.finishing_task = False
 
         url = "https://api.github.com/users/gabe-heim"
         response = requests.get(url=url, headers=self.headers)
@@ -116,32 +116,43 @@ class GitHubWorker:
 
         # Query all repos and last repo id
         repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+                SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
             """)
 
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
         repoIdSQL = s.sql.text("""
-            SELECT since_id_str FROM gh_worker_job
+                SELECT since_id_str FROM gh_worker_job
             """)
 
-        df = pd.read_sql(repoIdSQL, self.helper_db, params={})
-        last_id = int(df.iloc[0]['since_id_str'])
-        before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
-        after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
+        job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+
+        last_id = int(job_df.iloc[0]['since_id_str'])
+
+        jobHistorySQL = s.sql.text("""
+                SELECT max(history_id) AS history_id, status FROM gh_worker_history
+                GROUP BY status
+                LIMIT 1
+            """)
+
+        history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
+
+        if history_df.iloc[0]['status'] == 'Stopped':
+            self.history_id = int(history_df.iloc[0]['history_id'])
+            self.finishing_task = True
+        else:
+            last_id += 1
+
+        # Rearrange repos so the one after the last one that 
+        #   was completed will be ran first
+        before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
+        after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
 
         reorganized_repos = after_repos.append(before_repos)
-        # logging.info("BEFORE: " + str(before_repos) + " AFTER: " + str(after_repos))
-        # logging.info("FIRST REPO TO WORK ON: " + str(reorganized_repos))
-
-        
-
 
         # Populate queue
         for index, row in reorganized_repos.iterrows():
             self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
-
-
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
         maxIssueCntrbSQL = s.sql.text("""
@@ -150,8 +161,8 @@ class GitHubWorker:
         """)
         rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
 
-        issue_start = rs.iloc[0]["issue_id"]
-        cntrb_start = rs.iloc[0]["cntrb_id"]
+        issue_start = int(rs.iloc[0]["issue_id"]) | 25150
+        cntrb_start = int(rs.iloc[0]["cntrb_id"]) | 25150
 
         maxMsgSQL = s.sql.text("""
             SELECT max(msg_id) AS msg_id
@@ -159,20 +170,7 @@ class GitHubWorker:
         """)
         rs = pd.read_sql(maxMsgSQL, self.db, params={})
 
-        msg_start = rs.iloc[0]["msg_id"]
-
-        if issue_start is None:
-            issue_start = 25150
-        else:
-            issue_start = issue_start.item()
-        if cntrb_start is None:
-            cntrb_start = 25150
-        else:
-            cntrb_start = cntrb_start.item()
-        if msg_start is None:
-            msg_start = 25150
-        else:
-            msg_start = msg_start.item()
+        msg_start = int(rs.iloc[0]["msg_id"]) | 25150
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.issue_id_inc = (issue_start + 1)
@@ -220,9 +218,6 @@ class GitHubWorker:
                 self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
             else:
                 self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
-        
-        # list_queue = dump_queue(self._queue)
-        # logging.info("worker's queue after adding the job: " + list_queue)
 
         except:
             logging.info("that repo is not in our database")
@@ -289,44 +284,72 @@ class GitHubWorker:
         if ".git" in name:
             name = name[:-4]
 
-        url = ("https://api.github.com/repos/" + owner + "/" + name + "/contributors?page={}")
+        # Set the base of the url and place to hold contributors to insert
+        url = ("https://api.github.com/repos/" + owner + "/" + 
+            name + "/contributors?per_page=100&page={}")
         contributors = []
-        i = 0
-        # Paginate through all the contributors
+
+        # Get values of tuples we already have in our table
+        pseudo_key_gh = 'login'
+        pseydo_key_augur = 'cntrb_login'
+        table = 'contributors'
+        cntrb_table_values = self.get_table_values({pseydo_key_augur: pseudo_key_gh}, [table])
+
+        # Paginate backwards through all the contributors but starting with
+        #   the first one in order to get last page # and check if 1st page 
+        #   covers all of them
+        i = 1
+        multiple_pages = False
         while True:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
             self.update_rate_limit(r)
+
+            # If it lists the last page then there is more than 1
+            if 'last' in r.links and not multiple_pages and not self.finishing_task:
+                param = r.links['last']['url'][-6:]
+                i = int(param.split('=')[1]) + 1
+                logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+                multiple_pages = True
+            elif not multiple_pages and not self.finishing_task:
+                logging.info("Only 1 page of request\n")
+            elif self.finishing_task:
+                logging.info("Finishing a previous task, paginating forwards ... excess rate limit requests will be made\n")
+
+            # The contributors endpoints has issues with getting json from request
             try:
                 j = r.json()
             except Exception as e:
                 logging.info("Caught exception: " + str(e) + "....\n")
                 logging.info("Some kind of issue CHECKTHIS  " + url + " ...\n")
-                j = ""
-                logging.info("setting j to an empty string " + str(j) + "...\n ")
+                j = json.loads(json.dumps(j))
             else:
                 logging.info("JSON seems ill-formed " + str(r) + "....\n")
-                logging.info("Keys of r: " + str(r.__dict__.keys()))
                 j = json.loads(json.dumps(j))
-                logging.info("setting value of j as " + str(j) + "....\n")
 
-            if r.status_code != 204:
-                contributors = r.json()
-                logging.info("length of j is " + str(len(j)))
-            if len(j) == 0:
-                logging.info("length of j is " + str(len(j)) + "... breaking from pagination")
+            if r.status_code == 204:
+                j = []
+            
+            # Checking contents of requests with what we already have in the db
+            new_contributors = self.check_duplicates(j, cntrb_table_values, pseudo_key_gh)
+            if len(new_contributors) == 0 and multiple_pages and 'last' in r.links:
+                if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                    logging.info("No more pages with unknown contributors, breaking from pagination.\n")
+                    break
+            elif len(new_contributors) != 0:
+                to_add = [obj for obj in j if obj not in contributors]
+                contributors += to_add
+
+            i = i + 1 if self.finishing_task else i - 1
+
+            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                logging.info("No more pages to check, breaking from pagination.\n")
                 break
-            logging.info("Contributor list before adding j: " + str(contributors) + "\n")
-            contributors += j
-            logging.info("Contributor list after adding j: " + str(contributors))
-            i += 1
         
         try:
-            # Duplicate checking ...
-            need_insertion = self.filter_duplicates({'cntrb_login': "login"}, ['contributors'], contributors)
-            logging.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
+            logging.info("Count of contributors needing insertion: " + str(len(contributors)) + "\n")
 
-            for repo_contributor in need_insertion:
+            for repo_contributor in contributors:
 
                 # Need to hit this single contributor endpoint to get extra data including...
                 #   created at
@@ -336,7 +359,6 @@ class GitHubWorker:
                 r = requests.get(url=cntrb_url, headers=self.headers)
                 self.update_rate_limit(r)
                 contributor = r.json()
-
 
                 # NEED TO FIGURE OUT IF THIS STUFF IS EVER AVAILABLE
                 #    if so, the null case will need to be handled
@@ -353,8 +375,6 @@ class GitHubWorker:
                 # rs = pd.read_sql(aliasSQL, self.db, params={})
 
                 canonical_email = None#rs.iloc[0]["canonical_email"]
-
-
 
                 cntrb = {
                     "cntrb_login": contributor['login'],
@@ -384,23 +404,23 @@ class GitHubWorker:
                     "data_source": self.data_source
                 }
 
-            # Commit insertion to table
+                # Commit insertion to table
                 result = self.db.execute(self.contributors_table.insert().values(cntrb))
                 logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
     
                 logging.info("Inserted contributor: " + contributor['login'] + "\n")
 
-            # Increment our global track of the cntrb id for the possibility of it being used as a FK
-                self.cntrb_id_inc += 1
+                # Increment our global track of the cntrb id for the possibility of it being used as a FK
+                self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
         except Exception as e:
             logging.info("Caught exception: " + str(e))
             logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
             logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
         else:
-            logging.info(need_insertion)
-            logging.info("Well, that contributor just don't except because we hit the else-block yo")    
+            if len(contributors) != 0:
+                logging.info("Well, that contributor just don't except because we hit the else-block yo")    
 
 
     def query_issues(self, entry_info):
@@ -409,7 +429,7 @@ class GitHubWorker:
         Query the GitHub API for issues
         """
         logging.info("Beginning filling the issues model for repo: " + entry_info['repo_git'] + "\n")
-        self.record_model_process('issues')
+        self.record_model_process(entry_info, 'issues')
 
         #if str.find('github.com', str(entry_info['repo_git']) < 0
         ### I have repos not on github and I need to skip them 
@@ -425,7 +445,6 @@ class GitHubWorker:
         # Extract the owner/repo for the endpoint
         path = urlparse(url)
         split = path[2].split('/')
-
         owner = split[1]
         name = split[2]
 
@@ -433,27 +452,64 @@ class GitHubWorker:
         if ".git" in name:
             name = name[:-4]
 
-        url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues?state=all&page={}")
+        # Set base of endpoint url and list to hold issues needing insertion
+        url = ("https://api.github.com/repos/" + owner + "/" + name + 
+            "/issues?per_page=100&state=all&page={}")
         issues = []
-        i = 0
-        # Paginate through all the issues
+        
+        # Get issues that we already have stored
+        #   Set pseudo key (something other than PK) to 
+        #   check dupicates with
+        pseudo_key_gh = 'id'
+        pseydo_key_augur = 'gh_issue_id'
+        table = 'issues'
+        issue_table_values = self.get_table_values({pseydo_key_augur: pseudo_key_gh}, [table])
+            
+        # Paginate backwards through all the issues but get first page in order
+        #   to determine if there are multiple pages and if the 1st page covers all
+        i = 1
+        multiple_pages = False
         while True:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
             self.update_rate_limit(r)
+            
+            # Find last page so we can decrement from there
+            if 'last' in r.links and not multiple_pages and not self.finishing_task:
+                param = r.links['last']['url'][-6:]
+                i = int(param.split('=')[1]) + 1
+                logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+                multiple_pages = True
+            elif not multiple_pages and not self.finishing_task:
+                logging.info("Only 1 page of request\n")
+            elif self.finishing_task:
+                logging.info("Finishing a previous task, paginating forwards ... excess rate limit requests will be made\n")
+
             j = r.json()
-            if len(j) == 0:
+
+            # Checking contents of requests with what we already have in the db
+            new_issues = self.check_duplicates(j, issue_table_values, pseudo_key_gh)
+            if len(new_issues) == 0 and multiple_pages and 'last' in r.links:
+                if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                    logging.info("No more pages with unknown issues, breaking from pagination.\n")
+                    break
+            elif len(new_issues) != 0:
+                to_add = [obj for obj in j if obj not in issues]
+                issues += to_add
+
+            i = i + 1 if self.finishing_task else i - 1
+
+            # Since we already wouldve checked the first page... break
+            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                logging.info("No more pages to check, breaking from pagination.\n")
                 break
-            issues += j
-            i += 1
 
         # Discover and remove duplicates before we start inserting
-        need_insertion = self.filter_duplicates({'gh_issue_id': 'id'}, ['issues'], issues)
-        logging.info("Count of issues needing insertion: " + str(len(need_insertion)) + "\n")
+        logging.info("Count of issues needing insertion: " + str(len(issues)) + "\n")
 
-        for issue_dict in need_insertion:
-
+        for issue_dict in issues:
             logging.info("Begin analyzing the issue with title: " + issue_dict['title'] + "\n")
+            
             # Add the FK repo_id to the dict being inserted
             issue_dict['repo_id'] = entry_info['repo_id']
 
@@ -461,11 +517,11 @@ class GitHubWorker:
             #   still unsure about this key value pair/what it means
             pr_id = None
             if "pull_request" in issue_dict:
-                logging.info("it is a PR\n")
+                logging.info("Issue is a PR\n")
                 # Right now we are just storing our issue id as the PR id if it is one
                 pr_id = self.issue_id_inc
             else:
-                logging.info("it is not a PR\n")
+                logging.info("Issue is not a PR\n")
 
             # Begin on the actual issue...
 
@@ -473,20 +529,56 @@ class GitHubWorker:
             url = ("https://api.github.com/repos/" + owner + "/" + name + "/issues/" + str(issue_dict['number']))
 
             # Get events ready in case the issue is closed and we need to insert the closer's id
-            events_url = (url + "/events?page={}")
+            events_url = (url + "/events?per_page=100&page={}")
             issue_events = []
-            i = 0
-            # Paginate through all the issue events
+            
+            # Get events that we already have stored
+            #   Set pseudo key (something other than PK) to 
+            #   check dupicates with
+            pseudo_key_gh = 'url'
+            pseydo_key_augur = 'node_url'
+            table = 'issue_events'
+            event_table_values = self.get_table_values({pseydo_key_augur: pseudo_key_gh}, [table])
+            
+            # Paginate backwards through all the events but get first page in order
+            #   to determine if there are multiple pages and if the 1st page covers all
+            i = 1
+            multiple_pages = False
             while True:
                 logging.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
                 r = requests.get(url=events_url.format(i), headers=self.headers)
                 self.update_rate_limit(r)
+
+                # Find last page so we can decrement from there
+                if 'last' in r.links and not multiple_pages and not self.finishing_task:
+                    param = r.links['last']['url'][-6:]
+                    i = int(param.split('=')[1]) + 1
+                    logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+                    multiple_pages = True
+                elif not multiple_pages and not self.finishing_task:
+                    logging.info("Only 1 page of request\n")
+                elif self.finishing_task:
+                    logging.info("Finishing a previous task, paginating forwards ... excess rate limit requests will be made\n")
+
                 j = r.json()
-                if len(j) == 0:
+
+                # Checking contents of requests with what we already have in the db
+                new_events = self.check_duplicates(j, event_table_values, pseudo_key_gh)
+                if len(new_events) == 0 and multiple_pages and 'last' in r.links:
+                    if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                        logging.info("No more pages with unknown events, breaking from pagination.\n")
+                        break
+                elif len(new_events) != 0:
+                    to_add = [obj for obj in j if obj not in issue_events]
+                    issue_events += to_add
+
+                i = i + 1 if self.finishing_task else i - 1
+
+                # Since we already wouldve checked the first page... break
+                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                    logging.info("No more pages to check, breaking from pagination.\n")
                     break
-                issue_events += j
-                i += 1
-            
+
             # If the issue is closed, then we search for the closing event and store the user's id
             cntrb_id = None
             if 'closed_at' in issue_dict:
@@ -499,7 +591,6 @@ class GitHubWorker:
                                 logging.info("SOMETHING WRONG WITH FINDING ID FROM LOGIN... using alt id of 1")
                                 cntrb_id = 1
                         
-            
             issue = {
                 "repo_id": issue_dict['repo_id'],
                 "reporter_id": self.find_id_from_login(issue_dict['user']['login']),
@@ -572,12 +663,8 @@ class GitHubWorker:
                     logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
                         " with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
 
-
-            
-
             # Insert the issue labels to the issue_labels table
             for label_dict in issue_dict['labels']:
-                logging.info(str(label_dict))
                 desc = None
                 if 'description' in label_dict:
                     desc = label_dict['description']
@@ -598,36 +685,70 @@ class GitHubWorker:
                 logging.info("Inserted issue label with text: " + label_dict['name'] + "\n")
 
 
-            #### Messages/comments and events insertion (we collected events above but never inserted them)
+            #### Messages/comments and events insertion 
+            #    (we collected events above but never inserted them)
 
-            comments_url = (url + "/comments?page={}")
+            comments_url = (url + "/comments?page={}&per_page=100")
             issue_comments = []
-            i = 0
-            # Paginate through all the issue comments
+            
+            # Get comments that we already have stored
+            #   Set pseudo key (something other than PK) to 
+            #   check dupicates with
+            pseudo_key_gh = 'created_at'
+            pseydo_key_augur = 'msg_timestamp'
+            table = 'message'
+            issue_comments_table_values = self.get_table_values({pseydo_key_augur: pseudo_key_gh}, [table])
+            
+            # Paginate backwards through all the comments but get first page in order
+            #   to determine if there are multiple pages and if the 1st page covers all
+            i = 1
+            multiple_pages = False
             while True:
                 logging.info("Hitting endpoint: " + comments_url.format(i) + " ...\n")
                 r = requests.get(url=comments_url.format(i), headers=self.headers)
                 self.update_rate_limit(r)
+
+                # Find last page so we can decrement from there
+                if 'last' in r.links and not multiple_pages and not self.finishing_task:
+                    param = r.links['last']['url'][-6:]
+                    i = int(param.split('=')[1]) + 1
+                    logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+                    multiple_pages = True
+                elif not multiple_pages and not self.finishing_task:
+                    logging.info("Only 1 page of request\n")
+                elif self.finishing_task:
+                    logging.info("Finishing a previous task, paginating forwards ... excess rate limit requests will be made\n")
+
                 j = r.json()
-                if len(j) == 0:
+
+                # Checking contents of requests with what we already have in the db
+                new_comments = self.check_duplicates(j, event_table_values, pseudo_key_gh)
+                if len(new_comments) == 0 and multiple_pages and 'last' in r.links:
+                    if i - 1 != int(r.links['last']['url'][-6:].split('=')[1]):
+                        logging.info("No more pages with unknown comments, breaking from pagination.\n")
+                        break
+                elif len(new_comments) != 0:
+                    to_add = [obj for obj in j if obj not in issue_comments]
+                    issue_comments += to_add
+
+                i = i + 1 if self.finishing_task else i - 1
+
+                # Since we already wouldve checked the first page... break
+                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                    logging.info("No more pages to check, breaking from pagination.\n")
                     break
-                issue_comments += j
-                i += 1
 
             # Add the FK of our cntrb_id to each comment dict to be inserted
-            logging.info("length of commit comments " + str(len(issue_comments)))
             if len(issue_comments) != 0:
                 for comment in issue_comments:
                     # logging.info("user: "+str(comment['user']) + "...\n") 
                     if "user" in comment:
                         if "login" in comment['user']:
                             comment['cntrb_id'] = self.find_id_from_login(comment['user']['login'])
-            # Filter duplicates before insertion
-            comments_need_insertion = self.filter_duplicates({'msg_timestamp': 'created_at', 'cntrb_id': 'cntrb_id'}, ['message'], issue_comments)
-    
-            logging.info("Number of comments needing insertion: " + str(len(comments_need_insertion)))
+                
+            logging.info("Number of comments needing insertion: " + str(len(issue_comments)) + "\n")
 
-            for comment in comments_need_insertion:
+            for comment in issue_comments:
                 issue_comment = {
                     "pltfrm_id": 25150,
                     "msg_text": comment['body'],
@@ -641,6 +762,7 @@ class GitHubWorker:
                 result = self.db.execute(self.message_table.insert().values(issue_comment))
                 logging.info("Primary key inserted into the message table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
+                self.msg_id_inc = int(result.inserted_primary_key[0])
 
                 logging.info("Inserted issue comment: " + comment['body'] + "\n")
 
@@ -658,10 +780,6 @@ class GitHubWorker:
                 logging.info("Primary key inserted into the issue_message_ref table: " + str(result.inserted_primary_key))
                 self.results_counter += 1
 
-                logging.info("Inserted issue comment with msg_id of: " + str(self.msg_id_inc) + "\n")
-
-                self.msg_id_inc += 1
-
 
             for event in issue_events:
                 if event['actor'] is not None:
@@ -671,10 +789,8 @@ class GitHubWorker:
                         event['cntrb_id'] = 1
                 else:
                     event['cntrb_id'] = 1
-
-            events_need_insertion = self.filter_duplicates({'node_id': 'node_id'}, ['issue_events'], issue_events)
         
-            logging.info("Number of events needing insertion: " + str(len(events_need_insertion)))
+            logging.info("Number of events needing insertion: " + str(len(issue_events)) + "\n")
 
             for event in issue_events:
                 issue_event = {
@@ -696,17 +812,15 @@ class GitHubWorker:
 
                 logging.info("Inserted issue event: " + event['event'] + " " + str(self.issue_id_inc) + "\n")
             
-
-
             self.issue_id_inc += 1
 
         #Register this task as completed
         self.register_task_completion(entry_info, "issues")
+        if self.finishing_task:
+            self.finishing_task = False
             
             
-    def filter_duplicates(self, cols, tables, og_data):
-        need_insertion = []
-
+    def get_table_values(self, cols, tables):
         table_str = tables[0]
         del tables[0]
         for table in tables:
@@ -716,15 +830,7 @@ class GitHubWorker:
                 SELECT {} FROM {}
                 """.format(col, table_str))
             values = pd.read_sql(colSQL, self.db, params={})
-
-            for obj in og_data:
-                if values.isin([obj[cols[col]]]).any().any():
-                    logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
-                elif obj not in need_insertion:
-                    need_insertion.append(obj)
-        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) + 
-            " to " + str(len(need_insertion)) + "\n")
-        return need_insertion
+            return values
 
     def find_id_from_login(self, login):
         idSQL = s.sql.text("""
@@ -737,7 +843,7 @@ class GitHubWorker:
         except:
             logging.info("contributor needs to be added...")
             cntrb_url = ("https://api.github.com/users/" + login)
-
+            logging.info("Hitting endpoint: {} ...\n".format(cntrb_url))
             r = requests.get(url=cntrb_url, headers=self.headers)
             self.update_rate_limit(r)
             contributor = r.json()
@@ -793,9 +899,10 @@ class GitHubWorker:
             result = self.db.execute(self.contributors_table.insert().values(cntrb))
             logging.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
             self.results_counter += 1
+            self.cntrb_id_inc = int(result.inserted_primary_key[0])
 
             logging.info("Inserted contributor: " + contributor['login'] + "\n")
-            self.cntrb_id_inc += 1
+            
             self.find_id_from_login(login)
             pass
 
@@ -808,9 +915,6 @@ class GitHubWorker:
             logging.info("Headers did not work, had to decrement\n")
         logging.info("Updated rate limit, you have: " + str(self.rate_limit) + " requests remaining.\n")
         if self.rate_limit <= 0:
-
-            # url = "https://api.github.com/users/gabe-heim"
-            # response = requests.get(url=url, headers=self.headers)
             reset_time = response.headers['X-RateLimit-Reset']
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
             logging.info("Rate limit exceeded, waiting " + str(time_diff.total_seconds()) + " seconds.\n")
@@ -827,15 +931,15 @@ class GitHubWorker:
         task_history = {
             "repo_id": entry_info['repo_id'],
             "worker": self.config['id'],
-            "job_model": entry_info['repo_git'],
+            "job_model": model,
             "oauth_id": self.config['zombie_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Success",
             "total_results": self.results_counter
         }
-        self.helper_db.execute(self.history_table.insert().values(task_history))
-        logging.info("Recorded job completion for model: " + model + "\n")
-        logging.info(task_completed)
+        self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
+
+        logging.info("Recorded job completion for: " + str(task_completed) + "\n")
 
         # Update job process table
         updated_job = {
@@ -856,13 +960,40 @@ class GitHubWorker:
         # Reset results counter for next task
         self.results_counter = 0
 
-    def record_model_process(self, model):
-        updated_job = {
-            "oauth_id": self.config['zombie_id'],
-            "analysis_state": '1'
-        }
-        self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==model).values(updated_job))
-        logging.info("Update job process for model: " + model + "\n")
-            
+    def record_model_process(self, entry_info, model):
+        # updated_job = {
+        #     "since_id_str": entry_info['repo_id'],
+        #     "last_count": self.results_counter,
+        #     "last_run": datetime.datetime.now(),
+        #     "oauth_id": self.config['zombie_id'],
+        #     "analysis_state": '1'
+        # }
+        # self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==model).values(updated_job))
+        # logging.info("Record beginning job process for model: " + model + "\n")
 
-        
+        task_history = {
+            "repo_id": entry_info['repo_id'],
+            "worker": self.config['id'],
+            "job_model": model,
+            "oauth_id": self.config['zombie_id'],
+            "timestamp": datetime.datetime.now(),
+            "status": "Stopped",
+            "total_results": self.results_counter
+        }
+        if self.finishing_task:
+            result = self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
+        else:
+            result = self.helper_db.execute(self.history_table.insert().values(task_history))
+            logging.info("Record incomplete history tuple: " + str(result.inserted_primary_key))
+            self.history_id = int(result.inserted_primary_key[0])
+            
+    def check_duplicates(self, new_data, table_values, key):
+        need_insertion = []
+        for obj in new_data:
+            if type(obj) == dict:
+                if table_values.isin([obj[key]]).any().any():
+                    logging.info("Tuple with github's {} key value already exists in our db: {}\n".format(key, str(obj[key])))
+                else:
+                    need_insertion.append(obj)
+        logging.info("Page recieved has {} tuples, while filtering duplicates this was reduced to {} tuples.\n".format(str(len(new_data)), str(len(need_insertion))))
+        return need_insertion
