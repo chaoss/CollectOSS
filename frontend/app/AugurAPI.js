@@ -353,7 +353,7 @@ export default class AugurAPI {
       addRepoMetric(repo, 'issuesOpenAge', 'issues-open-age')
       addRepoMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
       addRepoMetric(repo, 'issueActive', 'issues-active')
-      addRepoMetric(repo, 'issuesOverview', 'issues-overview')
+      addRepoMetric(repo, 'getIssues', 'get-issues')
     }
 
     if (repo.repo_group_id && repo.repo_id == null) {
@@ -373,7 +373,7 @@ export default class AugurAPI {
       addRepoGroupMetric(repo, 'issuesOpenAge', 'issues-open-age')
       addRepoGroupMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
       addRepoGroupMetric(repo, 'issueActive', 'issues-active')
-      addRepoGroupMetric(repo, 'issuesOverview', 'issues-overview')
+      addRepoGroupMetric(repo, 'getIssues', 'get-issues')
     }
 
     return repo

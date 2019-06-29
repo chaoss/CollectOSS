@@ -4723,9 +4723,6 @@ header {
 .modal-body {
   margin: 10px 0;
 }
-.modal-default-button {
-  float: right;
-}
 .modal-enter {
   opacity: 0;
 }
@@ -4736,6 +4733,9 @@ header {
 .modal-leave-active .modal-container {
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
+}
+.modal-footer {
+  text-align: right;
 }
 @-moz-keyframes spin {
   0% {

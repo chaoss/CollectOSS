@@ -1111,13 +1111,14 @@ class Augur(object):
 
         return results
 
-    @annotate(tag="issues-overview")
-    def issues_overview(self, repo_group_id, repo_id=None):
+    @annotate(tag="get-issues")
+    def get_issues(self, repo_group_id, repo_id=None):
         if not repo_id:
             issuesSQL = s.sql.text("""
                 SELECT issue_title,
                     issues.issue_id,
                     issues.repo_id,
+                    issues.html_url,
                     issue_state                                 AS STATUS,
                     issues.created_at                           AS DATE,
                     count(issue_events.event_id),
@@ -1137,6 +1138,7 @@ class Augur(object):
                 SELECT issue_title,
                     issues.issue_id,
                     issues.repo_id,
+                    issues.html_url,
                     issue_state                                 AS STATUS,
                     issues.created_at                           AS DATE,
                     count(issue_events.event_id),

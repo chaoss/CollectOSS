@@ -110,9 +110,9 @@ export default {
 
       console.log('DEBUG', this.data)
       if (this.data) {
-        processData(this.data[repo.toString()]["issuesOverview"])
+        processData(this.data[repo.toString()]["getIssues"])
       } else {
-        repo.issuesOverview().then((lists)=> {
+        repo.getIssues().then((lists)=> {
           processData(lists)
         })
       }

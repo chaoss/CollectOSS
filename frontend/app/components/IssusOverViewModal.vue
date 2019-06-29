@@ -5,22 +5,29 @@
         <div class="modal-container">
           <div class="modal-header">
             <slot name="header">
-              Issue Title: {{modal.issue_title}}
+             Issue Detail
             </slot>
           </div>
 
           <div class="modal-body">
             <slot name="body">
-              default body
+               Title: {{modal.issue_title}} <br />
+               Issue ID: {{modal.issue_id}}<br/>
+               URL: <a v-bind:href="modal.html_url">{{modal.html_url}}</a><br/>
+               Status: {{modal.status}}<br />
+               Open Day: {{modal.open_day}} <br />
+               Date: {{modal.date}}<br />
+               Last Event Created at: {{modal.last_event_date}} <br/>
             </slot>
           </div>
 
           <div class="modal-footer">
             <slot name="footer">
-              default footer
+              <div>
               <button class="modal-default-button" @click.prevent="active=false">
                 Return
               </button>
+              </div>
             </slot>
           </div>
         </div>

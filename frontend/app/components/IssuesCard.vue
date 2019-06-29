@@ -15,7 +15,7 @@
     <div class="row" style="transform: translateY(-40px) !important" v-if="loaded1">
         <issue-chart source="issuesOverview" 
                     title = "issue Overview"
-                    :data="values['issuesOverview']">
+                    :data="values['getIssues']">
         </issue-chart>
     </div>
 
@@ -90,7 +90,7 @@ module.exports = {
     }); 
 
     let endpoints1 = [
-      "issuesOverview"
+      "getIssues"
     ]
     
     window.AugurAPI.batchMapped(repos, endpoints1).then((data) => {

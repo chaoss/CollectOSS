@@ -875,7 +875,7 @@ var AugurAPI = function () {
         addRepoMetric(repo, 'issuesOpenAge', 'issues-open-age');
         addRepoMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration');
         addRepoMetric(repo, 'issueActive', 'issues-active');
-        addRepoMetric(repo, 'issuesOverview', 'issues-overview');
+        addRepoMetric(repo, 'getIssues', 'get-issues');
       }
 
       if (repo.repo_group_id && repo.repo_id == null) {
@@ -895,7 +895,7 @@ var AugurAPI = function () {
         addRepoGroupMetric(repo, 'issuesOpenAge', 'issues-open-age');
         addRepoGroupMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration');
         addRepoGroupMetric(repo, 'issueActive', 'issues-active');
-        addRepoGroupMetric(repo, 'issuesOverview', 'issues-overview');
+        addRepoGroupMetric(repo, 'getIssues', 'get-issues');
       }
 
       return repo;
@@ -2175,7 +2175,7 @@ module.exports = {
       repos.push(window.AugurRepos[repo]);
     });
 
-    var endpoints1 = ["issuesOverview"];
+    var endpoints1 = ["getIssues"];
 
     window.AugurAPI.batchMapped(repos, endpoints1).then(function (data) {
       console.log("here", data);
@@ -2196,7 +2196,7 @@ module.exports = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(this.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!this.loaded)?_c('spinner'):_vm._e(),_vm._v(" "),(_vm.loaded1)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-40px) !important"}},[_c('issue-chart',{attrs:{"source":"issuesOverview","title":"issue Overview","data":_vm.values['issuesOverview']}})],1):_vm._e()],1)}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('section',[_c('div',{staticStyle:{"display":"inline-block"}},[(this.loaded)?_c('h2',{staticStyle:{"display":"inline-block","color":"black !important"}},[_vm._v(_vm._s(_vm.$store.state.baseRepo))]):_vm._e(),_vm._v(" "),_c('p'),_vm._v(" "),(_vm.$store.state.comparedRepos.length > 0)?_c('h2',{staticClass:"repolisting",staticStyle:{"display":"inline-block"}},[_vm._v(" compared to: ")]):_vm._e(),_vm._v(" "),_vm._l((_vm.$store.state.comparedRepos),function(repo,index){return _c('h2',{staticStyle:{"display":"inline-block"}},[_c('span',{staticClass:"repolisting",style:({ 'color': _vm.colors[index] })},[_vm._v(" "+_vm._s(repo)+" ")])])})],2),_vm._v(" "),(!this.loaded)?_c('spinner'):_vm._e(),_vm._v(" "),(_vm.loaded1)?_c('div',{staticClass:"row",staticStyle:{"transform":"translateY(-40px) !important"}},[_c('issue-chart',{attrs:{"source":"issuesOverview","title":"issue Overview","data":_vm.values['getIssues']}})],1):_vm._e()],1)}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -2205,7 +2205,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-1e43c417", __vue__options__)
   } else {
-    hotAPI.reload("data-v-1e43c417", __vue__options__)
+    hotAPI.rerender("data-v-1e43c417", __vue__options__)
   }
 })()}
 });
@@ -2244,7 +2244,7 @@ exports.default = {
 if (module.exports.__esModule) module.exports = module.exports.default
 var __vue__options__ = (typeof module.exports === "function"? module.exports.options: module.exports)
 if (__vue__options__.functional) {console.error("[vueify] functional components are not supported and should be defined in plain js files using render functions.")}
-__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('transition',{attrs:{"name":"modal"}},[_c('div',{staticClass:"modal-mask",class:{'is-active':_vm.active}},[_c('div',{staticClass:"modal-wrapper"},[_c('div',{staticClass:"modal-container"},[_c('div',{staticClass:"modal-header"},[_vm._t("header",[_vm._v("\n              Issue Title: "+_vm._s(_vm.modal.issue_title)+"\n            ")])],2),_vm._v(" "),_c('div',{staticClass:"modal-body"},[_vm._t("body",[_vm._v("\n              default body\n            ")])],2),_vm._v(" "),_c('div',{staticClass:"modal-footer"},[_vm._t("footer",[_vm._v("\n              default footer\n              "),_c('button',{staticClass:"modal-default-button",on:{"click":function($event){$event.preventDefault();_vm.active=false}}},[_vm._v("\n                Return\n              ")])])],2)])])])])}
+__vue__options__.render = function render () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('transition',{attrs:{"name":"modal"}},[_c('div',{staticClass:"modal-mask",class:{'is-active':_vm.active}},[_c('div',{staticClass:"modal-wrapper"},[_c('div',{staticClass:"modal-container"},[_c('div',{staticClass:"modal-header"},[_vm._t("header",[_vm._v("\n             Issue Detail\n            ")])],2),_vm._v(" "),_c('div',{staticClass:"modal-body"},[_vm._t("body",[_vm._v("\n               Title: "+_vm._s(_vm.modal.issue_title)+" "),_c('br'),_vm._v("\n               Issue ID: "+_vm._s(_vm.modal.issue_id)),_c('br'),_vm._v("\n               URL: "),_c('a',{attrs:{"href":_vm.modal.html_url}},[_vm._v(_vm._s(_vm.modal.html_url))]),_c('br'),_vm._v("\n               Status: "+_vm._s(_vm.modal.status)),_c('br'),_vm._v("\n               Open Day: "+_vm._s(_vm.modal.open_day)+" "),_c('br'),_vm._v("\n               Date: "+_vm._s(_vm.modal.date)),_c('br'),_vm._v("\n               Last Event Created at: "+_vm._s(_vm.modal.last_event_date)+" "),_c('br')])],2),_vm._v(" "),_c('div',{staticClass:"modal-footer"},[_vm._t("footer",[_c('div',[_c('button',{staticClass:"modal-default-button",on:{"click":function($event){$event.preventDefault();_vm.active=false}}},[_vm._v("\n                Return\n              ")])])])],2)])])])])}
 __vue__options__.staticRenderFns = []
 if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
@@ -4659,147 +4659,8 @@ exports.default = {
       return this.$store.state.showDetail;
     },
     spec: function spec() {
-      var _this = this;
+      config = {};
 
-      var config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-        "padding": { 'left': 25, 'top': 15, 'right': 80, 'bottom': 50 },
-        "config": {
-          "axis": {
-            "tickRound": false
-          },
-          "title": {
-            "fontSize": 1
-          }
-
-        },
-        "title": {
-          "text": this.title,
-
-          "offset": 10
-
-        },
-        "width": 1000,
-        "height": 360,
-        "layer": [{
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": {
-                "format": "%b %Y", "title": " "
-              }
-            },
-            "y": {
-              "field": this.fieldone,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
-            "color": {
-              "field": "type",
-              "type": "nominal",
-              "scale": { "range": this.colors },
-              "sort": false
-            }
-          },
-          "mark": {
-            "type": "line",
-            "interpolate": "basis",
-            "clip": true
-          }
-        }, {
-          "encoding": {
-            "x": {
-              "field": "date",
-              "type": "temporal",
-              "axis": {
-                "format": "%b %Y", "title": " "
-              }
-            },
-            "y": {
-              "field": this.fieldtwo,
-              "type": "quantitative",
-              "axis": {
-                "title": null
-              }
-            },
-            "color": {
-              "field": "type",
-              "type": "nominal",
-              "scale": { "range": this.colors },
-              "sort": false
-            }
-          },
-          "mark": {
-            "type": "line",
-            "interpolate": "basis",
-            "clip": true
-          }
-        }]
-      };
-
-      var repos = [];
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) repos.push(window.AugurRepos[this.repo]);else if (this.gitRepo) {
-          var temp = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
-          if (window.AugurRepos[temp.toString()]) temp = window.AugurRepos[temp.toString()];else window.AugurRepos[temp.toString()] = temp;
-          repos.push(temp);
-        }
-      }
-      var endpoints = [];
-      var fields = {};
-      this.source.split(',').forEach(function (endpointAndFields) {
-        var split = endpointAndFields.split(':');
-        endpoints.push(split[0]);
-        if (split[1]) {
-          fields[split[0]] = split[1].split('+');
-        }
-      });
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
-      var processGitData = function processGitData(data) {
-        var repo = window.AugurAPI.Repo({ gitURL: _this.repo });
-        var dat = [];
-        repo.changesByAuthor().then(function (changes) {
-          dat.push(changes);
-        });
-      };
-      var defaultProcess = function defaultProcess(obj, key) {
-        var d = null;
-        if (typeof field == "string") field = [field];
-        d = _AugurStats2.default.convertKey(obj[key], key);
-        return d;
-      };
-      var processData = function processData(data) {
-        console.log(repos, data, "CHECK");
-
-
-        data.forEach(function (el) {
-          if ('closed_count' in el) {
-            el.type = 'closed';
-            _this.total_closed += el.closed_count;
-          }
-          if ('open_count' in el) {
-            el.type = 'open';
-            _this.total_open += el.open_count;
-          }
-        });
-
-        repos.forEach(function (repo) {
-          _this.values = data;
-        });
-      };
-      if (this.data) {
-        processData(this.data);
-      } else {
-        var repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        repo[this.source]().then(function (data) {
-          console.log("batch data", data);
-          processData(data);
-        }, function () {});
-      }
       return config;
     }
   }
@@ -6370,9 +6231,9 @@ exports.default = {
 
     console.log('DEBUG', this.data);
     if (this.data) {
-      processData(this.data[repo.toString()]["issuesOverview"]);
+      processData(this.data[repo.toString()]["getIssues"]);
     } else {
-      repo.issuesOverview().then(function (lists) {
+      repo.getIssues().then(function (lists) {
         processData(lists);
       });
     }
