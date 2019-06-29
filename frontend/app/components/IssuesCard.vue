@@ -21,9 +21,17 @@
       <div class="col col-6">
         <dynamic-line-chart source="issuesOpenAge"
                       title="Issues Open Age"
-                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md"
+                      cite-url="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-open-age.md"
                       cite-text="Issues Open Age"
                       :data="values['issuesOpenAge']">
+        </dynamic-line-chart>
+      </div>
+      <div class="col col-6">
+        <dynamic-line-chart source="issueActive"
+                      title="Active Issues"
+                      cite-url="https://github.com/chaoss/wg-evolution/blob/master/metrics/Issues_Active.md"
+                      cite-text="Acitve Issue"
+                      :data="values['issueActive']">
         </dynamic-line-chart>
       </div>
     </div>
@@ -122,7 +130,8 @@ module.exports = {
     }) // end batch
 
     let endpoints2 = [
-      "issuesOpenAge"
+      "issuesOpenAge",
+      "issueActive"
     ]
     window.AugurAPI.batchMapped(repos, endpoints2).then((data) => {
       console.log("here",data)
