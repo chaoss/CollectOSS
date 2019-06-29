@@ -9,7 +9,6 @@
       </h2>
     </div>
 
-    <spinner v-if="!this.loaded"></spinner>
     
 
     <div class="row" style="transform: translateY(-40px) !important" v-if="loaded1">
@@ -18,6 +17,18 @@
                     :data="values['getIssues']">
         </issue-chart>
     </div>
+    <div v-if="loaded2" class="row">
+      <div class="col col-6">
+        <dynamic-line-chart source="issuesOpenAge"
+                      title="Issues Open Age"
+                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md"
+                      cite-text="Issues Open Age"
+                      :data="values['issuesOpenAge']">
+        </dynamic-line-chart>
+      </div>
+    </div>
+
+    <spinner v-if="!this.loaded"></spinner>
 
   </section>
 </template>
@@ -32,9 +43,10 @@ import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChar
 import HorizontalBarChart from './charts/HorizontalBarChart'
 import GroupedBarChart from './charts/GroupedBarChart'
 import StackedBarChart from './charts/StackedBarChart'
-import DualLineChart from './charts/DualLineChart'
+// import DualLineChart from './charts/DualLineChart'
 import LineChart from './charts/LineChart'
 import IssueChart from './charts/IssueChart'
+import DynamicLineChart from './charts/DynamicLineChart'
 
 module.exports = {
   data() {
@@ -56,9 +68,10 @@ module.exports = {
     HorizontalBarChart,
     GroupedBarChart,
     StackedBarChart,
-    DualLineChart,
+    // DualLineChart,
     LineChart,
-    IssueChart
+    IssueChart,
+    DynamicLineChart,
   },
   computed: {
     repo () {
@@ -71,7 +84,7 @@ module.exports = {
       return this.$store.state.comparedRepos
     },
     loaded() {
-      return this.loaded1
+      return this.loaded1 && this.loaded2
     }
   },
   mounted() {
@@ -107,6 +120,25 @@ module.exports = {
       this.loaded1=false
       console.log("failed", error)
     }) // end batch
+
+    let endpoints2 = [
+      "issuesOpenAge"
+    ]
+    window.AugurAPI.batchMapped(repos, endpoints2).then((data) => {
+      console.log("here",data)
+      endpoints2.forEach((endpoint) => {
+        this.values[endpoint] = {}
+        this.values[endpoint][this.repo] = {}
+        this.values[endpoint][this.repo][endpoint] = data[this.repo][endpoint]
+      })
+      // this.values=data
+      this.loaded2=true
+      // return data
+    }, (error) => {
+      this.loaded2=false
+      console.log("failed", error)
+    }) // end batch
+  
   
   }
 }

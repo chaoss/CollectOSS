@@ -789,29 +789,29 @@ class Augur(object):
         """
         if not repo_id:
             openAgeSQL = s.sql.text("""
-                SELECT issues.gh_issue_number, issues.issue_title, repo_name, issues.created_at, EXTRACT(DAY FROM NOW() - issues.created_at) AS DateDifference
+                SELECT issues.created_at as date, EXTRACT(DAY FROM NOW() - issues.created_at) AS open_date
                 FROM issues,
                     repo,
                     repo_groups
                 WHERE issue_state = 'open'
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
-                GROUP BY gh_issue_number, issue_title, issues.repo_id, repo_name, issues.created_at, DateDifference
-                ORDER BY DateDifference DESC
+                GROUP BY date, open_date
+                ORDER BY open_date DESC
             """)
             results = pd.read_sql(openAgeSQL, self.db, params={
                                  'repo_group_id': repo_group_id})
         else:
             openAgeSQL = s.sql.text("""
-                SELECT issues.gh_issue_number, issues.issue_title, repo_name, issues.created_at, EXTRACT(DAY FROM NOW() - issues.created_at) AS DateDifference
+                SELECT issues.created_at as date, EXTRACT(DAY FROM NOW() - issues.created_at) AS open_date
                 FROM issues,
                     repo,
                     repo_groups
                 WHERE issue_state = 'open'
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
-                GROUP BY gh_issue_number, issue_title, issues.repo_id, repo_name, issues.created_at, DateDifference
-                ORDER BY DateDifference DESC
+                GROUP BY date, open_date
+                ORDER BY open_date DESC
             """)
             results = pd.read_sql(openAgeSQL, self.db,
                                  params={'repo_id': repo_id})

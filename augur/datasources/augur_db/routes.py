@@ -736,16 +736,12 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "gh_issue_number":1,
-                            "issue_title":"Property Place holder for namespaced attributes is not working",
-                            "repo_name":"jrugged",
-                            "datedifference":2414.0
+                            "date": "2009-05-15T19:48:43.000Z",
+                            "open_date": 3696
                         },
                         {
-                            "gh_issue_number":2,
-                            "issue_title":"Update custom namespace to work with annotation driven config",
-                            "repo_name":"jrugged",
-                            "datedifference":2414.0
+                            "date": "2009-05-16T14:35:40.000Z",
+                            "open_date": 3695
                         }
                     ]
     """
@@ -762,16 +758,12 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "gh_issue_number":2045,
-                            "issue_title":"Add possibility to render partial from subfolder with inheritance",
-                            "repo_name":"rails",
-                            "datedifference":2899.0
+                            "date": "2009-05-15T19:48:43.000Z",
+                            "open_date": 3696
                         },
                         {
-                            "gh_issue_number":2686,
-                            "issue_title":"Attachments not visible in mail clients when additional inline attachments present",
-                            "repo_name":"rails",
-                            "datedifference":2856.0
+                            "date": "2009-05-16T14:35:40.000Z",
+                            "open_date": 3695
                         }
                     ]
     """
