@@ -88,14 +88,14 @@ class Augur(object):
         if not repo_id:
             code_changes_SQL = s.sql.text("""
                 SELECT
-                    date_trunc(:period, cmt_committer_date::DATE) as commit_date,
+                    date_trunc(:period, cmt_committer_date::DATE) as date,
                     repo_id,
                     COUNT(cmt_commit_hash) as commit_count
                 FROM commits
                 WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY commit_date, repo_id
-                ORDER BY repo_id, commit_date
+                GROUP BY date, repo_id
+                ORDER BY repo_id, date
             """)
 
             results = pd.read_sql(code_changes_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -105,7 +105,7 @@ class Augur(object):
         else:
             code_changes_SQL = s.sql.text("""
                 SELECT
-                    date_trunc(:period, cmt_committer_date::DATE) as commit_date,
+                    date_trunc(:period, cmt_committer_date::DATE) as date,
                     COUNT(cmt_commit_hash) as commit_count
                 FROM commits
                 WHERE repo_id = :repo_id
@@ -682,15 +682,15 @@ class Augur(object):
         if not repo_id:
             issues_closed_SQL = s.sql.text("""
                 SELECT
-                    date_trunc(:period, closed_at::DATE) as issue_close_date,
+                    date_trunc(:period, closed_at::DATE) as date,
                     repo_id,
                     COUNT(issue_id) as issues
                 FROM issues
                 WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY issue_close_date, repo_id
-                ORDER BY repo_id, issue_close_date
+                GROUP BY date, repo_id
+                ORDER BY repo_id, date
             """)
 
             results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -700,13 +700,13 @@ class Augur(object):
 
         else:
             issues_closed_SQL = s.sql.text("""
-                SELECT date_trunc(:period, closed_at::DATE) as issue_close_date, COUNT(issue_id) as issues
+                SELECT date_trunc(:period, closed_at::DATE) as date, COUNT(issue_id) as issues
                 FROM issues
                 WHERE repo_id = :repo_id
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY issue_close_date
-                ORDER BY issue_close_date;
+                GROUP BY date
+                ORDER BY date;
             """)
 
             results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_id': repo_id, 'period': period,
@@ -747,6 +747,54 @@ class Augur(object):
             results['duration'] = results['duration'].astype(str)
             return results
 
+    @annotate(tag='issue-participants')
+    def issue_participants(self, repo_group_id, repo_id=None):
+        """Returns number of participants per issue.
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame of count of participants per issue.
+        """
+        if not repo_id:
+            issue_participants_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    derived.issue_id,
+                    COUNT(DISTINCT derived.cntrb_id) AS participants
+                FROM (
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    UNION
+                    (SELECT issue_id, cntrb_id FROM issue_message_ref, message
+                    WHERE issue_message_ref.msg_id = message.msg_id)
+                ) AS derived, issues
+                WHERE derived.issue_id = issues.issue_id
+                AND repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                GROUP BY repo_id, derived.issue_id
+                ORDER BY repo_id
+            """)
+
+            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return result
+        else:
+            issue_participants_SQL = s.sql.text("""
+                SELECT
+                    derived.issue_id,
+                    COUNT(DISTINCT derived.cntrb_id) AS participants
+                FROM (
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    UNION
+                    (SELECT issue_id, cntrb_id FROM issue_message_ref, message
+                    WHERE issue_message_ref.msg_id = message.msg_id)
+                ) AS derived, issues
+                WHERE derived.issue_id = issues.issue_id
+                AND repo_id = :repo_id
+                GROUP BY repo_id, derived.issue_id
+                ORDER BY repo_id
+            """)
+
+            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_id': repo_id})
+            return result
+
     @annotate(tag='issue-backlog')
     def issue_backlog(self, repo_group_id, repo_id=None):
         """Returns number of issues currently open.
@@ -776,6 +824,45 @@ class Augur(object):
             """)
 
             result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_id': repo_id})
+            return result
+
+    @annotate(tag='issue-throughput')
+    def issue_throughput(self, repo_group_id, repo_id=None):
+        """Returns the ratio of issues closed to total issues
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame of ratio of issues closed to total issues.
+        """
+        if not repo_id:
+            issue_throughput_SQL = s.sql.text("""
+                SELECT table1.repo_id, (tot1 / tot2) AS throughput
+                FROM
+                    (SELECT repo_id, COUNT(issue_id)::REAL AS tot1
+                    FROM issues WHERE issue_state='closed'
+                    AND repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY repo_id) AS table1,
+                    (SELECT repo_id, COUNT(issue_id)::REAL AS tot2
+                    FROM issues
+                    WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY repo_id) AS table2
+                WHERE table1.repo_id = table2.repo_id
+            """)
+
+            results = pd.read_sql(issue_throughput_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            issue_throughput_SQL = s.sql.text("""
+                SELECT (tot1 / tot2) AS throughput
+                FROM
+                    (SELECT COUNT(issue_id)::REAL AS tot1 FROM issues
+                    WHERE issue_state='closed' AND repo_id=:repo_id) AS table1,
+                    (SELECT COUNT(issue_id)::REAL AS tot2 FROM issues
+                    WHERE repo_id=:repo_id) AS table2
+            """)
+
+            result = pd.read_sql(issue_throughput_SQL, self.db, params={'repo_id': repo_id})
             return result
 
     @annotate(tag='issues-open-age')
@@ -851,13 +938,13 @@ class Augur(object):
                 FROM issues
                 WHERE closed_at NOTNULL AND repo_id = :repo_id
                 GROUP BY gh_issue_number, issue_title, created_at, closed_at, DIFFDATE
-                ORDER BY DIFFDATE DESC 
+                ORDER BY DIFFDATE DESC
             """)
             results = pd.read_sql(issueSQL, self.db,
                                  params={'repo_id': repo_id})
 
         return results
-        
+
     #####################################
     ###              RISK             ###
     #####################################
@@ -1056,7 +1143,7 @@ class Augur(object):
             """)
             results = pd.read_sql(openIssueCountSQL, self.db, params={'repo_id': repo_id})
             return results
-        
+
 
     @annotate(tag='closed-issues-count')
     def closed_issues_count(self, repo_group_id, repo_id=None):
@@ -1101,8 +1188,8 @@ class Augur(object):
         :param repo: the name of the repo
         """
         getRepoSQL = s.sql.text("""
-            SELECT repo_id, repo_group_id
-            FROM repo
+            SELECT repo.repo_id, repo.repo_group_id, rg_name
+            FROM repo JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
             WHERE repo_name = :repo AND repo_path LIKE :owner
             GROUP BY repo_id
         """)

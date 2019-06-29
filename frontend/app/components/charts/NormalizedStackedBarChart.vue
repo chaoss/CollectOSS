@@ -1,5 +1,6 @@
 <template>
   <div ref="holder">
+
     <div style="margin-bottom: 0 !important" class="tickchart ">
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <div :id="source"></div>

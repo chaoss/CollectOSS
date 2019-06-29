@@ -247,7 +247,6 @@ class MetricsStatus(object):
             if is_not_grouped_metric:
                 self.activity_metrics.append(activity_metric)
 
-
     def create_experimental_metrics(self):
         tags = []
         for group in self.metrics_by_group:

@@ -186,6 +186,9 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">commitsByMonthSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
         <span class="k">return</span> <span class="n">results</span>
 
+<<<<<<< HEAD
+    
+=======
     <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;facade-project&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">facade_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -202,6 +205,7 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">facadeProjectSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
         <span class="k">return</span> <span class="n">results</span>
 
+>>>>>>> broker
     <span class="c1"># cd - code</span>
     <span class="c1"># rg - repo group</span>
     <span class="c1"># tp - time period (fixed time period)</span>
@@ -597,6 +601,10 @@
         <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="s1">&#39;facade_project&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
                 <span class="n">cdRepTpIntervalLocCommitsUaSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<<<<<<< HEAD
+
+=======
+>>>>>>> broker
 <span class="s2">                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month, affiliation </span>
 <span class="s2">                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a </span>
 <span class="s2">                    LEFT JOIN</span>
