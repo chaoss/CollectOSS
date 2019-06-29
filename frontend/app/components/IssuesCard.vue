@@ -36,6 +36,16 @@
       </div>
     </div>
 
+    <div v-if="loaded3" class="row">
+        <div class="col col-12" style="padding-right: 35px">
+        <dual-line-chart source=""
+        :title="'Issue Count History for this Repo :  ' + this.baseRepo + ' - Grouped by Week'"
+        fieldone="open_count"
+        fieldtwo="closed_count"
+        :data="values['repo_issues']"></dual-line-chart>
+      </div>
+    </div>
+
     <spinner v-if="!this.loaded"></spinner>
 
   </section>
@@ -51,16 +61,16 @@ import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChar
 import HorizontalBarChart from './charts/HorizontalBarChart'
 import GroupedBarChart from './charts/GroupedBarChart'
 import StackedBarChart from './charts/StackedBarChart'
-// import DualLineChart from './charts/DualLineChart'
 import LineChart from './charts/LineChart'
 import IssueChart from './charts/IssueChart'
 import DynamicLineChart from './charts/DynamicLineChart'
+import DualLineChart from './charts/DualLineChart'
 
 module.exports = {
   data() {
     return {
       colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      values: {},
+      values: {'repo_issues':[]},
       loaded1: false,
       project: null,
       group: null
@@ -76,10 +86,10 @@ module.exports = {
     HorizontalBarChart,
     GroupedBarChart,
     StackedBarChart,
-    // DualLineChart,
     LineChart,
     IssueChart,
     DynamicLineChart,
+    DualLineChart
   },
   computed: {
     repo () {
@@ -92,7 +102,7 @@ module.exports = {
       return this.$store.state.comparedRepos
     },
     loaded() {
-      return this.loaded1 && this.loaded2
+      return this.loaded1 && this.loaded2 && this.loaded3
     }
   },
   mounted() {
@@ -148,6 +158,22 @@ module.exports = {
       console.log("failed", error)
     }) // end batch
   
+    let endpoints3 = [
+      "openIssuesCount",
+      "closedIssuesCount"
+    ]
+     window.AugurAPI.batchMapped(repos, endpoints3).then((data) => {
+      console.log("here",data)
+      endpoints3.forEach((endpoint) => {
+       this.values['repo_issues'] =  this.values['repo_issues'].concat(data[this.repo][endpoint])
+      })
+      // this.values=data
+      this.loaded3=true
+      // return data
+    }, (error) => {
+      this.loaded3=false
+      console.log("failed", error)
+    }) // end batch
   
   }
 }
