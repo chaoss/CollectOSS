@@ -355,64 +355,158 @@ class Augur(object):
 
         if repo_id:
             contributorsSQL = s.sql.text("""
-                SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues, SUM(commit_comments) AS commit_comments,
-                SUM(issue_comments) AS issue_comments, SUM(pull_requests) AS pull_requests,
-                SUM(pull_request_comments) AS pull_request_comments,
-                SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
+               SELECT id                           AS user_id,
+                    SUM(commits)                 AS commits,
+                    SUM(issues)                  AS issues,
+                    SUM(commit_comments)         AS commit_comments,
+                    SUM(issue_comments)          AS issue_comments,
+                    SUM(pull_requests)           AS pull_requests,
+                    SUM(pull_request_comments)   AS pull_request_comments,
+                    SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests +
+                        a.pull_request_comments) AS total
                 FROM (
-                (SELECT gh_user_id AS id,
-                0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-                FROM issues
-                WHERE repo_id = :repo_id
-                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL
-                GROUP BY gh_user_id)
-                UNION ALL
-                (SELECT cmt_ght_author_id AS id,
-                COUNT(*) AS commits,  0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-                FROM commits
-                WHERE repo_id = :repo_id
-                AND cmt_ght_author_id IS NOT NULL AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY cmt_ght_author_id)
-                UNION ALL
-                (SELECT user_id AS id, 0 AS commits, 0 AS issues, COUNT(*) AS commit_comments,
-                0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-                FROM commit_comment_ref
-                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id = :repo_id )
-                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
-                GROUP BY user_id)
-                ) a GROUP BY a.id ORDER BY total DESC
+                        (SELECT gh_user_id AS id,
+                                0          AS commits,
+                                COUNT(*)   AS issues,
+                                0          AS commit_comments,
+                                0          AS issue_comments,
+                                0          AS pull_requests,
+                                0          AS pull_request_comments
+                        FROM issues
+                        WHERE repo_id = :repo_id
+                            AND created_at BETWEEN :begin_date AND :end_date
+                            AND gh_user_id IS NOT NULL
+                        GROUP BY gh_user_id)
+                        UNION ALL
+                        (SELECT cmt_ght_author_id AS id,
+                                COUNT(*)          AS commits,
+                                0                 AS issues,
+                                0                 AS commit_comments,
+                                0                 AS issue_comments,
+                                0                 AS pull_requests,
+                                0                 AS pull_request_comments
+                        FROM commits
+                        WHERE repo_id = :repo_id
+                            AND cmt_ght_author_id IS NOT NULL
+                            AND cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_ght_author_id)
+                        UNION ALL
+                        (SELECT cntrb_id AS id,
+                                0        AS commits,
+                                0        AS issues,
+                                COUNT(*) AS commit_comments,
+                                0        AS issue_comments,
+                                0        AS pull_requests,
+                                0        AS pull_request_comments
+                        FROM commit_comment_ref,
+                            commits,
+                            message
+                        WHERE commit_comment_ref.cmt_id = commit_comment_ref.cmt_id
+                            AND message.msg_id = commit_comment_ref.msg_id
+                            AND repo_id = :repo_id
+                            AND created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY id)
+                        UNION ALL
+                        (
+                            SELECT message.cntrb_id AS id,
+                                    0                AS commits,
+                                    0                AS issues,
+                                    0                AS commit_comments,
+                                    count(*)         AS issue_comments,
+                                    0                AS pull_requests,
+                                    0                AS pull_request_comments
+                            FROM issues,
+                                issue_message_ref,
+                                message
+                            WHERE repo_id = :repo_id
+                            AND gh_user_id IS NOT NULL
+                            AND issues.issue_id = issue_message_ref.issue_id
+                            AND issue_message_ref.msg_id = message.msg_id
+                            AND created_at BETWEEN :begin_date AND :end_date
+                            GROUP BY id
+                        )
+                    ) a
+                GROUP BY a.id
+                ORDER BY total DESC 
             """)
 
             results = pd.read_sql(contributorsSQL, self.db, params={'repo_id': repo_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
         else:
             contributorsSQL = s.sql.text("""
-                SELECT id AS user, SUM(commits) AS commits, SUM(issues) AS issues, SUM(commit_comments) AS commit_comments,
-                SUM(issue_comments) AS issue_comments, SUM(pull_requests) AS pull_requests,
-                SUM(pull_request_comments) AS pull_request_comments,
-                SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests + a.pull_request_comments) AS total
+               SELECT id                           AS user_id,
+                    SUM(commits)                 AS commits,
+                    SUM(issues)                  AS issues,
+                    SUM(commit_comments)         AS commit_comments,
+                    SUM(issue_comments)          AS issue_comments,
+                    SUM(pull_requests)           AS pull_requests,
+                    SUM(pull_request_comments)   AS pull_request_comments,
+                    SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests +
+                        a.pull_request_comments) AS total
                 FROM (
-                (SELECT gh_user_id AS id,
-                0 AS commits, COUNT(*) AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-                FROM issues
-                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL
-                GROUP BY gh_user_id)
-                UNION ALL
-                (SELECT cmt_ght_author_id AS id,
-                COUNT(*) AS commits,  0 AS issues, 0 AS commit_comments, 0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-                FROM commits
-                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-                AND cmt_ght_author_id IS NOT NULL AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY cmt_ght_author_id)
-                UNION ALL
-                (SELECT user_id AS id, 0 AS commits, 0 AS issues, COUNT(*) AS commit_comments,
-                0 AS issue_comments, 0 AS pull_requests, 0 AS pull_request_comments
-                FROM commit_comment_ref
-                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id))
-                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
-                GROUP BY user_id)
-                ) a GROUP BY a.id ORDER BY total DESC
+                        (SELECT gh_user_id AS id,
+                                0          AS commits,
+                                COUNT(*)   AS issues,
+                                0          AS commit_comments,
+                                0          AS issue_comments,
+                                0          AS pull_requests,
+                                0          AS pull_request_comments
+                        FROM issues
+                        WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                            AND created_at BETWEEN :begin_date AND :end_date
+                            AND gh_user_id IS NOT NULL
+                        GROUP BY gh_user_id)
+                        UNION ALL   
+                        (SELECT cmt_ght_author_id AS id,
+                                COUNT(*)          AS commits,
+                                0                 AS issues,
+                                0                 AS commit_comments,
+                                0                 AS issue_comments,
+                                0                 AS pull_requests,
+                                0                 AS pull_request_comments
+                        FROM commits
+                        WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                            AND cmt_ght_author_id IS NOT NULL
+                            AND cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_ght_author_id)
+                        UNION ALL
+                        (SELECT cntrb_id AS id,
+                                0        AS commits,
+                                0        AS issues,
+                                COUNT(*) AS commit_comments,
+                                0        AS issue_comments,
+                                0        AS pull_requests,
+                                0        AS pull_request_comments
+                        FROM commit_comment_ref,
+                            commits,
+                            message
+                        WHERE commit_comment_ref.cmt_id = commit_comment_ref.cmt_id
+                            AND message.msg_id = commit_comment_ref.msg_id
+                            AND repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                            AND created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY id)
+                        UNION ALL
+                        (
+                            SELECT message.cntrb_id AS id,
+                                    0                AS commits,
+                                    0                AS issues,
+                                    0                AS commit_comments,
+                                    count(*)         AS issue_comments,
+                                    0                AS pull_requests,
+                                    0                AS pull_request_comments
+                            FROM issues,
+                                issue_message_ref,
+                                message
+                            WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                            AND gh_user_id IS NOT NULL
+                            AND issues.issue_id = issue_message_ref.issue_id
+                            AND issue_message_ref.msg_id = message.msg_id
+                            AND created_at BETWEEN :begin_date AND :end_date
+                            GROUP BY id
+                        )
+                    ) a
+                GROUP BY a.id
+                ORDER BY total DESC
             """)
 
             results = pd.read_sql(contributorsSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
