@@ -166,3 +166,6 @@ def test_get_repo(augur_db):
 def test_lines_changed_by_author(augur_db):
     assert augur_db.lines_changed_by_author(20).iloc[0].additions > 0
     assert augur_db.lines_changed_by_author(20,21000).iloc[0].additions > 0
+
+def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, calendar_year=2019).iloc[0].net > 0
