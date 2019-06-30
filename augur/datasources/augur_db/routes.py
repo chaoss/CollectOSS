@@ -1324,7 +1324,7 @@ def create_routes(server):
 
     
     """
-    @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-grou Annual Commit Count Ranked by New Repo in Repo Group
+    @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group Annual Commit Count Ranked by New Repo in Repo Group
     @apiName annual-commit-count-ranked-by-new-repo-in-repo-group
     @apiGroup Experiment
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository

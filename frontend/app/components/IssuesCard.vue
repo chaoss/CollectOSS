@@ -39,7 +39,7 @@
     <div v-if="loaded3" class="row">
         <div class="col col-12" style="padding-right: 35px">
         <dual-line-chart source=""
-        :title="'Issue Count History for this Repo :  ' + this.baseRepo + ' - Grouped by Week'"
+        :title="'Issue Count History for this Repo :  ' + this.repo + ' - Grouped by Week'"
         fieldone="open_count"
         fieldtwo="closed_count"
         :data="values['repo_issues']"></dual-line-chart>
@@ -71,6 +71,8 @@ module.exports = {
       colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
       values: {'repo_issues':[]},
       loaded1: false,
+      loaded2: false,
+      loaded3: false,
       project: null,
       group: null
     }
