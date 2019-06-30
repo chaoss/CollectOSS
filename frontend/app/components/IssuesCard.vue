@@ -61,7 +61,6 @@ import OneDimensionalStackedBarChart from './charts/OneDimensionalStackedBarChar
 import HorizontalBarChart from './charts/HorizontalBarChart'
 import GroupedBarChart from './charts/GroupedBarChart'
 import StackedBarChart from './charts/StackedBarChart'
-import LineChart from './charts/LineChart'
 import IssueChart from './charts/IssueChart'
 import DynamicLineChart from './charts/DynamicLineChart'
 import DualLineChart from './charts/DualLineChart'
@@ -86,7 +85,6 @@ module.exports = {
     HorizontalBarChart,
     GroupedBarChart,
     StackedBarChart,
-    LineChart,
     IssueChart,
     DynamicLineChart,
     DualLineChart
