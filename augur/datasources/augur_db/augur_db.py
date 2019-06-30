@@ -550,11 +550,12 @@ class Augur(object):
                 AND cmt_ght_author_id IS NOT NULL AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
                 GROUP BY cmt_ght_author_id)
                 UNION ALL
-                (SELECT user_id AS id, MIN(created_at) AS created_at
-                FROM commit_comment_ref
-                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id = :repo_id)
-                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
-                GROUP BY user_id)
+                (SELECT cntrb_id as id, MIN(created_at) AS created_at
+                FROM commit_comment_ref, commits, message
+                where commits.cmt_id = commit_comment_ref.cmt_id
+                and repo_id = :repo_id
+                and commit_comment_ref.msg_id = message.msg_id
+                group by id)
                 UNION ALL
                 (SELECT cntrb_id AS id, MIN(created_at) AS created_at
                 FROM issue_events
@@ -568,7 +569,7 @@ class Augur(object):
                                                                        'begin_date': begin_date, 'end_date': end_date})
         else:
             contributorsNewSQL = s.sql.text("""
-                SELECT date_trunc(:period, created_at::DATE) AS contribute_at, COUNT(id) AS count
+               SELECT date_trunc(:period, created_at::DATE) AS contribute_at, COUNT(id) AS count
                 FROM (
                 SELECT id as id, MIN(created_at) AS created_at
                 FROM (
@@ -584,11 +585,12 @@ class Augur(object):
                 AND cmt_ght_author_id IS NOT NULL AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
                 GROUP BY cmt_ght_author_id)
                 UNION ALL
-                (SELECT user_id AS id, MIN(created_at) AS created_at
-                FROM commit_comment_ref
-                WHERE cmt_id in (SELECT cmt_id FROM commits WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id))
-                AND created_at BETWEEN :begin_date AND :end_date AND user_id IS NOT NULL
-                GROUP BY user_id)
+                (SELECT cntrb_id as id, MIN(created_at) AS created_at
+                FROM commit_comment_ref, commits, message
+                where commits.cmt_id = commit_comment_ref.cmt_id
+                and repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                and commit_comment_ref.msg_id = message.msg_id
+                group by id)
                 UNION ALL
                 (SELECT cntrb_id AS id, MIN(created_at) AS created_at
                 FROM issue_events
