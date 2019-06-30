@@ -1258,3 +1258,66 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.license_declared, 'license-declared')
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    ##################################### 
+
+    """
+    @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
+    @apiNames lines-changed-by-author
+    @apiGroup Experimental
+    @apiDescription Returns number of lines changed per author per day 
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-24",
+                            "affiliation": "NULL",
+                            "additions": 25611,
+                            "deletions": 296,
+                            "whitespace": 5279
+                        },
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-25",
+                            "affiliation": "NULL",
+                            "additions": 163,
+                            "deletions": 179,
+                            "whitespace": 46
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.lines_changed_by_author,'lines-changed-by-author')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
+    @apiNames lines-changed-by-author
+    @apiGroup Experimental
+    @apiDescription Count of closed issues.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-24",
+                            "affiliation": "NULL",
+                            "additions": 25611,
+                            "deletions": 296,
+                            "whitespace": 5279
+                        },
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-25",
+                            "affiliation": "NULL",
+                            "additions": 163,
+                            "deletions": 179,
+                            "whitespace": 46
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.lines_changed_by_author,'lines-changed-by-author')

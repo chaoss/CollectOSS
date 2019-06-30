@@ -1134,22 +1134,35 @@ class Augur(object):
     #####################################
 
     @annotate(tag='lines-changed-by-author')
-    def lines_changed_by_author(self, repo_url):
+    def lines_changed_by_author(self, repo_group_id, repo_id = None):
         """
         Returns number of lines changed per author per day
 
         :param repo_url: the repository's URL
         """
-        linesChangedByAuthorSQL = s.sql.text("""
-            SELECT cmt_author_email, cmt_author_date, cmt_author_affiliation as affiliation,
-                SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace
-            FROM commits
-            WHERE repo_id = (SELECT repo_id FROM repo WHERE repo_git LIKE :repourl LIMIT 1)
-            GROUP BY repo_id, cmt_author_date, cmt_author_affiliation, cmt_author_email
-            ORDER BY cmt_author_date ASC;
-        """)
-        results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
-        return results
+
+        if repo_id:
+            linesChangedByAuthorSQL = s.sql.text("""
+                SELECT cmt_author_email, cmt_author_date, cmt_author_affiliation as affiliation,
+                    SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace
+                FROM commits
+                WHERE repo_id = :repo_id
+                GROUP BY repo_id, cmt_author_date, cmt_author_affiliation, cmt_author_email
+                ORDER BY cmt_author_date ASC;
+            """)
+            results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repo_id": repo_id})
+            return results
+        else:
+            linesChangedByAuthorSQL = s.sql.text("""
+                SELECT cmt_author_email, cmt_author_date, cmt_author_affiliation as affiliation,
+                    SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace
+                FROM commits
+                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                GROUP BY repo_id, cmt_author_date, cmt_author_affiliation, cmt_author_email
+                ORDER BY cmt_author_date ASC;
+            """)
+            results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repo_group_id": repo_group_id})
+            return results
 
     @annotate(tag='repo-groups')
     def repo_groups(self):
@@ -1335,4 +1348,4 @@ class Augur(object):
             """)
             results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
             return results
-        
+    

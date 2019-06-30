@@ -162,3 +162,7 @@ def test_issues_closed_resolution_duration(augur_db):
 
 def test_get_repo(augur_db):
     assert augur_db.get_repo('rails','rails').iloc[0].repo_group_id == 20
+
+def test_lines_changed_by_author(augur_db):
+    assert augur_db.lines_changed_by_author(20).iloc[0].additions > 0
+    assert augur_db.lines_changed_by_author(20,21000).iloc[0].additions > 0
