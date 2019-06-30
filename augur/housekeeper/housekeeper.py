@@ -7,9 +7,9 @@ import sqlalchemy as s
 import pandas as pd
 import os
 import zmq
-import json
 
-logging.basicConfig(filename='housekeeper.log', filemode='w', level=logging.INFO)
+logging.basicConfig(filename='housekeeper.log')
+# logging = logging.getlogging(name="housekeeper_logging")
 
 
 UPDATE_DELAY = 5 #5 sec for testing # 86400 (1 day)
@@ -17,13 +17,17 @@ UPDATE_DELAY = 5 #5 sec for testing # 86400 (1 day)
 def client_git_url_task(identity, model, git_url):
     """Basic request-reply client using REQ socket."""
     socket = zmq.Context().socket(zmq.REQ)
-    socket.identity = u"git-url-client-{}-{}".format(identity, os.getpid()).encode("ascii")
+    socket.identity = u"git-url-client-{}".format(identity).encode("ascii")
     socket.connect("ipc://backend.ipc")
-
+    # socket.connect("tcp://localhost:5558")
     # Send request, get reply
-    request = b'UPDATE {"models":["%s"],"given":{"git_url":"%s"}}' % (model.encode(), git_url.encode())
-    logging.info("Sent request: " + str(request) + "\n")
+    request = b'UPDATE {"models":[model],"given":{"git_url": git_url}}'
+    logging.info("sent request: " + str(request))
+    #logging.info(f'{socket.identity.decode("ascii")}: sending {request.decode("ascii")}')
     socket.send(request)
+    # reply = socket.recv()
+    # logging.info("Reply: " + str(reply))
+    #logging.info("{}: {}".format(socket.identity.decode("ascii"), reply.decode("ascii")))
 
 class Housekeeper:
 
@@ -50,47 +54,65 @@ class Housekeeper:
         all_repos = rs['repo_git'].values.tolist()
 
         # List repo subsections that may have special update requirements
-        subsection_test = ['https://github.com/rails/exception_notification.git']
-        all_repo_issues_sorted = self.sort_issue_repos()['repo_git'].values#.tolist()
+        example_subsection = [
+                {
+                    'repo_git': 'https://github.com/rails/exception_notification.git', 
+                    'focused_task': '0' # OPTIONAL KEY, '1' if you want an in-depth 'crawl' of github's api for the repo, 
+                                        #    will cause unnecessary api calls and will take longer
+                }
+            ]
+        all_sorted_by_issues = self.sort_issue_repos()
 
-        # List of jobs that need periodic updates
+        # List of tasks that need periodic updates
         self.__updatable = [
             {
                 'model': 'issues',
                 'started': False,
-                'delay': 15000,
-                'section': all_repo_issues_sorted,
-                'tag': 'All stored repositories'
+                'delay': 150000,
+                'section': all_sorted_by_issues,
+                'tag': 'All repositories'
             }
         ]
         self.__processes = []
-
+        # logging.info("HK pid: {}".format(str(os.getpid())))
         self.__updater()
-        
 
     @staticmethod
-    def updater_process(model, delay, repos, tag):
+    def updater_process(model, started, delay, section, tag):
         """
         Controls a given plugin's update process
-
         :param name: name of object to be updated 
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
-        logging.info('Housekeeper spawned {} model updater process with PID {} for subsection {}'.format(
-            model, os.getpid(), tag))
+        logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, tag, os.getpid()))
         try:
+            logging.info('Housekeeper waiting 60 seconds to give time for the worker to finish initializing...')
+            time.sleep(60)
             while True:
-                logging.info('Housekeeper preparing to send update request(s) for {} model for subsection {}...'.format(model, tag))
+                logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, tag))
                 
-                # Send task to broker through 0mq
-                for repo in repos:
-                    client_git_url_task('housekeeper', model, repo)
-                    time.sleep(15)
+                for repo in section:
+                    task = {
+                        "job_type": "MAINTAIN", 
+                        "models": [model], 
+                        "given": {
+                            "git_url": repo['repo_git']
+                        }
+                    }
+                    if "focused_task" in repo:
+                        task["focused_task"] = repo['focused_task']
+                    try:
+                        requests.post('http://localhost:5000/api/unstable/task', json=task, timeout=10)
+                    except:# Exception as e:
+                        logging.info("no worker found")
 
+                    time.sleep(0.5)
+                logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(section))))
                 time.sleep(delay)
+
+                
         except KeyboardInterrupt:
-            self.shutdown_updates()
             os.kill(os.getpid(), 9)
             os._exit(0)
         except:
@@ -105,10 +127,10 @@ class Housekeeper:
             updates = self.__updatable
         for update in updates:
             if update['started'] != True:
-                update['started'] = True
-                up = Process(target=self.updater_process, args=(update['model'], update['delay'], update['section'], update['tag']), daemon=True)
+                up = Process(target=self.updater_process, args=(update.values()), daemon=True)
                 up.start()
                 self.__processes.append(up)
+                # logging.info("HK processes: {}".format(str(self.__processes[0].pid)))
                 update['started'] = True
 
     def update_all(self):
@@ -116,6 +138,7 @@ class Housekeeper:
         Updates all plugins
         """
         for updatable in self.__updatable:
+            # logging.info('Updating {} model...'.format(updatable['model']))
             updatable['update']()
 
     def schedule_updates(self):
@@ -141,23 +164,50 @@ class Housekeeper:
             process.terminate()
 
     def sort_issue_repos(self):
+
         # Query all repos and last repo id
         repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+                SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
             """)
 
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
         repoIdSQL = s.sql.text("""
-            SELECT since_id_str FROM gh_worker_job
+                SELECT since_id_str FROM gh_worker_job
             """)
 
-        df = pd.read_sql(repoIdSQL, self.helper_db, params={})
-        last_id = int(df.iloc[0]['since_id_str'])
-        before_repos = rs.loc[rs['repo_id'].astype(int) <= last_id]
-        after_repos = rs.loc[rs['repo_id'].astype(int) > last_id]
+        job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+
+        last_id = int(job_df.iloc[0]['since_id_str'])
+
+        jobHistorySQL = s.sql.text("""
+                SELECT max(history_id) AS history_id, status FROM gh_worker_history
+                GROUP BY status
+                LIMIT 1
+            """)
+
+        history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
+
+        finishing_task = False
+        if history_df.iloc[0]['status'] == 'Stopped':
+            self.history_id = int(history_df.iloc[0]['history_id'])
+            finishing_task = True
+            last_id += 1 #update to match history tuple val rather than just increment
+            
+
+        # Rearrange repos so the one after the last one that 
+        #   was completed will be ran first
+        before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
+        after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
 
         reorganized_repos = after_repos.append(before_repos)
+
+        reorganized_repos['focused_task'] = 0
+        reorganized_repos = reorganized_repos.to_dict('records')
+        
+        if finishing_task:
+            reorganized_repos[0]['focused_task'] = 1
+
         return reorganized_repos
         
     # def run(self):
@@ -189,6 +239,3 @@ class Housekeeper:
     #         }
 
     #         requests.post('http://localhost:5000/api/job', json=job)
-
-
-

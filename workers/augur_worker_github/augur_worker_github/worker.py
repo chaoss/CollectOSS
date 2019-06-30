@@ -10,6 +10,7 @@ import time
 import logging
 import json
 import ast
+import os
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 class CollectorTask:
@@ -40,7 +41,7 @@ class GitHubWorker:
     config: holds info like api keys, descriptions, and database connection strings
     """
     def __init__(self, config, task=None):
-        logging.info('Worker initializing...')
+        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self._task = task
         self._child = None
         self._queue = Queue()
@@ -51,7 +52,7 @@ class GitHubWorker:
         self.table = None
         self.API_KEY = self.config['key']
         self.tool_source = 'GitHub API Worker'
-        self.tool_version = '0.0.1' # See __init__.py
+        self.tool_version = '0.0.2' # See __init__.py
         self.data_source = 'GitHub API'
         self.results_counter = 0
         self.headers = {'Authorization': 'token %s' % self.config['key']}
@@ -80,6 +81,7 @@ class GitHubWorker:
         )
 
         #Database connections
+        logging.info("Making database connections...")
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
@@ -114,47 +116,48 @@ class GitHubWorker:
         self.job_table = HelperBase.classes.gh_worker_job.__table__
 
 
-        # Query all repos and last repo id
-        repoUrlSQL = s.sql.text("""
-                SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
-            """)
+        # # Query all repos and last repo id
+        # repoUrlSQL = s.sql.text("""
+        #         SELECT git_url, repo_id FROM repo ORDER BY repo_id ASC
+        #     """)
 
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
 
-        repoIdSQL = s.sql.text("""
-                SELECT since_id_str FROM gh_worker_job
-            """)
+        # repoIdSQL = s.sql.text("""
+        #         SELECT since_id_str FROM gh_worker_job
+        #     """)
 
-        job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+        # job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
 
-        last_id = int(job_df.iloc[0]['since_id_str'])
+        # last_id = int(job_df.iloc[0]['since_id_str'])
 
-        jobHistorySQL = s.sql.text("""
-                SELECT max(history_id) AS history_id, status FROM gh_worker_history
-                GROUP BY status
-                LIMIT 1
-            """)
+        # jobHistorySQL = s.sql.text("""
+        #         SELECT max(history_id) AS history_id, status FROM gh_worker_history
+        #         GROUP BY status
+        #         LIMIT 1
+        #     """)
 
-        history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
+        # history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
 
-        if history_df.iloc[0]['status'] == 'Stopped':
-            self.history_id = int(history_df.iloc[0]['history_id'])
-            self.finishing_task = True
-        else:
-            last_id += 1
+        # if history_df.iloc[0]['status'] == 'Stopped':
+        #     self.history_id = int(history_df.iloc[0]['history_id'])
+        #     self.finishing_task = True
+        # else:
+        #     last_id += 1
 
-        # Rearrange repos so the one after the last one that 
-        #   was completed will be ran first
-        before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
-        after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
+        # # Rearrange repos so the one after the last one that 
+        # #   was completed will be ran first
+        # before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
+        # after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
 
-        reorganized_repos = after_repos.append(before_repos)
+        # reorganized_repos = after_repos.append(before_repos)
 
-        # Populate queue
-        for index, row in reorganized_repos.iterrows():
-            self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
+        # # Populate queue
+        # for index, row in reorganized_repos.iterrows():
+        #     self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
+        logging.info("Querying starting ids info...")
         maxIssueCntrbSQL = s.sql.text("""
             SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
             FROM issues, contributors
@@ -177,7 +180,7 @@ class GitHubWorker:
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
 
-        self.run()
+        # self.run()
 
         requests.post('http://localhost:5000/api/unstable/workers', json=specs) #hello message
 
@@ -209,20 +212,24 @@ class GitHubWorker:
 
         """ Query all repos """
         repoUrlSQL = s.sql.text("""
-            SELECT repo_id FROM repo WHERE repo_git = '{}'
+            SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
             """.format(git_url))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
-
         try:
-            if value['action'] == "UPDATE":
-                self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
-            else:
-                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs}))
+            # self.query_issues({"git_url": git_url, "repo_id": rs})
+            repo_id = int(rs.iloc[0]['repo_id'])
+            if value['job_type'] == "UPDATE":
+                self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": repo_id}))
+            elif value['job_type'] == "MAINTAIN":
+                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": repo_id}))
+            if 'focused_task' in value:
+                if value['focused_task'] == 1:
+                    self.finishing_task = True
 
-        except:
-            logging.info("that repo is not in our database")
+        except Exception as e:
+            logging.info("error: {}, or that repo is not in our database: {}".format(str(e), str(value)))
         
-        self._task = value
+        self._task = CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": repo_id})
         self.run()
 
     def cancel(self):
@@ -250,6 +257,7 @@ class GitHubWorker:
             else:
                 if not self._maintain_queue.empty():
                     message = self._maintain_queue.get()
+                    logging.info("Popped off message: {}".format(str(message.entry_info)))
                     self.working_on = "MAINTAIN"
                 else:
                     break
@@ -261,6 +269,7 @@ class GitHubWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
+
                 self.query_issues(message.entry_info)
 
     def query_contributors(self, entry_info):
@@ -271,7 +280,7 @@ class GitHubWorker:
         logging.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
 
         # Url of repo we are querying for
-        url = entry_info['repo_git']
+        url = entry_info['git_url']
 
         # Extract owner/repo from the url for the endpoint
         path = urlparse(url)
@@ -419,28 +428,27 @@ class GitHubWorker:
             logging.info("Contributor not defined. Please contact the manufacturers of Soylent Green " + url + " ...\n")
             logging.info("Cascading Contributor Anomalie from missing repo contributor data: " + url + " ...\n")
         else:
-            if len(contributors) != 0:
-                logging.info("Well, that contributor just don't except because we hit the else-block yo")    
-
+            if len(contributors) > 2:
+                logging.info("Well, that contributor list of len {} with last 3 tuples as: {} just don't except because we hit the else-block yo\n".format(str(len(contributors)), str(contributors[-3:])))    
 
     def query_issues(self, entry_info):
 
         """ Data collection function
         Query the GitHub API for issues
         """
-        logging.info("Beginning filling the issues model for repo: " + entry_info['repo_git'] + "\n")
+        logging.info("Beginning filling the issues model for repo: " + entry_info['git_url'] + "\n")
         self.record_model_process(entry_info, 'issues')
 
-        #if str.find('github.com', str(entry_info['repo_git']) < 0
+        #if str.find('github.com', str(entry_info['git_url']) < 0
         ### I have repos not on github and I need to skip them 
-        #@if str.find('github.com', str(entry_info['repo_git']) < 0
+        #@if str.find('github.com', str(entry_info['git_url']) < 0
         #    return 
 
         # Contributors are part of this model, and finding all for the repo saves us 
         #   from having to add them as we discover committers in the issue process
         self.query_contributors(entry_info)
 
-        url = entry_info['repo_git']
+        url = entry_info['git_url']
 
         # Extract the owner/repo for the endpoint
         path = urlparse(url)
@@ -584,7 +592,6 @@ class GitHubWorker:
             if 'closed_at' in issue_dict:
                 for event in issue_events:
                     if event['event'] == 'closed':
-                        logging.info('event-issue '  ' event seems missing somethinga '  + "..... \n")
                         if event['actor'] is not None:
                             cntrb_id = self.find_id_from_login(event['actor']['login'])
                             if cntrb_id is None:
@@ -629,23 +636,15 @@ class GitHubWorker:
             logging.info("Inserted issue with our issue_id being: " + str(self.issue_id_inc) + 
                 " and title of: " + issue_dict['title'] + " and gh_issue_num of: " + str(issue_dict['number']) + "\n")
 
-            # Just to help me figure out cases where a..nee vs a..nees shows up
-            if "assignee" in issue_dict and "assignees" in issue_dict:
-                logging.info("assignee and assignees here\n")
-            elif "assignees" in issue_dict:
-                logging.info("multiple assignees and no single one\n")
-            elif "assignee" in issue_dict:
-                logging.info("single assignees and no multiples\n")
-
             # Check if the assignee key's value is already recorded in the assignees key's value
             #   Create a collective list of unique assignees
             collected_assignees = issue_dict['assignees']
             if issue_dict['assignee'] not in collected_assignees:
                 collected_assignees.append(issue_dict['assignee'])
-            logging.info("Count of assignees for this issue: " + str(len(collected_assignees)) + "\n")
 
             # Handles case if there are no assignees
             if collected_assignees[0] is not None:
+                logging.info("Count of assignees to insert for this issue: " + str(len(collected_assignees)) + "\n")
                 for assignee_dict in collected_assignees:
 
                     assignee = {
@@ -662,6 +661,8 @@ class GitHubWorker:
 
                     logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
                         " with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
+            else:
+                logging.info("Issue does not have any assignees")
 
             # Insert the issue labels to the issue_labels table
             for label_dict in issue_dict['labels']:
@@ -760,7 +761,7 @@ class GitHubWorker:
                 }
 
                 result = self.db.execute(self.message_table.insert().values(issue_comment))
-                logging.info("Primary key inserted into the message table: " + str(result.inserted_primary_key))
+                logging.info("Primary key inserted into the message table: {}".format(str(result.inserted_primary_key)))
                 self.results_counter += 1
                 self.msg_id_inc = int(result.inserted_primary_key[0])
 
@@ -816,6 +817,7 @@ class GitHubWorker:
 
         #Register this task as completed
         self.register_task_completion(entry_info, "issues")
+
         if self.finishing_task:
             self.finishing_task = False
             
@@ -903,8 +905,8 @@ class GitHubWorker:
 
             logging.info("Inserted contributor: " + contributor['login'] + "\n")
             
-            self.find_id_from_login(login)
-            pass
+            return self.find_id_from_login(login)
+
 
     def update_rate_limit(self, response):
         try:
@@ -924,9 +926,12 @@ class GitHubWorker:
     def register_task_completion(self, entry_info, model):
 
         # Add to history table
-        task_completed = entry_info.to_dict()
-        task_completed['worker_id'] = self.config['id']
-        task_completed['action'] = self.working_on
+        task_completed = {
+            'worker_id': self.config['id'],
+            'job_type': self.working_on,
+            'repo_id': entry_info['repo_id'],
+            'git_url': entry_info['git_url']
+        }
 
         task_history = {
             "repo_id": entry_info['repo_id'],
