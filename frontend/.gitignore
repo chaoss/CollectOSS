@@ -21,7 +21,7 @@ Thumbs.db
 
 # lock files
 yarn.lock
-package-lock.json
+package-json.lock
 
 # NPM packages folder.
 node_modules/
