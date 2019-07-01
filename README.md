@@ -8,6 +8,13 @@
     - `sudo update-alternatives --config python3` 
         - Select the option for Python 3.7
 2. (NPM and Yarn stuff: Whatever that turns out to be)
+3. `pip3 install virtualenv`
+4. `virtualenv --python=python3 newaugur`
+5. `source newaugur/bin/activate`
+6. `cd frontend`
+7. Install yarn (temporary)
+8. `yarn add shards-vue`
+9. 
 
 branch | status
    --- | ---
