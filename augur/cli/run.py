@@ -58,9 +58,9 @@ def cli(app):
     app.schedule_updates()
     master = None
     controller = {
-        'broker': 0,#app.read_config('Server', 'broker', None, '0'),
-        'housekeeper': 0,#app.read_config('Server', 'housekeeper', None, '0'),
-        'github_worker': 0#app.read_config('Server', 'github_worker', None, '0'),
+        'broker': 1,#app.read_config('Controller', 'broker', None, '0'),
+        'housekeeper': 1,#app.read_config('Controller', 'housekeeper', None, '0'),
+        'github_worker': 0#app.read_config('Controller', 'github_worker', None, '0'),
     }
 
     logger.info("Controller specs ('1' for things that are set to automatically boot): {}".format(str(controller)))

@@ -189,10 +189,11 @@ class Housekeeper:
         history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
 
         finishing_task = False
-        if history_df.iloc[0]['status'] == 'Stopped':
-            self.history_id = int(history_df.iloc[0]['history_id'])
-            finishing_task = True
-            last_id += 1 #update to match history tuple val rather than just increment
+        if len(history_df.index) != 0:
+            if history_df.iloc[0]['status'] == 'Stopped':
+                self.history_id = int(history_df.iloc[0]['history_id'])
+                finishing_task = True
+                last_id += 1 #update to match history tuple val rather than just increment
             
 
         # Rearrange repos so the one after the last one that 
