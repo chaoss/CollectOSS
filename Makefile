@@ -55,7 +55,7 @@ install:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install --upgrade .'
 
 install-dev:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && yarn add shards-vue  && npm install --save canvas &&  npm install'
+	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 install-msr:
 	@ ./util/install-msr.sh
