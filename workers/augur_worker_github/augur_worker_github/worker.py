@@ -164,8 +164,9 @@ class GitHubWorker:
         """)
         rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
 
-        issue_start = int(rs.iloc[0]["issue_id"]) | 25150
-        cntrb_start = int(rs.iloc[0]["cntrb_id"]) | 25150
+        
+        issue_start = int(rs.iloc[0]["issue_id"]) if rs.iloc[0]["issue_id"] is not None else 25150
+        cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
 
         maxMsgSQL = s.sql.text("""
             SELECT max(msg_id) AS msg_id
@@ -173,7 +174,7 @@ class GitHubWorker:
         """)
         rs = pd.read_sql(maxMsgSQL, self.db, params={})
 
-        msg_start = int(rs.iloc[0]["msg_id"]) | 25150
+        msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.issue_id_inc = (issue_start + 1)
