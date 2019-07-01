@@ -19,10 +19,6 @@
 nbproject
 Thumbs.db
 
-# lock files
-yarn.lock
-package-json.lock
-
 # NPM packages folder.
 node_modules/
 
