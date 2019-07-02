@@ -6510,30 +6510,13 @@ exports.default = {
   },
 
   computed: {
-    repo: function repo() {
-      return this.$store.state.baseRepo;
-    },
-    gitRepo: function gitRepo() {
-      return this.$store.state.gitRepo;
-    },
-    chart: function chart() {
+    spec: function spec() {
       var _this = this;
 
-      var repo = null;
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) {
-          repo = window.AugurRepos[this.repo];
-        } else {
-          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
-          window.AugurRepos[_repo.toString] = _repo;
-        }
-      } else {
-        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        window.AugurRepos[repo.toString()] = repo;
-      }
-      var contributors = {};
-      var organizations = {};
-
+      var repo = window.AugurAPI.Repo({ "gitURL": this.url });
+      repo[this.source]().then(function (data) {
+        _this.values = _this.convertKey(data);
+      });
 
       var config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -6632,12 +6615,26 @@ exports.default = {
 
   computed: {
     repo: function repo() {
+      return this.$store.state.baseRepo;
+    },
+    gitRepo: function gitRepo() {
       return this.$store.state.gitRepo;
     },
     chart: function chart() {
       var _this = this;
 
-      var repo = window.AugurAPI.Repo({ gitURL: this.repo });
+      var repo = null;
+      if (this.repo) {
+        if (window.AugurRepos[this.repo]) {
+          repo = window.AugurRepos[this.repo];
+        } else {
+          var _repo = window.AugurAPI.Repo({ "gitURL": this.gitRepo });
+          window.AugurRepos[_repo.toString] = _repo;
+        }
+      } else {
+        repo = window.AugurAPI.Repo({ gitURL: this.gitRepo });
+        window.AugurRepos[repo.toString()] = repo;
+      }
       var contributors = {};
       var organizations = {};
 
@@ -9013,7 +9010,7 @@ if (module.hot) {(function () {  var hotAPI = require("vue-hot-reload-api")
   if (!module.hot.data) {
     hotAPI.createRecord("data-v-ac7c9dc2", __vue__options__)
   } else {
-    hotAPI.rerender("data-v-ac7c9dc2", __vue__options__)
+    hotAPI.reload("data-v-ac7c9dc2", __vue__options__)
   }
 })()}
 });

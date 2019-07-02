@@ -1,5 +1,21 @@
 # Augur
 
+## Under Development
+**The dev branch version of this README.md file is under development. 
+1. Update Python to 3.7: 
+    - `sudo apt-get install python3.7`
+    - `sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2`
+    - `sudo update-alternatives --config python3` 
+        - Select the option for Python 3.7
+2. (NPM and Yarn stuff: Whatever that turns out to be)
+3. `pip3 install virtualenv`
+4. `virtualenv --python=python3 newaugur`
+5. `source newaugur/bin/activate`
+6. `cd frontend`
+7. Install yarn (temporary)
+8. `yarn add shards-vue`
+9. 
+
 branch | status
    --- | ---
 master | [![Build Status](https://travis-ci.org/chaoss/augur.svg?branch=master)](https://travis-ci.org/chaoss/augur)
@@ -14,10 +30,6 @@ Functionally, Augur is a prototyped implementation of the Linux Foundation's [CH
 
 ## Getting Started 
 -------------------
-### Vagrant
-**The quickest way to get started working on Augur is by using [Vagrant](https://www.vagrantup.com/)** to spin up a virtual machine (VM) that comes with Augur already installed. We'll do all the work of setting up and installing dependencies, leaving you free to jump right into making something awesome. 
-
-*Caveat: if you’re a super nerd who likes to have total control over your development environment, there’s a local installation link at the bottom of this page. For the rest of you, Vagrant is the way to go, especially if you've had trouble getting all the dependcies installed locally, are not comfortable installing them yourself, or are using an OS for which we don't currently support local installation. **We currently only support local installation for macOS and most flavors of Linux**.*
 
 Windows installation instructions using Vagrant can be found [here](docs/python/source/windows-install.md).
 
@@ -26,8 +38,6 @@ Dependencies
 
 -   [Git
     client](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
--   [Vagrant](https://www.vagrantup.com/)
--   [Virtualbox](https://www.virtualbox.org/)
 -   [GitHub Access Token](https://github.com/settings/tokens) (no write
     access required)
 

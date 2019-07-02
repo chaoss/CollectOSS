@@ -35,7 +35,7 @@ class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self, frontend_folder='../frontend/public'):
+    def __init__(self, frontend_folder='../frontend/public', manager=None, broker=None, housekeeper=None):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
@@ -61,14 +61,9 @@ class Server(object):
 
         self.show_metadata = False
 
-        # self.broker = Broker()
-        # self.housekeeper = Housekeeper(
-        #     user=self._augur.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-        #     password=self._augur.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
-        #     host=self._augur.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-        #     port=self._augur.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-        #     dbname=self._augur.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
-        # )
+        self.manager = manager
+        self.broker = broker
+        self.housekeeper = housekeeper
 
         create_routes(self)
 

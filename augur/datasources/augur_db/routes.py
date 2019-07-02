@@ -138,17 +138,17 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "commit_date": "2018-01-01T00:00:00.000Z",
+                            "date": "2018-01-01T00:00:00.000Z",
                             "repo_id": 1,
                             "commit_count": 5140
                         },
                         {
-                            "commit_date": "2019-01-01T00:00:00.000Z",
+                            "date": "2019-01-01T00:00:00.000Z",
                             "repo_id": 1,
                             "commit_count": 711
                         },
                         {
-                            "commit_date": "2015-01-01T00:00:00.000Z",
+                            "date": "2015-01-01T00:00:00.000Z",
                             "repo_id": 25001,
                             "commit_count": 1071
                         }
@@ -170,19 +170,19 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "commit_date": "2018-01-01T00:00:00.000Z",
+                            "date": "2018-01-01T00:00:00.000Z",
                             "commit_count": 2287
                         },
                         {
-                            "commit_date": "2018-02-01T00:00:00.000Z",
+                            "date": "2018-02-01T00:00:00.000Z",
                             "commit_count": 1939
                         },
                         {
-                            "commit_date": "2018-03-01T00:00:00.000Z",
+                            "date": "2018-03-01T00:00:00.000Z",
                             "commit_count": 1979
                         },
                         {
-                            "commit_date": "2018-04-01T00:00:00.000Z",
+                            "date": "2018-04-01T00:00:00.000Z",
                             "commit_count": 2159
                         }
                     ]
@@ -202,25 +202,25 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "commit_date": "2018-01-01T00:00:00.000Z",
+                            "date": "2018-01-01T00:00:00.000Z",
                             "repo_id": 1,
                             "added": 640098,
                             "removed": 694608
                         },
                         {
-                            "commit_date": "2019-01-01T00:00:00.000Z",
+                            "date": "2019-01-01T00:00:00.000Z",
                             "repo_id": 1,
                             "added": 56549,
                             "removed": 48962
                         },
                         {
-                            "commit_date": "2014-01-01T00:00:00.000Z",
+                            "date": "2014-01-01T00:00:00.000Z",
                             "repo_id": 25001,
                             "added": 19,
                             "removed": 1
                         },
                         {
-                            "commit_date": "2015-01-01T00:00:00.000Z",
+                            "date": "2015-01-01T00:00:00.000Z",
                             "repo_id": 25001,
                             "added": 429535,
                             "removed": 204015
@@ -243,22 +243,22 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "commit_date": "2014-01-01T00:00:00.000Z",
+                            "date": "2014-01-01T00:00:00.000Z",
                             "added": 19,
                             "removed": 1
                         },
                         {
-                            "commit_date": "2015-01-01T00:00:00.000Z",
+                            "date": "2015-01-01T00:00:00.000Z",
                             "added": 429535,
                             "removed": 204015
                         },
                         {
-                            "commit_date": "2016-01-01T00:00:00.000Z",
+                            "date": "2016-01-01T00:00:00.000Z",
                             "added": 2739765,
                             "removed": 944568
                         },
                         {
-                            "commit_date": "2017-01-01T00:00:00.000Z",
+                            "date": "2017-01-01T00:00:00.000Z",
                             "added": 3945001,
                             "removed": 1011396
                         }
@@ -279,12 +279,12 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "issue_date": "2019-05-01T00:00:00.000Z",
+                            "date": "2019-05-01T00:00:00.000Z",
                             "repo_id": 1,
                             "issues": 3
                         },
                         {
-                            "issue_date": "2019-05-01T00:00:00.000Z",
+                            "date": "2019-05-01T00:00:00.000Z",
                             "repo_id": 25001,
                             "issues": 1
                         }
@@ -306,11 +306,11 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "issue_date": "2019-05-01T00:00:00.000Z",
+                            "date": "2019-05-01T00:00:00.000Z",
                             "issues": 1
                         },
                         {
-                            "issue_date": "2019-06-01T00:00:00.000Z",
+                            "date": "2019-06-01T00:00:00.000Z",
                             "issues": 31
                         }
                     ]
