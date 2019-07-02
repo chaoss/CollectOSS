@@ -1176,6 +1176,44 @@ def create_routes(server):
     server.addRepoMetric(
         augur_db.issues_closed_resolution_duration, 'issues-closed-resolution-duration')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-maintainer-response-duration Issue Response Time (Repo Group)
+    @apiName Issue Response Time(Repo Group)
+    @apiGroup Evolution
+    @apiDescription Duration of time for issues to be resolved.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-maintainer-response-duration.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                   [
+                        {
+                            "rg_name": "Comcast",
+                            "average_days_comment": 42.5848375451
+                        } 
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issues_maintainer_response_duration, 'issues-maintainer-response-duration')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-maintainer-response-duration Issue Response Time (Repo)
+    @apiName Issue Response Time(Repo)
+    @apiGroup Evolution
+    @apiDescription Duration of time for issues to be resolved.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-maintainer-response-duration.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                   [
+                        {
+                            "repo_name": "rails",
+                            "average_days_comment": 13.8279352227
+                        } 
+                    ]
+    """
+    server.addRepoMetric(augur_db.issues_maintainer_response_duration, 'issues-maintainer-response-duration')
 
     #####################################
     ###              RISK             ###

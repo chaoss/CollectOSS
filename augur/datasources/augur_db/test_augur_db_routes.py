@@ -319,6 +319,21 @@ def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db_routes):
     assert len(data) >= 1
     assert data[0]["net"] >= 0 
 
+def test_issues_maintainer_response_duration_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/issues-maintainer-response-duration/')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]["average_days_comment"] >= 0
+
+def test_issues_maintainer_response_duration_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/issues-maintainer-response-duration/')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]["average_days_comment"] >= 0
+    assert data[0]["average_days_comment"] >= 0
+
 def test_cii_best_practices_badge_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/cii-best-practices-badge')
     data = response.json()

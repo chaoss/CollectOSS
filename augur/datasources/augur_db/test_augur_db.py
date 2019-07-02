@@ -248,3 +248,9 @@ def test_license_declared(augur_db):
     assert augur_db.license_declared(21, 21252).iloc[0]['license'] == 'Apache-2.0'
 
     assert augur_db.license_declared(21).iloc[0]['license'] == 'Apache-2.0'
+
+def test_issues_maintainer_response_duration(augur_db):
+    assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
+    assert augur_db.issues_maintainer_response_duration(20).iloc[0].average_days_comment > 0
+    assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
+

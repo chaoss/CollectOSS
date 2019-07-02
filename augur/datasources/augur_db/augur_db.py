@@ -1112,6 +1112,76 @@ class Augur(object):
             results = pd.read_sql(license_declared_SQL, self.db, params={'repo_id': repo_id})
             return results
 
+    @annotate(tag='issues-maintainer-response-duration')
+    def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
+
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        issuesSQL = None
+        if repo_id:
+            issuesSQL = s.sql.text("""
+                select repo_name, AVG(time_to_first_commit) as average_days_comment
+                from (
+                        select repo_name,
+                                earliest_member_comments.issue_id                  as issue_id,
+                                extract(day from first_response_time - created_at) as time_to_first_commit
+                        from (
+                                select issues.issue_id            as issue_id,
+                                        issues.created_at          as created_at,
+                                        MIN(message.msg_timestamp) as first_response_time,
+                                        repo_name
+                                from repo,
+                                    issues,
+                                    issue_message_ref,
+                                    message
+                                where repo.repo_id = :repo_id
+                                    and repo.repo_id = issues.repo_id
+                                    and issues.issue_id = issue_message_ref.issue_id
+                                    and issue_message_ref.msg_id = message.msg_id
+                                    and issues.created_at between :begin_date and :end_date
+                                group by issues.issue_id, issues.created_at,repo_name
+                            ) as earliest_member_comments
+                        group by repo_name, issue_id, time_to_first_commit
+                    )as time_to_comment
+                group by repo_name
+            """)
+        else:
+            issuesSQL = s.sql.text("""
+                select rg_name, AVG(time_to_first_commit) as average_days_comment
+                from (
+                        select rg_name,
+                                earliest_member_comments.issue_id                  as issue_id,
+                                extract(day from first_response_time - created_at) as time_to_first_commit
+                        from (
+                                select issues.issue_id            as issue_id,
+                                        issues.created_at          as created_at,
+                                        MIN(message.msg_timestamp) as first_response_time,
+                                        rg_name
+                                from repo,
+                                    repo_groups,
+                                    issues,
+                                    issue_message_ref,
+                                    message
+                                where repo.repo_group_id = repo_groups.repo_group_id
+                                    and repo_groups.repo_group_id = :repo_group_id
+                                    and repo.repo_id = issues.repo_id
+                                    and issues.issue_id = issue_message_ref.issue_id
+                                    and issue_message_ref.msg_id = message.msg_id
+                                    and issues.created_at between :begin_date and :end_date
+                                group by issues.issue_id, issues.created_at, rg_name
+                            ) as earliest_member_comments
+                        group by rg_name, issue_id, time_to_first_commit
+                    ) as time_to_comment
+                group by rg_name
+            """)
+
+        results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
+
+        return results
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
