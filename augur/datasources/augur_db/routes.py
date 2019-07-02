@@ -93,6 +93,35 @@ def create_routes(server):
     server.updateMetricMetadata(function=augur_db.downloaded_repos, endpoint='/{}/repos'.format(server.api_version), metric_type='git')
 
     """
+    @api {get} /repo-groups/:repo_group_id/repos Repos in Repo Group
+    @apiName repos-in-repo-groups
+    @apiGroup Utility
+    @apiDescription Get all the repos in a repo group.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21326,
+                            "repo_name": "graphql-js",
+                            "description": null,
+                            "url": "https:\/\/github.com\/graphql\/graphql-js.git",
+                            "repo_status": "Complete",
+                            "commits_all_time": 6874,
+                            "issues_all_time": 81
+                        },
+                        {
+                            "repo_id": 21331,
+                            "repo_name": "graphiql",
+                            "description": null,
+                            "url": "https:\/\/github.com\/graphql\/graphiql.git",
+                            "repo_status": "Complete",
+                            "commits_all_time": 4772,
+                            "issues_all_time": 144
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.repos_in_repo_groups, 'repos')
+
+    """
     @api {get} /repos/:owner/:repo Get Repo
     @apiName get-repo
     @apiGroup Utility
@@ -118,6 +147,13 @@ def create_routes(server):
                         mimetype="application/json")
 
     server.updateMetricMetadata(function=augur_db.get_repo, endpoint='/{}/repos/<owner>/<repo>'.format(server.api_version), metric_type='git')
+
+    @server.app.route('/{}/dosocs/repos'.format(server.api_version))
+    def get_repos_for_dosocs():
+        res = server.transform(augur_db.get_repos_for_dosocs)
+        return Response(response=res,
+                        status=200,
+                        mimetype='application/json')
 
     server.addRepoGroupMetric(augur_db.get_issues, 'get-issues')
     server.addRepoMetric(augur_db.get_issues, 'get-issues')

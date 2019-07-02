@@ -1138,61 +1138,6 @@ class Augur(object):
             results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repo_group_id": repo_group_id})
             return results
 
-    @annotate(tag='repo-groups')
-    def repo_groups(self):
-        """
-        Returns number of lines changed per author per day
-
-        :param repo_url: the repository's URL
-        """
-        repoGroupsSQL = s.sql.text("""
-            SELECT *
-            FROM repo_groups
-        """)
-        results = pd.read_sql(repoGroupsSQL, self.db)
-        return results
-
-    @annotate(tag='downloaded-repos')
-    def downloaded_repos(self):
-        """
-        Returns all repository names, URLs, and base64 URLs in the facade database
-        """
-        downloadedReposSQL = s.sql.text("""
-            SELECT
-                repo.repo_id,
-                repo.repo_name,
-                repo.description,
-                repo.repo_git AS url,
-                repo.repo_status,
-                a.commits_all_time,
-                b.issues_all_time ,
-                rg_name
-            FROM
-                repo
-                left outer join
-                (select repo_id,    COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
-                repo.repo_id = a.repo_id
-                left outer join
-                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b
-                on
-                repo.repo_id = b.repo_id
-                JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
-            order by commits_all_time desc
-        """)
-        results = pd.read_sql(downloadedReposSQL, self.db)
-        results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
-        # if self.projects:
-        #     results = results[results.project_name.isin(self.projects)]
-        if self.projects:
-              results = results[results.project_name.isin(self.projects)]
-
-        b64_urls = []
-        for i in results.index:
-            b64_urls.append(base64.b64encode((results.at[i, 'url']).encode()))
-        results['base64_url'] = b64_urls
-
-        return results
-
     @annotate(tag='closed-issues-count')
     def open_issues_count(self, repo_group_id, repo_id=None):
         """
@@ -1261,14 +1206,14 @@ class Augur(object):
             """)
             results = pd.read_sql(closedIssueCountSQL, self.db, params={'repo_id': repo_id})
             return results
-
+          
     @annotate(tag='annual-commit-count-ranked-by-new-repo-in-repo-group')
     def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_group_id, repo_id = None, calendar_year=None):
         """
         For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
-        calendar year (a new repo in that year), 
-        show all commits for that year (total for year by repo). 
+        calendar year (a new repo in that year), show all commits for that year (total for year by repo). 
         Result ranked from highest number of commits to lowest by default. 
+
         :param repo_url: the repository's URL
         :param calendar_year: the calendar year a repo is created in to be considered "new"
         :param repo_group: the group of repositories to analyze
@@ -1287,27 +1232,7 @@ class Augur(object):
             ORDER BY net desc
             LIMIT 10
         """)
-
         results = pd.read_sql(cdRgNewrepRankedCommitsSQL, self.db, params={ "repo_group_id": repo_group_id, "calendar_year": calendar_year})
-        return results
-
-    @annotate(tag='get-repo')
-    def get_repo(self, owner, repo):
-        """
-        Returns repo id and repo group id by owner and repo
-
-        :param owner: the owner of the repo
-        :param repo: the name of the repo
-        """
-        getRepoSQL = s.sql.text("""
-            SELECT repo.repo_id, repo.repo_group_id, rg_name
-            FROM repo JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
-            WHERE repo_name = :repo AND repo_path LIKE :owner
-            GROUP BY repo_id, rg_name
-        """)
-
-        results = pd.read_sql(getRepoSQL, self.db, params={'owner': '%{}_'.format(owner), 'repo': repo,})
-
         return results
 
     @annotate(tag="get-issues")
@@ -1351,4 +1276,129 @@ class Augur(object):
             """)
             results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
             return results
-    
+
+
+#####################################
+###           UTILITIES           ###
+#####################################
+
+    @annotate(tag='repo-groups')
+    def repo_groups(self):
+        """
+        Returns number of lines changed per author per day
+
+        :param repo_url: the repository's URL
+        """
+        repoGroupsSQL = s.sql.text("""
+            SELECT *
+            FROM repo_groups
+        """)
+        results = pd.read_sql(repoGroupsSQL, self.db)
+        return results
+
+    @annotate(tag='downloaded-repos')
+    def downloaded_repos(self):
+        """
+        Returns all repository names, URLs, and base64 URLs in the facade database
+        """
+        downloadedReposSQL = s.sql.text("""
+            SELECT
+                repo.repo_id,
+                repo.repo_name,
+                repo.description,
+                repo.repo_git AS url,
+                repo.repo_status,
+                a.commits_all_time,
+                b.issues_all_time ,
+                rg_name
+            FROM
+                repo
+                left outer join
+                (select repo_id,    COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
+                repo.repo_id = a.repo_id
+                left outer join
+                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b
+                on
+                repo.repo_id = b.repo_id
+                JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
+            order by commits_all_time desc
+        """)
+        results = pd.read_sql(downloadedReposSQL, self.db)
+        results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
+        # if self.projects:
+        #     results = results[results.project_name.isin(self.projects)]
+        if self.projects:
+              results = results[results.project_name.isin(self.projects)]
+
+        b64_urls = []
+        for i in results.index:
+            b64_urls.append(base64.b64encode((results.at[i, 'url']).encode()))
+        results['base64_url'] = b64_urls
+
+        return results
+
+    @annotate(tag='repos-in-repo-groups')
+    def repos_in_repo_groups(self, repo_group_id):
+        """
+        Returns a list of all the repos in a repo_group
+
+        :param repo_group_id: The repository's repo_group_id
+        """
+        repos_in_repo_groups_SQL = s.sql.text("""
+            SELECT
+                repo.repo_id,
+                repo.repo_name,
+                repo.description,
+                repo.repo_git AS url,
+                repo.repo_status,
+                a.commits_all_time,
+                b.issues_all_time
+            FROM
+                repo
+                left outer join
+                (select repo_id, COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
+                repo.repo_id = a.repo_id
+                left outer join
+                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b
+                on
+                repo.repo_id = b.repo_id
+                JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
+            WHERE
+                repo_groups.repo_group_id = :repo_group_id
+            ORDER BY commits_all_time DESC
+        """)
+
+        results = pd.read_sql(repos_in_repo_groups_SQL, self.db, params={'repo_group_id': repo_group_id})
+        return results
+
+    @annotate(tag='get-repo')
+    def get_repo(self, owner, repo):
+        """
+        Returns repo id and repo group id by owner and repo
+
+        :param owner: the owner of the repo
+        :param repo: the name of the repo
+        """
+        getRepoSQL = s.sql.text("""
+            SELECT repo.repo_id, repo.repo_group_id, rg_name
+            FROM repo JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
+            WHERE repo_name = :repo AND repo_path LIKE :owner
+            GROUP BY repo_id, rg_name
+        """)
+
+        results = pd.read_sql(getRepoSQL, self.db, params={'owner': '%{}_'.format(owner), 'repo': repo,})
+
+        return results
+
+    # @annotate(tag='dosocs-repos')
+    def get_repos_for_dosocs(self):
+        """ Returns a list of repos along with their repo_id & path """
+        get_repos_for_dosocs_SQL = s.sql.text("""
+            SELECT b.repo_id, CONCAT(a.value || b.repo_group_id || chr(47) || b.repo_path || b.repo_name)
+            FROM settings a, repo b
+            WHERE a.setting='repo_directory'
+        """)
+
+        results = pd.read_sql(get_repos_for_dosocs_SQL, self.db)
+        return results
+
