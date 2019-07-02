@@ -123,7 +123,7 @@ def create_broker_routes(server):
     @server.app.route('/{}/workers/remove'.format(server.api_version), methods=['POST'])
     def remove_worker():
         worker = request.json
-        del server.broker[worker['id']]
+        server.broker[worker['id']]['status'] = 'Disconnected'
         return Response(response=worker,
                         status=200,
                         mimetype="application/json")

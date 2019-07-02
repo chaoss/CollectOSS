@@ -48,10 +48,12 @@ def main(augur_url, host, port):
     app = Flask(__name__)
 
     #load credentials
-    credentials = read_config("Database")
+    credentials = read_config("Database", use_main_config=1)
+    server = read_config("Server", use_main_config=1)
 
     config = { 
             "id": "com.augurlabs.core.github_worker",
+            "broker_port": server['port'],
             "zombie_id": credentials["zombie_id"],
             "host": credentials["host"],
             "key": credentials["key"],
@@ -77,7 +79,7 @@ def main(augur_url, host, port):
     if app.gh_worker._child is not None:
         app.gh_worker._child.terminate()
     try:
-        requests.post('http://localhost:5000/api/unstable/workers/remove', json={"id": config['id']})
+        requests.post('http://localhost:{}/api/unstable/workers/remove'.format(server['port']), json={"id": config['id']})
     except:
         pass
     
@@ -86,7 +88,7 @@ def main(augur_url, host, port):
     
 
 
-def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0):
+def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
     """
     Read a variable in specified section of the config file, unless provided an environment variable
 
@@ -94,8 +96,16 @@ def read_config(section, name=None, environment_variable=None, default=None, con
     :param name: name of variable
     """
 
+
     __config_bad = False
-    __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
+    if use_main_config == 0:
+
+        __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
+        print(__config_file_path)
+    else:        
+        print(os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file)), os.getenv('AUGUR_CONFIG_FILE', config_file))
+        __config_file_path = '/Users/gabeheim/Documents/repos/augur/augur.config.json'
+
     __config_location = os.path.dirname(__config_file_path)
     __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
     __default_config = { 'Database': {"host": "nekocase.augurlabs.io"} }

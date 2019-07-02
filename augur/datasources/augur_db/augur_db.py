@@ -36,32 +36,6 @@ class Augur(object):
         # except Exception as e:
         #     logger.error("Could not connect to GHTorrent database. Error: " + str(e))
 
-    def client_git_url_task(identity):
-        """Basic request-reply client using REQ socket."""
-        socket = zmq.Context().socket(zmq.REQ)
-        socket.identity = u"git-url-client-{}".format(identity).encode("ascii")
-        socket.connect("ipc://frontend.ipc")
-
-        # Send request, get reply
-        request = b'UPDATE {"models":["messages"],"given":{"git_url":"https://github.com/rails/rails.git"}}'
-        #logger.info(f'{socket.identity.decode("ascii")}: sending {request.decode("ascii")}')
-        socket.send(request)
-        reply = socket.recv()
-        #logger.info("{}: {}".format(socket.identity.decode("ascii"), reply.decode("ascii")))
-
-    def client_owner_repo_task(identity):
-        """Basic request-reply client using REQ socket."""
-        socket = zmq.Context().socket(zmq.REQ)
-        socket.identity = u"owner-repo-client-{}".format(identity).encode("ascii")
-        socket.connect("ipc://frontend.ipc")
-
-        # Send request, get reply
-        request = b'UPDATE {"models":["messages"],"given":{"owner_repo_pair":"rails/rails"}}'
-        #logger.info(f'{socket.identity.decode("ascii")}: sending {request.decode("ascii")}')
-        socket.send(request)
-        reply = socket.recv()
-    #logger.info("{}: {}".format(socket.identity.decode("ascii"), reply.decode("ascii")))
-
     #####################################
     ###           EVOLUTION           ###
     #####################################

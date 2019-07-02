@@ -68,6 +68,7 @@ def cli(app):
     manager = None
     broker = None
     housekeeper = None
+    rc = app.read_config
     
     if controller['broker'] == 1:
         logger.info("Booting broker and its manager")
@@ -76,12 +77,13 @@ def cli(app):
         
     if controller['housekeeper'] == 1:
         logger.info("Booting housekeeper")
-        housekeeper = Housekeeper(
+        housekeeper = Housekeeper(broker,
+                broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
                 user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
                 password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
                 host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
                 port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-                dbname=app.read_config('Database', 'name', 'AUGUR_DB_NAME', 'msr14')
+                dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
             )
 
     if controller['github_worker'] == 1:

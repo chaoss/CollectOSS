@@ -183,7 +183,8 @@ class GitHubWorker:
 
         # self.run()
 
-        requests.post('http://localhost:5000/api/unstable/workers', json=specs) #hello message
+        requests.post('http://localhost:{}/api/unstable/workers'.format(
+            self.config['broker_port']), json=specs) #hello message
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -663,7 +664,7 @@ class GitHubWorker:
                     logging.info("Inserted assignee for issue id: " + str(self.issue_id_inc) + 
                         " with login/cntrb_id: " + assignee_dict['login'] + " " + str(assignee['cntrb_id']) + "\n")
             else:
-                logging.info("Issue does not have any assignees")
+                logging.info("Issue does not have any assignees\n")
 
             # Insert the issue labels to the issue_labels table
             for label_dict in issue_dict['labels']:
@@ -961,7 +962,8 @@ class GitHubWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        requests.post('http://localhost:5000/api/unstable/completed_task', json=task_completed)
+        requests.post('http://localhost:{}/api/unstable/completed_task'.format(
+            ), json=task_completed)
 
         # Reset results counter for next task
         self.results_counter = 0

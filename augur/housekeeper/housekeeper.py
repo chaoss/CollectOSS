@@ -31,8 +31,10 @@ def client_git_url_task(identity, model, git_url):
 
 class Housekeeper:
 
-    def __init__(self, user, password, host, port, dbname):
+    def __init__(self, broker, broker_port, user, password, host, port, dbname):
 
+        self.broker_port = broker_port
+        self.broker = broker
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
         )
@@ -78,7 +80,7 @@ class Housekeeper:
         self.__updater()
 
     @staticmethod
-    def updater_process(model, started, delay, section, tag):
+    def updater_process(broker_port, broker, model, started, delay, section, tag):
         """
         Controls a given plugin's update process
         :param name: name of object to be updated 
@@ -87,29 +89,34 @@ class Housekeeper:
         """
         logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, tag, os.getpid()))
         try:
-            logging.info('Housekeeper waiting 60 seconds to give time for the worker to finish initializing...')
-            time.sleep(60)
+            # Waiting for 1 alive worker
             while True:
-                logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, tag))
-                
-                for repo in section:
-                    task = {
-                        "job_type": "MAINTAIN", 
-                        "models": [model], 
-                        "given": {
-                            "git_url": repo['repo_git']
-                        }
-                    }
-                    if "focused_task" in repo:
-                        task["focused_task"] = repo['focused_task']
-                    try:
-                        requests.post('http://localhost:5000/api/unstable/task', json=task, timeout=10)
-                    except:# Exception as e:
-                        logging.info("no worker found")
+                if len(broker._getvalue().keys()) > 0:
+                    logging.info("Housekeeper recognized that the broker has at least one worker... beginning to distribute maintained tasks")
+                    while True:
+                        logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, tag))
+                        
+                        for repo in section:
+                            task = {
+                                "job_type": "MAINTAIN", 
+                                "models": [model], 
+                                "given": {
+                                    "git_url": repo['repo_git']
+                                }
+                            }
+                            if "focused_task" in repo:
+                                task["focused_task"] = repo['focused_task']
+                            try:
+                                requests.post('http://localhost:{}/api/unstable/task'.format(
+                                    broker_port), json=task, timeout=10)
+                            except Exception as e:
+                                logging.info(str(e))
 
-                    time.sleep(0.5)
-                logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(section))))
-                time.sleep(delay)
+                            time.sleep(2.5)
+                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(section))))
+                        time.sleep(delay)
+                    break
+                time.sleep(3)
 
                 
         except KeyboardInterrupt:
@@ -127,7 +134,8 @@ class Housekeeper:
             updates = self.__updatable
         for update in updates:
             if update['started'] != True:
-                up = Process(target=self.updater_process, args=(update.values()), daemon=True)
+                up = Process(target=self.updater_process, args=(self.broker_port, self.broker, update['model'], 
+                    update['started'], update['delay'], update['section'], update['tag']), daemon=True)
                 up.start()
                 self.__processes.append(up)
                 # logging.info("HK processes: {}".format(str(self.__processes[0].pid)))

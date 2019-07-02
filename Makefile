@@ -118,7 +118,7 @@ backend-stop:
 	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
 	@ echo
 
-backend-start: backend-stop
+backend-start:
 	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
 
 backend-restart: backend-stop backend-start
