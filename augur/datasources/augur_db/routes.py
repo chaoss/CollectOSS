@@ -119,6 +119,8 @@ def create_routes(server):
 
     server.updateMetricMetadata(function=augur_db.get_repo, endpoint='/{}/repos/<owner>/<repo>'.format(server.api_version), metric_type='git')
 
+    server.addRepoGroupMetric(augur_db.get_issues, 'get-issues')
+    server.addRepoMetric(augur_db.get_issues, 'get-issues')
     #####################################
     ###           EVOLUTION           ###
     #####################################
@@ -828,7 +830,7 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "user": 1,
+                            "user_id": 1,
                             "commits": 0,
                             "issues": 2,
                             "commit_comments": 0,
@@ -838,7 +840,7 @@ def create_routes(server):
                             "total": 2
                         },
                         {
-                            "user": 2,
+                            "user_id": 2,
                             "commits": 0,
                             "issues": 2,
                             "commit_comments": 0,
@@ -1044,16 +1046,12 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "gh_issue_number":1,
-                            "issue_title":"Property Place holder for namespaced attributes is not working",
-                            "repo_name":"jrugged",
-                            "datedifference":2414.0
+                            "date": "2009-05-15T19:48:43.000Z",
+                            "open_date": 3696
                         },
                         {
-                            "gh_issue_number":2,
-                            "issue_title":"Update custom namespace to work with annotation driven config",
-                            "repo_name":"jrugged",
-                            "datedifference":2414.0
+                            "date": "2009-05-16T14:35:40.000Z",
+                            "open_date": 3695
                         }
                     ]
     """
@@ -1071,16 +1069,12 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "gh_issue_number":2045,
-                            "issue_title":"Add possibility to render partial from subfolder with inheritance",
-                            "repo_name":"rails",
-                            "datedifference":2899.0
+                            "date": "2009-05-15T19:48:43.000Z",
+                            "open_date": 3696
                         },
                         {
-                            "gh_issue_number":2686,
-                            "issue_title":"Attachments not visible in mail clients when additional inline attachments present",
-                            "repo_name":"rails",
-                            "datedifference":2856.0
+                            "date": "2009-05-16T14:35:40.000Z",
+                            "open_date": 3695
                         }
                     ]
     """
@@ -1264,3 +1258,91 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.license_declared, 'license-declared')
+
+    #####################################
+    ###         EXPERIMENTAL          ###
+    ##################################### 
+
+    """
+    @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
+    @apiNames lines-changed-by-author
+    @apiGroup Experimental
+    @apiDescription Returns number of lines changed per author per day 
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-24",
+                            "affiliation": "NULL",
+                            "additions": 25611,
+                            "deletions": 296,
+                            "whitespace": 5279
+                        },
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-25",
+                            "affiliation": "NULL",
+                            "additions": 163,
+                            "deletions": 179,
+                            "whitespace": 46
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.lines_changed_by_author,'lines-changed-by-author')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
+    @apiNames lines-changed-by-author
+    @apiGroup Experimental
+    @apiDescription Count of closed issues.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/contributors-new.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-24",
+                            "affiliation": "NULL",
+                            "additions": 25611,
+                            "deletions": 296,
+                            "whitespace": 5279
+                        },
+                        {
+                            "cmt_author_email": "david@loudthinking.com",
+                            "cmt_author_date": "2004-11-25",
+                            "affiliation": "NULL",
+                            "additions": 163,
+                            "deletions": 179,
+                            "whitespace": 46
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.lines_changed_by_author,'lines-changed-by-author')
+
+    
+    """
+    @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group Annual Commit Count Ranked by New Repo in Repo Group
+    @apiName annual-commit-count-ranked-by-new-repo-in-repo-group
+    @apiGroup Experiment
+    @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
+    @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
+    @apiSuccessExample {json} Success-Response:
+                        [
+                            {
+                                "repos_id": 1,
+                                "net": 2479124,
+                                "patches": 1,
+                                "name": "twemoji"
+                            },
+                            {
+                                "repos_id": 63,
+                                "net": 2477911,
+                                "patches": 1,
+                                "name": "twemoji-1"
+                            }
+                        ]
+    """
+    server.addRepoGroupMetric(augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group,'annual-commit-count-ranked-by-new-repo-in-repo-group')
