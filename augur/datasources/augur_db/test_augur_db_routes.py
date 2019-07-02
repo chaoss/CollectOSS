@@ -226,7 +226,7 @@ def test_sub_projects_by_repo(augur_db_routes):
     assert data[0]["sub_protject_count"] > 0
 
 def test_contributors_by_group(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/contributors')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/contributors')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -234,7 +234,7 @@ def test_contributors_by_group(augur_db_routes):
 
 
 def test_contributors_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/repos/21477/contributors')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/contributors')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -288,14 +288,14 @@ def test_issues_open_age_by_group(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["datedifference"] > 1
+    assert data[0]["open_date"] > 1
 
 def test_issues_open_age_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/issues-open-age/')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["datedifference"] > 1
+    assert data[0]["open_date"] > 1
 
 def test_issues_closed_resolution_duration_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/issues-closed-resolution-duration/')
@@ -311,6 +311,13 @@ def test_issues_closed_resolution_duration_by_repo(augur_db_routes):
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]["diffdate"] >= 0
+
+def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/annual-commit-count-ranked-by-new-repo-in-repo-group/')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+    assert data[0]["net"] >= 0 
 
 def test_cii_best_practices_badge_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/cii-best-practices-badge')
@@ -347,3 +354,4 @@ def test_license_declared_by_repo(augur_db_routes):
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]["license"] == 'Apache-2.0'
+

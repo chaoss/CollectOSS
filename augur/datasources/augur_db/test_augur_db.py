@@ -168,18 +168,18 @@ def test_pull_requests_merge_contributor_new(augur_db):
 
 def test_contributors(augur_db):
     # repo group
-    assert augur_db.contributors(24).iloc[0]['total'] > 5
+    assert augur_db.contributors(20).iloc[0]['total'] > 0
 
     # repo id
     assert augur_db.contributors(
-        24, repo_id=21524).iloc[0]['total'] > 5
+        24, repo_id=21000).iloc[0]['total'] > 0
 
     # test begin_date and end_date
-    assert augur_db.contributors(24, begin_date='2019-6-1 00:00:01',
-                                 end_date='2019-06-10 23:59:59').iloc[0]['total'] < 5
+    assert augur_db.contributors(20, begin_date='2019-6-1 00:00:01',
+                                 end_date='2019-06-10 23:59:59').iloc[0]['total'] > 0
 
-    assert augur_db.contributors(24, repo_id=21524, begin_date='2019-6-1 00:00:01',
-                                 end_date='2019-06-10 23:59:59').iloc[0]['total'] < 5
+    assert augur_db.contributors(20, repo_id=21000, begin_date='2019-6-1 00:00:01',
+                                 end_date='2019-06-10 23:59:59').iloc[0]['total'] > 0
 
 
 def test_contributors_new(augur_db):
@@ -213,9 +213,9 @@ def test_closed_issues_count(augur_db):
 
 def test_issues_open_age(augur_db):
     #repo group
-    assert augur_db.issues_open_age(24).iloc[0]['datedifference'] > 100
-    # repo
-    assert augur_db.issues_open_age(20,21000).iloc[0]['datedifference'] > 100
+    assert augur_db.issues_open_age(24).iloc[0]['open_date'] > 0
+    # repo 
+    assert augur_db.issues_open_age(20,21000).iloc[0]['open_date'] > 0
 
 def test_issues_closed_resolution_duration(augur_db):
     # repo group
@@ -225,6 +225,13 @@ def test_issues_closed_resolution_duration(augur_db):
 
 def test_get_repo(augur_db):
     assert augur_db.get_repo_by_name('Comcast','zucchini').iloc[0].repo_id == 21116
+
+def test_lines_changed_by_author(augur_db):
+    assert augur_db.lines_changed_by_author(20).iloc[0].additions > 0
+    assert augur_db.lines_changed_by_author(20,21000).iloc[0].additions > 0
+
+def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, calendar_year=2019).iloc[0].net > 0    
 
 def test_cii_best_practices_badge(augur_db):
     # repo
