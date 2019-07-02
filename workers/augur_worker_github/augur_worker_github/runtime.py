@@ -103,8 +103,8 @@ def read_config(section, name=None, environment_variable=None, default=None, con
         __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
         print(__config_file_path)
     else:        
-        print(os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file)), os.getenv('AUGUR_CONFIG_FILE', config_file))
-        __config_file_path = '/Users/gabeheim/Documents/repos/augur/augur.config.json'
+        __config_file_path = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())) + '/augur.config.json')
+        print(__config_file_path)
 
     __config_location = os.path.dirname(__config_file_path)
     __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'

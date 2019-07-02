@@ -68,7 +68,6 @@ def cli(app):
     manager = None
     broker = None
     housekeeper = None
-    rc = app.read_config
     
     if controller['broker'] == 1:
         logger.info("Booting broker and its manager")
