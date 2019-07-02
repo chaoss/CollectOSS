@@ -318,7 +318,7 @@ class Application(object):
         Ends all running update processes
         """
         for process in self.__processes:
-            process.terminate()
+            process.terminate()            
 
 
 Application.plugins = {}

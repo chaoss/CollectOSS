@@ -91,8 +91,9 @@ class Housekeeper:
         try:
             # Waiting for 1 alive worker
             while True:
-                if len(broker._getvalue().keys()) > 0:
+                if len(broker._getvalue().keys()) > 1:
                     logging.info("Housekeeper recognized that the broker has at least one worker... beginning to distribute maintained tasks")
+                    time.sleep(10)
                     while True:
                         logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, tag))
                         

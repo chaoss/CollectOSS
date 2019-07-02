@@ -244,9 +244,11 @@ class GitHubWorker:
         Gets run whenever a new task is added
         """
         logging.info("Running...")
-        # if not self._child:
-        self._child = Process(target=self.collect, args=())
-        self._child.start()
+        if self._child is None:
+            self._child = Process(target=self.collect, args=())
+            self._child.start()
+            requests.post("http://localhost:{}/api/unstable/add_pids".format(
+                self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -963,7 +965,7 @@ class GitHubWorker:
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
         requests.post('http://localhost:{}/api/unstable/completed_task'.format(
-            ), json=task_completed)
+            self.config['broker_port']), json=task_completed)
 
         # Reset results counter for next task
         self.results_counter = 0

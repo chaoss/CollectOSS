@@ -65,6 +65,8 @@ class Server(object):
         self.broker = broker
         self.housekeeper = housekeeper
 
+        self.worker_pids = []
+
         create_routes(self)
 
         #####################################
@@ -414,9 +416,9 @@ class Server(object):
         real_func = getattr(function.__self__.__class__, function.__name__)
         annotate(endpoint=endpoint, **kwargs)(real_func)
 
-
     def admin(self):
         return (current_user and current_user.administrator) or (request.args.get('admin_token') == self._augur.read_config('Server', 'admin_token', 'AUGUR_ADMIN_TOKEN', 'changeme'))
+
 
 def run():
     """

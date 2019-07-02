@@ -23,33 +23,34 @@ def create_broker_routes(server):
 
         worker_found = False
         for worker in list(server.broker._getvalue().keys()):
-            models = server.broker[worker]['models']
-            givens = server.broker[worker]['given']
-            user_queue = server.broker[worker]['user_queue']
-            maintain_queue = server.broker[worker]['maintain_queue']
+            if type(server.broker[worker]._getvalue()) == dict:
+                models = server.broker[worker]['models']
+                givens = server.broker[worker]['given']
+                user_queue = server.broker[worker]['user_queue']
+                maintain_queue = server.broker[worker]['maintain_queue']
 
-            if model in models and given in givens:
-                if task['job_type'] == "UPDATE":
-                    server.broker[worker]['user_queue'].append(task)
-                    logging.info("New length of worker {}'s user queue: {}".format(worker, str(len(server.broker[worker]['user_queue']))))
-                elif task['job_type'] == "MAINTAIN":
-                    server.broker[worker]['maintain_queue'].append(task)
-                    # logging.info("New length of worker {}'s maintain queue: {}".format(worker, str(len(server.broker[worker]['maintain_queue']))))
+                if model in models and given in givens:
+                    if task['job_type'] == "UPDATE":
+                        server.broker[worker]['user_queue'].append(task)
+                        logging.info("New length of worker {}'s user queue: {}".format(worker, str(len(server.broker[worker]['user_queue']))))
+                    elif task['job_type'] == "MAINTAIN":
+                        server.broker[worker]['maintain_queue'].append(task)
+                        # logging.info("New length of worker {}'s maintain queue: {}".format(worker, str(len(server.broker[worker]['maintain_queue']))))
 
-                if server.broker[worker]['status'] == 'Idle':
-                    if len(user_queue) > 0:
-                        new_task = user_queue.pop(0)
-                        logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker, new_task['given']['git_url'], str(server.broker[worker]['location'])))
-                        requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
-                        server.broker[worker]['status'] = 'Working'
-                    elif len(maintain_queue) > 0:
-                        new_task = maintain_queue.pop(0)
-                        # logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker, new_task['given']['git_url'], str(server.broker[worker]['location'])))
-                        requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
-                        server.broker[worker]['status'] = 'Working'
-                    else:
-                        logging.info("Both queues are empty for worker {} and it is idle".format(worker))
-                worker_found = True
+                    if server.broker[worker]['status'] == 'Idle':
+                        if len(user_queue) > 0:
+                            new_task = user_queue.pop(0)
+                            logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker, new_task['given']['git_url'], str(server.broker[worker]['location'])))
+                            requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
+                            server.broker[worker]['status'] = 'Working'
+                        elif len(maintain_queue) > 0:
+                            new_task = maintain_queue.pop(0)
+                            # logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker, new_task['given']['git_url'], str(server.broker[worker]['location'])))
+                            requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
+                            server.broker[worker]['status'] = 'Working'
+                        else:
+                            logging.info("Both queues are empty for worker {} and it is idle".format(worker))
+                    worker_found = True
         # Otherwise, let the frontend know that the request can't be served
         if not worker_found:
             logging.info(f"Augur does not have knowledge of any workers that are capable of handing the request: " + str(task))
@@ -112,9 +113,10 @@ def create_broker_routes(server):
     def get_status():
         status = {}
         for worker in list(server.broker._getvalue().keys()):
-            status[worker] = worker
-            status[worker]['user_queue'] = server.broker[worker]['user_queue']._getvalue()
-            status[worker]['maintain_queue'] = server.broker[worker]['maintain_queue']._getvalue()
+            if type(server.broker[worker]._getvalue()) == dict:
+                status[worker] = worker
+                status[worker]['user_queue'] = server.broker[worker]['user_queue']._getvalue()
+                status[worker]['maintain_queue'] = server.broker[worker]['maintain_queue']._getvalue()
 
         return Response(response=status,
                         status=200,
@@ -125,5 +127,14 @@ def create_broker_routes(server):
         worker = request.json
         server.broker[worker['id']]['status'] = 'Disconnected'
         return Response(response=worker,
+                        status=200,
+                        mimetype="application/json")
+
+    @server.app.route('/{}/add_pids'.format(server.api_version), methods=['POST'])
+    def add_pids():
+        pids = request.json['pids']
+        for pid in pids:
+            server.broker['worker_pids'].append(pid)
+        return Response(response=request.json,
                         status=200,
                         mimetype="application/json")

@@ -46,13 +46,9 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
         server = Server(manager=self.manager, broker=self.broker, housekeeper=self.housekeeper)
         return server.app
 
-worker_pid = None
-
 @click.command('run', short_help='Run the Augur server')
 @pass_application
 def cli(app):
-
-    
 
     mp.set_start_method('forkserver', force=True)
     app.schedule_updates()
@@ -63,7 +59,7 @@ def cli(app):
         'github_worker': 0#app.read_config('Controller', 'github_worker', None, '0'),
     }
 
-    logger.info("Controller specs ('1' for things that are set to automatically boot): {}".format(str(controller)))
+    logger.info("Controller specs ('1' for components that are set to automatically boot): {}".format(str(controller)))
 
     manager = None
     broker = None
@@ -73,6 +69,7 @@ def cli(app):
         logger.info("Booting broker and its manager")
         manager = mp.Manager()
         broker = manager.dict()
+        broker['worker_pids'] = manager.list()
         
     if controller['housekeeper'] == 1:
         logger.info("Booting housekeeper")
@@ -97,6 +94,8 @@ def cli(app):
             master.halt()
         logger.info("Shutting down app updates...")
         app.shutdown_updates()
+        for pid in broker['worker_pids']:
+            os.kill(pid, 9)
         logger.info("Finalizing config...")
         app.finalize_config()
         logger.info("Shutting down housekeeper updates...")
@@ -104,10 +103,9 @@ def cli(app):
             housekeeper.shutdown_updates()
 
         if controller['github_worker'] == 1:
+            logger.info("You had the github_worker startup enabled, please allow ~30 seconds for its processes to shutdown before running 'make dev' again")
             logger.info("Shutting down github worker...")
-            if worker_pid is not None:
-                logger.info("KILLING WORKER PID {}".format(str(worker_pid)))
-                os.kill(worker_pid, 9)
+
             up.terminate()
         # if hasattr(manager, "shutdown"):
             # wait for the spawner and the worker threads to go down
@@ -137,6 +135,5 @@ def cli(app):
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
 def worker_start():
-    process = subprocess.Popen("cd workers/augur_worker_github && github_worker", shell=True)
-    worker_pid = process.pid
-    logger.info(worker_pid)
+        logger.info("Booting github worker")
+        process = subprocess.Popen("cd workers/augur_worker_github && github_worker", shell=True)

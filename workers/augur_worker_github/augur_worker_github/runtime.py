@@ -1,9 +1,8 @@
 from flask import Flask, jsonify, request, Response
-import click
+import click, os, json, requests, logging
 from augur_worker_github.worker import GitHubWorker
-import os
-import json
-import requests
+logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
+
 
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
@@ -17,7 +16,7 @@ def create_server(app, gw):
         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
         """
         if request.method == 'POST': #will post a task to be added to the queue
-            print("Sending to work on task: {}".format(str(request.json)))
+            logging.info("Sending to work on task: {}".format(str(request.json)))
             app.gh_worker.task = request.json
 
             #set task
@@ -74,7 +73,7 @@ def main(augur_url, host, port):
     app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
-    print("Starting Flask App with pid: " + str(os.getpid()) + "...")
+    logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=port)
     if app.gh_worker._child is not None:
         app.gh_worker._child.terminate()
@@ -83,7 +82,7 @@ def main(augur_url, host, port):
     except:
         pass
     
-    print("Killing Flask App: " + str(os.getpid()))
+    logging.info("Killing Flask App: " + str(os.getpid()))
     os.kill(os.getpid(), 9)
     
 
@@ -99,12 +98,9 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
     __config_bad = False
     if use_main_config == 0:
-
         __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
-        print(__config_file_path)
     else:        
         __config_file_path = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())) + '/augur.config.json')
-        print(__config_file_path)
 
     __config_location = os.path.dirname(__config_file_path)
     __export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
