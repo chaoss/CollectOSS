@@ -140,7 +140,10 @@ class GHRepoInfoWorker:
 
         for _, row in repos.iterrows():
             owner, repo = self.get_owner_repo(row['repo_git'])
+            print(f'Querying: {owner}/{repo}')
             self.query_repo_info(row['repo_id'], owner, repo)
+
+        print(f'Added repo info for {self.results_counter} repos')
 
 
     def get_owner_repo(self, git_url):
@@ -206,16 +209,16 @@ class GHRepoInfoWorker:
             'repo_id': repo_id,
             'last_updated': j['updatedAt'],
             'issues_enabled': j['hasIssuesEnabled'],
-            'open_issues': j['issues']['totalCount'],
+            'open_issues': j['issues']['totalCount'] if j['issues'] else None,
             'pull_requests_enabled': None,
             'wiki_enabled': j['hasWikiEnabled'],
             'pages_enabled': None,
             'fork_count': j['forkCount'],
-            'default_branch': j['defaultBranchRef']['name'],
-            'watchers_count': j['watchers']['totalCount'],
+            'default_branch': j['defaultBranchRef']['name'] if j['defaultBranchRef'] else None,
+            'watchers_count': j['watchers']['totalCount'] if j['watchers'] else None,
             'UUID': None,
             'license': j['licenseInfo']['name'] if j['licenseInfo'] else None,
-            'stars_count': j['stargazers']['totalCount'],
+            'stars_count': j['stargazers']['totalCount'] if j['stargazers'] else None,
             'committers_count': None,
             'issue_contributors_count': None,
             'changelog_file': None,
