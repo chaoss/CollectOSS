@@ -174,19 +174,22 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
+                            "repo_id": 21337,
+                            "repo_name": "graphql-wg",
                             "date": "2018-01-01T00:00:00.000Z",
-                            "repo_id": 1,
-                            "commit_count": 5140
+                            "commit_count": 173
                         },
                         {
+                            "repo_id": 21337,
+                            "repo_name": "graphql-wg",
                             "date": "2019-01-01T00:00:00.000Z",
-                            "repo_id": 1,
-                            "commit_count": 711
+                            "commit_count": 92
                         },
                         {
-                            "date": "2015-01-01T00:00:00.000Z",
-                            "repo_id": 25001,
-                            "commit_count": 1071
+                            "repo_id": 21338,
+                            "repo_name": "foundation",
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "commit_count": 8
                         }
                     ]
     """
@@ -206,20 +209,14 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2018-01-01T00:00:00.000Z",
-                            "commit_count": 2287
+                            "repo_name": "graphql",
+                            "date": "2015-01-01T00:00:00.000Z",
+                            "commit_count": 90,
                         },
                         {
-                            "date": "2018-02-01T00:00:00.000Z",
-                            "commit_count": 1939
-                        },
-                        {
-                            "date": "2018-03-01T00:00:00.000Z",
-                            "commit_count": 1979
-                        },
-                        {
-                            "date": "2018-04-01T00:00:00.000Z",
-                            "commit_count": 2159
+                            "repo_name": "graphql",
+                            "date": "2016-01-01T00:00:00.000Z",
+                            "commit_count": 955,
                         }
                     ]
     """
@@ -238,28 +235,25 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
+                            "repo_id": 21337,
+                            "repo_name": "graphql-wg",
                             "date": "2018-01-01T00:00:00.000Z",
-                            "repo_id": 1,
-                            "added": 640098,
-                            "removed": 694608
+                            "added": 1135,
+                            "removed": 101
                         },
                         {
+                            "repo_id": 21337,
+                            "repo_name": "graphql-wg",
                             "date": "2019-01-01T00:00:00.000Z",
-                            "repo_id": 1,
-                            "added": 56549,
-                            "removed": 48962
+                            "added": 872,
+                            "removed": 76
                         },
                         {
-                            "date": "2014-01-01T00:00:00.000Z",
-                            "repo_id": 25001,
-                            "added": 19,
-                            "removed": 1
-                        },
-                        {
-                            "date": "2015-01-01T00:00:00.000Z",
-                            "repo_id": 25001,
-                            "added": 429535,
-                            "removed": 204015
+                            "repo_id": 21338,
+                            "repo_name": "foundation",
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "added": 130,
+                            "removed": 5
                         }
                     ]
     """
@@ -279,24 +273,22 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2014-01-01T00:00:00.000Z",
-                            "added": 19,
-                            "removed": 1
+                            "repo_name": "graphql-js",
+                            "date": "2015-06-01T00:00:00.000Z",
+                            "added": 17613,
+                            "removed": 106
                         },
                         {
-                            "date": "2015-01-01T00:00:00.000Z",
-                            "added": 429535,
-                            "removed": 204015
+                            "repo_name": "graphql-js",
+                            "date": "2015-07-01T00:00:00.000Z",
+                            "added": 9448,
+                            "removed": 5081
                         },
                         {
-                            "date": "2016-01-01T00:00:00.000Z",
-                            "added": 2739765,
-                            "removed": 944568
-                        },
-                        {
-                            "date": "2017-01-01T00:00:00.000Z",
-                            "added": 3945001,
-                            "removed": 1011396
+                            "repo_name": "graphql-js",
+                            "date": "2015-08-01T00:00:00.000Z",
+                            "added": 6270,
+                            "removed": 3833
                         }
                     ]
     """
@@ -315,14 +307,22 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-05-01T00:00:00.000Z",
-                            "repo_id": 1,
-                            "issues": 3
+                            "repo_id": 21000,
+                            "repo_name": "rails",
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "issues": 318
                         },
                         {
-                            "date": "2019-05-01T00:00:00.000Z",
-                            "repo_id": 25001,
+                            "repo_id": 21002,
+                            "repo_name": "acts_as_list",
+                            "date": "2009-01-01T00:00:00.000Z",
                             "issues": 1
+                        },
+                        {
+                            "repo_id": 21002,
+                            "repo_name": "acts_as_list",
+                            "date": "2010-01-01T00:00:00.000Z",
+                            "issues": 7
                         }
                     ]
     """
@@ -342,12 +342,19 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-05-01T00:00:00.000Z",
-                            "issues": 1
+                            "repo_name": "rails",
+                            "date": "2015-01-01T00:00:00.000Z",
+                            "issues": 116
                         },
                         {
-                            "date": "2019-06-01T00:00:00.000Z",
-                            "issues": 31
+                            "repo_name": "rails",
+                            "date": "2016-01-01T00:00:00.000Z",
+                            "issues": 196
+                        },
+                        {
+                            "repo_name": "rails",
+                            "date": "2017-01-01T00:00:00.000Z",
+                            "issues": 180
                         }
                     ]
     """
@@ -366,21 +373,29 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2019-05-01T00:00:00.000Z",
-                            "repo_id": 21326,
-                            "issues": 27
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "issues": 18
                         },
                         {
-                            "date": "2019-05-01T00:00:00.000Z",
-                            "repo_id": 21327,
-                            "issues": 54
+                            "repo_id": 21041,
+                            "repo_name": "prototype-rails",
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "issues": 20
+                        },
+                        {
+                            "repo_id": 21043,
+                            "repo_name": "sprockets-rails",
+                            "date": "2015-01-01T00:00:00.000Z",
+                            "issues": 102
                         }
                     ]
     """
     server.addRepoGroupMetric(augur_db.issues_active, 'issues-active')
 
     """
-    @api {get} /repo-groups/:repo_group_id/issues-active Issues Active (Repo)
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-active Issues Active (Repo)
     @apiName issues-active-repo
     @apiGroup Evolution
     @apiDescription Time series of number of issues that showed some activity during a certain period.
@@ -393,12 +408,19 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "date": "2015-07-01T00:00:00.000Z",
-                            "issues": 32
+                            "repo_name": "rails",
+                            "date": "2011-01-01T00:00:00.000Z",
+                            "issues": 30
                         },
                         {
-                            "date": "2015-08-01T00:00:00.000Z",
-                            "issues": 62
+                            "repo_name": "rails",
+                            "date": "2012-01-01T00:00:00.000Z",
+                            "issues": 116
+                        },
+                        {
+                            "repo_name": "rails",
+                            "date": "2013-01-01T00:00:00.000Z",
+                            "issues": 479
                         }
                     ]
     """
@@ -417,24 +439,22 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "issue_close_date": "2019-05-01T00:00:00.000Z",
                             "repo_id": 21681,
-                            "issues": 55
+                            "repo_name": "incubator-zipkin",
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "issues": 425
                         },
                         {
-                            "issue_close_date": "2019-06-01T00:00:00.000Z",
-                            "repo_id": 21681,
-                            "issues": 79
-                        },
-                        {
-                            "issue_close_date": "2013-02-01T00:00:00.000Z",
                             "repo_id": 21682,
-                            "issues": 3
+                            "repo_name": "incubator-dubbo",
+                            "date": "2013-01-01T00:00:00.000Z",
+                            "issues": 7
                         },
                         {
-                            "issue_close_date": "2014-06-01T00:00:00.000Z",
                             "repo_id": 21682,
-                            "issues": 10
+                            "repo_name": "incubator-dubbo",
+                            "date": "2014-01-01T00:00:00.000Z",
+                            "issues": 47
                         }
                     ]
     """
@@ -454,12 +474,19 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "issue_close_date": "2019-05-01T00:00:00.000Z",
-                            "issues": 55
+                            "repo_name": "incubator-pagespeed-ngx",
+                            "date": "2012-01-01T00:00:00.000Z",
+                            "issues": 97
                         },
                         {
-                            "issue_close_date": "2019-06-01T00:00:00.000Z",
-                            "issues": 79
+                            "repo_name": "incubator-pagespeed-ngx",
+                            "date": "2013-01-01T00:00:00.000Z",
+                            "issues": 395
+                        },
+                        {
+                            "repo_name": "incubator-pagespeed-ngx",
+                            "date": "2014-01-01T00:00:00.000Z",
+                            "issues": 265
                         }
                     ]
     """
@@ -472,17 +499,33 @@ def create_routes(server):
     @apiDescription Time since an issue is proposed until it is closed.
                     <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
     @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo_id": 21682,
-                            "issue_id": 41786,
-                            "duration": "0 days 00:56:26.000000000"
+                            "repo_id": 21017,
+                            "repo_name": "ssl_requirement",
+                            "issue_id": 50320,
+                            "created_at": "2011-05-06T20:20:05.000Z",
+                            "closed_at": "2011-05-06T20:21:47.000Z",
+                            "duration": "0 days 00:01:42.000000000"
                         },
                         {
-                            "repo_id": 21682,
-                            "issue_id": 41787,
-                            "duration": "0 days 13:25:04.000000000"
+                            "repo_id": 21027,
+                            "repo_name": "rails-contributors",
+                            "issue_id": 50328,
+                            "created_at": "2019-06-20T22:56:38.000Z",
+                            "closed_at": "2019-06-21T20:17:28.000Z",
+                            "duration": "0 days 21:20:50.000000000"
+                        },
+                        {
+                            "repo_id": 21027,
+                            "repo_name": "rails-contributors",
+                            "issue_id": 50329,
+                            "created_at": "2019-06-20T22:01:52.000Z",
+                            "closed_at": "2019-06-22T02:29:03.000Z",
+                            "duration": "1 days 04:27:11.000000000"
                         }
                     ]
     """
@@ -496,38 +539,59 @@ def create_routes(server):
                     <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
     @apiParam {string} repo_group_id Repository Group ID.
     @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "issue_id": 43893,
-                            "duration": "8 days 18:53:54.000000000"
+                            "repo_name": "exception_notification",
+                            "issue_id": 50306,
+                            "created_at": "2011-02-13T03:46:06.000Z",
+                            "closed_at": "2011-04-14T23:27:33.000Z",
+                            "duration": "60 days 19:41:27.000000000"
                         },
                         {
-                            "issue_id": 43896,
-                            "duration": "0 days 01:06:31.000000000"
+                            "repo_name": "exception_notification",
+                            "issue_id": 50308,
+                            "created_at": "2011-01-19T18:47:41.000Z",
+                            "closed_at": "2013-12-09T13:51:03.000Z",
+                            "duration": "1054 days 19:03:22.000000000"
                         }
                     ]
     """
     server.addRepoMetric(augur_db.issue_duration, 'issue-duration')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-participants Issue Participants (Repo Group)
+    @api {get} /repo-groups/:repo_group_id/issue-participants Issue Participants (Repo Group)
     @apiName issue-participants-repo-group
     @apiGroup Evolution
     @apiDescription How many persons participated in the discussion of issues.
                     <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
     @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo_id": 21326,
-                            "issue_id": 38803,
-                            "participants": 11
+                            "repo_id": 21027,
+                            "repo_name": "rails-contributors",
+                            "issue_id": 50328,
+                            "created_at": "2019-06-20T22:56:38.000Z",
+                            "participants": 1
                         },
                         {
-                            "repo_id": 21327,
-                            "issue_id": 26422,
-                            "participants": 4
+                            "repo_id": 21030,
+                            "repo_name": "arel",
+                            "issue_id": 50796,
+                            "created_at": "2017-03-02T21:14:46.000Z",
+                            "participants": 1
+                        },
+                        {
+                            "repo_id": 21030,
+                            "repo_name": "arel",
+                            "issue_id": 50795,
+                            "created_at": "2017-03-24T15:39:08.000Z",
+                            "participants": 2
                         }
                     ]
     """
@@ -541,15 +605,21 @@ def create_routes(server):
                     <a href="https://github.com/chaoss/wg-evolution/blob/master/focus_areas/code_development.md">CHAOSS Metric Definition</a>
     @apiParam {string} repo_group_id Repository Group ID.
     @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "issue_id": 38829,
-                            "participants": 23
+                            "repo_name": "arel",
+                            "issue_id": 50796,
+                            "created_at": "2017-03-02T21:14:46.000Z",
+                            "participants": 1
                         },
                         {
-                            "issue_id": 38830,
-                            "participants": 8
+                            "repo_name": "arel",
+                            "issue_id": 50795,
+                            "created_at": "2017-03-24T15:39:08.000Z",
+                            "participants": 2
                         }
                     ]
     """
@@ -565,12 +635,19 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo_id": 1,
-                            "issue_backlog": 3
+                            "repo_id": 21055,
+                            "repo_name": "cache_digests",
+                            "issue_backlog": 21
                         },
                         {
-                            "repo_id": 25001,
-                            "issue_backlog": 32
+                            "repo_id": 21056,
+                            "repo_name": "rails-dev-box",
+                            "issue_backlog": 1
+                        },
+                        {
+                            "repo_id": 21058,
+                            "repo_name": "activerecord-session_store",
+                            "issue_backlog": 24
                         }
                     ]
     """
@@ -587,6 +664,7 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
+                            "repo_name":"render_component",
                             "issue_backlog": 3
                         }
                     ]
@@ -603,12 +681,14 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo_id": 21682,
-                            "throughput": 0.783692
+                            "repo_id": 21681,
+                            "repo_name": "incubator-zipkin",
+                            "throughput": 0.819125
                         },
                         {
-                            "repo_id": 21681,
-                            "throughput": 0.301124
+                            "repo_id": 21682,
+                            "repo_name": "incubator-dubbo",
+                            "throughput": 0.861896
                         }
                     ]
     """
@@ -625,7 +705,8 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "throughput": 0.301124
+                            "repo_name": "rails-contributors",
+                            "throughput": 0.997531
                         }
                     ]
     """
@@ -1280,12 +1361,14 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo_id": 21277,
-                            "badge_level": "passing"
+                            "repo_id": 21252,
+                            "repo_name": "php-legal-licenses",
+                            "badge_level": "in_progress"
                         },
                         {
-                            "repo_id": 21252,
-                            "badge_level": "in_progress"
+                            "repo_id": 21277,
+                            "repo_name": "trickster",
+                            "badge_level": "passing"
                         }
                     ]
     """
@@ -1302,7 +1385,8 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "badge_level": "gold"
+                            "repo_name": "trickster",
+                            "badge_level": "passing"
                         }
                     ]
     """
@@ -1356,11 +1440,13 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo_id": 21277,
+                            "repo_id": 21252,
+                            "repo_name": "php-legal-licenses",
                             "license": "Apache-2.0"
                         },
                         {
-                            "repo_id": 21252,
+                            "repo_id": 21277,
+                            "repo_name": "trickster",
                             "license": "Apache-2.0"
                         }
                     ]
@@ -1378,6 +1464,7 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
+                            "repo_name":"php-legal-licenses",
                             "license": "Apache-2.0"
                         }
                     ]
@@ -1386,13 +1473,13 @@ def create_routes(server):
 
     #####################################
     ###         EXPERIMENTAL          ###
-    ##################################### 
+    #####################################
 
     """
     @api {get} /repo-groups/:repo_group_id/lines-changed-by-author Lines Changed by Author(Repo)
     @apiNames lines-changed-by-author
     @apiGroup Experimental
-    @apiDescription Returns number of lines changed per author per day 
+    @apiDescription Returns number of lines changed per author per day
     @apiParam {string} repo_group_id Repository Group ID
     @apiParam {string} repo_id Repository ID.
     @apiSuccessExample {json} Success-Response:
@@ -1447,7 +1534,7 @@ def create_routes(server):
     """
     server.addRepoGroupMetric(augur_db.lines_changed_by_author,'lines-changed-by-author')
 
-    
+
     """
     @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group Annual Commit Count Ranked by New Repo in Repo Group
     @apiName annual-commit-count-ranked-by-new-repo-in-repo-group

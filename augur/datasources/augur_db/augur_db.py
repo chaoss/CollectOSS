@@ -62,15 +62,15 @@ class Augur(object):
         if not repo_id:
             code_changes_SQL = s.sql.text("""
                 SELECT
+                    commits.repo_id,
+                    repo_name,
                     date_trunc(:period, cmt_committer_date::DATE) as date,
-                    repo_id,
-                    COUNT(cmt_commit_hash) as commit_count,
-                    repo_name
+                    COUNT(cmt_commit_hash) as commit_count
                 FROM commits JOIN repo ON repo.repo_id = commits.repo_id
-                WHERE repo_group_id=:repo_group_id)
+                WHERE commits.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY date, repo_id
-                ORDER BY repo_id, date
+                GROUP BY commits.repo_id, date, repo_name
+                ORDER BY commits.repo_id, date
             """)
 
             results = pd.read_sql(code_changes_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -80,9 +80,9 @@ class Augur(object):
         else:
             code_changes_SQL = s.sql.text("""
                 SELECT
+                    repo_name,
                     date_trunc(:period, cmt_committer_date::DATE) as date,
-                    COUNT(cmt_commit_hash) as commit_count,
-                    repo_name
+                    COUNT(cmt_commit_hash) as commit_count
                 FROM commits JOIN repo ON commits.repo_id = repo.repo_id
                 WHERE commits.repo_id = :repo_id
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
@@ -653,15 +653,16 @@ class Augur(object):
         if not repo_id:
             code_changes_lines_SQL = s.sql.text("""
                 SELECT
+                    commits.repo_id,
+                    repo_name,
                     date_trunc(:period, cmt_author_date::DATE) as date,
-                    repo_id,
                     SUM(cmt_added) as added,
                     SUM(cmt_removed) as removed
-                FROM commits
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                FROM commits JOIN repo ON commits.repo_id = repo.repo_id
+                WHERE commits.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND cmt_author_date BETWEEN :begin_date AND :end_date
-                GROUP BY date, repo_id
-                ORDER BY repo_id, date
+                GROUP BY commits.repo_id, date, repo_name
+                ORDER BY commits.repo_id, date
             """)
 
             results = pd.read_sql(code_changes_lines_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -672,13 +673,14 @@ class Augur(object):
         else:
             code_changes_lines_SQL = s.sql.text("""
                 SELECT
+                    repo_name,
                     date_trunc(:period, cmt_author_date::DATE) as date,
                     SUM(cmt_added) AS added,
                     SUM(cmt_removed) as removed
-                FROM commits
-                WHERE repo_id = :repo_id
+                FROM commits JOIN repo ON commits.repo_id = repo.repo_id
+                WHERE commits.repo_id = :repo_id
                 AND cmt_author_date BETWEEN :begin_date AND :end_date
-                GROUP BY date
+                GROUP BY date, repo_name
                 ORDER BY date;
             """)
 
@@ -707,14 +709,15 @@ class Augur(object):
         if not repo_id:
             issues_new_SQL = s.sql.text("""
                 SELECT
-                    date_trunc(:period, created_at::DATE) as date,
-                    repo_id,
+                    issues.repo_id,
+                    repo_name,
+                    date_trunc(:period, issues.created_at::DATE) as date,
                     COUNT(issue_id) as issues
-                FROM issues
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
-                AND created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY date, repo_id
-                ORDER BY repo_id, date
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND issues.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issues.repo_id, date, repo_name
+                ORDER BY issues.repo_id, date
             """)
 
             results = pd.read_sql(issues_new_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -724,11 +727,14 @@ class Augur(object):
 
         else:
             issues_new_SQL = s.sql.text("""
-                SELECT date_trunc(:period, created_at::DATE) as date, COUNT(issue_id) as issues
-                FROM issues
-                WHERE repo_id = :repo_id
-                AND created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY date
+                SELECT
+                    repo_name,
+                    date_trunc(:period, issues.created_at::DATE) as date,
+                    COUNT(issue_id) as issues
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id = :repo_id
+                AND issues.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY date, repo_name
                 ORDER BY date;
             """)
 
@@ -755,15 +761,17 @@ class Augur(object):
         if not repo_id:
             issues_active_SQL = s.sql.text("""
                 SELECT
+                    issues.repo_id,
+                    repo_name,
                     date_trunc(:period, issue_events.created_at) as date,
-                    repo_id,
                     COUNT(issues.issue_id) AS issues
-                FROM issues
-                JOIN issue_events ON issues.issue_id = issue_events.issue_id
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                FROM issues, repo, issue_events
+                WHERE issues.issue_id = issue_events.issue_id
+                AND issues.repo_id = repo.repo_id
+                AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY date, repo_id
-                ORDER BY repo_id, date
+                GROUP BY issues.repo_id, date, repo_name
+                ORDER BY issues.repo_id, date
             """)
 
             results = pd.read_sql(issues_active_SQL, self.db, params={'repo_group_id': repo_group_id, 'period':period,
@@ -773,14 +781,16 @@ class Augur(object):
         else:
             issues_active_SQL = s.sql.text("""
                 SELECT
+                    repo_name,
                     date_trunc(:period, issue_events.created_at) as date,
                     COUNT(issues.issue_id) AS issues
-                FROM issues
-                JOIN issue_events ON issues.issue_id = issue_events.issue_id
-                WHERE repo_id = :repo_id
+                FROM issues, repo, issue_events
+                WHERE issues.issue_id = issue_events.issue_id
+                AND issues.repo_id = repo.repo_id
+                AND issues.repo_id = :repo_id
                 AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY date, repo_id
-                ORDER BY repo_id, date
+                GROUP BY date, repo_name
+                ORDER BY date
             """)
 
             results = pd.read_sql(issues_active_SQL, self.db, params={'repo_id': repo_id, 'period':period,
@@ -806,15 +816,16 @@ class Augur(object):
         if not repo_id:
             issues_closed_SQL = s.sql.text("""
                 SELECT
+                    issues.repo_id,
+                    repo_name,
                     date_trunc(:period, closed_at::DATE) as date,
-                    repo_id,
                     COUNT(issue_id) as issues
-                FROM issues
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY date, repo_id
-                ORDER BY repo_id, date
+                GROUP BY issues.repo_id, date, repo_name
+                ORDER BY issues.repo_id, date
             """)
 
             results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -824,12 +835,15 @@ class Augur(object):
 
         else:
             issues_closed_SQL = s.sql.text("""
-                SELECT date_trunc(:period, closed_at::DATE) as date, COUNT(issue_id) as issues
-                FROM issues
-                WHERE repo_id = :repo_id
+                SELECT
+                    repo_name,
+                    date_trunc(:period, closed_at::DATE) as date,
+                    COUNT(issue_id) as issues
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id = :repo_id
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY date
+                GROUP BY date, repo_name
                 ORDER BY date;
             """)
 
@@ -838,85 +852,136 @@ class Augur(object):
             return results
 
     @annotate(tag='issue-duration')
-    def issue_duration(self, repo_group_id, repo_id=None):
+    def issue_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
         """Returns the duration of each issue.
 
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of issue id with the corresponding duration
         """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:00'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
         if not repo_id:
             issue_duration_SQL = s.sql.text("""
-                SELECT repo_id, issue_id, (closed_at - created_at) AS duration
-                FROM issues
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                SELECT
+                    issues.repo_id,
+                    repo_name,
+                    issue_id,
+                    issues.created_at,
+                    issues.closed_at,
+                    (issues.closed_at - issues.created_at) AS duration
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
+                AND issues.created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                 ORDER BY repo_id, issue_id
             """)
 
-            results = pd.read_sql(issue_duration_SQL, self.db, params={'repo_group_id': repo_group_id})
+            results = pd.read_sql(issue_duration_SQL, self.db, params={'repo_group_id': repo_group_id,
+                                                                       'begin_date': begin_date,
+                                                                       'end_date': end_date})
             results['duration'] = results['duration'].astype(str)
             return results
 
         else:
             issue_duration_SQL = s.sql.text("""
-                SELECT issue_id, (closed_at - created_at) AS duration
-                FROM issues
-                WHERE repo_id = :repo_id
+                SELECT
+                    repo_name,
+                    issue_id,
+                    issues.created_at,
+                    issues.closed_at,
+                    (closed_at - issues.created_at) AS duration
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id = :repo_id
                 AND closed_at IS NOT NULL
+                AND issues.created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
                 ORDER BY issue_id;
             """)
 
-            results = pd.read_sql(issue_duration_SQL, self.db, params={'repo_id': repo_id})
+            results = pd.read_sql(issue_duration_SQL, self.db, params={'repo_id': repo_id,
+                                                                       'begin_date': begin_date,
+                                                                       'end_date': end_date})
             results['duration'] = results['duration'].astype(str)
             return results
 
     @annotate(tag='issue-participants')
-    def issue_participants(self, repo_group_id, repo_id=None):
+    def issue_participants(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
         """Returns number of participants per issue.
 
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of count of participants per issue.
         """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:00'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
         if not repo_id:
             issue_participants_SQL = s.sql.text("""
                 SELECT
-                    repo_id,
+                    issues.repo_id,
+                    repo.repo_name,
                     derived.issue_id,
+                    issues.created_at,
                     COUNT(DISTINCT derived.cntrb_id) AS participants
                 FROM (
                     (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
                     UNION
                     (SELECT issue_id, cntrb_id FROM issue_message_ref, message
                     WHERE issue_message_ref.msg_id = message.msg_id)
-                ) AS derived, issues
+                ) AS derived, issues, repo
                 WHERE derived.issue_id = issues.issue_id
-                AND repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
-                GROUP BY repo_id, derived.issue_id
-                ORDER BY repo_id
+                AND issues.repo_id = repo.repo_id
+                AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND issues.created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY issues.repo_id, repo_name, derived.issue_id, issues.created_at
+                ORDER BY issues.repo_id, issues.created_at
             """)
 
-            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_group_id': repo_group_id})
+            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_group_id': repo_group_id,
+                                                                          'begin_date': begin_date,
+                                                                          'end_date': end_date})
             return result
         else:
             issue_participants_SQL = s.sql.text("""
                 SELECT
+                    repo.repo_name,
                     derived.issue_id,
+                    issues.created_at,
                     COUNT(DISTINCT derived.cntrb_id) AS participants
                 FROM (
                     (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
                     UNION
                     (SELECT issue_id, cntrb_id FROM issue_message_ref, message
                     WHERE issue_message_ref.msg_id = message.msg_id)
-                ) AS derived, issues
+                ) AS derived, issues, repo
                 WHERE derived.issue_id = issues.issue_id
-                AND repo_id = :repo_id
-                GROUP BY repo_id, derived.issue_id
-                ORDER BY repo_id
+                AND issues.repo_id = repo.repo_id
+                AND issues.repo_id = :repo_id
+                AND issues.created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY repo_name, derived.issue_id, issues.created_at
+                ORDER BY issues.created_at
             """)
 
-            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_id': repo_id})
+            result = pd.read_sql(issue_participants_SQL, self.db, params={'repo_id': repo_id,
+                                                                          'begin_date': begin_date,
+                                                                          'end_date': end_date})
             return result
 
     @annotate(tag='issue-backlog')
@@ -929,22 +994,23 @@ class Augur(object):
         """
         if not repo_id:
             issue_backlog_SQL = s.sql.text("""
-                SELECT repo_id, COUNT(issue_id) as issue_backlog
-                FROM issues
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                SELECT issues.repo_id, repo_name, COUNT(issue_id) as issue_backlog
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND issue_state = 'open'
-                GROUP BY repo_id
-                ORDER BY repo_id
+                GROUP BY issues.repo_id, repo_name
+                ORDER BY issues.repo_id
             """)
             result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_group_id': repo_group_id})
             return result
 
         else:
             issue_backlog_SQL = s.sql.text("""
-                SELECT COUNT(*) as issue_backlog
-                FROM issues
-                WHERE repo_id = :repo_id
+                SELECT repo_name, COUNT(issue_id) as issue_backlog
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id = :repo_id
                 AND issue_state='open'
+                GROUP BY repo_name
             """)
 
             result = pd.read_sql(issue_backlog_SQL, self.db, params={'repo_id': repo_id})
@@ -960,7 +1026,7 @@ class Augur(object):
         """
         if not repo_id:
             issue_throughput_SQL = s.sql.text("""
-                SELECT table1.repo_id, (tot1 / tot2) AS throughput
+                SELECT table1.repo_id, repo.repo_name, (tot1 / tot2) AS throughput
                 FROM
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot1
                     FROM issues WHERE issue_state='closed'
@@ -969,8 +1035,10 @@ class Augur(object):
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot2
                     FROM issues
                     WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
-                    GROUP BY repo_id) AS table2
+                    GROUP BY repo_id) AS table2,
+                    repo
                 WHERE table1.repo_id = table2.repo_id
+                AND table1.repo_id = repo.repo_id
             """)
 
             results = pd.read_sql(issue_throughput_SQL, self.db, params={'repo_group_id': repo_group_id})
@@ -978,12 +1046,15 @@ class Augur(object):
 
         else:
             issue_throughput_SQL = s.sql.text("""
-                SELECT (tot1 / tot2) AS throughput
+                SELECT repo.repo_name, (tot1 / tot2) AS throughput
                 FROM
-                    (SELECT COUNT(issue_id)::REAL AS tot1 FROM issues
-                    WHERE issue_state='closed' AND repo_id=:repo_id) AS table1,
+                    (SELECT repo_id, COUNT(issue_id)::REAL AS tot1 FROM issues
+                    WHERE issue_state='closed' AND repo_id=:repo_id
+                    GROUP BY repo_id) AS table1,
                     (SELECT COUNT(issue_id)::REAL AS tot2 FROM issues
-                    WHERE repo_id=:repo_id) AS table2
+                    WHERE repo_id=:repo_id) AS table2,
+                    repo
+                WHERE table1.repo_id = repo.repo_id
             """)
 
             result = pd.read_sql(issue_throughput_SQL, self.db, params={'repo_id': repo_id})
@@ -1113,9 +1184,9 @@ class Augur(object):
         """
         if not repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT repo_id, badge_level
-                FROM repo_badging
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                SELECT repo_badging.repo_id, repo_name, badge_level
+                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
+                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_group_id': repo_group_id})
@@ -1123,7 +1194,7 @@ class Augur(object):
 
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT badge_level, repo_name
+                SELECT repo_name, badge_level
                 FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
                 WHERE repo_badging.repo_id = :repo_id
             """)
@@ -1141,7 +1212,7 @@ class Augur(object):
         """
         if not repo_id:
             languages_SQL = s.sql.text("""
-                SELECT repo_id, primary_language
+                SELECT repo_name, repo_id, primary_language
                 FROM repo
                 WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
             """)
@@ -1151,7 +1222,7 @@ class Augur(object):
 
         else:
             languages_SQL = s.sql.text("""
-                SELECT primary_language, repo_name
+                SELECT repo_name, primary_language
                 FROM repo
                 WHERE repo_id = :repo_id
             """)
@@ -1169,9 +1240,9 @@ class Augur(object):
         """
         if not repo_id:
             license_declared_SQL = s.sql.text("""
-                SELECT repo_id, license
-                FROM repo_badging
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id);
+                SELECT repo_badging.repo_id, repo_name, license
+                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
+                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id);
             """)
 
             results = pd.read_sql(license_declared_SQL, self.db, params={'repo_group_id': repo_group_id})
@@ -1179,7 +1250,7 @@ class Augur(object):
 
         else:
             license_declared_SQL = s.sql.text("""
-                SELECT license, repo_name
+                SELECT repo_name, license
                 FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
                 WHERE repo_badging.repo_id = :repo_id;
             """)
@@ -1362,13 +1433,13 @@ class Augur(object):
             """)
             results = pd.read_sql(closedIssueCountSQL, self.db, params={'repo_id': repo_id})
             return results
-          
+
     @annotate(tag='annual-commit-count-ranked-by-new-repo-in-repo-group')
     def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_group_id, repo_id = None, calendar_year=None):
         """
-        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
-        calendar year (a new repo in that year), show all commits for that year (total for year by repo). 
-        Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized
+        calendar year (a new repo in that year), show all commits for that year (total for year by repo).
+        Result ranked from highest number of commits to lowest by default.
 
         :param repo_url: the repository's URL
         :param calendar_year: the calendar year a repo is created in to be considered "new"
@@ -1558,4 +1629,3 @@ class Augur(object):
 
         results = pd.read_sql(get_repos_for_dosocs_SQL, self.db)
         return results
-
