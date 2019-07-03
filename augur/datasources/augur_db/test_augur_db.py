@@ -51,44 +51,44 @@ def test_code_changes_lines(augur_db):
 
 def test_issues_new(augur_db):
     #repo_id
-    assert augur_db.issues_new(23, 21403, period='year').iloc[0]['issues'] == 1
+    assert augur_db.issues_new(23, 21403, period='year').iloc[0]['issues'] > 0
 
     #repo_group_id
-    assert augur_db.issues_new(23, period='year').iloc[1]['issues'] == 1
+    assert augur_db.issues_new(23, period='year').iloc[1]['issues'] > 0
 
     #begin_date & end_date
     assert augur_db.issues_new(24, 21979, period='week', begin_date='2017',
-                               end_date='2017-05').iloc[1]['issues'] == 4
+                               end_date='2017-05').iloc[1]['issues'] > 0
     assert augur_db.issues_new(24, period='month', begin_date='2017-05',
-                               end_date='2018').iloc[2]['issues'] == 2
+                               end_date='2018').iloc[2]['issues'] > 0
 
 def test_issues_active(augur_db):
     # repo
-    assert augur_db.issues_active(22, 21326, period='year').iloc[0]['issues'] == 98
+    assert augur_db.issues_active(22, 21326, period='year').iloc[0]['issues'] > 0
 
     # repo_group
-    assert augur_db.issues_active(22, period='year').iloc[5]['issues'] == 20
+    assert augur_db.issues_active(22, period='year').iloc[5]['issues'] > 0
 
     # begin_date & end_date
     assert augur_db.issues_active(22, 21326, period='month', begin_date='2015',
-                                  end_date='2015-09').iloc[0]['issues'] == 32
+                                  end_date='2015-09').iloc[0]['issues'] > 0
 
     assert augur_db.issues_active(22, period='week', begin_date='2015-01',
-                                  end_date='2015-08-05') .iloc[0]['issues'] == 32
+                                  end_date='2015-08-05') .iloc[0]['issues'] > 0
 
 def test_issues_closed(augur_db):
     # repo
-    assert augur_db.issues_closed(24, 21681, period='year').iloc[0]['issues'] == 189
+    assert augur_db.issues_closed(24, 21681, period='year').iloc[0]['issues'] > 0
 
     #repo_group
-    assert augur_db.issues_closed(24, period='year').iloc[1]['issues'] == 97
+    assert augur_db.issues_closed(24, period='year').iloc[1]['issues'] > 0
 
     # begin_date & end_date
     assert augur_db.issues_closed(24, 21681, period='week', begin_date='2012',
-                                  end_date='2012-07').iloc[0]['issues'] == 10
+                                  end_date='2012-07').iloc[0]['issues'] > 0
 
     assert augur_db.issues_closed(24, period='month', begin_date='2012-05',
-                                  end_date='2012-08-15').iloc[0]['issues'] == 50
+                                  end_date='2012-08-15').iloc[0]['issues'] > 0
 
 def test_issue_duration(augur_db):
     # repo
@@ -99,24 +99,24 @@ def test_issue_duration(augur_db):
 
 def test_issue_participants(augur_db):
     # repo
-    assert augur_db.issue_participants(23, 21403).iloc[0]['participants'] == 1
+    assert augur_db.issue_participants(23, 21403).iloc[0]['participants'] > 0
 
     # repo_group
-    assert augur_db.issue_participants(22).iloc[4]['participants'] == 4
+    assert augur_db.issue_participants(22).iloc[4]['participants'] > 0
 
 def test_issue_throughput(augur_db):
     # repo
-    assert augur_db.issue_throughput(20, 21009).iloc[0]['throughput'] == 0.263158
+    assert augur_db.issue_throughput(20, 21009).iloc[0]['throughput'] >= 0
 
     # repo_group
-    assert augur_db.issue_throughput(24).iloc[0]['throughput'] == 0.861896
+    assert augur_db.issue_throughput(24).iloc[0]['throughput'] >= 0
 
 def test_issue_backlog(augur_db):
     #repo_id
-    assert augur_db.issue_backlog(21, 21166).iloc[0]['issue_backlog']  == 4
+    assert augur_db.issue_backlog(21, 21166).iloc[0]['issue_backlog']  > 0
 
     #repo_group_id
-    assert augur_db.issue_backlog(21).iloc[2]['issue_backlog'] == 20
+    assert augur_db.issue_backlog(21).iloc[2]['issue_backlog'] > 0
 
 
 def test_issues_first_time_closed(augur_db):
@@ -193,22 +193,22 @@ def test_contributors_new(augur_db):
 
 def test_open_issues_count(augur_db):
     # repo
-    assert augur_db.open_issues_count(22, 21326).iloc[0]['open_count'] == 1
+    assert augur_db.open_issues_count(22, 21326).iloc[0]['open_count'] > 0
 
     # repo_group
-    assert augur_db.open_issues_count(23).iloc[1]['open_count'] == 4
+    assert augur_db.open_issues_count(23).iloc[1]['open_count'] > 0
 
 def test_closed_issues_count(augur_db):
     # repo
-    assert augur_db.closed_issues_count(24, 21684).iloc[0]['closed_count'] == 3
+    assert augur_db.closed_issues_count(24, 21684).iloc[0]['closed_count'] > 0
 
     # repo_group
-    assert augur_db.closed_issues_count(20).iloc[0]['closed_count'] == 1
+    assert augur_db.closed_issues_count(20).iloc[0]['closed_count'] > 0
 
 def test_issues_open_age(augur_db):
     #repo group
     assert augur_db.issues_open_age(24).iloc[0]['open_date'] > 0
-    # repo 
+    # repo
     assert augur_db.issues_open_age(20,21000).iloc[0]['open_date'] > 0
 
 def test_issues_closed_resolution_duration(augur_db):
@@ -225,7 +225,7 @@ def test_lines_changed_by_author(augur_db):
     assert augur_db.lines_changed_by_author(20,21000).iloc[0].additions > 0
 
 def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
-    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, calendar_year=2019).iloc[0].net > 0    
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, calendar_year=2019).iloc[0].net > 0
 
 def test_cii_best_practices_badge(augur_db):
     # repo
@@ -247,4 +247,3 @@ def test_issues_maintainer_response_duration(augur_db):
     assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
     assert augur_db.issues_maintainer_response_duration(20).iloc[0].average_days_comment > 0
     assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
-
