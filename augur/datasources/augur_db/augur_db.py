@@ -118,7 +118,7 @@ class Augur(object):
                 COUNT(cmt_author_email), repo_name
                 FROM ( SELECT repo_name, cmt_author_email, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
                 FROM commits JOIN repo ON commits.repo_id = repo.repo_id
-                WHERE repo_id = :repo_id
+                WHERE commits.repo_id = :repo_id
                 AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_author_email IS NOT NULL
                 GROUP BY cmt_author_email, repo_name
                 ) as abc GROUP BY commit_date, repo_name
@@ -128,14 +128,17 @@ class Augur(object):
                                                                          'end_date': end_date})
         else:
             commitNewContributor = s.sql.text("""
-                SELECT date_trunc(:period, new_date::DATE) as commit_date,
-                COUNT(cmt_author_email)
-                FROM ( SELECT cmt_author_email, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
-                FROM commits WHERE
-                repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-                AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_author_email IS NOT NULL
-                GROUP BY cmt_author_email
-                ) as abc GROUP BY commit_date
+                SELECT abc.repo_id, repo_name ,date_trunc(:period, new_date::DATE) as commit_date,
+                    COUNT(cmt_author_email)
+                FROM (SELECT cmt_author_email, MIN(TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD')) AS new_date, repo_id
+                    FROM commits
+                    WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                        AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
+                        AND cmt_author_email IS NOT NULL
+                    GROUP BY cmt_author_email, repo_id
+                    ) as abc, repo
+                WHERE abc.repo_id = repo.repo_id
+                GROUP BY abc.repo_id, repo_name, commit_date
             """)
             results = pd.read_sql(commitNewContributor, self.db,
                                   params={'repo_group_id': repo_group_id, 'period': period,
@@ -187,10 +190,13 @@ class Augur(object):
         else:
             issueNewContributor = s.sql.text("""
                 SELECT
+                    repo.repo_id,
+                    repo_name,
                     date_trunc(:period, new_date::DATE) as issue_date,
                     COUNT(gh_user_id)
                 FROM (
                     SELECT
+                        repo_id,
                         gh_user_id,
                         MIN(created_at) AS new_date
                     FROM
@@ -198,9 +204,10 @@ class Augur(object):
                     WHERE
                         repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                         AND created_at BETWEEN :begin_date AND :end_date
-                    GROUP BY gh_user_id
-                ) as abc
-                GROUP BY issue_date
+                    GROUP BY gh_user_id, repo_id
+                ) as abc, repo
+                WHERE repo.repo_id= abc.repo_id
+                GROUP BY repo.repo_id, issue_date
                 ORDER BY issue_date
             """)
             results = pd.read_sql(issueNewContributor, self.db,
@@ -228,35 +235,43 @@ class Augur(object):
 
         if repo_id:
             issuesClosedSQL = s.sql.text("""
-                SELECT
-                    date_trunc(:period, new_date::DATE) AS issue_date, COUNT(cntrb_id)
+                SELECT date_trunc(:period, new_date::DATE) AS issue_date,
+                    COUNT(cntrb_id),
+                    repo_name
                 FROM (
-                    SELECT cntrb_id, MIN(created_at) AS new_date
-                    FROM issue_events
-                    WHERE
-                        issue_id IN
-                        (SELECT issue_id FROM issues
-                        WHERE repo_id = :repo_id)
+                        SELECT issue_events.cntrb_id, MIN(issue_events.created_at) AS new_date, repo_name
+                        FROM issue_events,
+                            repo,
+                            issues
+                        WHERE repo.repo_id = :repo_id
                         AND action = 'closed'
-                    GROUP BY cntrb_id ) AS iss_close
-                GROUP BY issue_date
+                        AND repo.repo_id = issues.repo_id
+                        AND issues.issue_id = issue_events.issue_id
+                        And issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY issue_events.cntrb_id, repo_name
+                    ) AS iss_close
+                GROUP BY issue_date, repo_name
             """)
             results = pd.read_sql(issuesClosedSQL, self.db, params={'repo_id': repo_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
         else:
             issuesClosedSQL = s.sql.text("""
-                 SELECT
-                    date_trunc(:period, new_date::DATE) AS issue_date, COUNT(cntrb_id)
+                 SELECT date_trunc(:period, new_date::DATE) AS issue_date,
+                    COUNT(cntrb_id),
+                    repo_name, repo_id
                 FROM (
-                    SELECT cntrb_id, MIN(created_at) AS new_date
-                    FROM issue_events
-                    WHERE
-                        issue_id IN
-                        (SELECT issue_id FROM issues
-                        WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id))
+                        SELECT issue_events.cntrb_id, MIN(issue_events.created_at) AS new_date, repo_name, repo.repo_id
+                        FROM issue_events,
+                            repo,
+                            issues
+                        WHERE repo.repo_group_id = :repo_group_id
                         AND action = 'closed'
-                    GROUP BY cntrb_id ) AS iss_close
-                GROUP BY issue_date
+                        AND repo.repo_id = issues.repo_id
+                        AND issues.issue_id = issue_events.issue_id
+                        And issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY issue_events.cntrb_id, repo.repo_id, repo_name
+                    ) AS iss_close
+                GROUP BY repo_id, repo_name,issue_date
             """)
             results = pd.read_sql(issuesClosedSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
@@ -292,7 +307,7 @@ class Augur(object):
                                                                     'begin_date': begin_date, 'end_date': end_date})
         else:
             sub_projectsSQL = s.sql.text("""
-                SELECT COUNT(*) AS sub_protject_count
+                SELECT COUNT(*) AS sub_project_count
                 FROM repo
                 WHERE repo_group_id = :repo_group_id
                 AND repo_added BETWEEN :begin_date AND :end_date
@@ -342,7 +357,7 @@ class Augur(object):
                     SUM(pull_request_comments)   AS pull_request_comments,
                     SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests +
                         a.pull_request_comments) AS total,
-                    a.repo_id, repo_name
+                    a.repo_id, repo.repo_name
                 FROM (
                         (SELECT gh_user_id AS id,
                                 0          AS commits,
@@ -408,7 +423,8 @@ class Augur(object):
                             AND created_at BETWEEN :begin_date AND :end_date
                             GROUP BY id, repo_id
                         )
-                    ) a
+                    ) a, repo
+                WHERE a.repo_id = repo.repo_id
                 GROUP BY a.id, a.repo_id, repo_name
                 ORDER BY total DESC
             """)
@@ -425,9 +441,10 @@ class Augur(object):
                     SUM(pull_requests)           AS pull_requests,
                     SUM(pull_request_comments)   AS pull_request_comments,
                     SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests +
-                        a.pull_request_comments) AS total
+                        a.pull_request_comments) AS total, a.repo_id, repo_name
                 FROM (
                         (SELECT gh_user_id AS id,
+                                repo_id,
                                 0          AS commits,
                                 COUNT(*)   AS issues,
                                 0          AS commit_comments,
@@ -438,9 +455,10 @@ class Augur(object):
                         WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                             AND created_at BETWEEN :begin_date AND :end_date
                             AND gh_user_id IS NOT NULL
-                        GROUP BY gh_user_id)
+                        GROUP BY gh_user_id, repo_id)
                         UNION ALL
                         (SELECT cmt_ght_author_id AS id,
+                                repo_id,
                                 COUNT(*)          AS commits,
                                 0                 AS issues,
                                 0                 AS commit_comments,
@@ -451,9 +469,10 @@ class Augur(object):
                         WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                             AND cmt_ght_author_id IS NOT NULL
                             AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                        GROUP BY cmt_ght_author_id)
+                        GROUP BY cmt_ght_author_id, repo_id)
                         UNION ALL
                         (SELECT cntrb_id AS id,
+                                repo_id,
                                 0        AS commits,
                                 0        AS issues,
                                 COUNT(*) AS commit_comments,
@@ -467,10 +486,11 @@ class Augur(object):
                             AND message.msg_id = commit_comment_ref.msg_id
                             AND repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                             AND created_at BETWEEN :begin_date AND :end_date
-                        GROUP BY id)
+                        GROUP BY id, repo_id)
                         UNION ALL
                         (
                             SELECT message.cntrb_id AS id,
+                                    repo_id,
                                     0                AS commits,
                                     0                AS issues,
                                     0                AS commit_comments,
@@ -485,10 +505,11 @@ class Augur(object):
                             AND issues.issue_id = issue_message_ref.issue_id
                             AND issue_message_ref.msg_id = message.msg_id
                             AND created_at BETWEEN :begin_date AND :end_date
-                            GROUP BY id
+                            GROUP BY id, repo_id
                         )
-                    ) a
-                GROUP BY a.id
+                    ) a, repo
+                WHERE a.repo_id = repo.repo_id
+                GROUP BY a.id, a.repo_id, repo_name
                 ORDER BY total DESC
             """)
 
@@ -517,70 +538,94 @@ class Augur(object):
 
         if repo_id:
             contributorsNewSQL = s.sql.text("""
-                SELECT date_trunc(:period, created_at::DATE) AS contribute_at, COUNT(id) AS count
+                SELECT date_trunc(:period, b.created_at::DATE) AS contribute_at, COUNT(id) AS count, repo.repo_id, repo_name
                 FROM (
-                SELECT id as id, MIN(created_at) AS created_at
-                FROM (
-                (SELECT gh_user_id AS id, MIN(created_at) AS created_at
-                FROM issues
-                WHERE repo_id = :repo_id
-                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL
-                GROUP BY gh_user_id)
-                UNION ALL
-                (SELECT cmt_ght_author_id AS id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD'))  AS created_at
-                FROM commits
-                WHERE repo_id = :repo_id
-                AND cmt_ght_author_id IS NOT NULL AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
-                GROUP BY cmt_ght_author_id)
-                UNION ALL
-                (SELECT cntrb_id as id, MIN(created_at) AS created_at
-                FROM commit_comment_ref, commits, message
-                where commits.cmt_id = commit_comment_ref.cmt_id
-                and repo_id = :repo_id
-                and commit_comment_ref.msg_id = message.msg_id
-                group by id)
-                UNION ALL
-                (SELECT cntrb_id AS id, MIN(created_at) AS created_at
-                FROM issue_events
-                WHERE issue_id IN (SELECT issue_id FROM issues WHERE repo_id = :repo_id)
-                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
-                AND action = 'closed' GROUP BY cntrb_id)
-                ) a GROUP BY a.id ) b GROUP BY contribute_at
+                        SELECT id as id, MIN(created_at) AS created_at, a.repo_id
+                        FROM (
+                                (SELECT gh_user_id AS id, MIN(created_at) AS created_at, repo_id
+                                FROM issues
+                                WHERE repo_id = :repo_id
+                                    AND created_at BETWEEN :begin_date AND :end_date
+                                    AND gh_user_id IS NOT NULL
+                                GROUP BY gh_user_id, repo_id)
+                                UNION ALL
+                                (SELECT cmt_ght_author_id                                AS id,
+                                        MIN(TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD')) AS created_at,
+                                        repo_id
+                                FROM commits
+                                WHERE repo_id = :repo_id
+                                    AND cmt_ght_author_id IS NOT NULL
+                                    AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
+                                GROUP BY cmt_ght_author_id, repo_id)
+                                UNION ALL
+                                (SELECT cntrb_id as id, MIN(created_at) AS created_at, commits.repo_id
+                                FROM commit_comment_ref,
+                                        commits,
+                                        message
+                                where commits.cmt_id = commit_comment_ref.cmt_id
+                                    and commits.repo_id = :repo_id
+                                    and commit_comment_ref.msg_id = message.msg_id
+                                group by id, commits.repo_id)
+                                UNION ALL
+                                (SELECT issue_events.cntrb_id AS id, MIN(issue_events.created_at) AS created_at, repo_id
+                                FROM issue_events, issues
+                                WHERE issues.repo_id = :repo_id
+                                    AND issues.issue_id = issue_events.issue_id
+                                    AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                                    AND issue_events.cntrb_id IS NOT NULL
+                                    AND action = 'closed'
+                                GROUP BY issue_events.cntrb_id, repo_id)
+                            ) a
+                        GROUP BY a.id, a.repo_id) b, repo
+                WHERE repo.repo_id = b.repo_id
+                GROUP BY contribute_at, repo.repo_id, repo_name
                 """)
 
             results = pd.read_sql(contributorsNewSQL, self.db, params={'repo_id': repo_id, 'period': period,
                                                                        'begin_date': begin_date, 'end_date': end_date})
         else:
             contributorsNewSQL = s.sql.text("""
-               SELECT date_trunc(:period, created_at::DATE) AS contribute_at, COUNT(id) AS count
+                SELECT date_trunc(:period, b.created_at::DATE) AS contribute_at, COUNT(id) AS count, repo.repo_id, repo_name
                 FROM (
-                SELECT id as id, MIN(created_at) AS created_at
-                FROM (
-                (SELECT gh_user_id AS id, MIN(created_at) AS created_at
-                FROM issues
-                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-                AND created_at BETWEEN :begin_date AND :end_date AND gh_user_id IS NOT NULL
-                GROUP BY gh_user_id)
-                UNION ALL
-                (SELECT cmt_ght_author_id AS id, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD'))  AS created_at
-                FROM commits
-                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-                AND cmt_ght_author_id IS NOT NULL AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
-                GROUP BY cmt_ght_author_id)
-                UNION ALL
-                (SELECT cntrb_id as id, MIN(created_at) AS created_at
-                FROM commit_comment_ref, commits, message
-                where commits.cmt_id = commit_comment_ref.cmt_id
-                and repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-                and commit_comment_ref.msg_id = message.msg_id
-                group by id)
-                UNION ALL
-                (SELECT cntrb_id AS id, MIN(created_at) AS created_at
-                FROM issue_events
-                WHERE issue_id IN (SELECT issue_id FROM issues WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id))
-                AND created_at BETWEEN :begin_date AND :end_date AND cntrb_id IS NOT NULL
-                AND action = 'closed' GROUP BY cntrb_id)
-                ) a GROUP BY a.id ) b GROUP BY contribute_at
+                        SELECT id as id, MIN(created_at) AS created_at, a.repo_id
+                        FROM (
+                                (SELECT gh_user_id AS id, MIN(created_at) AS created_at, repo_id
+                                FROM issues
+                                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                                    AND created_at BETWEEN :begin_date AND :end_date
+                                    AND gh_user_id IS NOT NULL
+                                GROUP BY gh_user_id, repo_id)
+                                UNION ALL
+                                (SELECT cmt_ght_author_id                                AS id,
+                                        MIN(TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD')) AS created_at,
+                                        repo_id
+                                FROM commits
+                                WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                                    AND cmt_ght_author_id IS NOT NULL
+                                    AND TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD') BETWEEN :begin_date AND :end_date
+                                GROUP BY cmt_ght_author_id, repo_id)
+                                UNION ALL
+                                (SELECT cntrb_id as id, MIN(created_at) AS created_at, commits.repo_id
+                                FROM commit_comment_ref,
+                                        commits,
+                                        message
+                                where commits.cmt_id = commit_comment_ref.cmt_id
+                                    and commits.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                                    and commit_comment_ref.msg_id = message.msg_id
+                                group by id, commits.repo_id)
+                                UNION ALL
+                                (SELECT issue_events.cntrb_id AS id, MIN(issue_events.created_at) AS created_at, repo_id
+                                FROM issue_events, issues
+                                WHERE issues.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                                    AND issues.issue_id = issue_events.issue_id
+                                    AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                                    AND issue_events.cntrb_id IS NOT NULL
+                                    AND action = 'closed'
+                                GROUP BY issue_events.cntrb_id, repo_id)
+                            ) a
+                        GROUP BY a.id, a.repo_id) b, repo
+                WHERE repo.repo_id = b.repo_id
+                GROUP BY contribute_at, repo.repo_id, repo_name
                 """)
 
             results = pd.read_sql(contributorsNewSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
@@ -1016,7 +1061,7 @@ class Augur(object):
             return result
 
     @annotate(tag='issues-open-age')
-    def issues_open_age(self, repo_group_id, repo_id=None):
+    def issues_open_age(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
         Retrun the age of open issues
 
@@ -1024,39 +1069,49 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: DataFrame of age of open issues.
         """
+        
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        openAgeSQL = None
+        
         if not repo_id:
             openAgeSQL = s.sql.text("""
-                SELECT issues.created_at as date, EXTRACT(DAY FROM NOW() - issues.created_at) AS open_date
+                SELECT  repo.repo_id, repo_name, issue_id, date_trunc(:period, issues.created_at ) as date, EXTRACT(DAY FROM NOW() - issues.created_at) AS open_date
                 FROM issues,
                     repo,
                     repo_groups
                 WHERE issue_state = 'open'
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
-                GROUP BY date, open_date
+                AND issues.created_at BETWEEN :begin_date and :end_date
+                GROUP BY repo.repo_id, repo_name, issue_id, date, open_date
                 ORDER BY open_date DESC
             """)
-            results = pd.read_sql(openAgeSQL, self.db, params={
-                                 'repo_group_id': repo_group_id})
         else:
             openAgeSQL = s.sql.text("""
-                SELECT issues.created_at as date, EXTRACT(DAY FROM NOW() - issues.created_at) AS open_date
+                SELECT repo.repo_id, repo_name, issue_id, date_trunc(:period, issues.created_at ) as date, EXTRACT(DAY FROM NOW() - issues.created_at) AS open_date
                 FROM issues,
                     repo,
                     repo_groups
                 WHERE issue_state = 'open'
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
-                GROUP BY date, open_date
+                AND issues.created_at BETWEEN :begin_date and :end_date
+                GROUP BY repo.repo_id,issue_id, date, open_date
                 ORDER BY open_date DESC
             """)
-            results = pd.read_sql(openAgeSQL, self.db,
-                                 params={'repo_id': repo_id})
+
+        results = pd.read_sql(openAgeSQL, self.db,
+                                params={'repo_id': repo_id, 'repo_group_id': repo_group_id,
+                                'period': period, 'begin_date':begin_date, 'end_date':end_date})
 
         return results
 
     @annotate(tag='issues-closed-resolution-duration')
-    def issues_closed_resolution_duration(self, repo_group_id, repo_id=None):
+    def issues_closed_resolution_duration(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
         Retrun Time duration of time for issues to be resolved
 
@@ -1064,34 +1119,54 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: DataFrame of time duration of time for issues to be resolved
         """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        issueSQL = None
         if not repo_id:
             issueSQL = s.sql.text("""
-                SELECT repo_name,
-                gh_issue_number,
-                issue_title,
-                issues.created_at,
-                issues.closed_at,
-                EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
-            FROM issues,
-                repo
-            WHERE issues.closed_at NOTNULL
+               SELECT repo.repo_id,
+                    repo_name,
+                    gh_issue_number,
+                    issue_title,
+                    date_trunc(:period,issues.created_at),
+                    date_trunc(:period,issues.closed_at),
+                    EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
+                FROM issues,
+                    repo
+                WHERE issues.closed_at NOTNULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
-            GROUP BY repo.repo_name, gh_issue_number, issue_title, issues.created_at, issues.closed_at, DIFFDATE
-            ORDER BY gh_issue_number
+                AND issues.created_at BETWEEN :begin_date and :end_date
+                GROUP BY repo.repo_id, repo.repo_name, gh_issue_number, issue_title, issues.created_at, issues.closed_at, DIFFDATE
+                ORDER BY gh_issue_number
             """)
-            results = pd.read_sql(issueSQL, self.db, params={
-                                 'repo_group_id': repo_group_id})
         else:
             issueSQL = s.sql.text("""
-                SELECT gh_issue_number, issue_title, created_at, closed_at, EXTRACT(DAY FROM closed_at - created_at) AS DIFFDATE
-                FROM issues
-                WHERE closed_at NOTNULL AND repo_id = :repo_id
-                GROUP BY gh_issue_number, issue_title, created_at, closed_at, DIFFDATE
-                ORDER BY DIFFDATE DESC
+                SELECT repo.repo_id,
+                    repo_name,
+                    gh_issue_number,
+                    issue_title,
+                    date_trunc(:period, issues.created_at),
+                    date_trunc(:period, issues.closed_at),
+                    EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
+                FROM issues,
+                    repo
+                WHERE issues.closed_at NOTNULL
+                AND issues.repo_id = :repo_id
+                AND repo.repo_id = issues.repo_id
+                AND issues.created_at BETWEEN :begin_date and :end_date
+                GROUP BY repo.repo_id, repo.repo_name, gh_issue_number, issue_title, issues.created_at, issues.closed_at, DIFFDATE
+                ORDER BY gh_issue_number
             """)
-            results = pd.read_sql(issueSQL, self.db,
-                                 params={'repo_id': repo_id})
+            
+        results = pd.read_sql(issueSQL, self.db,
+                                params={'repo_id': repo_id, 
+                                'repo_group_id': repo_group_id,
+                                'period': period, 'begin_date':begin_date,
+                                'end_date':end_date})
 
         return results
 
@@ -1182,6 +1257,78 @@ class Augur(object):
 
             results = pd.read_sql(license_declared_SQL, self.db, params={'repo_id': repo_id})
             return results
+
+    @annotate(tag='issues-maintainer-response-duration')
+    def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
+
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        issuesSQL = None
+        if repo_id:
+            issuesSQL = s.sql.text("""
+                select repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
+                from (
+                        select repo_id,
+                                repo_name,
+                                earliest_member_comments.issue_id                  as issue_id,
+                                extract(day from first_response_time - created_at) as time_to_first_commit
+                        from (
+                                select issues.issue_id            as issue_id,
+                                        issues.created_at          as created_at,
+                                        MIN(message.msg_timestamp) as first_response_time,
+                                        repo_name,
+                                        repo.repo_id
+                                from repo,
+                                    issues,
+                                    issue_message_ref,
+                                    message
+                                where repo.repo_id = :repo_id
+                                    and repo.repo_id = issues.repo_id
+                                    and issues.issue_id = issue_message_ref.issue_id
+                                    and issue_message_ref.msg_id = message.msg_id
+                                    and issues.created_at between :begin_date and :end_date
+                                group by issues.issue_id, issues.created_at, repo.repo_id
+                            ) as earliest_member_comments
+                        group by repo_id, repo_name,issue_id, time_to_first_commit
+                    ) as time_to_comment
+                group by repo_id, repo_name
+            """)
+        else:
+            issuesSQL = s.sql.text("""
+                select repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
+                from (
+                        select repo_id,
+                                repo_name,
+                                earliest_member_comments.issue_id                  as issue_id,
+                                extract(day from first_response_time - created_at) as time_to_first_commit
+                        from (
+                                select issues.issue_id            as issue_id,
+                                        issues.created_at          as created_at,
+                                        MIN(message.msg_timestamp) as first_response_time,
+                                        repo_name,
+                                        repo.repo_id
+                                from repo,
+                                    issues,
+                                    issue_message_ref,
+                                    message
+                                where repo.repo_id IN (SELECT repo.repo_id from repo where repo_group_id = :repo_group_id)
+                                    and repo.repo_id = issues.repo_id
+                                    and issues.issue_id = issue_message_ref.issue_id
+                                    and issue_message_ref.msg_id = message.msg_id
+                                    and issues.created_at between :begin_date and :end_date
+                                group by issues.issue_id, issues.created_at, repo.repo_id
+                            ) as earliest_member_comments
+                        group by repo_id, repo_name,issue_id, time_to_first_commit
+                    ) as time_to_comment
+                group by repo_id, repo_name
+            """)
+
+        results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
+
+        return results
 
     #####################################
     ###         EXPERIMENTAL          ###

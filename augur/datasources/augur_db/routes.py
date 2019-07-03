@@ -757,11 +757,13 @@ def create_routes(server):
                     [
                         {
                             "commit_date": "2018-01-01T00:00:00.000Z",
-                            "count": 5140
+                            "count": 5140,
+                            "repo_name": "rails"
                         },
                         {
                             "commit_date": "2019-01-01T00:00:00.000Z",
-                            "commit_count": 711
+                            "commit_count": 711,
+                            "repo_name": "rails"
                         }
                     ]
     """
@@ -783,11 +785,13 @@ def create_routes(server):
                     [
                         {
                             "commit_date": "2018-01-01T00:00:00.000Z",
-                            "count": 2287
+                            "count": 2287,
+                            "repo_name": "rails"
                         },
                         {
                             "commit_date": "2018-02-01T00:00:00.000Z",
-                            "count": 1939
+                            "count": 1939,
+                            "repo_name": "rails"
                         }
                     ]
     """
@@ -808,11 +812,15 @@ def create_routes(server):
                     [
                         {
                             "issue_date": "2018-05-20T00:00:00.000Z",
-                            "count": 3
+                            "count": 3,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         },
                         {
                             "issue_date": "2019-06-03T00:00:00.000Z",
-                            "count": 23
+                            "count": 23,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         }
                     ]
     """
@@ -834,11 +842,13 @@ def create_routes(server):
                     [
                         {
                             "issue_date": "2018-05-20T00:00:00.000Z",
-                            "count": 3
+                            "count": 3,
+                            "repo_name": "rails"
                         },
                         {
                             "issue_date": "2019-06-03T00:00:00.000Z",
-                            "count": 23
+                            "count": 23,
+                            "repo_name": "rails"
                         }
                     ]
     """
@@ -859,11 +869,15 @@ def create_routes(server):
                     [
                         {
                             "issue_date": "2018-05-20T00:00:00.000Z",
-                            "count": 3
+                            "count": 3,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         },
                         {
                             "issue_date": "2019-06-03T00:00:00.000Z",
                             "count": 23
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         }
                     ]
     """
@@ -885,11 +899,13 @@ def create_routes(server):
                     [
                         {
                             "issue_date": "2018-05-20T00:00:00.000Z",
-                            "count": 3
+                            "count": 3,
+                            "repo_name": "rails"
                         },
                         {
                             "issue_date": "2019-06-03T00:00:00.000Z",
-                            "count": 23
+                            "count": 23,
+                            "repo_name": "rails"
                         }
                     ]
     """
@@ -954,7 +970,9 @@ def create_routes(server):
                             "issue_comments": 0,
                             "pull_requests": 0,
                             "pull_request_comments": 0,
-                            "total": 2
+                            "total": 2,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         },
                         {
                             "user_id": 2,
@@ -964,7 +982,9 @@ def create_routes(server):
                             "issue_comments": 0,
                             "pull_requests": 0,
                             "pull_request_comments": 0,
-                            "total": 2
+                            "total": 2,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         }
                     ]
     """
@@ -1022,11 +1042,15 @@ def create_routes(server):
                     [
                         {
                             "contribute_at": "2018-05-20T00:00:00.000Z",
-                            "count": 3
+                            "count": 3,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         },
                         {
                             "contribute_at": "2019-06-03T00:00:00.000Z",
-                            "count": 23
+                            "count": 23,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         }
                     ]
     """
@@ -1048,11 +1072,15 @@ def create_routes(server):
                     [
                         {
                             "contribute_at": "2018-05-20T00:00:00.000Z",
-                            "count": 3
+                            "count": 3,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         },
                         {
                             "contribute_at": "2019-06-03T00:00:00.000Z",
-                            "count": 23
+                            "count": 23,
+                            "repo_name": "rails",
+                            "repo_id": 21000
                         }
                     ]
     """
@@ -1163,10 +1191,16 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
+                            "repo_id": 21000,
+                            "repo_name": "rails",
+                            "issue_id": 38318,
                             "date": "2009-05-15T19:48:43.000Z",
                             "open_date": 3696
                         },
                         {
+                            "repo_id": 21000,
+                            "repo_name": "rails",
+                            "issue_id": 38317,
                             "date": "2009-05-16T14:35:40.000Z",
                             "open_date": 3695
                         }
@@ -1186,10 +1220,16 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
+                            "repo_id": 21000,
+                            "repo_name": "rails",
+                            "issue_id": 38318,
                             "date": "2009-05-15T19:48:43.000Z",
                             "open_date": 3696
                         },
                         {
+                            "repo_id": 21000,
+                            "repo_name": "rails",
+                            "issue_id": 38317,
                             "date": "2009-05-16T14:35:40.000Z",
                             "open_date": 3695
                         }
@@ -1239,6 +1279,8 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
+                            "repo_id": 21682
+                            "repo_name":"incubator-dubbo",
                             "gh_issue_number":4223,
                             "issue_title":"Cloud Native PR",
                             "created_at":"2019-05-31T07:55:44.000Z",
@@ -1246,6 +1288,8 @@ def create_routes(server):
                             "diffdate":16.0
                         },
                         {
+                            "repo_id": 21682,
+                             "repo_name":"incubator-dubbo",
                             "gh_issue_number":4131,
                             "issue_title":"Reduce context switching cost by optimizing thread model on consumer side.",
                             "created_at":"2019-05-23T06:18:21.000Z",
@@ -1257,6 +1301,51 @@ def create_routes(server):
     server.addRepoMetric(
         augur_db.issues_closed_resolution_duration, 'issues-closed-resolution-duration')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/issues-maintainer-response-duration Issue Response Time (Repo Group)
+    @apiName Issue Response Time(Repo Group)
+    @apiGroup Evolution
+    @apiDescription Duration of time for issues to be resolved.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-maintainer-response-duration.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                   [
+                        {
+                            "repo_id": 21987,
+                            "repo_name": "qpid-proton",
+                            "average_days_comment": 27.1111111111
+                        },
+                        {
+                            "repo_id": 22252,
+                            "repo_name": "cordova-create",
+                            "average_days_comment": 0.8
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issues_maintainer_response_duration, 'issues-maintainer-response-duration')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issues-maintainer-response-duration Issue Response Time (Repo)
+    @apiName Issue Response Time(Repo)
+    @apiGroup Evolution
+    @apiDescription Duration of time for issues to be resolved.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/issues-maintainer-response-duration.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                   [
+                        {
+                            "repo_id": 21987,
+                            "repo_name": "qpid-proton",
+                            "average_days_comment": 27.1111111111
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issues_maintainer_response_duration, 'issues-maintainer-response-duration')
 
     #####################################
     ###              RISK             ###
