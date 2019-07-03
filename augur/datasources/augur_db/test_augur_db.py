@@ -139,18 +139,12 @@ def test_issues_first_time_closed(augur_db):
 def test_sub_projects(augur_db):
 
     # repo group
-    assert augur_db.sub_projects(24).iloc[0]['sub_protject_count'] > 50
+    assert augur_db.sub_projects(20).iloc[0]['sub_project_count'] > 0
 
     # repo id
     assert augur_db.sub_projects(
-        24, repo_id=21477).iloc[0]['sub_protject_count'] > 50
+        20, repo_id=21000).iloc[0]['sub_project_count'] > 0
 
-    # test begin_date and end_date
-    assert augur_db.sub_projects(24, begin_date='2019-6-1 00:00:01',
-                                 end_date='2019-06-10 23:59:59').iloc[0]['sub_protject_count'] < 5
-
-    assert augur_db.sub_projects(24, repo_id=21441, begin_date='2019-6-1 00:00:01',
-                                 end_date='2019-06-10 23:59:59').iloc[0]['sub_protject_count'] < 5
 
 def test_pull_requests_merge_contributor_new(augur_db):
     # repo id
@@ -224,7 +218,7 @@ def test_issues_closed_resolution_duration(augur_db):
     assert augur_db.issues_closed_resolution_duration(24,21682).iloc[0]['diffdate'] >= 0
 
 def test_get_repo(augur_db):
-    assert augur_db.get_repo_by_name('Comcast','zucchini').iloc[0].repo_id == 21116
+    assert augur_db.get_repo('rails','rails').iloc[0].repo_id == 21000
 
 def test_lines_changed_by_author(augur_db):
     assert augur_db.lines_changed_by_author(20).iloc[0].additions > 0
