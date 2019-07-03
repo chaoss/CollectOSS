@@ -1048,9 +1048,9 @@ class Augur(object):
 
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT badge_level
-                FROM repo_badging
-                WHERE repo_id = :repo_id
+                SELECT badge_level, repo_name
+                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
+                WHERE repo_badging.repo_id = :repo_id
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
@@ -1076,7 +1076,7 @@ class Augur(object):
 
         else:
             languages_SQL = s.sql.text("""
-                SELECT primary_language
+                SELECT primary_language, repo_name
                 FROM repo
                 WHERE repo_id = :repo_id
             """)
@@ -1104,9 +1104,9 @@ class Augur(object):
 
         else:
             license_declared_SQL = s.sql.text("""
-                SELECT license
-                FROM repo_badging
-                WHERE repo_id = :repo_id;
+                SELECT license, repo_name
+                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
+                WHERE repo_badging.repo_id = :repo_id;
             """)
 
             results = pd.read_sql(license_declared_SQL, self.db, params={'repo_id': repo_id})
@@ -1127,10 +1127,10 @@ class Augur(object):
         if repo_id:
             linesChangedByAuthorSQL = s.sql.text("""
                 SELECT cmt_author_email, cmt_author_date, cmt_author_affiliation as affiliation,
-                    SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace
-                FROM commits
-                WHERE repo_id = :repo_id
-                GROUP BY repo_id, cmt_author_date, cmt_author_affiliation, cmt_author_email
+                    SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace, repo_name
+                FROM commits JOIN repo ON commits.repo_id = repo.repo_id
+                WHERE commits.repo_id = :repo_id
+                GROUP BY commits.repo_id, cmt_author_date, cmt_author_affiliation, cmt_author_email, repo_name
                 ORDER BY cmt_author_date ASC;
             """)
             results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repo_id": repo_id})
@@ -1169,7 +1169,7 @@ class Augur(object):
             return results
         else:
             openIssueCountSQL = s.sql.text("""
-                SELECT repo.repo_id, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE
+                SELECT repo.repo_id, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE, repo_name
                 FROM issues, repo, repo_groups
                 WHERE issue_state = 'open'
                 AND issues.repo_id = :repo_id
@@ -1204,7 +1204,7 @@ class Augur(object):
             return results
         else:
             closedIssueCountSQL = s.sql.text("""
-                SELECT repo.repo_id, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE
+                SELECT repo.repo_id, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE, repo_name
                 FROM issues, repo, repo_groups
                 WHERE issue_state = 'closed'
                 AND issues.repo_id = :repo_id
@@ -1276,11 +1276,12 @@ class Augur(object):
                     issues.created_at                           AS DATE,
                     count(issue_events.event_id),
                     MAX(issue_events.created_at)                AS LAST_EVENT_DATE,
-                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY
-                FROM issues, issue_events
+                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY,
+                    repo_name
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id, issue_events
                 WHERE issues.repo_id = :repo_id
                 AND issues.issue_id = issue_events.issue_id
-                GROUP BY issues.issue_id
+                GROUP BY issues.issue_id, repo_name
                 ORDER by OPEN_DAY DESC
             """)
             results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
