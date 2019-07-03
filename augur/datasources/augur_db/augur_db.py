@@ -1131,8 +1131,8 @@ class Augur(object):
                     repo_name,
                     gh_issue_number,
                     issue_title,
-                    date_trunc(:period,issues.created_at),
-                    date_trunc(:period,issues.closed_at),
+                    date_trunc(:period, issues.created_at) as created_at,
+                    date_trunc(:period, issues.closed_at) as closed_at,
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
@@ -1149,8 +1149,8 @@ class Augur(object):
                     repo_name,
                     gh_issue_number,
                     issue_title,
-                    date_trunc(:period, issues.created_at),
-                    date_trunc(:period, issues.closed_at),
+                    date_trunc(:period, issues.created_at) as created_at,
+                    date_trunc(:period, issues.closed_at) as closed_at,
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
