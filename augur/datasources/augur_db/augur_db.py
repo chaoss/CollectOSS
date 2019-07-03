@@ -64,9 +64,10 @@ class Augur(object):
                 SELECT
                     date_trunc(:period, cmt_committer_date::DATE) as date,
                     repo_id,
-                    COUNT(cmt_commit_hash) as commit_count
-                FROM commits
-                WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                    COUNT(cmt_commit_hash) as commit_count,
+                    repo_name
+                FROM commits JOIN repo ON repo.repo_id = commits.repo_id
+                WHERE repo_group_id=:repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
                 GROUP BY date, repo_id
                 ORDER BY repo_id, date
@@ -80,11 +81,12 @@ class Augur(object):
             code_changes_SQL = s.sql.text("""
                 SELECT
                     date_trunc(:period, cmt_committer_date::DATE) as date,
-                    COUNT(cmt_commit_hash) as commit_count
-                FROM commits
-                WHERE repo_id = :repo_id
+                    COUNT(cmt_commit_hash) as commit_count,
+                    repo_name
+                FROM commits JOIN repo ON commits.repo_id = repo.repo_id
+                WHERE commits.repo_id = :repo_id
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY date
+                GROUP BY date, repo_name
                 ORDER BY date
             """)
 
@@ -113,13 +115,13 @@ class Augur(object):
         if repo_id:
             commitNewContributor = s.sql.text("""
                 SELECT date_trunc(:period, new_date::DATE) as commit_date,
-                COUNT(cmt_author_email)
-                FROM ( SELECT cmt_author_email, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
-                FROM commits WHERE
-                repo_id = :repo_id
+                COUNT(cmt_author_email), repo_name
+                FROM ( SELECT repo_name, cmt_author_email, MIN(TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD')) AS new_date
+                FROM commits JOIN repo ON commits.repo_id = repo.repo_id 
+                WHERE repo_id = :repo_id
                 AND TO_TIMESTAMP(cmt_author_date,'YYYY-MM-DD') BETWEEN :begin_date AND :end_date AND cmt_author_email IS NOT NULL
-                GROUP BY cmt_author_email
-                ) as abc GROUP BY commit_date
+                GROUP BY cmt_author_email, repo_name
+                ) as abc GROUP BY commit_date, repo_name
             """)
             results = pd.read_sql(commitNewContributor, self.db, params={'repo_id': repo_id, 'period': period,
                                                                          'begin_date': begin_date,
@@ -163,19 +165,21 @@ class Augur(object):
             issueNewContributor = s.sql.text("""
                 SELECT
                     date_trunc(:period, new_date::DATE) as issue_date,
-                    COUNT(gh_user_id)
+                    COUNT(gh_user_id),
+                    repo_name
                 FROM (
                     SELECT
                         gh_user_id,
-                        MIN(created_at) AS new_date
+                        MIN(issues.created_at) AS new_date,
+                        repo_name
                     FROM
-                        issues
+                        issues JOIN repo ON issues.repo_id = repo.repo_id
                     WHERE
-                        repo_id = :repo_id
-                        AND created_at BETWEEN :begin_date AND :end_date
-                    GROUP BY gh_user_id
+                        issues.repo_id = :repo_id
+                        AND issues.created_at BETWEEN :begin_date AND :end_date
+                    GROUP BY gh_user_id, repo_name
                 ) as abc
-                GROUP BY issue_date
+                GROUP BY issue_date, repo_name
                 ORDER BY issue_date
             """)
             results = pd.read_sql(issueNewContributor, self.db, params={'repo_id': repo_id, 'period': period,
@@ -275,7 +279,7 @@ class Augur(object):
 
         if repo_id:
             sub_projectsSQL = s.sql.text("""
-                SELECT COUNT(*)  AS sub_protject_count
+                SELECT COUNT(*)  AS sub_project_count
                 FROM repo
                 WHERE repo_group_id = (
                 SELECT repo_group_id
@@ -337,7 +341,8 @@ class Augur(object):
                     SUM(pull_requests)           AS pull_requests,
                     SUM(pull_request_comments)   AS pull_request_comments,
                     SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests +
-                        a.pull_request_comments) AS total
+                        a.pull_request_comments) AS total,
+                    a.repo_id, repo_name
                 FROM (
                         (SELECT gh_user_id AS id,
                                 0          AS commits,
@@ -345,12 +350,13 @@ class Augur(object):
                                 0          AS commit_comments,
                                 0          AS issue_comments,
                                 0          AS pull_requests,
-                                0          AS pull_request_comments
+                                0          AS pull_request_comments,
+                                repo_id
                         FROM issues
                         WHERE repo_id = :repo_id
                             AND created_at BETWEEN :begin_date AND :end_date
                             AND gh_user_id IS NOT NULL
-                        GROUP BY gh_user_id)
+                        GROUP BY gh_user_id, repo_id)
                         UNION ALL
                         (SELECT cmt_ght_author_id AS id,
                                 COUNT(*)          AS commits,
@@ -358,12 +364,13 @@ class Augur(object):
                                 0                 AS commit_comments,
                                 0                 AS issue_comments,
                                 0                 AS pull_requests,
-                                0                 AS pull_request_comments
+                                0                 AS pull_request_comments,
+                                repo_id
                         FROM commits
                         WHERE repo_id = :repo_id
                             AND cmt_ght_author_id IS NOT NULL
                             AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                        GROUP BY cmt_ght_author_id)
+                        GROUP BY cmt_ght_author_id, repo_id)
                         UNION ALL
                         (SELECT cntrb_id AS id,
                                 0        AS commits,
@@ -371,7 +378,8 @@ class Augur(object):
                                 COUNT(*) AS commit_comments,
                                 0        AS issue_comments,
                                 0        AS pull_requests,
-                                0        AS pull_request_comments
+                                0        AS pull_request_comments,
+                                repo_id
                         FROM commit_comment_ref,
                             commits,
                             message
@@ -379,7 +387,7 @@ class Augur(object):
                             AND message.msg_id = commit_comment_ref.msg_id
                             AND repo_id = :repo_id
                             AND created_at BETWEEN :begin_date AND :end_date
-                        GROUP BY id)
+                        GROUP BY id, repo_id)
                         UNION ALL
                         (
                             SELECT message.cntrb_id AS id,
@@ -388,7 +396,8 @@ class Augur(object):
                                     0                AS commit_comments,
                                     count(*)         AS issue_comments,
                                     0                AS pull_requests,
-                                    0                AS pull_request_comments
+                                    0                AS pull_request_comments,
+                                repo_id
                             FROM issues,
                                 issue_message_ref,
                                 message
@@ -397,10 +406,10 @@ class Augur(object):
                             AND issues.issue_id = issue_message_ref.issue_id
                             AND issue_message_ref.msg_id = message.msg_id
                             AND created_at BETWEEN :begin_date AND :end_date
-                            GROUP BY id
+                            GROUP BY id, repo_id
                         )
                     ) a
-                GROUP BY a.id
+                GROUP BY a.id, a.repo_id, repo_name
                 ORDER BY total DESC 
             """)
 
