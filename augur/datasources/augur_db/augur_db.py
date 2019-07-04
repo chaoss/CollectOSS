@@ -1069,14 +1069,14 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: DataFrame of age of open issues.
         """
-        
+
         if not begin_date:
             begin_date = '1970-1-1 00:00:01'
         if not end_date:
             end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         openAgeSQL = None
-        
+
         if not repo_id:
             openAgeSQL = s.sql.text("""
                 SELECT  repo.repo_id, repo_name, issue_id, date_trunc(:period, issues.created_at ) as date, EXTRACT(DAY FROM NOW() - issues.created_at) AS open_date
@@ -1161,9 +1161,9 @@ class Augur(object):
                 GROUP BY repo.repo_id, repo.repo_name, gh_issue_number, issue_title, issues.created_at, issues.closed_at, DIFFDATE
                 ORDER BY gh_issue_number
             """)
-            
+
         results = pd.read_sql(issueSQL, self.db,
-                                params={'repo_id': repo_id, 
+                                params={'repo_id': repo_id,
                                 'repo_group_id': repo_group_id,
                                 'period': period, 'begin_date':begin_date,
                                 'end_date':end_date})
@@ -1200,6 +1200,46 @@ class Augur(object):
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
+            return results
+
+    @annotate(tag='forks')
+    def forks(self, repo_group_id, repo_id=None):
+        """
+        Returns a time series of the fork count
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Time series of fork count
+        """
+        if not repo_id:
+            forks_SQL = s.sql.text("""
+                SELECT
+                    repo_info.repo_id,
+                    repo_name,
+                    repo_info.data_collection_date as date,
+                    fork_count AS forks
+                FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                WHERE repo_info.repo_id IN
+                    (SELECT repo_id FROM repo
+                     WHERE  repo_group_id = :repo_group_id)
+                ORDER BY repo_info.repo_id, date
+            """)
+
+            results = pd.read_sql(forks_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            forks_SQL = s.sql.text("""
+                SELECT
+                    repo_name,
+                    repo_info.data_collection_date as date,
+                    fork_count AS forks
+                FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                WHERE repo_info.repo_id = :repo_id
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(forks_SQL, self.db, params={'repo_id': repo_id})
             return results
 
     @annotate(tag='languages')

@@ -1393,6 +1393,67 @@ def create_routes(server):
     server.addRepoMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
 
     """
+    @api {get} /repo-groups/:repo_group_id/forks Forks (Repo Group)
+    @apiName forks-repo-group
+    @apiGroup Risk
+    @apiDescription A time series of fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "date": "2019-07-03T23:26:42.000Z",
+                            "forks": 519
+                        },
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "date": "2019-07-04T16:39:39.000Z",
+                            "forks": 519
+                        },
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "date": "2019-07-03T23:26:22.000Z",
+                            "forks": 20
+                        },
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "date": "2019-07-04T16:39:20.000Z",
+                            "forks": 20
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.forks, 'forks')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/forks Forks (Repo)
+    @apiName forks-repo
+    @apiGroup Risk
+    @apiDescription A time series of fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-03T23:27:42.000Z",
+                            "forks": 843
+                        },
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-04T16:40:44.000Z",
+                            "forks": 844
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.forks, 'forks')
+
+    """
     @api {get} /repo-groups/:repo_group_id/languages Languages (Repo Group)
     @apiName languages-repo-group
     @apiGroup Risk
