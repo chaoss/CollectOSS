@@ -1454,6 +1454,47 @@ def create_routes(server):
     server.addRepoMetric(augur_db.forks, 'forks')
 
     """
+    @api {get} /repo-groups/:repo_group_id/fork-count Fork Count (Repo Group)
+    @apiName fork-count-repo-group
+    @apiGroup Risk
+    @apiDescription Fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21364,
+                            "repo_name": "irs_process_scripts",
+                            "forks": 4
+                        },
+                        {
+                            "repo_id": 21420,
+                            "repo_name": "ruby-coffee-script",
+                            "forks": 54
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.fork_count, 'fork-count')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/fork-count Fork Count (Repo)
+    @apiName fork-count-repo
+    @apiGroup Risk
+    @apiDescription Fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "forks": 844
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.fork_count, 'fork-count')
+
+    """
     @api {get} /repo-groups/:repo_group_id/languages Languages (Repo Group)
     @apiName languages-repo-group
     @apiGroup Risk
