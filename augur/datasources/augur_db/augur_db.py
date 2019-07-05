@@ -1462,48 +1462,7 @@ class Augur(object):
         results = pd.read_sql(cdRgNewrepRankedCommitsSQL, self.db, params={ "repo_group_id": repo_group_id, "calendar_year": calendar_year})
         return results
 
-    @annotate(tag="get-issues")
-    def get_issues(self, repo_group_id, repo_id=None):
-        if not repo_id:
-            issuesSQL = s.sql.text("""
-                SELECT issue_title,
-                    issues.issue_id,
-                    issues.repo_id,
-                    issues.html_url,
-                    issue_state                                 AS STATUS,
-                    issues.created_at                           AS DATE,
-                    count(issue_events.event_id),
-                    MAX(issue_events.created_at)                AS LAST_EVENT_DATE,
-                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY
-                FROM issues,
-                    issue_events
-                WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
-                AND issues.issue_id = issue_events.issue_id
-                GROUP BY issues.issue_id
-                ORDER by OPEN_DAY DESC
-            """)
-            results = pd.read_sql(issuesSQL, self.db, params={'repo_group_id': repo_group_id})
-            return results
-        else:
-            issuesSQL = s.sql.text("""
-                SELECT issue_title,
-                    issues.issue_id,
-                    issues.repo_id,
-                    issues.html_url,
-                    issue_state                                 AS STATUS,
-                    issues.created_at                           AS DATE,
-                    count(issue_events.event_id),
-                    MAX(issue_events.created_at)                AS LAST_EVENT_DATE,
-                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY,
-                    repo_name
-                FROM issues JOIN repo ON issues.repo_id = repo.repo_id, issue_events
-                WHERE issues.repo_id = :repo_id
-                AND issues.issue_id = issue_events.issue_id
-                GROUP BY issues.issue_id, repo_name
-                ORDER by OPEN_DAY DESC
-            """)
-            results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
-            return results
+    
 
 
 #####################################
@@ -1629,3 +1588,46 @@ class Augur(object):
 
         results = pd.read_sql(get_repos_for_dosocs_SQL, self.db)
         return results
+
+    @annotate(tag="get-issues")
+    def get_issues(self, repo_group_id, repo_id=None):
+        if not repo_id:
+            issuesSQL = s.sql.text("""
+                SELECT issue_title,
+                    issues.issue_id,
+                    issues.repo_id,
+                    issues.html_url,
+                    issue_state                                 AS STATUS,
+                    issues.created_at                           AS DATE,
+                    count(issue_events.event_id),
+                    MAX(issue_events.created_at)                AS LAST_EVENT_DATE,
+                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY
+                FROM issues,
+                    issue_events
+                WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND issues.issue_id = issue_events.issue_id
+                GROUP BY issues.issue_id
+                ORDER by OPEN_DAY DESC
+            """)
+            results = pd.read_sql(issuesSQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+        else:
+            issuesSQL = s.sql.text("""
+                SELECT issue_title,
+                    issues.issue_id,
+                    issues.repo_id,
+                    issues.html_url,
+                    issue_state                                 AS STATUS,
+                    issues.created_at                           AS DATE,
+                    count(issue_events.event_id),
+                    MAX(issue_events.created_at)                AS LAST_EVENT_DATE,
+                    EXTRACT(DAY FROM NOW() - issues.created_at) AS OPEN_DAY,
+                    repo_name
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id, issue_events
+                WHERE issues.repo_id = :repo_id
+                AND issues.issue_id = issue_events.issue_id
+                GROUP BY issues.issue_id, repo_name
+                ORDER by OPEN_DAY DESC
+            """)
+            results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
+            return results
