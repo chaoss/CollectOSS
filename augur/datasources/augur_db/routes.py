@@ -1636,6 +1636,45 @@ def create_routes(server):
     """
     server.addRepoMetric(augur_db.stars, 'stars')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/stars-count Stars Count (Repo Group)
+    @apiName stars-count-repo-group
+    @apiGroup Value
+    @apiDescription Stars count.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21364,
+                            "repo_name": "irs_process_scripts",
+                            "stars": 20
+                        },
+                        {
+                            "repo_id": 21420,
+                            "repo_name": "ruby-coffee-script",
+                            "stars": 19
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.stars_count, 'stars-count')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/stars-count Stars Count (Repo)
+    @apiName stars-count-repo
+    @apiGroup Value
+    @apiDescription Stars count.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "stars": 8653
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.stars_count, 'stars-count')
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################

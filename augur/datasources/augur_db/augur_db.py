@@ -1449,6 +1449,41 @@ class Augur(object):
             results = pd.read_sql(stars_SQL, self.db, params={'repo_id': repo_id})
             return results
 
+    @annotate(tag='stars-count')
+    def stars_count(self, repo_group_id, repo_id=None):
+        """
+        Returns the latest stars count
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: stars count
+        """
+        if not repo_id:
+            stars_count_SQL = s.sql.text("""
+                SELECT a.repo_id, repo_name, a.stars_count AS stars
+                FROM repo_info a LEFT JOIN repo_info b
+                ON (a.repo_id = b.repo_id AND a.repo_info_id < b.repo_info_id), repo
+                WHERE b.repo_info_id IS NULL
+                AND a.repo_id = repo.repo_id
+                AND a.repo_id IN
+                    (SELECT repo_id FROM repo
+                     WHERE  repo_group_id = :repo_group_id)
+            """)
+
+            results = pd.read_sql(stars_count_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+        else:
+            stars_count_SQL = s.sql.text("""
+                SELECT repo_name, stars_count AS stars
+                FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                WHERE repo_info.repo_id = :repo_id
+                ORDER BY repo_info.data_collection_date DESC
+                LIMIT 1
+            """)
+
+            results = pd.read_sql(stars_count_SQL, self.db, params={'repo_id': repo_id})
+            return results
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
