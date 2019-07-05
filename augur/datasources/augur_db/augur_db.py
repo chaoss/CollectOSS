@@ -1406,6 +1406,50 @@ class Augur(object):
         return results
 
     #####################################
+    ###             VALUE             ###
+    #####################################
+
+    @annotate(tag='stars')
+    def stars(self, repo_group_id, repo_id=None):
+        """
+        Returns a time series of the stars count
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Time series of stars count
+        """
+        if not repo_id:
+            stars_SQL = s.sql.text("""
+                SELECT
+                    repo_info.repo_id,
+                    repo_name,
+                    repo_info.data_collection_date as date,
+                    stars_count AS stars
+                FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                WHERE repo_info.repo_id IN
+                    (SELECT repo_id FROM repo
+                     WHERE  repo_group_id = :repo_group_id)
+                ORDER BY repo_info.repo_id, date
+            """)
+
+            results = pd.read_sql(stars_SQL, self.db, params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            stars_SQL = s.sql.text("""
+                SELECT
+                    repo_name,
+                    repo_info.data_collection_date as date,
+                    stars_count AS stars
+                FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                WHERE repo_info.repo_id = :repo_id
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(stars_SQL, self.db, params={'repo_id': repo_id})
+            return results
+
+    #####################################
     ###         EXPERIMENTAL          ###
     #####################################
 

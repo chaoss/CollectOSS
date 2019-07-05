@@ -1574,6 +1574,69 @@ def create_routes(server):
     server.addRepoMetric(augur_db.license_declared, 'license-declared')
 
     #####################################
+    ###             VALUE             ###
+    #####################################
+
+    """
+    @api {get} /repo-groups/:repo_group_id/stars Stars (Repo Group)
+    @apiName stars-repo-group
+    @apiGroup Value
+    @apiDescription A time series of stars count.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21491,
+                            "repo_name": "commons-io",
+                            "date": "2019-07-03T23:23:36.000Z",
+                            "stars": 600
+                        },
+                        {
+                            "repo_id": 21491,
+                            "repo_name": "commons-io",
+                            "date": "2019-07-04T16:36:27.000Z",
+                            "stars": 601
+                        },
+                        {
+                            "repo_id": 21524,
+                            "repo_name": "maven",
+                            "date": "2019-07-03T23:21:14.000Z",
+                            "stars": 1730
+                        },
+                        {
+                            "repo_id": 21524,
+                            "repo_name": "maven",
+                            "date": "2019-07-04T16:34:04.000Z",
+                            "stars": 1733
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.stars, 'stars')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/stars Stars (Repo)
+    @apiName stars-repo
+    @apiGroup Value
+    @apiDescription A time series of stars count.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-03T23:27:42.000Z",
+                            "stars": 8652
+                        },
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-04T16:40:44.000Z",
+                            "stars": 8653
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.stars, 'stars')
+
+    #####################################
     ###         EXPERIMENTAL          ###
     #####################################
 
