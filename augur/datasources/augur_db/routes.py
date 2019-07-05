@@ -1734,6 +1734,45 @@ def create_routes(server):
     """
     server.addRepoMetric(augur_db.watchers, 'watchers')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/watchers-count Watchers Count (Repo Group)
+    @apiName watchers-count-repo-group
+    @apiGroup Value
+    @apiDescription Watchers count.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "watchers": 20
+                        },
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "watchers": 60
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.watchers_count, 'watchers-count')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/watchers-count watchers Count (Repo)
+    @apiName watchers-count-repo
+    @apiGroup Value
+    @apiDescription Watchers count.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "airflow",
+                            "watchers": 649
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.watchers_count, 'watchers-count')
+
     #####################################
     ###         EXPERIMENTAL          ###
     #####################################
