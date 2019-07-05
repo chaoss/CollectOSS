@@ -1697,7 +1697,7 @@ class Augur(object):
     def get_repos_for_dosocs(self):
         """ Returns a list of repos along with their repo_id & path """
         get_repos_for_dosocs_SQL = s.sql.text("""
-            SELECT b.repo_id, CONCAT(a.value || b.repo_group_id || chr(47) || b.repo_path || b.repo_name)
+            SELECT b.repo_id, CONCAT(a.value || b.repo_group_id || chr(47) || b.repo_path || b.repo_name) AS path
             FROM settings a, repo b
             WHERE a.setting='repo_directory'
         """)
