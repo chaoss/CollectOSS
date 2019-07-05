@@ -248,3 +248,23 @@ def test_issues_maintainer_response_duration(augur_db):
     assert augur_db.issues_maintainer_response_duration(20).iloc[0].average_days_comment > 0
     assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
 
+
+def test_annual_lines_of_code_count_ranked_by_repo_in_repo_group(augur_db):
+    assert augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group(20).iloc[0].net > 0
+    assert augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group(20, timeframe = 'year').iloc[0].net > 0
+    assert augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group(20, 21000).iloc[0].net > 0
+    assert augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group(20, 21000,timeframe = 'year').iloc[0].net > 0
+
+def test_annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(augur_db):
+    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0 
+    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0 
+
+def test_annual_commit_count_ranked_by_repo_in_repo_group(augur_db):
+    assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20).iloc[0].net > 0
+    assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20, timeframe = 'year').iloc[0].net > 0
+    assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20, 21000).iloc[0].net > 0
+    assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20, 21000,timeframe = 'year').iloc[0].net > 0
+
+def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0 
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0 
