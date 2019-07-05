@@ -247,3 +247,7 @@ def test_issues_maintainer_response_duration(augur_db):
     assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
     assert augur_db.issues_maintainer_response_duration(20).iloc[0].average_days_comment > 0
     assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
+
+def test_get_repos_for_dosocs(augur_db):
+    assert augur_db.get_repos_for_dosocs().isin(
+        ['/home/sean/git-repos/23/github.com/rails/rails-dom-testing']).any().any()
