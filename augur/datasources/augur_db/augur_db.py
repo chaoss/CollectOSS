@@ -1447,19 +1447,35 @@ class Augur(object):
         """
         if calendar_year == None:
             calendar_year = 2019
+        
+        cdRgNewrepRankedCommitsSQL = None
 
-        cdRgNewrepRankedCommitsSQL = s.sql.text("""
-            SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, rg_name
-            FROM dm_repo_annual, repo, repo_groups
-            where  repo.repo_group_id = :repo_group_id
-            and dm_repo_annual.repo_id = repo.repo_id
-            and date_part('year', repo.repo_added) = :calendar_year
-            and repo.repo_group_id = repo_groups.repo_group_id
-            group by repo.repo_id, patches, rg_name
-            ORDER BY net desc
-            LIMIT 10
-        """)
-        results = pd.read_sql(cdRgNewrepRankedCommitsSQL, self.db, params={ "repo_group_id": repo_group_id, "calendar_year": calendar_year})
+        if not repo_id:
+            cdRgNewrepRankedCommitsSQL = s.sql.text("""
+                SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
+                FROM dm_repo_annual, repo, repo_groups
+                where  repo.repo_group_id = :repo_group_id
+                and dm_repo_annual.repo_id = repo.repo_id
+                and date_part('year', repo.repo_added) = :calendar_year
+                and repo.repo_group_id = repo_groups.repo_group_id
+                group by repo.repo_id, patches, rg_name
+                ORDER BY net desc
+                LIMIT 10
+            """)
+        else: 
+            cdRgNewrepRankedCommitsSQL = s.sql.text("""
+                SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
+                FROM dm_repo_annual, repo, repo_groups
+                where  repo.repo_group_id = (select repo.repo_group_id from repo where repo.repo_id = :repo_id)
+                and dm_repo_annual.repo_id = repo.repo_id
+                and date_part('year', repo.repo_added) = :calendar_year
+                and repo.repo_group_id = repo_groups.repo_group_id
+                group by repo.repo_id, patches, rg_name
+                ORDER BY net desc
+                LIMIT 10
+            """)
+        results = pd.read_sql(cdRgNewrepRankedCommitsSQL, self.db, params={ "repo_group_id": repo_group_id,
+        "repo_id": repo_id, "calendar_year": calendar_year})
         return results
 
     
