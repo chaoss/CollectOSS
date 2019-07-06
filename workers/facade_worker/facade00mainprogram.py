@@ -89,15 +89,15 @@ html = html.parser.HTMLParser()
 
 # 	db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people = cfg.migrate_database_config()
 
-json = cfg.migrate_database_config("Credentials")
+json = cfg.read_config("Database", use_main_config=1)#cfg.migrate_database_config("Credentials")
 db_user = json['user']
-db_pass = json['pass']
-db_name = json['name']
+db_pass = json['password']
+db_name = json['database']
 db_host = json['host']
-db_user_people = json['user_people']
-db_pass_people = json['pass_people']
-db_name_people = json['name_people']
-db_host_people = json['host_people']
+db_user_people = json['user']
+db_pass_people = json['password']
+db_name_people = json['database']
+db_host_people = json['host']
 
 # Open a general-purpose connection
 db,cursor = cfg.database_connection(
