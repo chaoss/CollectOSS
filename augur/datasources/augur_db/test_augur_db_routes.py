@@ -83,21 +83,21 @@ def test_issues_new_by_repo(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['issues'] >= 1
+    assert data[0]['issues'] > 0
 
 def test_issues_active_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issues-active')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['issues'] >= 1
+    assert data[0]['issues'] > 0
 
 def test_issues_active_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21339/issues-active')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['issues'] >= 1
+    assert data[0]['issues'] > 0
 
 def test_issues_closed_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/issues-closed')
@@ -118,42 +118,40 @@ def test_issue_duration_by_group(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['duration'] == '60 days 19:41:27.000000000'
 
 def test_issue_duration_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21009/issue-duration')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['duration'] == '60 days 19:41:27.000000000'
 
 def test_issue_participants_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issue-participants')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['participants'] == 1
+    assert data[0]['participants'] > 0
 
 def test_issue_participants_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21403/issue-participants')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['participants'] == 1
+    assert data[0]['participants'] > 0
 
 def test_issue_throughput_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/issue-throughput')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['throughput'] == 0.263158
+    assert data[0]['throughput'] >= 0
 
 def test_issue_throughput_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/repos/21682/issue-throughput')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['throughput'] == 0.861896
+    assert data[0]['throughput'] >= 0
 
 def test_issue_backlog_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issue-backlog')
@@ -216,14 +214,14 @@ def test_sub_projects_by_group(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["sub_protject_count"] > 0
+    assert data[0]["sub_project_count"] > 0
 
 def test_sub_projects_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/repos/21477/sub-projects')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["sub_protject_count"] > 0
+    assert data[0]["sub_project_count"] > 0
 
 def test_contributors_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/contributors')
@@ -260,28 +258,28 @@ def test_open_issues_count_by_group(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['open_count'] == 1
+    assert data[0]['open_count'] > 0
 
 def test_open_issues_count_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/22/repos/21326/open-issues-count')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['open_count'] == 1
+    assert data[0]['open_count'] > 0
 
 def test_closed_issues_count_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/closed-issues-count')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['closed_count'] == 1
+    assert data[0]['closed_count'] > 0
 
 def test_closed_issues_count_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/22/repos/21684/closed-issues-count')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]['closed_count'] == 3
+    assert data[0]['closed_count'] > 0
 
 def test_issues_open_age_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/issues-open-age/')
@@ -317,7 +315,7 @@ def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["net"] >= 0 
+    assert data[0]["net"] >= 0
 
 def test_issues_maintainer_response_duration_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/issues-maintainer-response-duration/')
@@ -339,14 +337,12 @@ def test_cii_best_practices_badge_by_group(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["badge_level"] == 'passing'
 
 def test_cii_best_practices_badge_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/repos/21252/cii-best-practices-badge')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["badge_level"] == 'in_progress'
 
 def test_languages_by_group(augur_db_routes):
     # TODO need data
@@ -361,7 +357,6 @@ def test_license_declared_by_group(augur_db_routes):
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
-    assert data[0]["license"] == 'Apache-2.0'
 
 def test_license_declared_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/repos/21252/license-declared')
@@ -428,3 +423,4 @@ def test_annual_lines_of_code_count_ranked_by_repo_in_repo_group_by_group(augur_
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]["net"] > 0
+
