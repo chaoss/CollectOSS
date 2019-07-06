@@ -1393,6 +1393,108 @@ def create_routes(server):
     server.addRepoMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
 
     """
+    @api {get} /repo-groups/:repo_group_id/forks Forks (Repo Group)
+    @apiName forks-repo-group
+    @apiGroup Risk
+    @apiDescription A time series of fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "date": "2019-07-03T23:26:42.000Z",
+                            "forks": 519
+                        },
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "date": "2019-07-04T16:39:39.000Z",
+                            "forks": 519
+                        },
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "date": "2019-07-03T23:26:22.000Z",
+                            "forks": 20
+                        },
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "date": "2019-07-04T16:39:20.000Z",
+                            "forks": 20
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.forks, 'forks')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/forks Forks (Repo)
+    @apiName forks-repo
+    @apiGroup Risk
+    @apiDescription A time series of fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-03T23:27:42.000Z",
+                            "forks": 843
+                        },
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-04T16:40:44.000Z",
+                            "forks": 844
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.forks, 'forks')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/fork-count Fork Count (Repo Group)
+    @apiName fork-count-repo-group
+    @apiGroup Risk
+    @apiDescription Fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21364,
+                            "repo_name": "irs_process_scripts",
+                            "forks": 4
+                        },
+                        {
+                            "repo_id": 21420,
+                            "repo_name": "ruby-coffee-script",
+                            "forks": 54
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.fork_count, 'fork-count')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/fork-count Fork Count (Repo)
+    @apiName fork-count-repo
+    @apiGroup Risk
+    @apiDescription Fork count.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "forks": 844
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.fork_count, 'fork-count')
+
+    """
     @api {get} /repo-groups/:repo_group_id/languages Languages (Repo Group)
     @apiName languages-repo-group
     @apiGroup Risk
@@ -1470,6 +1572,206 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.license_declared, 'license-declared')
+
+    #####################################
+    ###             VALUE             ###
+    #####################################
+
+    """
+    @api {get} /repo-groups/:repo_group_id/stars Stars (Repo Group)
+    @apiName stars-repo-group
+    @apiGroup Value
+    @apiDescription A time series of stars count.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21491,
+                            "repo_name": "commons-io",
+                            "date": "2019-07-03T23:23:36.000Z",
+                            "stars": 600
+                        },
+                        {
+                            "repo_id": 21491,
+                            "repo_name": "commons-io",
+                            "date": "2019-07-04T16:36:27.000Z",
+                            "stars": 601
+                        },
+                        {
+                            "repo_id": 21524,
+                            "repo_name": "maven",
+                            "date": "2019-07-03T23:21:14.000Z",
+                            "stars": 1730
+                        },
+                        {
+                            "repo_id": 21524,
+                            "repo_name": "maven",
+                            "date": "2019-07-04T16:34:04.000Z",
+                            "stars": 1733
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.stars, 'stars')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/stars Stars (Repo)
+    @apiName stars-repo
+    @apiGroup Value
+    @apiDescription A time series of stars count.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-03T23:27:42.000Z",
+                            "stars": 8652
+                        },
+                        {
+                            "repo_name": "graphiql",
+                            "date": "2019-07-04T16:40:44.000Z",
+                            "stars": 8653
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.stars, 'stars')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/stars-count Stars Count (Repo Group)
+    @apiName stars-count-repo-group
+    @apiGroup Value
+    @apiDescription Stars count.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21364,
+                            "repo_name": "irs_process_scripts",
+                            "stars": 20
+                        },
+                        {
+                            "repo_id": 21420,
+                            "repo_name": "ruby-coffee-script",
+                            "stars": 19
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.stars_count, 'stars-count')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/stars-count Stars Count (Repo)
+    @apiName stars-count-repo
+    @apiGroup Value
+    @apiDescription Stars count.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphiql",
+                            "stars": 8653
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.stars_count, 'stars-count')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/watchers Watchers (Repo Group)
+    @apiName watchers-repo-group
+    @apiGroup Value
+    @apiDescription A time series of watchers count.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "date": "2019-07-03T23:26:42.000Z",
+                            "watchers": 60
+                        },
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "date": "2019-07-04T16:39:39.000Z",
+                            "watchers": 60
+                        },
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "date": "2019-07-03T23:26:22.000Z",
+                            "watchers": 19
+                        },
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "date": "2019-07-04T16:39:20.000Z",
+                            "watchers": 20
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.watchers, 'watchers')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/watchers Watchers (Repo)
+    @apiName watchers-repo
+    @apiGroup Value
+    @apiDescription A time series of watchers count.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "airflow",
+                            "date": "2019-07-03T23:22:26.000Z",
+                            "watchers": 649
+                        },
+                        {
+                            "repo_name": "airflow",
+                            "date": "2019-07-04T16:35:16.000Z",
+                            "watchers": 647
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.watchers, 'watchers')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/watchers-count Watchers Count (Repo Group)
+    @apiName watchers-count-repo-group
+    @apiGroup Value
+    @apiDescription Watchers count.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21039,
+                            "repo_name": "rails_xss",
+                            "watchers": 20
+                        },
+                        {
+                            "repo_id": 21036,
+                            "repo_name": "jquery-ujs",
+                            "watchers": 60
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.watchers_count, 'watchers-count')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/watchers-count watchers Count (Repo)
+    @apiName watchers-count-repo
+    @apiGroup Value
+    @apiDescription Watchers count.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "airflow",
+                            "watchers": 649
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.watchers_count, 'watchers-count')
 
     #####################################
     ###         EXPERIMENTAL          ###
