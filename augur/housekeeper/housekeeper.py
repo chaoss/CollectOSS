@@ -91,32 +91,33 @@ class Housekeeper:
         try:
             # Waiting for 1 alive worker
             while True:
-                if len(broker._getvalue().keys()) > 1:
-                    logging.info("Housekeeper recognized that the broker has at least one worker... beginning to distribute maintained tasks")
-                    time.sleep(10)
-                    while True:
-                        logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, tag))
-                        
-                        for repo in section:
-                            task = {
-                                "job_type": "MAINTAIN", 
-                                "models": [model], 
-                                "given": {
-                                    "git_url": repo['repo_git']
+                if broker is not None:
+                    if len(broker._getvalue().keys()) > 1:
+                        logging.info("Housekeeper recognized that the broker has at least one worker... beginning to distribute maintained tasks")
+                        time.sleep(10)
+                        while True:
+                            logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, tag))
+                            
+                            for repo in section:
+                                task = {
+                                    "job_type": "MAINTAIN", 
+                                    "models": [model], 
+                                    "given": {
+                                        "git_url": repo['repo_git']
+                                    }
                                 }
-                            }
-                            if "focused_task" in repo:
-                                task["focused_task"] = repo['focused_task']
-                            try:
-                                requests.post('http://localhost:{}/api/unstable/task'.format(
-                                    broker_port), json=task, timeout=10)
-                            except Exception as e:
-                                logging.info(str(e))
+                                if "focused_task" in repo:
+                                    task["focused_task"] = repo['focused_task']
+                                try:
+                                    requests.post('http://localhost:{}/api/unstable/task'.format(
+                                        broker_port), json=task, timeout=10)
+                                except Exception as e:
+                                    logging.info(str(e))
 
-                            time.sleep(2.5)
-                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(section))))
-                        time.sleep(delay)
-                    break
+                                time.sleep(2.5)
+                            logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(section))))
+                            time.sleep(delay)
+                        break
                 time.sleep(3)
 
                 

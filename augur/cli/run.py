@@ -53,10 +53,14 @@ def cli(app):
     mp.set_start_method('forkserver', force=True)
     app.schedule_updates()
     master = None
+
+    broker_switch = app.read_config('Controller', 'broker', 'AUGUR_BROKER', 0)
+    housekeeper_switch = app.read_config('Controller', 'housekeeper', 'AUGUR_HOUSEKEEPER', 0)
+    github_worker_switch = app.read_config('Controller', 'github_worker', 'AUGUR_GH_WORKER', 0)
     controller = {
-        'broker': 1,#app.read_config('Controller', 'broker', None, '0'),
-        'housekeeper': 1,#app.read_config('Controller', 'housekeeper', None, '0'),
-        'github_worker': 0#app.read_config('Controller', 'github_worker', None, '0'),
+        'broker': broker_switch,
+        'housekeeper': housekeeper_switch,
+        'github_worker': github_worker_switch,
     }
 
     logger.info("Controller specs ('1' for components that are set to automatically boot): {}".format(str(controller)))
@@ -73,6 +77,7 @@ def cli(app):
         
     if controller['housekeeper'] == 1:
         logger.info("Booting housekeeper")
+
         housekeeper = Housekeeper(broker,
                 broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
                 user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),

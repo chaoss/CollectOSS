@@ -778,7 +778,9 @@ class GitHubWorker:
                     "msg_id": self.msg_id_inc,
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
-                    "data_source": self.data_source
+                    "data_source": self.data_source,
+                    "issue_msg_ref_src_comment_id": comment['id'],
+                    "issue_msg_ref_src_node_id": comment['node_id']
                 }
 
                 result = self.db.execute(self.issues_message_ref_table.insert().values(issue_message_ref))

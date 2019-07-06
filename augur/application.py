@@ -223,11 +223,14 @@ class Application(object):
         :param name: name of variable
         """
         value = None
+        # logger.info(str(section) + str(name) + str(environment_variable))
         if environment_variable is not None:
             value = os.getenv(environment_variable)
+            # logger.info("env var: " + str(value))
         if value is None:
             try:
                 value =  self.__config[section][name]
+                # logger.info("trying:" + str(value))
             except Exception as e:
                 value = default
                 if not section in self.__config:
