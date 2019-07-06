@@ -350,7 +350,7 @@ class GitHubWorker:
                     logging.info("No more pages with unknown contributors, breaking from pagination.\n")
                     break
             elif len(new_contributors) != 0:
-                to_add = [obj for obj in j if obj not in contributors]
+                to_add = [obj for obj in new_contributors if obj not in contributors]
                 contributors += to_add
 
             i = i + 1 if self.finishing_task else i - 1
@@ -506,7 +506,7 @@ class GitHubWorker:
                     logging.info("No more pages with unknown issues, breaking from pagination.\n")
                     break
             elif len(new_issues) != 0:
-                to_add = [obj for obj in j if obj not in issues]
+                to_add = [obj for obj in new_issues if obj not in issues]
                 issues += to_add
 
             i = i + 1 if self.finishing_task else i - 1
@@ -581,7 +581,7 @@ class GitHubWorker:
                         logging.info("No more pages with unknown events, breaking from pagination.\n")
                         break
                 elif len(new_events) != 0:
-                    to_add = [obj for obj in j if obj not in issue_events]
+                    to_add = [obj for obj in new_events if obj not in issue_events]
                     issue_events += to_add
 
                 i = i + 1 if self.finishing_task else i - 1
@@ -733,7 +733,7 @@ class GitHubWorker:
                         logging.info("No more pages with unknown comments, breaking from pagination.\n")
                         break
                 elif len(new_comments) != 0:
-                    to_add = [obj for obj in j if obj not in issue_comments]
+                    to_add = [obj for obj in new_comments if obj not in issue_comments]
                     issue_comments += to_add
 
                 i = i + 1 if self.finishing_task else i - 1
