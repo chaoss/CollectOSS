@@ -2,32 +2,11 @@ import logging
 import requests
 from multiprocessing import Process, Queue
 import time
-# import schedule
 import sqlalchemy as s
 import pandas as pd
 import os
 import zmq
-
 logging.basicConfig(filename='housekeeper.log')
-# logging = logging.getlogging(name="housekeeper_logging")
-
-
-UPDATE_DELAY = 5 #5 sec for testing # 86400 (1 day)
-
-def client_git_url_task(identity, model, git_url):
-    """Basic request-reply client using REQ socket."""
-    socket = zmq.Context().socket(zmq.REQ)
-    socket.identity = u"git-url-client-{}".format(identity).encode("ascii")
-    socket.connect("ipc://backend.ipc")
-    # socket.connect("tcp://localhost:5558")
-    # Send request, get reply
-    request = b'UPDATE {"models":[model],"given":{"git_url": git_url}}'
-    logging.info("sent request: " + str(request))
-    #logging.info(f'{socket.identity.decode("ascii")}: sending {request.decode("ascii")}')
-    socket.send(request)
-    # reply = socket.recv()
-    # logging.info("Reply: " + str(reply))
-    #logging.info("{}: {}".format(socket.identity.decode("ascii"), reply.decode("ascii")))
 
 class Housekeeper:
 
@@ -114,12 +93,11 @@ class Housekeeper:
                                 except Exception as e:
                                     logging.info(str(e))
 
-                                time.sleep(2.5)
+                                time.sleep(0.5)
                             logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(section))))
                             time.sleep(delay)
                         break
                 time.sleep(3)
-
                 
         except KeyboardInterrupt:
             os.kill(os.getpid(), 9)
@@ -213,40 +191,11 @@ class Housekeeper:
 
         reorganized_repos = after_repos.append(before_repos)
 
-        reorganized_repos['focused_task'] = 0
+        reorganized_repos['focused_task'] = 1
         reorganized_repos = reorganized_repos.to_dict('records')
         
         if finishing_task:
             reorganized_repos[0]['focused_task'] = 1
 
         return reorganized_repos
-        
-    # def run(self):
 
-
-    #     # schedule.every(30).days.at("10:30").do(job) #BADGING
-    #     # schedule.every().day.at("10:30").do(job) #FACADE?
-    #     # schedule.every(7).days.at("10:30").do(job) #ISSUES?
-
-    #     #testing
-    #     # schedule.every(2).seconds.do(self.update_model, model="issues")
-    #     schedule.every(15).seconds.do(self.update_model, model="badges")
-
-    #     while True:
-    #         schedule.run_pending()
-    #         time.sleep(1)
-
-    # def update_model(self, model=None):
-    #     print("updating model: " + model)
-
-    #     for repo in self.care_about:
-
-    #         job = {
-    #             "job_type": "MAINTAIN", 
-    #             "models": [model], 
-    #             "given": {
-    #                 "git_url": repo
-    #             }
-    #         }
-
-    #         requests.post('http://localhost:5000/api/job', json=job)
