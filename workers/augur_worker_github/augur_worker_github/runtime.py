@@ -24,9 +24,9 @@ def create_server(app, gw):
                         status=200,
                         mimetype="application/json")
         if request.method == 'GET': #will retrieve the current tasks/status of the worker
-            return jsonify({
-                "status": "success"
-            })
+            return Response(response=request.json,
+                        status=200,
+                        mimetype="application/json")
         return Response(response=request.json,
                         status=200,
                         mimetype="application/json")
@@ -49,10 +49,22 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
+    worker_info = read_config("GitHubWorker", use_main_config=1)
+
+    worker_port = worker_info['port'] if 'port' in worker_info else port
+
+    while True:
+        try:
+            r = requests.get("http://localhost:{}".format(worker_port) + '/AUGWOP/task')
+            if r.status == 200:
+                worker_port += 1
+        except:
+            break
 
     config = { 
-            "id": "com.augurlabs.core.github_worker",
+            "id": "com.augurlabs.core.github_worker.{}".format(worker_port),
             "broker_port": server['port'],
+            "location": "http://localhost:{}".format(worker_port),
             "zombie_id": credentials["zombie_id"],
             "host": credentials["host"],
             "key": credentials["key"],
@@ -74,7 +86,9 @@ def main(augur_url, host, port):
     
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
-    app.run(debug=app.debug, host=host, port=port)
+
+
+    app.run(debug=app.debug, host=host, port=worker_port)
     if app.gh_worker._child is not None:
         app.gh_worker._child.terminate()
     try:

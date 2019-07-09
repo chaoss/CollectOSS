@@ -210,9 +210,6 @@ class InsightWorker:
             data = r.json()
             
 
-        
-
-
 
         # data[0]['repo_id'] = entry_info['repo_id']
         # metrics = []

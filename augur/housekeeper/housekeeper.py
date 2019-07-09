@@ -10,7 +10,7 @@ logging.basicConfig(filename='housekeeper.log')
 
 class Housekeeper:
 
-    def __init__(self, broker, broker_port, user, password, host, port, dbname):
+    def __init__(self, jobs, broker, broker_port, user, password, host, port, dbname):
 
         self.broker_port = broker_port
         self.broker = broker
@@ -34,39 +34,22 @@ class Housekeeper:
 
         all_repos = rs['repo_git'].values.tolist()
 
-        # List repo subsections that may have special update requirements
-        example_subsection = [
-                {
-                    'repo_git': 'https://github.com/rails/exception_notification.git', 
-                    'focused_task': '0' # OPTIONAL KEY, '1' if you want an in-depth 'crawl' of github's api for the repo, 
-                                        #    will cause unnecessary api calls and will take longer
-                }
-            ]
-        all_sorted_by_issues = self.sort_issue_repos()
-
         # List of tasks that need periodic updates
-        self.__updatable = [
-            {
-                'model': 'issues',
-                'started': False,
-                'delay': 150000,
-                'section': all_sorted_by_issues,
-                'tag': 'All repositories'
-            }
-        ]
+        self.__updatable = self.sort_issue_repos(jobs)
+
         self.__processes = []
         # logging.info("HK pid: {}".format(str(os.getpid())))
         self.__updater()
 
     @staticmethod
-    def updater_process(broker_port, broker, model, started, delay, section, tag):
+    def updater_process(broker_port, broker, model, delay, repos, repo_group_id):
         """
         Controls a given plugin's update process
         :param name: name of object to be updated 
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
-        logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, tag, os.getpid()))
+        logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, repo_group_id, os.getpid()))
         try:
             # Waiting for 1 alive worker
             while True:
@@ -75,9 +58,9 @@ class Housekeeper:
                         logging.info("Housekeeper recognized that the broker has at least one worker... beginning to distribute maintained tasks")
                         time.sleep(10)
                         while True:
-                            logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, tag))
+                            logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, repo_group_id))
                             
-                            for repo in section:
+                            for repo in repos:
                                 task = {
                                     "job_type": "MAINTAIN", 
                                     "models": [model], 
@@ -94,7 +77,7 @@ class Housekeeper:
                                     logging.info(str(e))
 
                                 time.sleep(0.5)
-                            logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(section))))
+                            logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(repos))))
                             time.sleep(delay)
                         break
                 time.sleep(3)
@@ -113,20 +96,16 @@ class Housekeeper:
         if updates is None:
             updates = self.__updatable
         for update in updates:
-            if update['started'] != True:
-                up = Process(target=self.updater_process, args=(self.broker_port, self.broker, update['model'], 
-                    update['started'], update['delay'], update['section'], update['tag']), daemon=True)
-                up.start()
-                self.__processes.append(up)
-                # logging.info("HK processes: {}".format(str(self.__processes[0].pid)))
-                update['started'] = True
+            up = Process(target=self.updater_process, args=(self.broker_port, self.broker, update['model'], 
+                update['delay'], update['repos'], update['repo_group_id']), daemon=True)
+            up.start()
+            self.__processes.append(up)
 
     def update_all(self):
         """
         Updates all plugins
         """
         for updatable in self.__updatable:
-            # logging.info('Updating {} model...'.format(updatable['model']))
             updatable['update']()
 
     def schedule_updates(self):
@@ -151,51 +130,57 @@ class Housekeeper:
         for process in self.__processes:
             process.terminate()
 
-    def sort_issue_repos(self):
+    def sort_issue_repos(self, jobs):
 
-        # Query all repos and last repo id
-        repoUrlSQL = s.sql.text("""
-                SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
-            """)
+        for job in jobs:
 
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+            # Query all repos and last repo id
+            repoUrlSQL = s.sql.text("""
+                    SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
+                """.format(job['repo_group_id']))
 
-        repoIdSQL = s.sql.text("""
-                SELECT since_id_str FROM gh_worker_job
-            """)
+            rs = pd.read_sql(repoUrlSQL, self.db, params={})
+            print(len(rs))
+            if len(rs) == 0:
+                logging.info("Trying to send tasks for repo group with id: {}, but the repo group does not contain any repos".format(job['repo_group_id']))
+                continue
 
-        job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+            repoIdSQL = s.sql.text("""
+                    SELECT since_id_str FROM gh_worker_job
+                """)
 
-        last_id = int(job_df.iloc[0]['since_id_str'])
+            job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
 
-        jobHistorySQL = s.sql.text("""
-                SELECT max(history_id) AS history_id, status FROM gh_worker_history
-                GROUP BY status
-                LIMIT 1
-            """)
+            last_id = int(job_df.iloc[0]['since_id_str'])
 
-        history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
+            jobHistorySQL = s.sql.text("""
+                    SELECT max(history_id) AS history_id, status FROM gh_worker_history
+                    GROUP BY status
+                    LIMIT 1
+                """)
 
-        finishing_task = False
-        if len(history_df.index) != 0:
-            if history_df.iloc[0]['status'] == 'Stopped':
-                self.history_id = int(history_df.iloc[0]['history_id'])
-                finishing_task = True
-                last_id += 1 #update to match history tuple val rather than just increment
+            history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
+
+            finishing_task = False
+            if len(history_df.index) != 0:
+                if history_df.iloc[0]['status'] == 'Stopped':
+                    self.history_id = int(history_df.iloc[0]['history_id'])
+                    finishing_task = True
+                    last_id += 1 #update to match history tuple val rather than just increment
+                
+
+            # Rearrange repos so the one after the last one that 
+            #   was completed will be ran first
+            before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
+            after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
+
+            reorganized_repos = after_repos.append(before_repos)
+
+            reorganized_repos['focused_task'] = 1
+            reorganized_repos = reorganized_repos.to_dict('records')
             
-
-        # Rearrange repos so the one after the last one that 
-        #   was completed will be ran first
-        before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
-        after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
-
-        reorganized_repos = after_repos.append(before_repos)
-
-        reorganized_repos['focused_task'] = 1
-        reorganized_repos = reorganized_repos.to_dict('records')
-        
-        if finishing_task:
-            reorganized_repos[0]['focused_task'] = 1
-
-        return reorganized_repos
+            if finishing_task:
+                reorganized_repos[0]['focused_task'] = 1
+            job['repos'] = reorganized_repos
+        return jobs
 

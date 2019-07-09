@@ -16,6 +16,7 @@ import sys
 import atexit
 import click
 import subprocess
+# import psutil
 
 class AugurGunicornApp(gunicorn.app.base.BaseApplication):
     """
@@ -77,8 +78,10 @@ def cli(app):
         
     if controller['housekeeper'] == 1:
         logger.info("Booting housekeeper")
-
-        housekeeper = Housekeeper(broker,
+        jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
+        housekeeper = Housekeeper(
+                jobs,
+                broker,
                 broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
                 user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
                 password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
@@ -88,6 +91,10 @@ def cli(app):
             )
 
     if controller['github_worker'] == 1:
+        # proc_iter = psutil.process_iter(attrs=["pid", "name", "cmdline"])
+        # past_worker = any("/bin/sh -c cd workers/augur_worker_github && github_worker" in p.info["cmdline"] for p in proc_iter)
+        # logger.info(str(past_worker))
+
         logger.info("Booting github worker")
         up = mp.Process(target=worker_start, args=(), daemon=True)
         up.start()
@@ -95,12 +102,12 @@ def cli(app):
     @atexit.register
     def exit():
         # time.sleep(1)
+        for pid in broker['worker_pids']:
+            os.kill(pid, 9)
         if master is not None:
             master.halt()
         logger.info("Shutting down app updates...")
         app.shutdown_updates()
-        for pid in broker['worker_pids']:
-            os.kill(pid, 9)
         logger.info("Finalizing config...")
         app.finalize_config()
         logger.info("Shutting down housekeeper updates...")
