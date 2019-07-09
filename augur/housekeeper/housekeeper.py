@@ -133,14 +133,16 @@ class Housekeeper:
     def sort_issue_repos(self, jobs):
 
         for job in jobs:
-
+            if job['repo_group_id'] != 0:
             # Query all repos and last repo id
-            repoUrlSQL = s.sql.text("""
-                    SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
-                """.format(job['repo_group_id']))
-
+                repoUrlSQL = s.sql.text("""
+                        SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
+                    """.format(job['repo_group_id']))
+            else:
+                repoUrlSQL = s.sql.text("""
+                        SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+                    """.format(job['repo_group_id']))
             rs = pd.read_sql(repoUrlSQL, self.db, params={})
-            print(len(rs))
             if len(rs) == 0:
                 logging.info("Trying to send tasks for repo group with id: {}, but the repo group does not contain any repos".format(job['repo_group_id']))
                 continue
