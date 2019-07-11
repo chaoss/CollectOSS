@@ -8,6 +8,8 @@ from sqlalchemy import MetaData
 import logging
 import time
 from datetime import datetime
+import os
+import sys
 
 logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
 
@@ -38,6 +40,8 @@ class GHRepoInfoWorker:
         self._task = task
         self._child = None
         self._queue = Queue()
+        self._maintain_queue = Queue()
+        self.working_on = None
         self.config = config
         self.db = None
         self.table = None
@@ -54,7 +58,7 @@ class GHRepoInfoWorker:
         self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
 
         specs = {
-            "id": "com.augurlabs.core.gh_repo_info",
+            "id": self.config['id'],
             "location": "http://localhost:51237",
             "qualifications":  [
                 {
@@ -66,7 +70,7 @@ class GHRepoInfoWorker:
         }
 
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['name']
+            self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
         )
 
         logging.info("Making database connections...")
@@ -83,7 +87,7 @@ class GHRepoInfoWorker:
         helper_metadata = MetaData()
 
         metadata.reflect(self.db, only=['repo_info'])
-        # helper_metadata.reflect(self.helper_db)
+        helper_metadata.reflect(self.helper_db)
 
         Base = automap_base(metadata=metadata)
 
@@ -105,7 +109,12 @@ class GHRepoInfoWorker:
         else:
             self.info_id_inc = repo_info_start_id + 1
 
-        # requests.post('http://localhost:5000/api/unstable/workers', json=specs)
+        try:
+            requests.post('http://localhost:{}/api/unstable/workers'.format(
+                self.config['broker_port']), json=specs)
+        except requests.exceptions.ConnectionError:
+            logging.error('Cannot connect to the broker')
+            sys.exit('Cannot connect to the broker! Quitting...')
 
     @property
     def task(self):
@@ -120,30 +129,87 @@ class GHRepoInfoWorker:
 
         # repos = pd.read_sql(repo_id_sql, self.db)
 
+    @task.setter
+    def task(self, value):
+        git_url = value['given']['git_url']
+
+        repo_url_SQL = s.sql.text("""
+            SELECT min(repo_id) AS repo_id
+            FROM repo
+            WHERE repo_git = :repo_git
+        """)
+
+        rs = pd.read_sql(repo_url_SQL, self.db, params={'repo_git': git_url})
+
+        try:
+            repo_id = int(rs.iloc[0]['repo_id'])
+            if value['job_type'] == 'UPDATE':
+                self._queue.put(CollectorTask('TASK', {"git_url": git_url, "repo_id": repo_id}))
+            elif value['job_type'] == 'MAINTAIN':
+                self._maintain_queue.put(CollectorTask('TASK', {"git_url": git_url, "repo_id": repo_id}))
+
+            if 'focused_task' in value:
+                if value['focused_task'] == 1:
+                    self.finishing_task = True
+
+        except Exception as e:
+            logging.error("Error: {}, or that repo is not in our database: {}".format(str(e), str(value)))
+
+        self._task = CollectorTask('TASK', {"git_url": git_url, "repo_id": repo_id})
+        self.run()
+
     def cancel(self):
         """ Delete/cancel current task """
         self._task = None
 
     def run(self):
         logging.info("Running...")
-        self._child = Process(target=self.collect, args=())
-        self._child.start()
+        if self._child is None:
+            self._child = Process(target=self.collect, args=())
+            self._child.start()
+            requests.post("http://localhost:{}/api/unstable/add_pids".format(
+                self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self, repos=None):
 
-        if repos == None:
-            repo_id_sql = s.sql.text("""
-                SELECT repo_id, repo_git FROM repo
-            """)
+        while True:
+            if not self._queue.empty():
+                message = self._queue.get()
+                self.working_on = 'UPDATE'
+            else:
+                if not self._maintain_queue.empty():
+                    message = self._queue.get()
+                    logging.info("Popped off message: {}".format(str(message.entry_info)))
+                    self.working_on = "MAINTAIN"
+                else:
+                    break
 
-            repos = pd.read_sql(repo_id_sql, self.db)
+            if message.type == 'EXIT':
+                break
 
-        for _, row in repos.iterrows():
-            owner, repo = self.get_owner_repo(row['repo_git'])
-            print(f'Querying: {owner}/{repo}')
-            self.query_repo_info(row['repo_id'], owner, repo)
+            if message.type != 'TASK':
+                raise ValueError(f'{message.type} is not a recognized task type')
 
-        print(f'Added repo info for {self.results_counter} repos')
+            if message.type == 'TASK':
+                owner, repo = self.get_owner_repo(message.entry_info['git_url'])
+                logging.info(f'Querying: {owner}/{repo}')
+                self.query_repo_info(message.entry_info['repo_id'],
+                                     owner, repo)
+
+
+        # if repos == None:
+        #     repo_id_sql = s.sql.text("""
+        #         SELECT repo_id, repo_git FROM repo
+        #     """)
+
+        #     repos = pd.read_sql(repo_id_sql, self.db)
+
+        # for _, row in repos.iterrows():
+        #     owner, repo = self.get_owner_repo(row['repo_git'])
+        #     print(f'Querying: {owner}/{repo}')
+        #     self.query_repo_info(row['repo_id'], owner, repo)
+
+        # print(f'Added repo info for {self.results_counter} repos')
 
 
     def get_owner_repo(self, git_url):
@@ -200,7 +266,7 @@ class GHRepoInfoWorker:
             self.update_rate_limit(r)
             j = r.json()['data']['repository']
         except Exception as e:
-            logging.error('Caught Exception:', str(e))
+            logging.error('Caught Exception: ' + str(e))
 
         logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
 
