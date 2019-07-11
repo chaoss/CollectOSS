@@ -1,11 +1,6 @@
-#############################################################
-# This file is a copy of the augur_worker_github/runtime.py #
-#############################################################
-
-
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from augur_worker_github.worker import GitHubWorker
+from gh_repo_info_worker.worker import GHRepoInfoWorker
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 
@@ -22,7 +17,7 @@ def create_server(app, gw):
         """
         if request.method == 'POST': #will post a task to be added to the queue
             logging.info("Sending to work on task: {}".format(str(request.json)))
-            app.gh_worker.task = request.json
+            app.gh_repo_info_worker.task = request.json
 
             #set task
             return Response(response=request.json,
@@ -40,12 +35,12 @@ def create_server(app, gw):
     def augwop_config():
         """ Retrieve worker's config
         """
-        return app.gh_worker.config
+        return app.gh_repo_info_worker.config
 
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51236, help='Port')
+@click.option('--port', default=51237, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
@@ -56,16 +51,16 @@ def main(augur_url, host, port):
     server = read_config("Server", use_main_config=1)
 
     config = {
-            "id": "com.augurlabs.core.github_worker",
+            "id": "com.augurlabs.core.gh_repo_info_worker",
             "broker_port": server['port'],
-            "zombie_id": credentials["zombie_id"],
+            #"zombie_id": credentials["zombie_id"],
             "host": credentials["host"],
             "key": credentials["key"],
             "password": credentials["password"],
             "port": credentials["port"],
             "user": credentials["user"],
             "database": credentials["database"],
-            "table": "repo_badging",
+            "table": "repo_info",
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             "display_name": "",
             "description": "",
@@ -75,13 +70,13 @@ def main(augur_url, host, port):
 
     #create instance of the worker
 
-    app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
+    app.gh_repo_info_worker = GHRepoInfoWorker(config) # declares the worker that will be running on this server with specified config
 
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=port)
-    if app.gh_worker._child is not None:
-        app.gh_worker._child.terminate()
+    if app.gh_repo_info_worker._child is not None:
+        app.gh_repo_info_worker._child.terminate()
     try:
         requests.post('http://localhost:{}/api/unstable/workers/remove'.format(server['port']), json={"id": config['id']})
     except:
@@ -147,3 +142,6 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
             __config = __default_config
             return(__config[section][name])
+
+if __name__ == "__main__":
+    main()
