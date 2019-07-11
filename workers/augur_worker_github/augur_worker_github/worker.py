@@ -412,12 +412,15 @@ class GitHubWorker:
                 self.update_rate_limit(r)
                 contributor = r.json()
 
-                # NEED TO FIGURE OUT IF THIS STUFF IS EVER AVAILABLE
-                #    if so, the null case will need to be handled
-
-                # "company": contributor['company'],
-                # "location": contributor['location'],
-                # "email": contributor['email'],
+                company = None
+                location = None
+                email = None
+                if 'company' in contributor:
+                    company = contributor['company']
+                if 'location' in contributor:
+                    location = contributor['location']
+                if 'email' in contributor:
+                    email = contributor['email']
 
                 # aliasSQL = s.sql.text("""
                 #     SELECT canonical_email
@@ -431,6 +434,9 @@ class GitHubWorker:
                 cntrb = {
                     "cntrb_login": contributor['login'],
                     "cntrb_created_at": contributor['created_at'],
+                    "cntrb_email": email,
+                    "cntrb_company": company,
+                    "cntrb_location": location,
                     # "cntrb_type": , dont have a use for this as of now ... let it default to null
                     "cntrb_canonical": canonical_email,
                     "gh_user_id": contributor['id'],

@@ -212,9 +212,9 @@ class MetricsStatus(object):
     def create_grouped_metrics(self, remotes_list, group):
         remote_names = []
 
-        for remote in remotes_list:
-            for name in self.extract_grouped_metric_names(remote):
-                remote_names.append(name)
+        # for remote in remotes_list:
+        #     for name in self.extract_grouped_metric_names(remote):
+        #         remote_names.append(name)
 
         remote_metrics = []
 
