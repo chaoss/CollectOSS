@@ -47,12 +47,12 @@
 </template>
 
 <script>
-import SmallStats from '@/components/common/SmallStats.vue';
-import TopReferrals from '@/components/common/TopReferrals.vue';
-import UsersOverview from '@/components/blog/UsersOverview.vue';
-import UsersByDevice from '@/components/blog/UsersByDeviceLite.vue';
-import NewDraft from '@/components/blog/NewDraft.vue';
-import Discussions from '@/components/blog/Discussions.vue';
+import SmallStats from '../components/common/SmallStats.vue';
+import TopReferrals from '../components/common/TopReferrals.vue';
+import UsersOverview from '../components/blog/UsersOverview.vue';
+import UsersByDevice from '../components/blog/UsersByDeviceLite.vue';
+import NewDraft from '../components/blog/NewDraft.vue';
+import Discussions from '../components/blog/Discussions.vue';
 
 export default {
   components: {

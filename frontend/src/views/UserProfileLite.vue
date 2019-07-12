@@ -21,8 +21,8 @@
 </template>
 
 <script>
-import UserDetails from '@/components/user-profile-lite/UserDetails.vue';
-import UserAccountDetails from '@/components/user-profile-lite/UserAccountDetails.vue';
+import UserDetails from '../components/user-profile-lite/UserDetails.vue';
+import UserAccountDetails from '../components/user-profile-lite/UserAccountDetails.vue';
 
 export default {
   name: 'user-profile-lite',

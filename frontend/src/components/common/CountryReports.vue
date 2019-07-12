@@ -1,7 +1,6 @@
-<template>
+<!-- <template>
   <div class="card card-small country-stats">
 
-    <!-- Card Header -->
     <div class="card-header border-bottom">
       <h6 class="m-0">{{ title }}</h6>
       <div class="block-handle"></div>
@@ -9,10 +8,8 @@
 
     <div class="card-body p-0">
 
-      <!-- Map Container -->
       <div ref="mContainer" width="100%" height="100%" style="width: 100%; height: 180px;"></div>
 
-      <!-- Countries Table List -->
       <table class="table m-0">
         <tbody>
           <tr v-for="(country, idx) in countries" :key="idx">
@@ -27,7 +24,6 @@
     <d-card-footer class="border-top">
       <d-row>
 
-        <!-- Time Frame -->
         <d-col>
           <d-select size="sm" value="last-week" style="max-width: 130px;">
             <option value="last-week">Last Week</option>
@@ -37,7 +33,6 @@
           </d-select>
         </d-col>
 
-        <!-- View Full Report -->
         <d-col class="text-right view-report">
           <a href="#">View full report &rarr;</a>
         </d-col>
@@ -49,22 +44,22 @@
 
 <script>
 const defaultCountriesData = [{
-  flag: require('@/assets/images/flags/flag-us.png'),
+  flag: require('../assets/images/flags/flag-us.png'),
   title: 'United States',
   visitorsAmount: '12,291',
   visitorsPercentage: '23.32%',
 }, {
-  flag: require('@/assets/images/flags/flag-uk.png'),
+  flag: require('../assets/images/flags/flag-uk.png'),
   title: 'United Kingdom',
   visitorsAmount: '11,192',
   visitorsPercentage: '18.8%',
 }, {
-  flag: require('@/assets/images/flags/flag-au.png'),
+  flag: require('../assets/images/flags/flag-au.png'),
   title: 'Australia',
   visitorsAmount: '9,291',
   visitorsPercentage: '12.3%',
 }, {
-  flag: require('@/assets/images/flags/flag-jp.png'),
+  flag: require('../assets/images/flags/flag-jp.png'),
   title: 'Japan',
   visitorsAmount: '2,291',
   visitorsPercentage: '8.14%',
@@ -167,3 +162,4 @@ export default {
   },
 };
 </script>
+ -->

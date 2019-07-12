@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import Quill from 'quill';
+// import Quill from 'quill';
 
 export default {
   name: 'editor',
@@ -26,13 +26,13 @@ export default {
     ];
 
     // Init the Quill RTE
-    new Quill(this.$refs.editor, {
-      modules: {
-        toolbar: toolbarOptions,
-      },
-      placeholder: 'Words can be like x-rays if you use them properly...',
-      theme: 'snow',
-    });
+    // new Quill(this.$refs.editor, {
+    //   modules: {
+    //     toolbar: toolbarOptions,
+    //   },
+    //   placeholder: 'Words can be like x-rays if you use them properly...',
+    //   theme: 'snow',
+    // });
   },
 };
 </script>

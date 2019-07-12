@@ -1,7 +1,6 @@
-<template>
+<!-- <template>
   <d-card class="card-small h-100">
 
-    <!-- Card Header -->
     <d-card-header class="border-bottom">
       <h6 class="m-0">{{ title }}</h6>
       <div class="block-handle"></div>
@@ -10,7 +9,6 @@
     <d-card-body class="pt-0">
       <d-row class="border-bottom py-2 bg-light">
 
-        <!-- Date Range -->
         <d-col col sm="6" class="d-flex mb-2 mb-sm-0">
           <d-input-group size="sm" class="date-range d-flex justify-content-left">
             <d-datepicker v-model="dateRange.from" :highlighted="{ from: dateRange.from, to: dateRange.to || new Date() }" placeholder="Start Date" typeable small />
@@ -21,14 +19,12 @@
           </d-input-group>
         </d-col>
 
-        <!-- View Full Report -->
         <d-col col sm="6">
           <d-button size="sm" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
         </d-col>
 
       </d-row>
 
-      <!-- Legend & Chart -->
       <div ref="legend"></div>
       <canvas height="120" ref="canvas" style="max-width: 100% !important;"></canvas>
 
@@ -159,3 +155,4 @@ export default {
 };
 </script>
 
+ -->

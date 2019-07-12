@@ -25,11 +25,11 @@
 </template>
 
 <script>
-import SidebarActions from '@/components/add-new-post/SidebarActions.vue';
-import SidebarCategories from '@/components/add-new-post/SidebarCategories.vue';
-import Editor from '@/components/add-new-post/Editor.vue';
+import SidebarActions from '../components/add-new-post/SidebarActions.vue';
+import SidebarCategories from '../components/add-new-post/SidebarCategories.vue';
+import Editor from '../components/add-new-post/Editor.vue';
 
-import 'quill/dist/quill.snow.css';
+
 
 export default {
   components: {

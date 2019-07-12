@@ -2,18 +2,21 @@
   <d-container fluid>
     <d-row>
       <!-- Main Sidebar -->
-      <main-sidebar :items="sidebarItems" />
+      <!-- <d-col :class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']"> -->
+        <router-view name="sidebar"></router-view>
+      <!-- </d-col>   -->
+       <!--<main-sidebar :items="sidebarItems" />-->
 
-      <d-col class="main-content offset-lg-2 offset-md-3 p-0" tag="main" lg="10" md="9" sm="12">
+      <d-col class="main-content col-10 offset-lg-2 p-0" ><!-- offset-lg-2 offset-md-3 p-0" tag="main" lg="10" md="9" sm="12">-->
 
         <!-- Main Navbar -->
-        <main-navbar />
+        <router-view name="navbar"></router-view> <!--<main-navbar />-->
 
         <!-- Content -->
-        <slot />
+        <router-view name="content"></router-view> <!--<slot />-->
 
         <!-- Main Footer -->
-        <main-footer />
+        <!--<main-footer />-->
       </d-col>
 
     </d-row>
@@ -21,23 +24,23 @@
 </template>
 
 <script>
-import getSidebarItems from '@/data/sidebar-nav-items';
+// import getSidebarItems from '@/data/sidebar-nav-items';
 
-// Main layout components
-import MainNavbar from '@/components/layout/MainNavbar/MainNavbar.vue';
-import MainSidebar from '@/components/layout/MainSidebar/MainSidebar.vue';
-import MainFooter from '@/components/layout/MainFooter/MainFooter.vue';
+// // Main layout components
+// import MainNavbar from '@/components/layout/MainNavbar/MainNavbar.vue';
+// import MainSidebar from '@/components/layout/MainSidebar/MainSidebar.vue';
+// import MainFooter from '@/components/layout/MainFooter/MainFooter.vue';
 
 export default {
   name: 'analytics',
   components: {
-    MainNavbar,
-    MainSidebar,
-    MainFooter,
+    // MainNavbar,
+    // MainSidebar,
+    // MainFooter,
   },
   data() {
     return {
-      sidebarItems: getSidebarItems(),
+      // sidebarItems: getSidebarItems(),
     };
   },
 };
