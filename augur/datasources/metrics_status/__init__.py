@@ -28,7 +28,7 @@ class MetricsStatusPlugin(AugurPlugin):
 
 MetricsStatusPlugin.augur_plugin_meta = {
     'name': 'metrics_status',
-    'datasource': True
+    'datasource': False
 }
 Application.register_plugin(MetricsStatusPlugin)
 
