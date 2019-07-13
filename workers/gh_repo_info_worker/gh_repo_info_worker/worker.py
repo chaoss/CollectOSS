@@ -173,16 +173,16 @@ class GHRepoInfoWorker:
     def collect(self, repos=None):
 
         while True:
+            time.sleep(0.5)
             if not self._queue.empty():
                 message = self._queue.get()
                 self.working_on = 'UPDATE'
+            elif not self._maintain_queue.empty():
+                message = self._maintain_queue.get()
+                logging.info("Popped off message: {}".format(str(message.entry_info)))
+                self.working_on = "MAINTAIN"
             else:
-                if not self._maintain_queue.empty():
-                    message = self._queue.get()
-                    logging.info("Popped off message: {}".format(str(message.entry_info)))
-                    self.working_on = "MAINTAIN"
-                else:
-                    break
+                break
 
             if message.type == 'EXIT':
                 break
@@ -191,10 +191,8 @@ class GHRepoInfoWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
-                owner, repo = self.get_owner_repo(message.entry_info['git_url'])
-                logging.info(f'Querying: {owner}/{repo}')
                 self.query_repo_info(message.entry_info['repo_id'],
-                                     owner, repo)
+                                     message.entry_info['git_url'])
 
 
         # if repos == None:
@@ -223,9 +221,11 @@ class GHRepoInfoWorker:
 
         return owner, repo
 
-    def query_repo_info(self, repo_id, owner, repo):
+    def query_repo_info(self, repo_id, git_url):
         # url = f'https://api.github.com/repos/{owner}/{repo}'
         url = 'https://api.github.com/graphql'
+
+        owner, repo = self.get_owner_repo(git_url)
 
         query = """
             {
@@ -309,6 +309,8 @@ class GHRepoInfoWorker:
 
         self.info_id_inc += 1
 
+        self.register_task_completion(repo_id, git_url)
+
 
 
     def update_rate_limit(self, response):
@@ -325,3 +327,18 @@ class GHRepoInfoWorker:
             logging.info("Rate limit exceeded, waiting " + str(time_diff.total_seconds()) + " seconds.\n")
             time.sleep(time_diff.total_seconds())
             self.rate_limit = int(response.headers['X-RateLimit-Limit'])
+
+    def register_task_completion(self, repo_id, git_url):
+        task_completed = {
+            'worker_id': self.config['id'],
+            'job_type': self.working_on,
+            'repo_id': repo_id,
+            'git_url': git_url
+        }
+
+        logging.info("Telling broker we completed task: " + str(task_completed) + "\n" +
+            "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
+
+        requests.post('http://localhost:{}/api/unstable/completed_task'.format(
+            self.config['broker_port']), json=task_completed)
+        self.results_counter = 0
