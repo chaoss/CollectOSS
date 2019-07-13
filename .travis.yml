@@ -11,9 +11,7 @@ matrix:
     language: python
     python: '3.6'
     script:
-      - augur run > /dev/null 2>&1 &
-      - sleep 10
-      - python -m pytest augur/datasources/**/test_**_routes.py
+    - python test/api/test_api.py
 
 notifications:
   slack:
