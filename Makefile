@@ -167,13 +167,6 @@ clean:
 	find . -name \*.pyc -delete
 	@ echo "Run sudo make install-dev again to reinstall the environment."
 
-vagrant:
-	@ vagrant up
-	@ vagrant ssh
-	@ echo "****************************************************"
-	@ echo "Don't forget to shutdown the VM with 'vagrant halt'!"
-	@ echo "****************************************************"
-
 #
 # Git
 #
