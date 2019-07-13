@@ -1,5 +1,9 @@
 # README for Augur Schema
 
+## Steps to just Make the database
+1. Create a user called "augur" in your postgresql version 10 or higher database system. 
+2. Execute the file name `new-augur.0.0.77.5-release.sql` as the `augur` user, if you have granted that user schema creation privileges, or as any other user who has schema creation privileges.  All schemas, the tables, and sequences they contain, are owned by the `augur` user. Sure, you could do a search and replace and make everything owned by `Sarah`, but why would you do that? 
+
 ## Augur Data
 The `augur_data` schema contains *most* of the information analyzed and constructed by Augur. The origin's of the data inside of augur are: 
 1. `workers/augur_github_worker`: Pulls data from the GitHub API. Presently this is focused on issues, including issue_comments, issue_events, issue_labels and contributors. Note that all messages are stored in Augur in the `messages` table. This is to facilitate easy analysis of the tone and characteristics of text communication in a project from one place. 
