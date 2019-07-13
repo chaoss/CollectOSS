@@ -11,6 +11,9 @@ matrix:
     language: python
     python: '3.6'
     script:
+    - mkdir logs
+    - touch logs/backend.pid
+    - touch logs/backend.log
     - python test/api/test_api.py
 
 notifications:
