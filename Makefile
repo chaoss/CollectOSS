@@ -119,6 +119,7 @@ backend-stop:
 	@ echo
 
 backend-start:
+	@ mkdir -p logs runtime
 	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
 
 backend-restart: backend-stop backend-start
