@@ -20,24 +20,28 @@
 ## Create Database Schema
 1. [Install Postgresql's latest version for your operating system.](https://www.postgresql.org/download/)
 2. Create a user called "augur" and a database called "augur" in your postgresql database system. Then grant the user all the rights on the database. 
-    - Command Line Strategy
+
+### Command Line Strategy
 
 ```
     sudo -u postgres psql
     postgres=# create database augur;
     postgres=# create user augur with encrypted password 'mypass';
     postgres=# grant all privileges on database augur to augur;
+
 ```
-    - GUI Strategy 
-        - Download pgadmin: https://www.pgadmin.org/download/
-        - Configure pgadmin for your local or remote database environment
-        - You can get more information from these links: 
-            - Support: pgadmin-support@lists.postgresql.org
-            - Website: https://www.pgadmin.org/
-            - Tracker: https://redmine.postgresql.org/projects/pgadmin4
-        - Create your database `augur`
-        - Create your user `augur` with a password. 
-        - Grant augur all the privileges on augur
+
+### GUI Strategy 
+    - Download pgadmin: https://www.pgadmin.org/download/
+    - Configure pgadmin for your local or remote database environment
+    - You can get more information from these links: 
+        - Support: pgadmin-support@lists.postgresql.org
+        - Website: https://www.pgadmin.org/
+        - Tracker: https://redmine.postgresql.org/projects/pgadmin4
+    - Create your database `augur`
+    - Create your user `augur` with a password. 
+    - Grant augur all the privileges on augur
+
 3. Execute the file name `new-augur.0.0.77.5-release.sql` as the `augur` user, if you have granted that user schema creation privileges, or as any other user who has schema creation privileges.  All schemas, the tables, and sequences they contain, are owned by the `augur` user. Sure, you could do a search and replace and make everything owned by `Sarah`, but why would you do that? Unless your name is `Sarah` and its really important to you. 
 
 ## Build Your Augur Backend Environment
