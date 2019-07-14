@@ -26,10 +26,10 @@ Dependencies
 
 
 ### Local Installation
-1. [Please follow our developer installation instructions here.](./installing-augur.md)
+1. [Please follow our developer installation instructions here.](./docs/setup/installing-augur.md)
 2. If you have any issues, please feel free to request to email straight into our slack channel! p9j0r6s0m4a0t8v5@augurlabs.slack.com for new developer support!!  
-3. [Start Gathering Data for your own repositories of interest](./augur-get-data.md)
-4. Or, simply [Load up a sample database we built to get new developers going quickly](./augur-load-data.md)
+3. [Start Gathering Data for your own repositories of interest](./docs/setup/augur-get-data.md)
+4. Or, simply [Load up a sample database we built to get new developers going quickly](./docs/setup/augur-load-data.md)
 
 ## Guidelines
 To contribute to Augur, please check out our [development guide](http://augur.augurlabs.io/static/docs/dev-guide/1-overview.html) and [notes on making contributions](CONTRIBUTING.md). Also, please note our [code of conduct](CODE_OF_CONDUCT.md). We want Augur to be a welcoming development community that is open to everyone. 
