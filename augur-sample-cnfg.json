@@ -1,0 +1,74 @@
+{
+    "Cache": {
+        "config": {
+            "cache.data_dir": "runtime/cache/",
+            "cache.lock_dir": "runtime/cache/",
+            "cache.type": "file"
+        }
+    },
+    "Database": {
+        "connection_string": "sqlite:///:memory:",
+        "database": "augur",
+        "name": "your database name here",
+        "host": "your hostname, probably localhost for development",
+        "password": "your password",
+        "port": "your postgres port, probably 5432",
+        "schema": "augur_data",
+        "user": "augur",
+        "key": "your github API key",
+        "zombie_id": "22"
+    },
+    "Development": {
+        "developer": "0",
+        "interactive": "0"
+    },
+    "GHTorrent": {
+        "host": " request public GHTorrent Access by commenting here: https://github.com/chaoss/augur/issues/302",
+        "name": "ghtorrent_restore",
+        "pass": "xxxx!",
+        "port": "xxxxx",
+        "user": "xxxx"
+    },
+    "GHTorrentPlus": {
+        "host": "augurlabs.io",
+        "name": "xxx",
+        "pass": "xxxx",
+        "port": "xxx",
+        "user": "xxx"
+    },
+    "GitHub": {
+        "apikey": "Your GitHub API Key"
+    },
+    "Plugins": [],
+    "Postman": {
+        "apikey": "Your postman API Key (not necessary)"
+    },
+    "Plugins": [],
+    "PublicWWW": {
+        "apikey": "Your publicwww API Key (not necessary)"
+    },
+    "Server": {
+        "cache_expire": 3600,
+        "host": "0.0.0.0",
+        "port": "5002",
+        "workers": 8
+    },
+    "Controller": {
+      "broker": 1,
+      "github_worker": 0,
+      "housekeeper": 1
+    },
+    "Housekeeper": {
+      "jobs": [
+            {
+                "model": "issues",
+                "delay": 345000,
+                "repo_group_id": 0 
+            }
+        ]
+    },
+    "GitHubWorker": {
+        "port": 51238,
+        "workers": 1
+    }    
+}
