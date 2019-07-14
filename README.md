@@ -31,9 +31,6 @@ Dependencies
 3. [Start Gathering Data for your own repositories of interest](./augur-get-data.md)
 4. Or, simply [Load up a sample database we built to get new developers going quickly](./augur-load-data.md)
 
-#### If you want to build the old Master Branch, instructions are here: 
-To contribute to our code base routinely, we recommended that developers configure Augur on their local workstations. Start [here](http://augur.augurlabs.io/static/docs/dev-guide/1-overview.html) to get a primer on the project, or jump straight into our [local installation instructions](http://augur.augurlabs.io/static/docs/dev-guide/2-install.html) for developers.
-
 ## Guidelines
 To contribute to Augur, please check out our [development guide](http://augur.augurlabs.io/static/docs/dev-guide/1-overview.html) and [notes on making contributions](CONTRIBUTING.md). Also, please note our [code of conduct](CODE_OF_CONDUCT.md). We want Augur to be a welcoming development community that is open to everyone. 
 
