@@ -12,7 +12,7 @@ logFileHandler = logging.FileHandler("iterator.log")
 logFileHandler.setLevel(logging.DEBUG)
 #theLogger.basicConfig(filename='example.log',filemode = 'w',level=theLogger.DEBUG)
 
-projects_file = open('value-projects.json')
+projects_file = open('repos-orgs-to-get.json')
 
 project_json = json.load(projects_file)
 
@@ -64,8 +64,8 @@ with open('projects_poop.csv', 'w') as projects_poop_file:
         projects_poop_file.write("{},{},\"{}\",{}\n".format(project[0], project[1], project[2], project[3]))
         theLogger.debug(project[1])
 
-project_id = 20
-repo_id = 21000
+project_id = 22000
+repo_id = 22000
 
 with open('repos.csv', 'w') as repos_file:
     repos_file.write("repos_id, projects_id, repo_url, path, facade_name, added, status, name, description, project_url\n")
@@ -75,7 +75,7 @@ with open('repos.csv', 'w') as repos_file:
         repo_id+=1
 
 try:
-    os.system('python -m gitim_repourl -t {} --project_id {} --repo_id {}'.format('06b79d598e4a27113a0c6341241493530948912f', project_id, repo_id))
+    os.system('python -m gitim_repourl -t {} --project_id {} --repo_id {}'.format('your oauth token here', project_id, repo_id))
 except Exception as e:
     theLogger.debug(e)
     theLogger.debug(project_id)
