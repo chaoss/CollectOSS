@@ -75,7 +75,7 @@ with open('repos.csv', 'w') as repos_file:
         repo_id+=1
 
 try:
-    os.system('python -m gitim_repourl -t {} --project_id {} --repo_id {}'.format('your oauth token here', project_id, repo_id))
+    os.system('python -m gitim_repourl -t {} --project_id {} --repo_id {}'.format('your GitHUb API Key here', project_id, repo_id))
 except Exception as e:
     theLogger.debug(e)
     theLogger.debug(project_id)
