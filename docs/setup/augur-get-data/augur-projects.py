@@ -72,7 +72,7 @@ project_id = 22000
 repo_id = 22000
 
 with open('repos.csv', 'w') as repos_file:
-    repos_file.write("repos_id, projects_id, repo_url, path, facade_name, added, status, name, description, project_url\n")
+    #repos_file.write("repos_id, projects_id, repo_url, path, facade_name, added, status, name, description, project_url\n")
     for repo in repos:
         repos_file.write("{},{},{},NULL,NULL,,New,\"{}\",\"{}\",\"{}\"\n".format(repo_id, project_id, repo[2], repo[0], repo[1], repo[3]))
         # repos_sql.write("INSERT INTO \"augur_data\".\"repo_groups\"(\"rg_name\", \"rg_description\", \"rg_website\", \"rg_recache\", \"rg_last_modified\", \"rg_type\", \"tool_source\", \"tool_version\", \"data_source\", \"data_collection_date\") VALUES ('Twitter', 'All of the Twitter Repositories', 'http://www.twitter.com', 0, CURRENT_TIMESTAMP, NULL, 'Data Load', 'Data Load', 'Old Twitter Repo List', CURRENT_TIMESTAMP);\n")

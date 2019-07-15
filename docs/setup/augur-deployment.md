@@ -13,8 +13,10 @@
         }
 
 ```
+    - `sudo nginx -t` to test your configuration file
+    - `sudo systemctl restart nginx` if the test passes. 
     - `cd frontend`
-    - `yarn build`
+    - `npm install`
     - Create a new subdomain for the frontend. Currently this is http://vue-cli.augurlabs.io
     - NGINX Config in `/etc/nginx/sites-enabled/vue-cli.augurlabs.io`
 ```

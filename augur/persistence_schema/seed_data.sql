@@ -3,3 +3,18 @@ INSERT INTO "augur_operations"."gh_worker_job" VALUES ('issues', 5, 0, '22447', 
 INSERT INTO "augur_data"."platform"("pltfrm_id", "pltfrm_name", "pltfrm_version", "pltfrm_release_date", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (25150, 'GitHub', '3', '2019-06-05', 'Manual Entry', 'Sean Goggins', 'GitHub', '2019-06-05 17:23:42');
 INSERT INTO "augur_operations"."gh_worker_oauth"("oauth_id", "name", "consumer_key", "consumer_secret", "access_token", "access_token_secret") VALUES (22, 'signalcaller', 'your consumer_key', 'your consumer_secret', 'your access_token', 'your access_token_secret');
 INSERT INTO "augur_data"."contributors"("cntrb_id", "cntrb_login", "cntrb_email", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'not-provided', NULL, NULL, '2019-06-13 11:33:39', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'nobody', 'http://fake.me', 'http://fake.me', 'x', 'http://fake.me', NULL, 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', NULL, NULL, NULL, NULL, NULL, NULL, '2019-06-13 16:35:25');
+BEGIN;
+INSERT INTO "augur_data"."settings" VALUES (5, 'report_date', 'committer', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (6, 'report_attribution', 'author', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (10, 'google_analytics', 'disabled', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (11, 'update_frequency', '24', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (12, 'database_version', '7', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (13, 'results_visibility', 'show', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (1, 'start_date', '2001-01-01', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (4, 'log_level', 'Debug', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (2, 'repo_directory', '/mnt/md0/repos/twitter-new-test/', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (8, '1900-01-22 20:36:27', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (9, '1900-01-22 20:36:27', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (7, 'working_author', 'done', CURRENT_TIMESTAMP);
+INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', CURRENT_TIMESTAMP);
+COMMIT;
