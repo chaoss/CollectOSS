@@ -15,29 +15,31 @@ pp = pprint.PrettyPrinter()
 class FrontendStatusExtractor(object):
 
     def __init__(self):
-        self.api_text = open("frontend/app/AugurAPI.js", 'r').read()
-        self.attributes = re.findall(r'(?:(GitEndpoint|Endpoint|Timeseries)\(repo, )\'(.*)\', \'(.*)\'', self.api_text)
-        self.timeseries = [attribute for attribute in self.attributes if attribute[0] == "Timeseries"]
-        self.endpoints = [attribute for attribute in self.attributes if attribute[0] == "Endpoint"]
-        self.git_endpoints = [attribute for attribute in self.attributes if attribute[0] == "GitEndpoint"]
+        pass
+        # self.api_text = open("frontend/app/AugurAPI.js", 'r').read()
+        # self.attributes = re.findall(r'(?:(GitEndpoint|Endpoint|Timeseries)\(repo, )\'(.*)\', \'(.*)\'', self.api_text)
+        # self.timeseries = [attribute for attribute in self.attributes if attribute[0] == "Timeseries"]
+        # self.endpoints = [attribute for attribute in self.attributes if attribute[0] == "Endpoint"]
+        # self.git_endpoints = [attribute for attribute in self.attributes if attribute[0] == "GitEndpoint"]
 
     def determine_frontend_status(self, metric):
-        attribute = None
+        metric.frontend_status = 'unimplemented'
+        # attribute = None
 
-        if metric.metric_type == "timeseries":
-            attribute = next((attribute for attribute in self.timeseries if "/api/unstable/<owner>/<repo>/timeseries/{}".format(attribute[2]) == metric.endpoint), None)
+        # if metric.metric_type == "timeseries":
+        #     attribute = next((attribute for attribute in self.timeseries if "/api/unstable/<owner>/<repo>/timeseries/{}".format(attribute[2]) == metric.endpoint), None)
 
-        elif metric.metric_type == "metric":
-            attribute = next((attribute for attribute in self.endpoints if "/api/unstable/<owner>/<repo>/{}".format(attribute[2]) == metric.endpoint), None)
+        # elif metric.metric_type == "metric":
+        #     attribute = next((attribute for attribute in self.endpoints if "/api/unstable/<owner>/<repo>/{}".format(attribute[2]) == metric.endpoint), None)
 
-        elif metric.metric_type == "git":
-            attribute = next((attribute for attribute in self.git_endpoints if "/api/unstable/git/{}".format(attribute[2]) == metric.endpoint), None)
+        # elif metric.metric_type == "git":
+        #     attribute = next((attribute for attribute in self.git_endpoints if "/api/unstable/git/{}".format(attribute[2]) == metric.endpoint), None)
 
-        if attribute is not None:
-            metric.frontend_status = 'implemented'
-            metric.chart_mapping = attribute[1]
-        else:
-            metric.frontend_status = 'unimplemented'
+        # if attribute is not None:
+        #     metric.frontend_status = 'implemented'
+        #     metric.chart_mapping = attribute[1]
+        # else:
+        #     metric.frontend_status = 'unimplemented'
 
 class Metric(ABC):
 

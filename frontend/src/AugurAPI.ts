@@ -25,7 +25,7 @@ export default class AugurAPI {
   };
 
 
-  constructor(hostURL: string = 'http://' + window.location.host, version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://localhost:5001', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'

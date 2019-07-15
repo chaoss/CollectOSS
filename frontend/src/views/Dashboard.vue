@@ -19,7 +19,7 @@
             <d-card class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
-                <insight-chart style="transform: translateX(-30px)" :source="testEndpoints[idx]" :url="repo_relations[group][0].url" :color="colors[idx]"></insight-chart>
+                <insight-chart style="transform: translateX(-30px)" :data="values[testEndpoints[idx]]" :url="repo_relations[group][0].url" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
                   <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
@@ -118,7 +118,7 @@
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo.url }}</span>
                       </d-link>
 
-                      <spark-chart :color="colors[idx]" :url="repo.url" source="codeCommits" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;"/>
+                      <spark-chart :color="colors[idx]" :url="repo.url" :data="values[repo.url][codeCommits]" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;"/>
                     </div>
                   </div>
                 </div>
@@ -131,172 +131,130 @@
   </d-container>
 </template>
 
-<script>
+<script lang="ts">
+import { mapActions, mapGetters } from 'vuex';
+import Component from 'vue-class-component';
+import Vue from 'vue';
 import SparkChart from '../components/charts/SparkChart.vue';
 import InsightChart from '../components/charts/InsightChart.vue';
 import Spinner from '../components/Spinner.vue';
 
-export default {
+@Component({
+  methods: {
+    ...mapActions([
+      'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+                  // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+      'getRepoRelations',
+    ])
+  },
+  computed: {
+    ...mapGetters([
+      'repoRelationsInfo',
+      'groupsInfo'
+    ])
+  },
   components: {
     SparkChart,
     InsightChart,
     Spinner
-  },
-  computed: {
-    repoRelations () {
-      // Call our data collection methods
-      window.AugurAPI.getRepos().then((data) => {
-        let relations = {}
-        this.repos = data
-        data.forEach((repo) => {
-          // set loaded's to false
-          this.values[repo.url] = []
-        })
-        
+  }
+})
+export default class Dashboard extends Vue {
+  // @Action getRepoRelations
+  // @Action testEndpoints
+  // Data properties
+  colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
+  testEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
+  testTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
+  repos: any[] = [];
+  themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
+  loadedGroups: boolean = false;
+  loadedSparks: boolean = false;
 
-        console.log("LOADED repos", this.repos)
-        this.repos.forEach((repo) => {
-          if (this.repo) {
-            if (window.AugurRepos[this.repo])
-              this.api_repos.push(window.AugurRepos[this.repo])
-            else if (this.gitRepo){
-              let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-              if (window.AugurRepos[temp.toString()])
-                temp = window.AugurRepos[temp.toString()]
-              else
-                window.AugurRepos[temp.toString()] = temp
-              this.api_repos.push(temp)
-            }
-          }
-          if (this.repo_groups.indexOf(repo.rg_name) < 0)
-            this.repo_groups.push(repo.rg_name)
-        })
+  getOwner (url: string) {
+    console.log(url)
+    let first = url.indexOf(".")
+    let last = url.lastIndexOf(".")
+    let domain = null
+    let owner = null
+    let repo = null
+    let extension = false
 
-        //move down between future relation endpoint
-        this.repo_groups.forEach((group) => {
-          relations[group] = this.repos.filter(function(repo){
-            return repo.rg_name == group
-          })
-        })
-        this.loadedGroups = true
-        this.repo_relations = relations
-        console.log("LOADED repo groups", this.repo_relations)
-        return relations
-      }) 
+    if (first == last) { //normal github
+      domain = url.substring(0, first)
+      owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.slice(url.lastIndexOf('/') + 1)
+      console.log(owner+ "/" + repo)
+      return owner
+    } else if (url.slice(last) == '.git') { //github with extension
+      domain = url.substring(0, first)
+      extension = true
+      owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4)
+      return owner
+    } else { //gluster
+      domain = url.substring(first + 1, last)
+      owner = null //url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.slice(url.lastIndexOf('/') + 1)
+      return domain
     }
-  },
-  data() {
-    return {
-      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      testEndpoints: ['issuesClosed', 'codeChangesLines', 'issueNew'],
-      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-      repos: [],
-      api_repos: [],
-      repo_groups: [],
-      repo_relations: {},
-      themes: ['dark', 'info', 'royal-blue', 'warning'],
-      values: {},
-      loadedGroups: false,
-      loadedSparks: false
+  }
+
+  getRepo(url: string){
+    let first = url.indexOf(".")
+    let last = url.lastIndexOf(".")
+    let domain = null
+    let owner = null
+    let repo = null
+    let extension = false
+
+    if (first == last){ //normal github
+      domain = url.substring(0, first)
+      owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.slice(url.lastIndexOf('/') + 1)
+      return repo
+    } else if (url.slice(last) == '.git'){ //github with extension
+      domain = url.substring(0, first)
+      extension = true
+      owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4)
+      return repo
+    } else { //gluster
+      domain = url.substring(first + 1, last)
+      owner = null //url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.slice(url.lastIndexOf('/') + 1)
+      return repo
     }
-  },
-  methods: {
-    getOwner(url) {
-      console.log(url)
-      let first = url.indexOf(".")
-      let last = url.lastIndexOf(".")
-      let domain = null
-      let owner = null
-      let repo = null
-      let extension = false
+  }
+  getColor (idx: number) {
+    if (idx % 2 == 0)
+      return 'color: green'
+    else
+      return 'color: red'
+  }
+  getDirection (idx: number) {
+    if (idx % 2 == 0)
+      return 'arrow_upward'
+    else
+      return 'arrow_downward'
+  }
+  getPhrase (idx: number) {
+    if (idx % 2 == 0)
+      return 'increased'
+    else
+      return 'declined'
+  }
+  setBaseRepo (e: any) {
+    // this.$store.commit('setBaseRepo', store.AugurAPI.Repo({ gitURL: e.url}))
+  }
 
-      if (first == last){ //normal github
-        domain = url.substring(0, first)
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        console.log(owner+ "/" + repo)
-        return owner
-      } else if (url.slice(last) == '.git'){ //github with extension
-        domain = url.substring(0, first)
-        extension = true
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4)
-        return owner
-      } else { //gluster
-        domain = url.substring(first + 1, last)
-        owner = null //url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        return domain
-      }
-    },
-    getRepo(url){
-      let first = url.indexOf(".")
-      let last = url.lastIndexOf(".")
-      let domain = null
-      let owner = null
-      let repo = null
-      let extension = false
 
-      if (first == last){ //normal github
-        domain = url.substring(0, first)
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        return repo
-      } else if (url.slice(last) == '.git'){ //github with extension
-        domain = url.substring(0, first)
-        extension = true
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4)
-        return repo
-      } else { //gluster
-        domain = url.substring(first + 1, last)
-        owner = null //url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        return repo
-      }
-    },
-    getColor (idx) {
-      if (idx % 2 == 0)
-        return 'color: green'
-      else
-        return 'color: red'
-    },
-    getDirection (idx) {
-      if (idx % 2 == 0)
-        return 'arrow_upward'
-      else
-        return 'arrow_downward'
-    },
-    getPhrase (idx) {
-      if (idx % 2 == 0)
-        return 'increased'
-      else
-        return 'declined'
-    },
-    setBaseRepo (e) {
-      this.$store.commit('setBaseRepo', window.AugurAPI.Repo({ gitURL: e.url}))
-    },
-    btoa(s) {
-      return window.btoa(s)
-    }
-  },
-  created() {
-    let repos = [window.AugurAPI.Repo({ gitURL: 'github.com/ropensci/plotly' })]
+  created () {
+    // let repoInfo = this.getRepoRelations;
+    // this.repoRelationsInfo = repo_info.repoRelationsInfo
+    // this.groupInfo = repo_info.groupInfo
 
-    let endpoints = this.testEndpoints
-    console.log("repos: ",repos, endpoints)
-    window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
-      this.values = data
-      console.log("DATA: ", data, typeof(data))
-      console.log(data[repos[0].toString()])
-    })
-  },
-  mounted() {
-    // Set all loaded's to false
-    // this.testEndpoints.forEach((endpoint) => {
-    //   this.values[endpoint] = {}
-    //   this.values[endpoint]['loaded'] = false
-    // })
+    // let endpoints = this.testEndpoints;
 
     
 
@@ -304,7 +262,7 @@ export default {
       // let count = 0
       // this.repo_groups.slice(0,3).forEach((group) => {
         
-      //   let repo = window.AugurAPI.Repo({ gitURL: this.repo_relations[group][0]['url'] })
+      //   let repo = store.AugurAPI.Repo({ gitURL: this.repo_relations[group][0]['url'] })
       //   console.log(repo)
       //   repo[this.testEndpoints[count]]().then((data) => {
       //     this.values[this.testEndpoints[count]]["values"] = data
@@ -317,7 +275,7 @@ export default {
       // console.log("CHECKCHECK")
       // this.repo_groups.forEach((group) => {
       //   this.repo_relations[group].slice(0,6).forEach((repo) => {
-      //     let api_repo = window.AugurAPI.Repo({ gitURL: repo['url'] })
+      //     let api_repo = store.AugurAPI.Repo({ gitURL: repo['url'] })
           
       //     api_repo.codeCommits().then((data) => {
       //       console.log("about to load sparks")
@@ -328,7 +286,7 @@ export default {
       // })
       
     
-  },
+  }
 }
 </script>
 
