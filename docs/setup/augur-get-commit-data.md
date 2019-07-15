@@ -60,4 +60,4 @@
 ```
 
 11. Alter the value of the `repo_directory` row in `augur_data.settings` to reflect a directory path that your augur installation has access to. It should be a new, empty directory. This is where Augur will clone your repos for the purpose of counting commits, contributions and other code oriented aspects of open source software health and sustainability. 
-12.  
+12. Proceed to the [Starting Workers Section](./augur-get-workers-going.md)
