@@ -15,7 +15,7 @@
     - `pip install -e .` installs the worker so you can start it with the command, below.
     - `nohup linux-badge-worker >work.log 2>work.err &`
 5. Start the `facade_worker`. This worker collects all of the commit data for your repositories.  You must have already completed all of the steps in 
-    - From the root of your Augur repository, `cd workers/linux_badge_worker`
+    - From the root of your Augur repository, `cd workers/facade_worker`
     - `nohup ./facade00mainprogram.py >facade.log 2>facade.err &` will start the facade worker. 
 
 
