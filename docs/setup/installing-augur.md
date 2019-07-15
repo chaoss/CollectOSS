@@ -37,15 +37,15 @@
 
 
 ### GUI Strategy 
-    - Download pgadmin: https://www.pgadmin.org/download/
-    - Configure pgadmin for your local or remote database environment
-    - You can get more information from these links: 
-        - Support: pgadmin-support@lists.postgresql.org
-        - Website: https://www.pgadmin.org/
-        - Tracker: https://redmine.postgresql.org/projects/pgadmin4
-    - Create your database `augur`
-    - Create your user `augur` with a password. 
-    - Grant augur all the privileges on augur
+- Download pgadmin: https://www.pgadmin.org/download/
+- Configure pgadmin for your local or remote database environment
+- You can get more information from these links: 
+    - Support: pgadmin-support@lists.postgresql.org
+    - Website: https://www.pgadmin.org/
+    - Tracker: https://redmine.postgresql.org/projects/pgadmin4
+- Create your database `augur`
+- Create your user `augur` with a password. 
+- Grant augur all the privileges on augur
 
 3. Execute the file named [`new-augur.0.0.77.5-release.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as the `augur` user, if you have granted that user schema creation privileges, or as any other user who has schema creation privileges.  All schemas, the tables, and sequences they contain, are owned by the `augur` user. Sure, you could do a search and replace and make everything owned by `Sarah`, but why would you do that? Unless your name is `Sarah` and its really important to you. 
 4. There is also a small amount of "seed data" that our data collection "workers" need populated, so execute the file named [`seed_data.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as the `augur` user as well. 
