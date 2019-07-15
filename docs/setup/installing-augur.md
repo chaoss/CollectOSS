@@ -51,7 +51,7 @@
 4. There is also a small amount of "seed data" that our data collection "workers" need populated, so execute the file named [`seed_data.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as the `augur` user as well. 
 
 ## Build Your Augur Backend Environment
-From the root directory inside of your augur clone: 
+From the root directory inside of your augur clone (assuming an activated Python virtualenv from the beginning steps: `source newaugur/bin/activate`)
 1. `pip install pipreqs sphinx`
 2. `sudo npm install -g apidoc brunch newman` 
 3. `pip install -e .` 
