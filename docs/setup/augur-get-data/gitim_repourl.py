@@ -94,11 +94,12 @@ class Gitim():
                         for repo in get_repos():
                             # repos_file.write("{},{},{},NULL,NULL,2019-03-08 12:36:33.236898,New,\"{}\",\"{}\",\"{}\"\n".format(repo_id, project_id, repo[2], repo[0], repo[1], repo[3]))
                             print(project_tuple[3])
-                            repos_file.write(("{},{},{},NULL,NULL,2019-03-08 12:36:33.236898,New,\"{}\",\"{}\",\"{}\"\n").format(repo_id, project_id, repo.clone_url, project_tuple[1], project_tuple[2], project_tuple[3]))
+                            repos_file.write(("{},{},{},NULL,NULL,,New,\"{}\",{},\"{}\"\n").format(repo_id, project_id, repo.clone_url, project_tuple[1], project_tuple[2], project_tuple[3]))
                             repo_id+=1
                             logging.debug(repo)
                     project_id+=1
                     print(project_id)
+                    #project_file.write(("{},{},{},{}\n").format(project_id, project_tuple[1], project_tuple[2], project_tuple[3]))
                     #logging.debug(repo_id, project_id, repo.clone_url, project_tuple[1], project_tuple[2], project_tuple[3])
                 except Exception as e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()

@@ -2559,3 +2559,21 @@ ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_relationship_ty
 ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_right_identifier_id_fkey" FOREIGN KEY ("right_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON UPDATE NO ACTION;
 ALTER TABLE "augur_data"."repo_insights" ADD CONSTRAINT "fk_repo_insights_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id");
 
+-- ----------------------------
+-- Table structure for repos_import
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_operations"."repos_import";
+CREATE TABLE "augur_operations"."repos_import" (
+  "repos_id" int8,
+  "projects_id" int8,
+  "repo_url" varchar COLLATE "pg_catalog"."default",
+  "path" varchar COLLATE "pg_catalog"."default",
+  "facade_name" varchar COLLATE "pg_catalog"."default",
+  "added" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "status" varchar(255) COLLATE "pg_catalog"."default",
+  "name" varchar COLLATE "pg_catalog"."default",
+  "description" varchar COLLATE "pg_catalog"."default",
+  "project_url" varchar COLLATE "pg_catalog"."default"
+)
+;
+ALTER TABLE "augur_operations"."repos_import" OWNER TO "augur";
