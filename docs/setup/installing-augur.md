@@ -12,6 +12,11 @@
 4. Create a Python 3 virtual environment for Augur: `virtualenv --python=python3 newaugur`
 5. Activate your virtual environment `source newaugur/bin/activate` (In the case of Ubuntu, you get the `source` command automatically put into your path using the `bash` shell. So, if you get an error, type `bash` and then hit the enter key and try again.)
 
+### Other operating systems
+1. For Mac OSX `sudo apt-get install` is replaced with `brew install`. [To download brew, click here.](https://brew.sh/) 
+2. For Fedora based Linux distributions, `sudo apt-get install` is replaced with `sudo dnf install`
+3. Python instructions are the same on all operating systems except for windows. We currently have a Vagrant distribution on Windows, and will update that distribution with the latest version of Augur by August 1, 2019. 
+
 ## Getting Augur
 1. Clone the Augur Repository: `git clone https://github.com/chaoss/augur.git`
 2. Change into the `augur` directory with `cd augur`
