@@ -1,5 +1,5 @@
 # Start up the Augur Workers
-1. [Make sure you are still in your python virtual environment, created during setup and installation of Augur.](../installing-augur.md)
+1. [Make sure you are still in your python virtual environment, created during setup and installation of Augur.](./installing-augur.md)
 2. You will be starting four workers. The first one is the `augur_worker_github`. The configuration in your `augur.config.json` file in Augur root should already be setup from earlier. 
     - From the root of your Augur repository, `cd workers/augur_worker_github`
     - `pip install -e .` installs the worker so you can start it with the command, below. 
