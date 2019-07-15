@@ -203,7 +203,7 @@ class MetricStatusWorker:
         """)
         values = pd.read_sql(colSQL, self.db)
         for obj in og_data:
-            location = values.loc[ (values['cm_name']==obj['cm_name'] ) & ( values['cm_group']==obj['cm_group'])]
+            location = values.loc[ (values['cm_name']==obj['cm_name'] ) & ( values['cm_working_group']==obj['cm_working_group'])]
             if not location.empty:
                 logging.info("value of tuple exists: " + str(obj['cm_name']) + "\n")
             else:
