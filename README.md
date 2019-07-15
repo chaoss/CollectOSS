@@ -28,9 +28,9 @@ Dependencies
 ### Developer Setup 
 1. [Install and configure Augur.](./docs/setup/installing-augur.md)
 2. You can follow instructions for collecting data about specific repositories of interest, **OR** use our sample dataset to get going faster.
-    - Option 1: [Configure Augur to get Data for your repositories of interest.](./augur-get-commit-data.md) *or*
+    - Option 1: [Configure Augur to get Data for your repositories of interest.](.docs/setup/augur-get-commit-data.md) *or*
     - Option 2: [Load up a sample database we built to get new developers going quickly](./docs/setup/augur-load-data.md)
-3. If you are collecting data of your own, you  [Start up the Augur Workers](./augur-get-workers-going.md)
+3. If you are collecting data of your own, you  [Start up the Augur Workers](./docs/setup/augur-get-workers-going.md)
 4. If you have any issues, please feel free to request to email straight into our slack channel! p9j0r6s0m4a0t8v5@augurlabs.slack.com for new developer support!!  
 
 
