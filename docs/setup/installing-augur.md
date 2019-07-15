@@ -27,7 +27,6 @@
 2. Create a user called "augur" and a database called "augur" in your postgresql database system. Then grant the user all the rights on the database. 
 
 ### Command Line Strategy
-
 ```
     sudo -u postgres psql
     postgres=# create database augur;
@@ -35,6 +34,7 @@
     postgres=# grant all privileges on database augur to augur;
 
 ```
+
 
 ### GUI Strategy 
     - Download pgadmin: https://www.pgadmin.org/download/
