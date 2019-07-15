@@ -31,9 +31,8 @@ Dependencies
     - Option 1: [Configure Augur to get Data for your repositories of interest.](./augur-get-commit-data.md) *or*
     - Option 2: [Load up a sample database we built to get new developers going quickly](./docs/setup/augur-load-data.md)
 3. If you are collecting data of your own, you  [Start up the Augur Workers](./augur-get-workers-going.md)
-2. If you have any issues, please feel free to request to email straight into our slack channel! p9j0r6s0m4a0t8v5@augurlabs.slack.com for new developer support!!  
-3. [Start Gathering Data for your own repositories of interest](./docs/setup/augur-get-data.md)
-4. Or, simply 
+4. If you have any issues, please feel free to request to email straight into our slack channel! p9j0r6s0m4a0t8v5@augurlabs.slack.com for new developer support!!  
+
 
 ## Guidelines
 To contribute to Augur, please check out our [development guide](http://augur.augurlabs.io/static/docs/dev-guide/1-overview.html) and [notes on making contributions](CONTRIBUTING.md). Also, please note our [code of conduct](CODE_OF_CONDUCT.md). We want Augur to be a welcoming development community that is open to everyone. 
