@@ -79,7 +79,6 @@ upgrade: version download-upgrade install-dev
 dev-start: dev-stop
 	@ mkdir -p logs runtime
 	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
-	@ bash -c '($(CONDAACTIVATE) sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid)'
 	@ echo "Server     Description       Log                   Monitoring                   PID                        "
 	@ echo "------------------------------------------------------------------------------------------                 "
 	@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
@@ -112,7 +111,8 @@ server:
 	@ $(AUGUR_PYTHON) -m augur.server
 
 frontend:
-	bash -c 'cd frontend; brunch build'
+	@ bash -c 'cd frontend; brunch build'
+	@ bash -c '($(CONDAACTIVATE) sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid)'
 
 backend-stop:
 	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'

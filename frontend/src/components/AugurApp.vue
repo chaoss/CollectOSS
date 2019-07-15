@@ -11,7 +11,7 @@
 import AugurHeader from "./AugurHeader.vue";
 import AugurCards from "./AugurCards.vue";
 import VueRouter from "vue-router";
-var store = require('@/store').default;
+var store = require('@/store/store').default;
 
 export default {
   name: "app",
