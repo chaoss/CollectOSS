@@ -50,11 +50,13 @@
 2. `sudo npm install -g apidoc brunch newman` 
 3. `pip install -e .` 
 4. `pip install ipykernel`
+5. `pip install xlsxwriter` (you will need this for the facade worker later)
+5. `python -m ipykernel install --user --name augur --display-name "Python (augur)"`
 
 ## Augur Back End
 1. Create a file in the root of your augur project called `augur.config.json`. [Here is a sample augur.config.json file](./augur-sample-cnfg.json). There are a number of places where you need to provide
     - Augur database credentials
-    - A GitHub API Key
+    - Login to GitHub.com, then create [A GitHub API Key](https://github.com/settings/tokens)  
     - API Keys for optional services
 2. Once this is complete, you can start Augur `augur run`
 3. If there are no error messages continuously streaming, you can stop the process with 'ctrl+c', or leave it running and open a new terminal window for the backend. If you want to run it in the background: 
