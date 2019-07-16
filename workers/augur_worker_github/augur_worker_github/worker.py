@@ -701,7 +701,9 @@ class GitHubWorker:
                         "cntrb_id": self.find_id_from_login(assignee_dict['login']),
                         "tool_source": self.tool_source,
                         "tool_version": self.tool_version,
-                        "data_source": self.data_source
+                        "data_source": self.data_source,
+                        "issue_assignee_src_id": assignee_dict['id'],
+                        "issue_assignee_src_node": assignee_dict['node_id']
                     }
                     # Commit insertion to the assignee table
                     result = self.db.execute(self.issue_assignees_table.insert().values(assignee))
@@ -725,7 +727,9 @@ class GitHubWorker:
                     "label_color": label_dict['color'],
                     "tool_source": self.tool_source,
                     "tool_version": self.tool_version,
-                    "data_source": self.data_source
+                    "data_source": self.data_source,
+                    "label_src_id": label_dict['id'],
+                    "label_src_node_id": label_dict['node_id']
                 }
 
                 result = self.db.execute(self.issue_labels_table.insert().values(label))
@@ -846,6 +850,7 @@ class GitHubWorker:
 
             for event in issue_events:
                 issue_event = {
+                    "issue_event_src_id": event['id'],
                     "issue_id": self.issue_id_inc,
                     "node_id": event['node_id'],
                     "node_url": event['url'],
