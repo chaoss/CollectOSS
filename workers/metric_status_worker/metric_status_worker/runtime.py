@@ -49,8 +49,7 @@ def main(augur_url, host, port):
     """
     app = Flask(__name__)
     #load credentials
-    credentials = read_config("Database",use_main_config=1)
-
+    credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
 
     config = { 
@@ -69,26 +68,23 @@ def main(augur_url, host, port):
             "description": "",
             "required": 1,
             "type": "string"
-            # "host": credentials["host"],
-            # "password": credentials["password"],
-            # "port": credentials["port"],
-            # "user": credentials["user"],
-            # "database": credentials["database"],
-            # "table": "insights",
-            # "display_name": "",
-            # "description": "",
-            # "required": 1,
-            # "type": "string"
+
         }
 
     #create instance of the worker
-    app.gh_worker = MetricStatusWorker(config) # declares the worker that will be running on this server with specified config
+    app.metric_status_worker = MetricStatusWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
-    print("Starting Flask App with pid: " + str(os.getpid()) + "...")
+    logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=port)
-    print("Killing Flask App: " + str(os.getpid()))
-    
+    if app.metric_status_worker._child is not None:
+        app.metric_status_worker._child.terminate()
+    try:
+        requests.post('http://localhost:{}/api/unstable/workers/remove'.format(server['port']), json={"id": config['id']})
+    except:
+        pass
+    logging.info("Killing Flask App: " + str(os.getpid()))
+    os.kill(os.getpid(), 9)    
 
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
@@ -103,7 +99,7 @@ def read_config(section, name=None, environment_variable=None, default=None, con
     __config_bad = False
     if use_main_config == 0:
         __config_file_path = os.path.abspath(os.getenv('AUGUR_CONFIG_FILE', config_file))
-    else:
+    else:        
         __config_file_path = os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())) + '/augur.config.json')
 
     __config_location = os.path.dirname(__config_file_path)
@@ -122,9 +118,9 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
 
         # Options to export the loaded configuration as environment variables for Docker
-
+       
         if __export_env:
-
+            
             export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
             __export_file = open(export_filename, 'w+')
             # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
@@ -133,7 +129,6 @@ def read_config(section, name=None, environment_variable=None, default=None, con
         # Load the config file and return [section][name]
         try:
             config_text = __config_file.read()
-            print(__config_file_path, 'aa')
             __config = json.loads(config_text)
             if name is not None:
                 return(__config[section][name])
