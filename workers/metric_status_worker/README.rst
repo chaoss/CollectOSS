@@ -56,17 +56,17 @@ Here is an example of ``worker.log``
 
 .. code-block::
 
-INFO:root:Making database connections...
-INFO:root:Starting Flask App with pid: 90461...
-INFO:werkzeug: * Running on http://localhost:51238/ (Press CTRL+C to quit)
-INFO:root:Sending to work on task: {'job_type': 'UPDATE', 'models': ['chaoss_metric_status'], 'given': {}}
-INFO:root:Running...
-INFO:werkzeug:127.0.0.1 - - [16/Jul/2019 18:44:05] "POST /AUGWOP/task HTTP/1.1" 200 -
-INFO:root:While filtering duplicates, we reduced the data size from 137 to 137
+    INFO:root:Making database connections...
+    INFO:root:Starting Flask App with pid: 90461...
+    INFO:werkzeug: * Running on http://localhost:51238/ (Press CTRL+C to quit)
+    INFO:root:Sending to work on task: {'job_type': 'UPDATE', 'models': ['chaoss_metric_status'], 'given': {}}
+    INFO:root:Running...
+    INFO:werkzeug:127.0.0.1 - - [16/Jul/2019 18:44:05] "POST /AUGWOP/task HTTP/1.1" 200 -
+    INFO:root:While filtering duplicates, we reduced the data size from 137 to 137
 
-INFO:root:Count of contributors needing insertion: 137
+    INFO:root:Count of contributors needing insertion: 137
 
-INFO:root:Primary key inserted into the metrics table: [732]
-INFO:root:Primary key inserted into the metrics table: [733]
-INFO:root:Primary key inserted into the metrics table: [734]
-INFO:root:Primary key inserted into the metrics table: [735]
+    INFO:root:Primary key inserted into the metrics table: [732]
+    INFO:root:Primary key inserted into the metrics table: [733]
+    INFO:root:Primary key inserted into the metrics table: [734]
+    INFO:root:Primary key inserted into the metrics table: [735]
