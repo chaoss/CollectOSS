@@ -25,17 +25,18 @@ Dependencies
 -   [GitHub Access Token](https://github.com/settings/tokens) (no write access required)
 
 
-### Local Installation
-1. [Please follow our developer installation instructions here.](./docs/setup/installing-augur.md)
-2. If you have any issues, please feel free to request to email straight into our slack channel! p9j0r6s0m4a0t8v5@augurlabs.slack.com for new developer support!!  
-3. [Start Gathering Data for your own repositories of interest](./docs/setup/augur-get-data.md)
-4. Or, simply [Load up a sample database we built to get new developers going quickly](./docs/setup/augur-load-data.md)
+### Developer Setup 
+1. [Install and configure Augur.](./docs/setup/installing-augur.md)
+2. You can follow instructions for collecting data about specific repositories of interest, **OR** use our sample dataset to get going faster.
+    - Option 1: [Configure Augur to get Data for your repositories of interest.](./docs/setup/augur-get-commit-data.md) *or*
+    - Option 2: [Load up a sample database we built to get new developers going quickly](./docs/setup/augur-load-data.md)
+3. If you are collecting data of your own, you  [Start up the Augur Workers](./docs/setup/augur-get-workers-going.md)
+4. If you have any issues, please feel free to request to email straight into our slack channel! p9j0r6s0m4a0t8v5@augurlabs.slack.com for new developer support!!  
+
 
 ## Guidelines
 To contribute to Augur, please check out our [development guide](http://augur.augurlabs.io/static/docs/dev-guide/1-overview.html) and [notes on making contributions](CONTRIBUTING.md). Also, please note our [code of conduct](CODE_OF_CONDUCT.md). We want Augur to be a welcoming development community that is open to everyone. 
 
-## Roadmap
-Our technical, outreach, and academic goals [roadmap](https://github.com/chaoss/augur/wiki/Release-Schedule).
 
 ## License and Copyright
 Copyright © 2019 University of Nebraska at Omaha, University of Missouri and CHAOSS Project at the Linux Foundation
