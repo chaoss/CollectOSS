@@ -51,35 +51,40 @@ class Housekeeper:
         """
         logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, repo_group_id, os.getpid()))
         try:
-            # Waiting for 1 alive worker
+            compatible_worker_found = False
+            # Waiting for compatible worker
             while True:
-                if broker is not None:
-                    if len(broker._getvalue().keys()) > 1:
-                        logging.info("Housekeeper recognized that the broker has at least one worker... beginning to distribute maintained tasks")
-                        time.sleep(10)
-                        while True:
-                            logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, repo_group_id))
-                            
-                            for repo in repos:
-                                task = {
-                                    "job_type": "MAINTAIN", 
-                                    "models": [model], 
-                                    "given": {
-                                        "git_url": repo['repo_git']
-                                    }
+                for worker in list(broker._getvalue().keys()):
+                    if model in broker[worker]['models']:
+                        compatible_worker_found = True
+                if compatible_worker_found:
+                    logging.info("Housekeeper recognized that the broker has a worker that " + 
+                        "can handle the {} model... beginning to distribute maintained tasks".format(model))
+                    time.sleep(10)
+                    while True:
+                        logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, repo_group_id))
+                        
+                        for repo in repos:
+                            task = {
+                                "job_type": "MAINTAIN", 
+                                "models": [model], 
+                                "given": {
+                                    "git_url": repo['repo_git']
                                 }
-                                if "focused_task" in repo:
-                                    task["focused_task"] = repo['focused_task']
-                                try:
-                                    requests.post('http://localhost:{}/api/unstable/task'.format(
-                                        broker_port), json=task, timeout=10)
-                                except Exception as e:
-                                    logging.info(str(e))
+                            }
+                            if "focused_task" in repo:
+                                task["focused_task"] = repo['focused_task']
+                            # logging.info(str(task))
+                            try:
+                                requests.post('http://localhost:{}/api/unstable/task'.format(
+                                    broker_port), json=task, timeout=10)
+                            except Exception as e:
+                                logging.info(str(e))
 
-                                time.sleep(0.5)
-                            logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(repos))))
-                            time.sleep(delay)
-                        break
+                            time.sleep(0.5)
+                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(repos))))
+                        time.sleep(delay)
+                    break
                 time.sleep(3)
                 
         except KeyboardInterrupt:

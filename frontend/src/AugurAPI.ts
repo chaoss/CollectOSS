@@ -131,12 +131,12 @@ export default class AugurAPI {
       // _.assign(reverseMap, repo.__reverseEndpointMap)
       processedData[repo.toString()] = {}
       fields.forEach((field) => {
-        console.log("endpoint_map: ", field, repo, repo.__endpointMap[field])
+        // console.log("endpoint_map: ", field, repo, repo.__endpointMap[field])
         endpoints.push(repo.__endpointMap[field])
         reverseMap[repo.__endpointMap[field]] = repo.__reverseEndpointMap[repo.__endpointMap[field]]
       })
     })
-    console.log("before batch:", endpoints, reverseMap)
+    // console.log("before batch:", endpoints, reverseMap)
     return this.batch(endpoints).then((data: any) => {
 
       let newdat = new Promise((resolve, reject) => {
@@ -146,19 +146,19 @@ export default class AugurAPI {
               processedData[reverseMap[response.path].owner] = {}
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = []
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
-              console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
+              // console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
             } else if (reverseMap[response.path]) {
-              console.log('failed null')
+              // console.log('failed null')
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null
             }
           })
-          console.log(processedData)
+          // console.log(processedData)
           resolve(processedData)
         } else {
           reject(new Error('data-not-array'))
         }
       })
-      console.log(newdat, "newdata")
+      // console.log(newdat, "newdata")
       return newdat
     })
   }

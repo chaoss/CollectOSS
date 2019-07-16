@@ -51,6 +51,13 @@ class AugurGunicornApp(gunicorn.app.base.BaseApplication):
 @pass_application
 def cli(app):
 
+    def get_process_id(name):
+        """Return process ids found by name or command
+        """
+        child = subprocess.Popen(['pgrep', '-f', name], stdout=subprocess.PIPE, shell=False)
+        response = child.communicate()[0]
+        return [int(pid) for pid in response.split()]
+
     mp.set_start_method('forkserver', force=True)
     app.schedule_updates()
     master = None
@@ -74,7 +81,7 @@ def cli(app):
         logger.info("Booting broker and its manager")
         manager = mp.Manager()
         broker = manager.dict()
-        broker['worker_pids'] = manager.list()
+        # broker['worker_pids'] = manager.list()
         
     if controller['housekeeper'] == 1:
         logger.info("Booting housekeeper")
@@ -91,19 +98,32 @@ def cli(app):
             )
 
     if controller['github_worker'] == 1:
+        gh_pids = get_process_id("/bin/sh -c cd workers/augur_worker_github && github_worker")
+        logger.info(gh_pids)
+        if len(gh_pids) > 0:
+            gh_pids.append(gh_pids[0] + 1)
+            for pid in gh_pids:
+                try:
+                    os.kill(pid, 9)
+                except:
+                    logger.info("Worker process {} already killed".format(pid))
+
         # proc_iter = psutil.process_iter(attrs=["pid", "name", "cmdline"])
         # past_worker = any("/bin/sh -c cd workers/augur_worker_github && github_worker" in p.info["cmdline"] for p in proc_iter)
         # logger.info(str(past_worker))
 
         logger.info("Booting github worker")
+        logger.info("abt to call method")
         up = mp.Process(target=worker_start, args=(), daemon=True)
         up.start()
 
     @atexit.register
     def exit():
-        # time.sleep(1)
-        for pid in broker['worker_pids']:
-            os.kill(pid, 9)
+        # try:
+        #     for pid in broker['worker_pids']:
+        #         os.kill(pid, 9)
+        # except:
+        #     logger.info("Worker process {} already killed".format(pid))
         if master is not None:
             master.halt()
         logger.info("Shutting down app updates...")
@@ -115,7 +135,13 @@ def cli(app):
             housekeeper.shutdown_updates()
 
         if controller['github_worker'] == 1:
-            logger.info("You had the github_worker startup enabled, please allow ~30 seconds for its processes to shutdown before running 'make dev' again")
+            for pid in gh_pids:
+                try:
+                    os.kill(pid, 9)
+                    logger.info("killed worker process {}".format(pid))
+                except:
+                    logger.info("Worker process {} already killed".format(pid))
+            # logger.info("You had the github_worker startup enabled, please allow ~30 seconds for its processes to shutdown before running 'make dev' again")
             logger.info("Shutting down github worker...")
 
             up.terminate()
@@ -130,8 +156,9 @@ def cli(app):
         
         
         # Prevent multiprocessing's atexit from conflicting with gunicorn
-        os.kill(os.getpid(), 9)
-        os._exit(0)
+        # logger.info("killing self: {}".format(os.getpid()))
+        # os.kill(os.getpid(), 9)
+        # os._exit(0)
 
 
     host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
@@ -147,5 +174,5 @@ def cli(app):
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
 def worker_start():
-        logger.info("Booting github worker")
-        process = subprocess.Popen("cd workers/augur_worker_github && github_worker", shell=True)
+    logger.info("Booting github worker")
+    process = subprocess.Popen("cd workers/augur_worker_github && github_worker", shell=True)

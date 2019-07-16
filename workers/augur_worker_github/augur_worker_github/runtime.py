@@ -18,15 +18,13 @@ def create_server(app, gw):
         if request.method == 'POST': #will post a task to be added to the queue
             logging.info("Sending to work on task: {}".format(str(request.json)))
             app.gh_worker.task = request.json
-
-            #set task
             return Response(response=request.json,
                         status=200,
                         mimetype="application/json")
         if request.method == 'GET': #will retrieve the current tasks/status of the worker
-            return Response(response=request.json,
-                        status=200,
-                        mimetype="application/json")
+            return jsonify({
+                "status": "not implemented"
+            })
         return Response(response=request.json,
                         status=200,
                         mimetype="application/json")

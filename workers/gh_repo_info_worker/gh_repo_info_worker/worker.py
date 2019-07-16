@@ -173,7 +173,8 @@ class GHRepoInfoWorker:
     def collect(self, repos=None):
 
         while True:
-            time.sleep(0.5)
+            time.sleep(4.5)
+            logging.info("running")
             if not self._queue.empty():
                 message = self._queue.get()
                 self.working_on = 'UPDATE'
