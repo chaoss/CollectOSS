@@ -64,11 +64,6 @@
                 "model": "issues",
                 "delay": 345000,
                 "repo_group_id": 0 
-            },
-            {
-                "model": "repo_info",
-                "delay": 60,
-                "repo_group_id": 0
             }
         ]
     },

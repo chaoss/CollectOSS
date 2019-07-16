@@ -3,7 +3,7 @@
     "projectName": "Rails",
     "projectDescription": "Rails Ecosystem.",
     "projectRepository": "https://github.com/rails",
-    "projectWebsite": "none",
+    "projectWebsite": "http://www.rails.org",
     "category": "Development"
   },
     {
@@ -21,31 +21,10 @@
     "category": "Development"
   },
   {
-    "projectName": "Comcast.",
-    "projectDescription": "Comcast Ecosystem.",
-    "projectRepository": "https://github.com/comcast",
-    "projectWebsite": "none",
-    "category": "Development"
-  },
-  {
     "projectName": "GraphQL",
     "projectDescription": "GraphQL Ecosystem.",
     "projectRepository": "https://github.com/graphql",
-    "projectWebsite": "none",
-    "category": "Development"
-  },
-  {
-    "projectName": "Netflix",
-    "projectDescription": "Netflix Ecosystem.",
-    "projectRepository": "https://github.com/rails",
-    "projectWebsite": "none",
-    "category": "Development"
-  },
-  {
-    "projectName": "Apache",
-    "projectDescription": "Apache Ecosystem.",
-    "projectRepository": "https://github.com/apache",
-    "projectWebsite": "none",
+    "projectWebsite": "http://www.graphql.org",
     "category": "Development"
   }
 ]
