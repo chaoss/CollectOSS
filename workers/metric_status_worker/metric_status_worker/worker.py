@@ -63,11 +63,11 @@ class MetricStatusWorker:
         # self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
 
         specs = {
-            "id": "com.augurlabs.core.chaoss_metric_status",
+            "id": self.config['id'],
             "location": "http://localhost:51238",
             "qualifications":  [
                 {
-                    "given": [],
+                    "given": [[None]],
                     "models":["chaoss_metric_status"]
                 }
             ],
