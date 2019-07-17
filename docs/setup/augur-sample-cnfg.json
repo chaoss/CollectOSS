@@ -12,7 +12,7 @@
         "name": "your database name here",
         "host": "your hostname, probably localhost for development",
         "password": "your password",
-        "port": "your postgres port, probably 5432",
+        "port": "5432",
         "schema": "augur_data",
         "user": "augur",
         "key": "your github API key",
@@ -26,14 +26,14 @@
         "host": " request public GHTorrent Access by commenting here: https://github.com/chaoss/augur/issues/302",
         "name": "ghtorrent_restore",
         "pass": "xxxx!",
-        "port": "xxxxx",
+        "port": "3306",
         "user": "xxxx"
     },
     "GHTorrentPlus": {
         "host": "augurlabs.io",
         "name": "xxx",
         "pass": "xxxx",
-        "port": "xxx",
+        "port": "3306",
         "user": "xxx"
     },
     "GitHub": {
@@ -64,7 +64,12 @@
                 "model": "issues",
                 "delay": 345000,
                 "repo_group_id": 0 
-            }
+            },
+            {
+                "model": "repo_info",
+                "delay": 44460,
+                "repo_group_id": 0
+            }   
         ]
     },
     "GitHubWorker": {
