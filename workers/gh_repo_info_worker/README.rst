@@ -17,6 +17,15 @@ This worker is integrated into Augur's worker architecture and can receieve task
 Usage
 -----
 
+Installing the Worker
+********
+
+To install this worker execute the following command
+
+.. code:: bash
+
+    pip install -e .
+
 Running this Worker
 ********
 
@@ -24,7 +33,7 @@ To run this worker execute the following command
 
 .. code:: bash
 
-    python -m gh_repo_info_worker.runtime
+    repo_info_worker
 
 
 **Note:** Make sure the broker is running before running the worker
