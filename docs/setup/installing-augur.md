@@ -24,6 +24,8 @@
 
 ## Create Database Schema
 1. [Install Postgresql's latest version for your operating system.](https://www.postgresql.org/download/)
+    - You should download and install the database engine for your operating system. For Mac, you can use `brew install postgresql` as an efficient shortcut. 
+    - Then you will have either a command line or web interface strategy (described below) to follow for administration and script running. 
 2. Create a user called "augur" and a database called "augur" in your postgresql database system. Then grant the user all the rights on the database. 
 
 ### Command Line Strategy
@@ -47,8 +49,13 @@
 - Create your user `augur` with a password. 
 - Grant augur all the privileges on augur
 
-3. Execute the file named [`new-augur.0.0.77.5-release.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as the `augur` user, if you have granted that user schema creation privileges, or as any other user who has schema creation privileges.  All schemas, the tables, and sequences they contain, are owned by the `augur` user. Sure, you could do a search and replace and make everything owned by `Sarah`, but why would you do that? Unless your name is `Sarah` and its really important to you. 
-4. There is also a small amount of "seed data" that our data collection "workers" need populated, so execute the file named [`seed_data.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as the `augur` user as well. 
+3. Execute the file named [`new-augur.0.0.77.5-release.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as any user with schema creation privileges.   
+    - All schemas, the tables, and sequences they contain, are owned by the `augur` user.
+    - If you are running the script from the command line, from the root of the Augur repository it is located at: `augur/persistence_schema/new-augur.0.0.77.5-release.sql`. 
+    - The fastest way is `psql -U augur -d augur -f augur/persistence_schema/new-augur.0.0.77.5-release.sql -h localhost` from the command line at the root of the Augur repository. 
+4. There is also a small amount of "seed data" that our data collection "workers" need populated, so execute the file named [`seed_data.sql`](../../augur/persistence_schema/seed_data.sql) as the `augur` user as well.
+    - If you are running the script from the command line, from the root of the Augur repository it is located at: `augur/persistence_schema/seed_data.sql`. 
+    - The fastest way is `psql -U augur -d augur -f augur/persistence_schema/seed_data.sql -h localhost` from the command line at the root of the Augur repository. 
 
 ## Build Your Augur Backend Environment
 From the root directory inside of your augur clone (assuming an activated Python virtualenv from the beginning steps: `source newaugur/bin/activate`)
