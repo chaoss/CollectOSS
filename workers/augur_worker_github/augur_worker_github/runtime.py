@@ -47,17 +47,20 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
-    worker_info = read_config("GitHubWorker", use_main_config=1)
+
+    worker_info = read_config("Workers", use_main_config=1)
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
-    while True:
-        try:
-            r = requests.get("http://localhost:{}".format(worker_port) + '/AUGWOP/task')
-            if r.status == 200:
-                worker_port += 1
-        except:
-            break
+    # while True:
+    #     try:
+    #         print("trying")
+    #         r = requests.get("http://localhost:{}".format(worker_port) + '/AUGWOP/task', timeout=5)
+    #         print(r.json)
+    #         if r.status == 200:
+    #             worker_port += 1
+    #     except:
+    #         break
 
     config = { 
             "id": "com.augurlabs.core.github_worker.{}".format(worker_port),
@@ -70,7 +73,6 @@ def main(augur_url, host, port):
             "port": credentials["port"],
             "user": credentials["user"],
             "database": credentials["database"],
-            "table": "repo_badging",
             "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
             "display_name": "",
             "description": "",
@@ -79,10 +81,11 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-
+    print("made it")
     app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
-    
+    print("made it")
     create_server(app, None)
+    print("made it")
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
 
 

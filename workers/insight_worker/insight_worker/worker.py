@@ -47,12 +47,12 @@ class InsightWorker:
         logging.info("Worker initializing...\n")
         
         specs = {
-            "id": "com.augurlabs.core.badge_worker",
-            "location": "http://localhost:51235",
+            "id": "com.augurlabs.core.insight_worker",
+            "location": "http://localhost:51252",
             "qualifications":  [
                 {
                     "given": [["git_url"]],
-                    "models":["badges"]
+                    "models":["insights"]
                 }
             ],
             "config": [self.config]

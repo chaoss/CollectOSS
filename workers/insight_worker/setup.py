@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'worker_start=insight_worker.runtime:main',
+            'insight_worker=insight_worker.runtime:main',
         ],
     },
 

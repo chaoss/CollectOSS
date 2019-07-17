@@ -115,47 +115,6 @@ class GitHubWorker:
         self.history_table = HelperBase.classes.gh_worker_history.__table__
         self.job_table = HelperBase.classes.gh_worker_job.__table__
 
-
-        # # Query all repos and last repo id
-        # repoUrlSQL = s.sql.text("""
-        #         SELECT git_url, repo_id FROM repo ORDER BY repo_id ASC
-        #     """)
-
-        # rs = pd.read_sql(repoUrlSQL, self.db, params={})
-
-        # repoIdSQL = s.sql.text("""
-        #         SELECT since_id_str FROM gh_worker_job
-        #     """)
-
-        # job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
-
-        # last_id = int(job_df.iloc[0]['since_id_str'])
-
-        # jobHistorySQL = s.sql.text("""
-        #         SELECT max(history_id) AS history_id, status FROM gh_worker_history
-        #         GROUP BY status
-        #         LIMIT 1
-        #     """)
-
-        # history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
-
-        # if history_df.iloc[0]['status'] == 'Stopped':
-        #     self.history_id = int(history_df.iloc[0]['history_id'])
-        #     self.finishing_task = True
-        # else:
-        #     last_id += 1
-
-        # # Rearrange repos so the one after the last one that 
-        # #   was completed will be ran first
-        # before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
-        # after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
-
-        # reorganized_repos = after_repos.append(before_repos)
-
-        # # Populate queue
-        # for index, row in reorganized_repos.iterrows():
-        #     self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info=row))
-
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
         logging.info("Querying starting ids info...")
         maxIssueCntrbSQL = s.sql.text("""
@@ -180,8 +139,6 @@ class GitHubWorker:
         self.issue_id_inc = (issue_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
-
-        # self.run()
 
         requests.post('http://localhost:{}/api/unstable/workers'.format(
             self.config['broker_port']), json=specs) #hello message
@@ -246,8 +203,8 @@ class GitHubWorker:
         if self._child is None:
             self._child = Process(target=self.collect, args=())
             self._child.start()
-            requests.post("http://localhost:{}/api/unstable/add_pids".format(
-                self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
+            # requests.post("http://localhost:{}/api/unstable/add_pids".format(
+            #     self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -551,7 +508,9 @@ class GitHubWorker:
                     logging.info("No more pages with unknown issues, breaking from pagination.\n")
                     break
             elif len(new_issues) != 0:
-                to_add = [obj for obj in new_issues if obj not in issues]
+                # to_add = [obj for obj in new_issues if obj not in issues]
+                # issues += to_add
+                to_add = [obj for obj in j if obj not in issues]
                 issues += to_add
 
             i = i + 1 if self.finishing_task else i - 1

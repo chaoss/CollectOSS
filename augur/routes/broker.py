@@ -82,22 +82,20 @@ def create_broker_routes(server):
             givens = server.broker[worker['id']]['given']
             user_queue = server.broker[worker['id']]['user_queue']
             maintain_queue = server.broker[worker['id']]['maintain_queue']
-
-            if server.broker[worker]['status'] != 'Disconnected':
+            try:
+                new_task = user_queue.pop(0)
+                logging.info("Worker {}'s user queue is not empty, preparing to send it the next 'user' task: {}".format(worker['id'], new_task['given']['git_url']))
+                logging.info("Remaining length of user queue: {}".format(str(len(user_queue))))
+                requests.post(server.broker[worker['id']]['location'] + '/AUGWOP/task', json=new_task)
+            except:
                 try:
-                    new_task = user_queue.pop(0)
-                    logging.info("Worker {}'s user queue is not empty, preparing to send it the next 'user' task: {}".format(worker['id'], new_task['given']['git_url']))
-                    logging.info("Remaining length of user queue: {}".format(str(len(user_queue))))
+                    new_task = maintain_queue.pop(0)
+                    logging.info("Worker {}'s user queue is empty but the maintain queue is not, preparing to send it the next 'maintain' task: {}".format(worker['id'], new_task['given']['git_url']))
+                    logging.info("Remaining length of maintain queue: {}".format(str(len(maintain_queue))))
                     requests.post(server.broker[worker['id']]['location'] + '/AUGWOP/task', json=new_task)
                 except:
-                    try:
-                        new_task = maintain_queue.pop(0)
-                        logging.info("Worker {}'s user queue is empty but the maintain queue is not, preparing to send it the next 'maintain' task: {}".format(worker['id'], new_task['given']['git_url']))
-                        logging.info("Remaining length of maintain queue: {}".format(str(len(maintain_queue))))
-                        requests.post(server.broker[worker['id']]['location'] + '/AUGWOP/task', json=new_task)
-                    except:
-                        logging.info("Both queues are empty for worker {}".format(worker['id']))
-                        server.broker[worker['id']]['status'] = 'Idle'
+                    logging.info("Both queues are empty for worker {}".format(worker['id']))
+                    server.broker[worker['id']]['status'] = 'Idle'
 
         return Response(response=worker['id'],
                         status=200,
@@ -108,26 +106,29 @@ def create_broker_routes(server):
         task = request.json
         worker = task['worker_id']
         logging.info("Message recieved that worker " + worker + " completed task: " + str(task))
-        models = server.broker[worker]['models']
-        givens = server.broker[worker]['given']
-        user_queue = server.broker[worker]['user_queue']
-        maintain_queue = server.broker[worker]['maintain_queue']
+        try:
+            models = server.broker[worker]['models']
+            givens = server.broker[worker]['given']
+            user_queue = server.broker[worker]['user_queue']
+            maintain_queue = server.broker[worker]['maintain_queue']
 
-        if server.broker[worker]['status'] != 'Disconnected':
-            try:
-                new_task = user_queue.pop(0)
-                logging.info("Worker {}'s user queue is not empty, preparing to send it the next 'user' task: {}".format(worker, new_task['given']['git_url']))
-                logging.info("Remaining length of user queue: {}".format(str(len(user_queue))))
-                requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
-            except:
+            if server.broker[worker]['status'] != 'Disconnected':
                 try:
-                    new_task = maintain_queue.pop(0)
-                    logging.info("Worker {}'s user queue is empty but the maintain queue is not, preparing to send it the next 'maintain' task: {}".format(worker, new_task['given']['git_url']))
-                    logging.info("Remaining length of maintain queue: {}".format(str(len(maintain_queue))))
+                    new_task = user_queue.pop(0)
+                    logging.info("Worker {}'s user queue is not empty, preparing to send it the next 'user' task: {}".format(worker, new_task['given']['git_url']))
+                    logging.info("Remaining length of user queue: {}".format(str(len(user_queue))))
                     requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
                 except:
-                    logging.info("Both queues are empty for worker {}".format(worker))
-                    server.broker[worker]['status'] = 'Idle'
+                    try:
+                        new_task = maintain_queue.pop(0)
+                        logging.info("Worker {}'s user queue is empty but the maintain queue is not, preparing to send it the next 'maintain' task: {}".format(worker, new_task['given']['git_url']))
+                        logging.info("Remaining length of maintain queue: {}".format(str(len(maintain_queue))))
+                        requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
+                    except:
+                        logging.info("Both queues are empty for worker {}".format(worker))
+                        server.broker[worker]['status'] = 'Idle'
+        except:
+            logging.info("A past instance of the {} worker finished a previous leftover task.".format(worker))
 
         return Response(response=task,
                         status=200,

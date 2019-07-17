@@ -340,6 +340,9 @@ class GHRepoInfoWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" +
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        requests.post('http://localhost:{}/api/unstable/completed_task'.format(
-            self.config['broker_port']), json=task_completed)
+        try:
+            requests.post('http://localhost:{}/api/unstable/completed_task'.format(
+                self.config['broker_port']), json=task_completed)
+        except requests.exceptions.ConnectionError:
+            logging.info("Broker is booting and cannot accept the worker's message currently")
         self.results_counter = 0
