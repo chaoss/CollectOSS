@@ -29,12 +29,21 @@
 2. Create a user called "augur" and a database called "augur" in your postgresql database system. Then grant the user all the rights on the database. 
 
 ### Command Line Strategy
+**For Linux**
 ```
     sudo -u postgres psql
     postgres=# create database augur;
     postgres=# create user augur with encrypted password 'mypass';
     postgres=# grant all privileges on database augur to augur;
 
+```
+
+**For Mac OSX**  
+```
+    $ pgsql postgres
+    postgres=# create database augur;
+    postgres=# create user augur with encrypted password 'mypass';
+    postgres=# grant all privileges on database augur to augur;
 ```
 
 
