@@ -141,14 +141,14 @@ import Spinner from '../components/Spinner.vue';
 
 @Component({
   methods: {
-    ...mapActions([
+    ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       'getRepoRelations',
     ])
   },
   computed: {
-    ...mapGetters([
+    ...mapGetters('common',[
       'repoRelationsInfo',
       'groupsInfo'
     ])
@@ -253,10 +253,9 @@ export default class Dashboard extends Vue {
     // let repoInfo = this.getRepoRelations;
     // this.repoRelationsInfo = repo_info.repoRelationsInfo
     // this.groupInfo = repo_info.groupInfo
-
     // let endpoints = this.testEndpoints;
+    this.$store.dispatch('common/repoRelationsInfo')
 
-    
 
     // Load data for insights
       // let count = 0

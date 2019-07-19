@@ -97,52 +97,111 @@
     </div>
   </div>
 </template>
-<script>
 
-export default {
-  components: {
-
-  },
-  computed: {
-  },
-  data() {
-    return {
-      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
-      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-      repos: [],
-      repo_groups: [],
-      repo_relations: {},
-      themes: ['dark', 'info', 'royal-blue', 'warning'],
-    }
-  },
-  methods: {
-    getRepoGroups() {
-      console.log("START")
-      window.AugurAPI.getRepos().then((data) => {
-        this.repos = data
-        console.log("LOADED repos", this.repos)
-        window.AugurAPI.getRepoGroups().then((data) => {
-          $(this.$el).find('.spinner').removeClass('loader')
-          $(this.$el).find('.spinner').removeClass('relative')
-          this.repo_groups = data
-          //move down between future relation endpoint
-          this.repo_groups.forEach((group) => {
-            this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
-              return repo.rg_name == group.rg_name
-            })
-            group.repo_count = this.repo_relations[group.rg_name].length
-          })
-          console.log("LOADED repo groups", this.repo_relations)
-        })
-      })
+<script lang="ts">
+  import  { Component, Vue } from 'vue-property-decorator';
+  import {mapActions, mapGetters} from "vuex";
+  @Component({
+    methods: {
+      ...mapActions('common',[
+        'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+                    // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+        'getRepoRelations',
+      ])
     },
-    btoa(s) {
-      return window.btoa(s)
+    computed: {
+      ...mapGetters('common',[
+        'repoRelationsInfo',
+        'groupsInfo'
+      ])
+    },
+  })
+
+  export default class RepoGroups extends Vue{
+    colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
+    testEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
+    testTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
+    repos: any[] = [];
+    repo_groups:any[] = [];
+    repo_relations:any[] =  [];
+    themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
+    loadedGroups: boolean = false;
+    loadedSparks: boolean = false;
+    ascending:boolean = false;
+    sortColumn: string ='';
+
+    created() {
+      let repo_group_info = this.$store.getters['common/groupsInfo']
+      Object.keys(repo_group_info).forEach((key:any) =>{
+        this.repo_groups.push(repo_group_info[key])
+      })
     }
-  },
-  created() {
-    this.getRepoGroups()
-  },
-}
+
+    sortTable(col: string) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+
+      var ascending = this.ascending;
+
+      this.repos.sort(function(a, b) {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1
+        }
+        return 0;
+      })
+    }
+  }
+
+// export default {
+//   components: {
+//
+//   },
+//   computed: {
+//   },
+//   data() {
+//     return {
+//       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+//       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+//       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
+//       repos: [],
+//       repo_groups: [],
+//       repo_relations: {},
+//       themes: ['dark', 'info', 'royal-blue', 'warning'],
+//     }
+//   },
+//   methods: {
+//     getRepoGroups() {
+//       console.log("START")
+//       window.AugurAPI.getRepos().then((data) => {
+//         this.repos = data
+//         console.log("LOADED repos", this.repos)
+//         window.AugurAPI.getRepoGroups().then((data) => {
+//           $(this.$el).find('.spinner').removeClass('loader')
+//           $(this.$el).find('.spinner').removeClass('relative')
+//           this.repo_groups = data
+//           //move down between future relation endpoint
+//           this.repo_groups.forEach((group) => {
+//             this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
+//               return repo.rg_name == group.rg_name
+//             })
+//             group.repo_count = this.repo_relations[group.rg_name].length
+//           })
+//           console.log("LOADED repo groups", this.repo_relations)
+//         })
+//       })
+//     },
+//     btoa(s) {
+//       return window.btoa(s)
+//     }
+//   },
+//   created() {
+//     this.getRepoGroups()
+//   },
+// }
 </script>
