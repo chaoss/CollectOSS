@@ -1393,6 +1393,47 @@ def create_routes(server):
     server.addRepoMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
 
     """
+    @api {get} /repo-groups/:repo_group_id/avgerage-issue-resolution-time Average Issue Resolution Time (Repo Group)
+    @apiName average-issue-resolution-time-repo-group
+    @apiGroup Risk
+    @apiDescription The average issue resolution time.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21353,
+                            "repo_name": "open_id_authentication",
+                            "avg_issue_resolution_time": "1413 days 15:39:48"
+                        },
+                        {
+                            "repo_id": 21362,
+                            "repo_name": "country_select",
+                            "avg_issue_resolution_time": "140 days 09:37:58.2"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.average_issue_resolution_time, 'average-issue-resolution-time')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/avgerage-issue-resolution-time Average Issue Resolution Time (Repo)
+    @apiName average-issue-resolution-time-repo
+    @apiGroup Risk
+    @apiDescription The average issue resolution time.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "maven-release",
+                            "avg_issue_resolution_time": "276 days 13:54:13.2"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.average_issue_resolution_time, 'average-issue-resolution-time')
+
+    """
     @api {get} /repo-groups/:repo_group_id/forks Forks (Repo Group)
     @apiName forks-repo-group
     @apiGroup Risk

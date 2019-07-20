@@ -1202,6 +1202,48 @@ class Augur(object):
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
             return results
 
+    @annotate(tag='average-issue-resolution-time')
+    def average_issue_resolution_time(self, repo_group_id, repo_id=None):
+        """
+        Returns the average issue resolution time
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Average issue resolution time
+        """
+        if not repo_id:
+            avg_issue_resolution_SQL = s.sql.text("""
+                SELECT
+                    issues.repo_id,
+                    repo.repo_name,
+                    AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id IN
+                    (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                AND closed_at IS NOT NULL
+                GROUP BY issues.repo_id, repo.repo_name
+                ORDER BY issues.repo_id
+            """)
+
+            results = pd.read_sql(avg_issue_resolution_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            avg_issue_resolution_SQL = s.sql.text("""
+                SELECT
+                    repo.repo_name,
+                    AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id = :repo_id
+                AND closed_at IS NOT NULL
+                GROUP BY repo.repo_name
+            """)
+
+            results = pd.read_sql(avg_issue_resolution_SQL, self.db,
+                                  params={'repo_id': repo_id})
+            return results
+
     @annotate(tag='forks')
     def forks(self, repo_group_id, repo_id=None):
         """
@@ -1676,7 +1718,7 @@ class Augur(object):
         """
         if calendar_year == None:
             calendar_year = 2019
-        
+
         cdRgNewrepRankedCommitsSQL = None
 
         if not repo_id:
@@ -1691,7 +1733,7 @@ class Augur(object):
                 ORDER BY net desc
                 LIMIT 10
             """)
-        else: 
+        else:
             cdRgNewrepRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
                 FROM dm_repo_annual, repo, repo_groups
@@ -1710,15 +1752,15 @@ class Augur(object):
     @annotate(tag='annual-commit-count-ranked-by-repo-in-repo-group')
     def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of commits to lowest by default.
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :param calendar_year: the calendar year a repo is created in to be considered "new"
-        """    
+        """
         if timeframe == None:
             timeframe = 'all'
-        
+
         cdRgTpRankedCommitsSQL = None
 
         if repo_id:
@@ -1758,7 +1800,7 @@ class Augur(object):
                     order by net desc
                     LIMIT 10
                 """)
-        else: 
+        else:
             if timeframe == 'all':
                 cdRgTpRankedCommitsSQL = s.sql.text("""
                     SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
@@ -1816,7 +1858,7 @@ class Augur(object):
         """
         if calendar_year == None:
             calendar_year = 2019
-        
+
         cdRgNewrepRankedCommitsSQL = None
 
         if not repo_id:
@@ -1831,7 +1873,7 @@ class Augur(object):
                 ORDER BY net desc
                 LIMIT 10
             """)
-        else: 
+        else:
             cdRgNewrepRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
                 FROM dm_repo_annual, repo, repo_groups
@@ -1850,15 +1892,15 @@ class Augur(object):
     @annotate(tag='annual-lines-of-code-count-ranked-by-repo-in-repo-group')
     def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of commits to lowest by default.
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :param calendar_year: the calendar year a repo is created in to be considered "new"
-        """    
+        """
         if timeframe == None:
             timeframe = 'all'
-        
+
         cdRgTpRankedCommitsSQL = None
 
         if repo_id:
@@ -1898,7 +1940,7 @@ class Augur(object):
                     order by net desc
                     LIMIT 10
                 """)
-        else: 
+        else:
             if timeframe == 'all':
                 cdRgTpRankedCommitsSQL = s.sql.text("""
                     SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
