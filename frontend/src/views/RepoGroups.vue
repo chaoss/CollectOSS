@@ -99,7 +99,8 @@
 </template>
 
 <script lang="ts">
-  import  { Component, Vue } from 'vue-property-decorator';
+  import Component from 'vue-class-component';
+  import Vue from 'vue';
   import {mapActions, mapGetters} from "vuex";
   @Component({
     methods: {
@@ -129,11 +130,14 @@
     loadedSparks: boolean = false;
     ascending:boolean = false;
     sortColumn: string ='';
+    repoRelationsInfo!: any;
+    groupsInfo!:any;
+    getRepoRelations!: any
 
     created() {
-      let repo_group_info = this.$store.getters['common/groupsInfo']
-      Object.keys(repo_group_info).forEach((key:any) =>{
-        this.repo_groups.push(repo_group_info[key])
+   
+      Object.keys(this.groupsInfo).forEach((key:any) =>{
+        this.repo_groups.push(this.groupsInfo[key])
       })
     }
 

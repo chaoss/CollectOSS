@@ -1,5 +1,5 @@
 export default {
-    async repoRelationsInfo(context: any) {
+    async getRepoRelations(context: any) {
         console.log(context.state);
         try {
             console.log('INSIDE ACTION:', context.state);

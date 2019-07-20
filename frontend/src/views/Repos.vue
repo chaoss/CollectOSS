@@ -106,8 +106,11 @@
 </template>
 
 <script lang="ts">
-import  { Component, Vue } from 'vue-property-decorator';
+import Component from 'vue-class-component';
+import {Watch} from 'vue-property-decorator'
+import Vue from 'vue';
 import {mapActions, mapGetters} from "vuex";
+import { merge } from 'vega';
 @Component({
   methods: {
     ...mapActions('common',[
@@ -117,10 +120,14 @@ import {mapActions, mapGetters} from "vuex";
     ])
   },
   computed: {
-    ...mapGetters('common',[
-      'repoRelationsInfo',
-      'groupsInfo'
-    ])
+    ...mapGetters('common', [
+      // 'repoRelationsInfo',
+      'groupsInfo',
+      // 'repoRelationsInfo'
+    ]),
+    repoRelationsInfo() {
+      return this.$store.getters['common/repoRelationsInfo']
+    }
   },
 })
 
@@ -136,34 +143,39 @@ export default class Repos extends Vue{
   loadedSparks: boolean = false;
   ascending:boolean = false;
   sortColumn: string ='';
+  repoRelationsInfo!: any;
+  groupsInfo!:any;
+  getRepoRelations!: any
 
   created() {
-    let repoinfo = this.$store.getters['common/repoRelationsInfo']
 
-    // if(Object.keys(repoinfo).length === 0) {
-    //   this.$store.dispatch('common/repoRelationsInfo').then((data:any)=> {
-    //     console.log('CHECKED')
-    //     Object.keys(repoinfo).forEach((key: any) => {
-    //       let repos = repoinfo[key]
-    //       Object.keys(repos).forEach((key: any) => {
-    //         this.repos.push(repos[key])
-    //       })
-    //     })
-    //     this.sortTable('commits_all_time')
-    //   })
-    //
-    // } else {
-      Object.keys(repoinfo).forEach((key: any) => {
-        let repos = repoinfo[key]
+    if (Object.keys(this.repoRelationsInfo).length === 0) {
+      this.getRepoRelations()
+    } else {
+      Object.keys(this.repoRelationsInfo).forEach((key: any) => {
+        let repos = this.repoRelationsInfo[key]
         Object.keys(repos).forEach((key: any) => {
           this.repos.push(repos[key])
         })
       })
-    //   this.sortTable('commits_all_time')
-    // }
+      this.sortTable('commits_all_time')
+    }
 
   }
+  @Watch('repoRelationsInfo')
+  onRepoRelationsInfoChanged(oldVal:any, newVal:any) {
+    console.log('Watch')
+    this.repos = []
+    Object.keys(newVal).forEach((key: any) => {
+      let repos = newVal[key]
+      Object.keys(repos).forEach((key: any) => {
+        this.repos.push(repos[key])
+      })
+    })
+    this.sortTable('commits_all_time')
+  }
 
+  
   sortTable(col: string) {
       if (this.sortColumn === col) {
         this.ascending = !this.ascending;
@@ -181,6 +193,41 @@ export default class Repos extends Vue{
           return ascending ? -1 : 1
         }
         return 0;
+      })
+  }
+  onGitRepo (e:any) {
+      let first = e.url.indexOf(".")
+      let last = e.url.lastIndexOf(".")
+      let domain = null
+      let owner = null
+      let repo = null
+      let extension = false
+
+      if (first == last){ //normal github
+        domain = e.url.substring(0, first)
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
+      } else if (e.url.slice(last) == '.git'){ //github with extension
+        domain = e.url.substring(0, first)
+        extension = true
+        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
+        repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4)
+      } else { //gluster
+        domain = e.url.substring(first + 1, last)
+        owner = null //e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
+        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
+      }
+      this.$store.commit('setRepo', {
+        gitURL: e.url
+      })
+
+      // this.$store.commit('setTab', {
+      //   tab: 'git'
+      // })
+
+      this.$router.push({
+        name: 'repo_overview',
+        params: {owner:owner, repo:repo}
       })
   }
 }

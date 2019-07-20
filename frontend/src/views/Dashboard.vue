@@ -170,6 +170,9 @@ export default class Dashboard extends Vue {
   themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
   loadedGroups: boolean = false;
   loadedSparks: boolean = false;
+  repoRelationsInfo!: any;
+  groupsInfo!:any;
+  getRepoRelations!: any
 
   getOwner (url: string) {
     console.log(url)
@@ -254,7 +257,7 @@ export default class Dashboard extends Vue {
     // this.repoRelationsInfo = repo_info.repoRelationsInfo
     // this.groupInfo = repo_info.groupInfo
     // let endpoints = this.testEndpoints;
-    this.$store.dispatch('common/repoRelationsInfo')
+    this.getRepoRelations()
 
 
     // Load data for insights
