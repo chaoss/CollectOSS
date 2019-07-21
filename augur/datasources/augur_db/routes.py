@@ -2070,3 +2070,76 @@ def create_routes(server):
                         ]
     """
     server.addRepoMetric(augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group,'annual-lines-of-code-count-ranked-by-repo-in-repo-group')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/top-committers Top Committers (Repo Group)
+    @apiName top-committers-repo-group
+    @apiGroup Experimental
+    @apiDescription Returns a list of contributors contributing N% of all commits.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} [year] Specify the year to return the results for. Default value: `current year`
+    @apiParam {string} [threshold=0.5] Specify N%. Accepts a value between `0` & `1` where `0` specifies
+                                        `0%` and `1` specifies `100%`.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_group_id": 20,
+                            "repo_group_name": "Rails",
+                            "email": "kamipo@gmail.com",
+                            "commits": 502
+                        },
+                        {
+                            "repo_group_id": 20,
+                            "repo_group_name": "Rails",
+                            "email": "rafaelmfranca@gmail.com",
+                            "commits": 246
+                        },
+                        {
+                            "repo_group_id": 20,
+                            "repo_group_name": "Rails",
+                            "email": "kaspth@gmail.com",
+                            "commits": 119
+                        },
+                        {
+                            "repo_group_id": "20",
+                            "repo_group_name": "Rails",
+                            "email": "other_contributors",
+                            "commits": 1774
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.top_committers, 'top-committers')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/top-committers Top Committers (Repo)
+    @apiName top-committers-repo
+    @apiGroup Experimental
+    @apiDescription Returns a list of contributors contributing N% of all commits.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [year] Specify the year to return the results for. Default value: `current year`
+    @apiParam {string} [threshold=0.5] Specify N%. Accepts a value between `0` & `1` where `0` specifies
+                                        `0%` and `1` specifies `100%`.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21334,
+                            "repo_name": "graphql",
+                            "email": "caniszczyk@gmail.com",
+                            "commits": 4
+                        },
+                        {
+                            "repo_id": 21334,
+                            "repo_name": "graphql",
+                            "email": "richard.j.schulte@gmail.com",
+                            "commits": 3
+                        },
+                        {
+                            "repo_id": "21334",
+                            "repo_name": "graphql",
+                            "email": "other_contributors",
+                            "commits": 5
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.top_committers, 'top-committers')
