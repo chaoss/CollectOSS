@@ -229,10 +229,10 @@ def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
 
 def test_cii_best_practices_badge(augur_db):
     # repo
-    assert augur_db.cii_best_practices_badge(21, 21252).iloc[0]['badge_level'] == 'in_progress'
+    assert augur_db.cii_best_practices_badge(21, 21252).iloc[0]['tiered_percentage'] >= 85
 
     # repo_group
-    assert augur_db.cii_best_practices_badge(21).iloc[0]['badge_level'] == 'passing'
+    assert augur_db.cii_best_practices_badge(21).iloc[0]['tiered_percentage'] > 80
 
 def test_languages(augur_db):
     # TODO

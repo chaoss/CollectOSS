@@ -1182,11 +1182,14 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: CII best parctices badge level
         """
-        if not repo_id:
+        if repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT repo_badging.repo_id, repo_name, badge_level
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                SSELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
+                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                FROM repo_badging, repo, repo_groups
+                WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
+                AND repo_badging.repo_id = :repo_id
+                ORDER BY date DESC
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_group_id': repo_group_id})
@@ -1194,9 +1197,12 @@ class Augur(object):
 
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT repo_name, badge_level
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id = :repo_id
+                SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
+                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                FROM repo_badging, repo, repo_groups
+                WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
+                AND repo.repo_group_id = :repo_group_id
+                ORDER BY date DESC
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
