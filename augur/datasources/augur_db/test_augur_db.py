@@ -224,9 +224,6 @@ def test_lines_changed_by_author(augur_db):
     assert augur_db.lines_changed_by_author(20).iloc[0].additions > 0
     assert augur_db.lines_changed_by_author(20,21000).iloc[0].additions > 0
 
-def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
-    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, calendar_year=2019).iloc[0].net > 0
-
 def test_cii_best_practices_badge(augur_db):
     # repo
     assert augur_db.cii_best_practices_badge(21, 21252).iloc[0]['tiered_percentage'] >= 85
@@ -271,3 +268,7 @@ def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
 def test_get_repos_for_dosocs(augur_db):
     assert augur_db.get_repos_for_dosocs().isin(
         ['/home/sean/git-repos/23/github.com/rails/rails-dom-testing']).any().any()
+
+def test_committer(augur_db):
+    assert augur_db.committers(21,period='year').iloc[0]['count'] > 100
+    assert augur_db.committers(20,21000,period='year').iloc[0]['count'] > 100

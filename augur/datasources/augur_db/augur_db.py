@@ -1411,6 +1411,56 @@ class Augur(object):
 
         return results
 
+    @annotate(tag='committers')
+    def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='day'):
+        
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        committersSQL = None
+
+        if repo_id:
+            committersSQL = s.sql.text(
+                """
+                    SELECT
+                        date_trunc(:period, commits.cmt_author_date::date) as date,
+                        repo_name,
+                        rg_name,
+                        count(cmt_author_name)
+                    FROM
+                        commits, repo, repo_groups
+                    WHERE
+                        commits.repo_id = :repo_id AND commits.repo_id = repo.repo_id
+                        AND repo.repo_group_id = repo_groups.repo_group_id
+                        AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                    GROUP BY date, repo_name, rg_name
+                    ORDER BY date DESC
+                """
+            )
+        else:
+            committersSQL = s.sql.text(
+                """
+                SELECT
+                    date_trunc(:period, commits.cmt_author_date::date) as date,
+                    rg_name,
+                    count(cmt_author_name)
+                FROM
+                    commits, repo, repo_groups
+                WHERE
+                    repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_group_id = :repo_group_id
+                    AND repo.repo_id = commits.repo_id
+                    AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                GROUP BY date, rg_name
+                """
+            )
+
+        results = pd.read_sql(committersSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date, 'period':period})
+
+        return results 
+
+
     #####################################
     ###             VALUE             ###
     #####################################
