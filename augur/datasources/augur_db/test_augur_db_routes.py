@@ -344,6 +344,18 @@ def test_cii_best_practices_badge_by_repo(augur_db_routes):
     assert response.status_code == 200
     assert len(data) >= 1
 
+def test_average_issue_resolution_time_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/average-issue-resolution-time')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) > 0
+
+def test_average_issue_resolution_time_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/repos/21464/average-issue-resolution-time')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) > 0
+
 def test_languages_by_group(augur_db_routes):
     # TODO need data
     pass
@@ -423,4 +435,3 @@ def test_annual_lines_of_code_count_ranked_by_repo_in_repo_group_by_group(augur_
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]["net"] > 0
-
