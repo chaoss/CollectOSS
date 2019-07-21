@@ -1334,11 +1334,11 @@ class Augur(object):
                 return pd.DataFrame()
             repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT licenses.short_name, COUNT(files_licenses.file_id) as count
+                SELECT packages.name as repo_name, licenses.short_name, COUNT(files_licenses.file_id) as count
                 FROM packages, files_licenses, licenses, packages_files
-                WHERE packages.name = ANY(:repo_name_list)
-                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id AND licenses.name is NOT NULL
-                GROUP BY licenses.short_name
+                WHERE packages.name = ANY(ARRAY[:repo_name_list])
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id
+                GROUP BY licenses.short_name, repo_name
                 ORDER BY count DESC
             """)
         else:
@@ -1348,11 +1348,11 @@ class Augur(object):
              
             repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT licenses.short_name, COUNT(files_licenses.file_id) as count
+                SELECT packages.name as repo_name, licenses.short_name, COUNT(files_licenses.file_id) as count
                 FROM packages, files_licenses, licenses, packages_files
-                WHERE packages.name = ANY(:repo_name_list)
-                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id AND licenses.name is NOT NULL
-                GROUP BY licenses.short_name
+                WHERE packages.name = ANY(ARRAY[:repo_name_list])
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id
+                GROUP BY licenses.short_name, repo_name
                 ORDER BY count DESC
             """)
         
@@ -1379,13 +1379,14 @@ class Augur(object):
                 return pd.DataFrame()
             repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT a.total_files, b.license_declared_file,  round(b.license_declared_file::numeric / a.total_files::numeric,3) as coverage
-                FROM (SELECT count(files.file_id) as total_files
+                SELECT a.name as repo_name, a.total_files, b.license_declared_file,  round(b.license_declared_file::numeric / a.total_files::numeric,3) as coverage
+                FROM (SELECT packages.name as name,count(files.file_id) as total_files
                 FROM packages, files, packages_files
                 WHERE packages.name = ANY(:repo_name_list)
                 AND  packages_files.file_id = files.file_id
+                GROUP BY packages.name
                 ) a, (
-                    SELECT count(files_licenses) As license_declared_file
+                    SELECT packages.name as name, count(files_licenses) As license_declared_file
                     FROM packages,
                         files_licenses,
                         licenses,
@@ -1393,8 +1394,10 @@ class Augur(object):
                     WHERE packages.name = ANY (ARRAY [:repo_name_list])
                     AND files_licenses.license_id = licenses.license_id
                     AND packages_files.file_id = files_licenses.file_id
+                    GROUP BY packages.name
                     ORDER BY license_declared_file DESC
                 )b
+                WHERE a.name = b.name
             """)
         else:
             repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
@@ -1403,6 +1406,31 @@ class Augur(object):
 
             repo_name_list = repo_name['repo_name'].tolist()
 
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.total_files, b.license_declared_file,  round(b.license_declared_file::numeric / a.total_files::numeric,3) as coverage
+                FROM (SELECT packages.name as name,count(files.file_id) as total_files
+                FROM packages, files, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND  packages_files.file_id = files.file_id
+                GROUP BY packages.name
+                ) a, (
+                    SELECT packages.name as name, count(files_licenses) As license_declared_file
+                    FROM packages,
+                        files_licenses,
+                        licenses,
+                        packages_files
+                    WHERE packages.name = ANY (ARRAY [:repo_name_list])
+                    AND files_licenses.license_id = licenses.license_id
+                    AND packages_files.file_id = files_licenses.file_id
+                    GROUP BY packages.name
+                    ORDER BY license_declared_file DESC
+                )b
+                WHERE a.name = b.name
+            """)
+        
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
+
+        return results
 
     @annotate(tag='issues-maintainer-response-duration')
     def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
