@@ -28,8 +28,12 @@ class Augur(object):
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
-        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+        spdx_schema = 'spdx'
+        self.spdx_db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(spdx_schema)})
 
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
         self.projects = projects
         # try:
         #     self.userid('howderek')
@@ -1319,25 +1323,44 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: Declared License
         """
-        if not repo_id:
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        if repo_id:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_id = :repo_id'),self.db, params={'repo_id': repo_id})
+            # if repo_id is not in the list ,return empty dataframe
+            if repo_name.empty:
+                return pd.DataFrame()
+            repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT repo_badging.repo_id, repo_name, license
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id);
+                SELECT licenses.short_name, COUNT(files_licenses.file_id) as count
+                FROM packages, files_licenses, licenses, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id AND licenses.name is NOT NULL
+                GROUP BY licenses.short_name
+                ORDER BY count DESC
             """)
-
-            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_group_id': repo_group_id})
-            return results
-
         else:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
+            if repo_name.empty:
+                return pd.DataFrame()
+             
+            repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT repo_name, license
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id = :repo_id;
+                SELECT licenses.short_name, COUNT(files_licenses.file_id) as count
+                FROM packages, files_licenses, licenses, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id AND licenses.name is NOT NULL
+                GROUP BY licenses.short_name
+                ORDER BY count DESC
             """)
+        
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
 
-            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_id': repo_id})
-            return results
+        return results
+                
+
 
     @annotate(tag='issues-maintainer-response-duration')
     def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
