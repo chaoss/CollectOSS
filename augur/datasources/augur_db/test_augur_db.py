@@ -277,6 +277,14 @@ def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
     assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0
     assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0
 
+def test_top_committers(augur_db):
+    assert augur_db.top_committers(20).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, year=2017).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, year=2017, threshold=0.7).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000, year=2017).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000, year=2017, threshold=0.7).iloc[0]['commits'] > 0
+
 def test_get_repos_for_dosocs(augur_db):
     assert augur_db.get_repos_for_dosocs().isin(
         ['/home/sean/git-repos/23/github.com/rails/rails-dom-testing']).any().any()
