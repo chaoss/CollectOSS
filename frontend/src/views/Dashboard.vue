@@ -14,12 +14,12 @@
           <div v-if="!loadedGroups" class="col-md-8 col-lg-9">
             <spinner style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
           </div>
-          <d-col v-if="loadedGroups" v-for="(group, idx) in repo_groups.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
+          <d-col v-if="loadedGroups" v-for="(group, idx) in groupsList.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             
             <d-card class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
-                <insight-chart style="transform: translateX(-30px)" :data="values[testEndpoints[idx]]" :url="repo_relations[group][0].url" :color="colors[idx]"></insight-chart>
+                <insight-chart style="transform: translateX(-30px)" :data="values[testEndpoints[idx]]" :url="repoRelationsInfo[group][0].url" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
                   <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
@@ -29,14 +29,14 @@
               </div>
               <d-card-body>
                 <h5 class="card-title">
-                  <a href="#" class="text-fiord-blue">{{ getOwner(repo_relations[group][0].url) }}/{{ getRepo(repo_relations[group][0].url) }}</a>
+                  <a href="#" class="text-fiord-blue">{{ getOwner(repoRelationsInfo[group][0].url) }}/{{ getRepo(repoRelationsInfo[group][0].url) }}</a>
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository {{ getPhrase(idx) }} in {{ testEndpoints[idx] }} in the past {{ testTimeframes[idx] }}</p>
                 <span class="text-muted" style="font-size: .75rem">{{ testTimeframes[idx] }}</span>
               </d-card-body>
             </d-card>
           </d-col>
-          <d-col lg="3" md="4" sm="8" class="mb-4" style="font-size: .7rem">
+<!--           <d-col lg="3" md="4" sm="8" class="mb-4" style="font-size: .7rem">
             <d-card class="card-small card">
               <div class="border-bottom card-header">
                 <h6 class="m-0" style="font-size: .7rem">Worker Status</h6>
@@ -70,7 +70,6 @@
               <d-card-footer class="border-top">
                 <d-row>
 
-                  <!-- Time Frame -->
                   <d-col class="col-5">
                     <d-select size="sm" value="last-week" style="max-width: 130px;">
                       <option value="last-week">Sort</option>
@@ -80,7 +79,6 @@
                     </d-select>
                   </d-col>
 
-                  <!-- View Full Report -->
                   <d-col class="text-right view-report col-7" style="font-size: .6rem">
                     <a href="#">Overview of all workers &rarr;</a>
                   </d-col>
@@ -88,7 +86,7 @@
                 </d-row>
               </d-card-footer>
             </d-card>
-          </d-col>
+          </d-col> -->
         </d-row>
 
         <div style="transform: translateY(-20px)">
@@ -104,7 +102,7 @@
               <spinner></spinner>
             </div>
 
-            <d-col v-if="loadedGroups" v-for="(group, idx) in repo_groups.slice(0,6)" :key="idx" lg="4" sm="12" class="mb-4">
+            <d-col v-if="loadedGroups" v-for="(group, idx) in groupsList.slice(0,6)" :key="idx" lg="4" sm="12" class="mb-4">
               
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
@@ -113,7 +111,7 @@
                 </div>
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
-                    <div v-for="(repo, i) in repo_relations[group].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
+                    <div v-for="(repo, i) in repoRelationsInfo[group].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="setBaseRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo.url }}</span>
                       </d-link>
@@ -141,17 +139,18 @@ import Spinner from '../components/Spinner.vue';
 
 @Component({
   methods: {
-    ...mapActions([
-      'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+    ...mapActions({
+      endpoint: 'common/endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
-      'getRepoRelations',
-    ])
+      getRepoRelations: 'common/getRepoRelations',
+    })
   },
   computed: {
-    ...mapGetters([
-      'repoRelationsInfo',
-      'groupsInfo'
-    ])
+    ...mapGetters({
+      repoRelationsInfo: 'common/repoRelationsInfo',
+      groupsInfo: 'common/groupsInfo',
+      groupsList: 'common/groupsList',
+    })
   },
   components: {
     SparkChart,
@@ -172,7 +171,6 @@ export default class Dashboard extends Vue {
   loadedSparks: boolean = false;
 
   getOwner (url: string) {
-    console.log(url)
     let first = url.indexOf(".")
     let last = url.lastIndexOf(".")
     let domain = null
@@ -200,7 +198,7 @@ export default class Dashboard extends Vue {
     }
   }
 
-  getRepo(url: string){
+  getRepo (url: string) {
     let first = url.indexOf(".")
     let last = url.lastIndexOf(".")
     let domain = null
@@ -250,6 +248,7 @@ export default class Dashboard extends Vue {
 
 
   created () {
+    this.$store.dispatch('common/getRepoRelations')
     // let repoInfo = this.getRepoRelations;
     // this.repoRelationsInfo = repo_info.repoRelationsInfo
     // this.groupInfo = repo_info.groupInfo
@@ -260,9 +259,9 @@ export default class Dashboard extends Vue {
 
     // Load data for insights
       // let count = 0
-      // this.repo_groups.slice(0,3).forEach((group) => {
+      // this.groupsList.slice(0,3).forEach((group) => {
         
-      //   let repo = store.AugurAPI.Repo({ gitURL: this.repo_relations[group][0]['url'] })
+      //   let repo = store.AugurAPI.Repo({ gitURL: this.repoRelationsInfo[group][0]['url'] })
       //   console.log(repo)
       //   repo[this.testEndpoints[count]]().then((data) => {
       //     this.values[this.testEndpoints[count]]["values"] = data
@@ -273,8 +272,8 @@ export default class Dashboard extends Vue {
       // })
       // // Load data for spark charts
       // console.log("CHECKCHECK")
-      // this.repo_groups.forEach((group) => {
-      //   this.repo_relations[group].slice(0,6).forEach((repo) => {
+      // this.groupsInfo.forEach((group) => {
+      //   this.repoRelationsInfo[group].slice(0,6).forEach((repo) => {
       //     let api_repo = store.AugurAPI.Repo({ gitURL: repo['url'] })
           
       //     api_repo.codeCommits().then((data) => {

@@ -29,7 +29,7 @@ export default class AugurAPI {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
-    this._host = hostURL || 'http://' + window.location.host
+    this._host = hostURL || 'http://localhost:5001'
     this.__cache = {}
     this.__timeout = null
     this.__pending = {}
@@ -164,7 +164,8 @@ export default class AugurAPI {
   }
 
   Repo(repo: {githubURL?:string, gitURL?:string, repo_id?: number, repo_group_id?:number}){
-      return new Repo(this, repo)
+    console.log(repo)
+    return new Repo(this, repo)
   }
 
   RepoGroup(rg: {rg_name:string, repo_group_id?:number}) {
@@ -188,7 +189,7 @@ abstract class BaseRepo {
   [k: string]: any
   
   constructor(parent: AugurAPI){
-    this._host = parent._host || 'http://' + window.location.host
+    this._host = parent._host || 'http://localhost:5001'
     this._version = parent._version
     this.__URLFunctionFactory = parent.__URLFunctionFactory
     this.parent = parent
@@ -223,7 +224,7 @@ abstract class BaseRepo {
     return func
   }
 
-  GitEndpoin(jsName: string, endpoint: string) {
+  GitEndpoint(jsName: string, endpoint: string) {
     var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(this.gitURL||''))
     return this.__Endpoint(jsName, url)
   }
@@ -267,7 +268,6 @@ abstract class BaseRepo {
           })
           resolve(mapped)
         } else {
-          console.log("didnt work")
           reject(new Error('data-not-array'))
         }
       })
@@ -278,13 +278,14 @@ abstract class BaseRepo {
 
 class Repo extends BaseRepo{
   public rg_name?:string
-  constructor(parent: AugurAPI, metadata:{githubURL?:string, gitURL?:string, repo_id?: number, repo_group_id?:number}){
+  constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number}){
+    console.log(parent, metadata)
     super(parent)
     this.gitURL = metadata.gitURL || undefined
     this.githubURL = metadata.githubURL || undefined
     this.repo_id = metadata.repo_id || undefined
     this.repo_group_id = metadata.repo_group_id || undefined
-    this.getRepoNameAndID()
+    // this.getRepoNameAndID()
     this.initialLegacyMetric()
     this.initialMetric()
   }
@@ -324,15 +325,17 @@ class Repo extends BaseRepo{
         let res: any = []
         $.ajax({
           type: "GET",
-          url: this._version + '/repos/' + this.owner + '/' + this.name,
+          url: this.__endpointURL + '/repos/' + this.owner + '/' + this.name,
           async: false,
           success: function (data: any) {
             res = data;
           }
         })
-        this.repo_id = res[0].repo_id
-        this.repo_group_id = res[0].repo_group_id
-        this.rg_name = res[0].rg_name
+        if (res.length != 0) {
+          this.repo_id = res[0].repo_id
+          this.repo_group_id = res[0].repo_group_id
+          this.rg_name = res[0].rg_name
+        }
       }
     }
   } 

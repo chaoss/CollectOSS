@@ -93,8 +93,8 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			return email
 
 	def store_commit(repos_id,commit,filename,
-		author_name,author_email,author_date,
-		committer_name,committer_email,committer_date,
+		author_name,author_email,author_date,author_timestamp,
+		committer_name,committer_email,committer_date,committer_timestamp,
 		added,removed, whitespace):
 
 	# Fix some common issues in git commit logs and store data.
@@ -108,15 +108,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		committer_email = strip_extra_amp(committer_email)
 
 		store = ("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
-			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,
-			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,
+			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
+			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
 			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source, data_collection_date)
-			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
+			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
 
 		cursor_local.execute(store, (
 			repos_id,str(commit),filename,
-			str(author_name),author_email,discover_alias(author_email),author_date,
-			committer_name,committer_email,discover_alias(committer_email),committer_date,
+			str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
+			committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
 			added,removed,whitespace, committer_date, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),))
 		# , (
 		# 	repos_id,commit,filename,
@@ -234,6 +234,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 			if line.find('author_date:') == 0:
 				author_date = line[12:22]
+				author_timestamp = line[12:]
 				continue
 
 			if line.find('committer_name:') == 0:
@@ -246,6 +247,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 			if line.find('committer_date:') == 0:
 				committer_date = line[16:26]
+				committer_timestamp = line[16:]
 				continue
 
 			if line.find('parents:') == 0:
@@ -290,8 +292,8 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 				if not header:
 
 					store_commit(repo_id,commit,filename,
-						author_name,author_email,author_date,
-						committer_name,committer_email,committer_date,
+						author_name,author_email,author_date,author_timestamp,
+						committer_name,committer_email,committer_date,committer_timestamp,
 						added,removed,whitespace)
 
 				header = False
@@ -349,8 +351,8 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 	# Store the last stats from the git log
 	store_commit(repo_id,commit,filename,
-		author_name,author_email,author_date,
-		committer_name,committer_email,committer_date,
+		author_name,author_email,author_date,author_timestamp,
+		committer_name,committer_email,committer_date,committer_timestamp,
 		added,removed,whitespace)
 
 	# Remove the working commit.

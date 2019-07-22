@@ -37,7 +37,7 @@ def create_broker_routes(server):
                         server.broker[worker]['maintain_queue'].append(task)
                         # logging.info("New length of worker {}'s maintain queue: {}".format(worker, str(len(server.broker[worker]['maintain_queue']))))
 
-                    if server.broker[worker]['status'] != 'Disconnected':
+                    if server.broker[worker]['status'] == 'Idle':
                         if len(user_queue) > 0:
                             new_task = user_queue.pop(0)
                             logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker, new_task['given']['git_url'], str(server.broker[worker]['location'])))
@@ -45,7 +45,7 @@ def create_broker_routes(server):
                             server.broker[worker]['status'] = 'Working'
                         elif len(maintain_queue) > 0:
                             new_task = maintain_queue.pop(0)
-                            # logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker, new_task['given']['git_url'], str(server.broker[worker]['location'])))
+                            logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker, new_task['given']['git_url'], str(server.broker[worker]['location'])))
                             requests.post(server.broker[worker]['location'] + '/AUGWOP/task', json=new_task)
                             server.broker[worker]['status'] = 'Working'
                         else:
