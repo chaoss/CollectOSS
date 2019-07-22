@@ -132,12 +132,14 @@
     loadedSparks: boolean = false;
     ascending:boolean = false;
     sortColumn: string ='rg_last_modified';
+
+    // declare Vuex action and getter
     repoRelationsInfo!: any;
     groupsInfo!:any;
     getRepoRelations!: any;
     getRepoGroups!:any;
-    repo_groups:any[];
-    sorted_repo_groups:any[];
+    repo_groups!:any[];
+    sorted_repo_groups!:any[];
 
 
     created() {
