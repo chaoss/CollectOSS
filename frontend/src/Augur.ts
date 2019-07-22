@@ -23,7 +23,7 @@ import '@/assets/scss/date-range.scss';
 import AugurApp from '@/components/AugurApp.vue';
 import router from './router';
 var store = require('@/store/store').default;
-console.log("STore", store)
+
 // Layouts
 import Default from '@/layouts/Default.vue';
 

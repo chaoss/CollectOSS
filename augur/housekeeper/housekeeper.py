@@ -139,7 +139,7 @@ class Housekeeper:
 
         for job in jobs:
             if job['repo_group_id'] != 0:
-            # Query all repos and last repo id
+                # Query all repos and last repo id
                 repoUrlSQL = s.sql.text("""
                         SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
                     """.format(job['repo_group_id']))
@@ -183,7 +183,9 @@ class Housekeeper:
 
             reorganized_repos = after_repos.append(before_repos)
 
-            reorganized_repos['focused_task'] = 1
+            if 'all_focused' in job:
+                reorganized_repos['focused_task'] = job['all_focused']
+
             reorganized_repos = reorganized_repos.to_dict('records')
             
             if finishing_task:

@@ -182,6 +182,7 @@ def check_for_repo_updates(cfg):
         get_last_update = ("SELECT NULL FROM repos_fetch_log WHERE "
             "repos_id=%s AND status='Up-to-date' AND "
             "date >= CURRENT_TIMESTAMP(6) - INTERVAL %s HOUR ")
+        print(get_last_update)
         cfg.cursor.execute(get_last_update, (repo[0], update_frequency)) #['id'], update_frequency))
 
         # If the repo has not been updated within the waiting period, mark it.
@@ -195,6 +196,7 @@ def check_for_repo_updates(cfg):
                 SELECT repo.ctid FROM repo JOIN repo_groups ON repo.repo_group_id=repo_groups.repo_group_id
                 AND repo.repo_id=%s 
                 AND repo.repo_status != 'Empty')""")
+            print(mark_repo)
 
 
             # ("UPDATE repos r JOIN projects p ON p.id = r.projects_id "
@@ -213,6 +215,7 @@ def check_for_repo_updates(cfg):
         AND repo.repo_status='Update'
         AND repo.repo_status != 'Analyze' 
         AND repo.repo_status != 'Empty')""")
+    print(update_project_status)
 
 
     # ("UPDATE repos r LEFT JOIN repos s ON r.projects_id=s.projects_id "
@@ -289,7 +292,6 @@ def git_repo_updates(cfg):
                 break
 
             elif attempt == 0:
-
                 cfg.log_activity('Verbose','git pull failed, attempting reset and '
                     'clean for %s' % row[2])
 

@@ -46,8 +46,6 @@ from facade04postanalysiscleanup import git_repo_cleanup
 from facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
 from facade06analyze import analysis
 from facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
-
-
 # if platform.python_implementation() == 'PyPy':
 # 	import pymysql
 # else:
@@ -55,263 +53,234 @@ from facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, inv
 # ## End Imports
 
 
+class FacadeWorker:
+	def __init__(self, config, task=None):
+		self.cfg = Config()
+		# html = html.parser.HTMLParser()
 
-global log_level
+		### The real program starts here ###
 
-cfg = Config()
+		# Set up the database
+		json = self.cfg.read_config("Database", use_main_config=1)#self.cfg.migrate_database_config("Credentials")
+		db_user = json['user']
+		db_pass = json['password']
+		db_name = json['database']
+		db_host = json['host']
+		db_user_people = json['user']
+		db_pass_people = json['password']
+		db_name_people = json['database']
+		db_host_people = json['host']
 
-html = html.parser.HTMLParser()
+		# Open a general-purpose connection
+		db,cursor = self.cfg.database_connection(
+			db_host,
+			db_user,
+			db_pass,
+			db_name, False, False)
 
-### The real program starts here ###
+		# Open a connection for the people database
+		db_people,cursor_people = self.cfg.database_connection(
+			db_host_people,
+			db_user_people,
+			db_pass_people,
+			db_name_people, True, False)
 
-# Set up the database
+		# Check if the database is current and update it if necessary
+		try:
+			current_db = int(self.cfg.get_setting('database_version'))
+		except:
+			# Catch databases which existed before database versioning
+			current_db = -1
 
-# try:
-# 	config = configparser.ConfigParser()
-# 	config.read(os.path.join(os.path.dirname(__file__),'db.cfg'))
+		#WHAT IS THE UPSTREAM_DB???
+		# if current_db < upstream_db:
 
-# 	# Read in the general connection info
+		# 	print(("Current database version: %s\nUpstream database version %s\n" %
+		# 		(current_db, upstream_db)))
 
-# 	db_user = config['main_database']['user']
-# 	db_pass = config['main_database']['pass']
-# 	db_name = config['main_database']['name']
-# 	db_host = config['main_database']['host']
+		# 	self.cfg.update_db(current_db);
 
-# 	# Read in the people connection info
-
-# 	db_user_people = config['people_database']['user']
-# 	db_pass_people = config['people_database']['pass']
-# 	db_name_people = config['people_database']['name']
-# 	db_host_people = config['people_database']['host']
-
-# except:
-# 	# If the config import fails, check if there's an older style db.py
-
-# 	db_user,db_pass,db_name,db_host,db_user_people,db_pass_people,db_name_people,db_host_people = cfg.migrate_database_config()
-
-json = cfg.read_config("Database", use_main_config=1)#cfg.migrate_database_config("Credentials")
-db_user = json['user']
-db_pass = json['password']
-db_name = json['database']
-db_host = json['host']
-db_user_people = json['user']
-db_pass_people = json['password']
-db_name_people = json['database']
-db_host_people = json['host']
-
-# Open a general-purpose connection
-db,cursor = cfg.database_connection(
-	db_host,
-	db_user,
-	db_pass,
-	db_name, False, False)
-
-# Open a connection for the people database
-
-db_people,cursor_people = cfg.database_connection(
-	db_host_people,
-	db_user_people,
-	db_pass_people,
-	db_name_people, True, False)
-
-#MOVING THIS TO 01's __INIT__
-# # Figure out how much we're going to log
-# log_level = cfg.get_setting('log_level')
-
-# Check if the database is current and update it if necessary
-try:
-	current_db = int(cfg.get_setting('database_version'))
-except:
-	# Catch databases which existed before database versioning
-	current_db = -1
-
-#WHAT IS THE UPSTREAM_DB???
-# if current_db < upstream_db:
-
-# 	print(("Current database version: %s\nUpstream database version %s\n" %
-# 		(current_db, upstream_db)))
-
-# 	cfg.update_db(current_db);
-
-# Figure out what we need to do
-limited_run = 0
-delete_marked_repos = 0
-pull_repos = 0
-clone_repos = 0
-check_updates = 0
-force_updates = 0
-run_analysis = 0
-force_analysis = 0
-nuke_stored_affiliations = 0
-fix_affiliations = 1
-force_invalidate_caches = 0
-rebuild_caches = 0
-force_invalidate_caches = 0
-create_xlsx_summary_files = 0
-multithreaded = 1
-
-opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
-for opt in opts:
-	if opt[0] == '-h':
-		print("\nfacade-worker.py does everything by default except invalidating caches\n"
-				"and forcing updates, unless invoked with one of the following options.\n"
-				"In those cases, it will only do what you have selected.\n\n"
-				"Options:\n"
-				"	-d	Delete marked repos\n"
-				"	-c	Run 'git clone' on new repos\n"
-				"	-u	Check if any repos should be marked for updating\n"
-				"	-U	Force all repos to be marked for updating\n"
-				"	-p	Run 'git pull' on repos\n"
-				"	-a	Analyze git repos\n"
-				"	-A	Force all repos to be analyzed\n"
-				"	-m	Disable multithreaded mode (but why?)\n"
-				"	-n	Nuke stored affiliations (if mappings modified by hand)\n"
-				"	-f	Fill empty affiliations\n"
-				"	-I	Invalidate caches\n"
-				"	-r	Rebuild unknown affiliation and web caches\n"
-				"	-x	Create Excel summary files\n\n")
-		sys.exit(0)
-
-	elif opt[0] == '-d':
-		delete_marked_repos = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: delete marked repos.')
-
-	elif opt[0] == '-c':
-		clone_repos = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: clone new repos.')
-
-	elif opt[0] == '-u':
-		check_updates = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: checking for repo updates')
-
-	elif opt[0] == '-U':
-		force_updates = 1
-		cfg.log_activity('Info','Option set: forcing repo updates')
-
-	elif opt[0] == '-p':
-		pull_repos = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: update repos.')
-
-	elif opt[0] == '-a':
-		run_analysis = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: running analysis.')
-
-	elif opt[0] == '-A':
-		force_analysis = 1
-		run_analysis = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: forcing analysis.')
-
-	elif opt[0] == '-m':
-		multithreaded = 0
-		cfg.log_activity('Info','Option set: disabling multithreading.')
-
-	elif opt[0] == '-n':
-		nuke_stored_affiliations = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: nuking all affiliations')
-
-	elif opt[0] == '-f':
+		# Figure out what we need to do
+		limited_run = 0
+		delete_marked_repos = 0
+		pull_repos = 0
+		clone_repos = 0
+		check_updates = 0
+		force_updates = 0
+		run_analysis = 0
+		force_analysis = 0
+		nuke_stored_affiliations = 0
 		fix_affiliations = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: fixing affiliations.')
+		force_invalidate_caches = 0
+		print(datetime.datetime.strptime(self.cfg.get_setting('aliases_processed'), 
+			'%Y-%m-%d %I:%M:%S.%f%z'))
+		rebuild_caches = 1 if datetime.datetime.strptime(self.cfg.get_setting('aliases_processed'), 
+			'%Y-%m-%d %I:%M:%S.%f%z').Subtract(datetime.datetime.now()).TotalHours < int(self.cfg.get_setting(
+				'update_frequency')) else 0
+		force_invalidate_caches = 0
+		create_xlsx_summary_files = 0
+		multithreaded = 1
 
-	elif opt[0] == '-I':
-		force_invalidate_caches = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: Invalidate caches.')
+		opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
+		for opt in opts:
+			if opt[0] == '-h':
+				print("\nfacade-worker.py does everything by default except invalidating caches\n"
+						"and forcing updates, unless invoked with one of the following options.\n"
+						"In those cases, it will only do what you have selected.\n\n"
+						"Options:\n"
+						"	-d	Delete marked repos\n"
+						"	-c	Run 'git clone' on new repos\n"
+						"	-u	Check if any repos should be marked for updating\n"
+						"	-U	Force all repos to be marked for updating\n"
+						"	-p	Run 'git pull' on repos\n"
+						"	-a	Analyze git repos\n"
+						"	-A	Force all repos to be analyzed\n"
+						"	-m	Disable multithreaded mode (but why?)\n"
+						"	-n	Nuke stored affiliations (if mappings modified by hand)\n"
+						"	-f	Fill empty affiliations\n"
+						"	-I	Invalidate caches\n"
+						"	-r	Rebuild unknown affiliation and web caches\n"
+						"	-x	Create Excel summary files\n\n")
+				sys.exit(0)
 
-	elif opt[0] == '-r':
-		rebuild_caches = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: rebuilding caches.')
+			elif opt[0] == '-d':
+				delete_marked_repos = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: delete marked repos.')
 
-	elif opt[0] == '-x':
-		create_xlsx_summary_files = 1
-		limited_run = 1
-		cfg.log_activity('Info','Option set: creating Excel summary files.')
+			elif opt[0] == '-c':
+				clone_repos = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: clone new repos.')
 
-# Get the location of the directory where git repos are stored
-repo_base_directory = cfg.repo_base_directory
+			elif opt[0] == '-u':
+				check_updates = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: checking for repo updates')
 
-# Determine if it's safe to start the script
-current_status = cfg.get_setting('utility_status')
+			elif opt[0] == '-U':
+				force_updates = 1
+				self.cfg.log_activity('Info','Option set: forcing repo updates')
 
-if current_status != 'Idle':
-	cfg.log_activity('Error','Something is already running, aborting maintenance '
-		'and analysis.\nIt is unsafe to continue.')
-	sys.exit(1)
+			elif opt[0] == '-p':
+				pull_repos = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: update repos.')
 
-if len(repo_base_directory) == 0:
-	cfg.log_activity('Error','No base directory. It is unsafe to continue.')
-	update_status('Failed: No base directory')
-	sys.exit(1)
+			elif opt[0] == '-a':
+				run_analysis = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: running analysis.')
 
-# Begin working
+			elif opt[0] == '-A':
+				force_analysis = 1
+				run_analysis = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: forcing analysis.')
 
-start_time = time.time()
-cfg.log_activity('Quiet','Running facade-worker.py')
+			elif opt[0] == '-m':
+				multithreaded = 0
+				self.cfg.log_activity('Info','Option set: disabling multithreading.')
 
-if not limited_run or (limited_run and delete_marked_repos):
-	git_repo_cleanup(cfg)
+			elif opt[0] == '-n':
+				nuke_stored_affiliations = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: nuking all affiliations')
 
-if not limited_run or (limited_run and clone_repos):
-	git_repo_initialize(cfg)
+			elif opt[0] == '-f':
+				fix_affiliations = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: fixing affiliations.')
 
-if not limited_run or (limited_run and check_updates):
-	check_for_repo_updates(cfg)
+			elif opt[0] == '-I':
+				force_invalidate_caches = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: Invalidate caches.')
 
-if force_updates:
-	force_repo_updates(cfg)
+			elif opt[0] == '-r':
+				rebuild_caches = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: rebuilding caches.')
 
-if not limited_run or (limited_run and pull_repos):
-	git_repo_updates(cfg)
+			elif opt[0] == '-x':
+				create_xlsx_summary_files = 1
+				limited_run = 1
+				self.cfg.log_activity('Info','Option set: creating Excel summary files.')
 
-if force_analysis:
-	force_repo_analysis(cfg)
+		# Get the location of the directory where git repos are stored
+		repo_base_directory = self.cfg.repo_base_directory
 
-if not limited_run or (limited_run and run_analysis):
-	analysis(cfg, multithreaded)
+		# Determine if it's safe to start the script
+		current_status = self.cfg.get_setting('utility_status')
 
-if nuke_stored_affiliations:
-	nuke_affiliations(cfg)
+		if current_status != 'Idle':
+			self.cfg.log_activity('Error','Something is already running, aborting maintenance '
+				'and analysis.\nIt is unsafe to continue.')
+			# sys.exit(1)
 
-if not limited_run or (limited_run and fix_affiliations):
-	fill_empty_affiliations(cfg)
+		if len(repo_base_directory) == 0:
+			self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
+			update_status('Failed: No base directory')
+			sys.exit(1)
 
-if force_invalidate_caches:
-	invalidate_caches(cfg)
+		# Begin working
 
-if not limited_run or (limited_run and rebuild_caches):
-	rebuild_unknown_affiliation_and_web_caches(cfg)
+		start_time = time.time()
+		self.cfg.log_activity('Quiet','Running facade-worker.py')
 
-if not limited_run or (limited_run and create_xlsx_summary_files):
+		if not limited_run or (limited_run and delete_marked_repos):
+			git_repo_cleanup(self.cfg)
 
-	cfg.log_activity('Info','Creating summary Excel files')
+		if not limited_run or (limited_run and clone_repos):
+			git_repo_initialize(self.cfg)
 
-	from excel_generators import *
+		if not limited_run or (limited_run and check_updates):
+			check_for_repo_updates(self.cfg)
 
-	cfg.log_activity('Info','Creating summary Excel files (complete)')
+		if force_updates:
+			force_repo_updates(self.cfg)
+
+		if not limited_run or (limited_run and pull_repos):
+			git_repo_updates(self.cfg)
+
+		if force_analysis:
+			force_repo_analysis(self.cfg)
+
+		if not limited_run or (limited_run and run_analysis):
+			analysis(self.cfg, multithreaded)
+
+		if nuke_stored_affiliations:
+			nuke_affiliations(self.cfg)
+
+		if not limited_run or (limited_run and fix_affiliations):
+			fill_empty_affiliations(self.cfg)
+
+		if force_invalidate_caches:
+			invalidate_caches(self.cfg)
+
+		if not limited_run or (limited_run and rebuild_caches):
+			rebuild_unknown_affiliation_and_web_caches(self.cfg)
+
+		if not limited_run or (limited_run and create_xlsx_summary_files):
+
+			self.cfg.log_activity('Info','Creating summary Excel files')
+
+			from excel_generators import *
+
+			self.cfg.log_activity('Info','Creating summary Excel files (complete)')
 
 
 
-# All done
+		# All done
 
-cfg.update_status('Idle')
-cfg.log_activity('Quiet','facade-worker.py completed')
+		self.cfg.update_status('Idle')
+		self.cfg.log_activity('Quiet','facade-worker.py completed')
 
-elapsed_time = time.time() - start_time
+		elapsed_time = time.time() - start_time
 
-print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
+		print('\nCompleted in %s\n' % datetime.timedelta(seconds=int(elapsed_time)))
 
-cfg.cursor.close()
-cfg.cursor_people.close()
-cfg.db.close()
-cfg.db_people.close()
-
-
+		self.cfg.cursor.close()
+		self.cfg.cursor_people.close()
+		self.cfg.db.close()
+		self.cfg.db_people.close()

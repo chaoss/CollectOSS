@@ -49,19 +49,18 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
+    worker_info = read_config("Workers", use_main_config=1)
+    worker_port = worker_info['port'] if 'port' in worker_info else port
 
     config = { 
             "broker_port": server["port"],
             "host": credentials["host"],
+            "location": "http://localhost:{}".format(worker_port),
             "password": credentials["password"],
             "port": credentials["port"],
             "user": credentials["user"],
             "endpoint": "http://localhost:{}/api/unstable/metrics/status".format(server['port']),
             "database": credentials["database"],
-            "table": "insights",
-            "display_name": "",
-            "description": "",
-            "required": 1,
             "type": "string"
         }
 
@@ -72,8 +71,6 @@ def main(augur_url, host, port):
     print("Starting Flask App with pid: " + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=host, port=port)
     print("Killing Flask App: " + str(os.getpid()))
-    
-
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
     """
@@ -82,7 +79,6 @@ def read_config(section, name=None, environment_variable=None, default=None, con
     :param section: location of given variable
     :param name: name of variable
     """
-
 
     __config_bad = False
     if use_main_config == 0:
