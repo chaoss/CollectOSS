@@ -139,18 +139,17 @@ import Spinner from '../components/Spinner.vue';
 
 @Component({
   methods: {
-    ...mapActions({
-      endpoint: 'common/endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+    ...mapActions('common',[
+      'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       getRepoRelations: 'common/getRepoRelations',
     })
   },
   computed: {
-    ...mapGetters({
-      repoRelationsInfo: 'common/repoRelationsInfo',
-      groupsInfo: 'common/groupsInfo',
-      groupsList: 'common/groupsList',
-    })
+    ...mapGetters('common',[
+      'repoRelationsInfo',
+      'groupsInfo'
+    ])
   },
   components: {
     SparkChart,
@@ -169,6 +168,9 @@ export default class Dashboard extends Vue {
   themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
   loadedGroups: boolean = false;
   loadedSparks: boolean = false;
+  repoRelationsInfo!: any;
+  groupsInfo!:any;
+  getRepoRelations!: any
 
   getOwner (url: string) {
     let first = url.indexOf(".")
@@ -252,10 +254,9 @@ export default class Dashboard extends Vue {
     // let repoInfo = this.getRepoRelations;
     // this.repoRelationsInfo = repo_info.repoRelationsInfo
     // this.groupInfo = repo_info.groupInfo
-
     // let endpoints = this.testEndpoints;
+    this.getRepoRelations()
 
-    
 
     // Load data for insights
       // let count = 0

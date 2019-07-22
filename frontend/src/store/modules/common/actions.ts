@@ -2,7 +2,6 @@ import Repo from '@/AugurAPI';
 import RepoGroup from '@/AugurAPI';
 export default {
     async getRepoRelations(context: any, payload: object) {
-        console.log(context.state);
         try {
             let repoRelations = context.state.cache.repoRelations || {};
             let repoGroups = context.state.cache.repoGroups || {};
@@ -10,17 +9,13 @@ export default {
                 context.state.AugurAPI.getRepoGroups().then((groups: object[]) => {
                     // Move down between future relation endpoint
                     groups.forEach((group: any): void => {
-                        repoGroups[group.rg_name] = group//context.state.AugurAPI.RepoGroup(context.state.AugurAPI, group);
+                        repoGroups[group.rg_name] = group
                         repoRelations[group.rg_name] = {};
                         repos.filter((repo: any) => {
                             return repo.rg_name === group.rg_name;
                         }).forEach((repo: any) => {
                             repoRelations[group.rg_name][repo.url] = repo
-                                //context.state.AugurAPI.Repo({gitURL: repo.url}), repo_id: repo.repo_id})
-                                // new Repo(context.state.AugurAPI, repo);
                         });
-                        // THIS LINE WILL CHANGE WHEN WE IMPLEMENT A GROUP OBJECT OR CLASS
-                        // repoGroups[group] = state.AugurAPI.Repo({gitURL: repo.url})
                     });
                     console.log(context)
                     context.commit('mutateCache', {
