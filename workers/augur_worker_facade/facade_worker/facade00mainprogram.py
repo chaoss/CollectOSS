@@ -113,9 +113,9 @@ class FacadeWorker:
 		nuke_stored_affiliations = 0
 		fix_affiliations = 1
 		force_invalidate_caches = 0
-		rebuild_caches = 1 if abs((datetime.datetime.strptime(self.cfg.get_setting('aliases_processed')[:-3], 
-			'%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(self.cfg.get_setting(
-				'update_frequency')) else 0
+		rebuild_caches = 1 #if abs((datetime.datetime.strptime(self.cfg.get_setting('aliases_processed')[:-3], 
+			# '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(self.cfg.get_setting(
+			# 	'update_frequency')) else 0
 		force_invalidate_caches = 0
 		create_xlsx_summary_files = 0
 		multithreaded = 1
