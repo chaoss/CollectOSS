@@ -117,46 +117,53 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			repos_id,str(commit),filename,
 			str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
 			committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
-			added,removed,whitespace, committer_date, cfg.tool_source, cfg.tool_version, cfg.data_source, datetime.datetime.now(),))
-		# , (
-		# 	repos_id,commit,filename,
-		# 	author_name,author_email,discover_alias(author_email),author_date,
-		# 	committer_name,committer_email,discover_alias(committer_email),committer_date,
-		# 	added,removed,whitespace, cfg.tool_source, committer_date, cfg.tool_version, cfg.data_source, datetime.datetime.now()))
+			added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source,datetime.datetime.now(),))
 
 		db_local.commit()
 
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
 
-		# store = ("INSERT INTO contributors (repo_id,cmt_commit_hash,cmt_filename,"
-		# 	"cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,"
-		# 	"cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,"
-		# 	"cmt_added,cmt_removed,cmt_whitespace) "
-		# 	"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+		# Check if email already exists in db
+		email_check = ("""SELECT cntrb_email 
+			FROM contributors WHERE cntrb_email = %s OR cntrb_email = %s""")
+		cursor_local.execute(email_check,(author_email,committer_email,))
+		db_local.commit()
 
-
-		# cursor_local.execute(store, (
-		# 	None, #cntrb_login
-		# 	author_email, #login
-		# 	#email
-		# 	#comany
-		# 	,#created_at
-		# 	,#type
-		# 	,#fake
-		# 	,#deleted
-		# 	,#long
-		# 	,#lat
-		# 	,#countrycode
-		# 	,#state
-		# 	,#city
-
-		# 	author_name,discover_alias(author_email),author_date,
-		# 	committer_name,committer_email,discover_alias(committer_email),committer_date,
-		# 	added,removed,whitespace))
-
-		# db_local.commit()
-
+		emails = list(cursor_local)
+		emails_to_add = emails
+		emails_to_update = []
 		
+		for email in emails:
+			if email[0] == committer_email or email[0] == author_email:
+				emails_to_add = [tuple for tuple in emails_to_add if tuple != email]
+				emails_to_update.append(email)
+
+		if len(emails_to_add) > 0:
+			for email in emails_to_add:
+				cntrb = ("INSERT INTO contributors "
+					"(cntrb_email,cntrb_canonical,cntrb_full_name) "
+					"VALUES (%s,%s,%s)")
+				if email[0] == author_email:
+					cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name)))
+					db_local.commit()
+				elif email[0] == committer_email:
+					cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)))
+					db_local.commit()
+
+		if len(emails_to_update) > 0:
+			for email in emails_to_update:
+				email_update = ("UPDATE contributors "
+					"SET cntrb_canonical=%s, cntrb_full_name=%s "
+					"WHERE cntrb_email=%s")
+				if email[0] == author_email:
+					cursor_local.execute(email_update, (discover_alias(author_email),
+						str(author_name), email[0]))
+					db_local.commit()
+				elif email[0] == committer_email:
+					cursor_local.execute(email_update, (discover_alias(committer_email),
+						str(committer_name), email[0]))
+					db_local.commit()
+				
 
 ### The real function starts here ###
 
