@@ -12,10 +12,10 @@ export default {
       return state.AugurAPI;
     },
     repo: (state: any) => {
-        return state.baseRepo
+        return state.baseRepo;
     },
     gitRepo: (state: any) => {
-        return state.gitRepo
+        return state.gitRepo;
     },
     repos: (state: any) => {
         // console.log('CHECKED')
