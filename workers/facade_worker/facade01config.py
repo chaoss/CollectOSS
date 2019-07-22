@@ -59,9 +59,9 @@ class Config:
         self.db_people = None
 
         self.repo_base_directory = None
-        self.tool_source = '\'FacadeAugur\'' 
-        self.tool_version = '\'0.1\''
-        self.data_source = '\'git_repository\''
+        self.tool_source = 'FacadeAugur' 
+        self.tool_version = '0.1'
+        self.data_source = 'git_repository'
 
     #### Database update functions ####
 
@@ -380,8 +380,8 @@ class Config:
 
     # Get a setting from the database
 
-        query = ("SELECT value FROM settings WHERE setting=%s ORDER BY "
-            "last_modified DESC LIMIT 1")
+        query = ("""SELECT value FROM settings WHERE setting=%s ORDER BY 
+            last_modified DESC LIMIT 1""")
         self.cursor.execute(query, (setting, ))
         # print(type(self.cursor.fetchone()))
         return self.cursor.fetchone()[0]#["value"]

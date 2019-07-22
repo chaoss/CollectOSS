@@ -49,9 +49,11 @@ def update_repo_log(cfg, repos_id,status):
 
 	log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
 		"VALUES (%s,%s)")
-
-	cfg.cursor.execute(log_message, (repos_id, status))
-	cfg.db.commit()
+	try:
+		cfg.cursor.execute(log_message, (repos_id, status))
+		cfg.db.commit()
+	except:
+		pass
 
 def trim_commit(cfg, repo_id,commit):
 

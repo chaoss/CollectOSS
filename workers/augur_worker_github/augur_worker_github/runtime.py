@@ -48,7 +48,7 @@ def main(augur_url, host, port):
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
 
-    worker_info = read_config("Workers", use_main_config=1)
+    worker_info = read_config("Workers", use_main_config=1)['github_worker']
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
@@ -81,11 +81,8 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    print("made it")
     app.gh_worker = GitHubWorker(config) # declares the worker that will be running on this server with specified config
-    print("made it")
     create_server(app, None)
-    print("made it")
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
 
 

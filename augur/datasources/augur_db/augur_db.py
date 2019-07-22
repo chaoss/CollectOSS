@@ -28,8 +28,12 @@ class Augur(object):
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
-        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+        spdx_schema = 'spdx'
+        self.spdx_db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(spdx_schema)})
 
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
         self.projects = projects
         # try:
         #     self.userid('howderek')
@@ -1182,11 +1186,14 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: CII best parctices badge level
         """
-        if not repo_id:
+        if repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT repo_badging.repo_id, repo_name, badge_level
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                SSELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
+                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                FROM repo_badging, repo, repo_groups
+                WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
+                AND repo_badging.repo_id = :repo_id
+                ORDER BY date DESC
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_group_id': repo_group_id})
@@ -1194,9 +1201,12 @@ class Augur(object):
 
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT repo_name, badge_level
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id = :repo_id
+                SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
+                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                FROM repo_badging, repo, repo_groups
+                WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
+                AND repo.repo_group_id = :repo_group_id
+                ORDER BY date DESC
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
@@ -1355,25 +1365,227 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: Declared License
         """
-        if not repo_id:
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        if repo_id:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_id = :repo_id'),self.db, params={'repo_id': repo_id})
+            # if repo_id is not in the list ,return empty dataframe
+            if repo_name.empty:
+                return pd.DataFrame()
+            repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT repo_badging.repo_id, repo_name, license
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id);
+                SELECT packages.name as repo_name, licenses.short_name, COUNT(files_licenses.file_id) as count
+                FROM packages, files_licenses, licenses, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND packages.package_id = packages_files.package_id
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id
+                GROUP BY licenses.short_name, repo_name
+                ORDER BY count DESC
             """)
-
-            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_group_id': repo_group_id})
-            return results
-
         else:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
+            if repo_name.empty:
+                return pd.DataFrame()
+             
+            repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT repo_name, license
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id = :repo_id;
+                SELECT packages.name as repo_name, licenses.short_name, COUNT(files_licenses.file_id) as count
+                FROM packages, files_licenses, licenses, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND packages.package_id = packages_files.package_id
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id
+                GROUP BY licenses.short_name, repo_name
+                ORDER BY count DESC
             """)
+        
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
 
-            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_id': repo_id})
-            return results
+        return results
+                
+    @annotate(tag='license-coverage')
+    def license_coverage(self, repo_group_id, repo_id=None):
+        """Returns the declared license
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Declared License
+        """
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        if repo_id:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_id = :repo_id'),self.db, params={'repo_id': repo_id})
+            # if repo_id is not in the list ,return empty dataframe
+            if repo_name.empty:
+                return pd.DataFrame()
+            repo_name_list = repo_name['repo_name'].tolist()
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.total_files, b.license_declared_file,  round(b.license_declared_file::numeric / a.total_files::numeric,3) as coverage
+                FROM (SELECT packages.name as name,count(files.file_id) as total_files
+                FROM packages, files, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND packages.package_id = packages_files.package_id
+                AND  packages_files.file_id = files.file_id
+                GROUP BY packages.name
+                ) a, (
+                    SELECT packages.name as name, count(files_licenses) As license_declared_file
+                    FROM packages,
+                        files_licenses,
+                        licenses,
+                        packages_files
+                    WHERE packages.name = ANY (:repo_name_list)
+                    AND packages.package_id = packages_files.package_id
+                    AND files_licenses.license_id = licenses.license_id
+                    AND packages_files.file_id = files_licenses.file_id
+                    GROUP BY packages.name
+                    ORDER BY license_declared_file DESC
+                )b
+                WHERE a.name = b.name
+            """)
+        else:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
+            if repo_name.empty:
+                return pd.DataFrame()
+
+            repo_name_list = repo_name['repo_name'].tolist()
+
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.total_files, b.license_declared_file,  round(b.license_declared_file::numeric / a.total_files::numeric,3) as coverage
+                FROM (SELECT packages.name as name,count(files.file_id) as total_files
+                FROM packages, files, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND  packages_files.file_id = files.file_id
+                GROUP BY packages.name
+                ) a, (
+                    SELECT packages.name as name, count(files_licenses) As license_declared_file
+                    FROM packages,
+                        files_licenses,
+                        licenses,
+                        packages_files
+                    WHERE packages.name = ANY (:repo_name_list)
+                    AND packages.package_id = packages_files.package_id
+                    AND packages.package_id = packages_files.package_id
+                    AND files_licenses.license_id = licenses.license_id
+                    AND packages_files.file_id = files_licenses.file_id
+                    GROUP BY packages.name
+                    ORDER BY license_declared_file DESC
+                )b
+                WHERE a.name = b.name
+            """)
+        
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
+
+        return results
+    
+    @annotate(tag='license_count')
+    def license_count(self, repo_group_id, repo_id=None):
+        """Returns the declared license
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Declared License
+        """
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        if repo_id:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_id = :repo_id'),self.db, params={'repo_id': repo_id})
+            # if repo_id is not in the list ,return empty dataframe
+            if repo_name.empty:
+                return pd.DataFrame()
+            repo_name_list = repo_name['repo_name'].tolist()
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.license_count, b.total_files - c.license_declared_file > 0 as fils_without_license
+                FROM (
+                        SELECT packages.name as name, COUNT(distinct licenses.license_id) as license_count
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        group by packages.name) a,
+                    (SELECT packages.name as name, count(files.file_id) as total_files
+                    FROM packages,
+                        files,
+                        packages_files
+                    WHERE packages.name = ANY (repo_name_list)
+                        AND packages_files.file_id = files.file_id
+                    GROUP BY packages.name
+                    ) b,
+                    (
+                        SELECT packages.name as name, count(files_licenses) As license_declared_file
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        GROUP BY packages.name
+                        ORDER BY license_declared_file DESC
+                    ) c
+                WHERE a.name = b.name
+                AND b.name = c.name
+            """)
+        else:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
+            if repo_name.empty:
+                return pd.DataFrame()
+
+            repo_name_list = repo_name['repo_name'].tolist()
+
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.license_count, b.total_files - c.license_declared_file > 0 as fils_without_license
+                FROM (
+                        SELECT packages.name as name, COUNT(distinct licenses.license_id) as license_count
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        group by packages.name) a,
+                    (SELECT packages.name as name, count(files.file_id) as total_files
+                    FROM packages,
+                        files,
+                        packages_files
+                    WHERE packages.name = ANY (repo_name_list)
+                        AND packages_files.file_id = files.file_id
+                    GROUP BY packages.name
+                    ) b,
+                    (
+                        SELECT packages.name as name, count(files_licenses) As license_declared_file
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        GROUP BY packages.name
+                        ORDER BY license_declared_file DESC
+                    ) c
+                WHERE a.name = b.name
+                AND b.name = c.name               
+            """)
+        
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
+
+        return results
+    
 
     @annotate(tag='issues-maintainer-response-duration')
     def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
@@ -1446,6 +1658,56 @@ class Augur(object):
         results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
 
         return results
+
+    @annotate(tag='committers')
+    def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='day'):
+        
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        committersSQL = None
+
+        if repo_id:
+            committersSQL = s.sql.text(
+                """
+                    SELECT
+                        date_trunc(:period, commits.cmt_author_date::date) as date,
+                        repo_name,
+                        rg_name,
+                        count(cmt_author_name)
+                    FROM
+                        commits, repo, repo_groups
+                    WHERE
+                        commits.repo_id = :repo_id AND commits.repo_id = repo.repo_id
+                        AND repo.repo_group_id = repo_groups.repo_group_id
+                        AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                    GROUP BY date, repo_name, rg_name
+                    ORDER BY date DESC
+                """
+            )
+        else:
+            committersSQL = s.sql.text(
+                """
+                SELECT
+                    date_trunc(:period, commits.cmt_author_date::date) as date,
+                    rg_name,
+                    count(cmt_author_name)
+                FROM
+                    commits, repo, repo_groups
+                WHERE
+                    repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_group_id = :repo_group_id
+                    AND repo.repo_id = commits.repo_id
+                    AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                GROUP BY date, rg_name
+                """
+            )
+
+        results = pd.read_sql(committersSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date, 'period':period})
+
+        return results 
+
 
     #####################################
     ###             VALUE             ###

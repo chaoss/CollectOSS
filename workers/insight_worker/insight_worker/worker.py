@@ -48,7 +48,7 @@ class InsightWorker:
         
         specs = {
             "id": "com.augurlabs.core.insight_worker",
-            "location": "http://localhost:51252",
+            "location": self.config.location,
             "qualifications":  [
                 {
                     "given": [["git_url"]],
@@ -80,7 +80,7 @@ class InsightWorker:
 
         # we can reflect it ourselves from a database, using options
         # such as 'only' to limit what tables we look at...
-        metadata.reflect(self.db, only=['chaoss_metric_status'])#self.config['table']])
+        metadata.reflect(self.db, only=['chaoss_metric_status', 'repo_insights'])
 
         # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
@@ -89,22 +89,8 @@ class InsightWorker:
         Base.prepare()
 
         # mapped classes are ready
-        # self.insight_table = Base.classes[self.config['table']].__table__
         self.metrics_table = Base.classes['chaoss_metric_status'].__table__
-
-
-        """ Query all repos """
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo
-            """)
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
-
-        #fill queue
-        for index, row in rs.iterrows():
-            entry_info = {"git_url": row["repo_git"], "repo_id": row["repo_id"]}
-            self._queue.put(CollectorTask(message_type='TASK', entry_info=entry_info))
-
-        self.run()
+        self.insights_table = Base.classes['repo_insights'].__table__
 
         requests.post('http://localhost:{}/api/unstable/workers'.format(
             self.config['broker_port']), json=specs) #hello message
@@ -133,7 +119,6 @@ class InsightWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        print("VALUE", value)
         git_url = value['given']['git_url']
 
         """ Query all repos """
@@ -144,10 +129,6 @@ class InsightWorker:
         try:
             self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, 
                 "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]}))
-        
-        # list_queue = dump_queue(self._queue)
-        # print("worker's queue after adding the job: " + list_queue)
-
         except:
             print("that repo is not in our database")
         if self._queue.empty(): 
@@ -179,7 +160,6 @@ class InsightWorker:
                 message = self._queue.get()
             else:
                 break
-
             if message.type == 'EXIT':
                 break
             if message.type != 'TASK':
@@ -195,39 +175,41 @@ class InsightWorker:
         # Update table of endpoints before we query them all
         self.update_metrics()
         
-        insights = []
+        # insights = []
 
-        """ Query all endpoints """
+        # """ Query all endpoints """
         endpointSQL = s.sql.text("""
             SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
             """)
         endpoints = pd.read_sql(endpointSQL, self.db, params={}).to_json()
-        logging.info(str(endpoints))
 
-        base_url = 'http://localhost:{}/api/unstable/repo-groups/{}/repos/{}/'.format(
-            self.config['broker_port'], entry_info['repo_id'], entry_info['repo_group_id'])
-        for endpoint in endpoints:
-            url = base_url + endpoint['cm_info']
-            logging.info("Hitting endpoint: " + url + "\n")
-            r = requests.get(url=url)
-            data = r.json()
-            insights.append(create_insights(data))
+        # base_url = 'http://localhost:{}/api/unstable/repo-groups/{}/repos/{}/'.format(
+        #     self.config['broker_port'], entry_info['repo_id'], entry_info['repo_group_id'])
+        # for endpoint in endpoints:
+        #     url = base_url + endpoint['cm_info']
+        #     logging.info("Hitting endpoint: " + url + "\n")
+        #     r = requests.get(url=url)
+        #     data = r.json()
+        #     insights.append(create_insights(data))
 
-        greatest_week_name = greatest_month_name = insights[0]['cm_name']
-        greatest_week_val = abs(insights[0]['change_week'])
-        greatest_month_val = abs(insights[0]['change_month'])
+        # greatest_week_name = greatest_month_name = insights[0]['cm_name']
+        # greatest_week_val = abs(insights[0]['change_week'])
+        # greatest_month_val = abs(insights[0]['change_month'])
 
-        for insight in insights:
-            if abs(insight['change_week']) > greatest_week:
-                greatest_week_name = insight['cm_name']
-                greatest_week_val = insight['change_week']
+        # for insight in insights:
+        #     if abs(insight['change_week']) > greatest_week:
+        #         greatest_week_name = insight['cm_name']
+        #         greatest_week_val = insight['change_week']
 
-            if abs(insight['change_month']) > greatest_month:
-                greatest_month_name = insight['cm_name']
-                greatest_month_val = insight['change_month']
+        #     if abs(insight['change_month']) > greatest_month:
+        #         greatest_month_name = insight['cm_name']
+        #         greatest_month_val = insight['change_month']
 
-        logging.info("The endpoint with the greatest percent change in the last week was {} with {}%%".format(greatest_week_name, greatest_week_val))
-        logging.info("The endpoint with the greatest percent change in the last month was {} with {}%%".format(greatest_month_name, greatest_month_val))
+        # logging.info("The endpoint with the greatest percent change in the last week was {} with {}%%".format(greatest_week_name, greatest_week_val))
+        # logging.info("The endpoint with the greatest percent change in the last month was {} with {}%%".format(greatest_month_name, greatest_month_val))
+
+
+
 
         # data[0]['repo_id'] = entry_info['repo_id']
         # metrics = []
@@ -237,6 +219,10 @@ class InsightWorker:
         
         # self.db.execute(self.table.insert().values(data[0]))
         # requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
+
+    # def detect_high_activity(self, timeperiod):
+    #     """ Method to find high activity issues in the past specified timeperiod """
+
 
     def update_metrics(self):
         logging.info("Preparing to update metrics ...\n\n" + 
@@ -313,8 +299,8 @@ class InsightWorker:
         # print("\n\nMONTH\n\n", data_month)
 
         """ Determine these subscripts """
-        change_week = (data_now[] - data_week[])/data_now[]
-        change_month = (data_now[] - data_month[])/data_now[]
+        # change_week = (data_now[] - data_week[])/data_now[]
+        # change_month = (data_now[] - data_month[])/data_now[]
 
         new_insight = {
             "cm_name": data['cm_name'],

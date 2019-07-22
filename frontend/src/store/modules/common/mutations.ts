@@ -1,6 +1,10 @@
 /* tslint:disable */
 import router from '@/router'
 export default {
+  mutateCache(state: any, payload: any) {
+    console.log(state, payload)
+    state.cache[payload.property] = payload.with;
+  },
   mutate(state: any, payload: any) {
     state[payload.property] = payload.with;
   },
