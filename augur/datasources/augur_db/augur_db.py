@@ -1212,6 +1212,48 @@ class Augur(object):
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
             return results
 
+    @annotate(tag='average-issue-resolution-time')
+    def average_issue_resolution_time(self, repo_group_id, repo_id=None):
+        """
+        Returns the average issue resolution time
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Average issue resolution time
+        """
+        if not repo_id:
+            avg_issue_resolution_SQL = s.sql.text("""
+                SELECT
+                    issues.repo_id,
+                    repo.repo_name,
+                    AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id IN
+                    (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                AND closed_at IS NOT NULL
+                GROUP BY issues.repo_id, repo.repo_name
+                ORDER BY issues.repo_id
+            """)
+
+            results = pd.read_sql(avg_issue_resolution_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            avg_issue_resolution_SQL = s.sql.text("""
+                SELECT
+                    repo.repo_name,
+                    AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id = :repo_id
+                AND closed_at IS NOT NULL
+                GROUP BY repo.repo_name
+            """)
+
+            results = pd.read_sql(avg_issue_resolution_SQL, self.db,
+                                  params={'repo_id': repo_id})
+            return results
+
     @annotate(tag='forks')
     def forks(self, repo_group_id, repo_id=None):
         """
@@ -1938,7 +1980,7 @@ class Augur(object):
         """
         if calendar_year == None:
             calendar_year = 2019
-        
+
         cdRgNewrepRankedCommitsSQL = None
 
         if not repo_id:
@@ -1953,7 +1995,7 @@ class Augur(object):
                 ORDER BY net desc
                 LIMIT 10
             """)
-        else: 
+        else:
             cdRgNewrepRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
                 FROM dm_repo_annual, repo, repo_groups
@@ -1972,15 +2014,15 @@ class Augur(object):
     @annotate(tag='annual-commit-count-ranked-by-repo-in-repo-group')
     def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of commits to lowest by default.
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :param calendar_year: the calendar year a repo is created in to be considered "new"
-        """    
+        """
         if timeframe == None:
             timeframe = 'all'
-        
+
         cdRgTpRankedCommitsSQL = None
 
         if repo_id:
@@ -2020,7 +2062,7 @@ class Augur(object):
                     order by net desc
                     LIMIT 10
                 """)
-        else: 
+        else:
             if timeframe == 'all':
                 cdRgTpRankedCommitsSQL = s.sql.text("""
                     SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
@@ -2078,7 +2120,7 @@ class Augur(object):
         """
         if calendar_year == None:
             calendar_year = 2019
-        
+
         cdRgNewrepRankedCommitsSQL = None
 
         if not repo_id:
@@ -2093,7 +2135,7 @@ class Augur(object):
                 ORDER BY net desc
                 LIMIT 10
             """)
-        else: 
+        else:
             cdRgNewrepRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
                 FROM dm_repo_annual, repo, repo_groups
@@ -2112,15 +2154,15 @@ class Augur(object):
     @annotate(tag='annual-lines-of-code-count-ranked-by-repo-in-repo-group')
     def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of commits to lowest by default.
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :param calendar_year: the calendar year a repo is created in to be considered "new"
-        """    
+        """
         if timeframe == None:
             timeframe = 'all'
-        
+
         cdRgTpRankedCommitsSQL = None
 
         if repo_id:
@@ -2160,7 +2202,7 @@ class Augur(object):
                     order by net desc
                     LIMIT 10
                 """)
-        else: 
+        else:
             if timeframe == 'all':
                 cdRgTpRankedCommitsSQL = s.sql.text("""
                     SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
@@ -2205,6 +2247,107 @@ class Augur(object):
         "repo_id": repo_id})
         return results
 
+    @annotate(tag='top-committers')
+    def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.5):
+        """
+        Returns a list of contributors contributing N% of all commits.
+
+        :param repo_group_id: Repo group ID
+        :param repo_id: Repo ID.
+        :param year: Year. eg: 2018, 2107. Defaults to current year.
+        :param threshold: The threshold to specify N%. Defaults to 0.5
+        """
+        threshold = float(threshold)
+        if threshold < 0 or threshold > 1:
+            raise ValueError('threshold should be between 0 and 1')
+
+        if year is None:
+            year = datetime.datetime.now().year
+
+        if not repo_id:
+            total_commits_SQL = s.sql.text("""
+                SELECT SUM(patches)::int
+                FROM
+                    (SELECT repo_group_id, email, year, patches
+                    FROM dm_repo_group_annual
+                    WHERE year = :year AND repo_group_id = :repo_group_id
+                    ORDER BY patches DESC) a
+            """)
+
+            results = pd.read_sql(total_commits_SQL, self.db,
+                                params={'year': year, 'repo_group_id': repo_group_id})
+        else:
+            total_commits_SQL = s.sql.text("""
+                SELECT SUM(patches)::int
+                FROM
+                    (SELECT repo_id, email, year, patches
+                    FROM dm_repo_annual
+                    WHERE year = :year AND repo_id = :repo_id
+                    ORDER BY patches DESC) a
+            """)
+
+            results = pd.read_sql(total_commits_SQL, self.db,
+                                params={'year': year, 'repo_id': repo_id})
+
+        total_commits = int(results.iloc[0]['sum'])
+        threshold_commits = round(threshold * total_commits)
+
+        if not repo_id:
+            committers_SQL = s.sql.text("""
+                SELECT
+                    a.repo_group_id,
+                    rg_name AS repo_group_name,
+                    a.email,
+                    SUM(a.patches)::int AS commits
+                FROM
+                    (SELECT repo_group_id, email, year, patches
+                    FROM dm_repo_group_annual
+                    WHERE year = :year AND repo_group_id = :repo_group_id
+                    ORDER BY patches DESC) a, repo_groups
+                WHERE a.repo_group_id = repo_groups.repo_group_id
+                GROUP BY a.repo_group_id, repo_group_name, a.email
+                ORDER BY commits DESC
+            """)
+
+            results = pd.read_sql(committers_SQL, self.db,
+                                params={'year': year, 'repo_group_id': repo_group_id})
+        else:
+            committers_SQL = s.sql.text("""
+                SELECT
+                    a.repo_id,
+                    repo.repo_name,
+                    a.email,
+                    SUM(a.patches)::int AS commits
+                FROM
+                    (SELECT repo_id, email, year, patches
+                    FROM dm_repo_annual
+                    WHERE year = :year AND repo_id = :repo_id
+                    ORDER BY patches DESC) a, repo
+                WHERE a.repo_id = repo.repo_id
+                GROUP BY a.repo_id, repo.repo_name, a.email
+                ORDER BY commits DESC
+            """)
+
+            results = pd.read_sql(committers_SQL, self.db,
+                                  params={'year': year, 'repo_id': repo_id})
+
+        cumsum = 0
+        for i, row in results.iterrows():
+            cumsum += row['commits']
+            if cumsum >= threshold_commits:
+                results = results[:i + 1]
+                break
+
+        if not repo_id:
+            rg_name = results.iloc[0]['repo_group_name']
+            results.loc[i+1] = [repo_group_id, rg_name, 'other_contributors',
+                                int(total_commits - cumsum)]
+        else:
+            repo_name = results.iloc[0]['repo_name']
+            results.loc[i+1] = [repo_id, repo_name, 'other_contributors',
+                                int(total_commits - cumsum)]
+
+        return results
 
 #####################################
 ###           UTILITIES           ###

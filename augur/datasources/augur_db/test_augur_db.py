@@ -231,6 +231,15 @@ def test_cii_best_practices_badge(augur_db):
     # repo_group
     assert augur_db.cii_best_practices_badge(21).iloc[0]['tiered_percentage'] > 80
 
+def test_average_issue_resolution_time(augur_db):
+    #repo
+    assert augur_db.average_issue_resolution_time(24, 21464).isin(
+        ['maven-release', '276 days 13:54:13.2']).any().any()
+
+    # repo_group
+    assert augur_db.average_issue_resolution_time(24).isin(
+        ['maven-release', '276 days 13:54:13.2']).any().any()
+
 def test_languages(augur_db):
     # TODO
     pass
@@ -253,8 +262,8 @@ def test_annual_lines_of_code_count_ranked_by_repo_in_repo_group(augur_db):
     assert augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group(20, 21000,timeframe = 'year').iloc[0].net > 0
 
 def test_annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(augur_db):
-    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0 
-    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0 
+    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0
+    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0
 
 def test_annual_commit_count_ranked_by_repo_in_repo_group(augur_db):
     assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20).iloc[0].net > 0
@@ -263,8 +272,16 @@ def test_annual_commit_count_ranked_by_repo_in_repo_group(augur_db):
     assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20, 21000,timeframe = 'year').iloc[0].net > 0
 
 def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
-    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0 
-    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0 
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0
+
+def test_top_committers(augur_db):
+    assert augur_db.top_committers(20).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, year=2017).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, year=2017, threshold=0.7).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000, year=2017).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000, year=2017, threshold=0.7).iloc[0]['commits'] > 0
 
 def test_get_repos_for_dosocs(augur_db):
     assert augur_db.get_repos_for_dosocs().isin(
