@@ -80,7 +80,6 @@ def analysis(cfg, multithreaded):
 
 
 	for repo in repos:
-		print(repo)
 		update_analysis_log(repo[0],'Beginning analysis')
 		cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
 

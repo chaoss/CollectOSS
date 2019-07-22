@@ -52,11 +52,12 @@ from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_aff
 # 	import MySQLdb
 # ## End Imports
 
+html = html.parser.HTMLParser()
 
 class FacadeWorker:
 	def __init__(self, config, task=None):
 		self.cfg = Config()
-		# html = html.parser.HTMLParser()
+		
 
 		### The real program starts here ###
 
