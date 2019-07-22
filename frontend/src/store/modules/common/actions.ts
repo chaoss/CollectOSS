@@ -71,4 +71,28 @@ export default {
             throw error;
         }
     },
+    async getRepos(context:any, payload:any){
+        try {
+            context.state.AugurAPI.getRepos().then((repos: object[]) => {
+                context.commit('mutateCache', {
+                    property: 'getRepos',
+                    with: repos,
+                });
+            });
+        } catch(error) {
+            throw error;
+        }
+    },
+    async getRepoGroups(context:any, payload:any){
+        try {
+            context.state.AugurAPI.getRepoGroups().then((rgs: object[]) => {
+                context.commit('mutateCache', {
+                    property: 'getRepoGroups',
+                    with: rgs,
+                });
+            });
+        } catch(error) {
+            throw error;
+        }
+    }
 };
