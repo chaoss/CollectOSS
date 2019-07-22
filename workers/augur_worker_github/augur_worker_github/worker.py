@@ -1036,7 +1036,6 @@ class GitHubWorker:
                         [obj[duplicate_key_map[db_dupe_key]]])].to_dict('records')[0]
                     for col in update_col_map.keys():
                         if update_col_map[col] in obj:
-                            logging.info("checking update bw: {} and {}".format(obj, existing_tuple))
                             if obj[update_col_map[col]] != existing_tuple[col]:
                                 logging.info("This tuple needs an " +
                                     "update for column: {}".format(col, obj))
