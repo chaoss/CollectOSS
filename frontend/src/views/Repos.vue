@@ -65,7 +65,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="repo in repos">
+                <tr v-for="repo in sorted_repos(sortColumn,ascending)" v-bind:item="repo">
                   <td>
                     <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                   </td>
@@ -117,12 +117,14 @@ import { merge } from 'vega';
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       'getRepoRelations',
+      'getRepos',
     ])
   },
   computed: {
     ...mapGetters('common', [
-      // 'repoRelationsInfo',
+      'repoRelationsInfo',
       'groupsInfo',
+      'sorted_repos',
       // 'repoRelationsInfo'
     ]),
     repoRelationsInfo() {
@@ -135,46 +137,28 @@ export default class Repos extends Vue{
   colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
   testEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
   testTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
-  repos: any[] = [];
+  // repos: any[] = [];
   repo_groups:any[] = [];
   repo_relations:any[] =  [];
   themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
   loadedGroups: boolean = false;
   loadedSparks: boolean = false;
   ascending:boolean = false;
-  sortColumn: string ='';
+  sortColumn: string ='commits_all_time';
   repoRelationsInfo!: any;
   groupsInfo!:any;
   getRepoRelations!: any
+  sorted_repos!:any
+  getRepos!:any;
+
 
   created() {
-
-    if (Object.keys(this.repoRelationsInfo).length === 0) {
-      this.getRepoRelations()
-    } else {
-      Object.keys(this.repoRelationsInfo).forEach((key: any) => {
-        let repos = this.repoRelationsInfo[key]
-        Object.keys(repos).forEach((key: any) => {
-          this.repos.push(repos[key])
-        })
-      })
-      this.sortTable('commits_all_time')
+    
+    if (this.sorted_repos == null) {
+      this.getRepos()
     }
 
   }
-  @Watch('repoRelationsInfo')
-  onRepoRelationsInfoChanged(oldVal:any, newVal:any) {
-    console.log('Watch')
-    this.repos = []
-    Object.keys(newVal).forEach((key: any) => {
-      let repos = newVal[key]
-      Object.keys(repos).forEach((key: any) => {
-        this.repos.push(repos[key])
-      })
-    })
-    this.sortTable('commits_all_time')
-  }
-
   
   sortTable(col: string) {
       if (this.sortColumn === col) {
@@ -183,17 +167,6 @@ export default class Repos extends Vue{
         this.ascending = true;
         this.sortColumn = col;
       }
-
-      var ascending = this.ascending;
-
-      this.repos.sort(function(a, b) {
-        if (a[col] > b[col]) {
-          return ascending ? 1 : -1
-        } else if (a[col] < b[col]) {
-          return ascending ? -1 : 1
-        }
-        return 0;
-      })
   }
   onGitRepo (e:any) {
       let first = e.url.indexOf(".")
