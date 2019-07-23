@@ -2210,3 +2210,9 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.top_committers, 'top-committers')
+
+
+    server.addRepoGroupMetric(augur_db.aggregate_summary, 'aggregate-summary')
+
+
+    server.addRepoMetric(augur_db.aggregate_summary, 'aggregate-summary')
