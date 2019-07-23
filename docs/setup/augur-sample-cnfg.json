@@ -47,33 +47,46 @@
     "PublicWWW": {
         "apikey": "Your publicwww API Key (not necessary)"
     },
-    "Server": {
-        "cache_expire": 3600,
-        "host": "0.0.0.0",
-        "port": "5002",
-        "workers": 8
-    },
     "Controller": {
-      "broker": 1,
-      "github_worker": 0,
-      "housekeeper": 1
+        "broker": 1,
+        "github_worker": 0,
+        "housekeeper": 1
     },
     "Housekeeper": {
       "jobs": [
             {
                 "model": "issues",
                 "delay": 345000,
-                "repo_group_id": 0 
+                "repo_group_id": 0
             },
             {
                 "model": "repo_info",
-                "delay": 44460,
+                "delay": 33360,
                 "repo_group_id": 0
-            }   
+            }
         ]
     },
-    "GitHubWorker": {
-        "port": 51238,
-        "workers": 1
-    }    
+    "Workers": {
+            "github_worker": {
+                "switch": 1,
+                "port": 51238,
+                "workers": 1
+        },
+            "repo_info_worker": {
+                "switch": 0,
+                "port": 51239,
+                "workers": 1
+        },
+            "insight_worker": {
+                "switch": 0,
+                "port": 51240,
+                "workers": 1
+        },
+            "facade_worker": {
+                "switch": 0,
+                "port": 51258,
+                "workers": 1
+        }
+    }
 }
+
