@@ -761,7 +761,7 @@ class GitHubWorker:
                         if "login" in comment['user']:
                             comment['cntrb_id'] = self.find_id_from_login(comment['user']['login'])
                 
-            logging.info("Number of comments needing insertion: " + str(len(issue_comments)) + "\n")
+            logging.info("Number of comments needing insertion: {}\n".format(len(issue_comments)))
 
             for comment in issue_comments:
                 issue_comment = {
@@ -775,7 +775,7 @@ class GitHubWorker:
                 }
 
                 result = self.db.execute(self.message_table.insert().values(issue_comment))
-                logging.info("Primary key inserted into the message table: {}".format(str(result.inserted_primary_key)))
+                logging.info("Primary key inserted into the message table: {}".format(result.inserted_primary_key))
                 self.results_counter += 1
                 self.msg_id_inc = int(result.inserted_primary_key[0])
 
@@ -794,7 +794,7 @@ class GitHubWorker:
                 }
 
                 result = self.db.execute(self.issues_message_ref_table.insert().values(issue_message_ref))
-                logging.info("Primary key inserted into the issue_message_ref table: " + str(result.inserted_primary_key))
+                logging.info("Primary key inserted into the issue_message_ref table: {}".format(result.inserted_primary_key))
                 self.results_counter += 1
 
 

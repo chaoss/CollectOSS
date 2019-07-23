@@ -427,15 +427,15 @@ const routes = [
         // ]
       // },
 ];
-let downloadedRepos = [], repos = {}, projects = [];
+// let downloadedRepos = [], repos = {}, projects = [];
 // console.log(window)
-console.log(AugurAPI)
-AugurAPI.getDownloadedGitRepos().then((data: any) => {
+// console.log(AugurAPI)
+// AugurAPI.getDownloadedGitRepos().then((data: any) => {
 
-  repos = _.groupBy(data, 'project_name');
-  projects = Object.keys(repos);
+//   repos = _.groupBy(data, 'project_name');
+//   projects = Object.keys(repos);
 
-});
+// });
 // const routes = routerOptions.map(route => {
 //   // let route1 = Object.assign({}, route);
 //   return {

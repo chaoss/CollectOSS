@@ -1,31 +1,49 @@
 export default {
     repoRelationsInfo: (state: any) => {
-      return state.repoRelationsInfo;
+      return state.cache.repoRelations;
     },
     groupsInfo: (state: any) => {
-      return state.groupsInfo;
+      return state.cache.groupsInfo;
     },
     groupsList: (state: any) => {
-      return Object.keys(state.groupsInfo);
+      return Object.keys(state.cache.groupsInfo);
     },
     AugurAPI: (state: any) => {
       return state.AugurAPI;
     },
     repo: (state: any) => {
-        return state.baseRepo
+        return state.baseRepo;
     },
     gitRepo: (state: any) => {
-        return state.gitRepo
+        return state.gitRepo;
     },
     repos: (state: any) => {
         // console.log('CHECKED')
-        let repos: any[] = []
-        Object.keys(state.repoRelationsInfo).forEach((key: any) => {
-            Object.keys(state.repoRelationsInfo[key]).forEach((repo_name: any) => {
-                repos.push(state.repoRelationsInfo[key][repo_name])
-            })
-        })
-        return repos
+      return state.cache.getRepos
+    },
+    repo_groups: (state: any) => {
+      return state.cache.getRepoGroups
+    },
+    sorted_repos: (state:any)=> (col: string, ascending: boolean) => {
+      const items = [...state.cache.getRepos].sort((a,b) => {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1
+        }
+        return 0;
+      })
+      return items
+    },
+    sorted_repo_groups: (state:any) => (col:string, ascending: boolean) => {
+      const items = [...state.cache.getRepoGroups].sort((a,b) => {
+        if (a[col] > b[col]) {
+          return ascending ? 1 : -1
+        } else if (a[col] < b[col]) {
+          return ascending ? -1 : 1
+        }
+        return 0;
+      })
+      return items
     }
-
 };

@@ -1,12 +1,18 @@
 /* tslint:disable */
 import router from '@/router'
+import Vue from 'vue';
 export default {
   mutateCache(state: any, payload: any) {
     console.log(state, payload)
-    state.cache[payload.property] = payload.with;
+
+    // Vue cannot detect this change to array 
+    // reference: https://vuejs.org/v2/guide/list.html#Caveats 
+    // state.cache[payload.property] = payload.with;
+    Vue.set(state.cache, payload.property, payload.with)
   },
   mutate(state: any, payload: any) {
-    state[payload.property] = payload.with;
+    // state[payload.property] = payload.with;
+    Vue.set(state, payload.property, payload.with);
   },
   setBaseRepo (state: any, payload: any) {
     state.gitRepo = payload.gitURL;

@@ -14,9 +14,9 @@
           <div v-if="!loadedGroups" class="col-md-8 col-lg-9">
             <spinner style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
           </div>
-          <d-col v-if="loadedGroups" v-for="(group, idx) in groupsList.slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
+          <d-col v-if="loadedGroups" v-for="(group, idx) in groupsInfo" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             
-            <d-card class="card-small card-post card-post--1">
+            <d-card v-if="idx < 4" class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
                 <insight-chart style="transform: translateX(-30px)" :data="values[testEndpoints[idx]]" :url="repoRelationsInfo[group][0].url" :color="colors[idx]"></insight-chart>
@@ -102,7 +102,7 @@
               <spinner></spinner>
             </div>
 
-            <d-col v-if="loadedGroups" v-for="(group, idx) in groupsList.slice(0,6)" :key="idx" lg="4" sm="12" class="mb-4">
+            <d-col v-if="loadedGroups" v-for="(group, idx) in groupsInfo" :key="idx" lg="4" sm="12" class="mb-4">
               
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
@@ -111,7 +111,7 @@
                 </div>
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
-                    <div v-for="(repo, i) in repoRelationsInfo[group].slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
+                    <div v-for="(repo, i) in repoRelationsInfo[group]" v-if="i < 6" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo.url}}" @click="setBaseRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo.url }}</span>
                       </d-link>
@@ -142,13 +142,14 @@ import Spinner from '../components/Spinner.vue';
     ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
-      getRepoRelations: 'common/getRepoRelations',
-    })
+      'getRepoRelations',
+    ])
   },
   computed: {
     ...mapGetters('common',[
       'repoRelationsInfo',
-      'groupsInfo'
+      'groupsInfo',
+      'cache',
     ])
   },
   components: {
@@ -250,17 +251,23 @@ export default class Dashboard extends Vue {
 
 
   created () {
-    this.$store.dispatch('common/getRepoRelations')
+    this.$store.dispatch('common/getRepoRelations').then((data) => {
+      console.log(data.repoRelations)
+      console.log(Object.keys(data.repoRelations))
+      this.$store.dispatch('common/createAPIObjects', {repos: Object.keys(data.repoRelations)})
+        // Object.keys(data.repoRelations[Object.keys(data.repoGroups)[0]]).slice(0,3)})
+    })
+    
     // let repoInfo = this.getRepoRelations;
     // this.repoRelationsInfo = repo_info.repoRelationsInfo
     // this.groupInfo = repo_info.groupInfo
     // let endpoints = this.testEndpoints;
-    this.getRepoRelations()
+    // this.getRepoRelations()
 
 
     // Load data for insights
       // let count = 0
-      // this.groupsList.slice(0,3).forEach((group) => {
+      // this.groupsInfo.forEach((group) => {
         
       //   let repo = store.AugurAPI.Repo({ gitURL: this.repoRelationsInfo[group][0]['url'] })
       //   console.log(repo)

@@ -22,46 +22,46 @@
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
                     <div class="row">
                       <div class="col col-9">Name</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_description')"> 
                     <div class="row">
                       <div class="col col-9">Description</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_description' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_website')"> 
                     <div class="row">
                       <div class="col col-9">Website</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_website' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')"> 
                     <div class="row">
                       <div class="col col-9">Last Modified</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_last_modified' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_type')"> 
                     <div class="row">
                       <div class="col col-9">Type</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_type' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
                     <div class="row">
                       <div class="col col-9">Repo Count</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0">Options</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="group in repo_groups">
+                <tr v-for="group in sorted_repo_groups(sortColumn, ascending)">
                   <td>
-                    <a href="#" @click="onGitRepo(repo)">{{ group.rg_name }}</a>
+                    <a href="#" @click="onGitRepo(group)">{{ group.rg_name }}</a>
                   </td>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
@@ -108,12 +108,15 @@
         'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
         'getRepoRelations',
+        'getRepoGroups',
       ])
     },
     computed: {
       ...mapGetters('common',[
         'repoRelationsInfo',
-        'groupsInfo'
+        'groupsInfo',
+        'sorted_repo_groups',
+        'repo_groups'
       ])
     },
   })
@@ -123,22 +126,26 @@
     testEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
     testTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
     repos: any[] = [];
-    repo_groups:any[] = [];
     repo_relations:any[] =  [];
     themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
     loadedGroups: boolean = false;
     loadedSparks: boolean = false;
     ascending:boolean = false;
-    sortColumn: string ='';
+    sortColumn: string ='rg_last_modified';
+
+    // declare Vuex action and getter
     repoRelationsInfo!: any;
     groupsInfo!:any;
-    getRepoRelations!: any
+    getRepoRelations!: any;
+    getRepoGroups!:any;
+    repo_groups!:any[];
+    sorted_repo_groups!:any[];
+
 
     created() {
-   
-      Object.keys(this.groupsInfo).forEach((key:any) =>{
-        this.repo_groups.push(this.groupsInfo[key])
-      })
+      if(this.repo_groups == null){
+        this.getRepoGroups()
+      }
     }
 
     sortTable(col: string) {
@@ -148,18 +155,8 @@
         this.ascending = true;
         this.sortColumn = col;
       }
-
-      var ascending = this.ascending;
-
-      this.repos.sort(function(a, b) {
-        if (a[col] > b[col]) {
-          return ascending ? 1 : -1
-        } else if (a[col] < b[col]) {
-          return ascending ? -1 : 1
-        }
-        return 0;
-      })
     }
+    
   }
 
 // export default {

@@ -34,7 +34,7 @@ export default class AugurAPI {
     this.__timeout = null
     this.__pending = {}
 
-    this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
+    // this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.getRepos = this.__EndpointFactory('repos')
     this.getRepoGroups = this.__EndpointFactory('repo-groups')
 
