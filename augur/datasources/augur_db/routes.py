@@ -2212,7 +2212,7 @@ def create_routes(server):
     server.addRepoMetric(augur_db.top_committers, 'top-committers')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/aggregate-summary Aggregate Summary (Repo)
+    @api {get} /repo-groups/:repo_group_id/aggregate-summary Aggregate Summary (Repo Group)
     @apiName aggregate-summary
     @apiGroup Experimental
     @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
