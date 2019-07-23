@@ -2213,7 +2213,7 @@ def create_routes(server):
 
     """
     @api {get} /repo-groups/:repo_group_id/aggregate-summary Aggregate Summary (Repo Group)
-    @apiName aggregate-summary
+    @apiName aggregate-summary-repo-group
     @apiGroup Experimental
     @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
     @apiParam {string} repo_group_id Repository Group ID.
@@ -2235,7 +2235,7 @@ def create_routes(server):
 
     """
     @api {get} /repo-groups/:repo_group_id/repos/:repo_id/aggregate-summary Aggregate Summary (Repo)
-    @apiName aggregate-summary
+    @apiName aggregate-summary-repo
     @apiGroup Experimental
     @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
     @apiParam {string} repo_group_id Repository Group ID.
