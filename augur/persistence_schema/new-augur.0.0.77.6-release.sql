@@ -1,3 +1,11 @@
+-- ----------------------------
+CREATE SCHEMA augur_data;
+CREATE SCHEMA augur_operations;
+CREATE SCHEMA spdx;
+-- create the schemas
+-- -----------------------
+
+
 /*
  Navicat Premium Data Transfer
 

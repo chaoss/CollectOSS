@@ -59,10 +59,12 @@
 - Create your user `augur` with a password. 
 - Grant augur all the privileges on augur
 
+## Create the database schema
+
 3. Execute the file named [`new-augur.0.0.77.6-release.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as any user with schema creation privileges.   
     - All schemas, the tables, and sequences they contain, are owned by the `augur` user.
-    - If you are running the script from the command line, from the root of the Augur repository it is located at: `augur/persistence_schema/new-augur.0.0.77.5-release.sql`. 
-    - The fastest way is `psql -U augur -d augur -f augur/persistence_schema/new-augur.0.0.77.5-release.sql -h localhost` from the command line at the root of the Augur repository. 
+    - If you are running the script from the command line, from the root of the Augur repository it is located at: `augur/persistence_schema/new-augur.0.0.77.6-release.sql`. 
+    - The fastest way is `psql -U augur -d augur -f augur/persistence_schema/new-augur.0.0.77.6-release.sql -h localhost` from the command line at the root of the Augur repository. 
     - There is also a small amount of "seed data" that our data collection "workers" need populated, which is inserted at the end of the schema file above. 
 
 ## Build Your Augur Backend Environment
