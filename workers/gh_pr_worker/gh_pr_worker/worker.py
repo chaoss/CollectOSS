@@ -149,10 +149,17 @@ class GHPullRequestWorker:
         rs = pd.read_sql(max_msg_id_SQL, self.db)
         msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
 
+        max_pr_labels_id_SQL = s.sql.text("""
+            SELECT max(pr_label_id) AS label_id FROM pull_request_labels
+        """)
+        rs = pd.read_sql(max_pr_labels_id_SQL, self.db)
+        label_start = int(rs.iloc[0]['label_id']) if rs.iloc[0]['label_id'] else 25150
+
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.pr_id_inc = (pr_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
+        self.label_id_inc = (label_start + 1)
 
         # self.run()
 
@@ -384,12 +391,52 @@ class GHPullRequestWorker:
 
             result = self.db.execute(self.pull_requests_table.insert().values(pr))
             logging.info(f"Primary Key inserted pull_requests table: {result.inserted_primary_key}")
-            logging.info(f"Inserted PR data for {owner}/{repo}")
 
+            self.query_labels(pr_dict['labels'], self.pr_id_inc)
+
+            logging.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
             self.pr_id_inc += 1
 
-            self.register_task_completion(entry_info, 'pull_requests')
+        self.register_task_completion(entry_info, 'pull_requests')
+
+    def query_labels(self, labels, pr_id):
+        pseudo_key_gh = 'id'
+        psuedo_key_augur = 'pr_src_id'
+        table = 'pull_request_labels'
+        pr_labels_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+
+        new_labels = self.check_duplicates(labels, pr_labels_table_values, pseudo_key_gh)
+
+        if len(new_labels) == 0:
+            logging.info('No new labels to add')
+            return
+
+        logging.info(f'Found {len(new_labels)} labels')
+
+        for label_dict in new_labels:
+
+            label = {
+                'pr_label_id': self.label_id_inc,
+                'pull_request_id': pr_id,
+                'pr_src_id': label_dict['id'],
+                'pr_src_node_id': label_dict['node_id'],
+                'pr_src_url': label_dict['url'],
+                'pr_src_description': label_dict['name'],
+                'pr_src_color': label_dict['color'],
+                'pr_src_default_bool': label_dict['default'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': 'GitHub API',
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(self.pull_request_labels_table.insert().values(label))
+            logging.info(f"Primary Key inserted in pull_request_labels table: {result.inserted_primary_key}")
+            logging.info(f"Inserted PR Labels data for PR with id {pr_id}")
+
+            self.results_counter += 1
+            self.label_id_inc += 1
 
     def query_contributors(self, entry_info):
 
