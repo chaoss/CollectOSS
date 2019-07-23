@@ -11,6 +11,7 @@
 3. Change to your "home directory" for the next step. For all the operating systems we are aware of, you accomplish this simply by typing `cd` and then pressing enter at the command line. 
 4. Create a Python 3 virtual environment for Augur: `virtualenv --python=python3 newaugur`
 5. Activate your virtual environment `source newaugur/bin/activate` (In the case of Ubuntu, you get the `source` command automatically put into your path using the `bash` shell. So, if you get an error, type `bash` and then hit the enter key and try again.)
+6. Make sure you have NodeJS and NPM installed. `sudo dnf install nodejs` on Fedora or `sudo apt-get install nodejs` on Ubuntu. Or `brew install nodejs` on a Mac. 
 
 ### Other operating systems
 1. For Mac OSX `sudo apt-get install` is replaced with `brew install`. [To download brew, click here.](https://brew.sh/) 
