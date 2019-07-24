@@ -254,7 +254,7 @@ export default class RepoOverview extends Vue{
   repo_groups!:any[];
   sorted_repo_groups!:any[];
 
-  getOwner(url) {
+  getOwner(url:string) {
       let first = url.indexOf(".")
       let last = url.lastIndexOf(".")
       let domain = null
@@ -282,7 +282,7 @@ export default class RepoOverview extends Vue{
     }
   }
     
-  getRepo(url){
+  getRepo(url:string){
     let first = url.indexOf(".")
     let last = url.lastIndexOf(".")
     let domain = null
@@ -309,34 +309,34 @@ export default class RepoOverview extends Vue{
     }
   }
 
-  getColor (idx) {
+  getColor (idx:number) {
     if (idx % 2 == 0)
       return 'color: green'
     else
       return 'color: red'
   }
   
-  getDirection (idx) {
+  getDirection (idx:number) {
     if (idx % 2 == 0)
       return 'arrow_upward'
     else
       return 'arrow_downward'
   }
 
-  getPhrase (idx) {
+  getPhrase (idx:number) {
     if (idx % 2 == 0)
       return 'increased'
     else
       return 'declined'
   }
 
-  onRepo (e) {
+  onRepo (e:any) {
     this.$store.commit('setRepo', {
       githubURL: e.target.value
     })
   }
 
-  onGitRepo (e) {
+  onGitRepo (e:any) {
     let first = e.url.indexOf(".")
     let last = e.url.lastIndexOf(".")
     let domain = null

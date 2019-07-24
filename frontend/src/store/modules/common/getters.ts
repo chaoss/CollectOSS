@@ -25,7 +25,10 @@ export default {
       return state.cache.getRepoGroups
     },
     sorted_repos: (state:any)=> (col: string, ascending: boolean) => {
-      const items = [...state.cache.getRepos].sort((a,b) => {
+        if (state.cache.getRepos == undefined) {
+            return []
+        }
+        const items = [...state.cache.getRepos].sort((a,b) => {
         if (a[col] > b[col]) {
           return ascending ? 1 : -1
         } else if (a[col] < b[col]) {
@@ -45,5 +48,11 @@ export default {
         return 0;
       })
       return items
+    },
+    loaded_repos: (state:any) => {
+        return state.cache.getRepos != null;
+    },
+    loaded_groups: (state:any) => {
+        return state.cache.getRepoGroups != null;
     }
 };

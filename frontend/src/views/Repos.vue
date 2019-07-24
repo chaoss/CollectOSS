@@ -9,7 +9,9 @@
     </div>
 
     <!-- Default Light Table -->
-    <div :v-show="loaded" class="row">
+    <spinner v-if="!loaded_repos"></spinner>
+
+    <div v-if="loaded_repos"  class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
@@ -22,37 +24,37 @@
                   <th width="20%" scope="col" class="border-0" v-on:click="sortTable('url')"> 
                     <div class="row">
                       <div class="col col-9">URL</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
                     <div class="row">
                       <div class="col col-9">Repo Group Name</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
                     </div>
                   </th>
                   <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
                     <div class="row">
                       <div class="col col-9">Repo Description</div>
-                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'description' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'description' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
                     <div class="row">
                       <div class="col col-9">Group's Repo Count</div>
-                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('commits_all_time')">
                     <div class="row">
                       <div class="col col-9">Total Commit Count</div>
-                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'commits_all_time' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'commits_all_time' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('issues_all_time')">
                     <div class="row">
                       <div class="col col-0">Total Issue Count</div>
-                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'issues_all_time' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'issues_all_time' == sortColumn"></div>
                     </div>
                   </th>
                   <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_status')">
@@ -110,8 +112,11 @@ import Component from 'vue-class-component';
 import {Watch} from 'vue-property-decorator'
 import Vue from 'vue';
 import {mapActions, mapGetters} from "vuex";
-import { merge } from 'vega';
+import Spinner from '../components/Spinner.vue'
 @Component({
+  components: {
+    Spinner,
+  },
   methods: {
     ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
@@ -125,6 +130,7 @@ import { merge } from 'vega';
       'repoRelationsInfo',
       'groupsInfo',
       'sorted_repos',
+      'loaded_repos'
       // 'repoRelationsInfo'
     ]),
     repoRelationsInfo() {
@@ -143,6 +149,7 @@ export default class Repos extends Vue{
   themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
   loadedGroups: boolean = false;
   loadedSparks: boolean = false;
+  // loadedRepos: boolean = false;
   ascending:boolean = false;
   sortColumn: string ='commits_all_time';
   repoRelationsInfo!: any;
@@ -150,11 +157,12 @@ export default class Repos extends Vue{
   getRepoRelations!: any
   sorted_repos!:any
   getRepos!:any;
+  loaded_repos!:boolean;
 
 
   created() {
     
-    if (this.sorted_repos == null) {
+    if (!this.loaded_repos) {
       this.getRepos()
     }
 
