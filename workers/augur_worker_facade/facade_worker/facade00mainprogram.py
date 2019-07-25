@@ -58,7 +58,6 @@ class FacadeWorker:
 	def __init__(self, config, task=None):
 		self.cfg = Config()
 		
-
 		### The real program starts here ###
 
 		# Set up the database
@@ -105,7 +104,7 @@ class FacadeWorker:
 		limited_run = 0
 		delete_marked_repos = 0
 		pull_repos = 0
-		clone_repos = 0
+		clone_repos = 1
 		check_updates = 0
 		force_updates = 0
 		run_analysis = 0

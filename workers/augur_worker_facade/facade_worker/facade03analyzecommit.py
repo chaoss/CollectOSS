@@ -132,7 +132,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		emails = list(cursor_local)
 		emails_to_add = emails
 		emails_to_update = []
-		
+
 		for email in emails:
 			if email[0] == committer_email or email[0] == author_email:
 				emails_to_add = [tuple for tuple in emails_to_add if tuple != email]
@@ -146,9 +146,12 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 				if email[0] == author_email:
 					cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name)))
 					db_local.commit()
+					cfg.log_activity('Debug','Stored contributor with email: %s' % author_email)
+
 				elif email[0] == committer_email:
 					cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)))
 					db_local.commit()
+					cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
 
 		if len(emails_to_update) > 0:
 			for email in emails_to_update:
@@ -159,10 +162,12 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 					cursor_local.execute(email_update, (discover_alias(author_email),
 						str(author_name), email[0]))
 					db_local.commit()
+					cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
 				elif email[0] == committer_email:
 					cursor_local.execute(email_update, (discover_alias(committer_email),
 						str(committer_name), email[0]))
 					db_local.commit()
+					cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
 				
 
 ### The real function starts here ###
