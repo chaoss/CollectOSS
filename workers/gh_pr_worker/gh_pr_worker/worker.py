@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import time
+import traceback
 from datetime import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
@@ -149,10 +150,24 @@ class GHPullRequestWorker:
         rs = pd.read_sql(max_msg_id_SQL, self.db)
         msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
 
+        max_pr_labels_id_SQL = s.sql.text("""
+            SELECT max(pr_label_id) AS label_id FROM pull_request_labels
+        """)
+        rs = pd.read_sql(max_pr_labels_id_SQL, self.db)
+        label_start = int(rs.iloc[0]['label_id']) if rs.iloc[0]['label_id'] else 25150
+
+        max_pr_event_id_SQL = s.sql.text("""
+            SELECT MAX(pr_event_id) AS event_id FROM pull_request_events
+        """)
+        rs = pd.read_sql(max_pr_event_id_SQL, self.db)
+        event_start = int(rs.iloc[0]['event_id']) if rs.iloc[0]['event_id'] else 25150
+
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.pr_id_inc = (pr_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
+        self.label_id_inc = (label_start + 1)
+        self.event_id_inc = (event_start + 1)
 
         # self.run()
 
@@ -246,18 +261,19 @@ class GHPullRequestWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
-                try:
-                    git_url = message.entry_info['task']['given']['git_url']
-                    self.query_pr({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
-                except Exception as e:
-                    logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-                    logging.info("Error encountered: " + str(e) + "\n")
-                    logging.info("Notifying broker and logging task failure in database...\n")
+                # try:
+                git_url = message.entry_info['task']['given']['git_url']
+                self.query_pr({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                # except Exception as e:
+                #     logging.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
+                #     logging.error("Error encountered: " + str(e) + "\n")
+                #     traceback.format_exc()
+                #     logging.info("Notifying broker and logging task failure in database...\n")
 
-                    message.entry_info['task']['worker_id'] = self.config['id']
+                #     message.entry_info['task']['worker_id'] = self.config['id']
 
-                    requests.post("http://localhost:{}/api/unstable/task_error".format(
-                        self.config['broker_port']), json=message.entry_info['task'])
+                #     requests.post("http://localhost:{}/api/unstable/task_error".format(
+                #         self.config['broker_port']), json=message.entry_info['task'])
 
                     # Add to history table
                     # task_history = {
@@ -284,9 +300,7 @@ class GHPullRequestWorker:
                     # logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
 
                     # Reset results counter for next task
-                    self.results_counter = 0
-                    logging.info("passing")
-                    pass
+                self.results_counter = 0
                 logging.info("passed")
 
     def query_pr(self, entry_info):
@@ -342,6 +356,7 @@ class GHPullRequestWorker:
 
             pr = {
                 'pull_request_id': self.pr_id_inc,
+                'repo_id': repo_id,
                 'pr_url': pr_dict['url'],
                 'pr_src_id': pr_dict['id'],
                 'pr_src_node_id': None,
@@ -384,12 +399,121 @@ class GHPullRequestWorker:
 
             result = self.db.execute(self.pull_requests_table.insert().values(pr))
             logging.info(f"Primary Key inserted pull_requests table: {result.inserted_primary_key}")
-            logging.info(f"Inserted PR data for {owner}/{repo}")
 
+            self.query_labels(pr_dict['labels'], self.pr_id_inc)
+            self.query_pr_events(owner, repo, pr_dict['number'], self.pr_id_inc)
+
+            logging.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
             self.pr_id_inc += 1
 
-            self.register_task_completion(entry_info, 'pull_requests')
+        self.register_task_completion(entry_info, 'pull_requests')
+
+    def query_labels(self, labels, pr_id):
+        logging.info('Querying PR Labels')
+        pseudo_key_gh = 'id'
+        psuedo_key_augur = 'pr_src_id'
+        table = 'pull_request_labels'
+        pr_labels_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+
+        new_labels = self.check_duplicates(labels, pr_labels_table_values, pseudo_key_gh)
+
+        if len(new_labels) == 0:
+            logging.info('No new labels to add')
+            return
+
+        logging.info(f'Found {len(new_labels)} labels')
+
+        for label_dict in new_labels:
+
+            label = {
+                'pr_label_id': self.label_id_inc,
+                'pull_request_id': pr_id,
+                'pr_src_id': label_dict['id'],
+                'pr_src_node_id': label_dict['node_id'],
+                'pr_src_url': label_dict['url'],
+                'pr_src_description': label_dict['name'],
+                'pr_src_color': label_dict['color'],
+                'pr_src_default_bool': label_dict['default'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(self.pull_request_labels_table.insert().values(label))
+            logging.info(f"Primary Key inserted in pull_request_labels table: {result.inserted_primary_key}")
+            logging.info(f"Inserted PR Labels data for PR with id {pr_id}")
+
+            self.results_counter += 1
+            self.label_id_inc += 1
+
+    def query_pr_events(self, owner, repo, gh_pr_no, pr_id):
+        logging.info('Querying PR Events')
+
+        url = (f'https://api.github.com/repos/{owner}/{repo}/issues/'
+              + f'{gh_pr_no}/events?per_page=100')
+
+        pseudo_key_gh = 'id'
+        psuedo_key_augur = 'pr_event_id'
+        table = 'pull_request_events'
+        pr_events_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+
+        pr_events = []
+        try:
+            while True:
+                r = requests.get(url, headers=self.headers)
+                self.update_rate_limit(r)
+
+                j = r.json()
+
+                new_pr_events = self.check_duplicates(j, pr_events_table_values, pseudo_key_gh)
+
+                if len(new_pr_events) == 0:
+                    logging.info('No new PR Events to add... Exiting Pagination')
+                    break
+                else:
+                    pr_events += new_pr_events
+
+                if 'next' not in r.links:
+                    break
+                else:
+                    url = r.links['next']['url']
+        except Exception as e:
+            logging.error(f'Caught Exception on url {url}')
+            logging.error(str(e))
+            logging.info(f'Not adding PR events for PR {pr_id}')
+            return
+
+        for pr_event_dict in pr_events:
+
+            if pr_event_dict['actor']:
+                cntrb_id = self.find_id_from_login(pr_event_dict['actor']['login'])
+            else:
+                cntrb_id = 1
+
+            pr_event = {
+                'pr_event_id': self.event_id_inc,
+                'pull_request_id': pr_id,
+                'cntrb_id': cntrb_id,
+                'action': pr_event_dict['event'],
+                'action_commit_hash': None,
+                'created_at': pr_event_dict['created_at'],
+                'issue_event_src_id': pr_event_dict['id'],
+                'node_id': pr_event_dict['node_id'],
+                'node_url': pr_event_dict['url'],
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
+            logging.info(f"Primary Key inserted in pull_request_events table: {result.inserted_primary_key}")
+            logging.info(f"Inserted PR Events data for PR with id {pr_id}")
+
+            self.results_counter += 1
+            self.event_id_inc += 1
 
     def query_contributors(self, entry_info):
 
