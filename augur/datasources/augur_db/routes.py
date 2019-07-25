@@ -367,6 +367,72 @@ def create_routes(server):
     server.addRepoMetric(augur_db.reviews, 'reviews')
 
     """
+    @api {get} /repo-groups/:repo_group_id/reviews-accepted Reviews Accepted (Repo Group)
+    @apiName reviews-accepted-repo-group
+    @apiGroup Evolution
+    @apiDescription Time series of number of accepted reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21035,
+                            "repo_name": "prototype-ujs",
+                            "date": "2010-01-01T00:00:00.000Z",
+                            "pull_requests": 1
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2011-01-01T00:00:00.000Z",
+                            "pull_requests": 4
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2012-01-01T00:00:00.000Z",
+                            "pull_requests": 4
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.reviews_accepted, 'reviews-accepted')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/reviews-accepted Reviews Accepted (Repo)
+    @apiName reviews-accepted-repo
+    @apiGroup Evolution
+    @apiDescription Time series of number of accepted reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2016-01-01T00:00:00.000Z",
+                            "pull_requests": 30
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2017-01-01T00:00:00.000Z",
+                            "pull_requests": 37
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2018-01-01T00:00:00.000Z",
+                            "pull_requests": 46
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.reviews_accepted, 'reviews-accepted')
+
+    """
     @api {get} /repo-groups/:repo_group_id/issues-new Issues New (Repo Group)
     @apiName issues-new-repo-group
     @apiGroup Evolution
