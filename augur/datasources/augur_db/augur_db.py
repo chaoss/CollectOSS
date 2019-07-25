@@ -1838,7 +1838,7 @@ class Augur(object):
         issuesSQL = None
         if repo_id:
             issuesSQL = s.sql.text("""
-                select repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
+                SELECT repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
                 from (
                         select repo_id,
                                 repo_name,
@@ -1867,7 +1867,7 @@ class Augur(object):
             """)
         else:
             issuesSQL = s.sql.text("""
-                select repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
+                SELECT repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
                 from (
                         select repo_id,
                                 repo_name,
@@ -2754,4 +2754,100 @@ class Augur(object):
                 ORDER by OPEN_DAY DESC
             """)
             results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
+            return results
+
+    @annotate(tag="aggregate-summary")
+    def aggregate_summary(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
+
+        if not begin_date:
+            begin_date = datetime.datetime.now()
+            # Subtract 1 year and leap year check
+            try:
+                begin_date = begin_date.replace(year=begin_date.year-1)
+            except ValueError:
+                begin_date = begin_date.replace(year=begin_date.year-1, day=begin_date.day-1)
+            begin_date = begin_date.strftime('%Y-%m-%d')
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            summarySQL = s.sql.text("""
+                SELECT (
+                    SELECT sum(watchers_count) AS watcher_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                ) AS watcher_count,
+                (
+                    SELECT sum(stars_count) AS star_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                ) AS star_count,
+                (
+                    SELECT sum(fork_count) AS fork_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                ) AS fork_count,
+                (
+                    SELECT count(*) AS merged_count
+                    FROM (
+                        SELECT DISTINCT issue_events.issue_id
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id JOIN repo ON issues.repo_id = repo.repo_id
+                        WHERE action = 'merged'
+                        AND repo_group_id = :repo_group_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    ) a 
+                ) AS merged_count,
+                committer_count, commit_count FROM (
+                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
+                    FROM (
+                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits JOIN repo ON commits.repo_id = repo.repo_id
+                        WHERE repo_group_id = :repo_group_id
+                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_author_name
+                    ) temp
+                ) commit_data
+            """)
+            results = pd.read_sql(summarySQL, self.db, params={'repo_group_id': repo_group_id,
+                                                            'begin_date': begin_date, 'end_date': end_date})
+            return results
+        else:
+            summarySQL = s.sql.text("""
+                SELECT 
+                (
+                    SELECT sum(watchers_count) AS watcher_count
+                    FROM repo_info 
+                    WHERE repo_info.repo_id = :repo_id
+                ) AS watcher_count,
+                (
+                    SELECT sum(stars_count) AS star_count
+                    FROM repo_info
+                    WHERE repo_info.repo_id = :repo_id
+                ) AS star_count,
+                (
+                    SELECT sum(fork_count) AS fork_count
+                    FROM repo_info
+                    WHERE repo_info.repo_id = :repo_id
+                ) AS fork_count,
+                (
+                    SELECT count(*) AS merged_count
+                    FROM (
+                        SELECT DISTINCT issue_events.issue_id
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
+                        WHERE action = 'merged'
+                        AND repo_id = :repo_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    ) a 
+                ) AS merged_count,
+                committer_count, commit_count FROM (
+                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
+                    FROM (
+                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits
+                        WHERE repo_id = :repo_id
+                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_author_name
+                    ) temp
+                ) commit_data
+            """)
+            results = pd.read_sql(summarySQL, self.db, params={'repo_id': repo_id,
+                                                            'begin_date': begin_date, 'end_date': end_date})
             return results

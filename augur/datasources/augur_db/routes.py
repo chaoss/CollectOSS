@@ -2483,3 +2483,48 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.top_committers, 'top-committers')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/aggregate-summary Aggregate Summary (Repo Group)
+    @apiName aggregate-summary-repo-group
+    @apiGroup Experimental
+    @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "watcher_count": 69106,
+                            "star_count": 460447,
+                            "fork_count": 226841,
+                            "merged_count": 3883,
+                            "committer_count": 8553,
+                            "commit_count": 7890143
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.aggregate_summary, 'aggregate-summary')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/aggregate-summary Aggregate Summary (Repo)
+    @apiName aggregate-summary-repo
+    @apiGroup Experimental
+    @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "watcher_count": 83,
+                            "star_count": 581,
+                            "fork_count": 449,
+                            "merged_count": 0,
+                            "committer_count": 5,
+                            "commit_count": 133
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.aggregate_summary, 'aggregate-summary')
