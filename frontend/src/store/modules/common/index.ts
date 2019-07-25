@@ -28,6 +28,9 @@ const state = {
   showDetail: false,
   showTooltip: true,
   byDate: false,
+  
+  // compare test 
+  compareType: '', // repo or repo_group
 };
 
 export default {

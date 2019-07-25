@@ -64,7 +64,7 @@
               <tbody>
                 <tr v-for="group in sorted_repo_groups(sortColumn, ascending)">
                   <td>
-                    <a href="#" @click="onGitRepo(group)">{{ group.rg_name }}</a>
+                    <a href="#" @click="onRepoGroup(group)">{{ group.rg_name }}</a>
                   </td>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
@@ -104,7 +104,7 @@
 <script lang="ts">
   import Component from 'vue-class-component';
   import Vue from 'vue';
-  import {mapActions, mapGetters} from "vuex";
+  import {mapActions, mapGetters, mapMutations} from "vuex";
   import Spinner from "@/components/Spinner.vue";
   @Component({
     components: {
@@ -116,7 +116,11 @@
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
         'getRepoRelations',
         'getRepoGroups',
-      ])
+        'addRepoGroup',
+      ]),
+      ...mapMutations('common',[
+      'setComapreType',
+      ]),
     },
     computed: {
       ...mapGetters('common',[
@@ -149,6 +153,8 @@
     repo_groups!:any[];
     sorted_repo_groups!:any[];
     loaded_groups!:boolean;
+    addRepoGroup!:any;
+    setComapreType!:any;
 
 
     created() {
@@ -164,6 +170,11 @@
         this.ascending = true;
         this.sortColumn = col;
       }
+    }
+
+    onRepoGrouop(e:any) {
+      this.addRepoGroup(e)
+      this.setComapreType('repo_group')
     }
     
   }

@@ -111,7 +111,7 @@
 import Component from 'vue-class-component';
 import {Watch} from 'vue-property-decorator'
 import Vue from 'vue';
-import {mapActions, mapGetters} from "vuex";
+import {mapActions, mapGetters, mapMutations} from "vuex";
 import Spinner from '../components/Spinner.vue'
 @Component({
   components: {
@@ -123,7 +123,11 @@ import Spinner from '../components/Spinner.vue'
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       'getRepoRelations',
       'getRepos',
-    ])
+      'addRepo'
+    ]),
+    ...mapMutations('common',[
+      'setComapreType',
+    ]),
   },
   computed: {
     ...mapGetters('common', [
@@ -158,6 +162,8 @@ export default class Repos extends Vue{
   sorted_repos!:any
   getRepos!:any;
   loaded_repos!:boolean;
+  addRepo!:any;
+  setComapreType!:any;
 
 
   created() {
@@ -201,6 +207,11 @@ export default class Repos extends Vue{
       this.$store.commit('setRepo', {
         gitURL: e.url
       })
+
+      this.addRepo(e)
+
+      // set coompare tyep
+      this.setComapreType('repo')
 
       // this.$store.commit('setTab', {
       //   tab: 'git'

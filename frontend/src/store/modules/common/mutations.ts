@@ -1,6 +1,7 @@
 /* tslint:disable */
 import router from '@/router'
 import Vue from 'vue';
+import { VL_ONLY_GUIDE_CONFIG } from 'vega-lite/build/src/guide';
 export default {
   mutateCache(state: any, payload: any) {
     console.log(state, payload)
@@ -97,6 +98,30 @@ export default {
       }
     }
   },
+  mutateRepoRelation(state:any, payload:any) {
+    if(state.cache.repoRelations == null) {
+      Vue.set(state.cache, 'repoRelations', {})
+    }
+    if(state.cache.repoRelations[payload.rg_name] == null) {
+      Vue.set(state.cache.repoRelations, payload.rg_name, {})
+    }
+    Vue.set(state.cache.repoRelations[payload.rg_name], payload.url, payload.repo)
+  },
+  mutateRepoGroup(state:any, payload:any) {
+    if(state.cache.repoGroups == null){
+      Vue.set(state.cache, 'repoGroups', {})
+    }
+    Vue.set(state.cache.repoGroups, payload.rg_name, payload.group)
+  },
+  setComapreType(state:any, payload:any) {
+    if(payload == 'reset') {
+      state.compareType = ''
+    } else if (payload == 'repo' || payload == 'repo_group'){
+      state.compare = payload
+    } else {
+      return 
+    }
+  }
   // setDates (state: any, payload: any) {
   //   if (payload.startDate) {
   //     state.startDate = new Date(payload.startDate)

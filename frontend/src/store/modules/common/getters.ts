@@ -54,5 +54,8 @@ export default {
     },
     loaded_groups: (state:any) => {
         return state.cache.getRepoGroups != null;
+    },
+    comapre_type: (state:any) => {
+      return state.compareType;
     }
 };
