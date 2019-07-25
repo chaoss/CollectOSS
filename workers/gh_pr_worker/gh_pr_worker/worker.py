@@ -15,7 +15,6 @@ import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
 
-
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 class CollectorTask:
