@@ -692,6 +692,64 @@ class Augur(object):
                                                                            'begin_date': begin_date, 'end_date': end_date})
             return results
 
+    @annotate(tag='reviews')
+    def reviews(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+        """ Returns a timeseris of new reviews or pull requests opened
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of new reviews/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            reviews_SQL = s.sql.text("""
+                SELECT
+                    pull_requests.repo_id,
+                    repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_created_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id IN
+                    (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND pull_requests.pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                GROUP BY pull_requests.repo_id, repo_name, date
+                ORDER BY pull_requests.repo_id, date
+            """)
+
+            results = pd.read_sql(reviews_SQL, self.db,
+                                  params={'period': period, 'repo_group_id': repo_group_id,
+                                          'begin_date': begin_date, 'end_date': end_date })
+            return results
+
+        else:
+            reviews_SQL = s.sql.text("""
+                SELECT
+                    repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_created_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id = :repo_id
+                AND pull_requests.pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY date, repo_name
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(reviews_SQL, self.db,
+                                  params={'period': period, 'repo_id': repo_id,
+                                          'begin_date': begin_date, 'end_date': end_date})
+            return results
+
     @annotate(tag='issues-new')
     def issues_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of new issues opened.
@@ -1388,7 +1446,7 @@ class Augur(object):
             repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
             if repo_name.empty:
                 return pd.DataFrame()
-             
+
             repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
                 SELECT packages.name as repo_name, licenses.short_name, COUNT(files_licenses.file_id) as count
@@ -1399,11 +1457,11 @@ class Augur(object):
                 GROUP BY licenses.short_name, repo_name
                 ORDER BY count DESC
             """)
-        
+
         results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
 
         return results
-                
+
     @annotate(tag='license-coverage')
     def license_coverage(self, repo_group_id, repo_id=None):
         """Returns the declared license
@@ -1475,11 +1533,11 @@ class Augur(object):
                 )b
                 WHERE a.name = b.name
             """)
-        
+
         results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
 
         return results
-    
+
     @annotate(tag='license_count')
     def license_count(self, repo_group_id, repo_id=None):
         """Returns the declared license
@@ -1579,13 +1637,13 @@ class Augur(object):
                         ORDER BY license_declared_file DESC
                     ) c
                 WHERE a.name = b.name
-                AND b.name = c.name               
+                AND b.name = c.name
             """)
-        
+
         results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
 
         return results
-    
+
 
     @annotate(tag='issues-maintainer-response-duration')
     def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
@@ -1661,7 +1719,7 @@ class Augur(object):
 
     @annotate(tag='committers')
     def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='day'):
-        
+
         if not begin_date:
             begin_date = '1970-1-1 00:00:01'
         if not end_date:
@@ -1706,7 +1764,7 @@ class Augur(object):
 
         results = pd.read_sql(committersSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date, 'period':period})
 
-        return results 
+        return results
 
 
     #####################################
