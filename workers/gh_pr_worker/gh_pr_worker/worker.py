@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import time
+import traceback
 from datetime import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
@@ -260,18 +261,19 @@ class GHPullRequestWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
-                try:
-                    git_url = message.entry_info['task']['given']['git_url']
-                    self.query_pr({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
-                except Exception as e:
-                    logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-                    logging.info("Error encountered: " + str(e) + "\n")
-                    logging.info("Notifying broker and logging task failure in database...\n")
+                # try:
+                git_url = message.entry_info['task']['given']['git_url']
+                self.query_pr({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                # except Exception as e:
+                #     logging.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
+                #     logging.error("Error encountered: " + str(e) + "\n")
+                #     traceback.format_exc()
+                #     logging.info("Notifying broker and logging task failure in database...\n")
 
-                    message.entry_info['task']['worker_id'] = self.config['id']
+                #     message.entry_info['task']['worker_id'] = self.config['id']
 
-                    requests.post("http://localhost:{}/api/unstable/task_error".format(
-                        self.config['broker_port']), json=message.entry_info['task'])
+                #     requests.post("http://localhost:{}/api/unstable/task_error".format(
+                #         self.config['broker_port']), json=message.entry_info['task'])
 
                     # Add to history table
                     # task_history = {
@@ -298,9 +300,7 @@ class GHPullRequestWorker:
                     # logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
 
                     # Reset results counter for next task
-                    self.results_counter = 0
-                    logging.info("passing")
-                    pass
+                self.results_counter = 0
                 logging.info("passed")
 
     def query_pr(self, entry_info):
@@ -356,6 +356,7 @@ class GHPullRequestWorker:
 
             pr = {
                 'pull_request_id': self.pr_id_inc,
+                'repo_id': repo_id,
                 'pr_url': pr_dict['url'],
                 'pr_src_id': pr_dict['id'],
                 'pr_src_node_id': None,
@@ -486,10 +487,10 @@ class GHPullRequestWorker:
 
         for pr_event_dict in pr_events:
 
-            if 'actor' in pr_event_dict:
+            if pr_event_dict['actor']:
                 cntrb_id = self.find_id_from_login(pr_event_dict['actor']['login'])
             else:
-                cntrb_id = None
+                cntrb_id = 1
 
             pr_event = {
                 'pr_event_id': self.event_id_inc,
