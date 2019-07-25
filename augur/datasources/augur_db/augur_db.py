@@ -1031,6 +1031,70 @@ class Augur(object):
                                                                     'begin_date': begin_date, 'end_date': end_date})
             return results
 
+    @annotate(tag='review-duration')
+    def review_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
+        """ Returns the duartion of each accepted review.
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of pull request id with the corresponding duration
+        """
+        if not begin_date:
+            begin_date = '1970-1-1'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            review_duration_SQL = s.sql.text("""
+                SELECT
+                    pull_requests.repo_id,
+                    repo.repo_name,
+                    pull_requests.pull_request_id,
+                    pull_requests.pr_created_at AS created_at,
+                    pull_requests.pr_merged_at AS merged_at,
+                    (pr_merged_at - pr_created_at) AS duration
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id IN
+                    (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND pr_merged_at IS NOT NULL
+                AND pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                ORDER BY pull_requests.repo_id, pull_requests.pull_request_id
+            """)
+
+            results = pd.read_sql(review_duration_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id,
+                                          'begin_date': begin_date,
+                                          'end_date': end_date})
+            results['duration'] = results['duration'].astype(str)
+            return results
+        else:
+            review_duration_SQL = s.sql.text("""
+                SELECT
+                    repo_name,
+                    pull_request_id,
+                    pr_created_at AS created_at,
+                    pr_merged_at AS merged_at,
+                    (pr_merged_at - pr_created_at) AS duration
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id = :repo_id
+                AND pr_merged_at IS NOT NULL
+                AND pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                ORDER BY pull_requests.repo_id, pull_request_id
+            """)
+
+            results = pd.read_sql(review_duration_SQL, self.db,
+                                  params={'repo_id': repo_id,
+                                          'begin_date': begin_date,
+                                          'end_date': end_date})
+            results['duration'] = results['duration'].astype(str)
+            return results
+
     @annotate(tag='issue-duration')
     def issue_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
         """Returns the duration of each issue.
