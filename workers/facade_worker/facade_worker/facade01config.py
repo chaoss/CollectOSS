@@ -265,7 +265,10 @@ class Config:
                 config_text = __config_file.read()
                 __config = json.loads(config_text)
                 if name is not None:
-                    return(__config[section][name])
+                    try:
+                        return(__config[section][name])
+                    except:
+                        return default
                 else:
                     return(__config[section])
 
