@@ -167,6 +167,12 @@ class GHPullRequestWorker:
         rs = pd.read_sql(max_reviewer_id_SQL, self.db)
         reviewer_start = rs.iloc[0]['reviewer_id'] if rs.iloc[0]['reviewer_id'] else 25150
 
+        max_assignee_id_SQL = s.sql.text("""
+            SELECT MAX(pr_assignee_map_id) AS assignee_id FROM pull_request_assignees
+        """)
+        rs = pd.read_sql(max_assignee_id_SQL, self.db)
+        assignee_start = rs.iloc[0]['assignee_id'] if rs.iloc[0]['assignee_id'] else 25150
+
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.pr_id_inc = (pr_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
@@ -174,6 +180,7 @@ class GHPullRequestWorker:
         self.label_id_inc = (label_start + 1)
         self.event_id_inc = (event_start + 1)
         self.reviewer_id_inc = (reviewer_start + 1)
+        self.assignee_id_inc = (assignee_start + 1)
 
         # self.run()
 
@@ -566,6 +573,51 @@ class GHPullRequestWorker:
             self.results_counter += 1
 
         logging.info(f"Inserted PR Reviewer data for PR with id {pr_id}")
+
+    def query_assignee(self, assignees, pr_id):
+        logging.info('Querying Assignees')
+
+        if assignees is None or len(assignees) == 0:
+            logging.info('No assignees to add')
+            return
+
+        pseudo_key_gh = 'id'
+        psuedo_key_augur = 'pr_assignee_map_id'
+        table = 'pull_request_assignees'
+        assignee_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+
+        new_assignees = self.check_duplicates(assignees, assignee_table_values, pseudo_key_gh)
+
+        if len(new_assignees) == 0:
+            logging.info('No new assignees to add')
+            return
+
+        logging.info(f'Found {len(new_assignees)} assignees')
+
+        for assignee_dict in assignees:
+
+            if 'login' in assignee_dict:
+                cntrb_id = self.find_id_from_login(assignee_dict['login'])
+            else:
+                cntrb_id = 1
+
+            assignee = {
+                'pr_assignee_map_id': self.assignee_id_inc,
+                'pull_request_id': pr_id,
+                'contrib_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
+            logging.info(f'Added PR Assignee {result.inserted_primary_key}')
+
+            self.assignee_id_inc += 1
+            self.results_counter += 1
+
+        logging.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
 
     def query_contributors(self, entry_info):
 
