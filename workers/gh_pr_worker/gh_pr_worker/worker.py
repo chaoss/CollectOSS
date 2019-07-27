@@ -161,12 +161,19 @@ class GHPullRequestWorker:
         rs = pd.read_sql(max_pr_event_id_SQL, self.db)
         event_start = int(rs.iloc[0]['event_id']) if rs.iloc[0]['event_id'] else 25150
 
+        max_reviewer_id_SQL = s.sql.text("""
+            SELECT MAX(pr_reviewer_map_id) AS reviewer_id FROM pull_request_reviewers
+        """)
+        rs = pd.read_sql(max_reviewer_id_SQL, self.db)
+        reviewer_start = rs.iloc[0]['reviewer_id'] if rs.iloc[0]['reviewer_id'] else 25150
+
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.pr_id_inc = (pr_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
         self.label_id_inc = (label_start + 1)
         self.event_id_inc = (event_start + 1)
+        self.reviewer_id_inc = (reviewer_start + 1)
 
         # self.run()
 
@@ -401,6 +408,7 @@ class GHPullRequestWorker:
 
             self.query_labels(pr_dict['labels'], self.pr_id_inc)
             self.query_pr_events(owner, repo, pr_dict['number'], self.pr_id_inc)
+            self.query_reviewers(pr_dict['requested_reviewers'], self.pr_id_inc)
 
             logging.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
@@ -513,6 +521,51 @@ class GHPullRequestWorker:
 
             self.results_counter += 1
             self.event_id_inc += 1
+
+    def query_reviewers(self, reviewers, pr_id):
+        logging.info('Querying Reviewers')
+
+        if reviewers is None or len(reviewers) == 0:
+            logging.info('No reviewers to add')
+            return
+
+        pseudo_key_gh = 'id'
+        psuedo_key_augur = 'pr_reviewer_map_id'
+        table = 'pull_request_reviewers'
+        reviewers_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+
+        new_reviewers = self.check_duplicates(reviewers, reviewers_table_values, pseudo_key_gh)
+
+        if len(new_reviewers) == 0:
+            logging.info('No new reviewers to add')
+            return
+
+        logging.info(f'Found {len(new_reviewers)} reviewers')
+
+        for reviewers_dict in reviewers:
+
+            if 'login' in reviewers_dict:
+                cntrb_id = self.find_id_from_login(reviewers_dict['login'])
+            else:
+                cntrb_id = 1
+
+            reviewer = {
+                'pr_reviewer_map_id': self.reviewer_id_inc,
+                'pull_request_id': pr_id,
+                'cntrb_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
+            logging.info(f"Added PR Reviewer {result.inserted_primary_key}")
+
+            self.reviewer_id_inc += 1
+            self.results_counter += 1
+
+        logging.info(f"Inserted PR Reviewer data for PR with id {pr_id}")
 
     def query_contributors(self, entry_info):
 
