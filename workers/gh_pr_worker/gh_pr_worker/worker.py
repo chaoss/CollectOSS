@@ -173,6 +173,12 @@ class GHPullRequestWorker:
         rs = pd.read_sql(max_assignee_id_SQL, self.db)
         assignee_start = rs.iloc[0]['assignee_id'] if rs.iloc[0]['assignee_id'] else 25150
 
+        max_pr_meta_id_SQL = s.sql.text("""
+            SELECT MAX(pr_repo_meta_id) AS pr_meta_id FROM pull_request_meta
+        """)
+        rs = pd.read_sql(max_pr_meta_id_SQL, self.db)
+        pr_meta_id_start = rs.iloc[0]['pr_meta_id'] if rs.iloc[0]['pr_meta_id'] else 25150
+
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.pr_id_inc = (pr_start + 1)
         self.cntrb_id_inc = (cntrb_start + 1)
@@ -181,6 +187,7 @@ class GHPullRequestWorker:
         self.event_id_inc = (event_start + 1)
         self.reviewer_id_inc = (reviewer_start + 1)
         self.assignee_id_inc = (assignee_start + 1)
+        self.pr_meta_id_inc = (pr_meta_id_start + 1)
 
         # self.run()
 
@@ -416,6 +423,7 @@ class GHPullRequestWorker:
             self.query_labels(pr_dict['labels'], self.pr_id_inc)
             self.query_pr_events(owner, repo, pr_dict['number'], self.pr_id_inc)
             self.query_reviewers(pr_dict['requested_reviewers'], self.pr_id_inc)
+            self.query_pr_meta(pr_dict['head'], pr_dict['base'], self.pr_id_inc)
 
             logging.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
@@ -618,6 +626,75 @@ class GHPullRequestWorker:
             self.results_counter += 1
 
         logging.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
+
+    def query_pr_meta(self, head, base,  pr_id):
+        logging.info('Querying PR Meta')
+
+        pseudo_key_gh = 'sha'
+        psuedo_key_augur = 'pr_sha'
+        table = 'pull_request_meta'
+        meta_table_values = self.get_table_values({psuedo_key_augur: pseudo_key_gh}, [table])
+
+        new_head = self.check_duplicates([head], meta_table_values, pseudo_key_gh)
+        new_base = self.check_duplicates([base], meta_table_values, pseudo_key_gh)
+
+        if new_head[0]:
+            if 'login' in new_head[0]['user']:
+                cntrb_id = self.find_id_from_login(new_head[0]['user']['login'])
+            else:
+                cntrb_id = 1
+
+            pr_meta = {
+                'pr_repo_meta_id': self.pr_meta_id_inc,
+                'pull_request_id': pr_id,
+                'pr_head_or_base': 'head',
+                'pr_src_meta_label': new_head[0]['label'],
+                'pr_src_meta_ref': new_head[0]['ref'],
+                'pr_sha': new_head[0]['sha'],
+                'cntrb_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
+            logging.info(f'Added PR Head {result.inserted_primary_key}')
+
+            self.pr_meta_id_inc += 1
+            self.results_counter += 1
+        else:
+            logging.info('No new PR Head data to add')
+
+        if new_base:
+            if 'login' in new_base[0]['user']:
+                cntrb_id = self.find_id_from_login(new_base[0]['user']['login'])
+            else:
+                cntrb_id = 1
+
+            pr_meta = {
+                'pr_repo_meta_id': self.pr_meta_id_inc,
+                'pull_request_id': pr_id,
+                'pr_head_or_base': 'base',
+                'pr_src_meta_label': new_base[0]['label'],
+                'pr_src_meta_ref': new_base[0]['ref'],
+                'pr_sha': new_base[0]['sha'],
+                'cntrb_id': cntrb_id,
+                'tool_source': self.tool_source,
+                'tool_version': self.tool_version,
+                'data_source': self.data_source,
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
+            logging.info(f'Added PR Base {result.inserted_primary_key}')
+
+            self.pr_meta_id_inc += 1
+            self.results_counter += 1
+        else:
+            logging.info('No new PR Base data to add')
+
+        logging.info(f'Finished inserting PR Head & Base data for PR with id {pr_id}')
 
     def query_contributors(self, entry_info):
 
