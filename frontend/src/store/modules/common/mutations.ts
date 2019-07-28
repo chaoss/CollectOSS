@@ -113,15 +113,6 @@ export default {
     }
     Vue.set(state.cache.repoGroups, payload.rg_name, payload.group)
   },
-  setComapreType(state:any, payload:any) {
-    if(payload == 'reset') {
-      state.compareType = ''
-    } else if (payload == 'repo' || payload == 'repo_group'){
-      state.compare = payload
-    } else {
-      return 
-    }
-  }
   // setDates (state: any, payload: any) {
   //   if (payload.startDate) {
   //     state.startDate = new Date(payload.startDate)

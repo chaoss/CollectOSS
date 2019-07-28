@@ -109,7 +109,6 @@
 
 <script lang="ts">
 import Component from 'vue-class-component';
-import {Watch} from 'vue-property-decorator'
 import Vue from 'vue';
 import {mapActions, mapGetters, mapMutations} from "vuex";
 import Spinner from '../components/Spinner.vue'
@@ -125,9 +124,12 @@ import Spinner from '../components/Spinner.vue'
       'getRepos',
       'addRepo'
     ]),
-    ...mapMutations('common',[
-      'setComapreType',
+    ...mapMutations('compare',[
+      'setBaseRepo',
     ]),
+    ...mapActions('compare',[
+      'addComparedRepo',
+    ])
   },
   computed: {
     ...mapGetters('common', [
@@ -163,7 +165,8 @@ export default class Repos extends Vue{
   getRepos!:any;
   loaded_repos!:boolean;
   addRepo!:any;
-  setComapreType!:any;
+  setBaseRepo!:any;
+  addComparedRepo!:any;
 
 
   created() {
@@ -204,14 +207,13 @@ export default class Repos extends Vue{
         owner = null //e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
         repo = e.url.slice(e.url.lastIndexOf('/') + 1)
       }
-      this.$store.commit('setRepo', {
-        gitURL: e.url
-      })
+      // this.$store.commit('setRepo', {
+      //   gitURL: e.url
+      // })
 
-      this.addRepo(e)
+      this.setBaseRepo(e);
 
-      // set coompare tyep
-      this.setComapreType('repo')
+      this.addRepo(e);
 
       // this.$store.commit('setTab', {
       //   tab: 'git'

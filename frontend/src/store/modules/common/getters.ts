@@ -2,6 +2,9 @@ export default {
     repoRelationsInfo: (state: any) => {
       return state.cache.repoRelations;
     },
+    repoGroups: (state:any) => {
+        return state.cache.repoGroups;
+    },
     groupsInfo: (state: any) => {
       return state.cache.groupsInfo;
     },
@@ -55,7 +58,19 @@ export default {
     loaded_groups: (state:any) => {
         return state.cache.getRepoGroups != null;
     },
-    comapre_type: (state:any) => {
-      return state.compareType;
-    }
+    getRepoByURL: (state:any) => (url:string, rg_name?:string) => {
+        if (rg_name != null) {
+            return state.cache['repoRelations'][rg_name][url]
+        }
+
+        for(var name in state.cache['repoRelations']) {
+
+            for(var prop in state.cache['repoRelations'][name]) {
+                if (prop == url) {
+                    return state.cache['repoRelations'][name][url]
+                }
+            }
+        }
+        return undefined
+    },
 };
