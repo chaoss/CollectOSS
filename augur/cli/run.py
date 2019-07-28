@@ -99,8 +99,10 @@ def cli(app):
         )
 
     worker_pids = []
-    process = subprocess.Popen(['ps', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, notused = process.communicate()
+    # prep for altmethod 2?:
+    # process = subprocess.Popen(['ps', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # stdout, notused = process.communicate()
+    # altmethod 1:
     # data = [(int(p), c) for p, c in [x.rstrip('\n').split(' ', 1) \
     #     for x in os.popen('ps h -eo pid:1,command')]]
     # for p in psutil.process_iter():
@@ -108,23 +110,24 @@ def cli(app):
     #     if 'nginx' in p.name() or 'nginx' in ' '.join(p.cmdline()):
     #         p.terminate()
     #         p.wait()
-    try:
-        for line in stdout.splitlines():
-        # for line in data:
-            logger.info(line)
-            pid, cmdline = line.split(' ', 1)
-            logger.info("HERE {}".format(type(cmdline)))
-            if 'github_worker' in cmdline and github_worker_switch == 1:
-                # logger.info(cmdline)
-                logger.info("Killing: {}".format(line))
-            if 'repo_info_worker' in cmdline and repo_info_worker_switch == 1:
-                # logger.info(cmdline)
-                logger.info("Killing: {}".format(line))
-            if 'insight_worker' in cmdline and insight_worker_switch == 1:
-                # logger.info(cmdline)
-                logger.info("Killing: {}".format(line))
-    except:
-        pass
+    # altmethod 2:
+    # try:
+    #     for line in stdout.splitlines():
+    #     # for line in data:
+    #         logger.info(line)
+    #         pid, cmdline = line.split(' ', 1)
+    #         logger.info("HERE {}".format(type(cmdline)))
+    #         if 'github_worker' in cmdline and github_worker_switch == 1:
+    #             # logger.info(cmdline)
+    #             logger.info("Killing: {}".format(line))
+    #         if 'repo_info_worker' in cmdline and repo_info_worker_switch == 1:
+    #             # logger.info(cmdline)
+    #             logger.info("Killing: {}".format(line))
+    #         if 'insight_worker' in cmdline and insight_worker_switch == 1:
+    #             # logger.info(cmdline)
+    #             logger.info("Killing: {}".format(line))
+    # except:
+    #     pass
 
     if github_worker_switch == 1:
         gh_pids = get_process_id("/bin/sh -c cd workers/augur_worker_github && github_worker")
