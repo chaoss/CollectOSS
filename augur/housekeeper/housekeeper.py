@@ -35,14 +35,13 @@ class Housekeeper:
         all_repos = rs['repo_git'].values.tolist()
 
         # List of tasks that need periodic updates
-        self.__updatable = self.sort_issue_repos(jobs)
+        self.__updatable = self.prep_jobs(jobs)
 
         self.__processes = []
-        # logging.info("HK pid: {}".format(str(os.getpid())))
         self.__updater()
 
     @staticmethod
-    def updater_process(broker_port, broker, model, delay, repos, repo_group_id):
+    def updater_process(broker_port, broker, model, given, delay, repos, repo_group_id):
         """
         Controls a given plugin's update process
         :param name: name of object to be updated 
@@ -55,34 +54,51 @@ class Housekeeper:
             # Waiting for compatible worker
             while True:
                 for worker in list(broker._getvalue().keys()):
-                    if model in broker[worker]['models']:
+                    if model in broker[worker]['models'] and given in broker[worker]['given']:
                         compatible_worker_found = True
                 if compatible_worker_found:
                     logging.info("Housekeeper recognized that the broker has a worker that " + 
                         "can handle the {} model... beginning to distribute maintained tasks".format(model))
                     time.sleep(10)
                     while True:
-                        logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, repo_group_id))
+                        logging.info('Housekeeper updating {} model for subsection: {} with given {}...'.format(
+                            model, repo_group_id, given[0]))
                         
-                        for repo in repos:
-                            task = {
-                                "job_type": "MAINTAIN", 
-                                "models": [model], 
-                                "given": {
-                                    "git_url": repo['repo_git']
+                        if given[0] == 'git_url':
+                            for repo in repos:
+                                task = {
+                                    "job_type": "MAINTAIN", 
+                                    "models": [model], 
+                                    "display_name": "{} model for git url: {}".format(model, repo['repo_git']),
+                                    "given": {
+                                        "git_url": repo['repo_git']
+                                    }
                                 }
-                            }
-                            if "focused_task" in repo:
-                                task["focused_task"] = repo['focused_task']
-                            # logging.info(str(task))
+                                if "focused_task" in repo:
+                                    task["focused_task"] = repo['focused_task']
+                                try:
+                                    requests.post('http://localhost:{}/api/unstable/task'.format(
+                                        broker_port), json=task, timeout=10)
+                                except Exception as e:
+                                    logging.info("Error encountered: {}".format(e))
+
+                                time.sleep(0.5)
+                        elif given[0] == 'repo_group':
+                            task = {
+                                    "job_type": "MAINTAIN", 
+                                    "models": [model], 
+                                    "display_name": "{} model for repo group id: {}".format(model, repo_group_id),
+                                    "given": {
+                                        "repo_group": repos
+                                    }
+                                }
                             try:
                                 requests.post('http://localhost:{}/api/unstable/task'.format(
                                     broker_port), json=task, timeout=10)
                             except Exception as e:
-                                logging.info(str(e))
+                                logging.info("Error encountered: {}".format(e))
 
-                            time.sleep(0.5)
-                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(repos))))
+                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(repos)))
                         time.sleep(delay)
                     break
                 time.sleep(3)
@@ -102,7 +118,7 @@ class Housekeeper:
             updates = self.__updatable
         for update in updates:
             up = Process(target=self.updater_process, args=(self.broker_port, self.broker, update['model'], 
-                update['delay'], update['repos'], update['repo_group_id']), daemon=True)
+                update['given'], update['delay'], update['repos'], update['repo_group_id']), daemon=True)
             up.start()
             self.__processes.append(up)
 
@@ -135,7 +151,7 @@ class Housekeeper:
         for process in self.__processes:
             process.terminate()
 
-    def sort_issue_repos(self, jobs):
+    def prep_jobs(self, jobs):
 
         for job in jobs:
             if job['repo_group_id'] != 0:
@@ -154,11 +170,17 @@ class Housekeeper:
 
             repoIdSQL = s.sql.text("""
                     SELECT since_id_str FROM gh_worker_job
-                """)
+                    WHERE job_model = '{}'
+                """.format(job['model']))
 
             job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
 
-            last_id = int(job_df.iloc[0]['since_id_str'])
+            # If a last id is not recorded, start from beginning of repos 
+            #   (first id is not necessarily 0)
+            try:
+                last_id = int(job_df.iloc[0]['since_id_str'])
+            except:
+                last_id = 0
 
             jobHistorySQL = s.sql.text("""
                     SELECT max(history_id) AS history_id, status FROM gh_worker_history
