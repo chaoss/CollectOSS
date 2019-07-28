@@ -2,8 +2,12 @@
   <div style="margin: 0 auto;" class="sl-spinner" v-show="status" :style="spinnerStyle"></div>
 </template>
 
-<script>
-  export default {
+<script lang="ts">
+  import Component from 'vue-class-component';
+  import Vue from 'vue';
+  import {mapActions, mapGetters} from "vuex";
+
+  @Component({
     props: {
       status: {
         type: Boolean,
@@ -35,57 +39,60 @@
         default: '#6589b6'
       }
     },
+  })
+  export default class Spinner extends Vue {
+    rotationAnimations: string[] = ['forward', 'backward'];
+    sizeUnits:string = 'px';
+    timeUnits:string = 's';
+    // declare in component decorators
+    status!:boolean;
+    rotation!:boolean;
+    size!:number;
+    depth!:number;
+    speed!:number;
+    color!:string;
 
-    data() {
+
+
+    get rotationDirection() {
+      return this.rotation ? this.rotationAnimations[0] : this.rotationAnimations[1];
+    }
+
+    get spinnerSize() {
+      return this.size + this.sizeUnits;
+    }
+
+    get spinnerDepth() {
+      return this.depth + this.sizeUnits;
+    }
+
+    get spinnerSpeed() {
+      return this.speed + this.timeUnits;
+    }
+
+    get spinnerStyle() {
       return {
-        rotationAnimations: ['forward', 'backward'],
-        sizeUnits: 'px',
-        timeUnits: 's'
+        borderTopColor: this.hexToRGB(this.color, 0.15),
+        borderRightColor: this.hexToRGB(this.color, 0.15),
+        borderBottomColor: this.hexToRGB(this.color, 0.15),
+        borderLeftColor: this.color,
+        width: this.spinnerSize,
+        height: this.spinnerSize,
+        borderWidth: this.spinnerDepth,
+        animationName: this.rotationDirection,
+        animationDuration: this.spinnerSpeed
       }
-    },
+    }
 
-    computed: {
-      rotationDirection() {
-        return this.rotation ? this.rotationAnimations[0] : this.rotationAnimations[1];
-      },
+    hexToRGB(hex:string, alpha:number) {
+      var r = parseInt(hex.slice(1, 3), 16),
+              g = parseInt(hex.slice(3, 5), 16),
+              b = parseInt(hex.slice(5, 7), 16);
 
-      spinnerSize() {
-        return this.size + this.sizeUnits;
-      },
-
-      spinnerDepth() {
-        return this.depth + this.sizeUnits;
-      },
-
-      spinnerSpeed() {
-        return this.speed + this.timeUnits;
-      },
-
-      spinnerStyle() {
-        return {
-          borderTopColor: this.hexToRGB(this.color, 0.15),
-          borderRightColor: this.hexToRGB(this.color, 0.15),
-          borderBottomColor: this.hexToRGB(this.color, 0.15),
-          borderLeftColor: this.color,
-          width: this.spinnerSize,
-          height: this.spinnerSize,
-          borderWidth: this.spinnerDepth,
-          animationName: this.rotationDirection,
-          animationDuration: this.spinnerSpeed
-        }
-      }
-    },
-    methods: {
-      hexToRGB(hex, alpha) {
-        var r = parseInt(hex.slice(1, 3), 16),
-            g = parseInt(hex.slice(3, 5), 16),
-            b = parseInt(hex.slice(5, 7), 16);
-
-        if (alpha) {
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        } else {
-            return `rgb(${r}, ${g}, ${b})`;
-        }
+      if (alpha) {
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      } else {
+        return `rgb(${r}, ${g}, ${b})`;
       }
     }
   }

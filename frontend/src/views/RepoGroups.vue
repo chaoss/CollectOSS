@@ -8,8 +8,10 @@
       </div>
     </div>
 
+
+    <spinner v-if="!loaded_groups"></spinner>
     <!-- Default Light Table -->
-    <div :v-show="loaded" class="row">
+    <div v-if="loaded_groups" class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
@@ -22,37 +24,38 @@
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
                     <div class="row">
                       <div class="col col-9">Name</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn">
+                      </div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_description')"> 
                     <div class="row">
                       <div class="col col-9">Description</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_description' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_description' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_website')"> 
                     <div class="row">
                       <div class="col col-9">Website</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_website' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_website' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')"> 
                     <div class="row">
                       <div class="col col-9">Last Modified</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_last_modified' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_last_modified' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_type')"> 
                     <div class="row">
                       <div class="col col-9">Type</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_type' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_type' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
                     <div class="row">
                       <div class="col col-9">Repo Count</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0">Options</th>
@@ -61,7 +64,7 @@
               <tbody>
                 <tr v-for="group in sorted_repo_groups(sortColumn, ascending)">
                   <td>
-                    <a href="#" @click="onGitRepo(group)">{{ group.rg_name }}</a>
+                    <a href="#" @click="onRepoGroup(group)">{{ group.rg_name }}</a>
                   </td>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
@@ -101,22 +104,31 @@
 <script lang="ts">
   import Component from 'vue-class-component';
   import Vue from 'vue';
-  import {mapActions, mapGetters} from "vuex";
+  import {mapActions, mapGetters, mapMutations} from "vuex";
+  import Spinner from "@/components/Spinner.vue";
   @Component({
+    components: {
+      Spinner,
+    },
     methods: {
       ...mapActions('common',[
         'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
         'getRepoRelations',
         'getRepoGroups',
-      ])
+        'addRepoGroup',
+      ]),
+      ...mapMutations('common',[
+      'setComapreType',
+      ]),
     },
     computed: {
       ...mapGetters('common',[
         'repoRelationsInfo',
         'groupsInfo',
         'sorted_repo_groups',
-        'repo_groups'
+        'repo_groups',
+        'loaded_groups',
       ])
     },
   })
@@ -140,10 +152,13 @@
     getRepoGroups!:any;
     repo_groups!:any[];
     sorted_repo_groups!:any[];
+    loaded_groups!:boolean;
+    addRepoGroup!:any;
+    setComapreType!:any;
 
 
     created() {
-      if(this.repo_groups == null){
+      if(!this.loaded_groups){
         this.getRepoGroups()
       }
     }
@@ -155,6 +170,11 @@
         this.ascending = true;
         this.sortColumn = col;
       }
+    }
+
+    onRepoGrouop(e:any) {
+      this.addRepoGroup(e)
+      this.setComapreType('repo_group')
     }
     
   }

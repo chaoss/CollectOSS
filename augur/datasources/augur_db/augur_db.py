@@ -2621,7 +2621,8 @@ class Augur(object):
                 repo.repo_status,
                 a.commits_all_time,
                 b.issues_all_time ,
-                rg_name
+                rg_name,
+                repo.repo_group_id
             FROM
                 repo
                 left outer join
