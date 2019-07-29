@@ -123,5 +123,28 @@ export default {
         } catch(error) {
             throw error;
         }
+    },
+    async addRepo(context:any, payload:any) {
+         return new Promise((resolve, reject) => {
+             setTimeout(()=>{
+                let rg_name = payload.rg_name || undefined
+                let repo_id = payload.repo_id || undefined
+                let repo_group_id = payload.repo_group_id || undefined
+                let gitURL = payload.url || undefined
+                let repo:Repo = context.state.AugurAPI.Repo({gitURL:gitURL,repo_id:repo_id,repo_group_id:repo_group_id})
+                
+                context.commit('mutateRepoRelation', {repo:repo, url: gitURL,rg_name:rg_name})
+                resolve(repo)
+             },2000)
+         })
+    },
+    async addRepoGroup(context:any, payload:any) {
+        return new Promise((resolve,reject)=>{
+            let rg_name = payload.rg_name || undefined
+            let repo_group_id = payload.repo_group_id || undefined
+            let group:RepoGroup = context.state.AugurAPI.RepoGroup({repo_group_id:repo_group_id,rg_name:rg_name})
+
+            context.commit('mutateRepoGroup', {group:group, rg_name:rg_name})
+        })
     }
 };

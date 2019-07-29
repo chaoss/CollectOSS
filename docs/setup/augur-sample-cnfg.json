@@ -6,16 +6,21 @@
             "cache.type": "file"
         }
     },
+    "Controller": {
+        "broker": 1,
+        "github_worker": 0,
+        "housekeeper": 1
+    },
     "Database": {
         "connection_string": "sqlite:///:memory:",
         "database": "augur",
-        "name": "your database name here",
-        "host": "your hostname, probably localhost for development",
-        "password": "your password",
-        "port": "5432",
+        "host": "localhost",
+        "key": "YOUR KEY",
+        "name": "augur",
+        "password": "YOUR PASSWORD",
+        "port": "5433",
         "schema": "augur_data",
         "user": "augur",
-        "key": "your github API key",
         "zombie_id": "22"
     },
     "Development": {
@@ -23,46 +28,69 @@
         "interactive": "0"
     },
     "GHTorrent": {
-        "host": " request public GHTorrent Access by commenting here: https://github.com/chaoss/augur/issues/302",
+        "host": "mudcats.augurlabs.io",
         "name": "ghtorrent_restore",
-        "pass": "xxxx!",
+        "pass": "https://github.com/chaoss/augur/issues/302",
         "port": "3306",
-        "user": "xxxx"
+        "user": "ghdata"
     },
-    "GHTorrentPlus": {
+        "GHTorrentPlus": {
         "host": "augurlabs.io",
-        "name": "xxx",
-        "pass": "xxxx",
+        "name": "ghtorrentplus",
+        "pass": "PASSWORD!",
         "port": "3306",
-        "user": "xxx"
+        "user": "ghdata"
     },
     "GitHub": {
-        "apikey": "Your GitHub API Key"
+        "apikey": "YOUR API KEY"
+    },
+    "LibrariesIO": {
+        "apikey": "None",
+        "host": "augurlabs.io",
+        "name": "libraries.io",
+        "pass": "PASSWORD!",
+        "port": "3306",
+        "user": "ghdata"
     },
     "Plugins": [],
     "Postman": {
-        "apikey": "Your postman API Key (not necessary)"
+        "apikey": "aafac113c6e64cab9d7a0d344df88b8a"
     },
     "Plugins": [],
     "PublicWWW": {
-        "apikey": "Your publicwww API Key (not necessary)"
+        "apikey": "ec364d141ccec1da5d3242b5baebde79"
     },
-    "Controller": {
-        "broker": 1,
-        "github_worker": 0,
-        "housekeeper": 1
+    "Server": {
+        "cache_expire": 3600,
+        "host": "0.0.0.0",
+        "port": "5002",
+        "workers": 8
     },
     "Housekeeper": {
-      "jobs": [
+        "jobs": [
             {
                 "model": "issues",
-                "delay": 345000,
+                "given": ["git_url"],
+                "delay": 150000,
                 "repo_group_id": 0
             },
             {
                 "model": "repo_info",
-                "delay": 33360,
+                "given": ["git_url"],
+                "delay": 150000,
                 "repo_group_id": 0
+            },
+            {
+                "model": "commits",
+                "given": ["repo_group"],
+                "delay": 150000,
+                "repo_group_id": 0
+            },
+        {
+                "model": "pull_requests",
+        "given": ["git_url"],
+        "delay": 1000000,
+        "repo_group_id": 0
             }
         ]
     },
@@ -74,7 +102,7 @@
         },
             "repo_info_worker": {
                 "switch": 0,
-                "port": 51239,
+                "port": 51248,
                 "workers": 1
         },
             "insight_worker": {
@@ -86,7 +114,23 @@
                 "switch": 0,
                 "port": 51258,
                 "workers": 1
+        },
+            "Facade": {
+            "limited_run": 0,
+            "delete_marked_repos": 0,
+            "pull_repos": 1,
+            "clone_repos": 1,
+            "check_updates": 1,
+            "force_updates": 0,
+            "run_analysis": 1,
+            "force_analysis": 1,
+            "nuke_stored_affiliations": 0,
+            "fix_affiliations": 1,
+            "force_invalidate_caches": 1,
+            "rebuild_caches": 1,
+            "force_invalidate_caches": 0,
+            "create_xlsx_summary_files": 0,
+            "multithreaded": 1
         }
     }
 }
-

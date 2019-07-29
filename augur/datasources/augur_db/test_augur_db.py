@@ -290,3 +290,13 @@ def test_get_repos_for_dosocs(augur_db):
 def test_committer(augur_db):
     assert augur_db.committers(21,period='year').iloc[0]['count'] > 100
     assert augur_db.committers(20,21000,period='year').iloc[0]['count'] > 100
+
+def test_aggregate_summary(augur_db):
+    assert augur_db.aggregate_summary(24).iloc[0]['commit_count'] > 0
+    assert augur_db.aggregate_summary(24,21471,begin_date='2018-1-1 00:00:00',
+                                     end_date='2019-12-31 23:59:59').iloc[0]['commit_count'] > 0
+
+def test_pull_request_acceptance_rate(augur_db):
+    assert augur_db.pull_request_acceptance_rate(24).iloc[0]['rate'] > 0
+    assert augur_db.pull_request_acceptance_rate(24,21000,begin_date='2018-1-1 00:00:00',
+                                     end_date='2019-12-31 23:59:59',group_by='year').iloc[0]['rate'] > 0

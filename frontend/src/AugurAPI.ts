@@ -278,6 +278,7 @@ abstract class BaseRepo {
 
 class Repo extends BaseRepo{
   public rg_name?:string
+  public url?:string
   constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number}){
     console.log(parent, metadata)
     super(parent)
@@ -285,6 +286,7 @@ class Repo extends BaseRepo{
     this.githubURL = metadata.githubURL || undefined
     this.repo_id = metadata.repo_id || undefined
     this.repo_group_id = metadata.repo_group_id || undefined
+    this.url = this.gitURL || this.githubURL || undefined
     // this.getRepoNameAndID()
     this.initialLegacyMetric()
     this.initialMetric()

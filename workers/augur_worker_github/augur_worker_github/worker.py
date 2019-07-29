@@ -231,43 +231,43 @@ class GitHubWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
-                # try:
-                git_url = message.entry_info['task']['given']['git_url']
-                self.query_issues({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
-                # except Exception as e:
-                #     logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-                #     logging.info("Error encountered: " + repr(e) + "\n")
-                #     logging.info("Notifying broker and logging task failure in database...\n")
-                #     message.entry_info['task']['worker_id'] = self.config['id']
-                #     requests.post("http://localhost:{}/api/unstable/task_error".format(
-                #         self.config['broker_port']), json=message.entry_info['task'])
-                #     # Add to history table
-                #     task_history = {
-                #         "repo_id": message.entry_info['repo_id'],
-                #         "worker": self.config['id'],
-                #         "job_model": message.entry_info['task']['models'][0],
-                #         "oauth_id": self.config['zombie_id'],
-                #         "timestamp": datetime.datetime.now(),
-                #         "status": "Error",
-                #         "total_results": self.results_counter
-                #     }
-                #     self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
+                try:
+                    git_url = message.entry_info['task']['given']['git_url']
+                    self.query_issues({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                except Exception as e:
+                    logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
+                    logging.info("Error encountered: " + repr(e) + "\n")
+                    logging.info("Notifying broker and logging task failure in database...\n")
+                    message.entry_info['task']['worker_id'] = self.config['id']
+                    requests.post("http://localhost:{}/api/unstable/task_error".format(
+                        self.config['broker_port']), json=message.entry_info['task'])
+                    # Add to history table
+                    task_history = {
+                        "repo_id": message.entry_info['repo_id'],
+                        "worker": self.config['id'],
+                        "job_model": message.entry_info['task']['models'][0],
+                        "oauth_id": self.config['zombie_id'],
+                        "timestamp": datetime.datetime.now(),
+                        "status": "Error",
+                        "total_results": self.results_counter
+                    }
+                    self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
 
-                #     logging.info("Recorded job error for: " + str(message.entry_info['task']) + "\n")
+                    logging.info("Recorded job error for: " + str(message.entry_info['task']) + "\n")
 
-                #     # Update job process table
-                #     updated_job = {
-                #         "since_id_str": message.entry_info['repo_id'],
-                #         "last_count": self.results_counter,
-                #         "last_run": datetime.datetime.now(),
-                #         "analysis_state": 0
-                #     }
-                #     self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
-                #     logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
+                    # Update job process table
+                    updated_job = {
+                        "since_id_str": message.entry_info['repo_id'],
+                        "last_count": self.results_counter,
+                        "last_run": datetime.datetime.now(),
+                        "analysis_state": 0
+                    }
+                    self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
+                    logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
 
-                #     # Reset results counter for next task
-                #     self.results_counter = 0
-                #     pass
+                    # Reset results counter for next task
+                    self.results_counter = 0
+                    pass
 
     def query_contributors(self, entry_info):
 
