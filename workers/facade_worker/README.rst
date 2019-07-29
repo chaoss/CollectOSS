@@ -14,6 +14,10 @@ Augur Worker that collects GitHub data
 Usage
 -----
 
+`facade_worker_start` 
+`nohup facade_worker_start >facade.log 2>facade.err &` to run in the background. 
+
+
 Installation
 ------------
 
