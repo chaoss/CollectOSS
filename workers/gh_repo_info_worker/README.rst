@@ -23,7 +23,6 @@ Installing the Worker
 To install this worker execute the following command
 
 .. code:: bash
-
     pip install -e .
 
 Running this Worker
@@ -32,8 +31,14 @@ Running this Worker
 To run this worker execute the following command
 
 .. code:: bash
-
     repo_info_worker
+
+
+To Run this Worker in the Background 
+********
+
+.. code:: bash 
+    nohup repo_info_worker >riw.log 2>riw.err & 
 
 
 **Note:** Make sure the broker is running before running the worker
