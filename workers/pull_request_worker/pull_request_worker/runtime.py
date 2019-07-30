@@ -6,7 +6,7 @@ import click
 import requests
 from flask import Flask, Response, jsonify, request
 
-from gh_pr_worker.worker import GHPullRequestWorker
+from pull_request.worker import GHPullRequestWorker
 
 
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)

@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from gh_repo_info_worker.worker import GHRepoInfoWorker
+from repo_info_worker.worker import GHRepoInfoWorker
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 

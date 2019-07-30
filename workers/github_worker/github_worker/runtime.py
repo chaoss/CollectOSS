@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
-from augur_worker_github.worker import GitHubWorker
+from github_worker.worker import GitHubWorker
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 
