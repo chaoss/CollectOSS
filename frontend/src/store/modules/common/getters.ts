@@ -3,7 +3,7 @@ export default {
       return state.cache.repoRelations;
     },
     repoGroups: (state:any) => {
-        return state.cache.repoGroups;
+        return state.cache.repoGroups || {};
     },
     groupsInfo: (state: any) => {
       return state.cache.groupsInfo;

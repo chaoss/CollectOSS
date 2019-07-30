@@ -67,7 +67,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="repo in sorted_repos(sortColumn,ascending)" v-bind:item="repo">
+                <tr v-for="(repo,index) in sorted_repos(sortColumn,ascending)" v-bind:item="repo">
                   <td>
                     <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                   </td>
@@ -79,20 +79,21 @@
                   <!-- <td>{{ repo.repo_status }}</td> -->
                   <td>
                     <div class="row">
-                      <d-link id="favorite_repo" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0">
-                        <i class="material-icons">star_rate</i>
-                        <div class="item-icon-wrapper" />
-                      </d-link>
-                      <d-tooltip target="#favorite_repo"
-                        container=".shards-demo--example--tooltip-01">
+                      <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0;border: none; background: none;">
+                        <i class="material-icons" style="color:#007bff;">star_rate</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#favorite'+index"
+                                 container=".shards-demo--example--tooltip-01">
                         Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
                       </d-tooltip>
-                      <d-link id="add_compare_repo" class="nav-link col col-2" style="padding: 0">
-                        <i class="material-icons">library_add</i>
-                        <div class="item-icon-wrapper" />
-                      </d-link>
-                      <d-tooltip target="#add_compare_repo"
-                        container=".shards-demo--example--tooltip-01">
+                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0;border: none; background: none;" @click="addComparedRepo(repo)">
+                        <i class="material-icons" style="color:#007bff;">library_add</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#add_compare'+index"
+                                 :triggers="['hover']"
+                                 container=".shards-demo--example--tooltip-01">
                         Add this repo group to your current compared repos
                       </d-tooltip>
                     </div>

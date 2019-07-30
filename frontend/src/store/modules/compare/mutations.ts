@@ -10,7 +10,7 @@ export default {
 
     setBaseGroup(state: any, payload: any) {
         // pass url into function
-        state.baseGroup = payload.url
+        state.baseGroup = payload.rg_name
     },
 
     addComparedRepo(state:any, payload:any) {
@@ -18,7 +18,17 @@ export default {
     },
 
     addComparedRepoGroups(state:any, payload:any) {
-        state.comparedRepoGroups.push(payload)
+        if(payload != null){
+            state.comparedRepoGroups.push(payload)
+        }
+    },
+
+    resetCompare(state:any, payload:any) {
+        state.baseRepo = '';
+        state.baseGroup = '';
+        state.baseType = false;
+        state.comparedRepos = [];
+        state.comparedRepoGroups = [];
     },
 
 

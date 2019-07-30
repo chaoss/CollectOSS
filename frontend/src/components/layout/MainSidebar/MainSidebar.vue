@@ -51,26 +51,28 @@
 
               <div style="text-align: center; border-bottom: 1px solid #e1e5eb;">
                 <div class="comp_info">
-                  Comparison type N/A
+                  {{comparisonType}}
                 </div>
 
                 <div class="comp_info">
-                  {{ repo.url }}
+                  {{ base.url || base.rg_name}}
                 </div>
 
                 <div class="comp_info">
-                  No comparison(s) selected
+                  {{comparisionSize}} comparison(s) selected
                 </div>
               </div>
               
 
               <div class="row" style="position: absolute; bottom: 0; padding-left: 0px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
+                  <a href="" v-on:click="resetCompare()">
                   <d-link class="nav-link" style="padding: 0.7rem 0.7rem 0.7rem 1.5rem; margin-left: 1rem">
                     <i class="material-icons">autorenew</i>
                     <span>Reset</span>
                     <div class="item-icon-wrapper" />
                   </d-link>
+                  </a>
                 </div>
                 
                 <div class="col col-6" style="padding: 0px">
@@ -100,7 +102,7 @@
   import Spinner from '../components/Spinner.vue'
 
   @Component({
-    props:{
+    props: {
       hideLogoText: {
         type: Boolean,
         default: false,
@@ -108,10 +110,16 @@
     },
     computed: {
       ...mapGetters('compare',[
-        'repo',
-        'comparison_type'
+        'base',
+        'comparisonType',
+        'comparisionSize',
       ])
-    }
+    },
+    methods: {
+      ...mapMutations('compare',[
+        'resetCompare',
+      ])
+    },
   })
   export default class MainSidebar extends Vue {
     sidebarVisible:boolean = false;
@@ -158,34 +166,17 @@
     ];
 
     // state declared computed
-    comparison_type!: string;
-    repo!:string;
-
-    get comparison () {
-      if (this.$store.state.comparedRepos.length == 1) {
-        return this.$store.state.comparedRepos[0].gitURL
-      }
-      else if (this.$store.state.comparedRepoGroups.length == 1) {
-        return this.$store.state.comparedRepoGroups[0].rg_name
-      }
-      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
-        return "Multiple Groups"
-      }
-      else if (this.$store.state.comparedRepos.length > 1 && this.$store.state.comparedRepoGroups.length == 0) {
-        return "Custom Group"
-      }
-      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
-        return "No comparison(s) selected"
-      }
-      else {
-        return "Invalid comparison type"
-      }
-    }
+    comparisonType!: string;
+    base!:string;
+    resetCompare!:any;
+    comparisionSize!:any;
 
     // method
     handleToggleSidebar() {
       this.sidebarVisible = !this.sidebarVisible;
     }
+
+
   }
 </script>
 
