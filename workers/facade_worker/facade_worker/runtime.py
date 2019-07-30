@@ -16,7 +16,7 @@ def create_server(app, gw):
         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
         """
         if request.method == 'POST': #will post a task to be added to the queue
-            logging.info("Sending to work on task: {}".format(str(request.json)))
+            logging.info("Sending to work on task: {}".format(request.json))
             app.facade_worker.task = request.json
             return Response(response=request.json,
                         status=200,
@@ -73,7 +73,6 @@ def main(augur_url, host, port):
     app.facade_worker = FacadeWorker(config) # declares the worker that will be running on this server with specified config
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
-
 
     app.run(debug=app.debug, host=host, port=worker_port)
     try:

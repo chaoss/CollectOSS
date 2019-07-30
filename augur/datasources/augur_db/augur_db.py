@@ -226,7 +226,7 @@ class Augur(object):
 
         :param repo_id: The repository's id
         :param repo_group_id: The repository's group id
-        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of persons/period

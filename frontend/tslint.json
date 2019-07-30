@@ -19,7 +19,8 @@
     "no-consecutive-blank-lines": false,
     "no-console": false,
     "strictFunctionTypes": false,
-    "no-var-requires": false
+    "no-var-requires": false,
+    "semicolon": false
   },
   "strictFunctionTypes": false
 }

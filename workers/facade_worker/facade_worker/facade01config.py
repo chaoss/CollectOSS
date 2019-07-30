@@ -37,13 +37,8 @@ import configparser
 import pymysql
 import psycopg2
 import json
-# if platform.python_implementation() == 'PyPy':
-#     import pymysql
-# else:
-#     import MySQLdb
-# import sys
-# Important: Do not modify the database number unless you've also added an
-# update clause to update_db!
+import logging
+logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 class Config:
 
@@ -405,11 +400,11 @@ class Config:
         log_options = ('Error','Quiet','Info','Verbose','Debug')
 
         if self.log_level == 'Debug' and level == 'Debug':
-            sys.stderr.write("* %s\n" % status)
+            logging.info("* %s\n" % status)
             return
 
         if log_options.index(level) <= log_options.index(self.log_level):
             query = ("INSERT INTO utility_log (level,status) VALUES (%s,%s)")
             self.cursor.execute(query, (level, status))
             self.db.commit()
-            sys.stderr.write("* %s\n" % status)
+            logging.info("* %s\n" % status)
