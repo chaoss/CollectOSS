@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import traceback
-from datetime import datetime
+import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
 
@@ -258,11 +258,10 @@ class GHPullRequestWorker:
         Gets run whenever a new task is added
         """
         logging.info("Running...")
-        if self._child is None:
-            self._child = Process(target=self.collect, args=())
-            self._child.start()
-            requests.post("http://localhost:{}/api/unstable/add_pids".format(
-                self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
+        self._child = Process(target=self.collect, args=())
+        self._child.start()
+        # requests.post("http://localhost:{}/api/unstable/add_pids".format(
+        #     self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -291,46 +290,43 @@ class GHPullRequestWorker:
                 try:
                     git_url = message.entry_info['task']['given']['git_url']
                     self.query_pr({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
-                except Exception:
-                    logging.exception('Worker ran into an unknown error')
-                # except Exception as e:
-                #     logging.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-                #     logging.error("Error encountered: " + str(e) + "\n")
-                #     traceback.format_exc()
-                #     logging.info("Notifying broker and logging task failure in database...\n")
+                except Exception as e:
+                    logging.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
+                    logging.error("Error encountered: " + str(e) + "\n")
+                    # traceback.format_exc()
+                    logging.info("Notifying broker and logging task failure in database...\n")
 
-                #     message.entry_info['task']['worker_id'] = self.config['id']
+                    message.entry_info['task']['worker_id'] = self.config['id']
 
-                #     requests.post("http://localhost:{}/api/unstable/task_error".format(
-                #         self.config['broker_port']), json=message.entry_info['task'])
+                    requests.post("http://localhost:{}/api/unstable/task_error".format(
+                        self.config['broker_port']), json=message.entry_info['task'])
 
                     # Add to history table
-                    # task_history = {
-                    #     "repo_id": message.entry_info['repo_id'],
-                    #     "worker": self.config['id'],
-                    #     "job_model": message.entry_info['task']['models'][0],
-                    #     "oauth_id": self.config['zombie_id'],
-                    #     "timestamp": datetime.datetime.now(),
-                    #     "status": "Error",
-                    #     "total_results": self.results_counter
-                    # }
-                    # self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
+                    task_history = {
+                        "repo_id": message.entry_info['repo_id'],
+                        "worker": self.config['id'],
+                        "job_model": message.entry_info['task']['models'][0],
+                        "oauth_id": self.config['zombie_id'],
+                        "timestamp": datetime.datetime.now(),
+                        "status": "Error",
+                        "total_results": self.results_counter
+                    }
+                    self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
 
-                    # logging.info("Recorded job error for: " + str(message.entry_info['task']) + "\n")
+                    logging.info("Recorded job error for: " + str(message.entry_info['task']) + "\n")
 
                     # Update job process table
-                    # updated_job = {
-                    #     "since_id_str": message.entry_info['repo_id'],
-                    #     "last_count": self.results_counter,
-                    #     "last_run": datetime.datetime.now(),
-                    #     "analysis_state": 0
-                    # }
-                    # self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
-                    # logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
+                    updated_job = {
+                        "since_id_str": message.entry_info['repo_id'],
+                        "last_count": self.results_counter,
+                        "last_run": datetime.datetime.now(),
+                        "analysis_state": 0
+                    }
+                    self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
+                    logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
 
                     # Reset results counter for next task
-                self.results_counter = 0
-                logging.info("TASK COMPLETED")
+                    self.results_counter = 0
 
     def query_pr(self, entry_info):
         """Pull Request data collection function. Query GitHub API for PRs.
@@ -345,6 +341,7 @@ class GHPullRequestWorker:
         logging.info(f'Repo ID: {repo_id}, Git URL: {git_url}')
 
         owner, repo = self.get_owner_repo(git_url)
+        dsaflk
 
         url = (f'https://api.github.com/repos/{owner}/{repo}/'
                + f'pulls?state=all&direction=asc&per_page=100')
@@ -423,7 +420,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': 'GitHub API',
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_requests_table.insert().values(pr))
@@ -470,7 +467,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_labels_table.insert().values(label))
@@ -537,7 +534,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_events_table.insert().values(pr_event))
@@ -581,7 +578,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
@@ -626,7 +623,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
@@ -665,7 +662,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
@@ -693,7 +690,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
@@ -760,7 +757,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(self.message_table.insert().values(msg))
@@ -775,7 +772,7 @@ class GHPullRequestWorker:
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
 
             result = self.db.execute(
