@@ -45,13 +45,18 @@ def git_repo_initialize(cfg, repo_group_id=None):
     # Select any new git repos so we can set up their locations and git clone
 
     if repo_group_id is None:
-        cfg.update_status('Fetching new repos')
-        cfg.log_activity('Info','Fetching new repos')
+        cfg.update_status('Fetching non-cloned repos')
+        cfg.log_activity('Info','Fetching non-cloned repos')
 
         query = "SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'";
         cfg.cursor.execute(query)
 
-        new_repos = list(cfg.cursor)
+        new_repos = []
+        all_repos = list(cfg.cursor)
+
+        for repo in all_repos:
+            if not os.path.isdir(cfg.repo_base_directory + repo[0]):
+                new_repos.append(repo)
     else:
         cfg.update_status('Fetching repos with repo group id: {}'.format(repo_group_id))
         cfg.log_activity('Info','Fetching repos with repo group id: {}'.format(repo_group_id))

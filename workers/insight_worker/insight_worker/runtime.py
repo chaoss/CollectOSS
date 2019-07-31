@@ -52,7 +52,8 @@ def main(augur_url, host, port):
     worker_info = read_config("Workers", use_main_config=1)
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
-    config = { 
+    config = {
+            "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
             "broker_port": server["port"],
             "host": credentials["host"],
             "location": "http://localhost:{}".format(worker_port),

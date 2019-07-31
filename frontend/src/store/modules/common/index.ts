@@ -9,6 +9,8 @@ const state = {
   // hasState: false,
   // tab: 'gmd',
   // page: 'dashboard',
+  apiGroups: {},  
+  apiRepos: {},
   AugurAPI,
   cache: {},
   baseRepo: '',
@@ -16,8 +18,6 @@ const state = {
   baseGroup: '',
   comparedRepoGroups: new Array(),
   comparedRepos: new Array(),
-  repoRelationsInfo: {}, // {'Twitter': {'twemoji': augurapi repo class, ...}, ...}
-  groupsInfo: {}, // {'Twitter': augurapi repo group class, ...}
   trailingAverage: 180,
   startDate: new Date('1 February 2011'),
   endDate: new Date(),

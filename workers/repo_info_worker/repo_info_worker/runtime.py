@@ -47,10 +47,12 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
+    worker_port = worker_info['port'] if 'port' in worker_info else port
 
     config = {
-            "id": "com.augurlabs.core.repo_info_worker",
+            "id": "com.augurlabs.core.repo_info_worker.{}".format(worker_port),
             "broker_port": server['port'],
+            "location": "http://localhost:{}".format(worker_port),
             #"zombie_id": credentials["zombie_id"],
             "host": credentials["host"],
             "key": credentials["key"],
