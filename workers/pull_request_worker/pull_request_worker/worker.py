@@ -196,10 +196,12 @@ class GHPullRequestWorker:
         self.assignee_id_inc = (assignee_start + 1)
         self.pr_meta_id_inc = (pr_meta_id_start + 1)
 
-        # self.run()
-
-        requests.post('http://localhost:{}/api/unstable/workers'.format(
-            self.config['broker_port']), json=specs) #hello message
+        try:
+            requests.post('http://localhost:{}/api/unstable/workers'.format(
+                self.config['broker_port']), json=specs) #hello message
+        except:
+            logging.info("Broker's port is busy, worker will not be able to accept tasks, "
+                "please restart Augur if you want this worker to attempt connection again.")
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -380,7 +382,6 @@ class GHPullRequestWorker:
         for pr_dict in prs:
 
             pr = {
-                'pull_request_id': self.pr_id_inc,
                 'repo_id': repo_id,
                 'pr_url': pr_dict['url'],
                 'pr_src_id': pr_dict['id'],
@@ -433,7 +434,7 @@ class GHPullRequestWorker:
 
             logging.info(f"Inserted PR data for {owner}/{repo}")
             self.results_counter += 1
-            self.pr_id_inc += 1
+            self.pr_id_inc = int(result.inserted_primary_key[0])
 
         self.register_task_completion(entry_info, 'pull_requests')
 
@@ -455,7 +456,6 @@ class GHPullRequestWorker:
         for label_dict in new_labels:
 
             label = {
-                'pr_label_id': self.label_id_inc,
                 'pull_request_id': pr_id,
                 'pr_src_id': label_dict['id'],
                 'pr_src_node_id': label_dict['node_id'],
@@ -474,7 +474,7 @@ class GHPullRequestWorker:
             logging.info(f"Inserted PR Labels data for PR with id {pr_id}")
 
             self.results_counter += 1
-            self.label_id_inc += 1
+            self.label_id_inc = int(result.inserted_primary_key[0])
 
     def query_pr_events(self, owner, repo, gh_pr_no, pr_id):
         logging.info('Querying PR Events')
@@ -521,7 +521,6 @@ class GHPullRequestWorker:
                 cntrb_id = 1
 
             pr_event = {
-                'pr_event_id': self.event_id_inc,
                 'pull_request_id': pr_id,
                 'cntrb_id': cntrb_id,
                 'action': pr_event_dict['event'],
@@ -541,7 +540,7 @@ class GHPullRequestWorker:
             logging.info(f"Inserted PR Events data for PR with id {pr_id}")
 
             self.results_counter += 1
-            self.event_id_inc += 1
+            self.event_id_inc = int(result.inserted_primary_key[0])
 
     def query_reviewers(self, reviewers, pr_id):
         logging.info('Querying Reviewers')
@@ -571,7 +570,6 @@ class GHPullRequestWorker:
                 cntrb_id = 1
 
             reviewer = {
-                'pr_reviewer_map_id': self.reviewer_id_inc,
                 'pull_request_id': pr_id,
                 'cntrb_id': cntrb_id,
                 'tool_source': self.tool_source,
@@ -583,7 +581,7 @@ class GHPullRequestWorker:
             result = self.db.execute(self.pull_request_reviewers_table.insert().values(reviewer))
             logging.info(f"Added PR Reviewer {result.inserted_primary_key}")
 
-            self.reviewer_id_inc += 1
+            self.reviewer_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
 
         logging.info(f"Inserted PR Reviewer data for PR with id {pr_id}")
@@ -616,7 +614,6 @@ class GHPullRequestWorker:
                 cntrb_id = 1
 
             assignee = {
-                'pr_assignee_map_id': self.assignee_id_inc,
                 'pull_request_id': pr_id,
                 'contrib_id': cntrb_id,
                 'tool_source': self.tool_source,
@@ -628,7 +625,7 @@ class GHPullRequestWorker:
             result = self.db.execute(self.pull_request_assignees_table.insert().values(assignee))
             logging.info(f'Added PR Assignee {result.inserted_primary_key}')
 
-            self.assignee_id_inc += 1
+            self.assignee_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
 
         logging.info(f'Finished inserting PR Assignee data for PR with id {pr_id}')
@@ -651,7 +648,6 @@ class GHPullRequestWorker:
                 cntrb_id = 1
 
             pr_meta = {
-                'pr_repo_meta_id': self.pr_meta_id_inc,
                 'pull_request_id': pr_id,
                 'pr_head_or_base': 'head',
                 'pr_src_meta_label': new_head[0]['label'],
@@ -667,7 +663,7 @@ class GHPullRequestWorker:
             result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
             logging.info(f'Added PR Head {result.inserted_primary_key}')
 
-            self.pr_meta_id_inc += 1
+            self.pr_meta_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
         else:
             logging.info('No new PR Head data to add')
@@ -679,7 +675,6 @@ class GHPullRequestWorker:
                 cntrb_id = 1
 
             pr_meta = {
-                'pr_repo_meta_id': self.pr_meta_id_inc,
                 'pull_request_id': pr_id,
                 'pr_head_or_base': 'base',
                 'pr_src_meta_label': new_base[0]['label'],
@@ -695,7 +690,7 @@ class GHPullRequestWorker:
             result = self.db.execute(self.pull_request_meta_table.insert().values(pr_meta))
             logging.info(f'Added PR Base {result.inserted_primary_key}')
 
-            self.pr_meta_id_inc += 1
+            self.pr_meta_id_inc = int(result.inserted_primary_key[0])
             self.results_counter += 1
         else:
             logging.info('No new PR Base data to add')
@@ -745,7 +740,6 @@ class GHPullRequestWorker:
                 cntrb_id = 1
 
             msg = {
-                'msg_id': self.msg_id_inc,
                 'rgls_id': None,
                 'msg_text': pr_msg_dict['body'],
                 'msg_timestamp': pr_msg_dict['created_at'],
@@ -761,6 +755,7 @@ class GHPullRequestWorker:
 
             result = self.db.execute(self.message_table.insert().values(msg))
             logging.info(f'Added PR Comment {result.inserted_primary_key}')
+            self.msg_id_inc = int(result.inserted_primary_key[0])
 
             pr_msg_ref = {
                 'pr_msg_ref_id': self.pr_msg_ref_id_inc,
@@ -779,8 +774,8 @@ class GHPullRequestWorker:
             )
             logging.info(f'Added PR Message Ref {result.inserted_primary_key}')
 
-            self.pr_msg_ref_id_inc += 1
-            self.msg_id_inc += 1
+            self.pr_msg_ref_id_inc = int(result.inserted_primary_key[0])
+            
             self.results_counter += 1
 
         logging.info(f'Finished adding PR Message data for PR with id {pr_id}')

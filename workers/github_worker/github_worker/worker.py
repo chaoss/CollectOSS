@@ -63,7 +63,6 @@ class GitHubWorker:
         response = requests.get(url=url, headers=self.headers)
         self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
 
-        
         specs = {
             "id": self.config['id'],
             "location": self.config['location'],
