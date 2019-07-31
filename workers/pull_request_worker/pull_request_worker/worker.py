@@ -341,7 +341,6 @@ class GHPullRequestWorker:
         logging.info(f'Repo ID: {repo_id}, Git URL: {git_url}')
 
         owner, repo = self.get_owner_repo(git_url)
-        dsaflk
 
         url = (f'https://api.github.com/repos/{owner}/{repo}/'
                + f'pulls?state=all&direction=asc&per_page=100')
