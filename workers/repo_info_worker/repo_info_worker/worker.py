@@ -1,17 +1,21 @@
-from multiprocessing import Process, Queue
-from urllib.parse import urlparse
-import requests
-import pandas as pd
-import sqlalchemy as s
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import MetaData
 import logging
-import time
-from datetime import datetime
 import os
 import sys
+import time
+from datetime import datetime
+from multiprocessing import Process, Queue
+from urllib.parse import urlparse
 
-logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
+import pandas as pd
+import requests
+import sqlalchemy as s
+from sqlalchemy import MetaData
+from sqlalchemy.ext.automap import automap_base
+
+
+LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
+logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w', format=LOG_FORMAT)
+logger = logging.getLogger('RepoInfoWorker')
 
 
 class CollectorTask:
@@ -73,7 +77,7 @@ class GHRepoInfoWorker:
             self.config['user'], self.config['password'], self.config['host'], self.config['port'], self.config['database']
         )
 
-        logging.info("Making database connections...")
+        logger.info("Making database connections...")
 
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
@@ -95,7 +99,7 @@ class GHRepoInfoWorker:
 
         self.repo_info_table = Base.classes.repo_info.__table__
 
-        logging.info('Getting max repo_info_id...')
+        logger.info('Getting max repo_info_id...')
         max_repo_info_id_sql = s.sql.text("""
             SELECT MAX(repo_info_id) AS repo_info_id
             FROM repo_info
@@ -113,7 +117,7 @@ class GHRepoInfoWorker:
             requests.post('http://localhost:{}/api/unstable/workers'.format(
                 self.config['broker_port']), json=specs)
         except requests.exceptions.ConnectionError:
-            logging.error('Cannot connect to the broker')
+            logger.error('Cannot connect to the broker. Quitting...')
             sys.exit('Cannot connect to the broker! Quitting...')
 
     @property
@@ -153,7 +157,7 @@ class GHRepoInfoWorker:
                     self.finishing_task = True
 
         except Exception as e:
-            logging.error("Error: {}, or that repo is not in our database: {}".format(str(e), str(value)))
+            logger.error(f"Error: {e}, or that repo is not in our database: {value}")
 
         self._task = CollectorTask('TASK', {"git_url": git_url, "repo_id": repo_id})
         self.run()
@@ -163,7 +167,7 @@ class GHRepoInfoWorker:
         self._task = None
 
     def run(self):
-        logging.info("Running...")
+        logger.info("Running...")
         if self._child is None:
             self._child = Process(target=self.collect, args=())
             self._child.start()
@@ -174,13 +178,12 @@ class GHRepoInfoWorker:
 
         while True:
             time.sleep(4.5)
-            logging.info("running")
             if not self._queue.empty():
                 message = self._queue.get()
                 self.working_on = 'UPDATE'
             elif not self._maintain_queue.empty():
                 message = self._maintain_queue.get()
-                logging.info("Popped off message: {}".format(str(message.entry_info)))
+                logger.info(f"Popped off message: {message.entry_info}")
                 self.working_on = "MAINTAIN"
             else:
                 break
@@ -192,8 +195,13 @@ class GHRepoInfoWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
-                self.query_repo_info(message.entry_info['repo_id'],
-                                     message.entry_info['git_url'])
+                try:
+                    self.query_repo_info(message.entry_info['repo_id'],
+                                         message.entry_info['git_url'])
+                except Exception:
+                    logger.exception(f'Worker ran into an error for task {message.entry_info}')
+                    self.register_task_failure(message.entry_info['repo_id'],
+                                                  message.entry_info['git_url'])
 
 
         # if repos == None:
@@ -260,16 +268,25 @@ class GHRepoInfoWorker:
             }
         """ % (owner, repo)
 
-        logging.info(f'Hitting endpoint {url}')
+        logger.info(f'Hitting endpoint {url}')
         try:
             # r = requests.get(url, headers=self.headers)
             r = requests.post(url, json={'query': query}, headers=self.headers)
             self.update_rate_limit(r)
-            j = r.json()['data']['repository']
-        except Exception as e:
-            logging.error('Caught Exception: ' + str(e))
 
-        logging.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
+            j = r.json()
+            if 'errors' in j:
+                logger.error(f"[GitHub API]: {j['errors'][0]['type']}: {j['errors'][0]['message']}")
+                self.register_task_failure(repo_id, git_url)
+                return
+
+            j = j['data']['repository']
+        except requests.exceptions.ConnectionError:
+            logger.error('Could not connect to api.github.com')
+        except Exception as e:
+            logger.error(f'Caught Exception: {e}')
+
+        logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
 
         rep_inf = {
             'repo_info_id': self.info_id_inc,
@@ -303,10 +320,10 @@ class GHRepoInfoWorker:
         }
 
         result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
-        logging.info(f"Primary Key inserted into repo_info table: {result.inserted_primary_key}")
+        logger.info(f"Primary Key inserted into repo_info table: {result.inserted_primary_key}")
         self.results_counter += 1
 
-        logging.info(f"Inserted info for {owner}/{repo}")
+        logger.info(f"Inserted info for {owner}/{repo}")
 
         self.info_id_inc += 1
 
@@ -317,15 +334,15 @@ class GHRepoInfoWorker:
     def update_rate_limit(self, response):
         try:
             self.rate_limit = int(response.headers['X-RateLimit-Remaining'])
-            logging.info("Recieved rate limit from headers\n")
+            logger.info("[Rate Limit]: Recieved rate limit from headers")
         except:
             self.rate_limit -= 1
-            logging.info("Headers did not work, had to decrement\n")
-        logging.info("Updated rate limit, you have: " + str(self.rate_limit) + " requests remaining.\n")
+            logger.info("[Rate Limit]: Headers did not work, had to decrement")
+        logger.info(f"[Rate Limit]: Updated rate limit, you have: {self.rate_limit} requests remaining")
         if self.rate_limit <= 0:
             reset_time = response.headers['X-RateLimit-Reset']
             time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
-            logging.info("Rate limit exceeded, waiting " + str(time_diff.total_seconds()) + " seconds.\n")
+            logger.info(f"[Rate Limit]: Rate limit exceeded, waiting {time_diff.total_seconds()} seconds")
             time.sleep(time_diff.total_seconds())
             self.rate_limit = int(response.headers['X-RateLimit-Limit'])
 
@@ -337,12 +354,32 @@ class GHRepoInfoWorker:
             'git_url': git_url
         }
 
-        logging.info("Telling broker we completed task: " + str(task_completed) + "\n" +
-            "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
+        logger.info(f"Telling broker we completed task: {task_completed}")
+        logger.info(f"This task inserted {self.results_counter} tuples\n")
 
         try:
             requests.post('http://localhost:{}/api/unstable/completed_task'.format(
                 self.config['broker_port']), json=task_completed)
         except requests.exceptions.ConnectionError:
-            logging.info("Broker is booting and cannot accept the worker's message currently")
+            logger.info("Broker is booting and cannot accept the worker's message currently")
         self.results_counter = 0
+
+    def register_task_failure(self, repo_id, git_url):
+        task_failed = {
+            'worker_id': self.config['id'],
+            'job_type': self.working_on,
+            'repo_id': repo_id,
+            'git_url': git_url
+        }
+
+        logger.error('Task failed')
+        logger.error('Informing broker about Task Failure')
+        logger.info(f'This task inserted {self.results_counter} tuples\n')
+
+        try:
+            requests.post('http://localhost:{}/api/unstable/task_error'.format(
+                          self.config['broker_port']), json=task_failed)
+        except requests.exceptions.ConnectionError:
+            logger.error('Could not send task failure message to the broker')
+        except Exception:
+            logger.exception('An error occured while informing broker about task failure')

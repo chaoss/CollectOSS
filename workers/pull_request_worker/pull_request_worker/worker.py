@@ -288,9 +288,11 @@ class GHPullRequestWorker:
                 raise ValueError(f'{message.type} is not a recognized task type')
 
             if message.type == 'TASK':
-                # try:
-                git_url = message.entry_info['task']['given']['git_url']
-                self.query_pr({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                try:
+                    git_url = message.entry_info['task']['given']['git_url']
+                    self.query_pr({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                except Exception:
+                    logging.exception('Worker ran into an unknown error')
                 # except Exception as e:
                 #     logging.error("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
                 #     logging.error("Error encountered: " + str(e) + "\n")
