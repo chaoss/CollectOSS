@@ -6,7 +6,7 @@ import click
 import requests
 from flask import Flask, Response, jsonify, request
 
-from gh_pr_worker.worker import GHPullRequestWorker
+from pull_request_worker.worker import GHPullRequestWorker
 
 
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
@@ -70,7 +70,7 @@ def main(augur_url, host, port):
             break
 
     config = {
-            "id": "com.augurlabs.core.gh_pr_worker.{}".format(worker_port),
+            "id": "com.augurlabs.core.pull_request_worker.{}".format(worker_port),
             "broker_port": server['port'],
             "location": "http://localhost:{}".format(worker_port),
             "zombie_id": credentials["zombie_id"],

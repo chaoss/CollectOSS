@@ -24,7 +24,6 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-
   constructor(hostURL: string = 'http://localhost:5001', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
@@ -42,6 +41,14 @@ export default class AugurAPI {
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
     this.__reverseEndpointMap = {}
+
+    // Need to redundantly declare this. methods bc typescript
+    this.Repo = this.Repo;
+    this.__URLFunctionFactory = this.__URLFunctionFactory;
+    this.RepoGroup = this.RepoGroup;
+    this.batchMapped = this.batchMapped;
+    this.batch = this.batch;
+    this.__endpointURL = this.__endpointURL;
   }
 
   // __autobatcher (url, params, fireTimeout) {
@@ -122,21 +129,23 @@ export default class AugurAPI {
     })
   }
 
-  batchMapped(repos: Array<Repo>, fields: { forEach: (arg0: (field: any) => void) => void; }) {
+  batchMapped (repos: any[], fields: string[]){//{ forEach: (arg0: (field: any) => void) => void; }) {// { forEach: (arg0: (field: any) => void) => void; }) {
     let endpoints: String[] | any[] = []
     let reverseMap: any = {}
     let processedData: any = {}
-    repos.forEach((repo) => {
+    console.log(repos)
+    repos.forEach((repo:any) => {
       // Array.prototype.push.apply(endpoints, repo.batch(fields, true))
       // _.assign(reverseMap, repo.__reverseEndpointMap)
       processedData[repo.toString()] = {}
-      fields.forEach((field) => {
-        // console.log("endpoint_map: ", field, repo, repo.__endpointMap[field])
+      fields.forEach((field:any) => {
+        console.log("endpoint_map: ", field, repo)
+        console.log(repo.__endpointMap[field])
         endpoints.push(repo.__endpointMap[field])
         reverseMap[repo.__endpointMap[field]] = repo.__reverseEndpointMap[repo.__endpointMap[field]]
       })
     })
-    // console.log("before batch:", endpoints, reverseMap)
+    console.log("before batch:", endpoints, reverseMap)
     return this.batch(endpoints).then((data: any) => {
 
       let newdat = new Promise((resolve, reject) => {
@@ -146,29 +155,28 @@ export default class AugurAPI {
               processedData[reverseMap[response.path].owner] = {}
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = []
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
-              // console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
+              console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
             } else if (reverseMap[response.path]) {
-              // console.log('failed null')
+              console.log('failed null')
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null
             }
           })
-          // console.log(processedData)
+          console.log(processedData)
           resolve(processedData)
         } else {
           reject(new Error('data-not-array'))
         }
       })
-      // console.log(newdat, "newdata")
+      console.log(newdat, "newdata")
       return newdat
     })
   }
 
-  Repo(repo: {githubURL?:string, gitURL?:string, repo_id?: number, repo_group_id?:number}){
-    console.log(repo)
+  Repo(repo: {githubURL?:string, gitURL?:string, url?:string, repo_id?: number, repo_group_id?:number}){
     return new Repo(this, repo)
   }
 
-  RepoGroup(rg: {rg_name:string, repo_group_id?:number}) {
+  RepoGroup(rg: {rg_name?:any, repo_group_id?:number}) {
     return new RepoGroup(this, rg)
   }
 }
@@ -256,7 +264,6 @@ abstract class BaseRepo {
       return new Promise((resolve, reject) => {
         if (Array.isArray(data)) {
           let mapped: { [key: string]: any } = {}
-          console.log()
           data.forEach(response => {
             if (response.status === 200) {
               mapped[this.__reverseEndpointMap[response.path].name] = JSON.parse(response.response)
@@ -280,7 +287,6 @@ class Repo extends BaseRepo{
   public rg_name?:string
   public url?:string
   constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number}){
-    console.log(parent, metadata)
     super(parent)
     this.gitURL = metadata.gitURL || undefined
     this.githubURL = metadata.githubURL || undefined
@@ -428,11 +434,12 @@ class Repo extends BaseRepo{
 
 class RepoGroup extends BaseRepo {
   public rg_name?: string
-  constructor(parent: AugurAPI, metadata:{rg_name:string, repo_group_id?:number}){
+  constructor(parent: AugurAPI, metadata:{rg_name?:any, repo_group_id?:number}){
     super(parent)
+    
     this.repo_group_id = metadata.repo_group_id || undefined
-    this.rg_name = metadata.rg_name
-    this.initialMetric()
+    this.rg_name = metadata.rg_name || null
+    // this.initialMetric()
   }
 
   toString(){

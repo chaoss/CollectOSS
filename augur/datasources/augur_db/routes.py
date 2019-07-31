@@ -2528,3 +2528,49 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.aggregate_summary, 'aggregate-summary')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo Group)
+    @apiName pull-request-acceptance-rate-repo-group
+    @apiGroup Experimental
+    @apiDescription Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [group_by="week"] Allows for results to be grouped by day, week, month, or year. E.g. values: `year`, `day`, `month`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-02-11T00:00:00.000Z",
+                            "rate": 120.5
+                        },
+                        {
+                            "date": "2019-02-18T00:00:00.000Z",
+                            "rate": 34
+                        },
+                        {
+                            "date": "2019-02-25T00:00:00.000Z",
+                            "rate": 38.6666666667
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.pull_request_acceptance_rate, 'pull-request-acceptance-rate')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo)
+    @apiName pull-request-acceptance-rate-repo
+    @apiGroup Experimental
+    @apiDescription Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "rate": 5.3333333333
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.pull_request_acceptance_rate, 'pull-request-acceptance-rate')

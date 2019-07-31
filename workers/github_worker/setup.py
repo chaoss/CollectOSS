@@ -14,7 +14,7 @@ def read(filename):
 
 
 setup(
-    name="gh_repo_info_worker",
+    name="github_worker",
     version="0.1.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'repo_info_worker=gh_repo_info_worker.runtime:main',
+            'github_worker_start=github_worker.runtime:main',
         ],
     },
 

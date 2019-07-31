@@ -3,16 +3,13 @@ import router from '@/router'
 import Vue from 'vue';
 import { VL_ONLY_GUIDE_CONFIG } from 'vega-lite/build/src/guide';
 export default {
+  update_properties(state: any, payload: any) {
+    Vue.set(state, payload.property, {...state[payload.property], ...payload.with})//Object.assign(state.property, payload.with))
+  },
   mutateCache(state: any, payload: any) {
-    console.log(state, payload)
-
-    // Vue cannot detect this change to array 
-    // reference: https://vuejs.org/v2/guide/list.html#Caveats 
-    // state.cache[payload.property] = payload.with;
     Vue.set(state.cache, payload.property, payload.with)
   },
   mutate(state: any, payload: any) {
-    // state[payload.property] = payload.with;
     Vue.set(state, payload.property, payload.with);
   },
   setBaseRepo (state: any, payload: any) {

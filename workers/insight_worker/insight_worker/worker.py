@@ -48,7 +48,7 @@ class InsightWorker:
         
         specs = {
             "id": "com.augurlabs.core.insight_worker",
-            "location": self.config.location,
+            "location": self.config['location'],
             "qualifications":  [
                 {
                     "given": [["git_url"]],

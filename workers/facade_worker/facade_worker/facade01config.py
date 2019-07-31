@@ -37,13 +37,8 @@ import configparser
 import pymysql
 import psycopg2
 import json
-# if platform.python_implementation() == 'PyPy':
-#     import pymysql
-# else:
-#     import MySQLdb
-# import sys
-# Important: Do not modify the database number unless you've also added an
-# update clause to update_db!
+import logging
+logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 class Config:
 
@@ -58,7 +53,14 @@ class Config:
         self.db = None
         self.db_people = None
 
-        self.repo_base_directory = None
+        worker_options = self.read_config("Workers", "facade_worker", use_main_config=1)
+        if 'repo_directory' in worker_options:
+            self.repo_base_directory = worker_options['repo_directory']
+        else:
+            self.log_activity('Error',"Please specify a \'repo_directory\' parameter"
+                " in your \'Workers\' -> \'facade_worker\' object in your config "
+                "to the directory in which you want to clone repos. Exiting...")
+            sys.exit(1)
         self.tool_source = '\'FacadeAugur\''
         self.tool_version = '\'0.1\''
         self.data_source = '\'git_repository\''
@@ -374,7 +376,6 @@ class Config:
         
         # Figure out how much we're going to log
         self.log_level = self.get_setting('log_level')
-        self.repo_base_directory = self.get_setting('repo_directory')
 
         return db, cursor
         
@@ -403,13 +404,11 @@ class Config:
     # "Debug", then just print it and don't save it in the database.
 
         log_options = ('Error','Quiet','Info','Verbose','Debug')
-
+        logging.info("* %s\n" % status)
         if self.log_level == 'Debug' and level == 'Debug':
-            sys.stderr.write("* %s\n" % status)
             return
 
         if log_options.index(level) <= log_options.index(self.log_level):
             query = ("INSERT INTO utility_log (level,status) VALUES (%s,%s)")
             self.cursor.execute(query, (level, status))
             self.db.commit()
-            sys.stderr.write("* %s\n" % status)

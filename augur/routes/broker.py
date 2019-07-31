@@ -23,9 +23,9 @@ def send_task(task, worker_proxy):
         requests.post(task_endpoint, json=new_task)
         worker_proxy['status'] = 'Working'
     else:
-        logging.info("Both queues are empty for worker {}".format(worker))
+        logging.info("Both queues are empty for worker {}".format(worker_id))
         # new idle check... old:
-        server.broker[worker]['status'] = 'Idle'
+        worker_proxy['status'] = 'Idle'
 
 def create_broker_routes(server):
 

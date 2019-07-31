@@ -226,7 +226,7 @@ class Augur(object):
 
         :param repo_id: The repository's id
         :param repo_group_id: The repository's group id
-        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of persons/period
@@ -2850,5 +2850,83 @@ class Augur(object):
                 ) commit_data
             """)
             results = pd.read_sql(summarySQL, self.db, params={'repo_id': repo_id,
+                                                            'begin_date': begin_date, 'end_date': end_date})
+            return results
+
+
+    @annotate(tag='pull-request-acceptance-rate')
+    def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, group_by='week'):
+        """
+        Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame with ratio/day
+        """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        if not repo_id:
+            prAccRateSQL = s.sql.text("""
+                SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
+                FROM
+                    (
+                        SELECT count(issue_events.issue_id) AS num_approved, 
+                            date_trunc(:group_by,issue_events.created_at) AS accepted_on
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                            JOIN repo ON issues.repo_id = repo.repo_id
+                        WHERE action = 'merged'
+                        AND repo_group_id = :repo_group_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY accepted_on
+                        ORDER BY accepted_on
+                    ) accepted
+                JOIN
+                    (
+                        SELECT count(issue_events.issue_id) AS num_open, 
+                            date_trunc(:group_by,issue_events.created_at) AS date_created
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                            JOIN repo ON issues.repo_id = repo.repo_id
+                        WHERE action = 'ready_for_review'
+                        AND repo_group_id = :repo_group_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY date_created
+                        ORDER BY date_created
+                    ) opened
+                ON opened.date_created = accepted.accepted_on
+            """)
+            results = pd.read_sql(prAccRateSQL, self.db, params={'repo_group_id': repo_group_id, 'group_by': group_by,
+                                                            'begin_date': begin_date, 'end_date': end_date})
+            return results
+        else:
+            prAccRateSQL = s.sql.text("""
+                SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
+                FROM
+                    (
+                        SELECT count(issue_events.issue_id) AS num_approved, 
+                            date_trunc(:group_by,issue_events.created_at) AS accepted_on
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        WHERE action = 'merged'
+                        AND repo_id = :repo_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY accepted_on
+                        ORDER BY accepted_on
+                    ) accepted
+                JOIN
+                    (
+                        SELECT count(issue_events.issue_id) AS num_open, 
+                            date_trunc(:group_by,issue_events.created_at) AS date_created
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        WHERE action = 'ready_for_review'
+                        AND repo_id = :repo_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY date_created
+                        ORDER BY date_created
+                    ) opened
+                ON opened.date_created = accepted.accepted_on
+            """)
+            results = pd.read_sql(prAccRateSQL, self.db, params={'repo_id': repo_id, 'group_by': group_by,
                                                             'begin_date': begin_date, 'end_date': end_date})
             return results

@@ -14,7 +14,7 @@ def read(filename):
 
 
 setup(
-    name="gh_pr_worker",
+    name="repo_info_worker",
     version="0.1.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'pr_worker=gh_pr_worker.runtime:main',
+            'repo_info_worker_start=repo_info_worker.runtime:main',
         ],
     },
 

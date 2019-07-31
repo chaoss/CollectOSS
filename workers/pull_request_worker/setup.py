@@ -14,7 +14,7 @@ def read(filename):
 
 
 setup(
-    name="augur_worker_github",
+    name="pull_request_worker",
     version="0.1.0",
     url="https://github.com/chaoss/augur",
     license='MIT',
@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'github_worker=augur_worker_github.runtime:main',
+            'pull_request_worker_start=pull_request_worker.runtime:main',
         ],
     },
 

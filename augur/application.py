@@ -215,7 +215,7 @@ class Application(object):
                 self.__processes.append(up)
                 update['started'] = True
 
-    def read_config(self, section, name, environment_variable=None, default=None):
+    def read_config(self, section, name=None, environment_variable=None, default=None):
         """
         Read a variable in specified section of the config file, unless provided an environment variable
 
@@ -223,14 +223,14 @@ class Application(object):
         :param name: name of variable
         """
         value = None
-        # logger.info(str(section) + str(name) + str(environment_variable))
         if environment_variable is not None:
             value = os.getenv(environment_variable)
-            # logger.info("env var: " + str(value))
         if value is None:
             try:
-                value =  self.__config[section][name]
-                # logger.info("trying:" + str(value))
+                if name is not None:
+                    value = self.__config[section][name]
+                else:
+                    value = self.__config[section]
             except Exception as e:
                 value = default
                 if not section in self.__config:

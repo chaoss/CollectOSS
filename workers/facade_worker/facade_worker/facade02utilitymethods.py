@@ -36,6 +36,8 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import logging
+logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 # if platform.python_implementation() == 'PyPy':
 # 	import pymysql
 # else:
@@ -46,7 +48,7 @@ import configparser
 def update_repo_log(cfg, repos_id,status):
 
 # Log a repo's fetch status
-
+	cfg.log_activity("{} {}".format(status, repos_id))
 	log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
 		"VALUES (%s,%s)")
 	try:

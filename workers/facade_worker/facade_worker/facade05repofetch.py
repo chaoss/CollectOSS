@@ -37,22 +37,34 @@ import getopt
 import xlsxwriter
 import configparser
 from facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
-# if platform.python_implementation() == 'PyPy':
-#     import pymysql
-# else:
-#     import MySQLdb
+import logging
+logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
-def git_repo_initialize(cfg):
+def git_repo_initialize(cfg, repo_group_id=None):
 
-# Select any new git repos so we can set up their locations and git clone
+    # Select any new git repos so we can set up their locations and git clone
 
-    cfg.update_status('Fetching new repos')
-    cfg.log_activity('Info','Fetching new repos')
+    if repo_group_id is None:
+        cfg.update_status('Fetching non-cloned repos')
+        cfg.log_activity('Info','Fetching non-cloned repos')
 
-    query = "SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'";
-    cfg.cursor.execute(query)
+        query = "SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'";
+        cfg.cursor.execute(query)
 
-    new_repos = list(cfg.cursor)
+        new_repos = []
+        all_repos = list(cfg.cursor)
+
+        for repo in all_repos:
+            if not os.path.isdir(cfg.repo_base_directory + repo[0]):
+                new_repos.append(repo)
+    else:
+        cfg.update_status('Fetching repos with repo group id: {}'.format(repo_group_id))
+        cfg.log_activity('Info','Fetching repos with repo group id: {}'.format(repo_group_id))
+
+        query = "SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'";
+        cfg.cursor.execute(query)
+
+        new_repos = list(cfg.cursor)
 
     for row in new_repos:
         update_repo_log(cfg, row[0],'Cloning')

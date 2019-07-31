@@ -123,7 +123,6 @@ class GitHubWorker:
         """)
         rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
 
-        
         issue_start = int(rs.iloc[0]["issue_id"]) if rs.iloc[0]["issue_id"] is not None else 25150
         cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
 
@@ -140,8 +139,12 @@ class GitHubWorker:
         self.cntrb_id_inc = (cntrb_start + 1)
         self.msg_id_inc = (msg_start + 1)
 
-        requests.post('http://localhost:{}/api/unstable/workers'.format(
-            self.config['broker_port']), json=specs) #hello message
+        try:
+            requests.post('http://localhost:{}/api/unstable/workers'.format(
+                self.config['broker_port']), json=specs) #hello message
+        except:
+            logging.info("Broker's port is busy, worker will not be able to accept tasks, "
+                "please restart Augur if you want this worker to attempt connection again.")
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -203,16 +206,13 @@ class GitHubWorker:
         if self._child is None:
             self._child = Process(target=self.collect, args=())
             self._child.start()
-            # requests.post("http://localhost:{}/api/unstable/add_pids".format(
-            #     self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
-
+            
     def collect(self):
         """ Function to process each entry in the worker's task queue
         Determines what action to take based off the message type
         """
         while True:
             time.sleep(0.5)
-            logging.info(str(self._maintain_queue.empty()))
             if not self._queue.empty():
                 message = self._queue.get()
                 self.working_on = "UPDATE"

@@ -167,8 +167,8 @@ class GHRepoInfoWorker:
         if self._child is None:
             self._child = Process(target=self.collect, args=())
             self._child.start()
-            requests.post("http://localhost:{}/api/unstable/add_pids".format(
-                self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
+            # requests.post("http://localhost:{}/api/unstable/add_pids".format(
+            #     self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self, repos=None):
 

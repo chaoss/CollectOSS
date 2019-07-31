@@ -61,30 +61,16 @@ def cli(app):
     app.schedule_updates()
     master = None
 
-    # broker_switch = app.read_config('Controller', 'broker', 'AUGUR_BROKER', 0)
-    # housekeeper_switch = app.read_config('Controller', 'housekeeper', 'AUGUR_HOUSEKEEPER', 0)
-    github_worker_switch = app.read_config('Workers', 'github_worker', 'AUGUR_GH_WORKER', {"switch": 0})['switch']
-    repo_info_worker_switch = app.read_config('Workers', 'repo_info_worker', 'AUGUR_INFO_WORKER', {"switch": 0})['switch']
-    insight_worker_switch = app.read_config('Workers', 'insight_worker', 'AUGUR_INSIGHT_WORKER', {"switch": 0})['switch']
-    controller = {
-        # 'broker': broker_switch,
-        # 'housekeeper': housekeeper_switch,
-        'github_worker': github_worker_switch,
-        'repo_info_worker': repo_info_worker_switch,
-        'insight_worker': insight_worker_switch
-    }
-    # logger.info("Worker specs ('1' for components that are set to automatically boot): {}".format(str(controller)))
+    
+
     manager = None
     broker = None
     housekeeper = None
     
-    # if controller['broker'] == 1:
     logger.info("Booting broker and its manager")
     manager = mp.Manager()
     broker = manager.dict()
-        # broker['worker_pids'] = manager.list()
         
-    # if controller['housekeeper'] == 1:
     logger.info("Booting housekeeper")
     jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
     housekeeper = Housekeeper(
@@ -98,91 +84,26 @@ def cli(app):
             dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
         )
 
+    controller = app.read_config('Workers')
     worker_pids = []
-    # prep for altmethod 2?:
-    # process = subprocess.Popen(['ps', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # stdout, notused = process.communicate()
-    # altmethod 1:
-    # data = [(int(p), c) for p, c in [x.rstrip('\n').split(' ', 1) \
-    #     for x in os.popen('ps h -eo pid:1,command')]]
-    # for p in psutil.process_iter():
-    #     logger.info(p)
-    #     if 'nginx' in p.name() or 'nginx' in ' '.join(p.cmdline()):
-    #         p.terminate()
-    #         p.wait()
-    # altmethod 2:
-    # try:
-    #     for line in stdout.splitlines():
-    #     # for line in data:
-    #         logger.info(line)
-    #         pid, cmdline = line.split(' ', 1)
-    #         logger.info("HERE {}".format(type(cmdline)))
-    #         if 'github_worker' in cmdline and github_worker_switch == 1:
-    #             # logger.info(cmdline)
-    #             logger.info("Killing: {}".format(line))
-    #         if 'repo_info_worker' in cmdline and repo_info_worker_switch == 1:
-    #             # logger.info(cmdline)
-    #             logger.info("Killing: {}".format(line))
-    #         if 'insight_worker' in cmdline and insight_worker_switch == 1:
-    #             # logger.info(cmdline)
-    #             logger.info("Killing: {}".format(line))
-    # except:
-    #     pass
-
-    if github_worker_switch == 1:
-        gh_pids = get_process_id("/bin/sh -c cd workers/augur_worker_github && github_worker")
-        worker_pids += gh_pids
-        if len(gh_pids) > 0:
-            worker_pids.append(gh_pids[0] + 1)
-            gh_pids.append(gh_pids[0] + 1)
-            logger.info("Found github worker pids: {}".format(gh_pids))
-            for pid in gh_pids:
-                try:
-                    os.kill(pid, 9)
-                except:
-                    logger.info("Worker process {} already killed".format(pid))
-
-        logger.info("Booting github worker")
-        github_worker = mp.Process(target=github_worker_start, args=(), daemon=True)
-        github_worker.start()
-        time.sleep(2.5)
-
-    if controller['repo_info_worker'] == 1:
-        ri_pids = get_process_id("/bin/sh -c cd workers/gh_repo_info_worker && repo_info_worker")
-        worker_pids += ri_pids
-        if len(ri_pids) > 0:
-            worker_pids.append(ri_pids[0] + 1)
-            ri_pids.append(ri_pids[0] + 1)
-            logger.info("Found repo info worker pids: {}".format(ri_pids))
-            for pid in ri_pids:
-                try:
-                    os.kill(pid, 9)
-                except:
-                    logger.info("Worker process {} already killed".format(pid))
-
-        logger.info("Booting repo_info worker")
-        repo_info_worker = mp.Process(target=repo_info_worker_start, args=(), daemon=True)
-        repo_info_worker.start()
-        time.sleep(2.5)
-
-    if controller['insight_worker'] == 1:
-        insight_pids = get_process_id("/bin/sh -c cd workers/insight_worker && insight_worker")
-        worker_pids += insight_pids
-        if len(insight_pids) > 0:
-            worker_pids.append(insight_pids[0] + 1)
-            insight_pids.append(insight_pids[0] + 1)
-            logger.info("Found repo info worker pids: {}".format(insight_pids))
-            for pid in insight_pids:
-                try:
-                    os.kill(pid, 9)
-                except:
-                    logger.info("Worker process {} already killed".format(pid))
-
-        logger.info("Booting insight worker")
-        insight_worker = mp.Process(target=insight_worker_start, args=(), daemon=True)
-        insight_worker.start()
-        time.sleep(2.5)
-
+    worker_processes = []
+    for worker in controller.keys():
+        if controller[worker]['switch']:
+            pids = get_process_id("/bin/sh -c cd workers/{} && {}_start".format(worker, worker))
+            worker_pids += pids
+            if len(pids) > 0:
+                worker_pids.append(pids[0] + 1)
+                pids.append(pids[0] + 1)
+                logger.info("Found and preparing to kill previous {} worker pids: {}".format(worker,pids))
+                for pid in pids:
+                    try:
+                        os.kill(pid, 9)
+                    except:
+                        logger.info("Worker process {} already killed".format(pid))
+            worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker}, daemon=True)
+            worker_process.start()
+            worker_processes.append(worker_process)
+            time.sleep(2.5)
 
     @atexit.register
     def exit():
@@ -191,6 +112,10 @@ def cli(app):
                 os.kill(pid, 9)
         except:
             logger.info("Worker process {} already killed".format(pid))
+        for process in worker_processes:
+            logger.info("Shutting down worker process with pid: {} ...".format(process))
+            process.terminate()
+
         if master is not None:
             master.halt()
         logger.info("Shutting down app updates...")
@@ -200,16 +125,7 @@ def cli(app):
         logger.info("Shutting down housekeeper updates...")
         if housekeeper is not None:
             housekeeper.shutdown_updates()
-
-        if github_worker_switch == 1:
-            logger.info("Shutting down github worker...")
-            github_worker.terminate()
-        if repo_info_worker_switch == 1:
-            logger.info("Shutting down github worker...")
-            repo_info_worker.terminate()
-        if insight_worker_switch == 1:
-            logger.info("Shutting down github worker...")
-            insight_worker.terminate()
+    
         # if hasattr(manager, "shutdown"):
             # wait for the spawner and the worker threads to go down
             # 
@@ -219,12 +135,10 @@ def cli(app):
             # if manager._process.is_alive():
             manager._process.terminate()
         
-        
         # Prevent multiprocessing's atexit from conflicting with gunicorn
         # logger.info("killing self: {}".format(os.getpid()))
         # os.kill(os.getpid(), 9)
         # os._exit(0)
-
 
     host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
     port = app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
@@ -238,14 +152,6 @@ def cli(app):
     logger.info('Starting server...')
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
-def github_worker_start():
-    logger.info("Booting github worker")
-    process = subprocess.Popen("cd workers/augur_worker_github && github_worker", shell=True)
-
-def repo_info_worker_start():
-    logger.info("Booting repo_info worker")
-    process = subprocess.Popen("cd workers/gh_repo_info_worker && repo_info_worker", shell=True)
-
-def insight_worker_start():
-    logger.info("Booting insight worker")
-    process = subprocess.Popen("cd workers/insight_worker && insight_worker", shell=True)
+def worker_start(worker_name=None):
+    logger.info("Booting {} worker".format(worker_name))
+    process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)

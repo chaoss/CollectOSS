@@ -186,7 +186,8 @@ export default class Repos extends Vue{
         this.sortColumn = col;
       }
   }
-  onGitRepo (e:any) {
+
+  onGitRepo (e: any) {
       let first = e.url.indexOf(".")
       let last = e.url.lastIndexOf(".")
       let domain = null
