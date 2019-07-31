@@ -35,9 +35,9 @@ export default {
     // return the base
     base: (state:any, getters:any, rootState:any, rootGetters:any) => {
         if(state.baseRepo) {
-            return rootGetters['common/getRepoByURL'](state.baseRepo) || {'url': 'No base repo/group selected'}
+            return rootGetters['common/apiRepos'][state.baseRepo] || {'url': 'No base repo/group selected'}
         } else if (state.baseGroup) {
-            return rootGetters['common/repoGroups'][state.baseGroup] || {'url': 'No base repo/group selected'}
+            return rootGetters['common/apiGroups'][state.baseGroup] || {'url': 'No base repo/group selected'}
         }
 
         return {'url': 'No base repo/group selected'}

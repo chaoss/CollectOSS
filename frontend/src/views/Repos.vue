@@ -122,7 +122,7 @@ import Spinner from '../components/Spinner.vue'
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
       'getRepoRelations',
-      'getRepos',
+      'loadRepos',
       'addRepo'
     ]),
     ...mapMutations('compare',[
@@ -134,15 +134,10 @@ import Spinner from '../components/Spinner.vue'
   },
   computed: {
     ...mapGetters('common', [
-      'repoRelationsInfo',
       'groupsInfo',
       'sorted_repos',
       'loaded_repos'
-      // 'repoRelationsInfo'
     ]),
-    repoRelationsInfo() {
-      return this.$store.getters['common/repoRelationsInfo']
-    }
   },
 })
 
@@ -159,11 +154,10 @@ export default class Repos extends Vue{
   // loadedRepos: boolean = false;
   ascending:boolean = false;
   sortColumn: string ='commits_all_time';
-  repoRelationsInfo!: any;
   groupsInfo!:any;
   getRepoRelations!: any
   sorted_repos!:any
-  getRepos!:any;
+  loadRepos!:any;
   loaded_repos!:boolean;
   addRepo!:any;
   setBaseRepo!:any;
@@ -173,7 +167,7 @@ export default class Repos extends Vue{
   created() {
     
     if (!this.loaded_repos) {
-      this.getRepos()
+      this.loadRepos()
     }
 
   }

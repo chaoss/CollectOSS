@@ -117,7 +117,7 @@
         'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
         'getRepoRelations',
-        'getRepoGroups',
+        'loadRepoGroups',
         'addRepoGroup',
       ]),
       ...mapMutations('common',[
@@ -154,7 +154,7 @@
     repoRelationsInfo!: any;
     groupsInfo!:any;
     getRepoRelations!: any;
-    getRepoGroups!:any;
+    loadRepoGroups!:any;
     repo_groups!:any[];
     sorted_repo_groups!:any[];
     loaded_groups!:boolean;
@@ -165,7 +165,7 @@
 
     created() {
       if(!this.loaded_groups){
-        this.getRepoGroups()
+        this.loadRepoGroups()
       }
     }
 

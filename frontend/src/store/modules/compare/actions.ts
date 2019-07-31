@@ -14,9 +14,8 @@ export default {
         if(!(context.state.comparedRepos.includes(payload.url) && context.state.baseRepo == payload.url)) {
             context.commit('addComparedRepo', payload.url)
         }
-        if (!(payload.rg_name in context.rootGetters['common/repoRelationsInfo'])
-            ||!(payload.url in context.rootGetters['common/repoRelationsInfo'][payload.rg_name])) {
-            context.dispatch('common/addRepo',payload)
+        if (!(payload.rg_name in context.rootGetters['common/apiRepos'])) {
+            context.dispatch('common/addRepo',payload,{root:true})
         }
     },
 
@@ -32,8 +31,8 @@ export default {
         if(!context.state.comparedRepoGroups.includes(payload.rg_name) && context.state.baseGroup != payload.rg_name) {
             context.commit('addComparedRepoGroups', payload.rg_name)
         }
-        // console.log('#####', context.rootGetters['common/repoGroups'])
-        if (!(payload.rg_name in context.rootGetters['common/repoGroups'])) {
+        console.log('#####', context.rootGetters['common/apiGroups'])
+        if (!(payload.rg_name in context.rootGetters['common/apiGroups'])) {
             context.dispatch('common/addRepoGroup',payload,{root:true})
         }
     },
