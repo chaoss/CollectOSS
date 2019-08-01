@@ -115,7 +115,7 @@ const routes = [
             ],
       },
       {
-            path: '/repo/:owner?/:repo',
+            path: '/repo/:group/:repo',
             component: Default,
             children: [
                   {

@@ -166,7 +166,7 @@ export default {
                 let gitURL = payload.url || undefined
                 let repo:Repo = context.state.AugurAPI.Repo({gitURL:gitURL,repo_id:repo_id,repo_group_id:repo_group_id})
                 
-                context.commit('mutateRepoRelation', {repo:repo, url: gitURL,rg_name:rg_name})
+                context.commit('mutateAPIRepo', {repo:repo, url: gitURL})
                 resolve(repo)
              },2000)
          })
@@ -177,7 +177,7 @@ export default {
             let repo_group_id = payload.repo_group_id || undefined
             let group:RepoGroup = context.state.AugurAPI.RepoGroup({repo_group_id:repo_group_id,rg_name:rg_name})
 
-            context.commit('mutateRepoGroup', {group:group, rg_name:rg_name})
+            context.commit('mutateAPIGroup', {group:group, rg_name:rg_name})
         })
     }
 };
