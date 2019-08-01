@@ -217,7 +217,7 @@ export default class Repos extends Vue{
 
       this.$router.push({
         name: 'repo_overview',
-        params: {owner:owner, repo:repo}
+        params: {group:e.rg_name, repo:e.repo_name}
       })
   }
 }

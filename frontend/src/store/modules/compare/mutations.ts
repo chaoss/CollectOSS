@@ -1,6 +1,6 @@
 /* tslint:disable */
 import Vue from 'vue';
-// import router from '@/router';
+import router from '@/router';
 
 export default {
     setBaseRepo(state: any, payload: any) {
@@ -23,13 +23,64 @@ export default {
         }
     },
 
-    resetCompare(state:any, payload:any) {
+    mutateComparedRepo(state:any, payload:any) {
+        if(payload != null){
+            state.comparedRepos = payload
+        }
+    },
+
+    mutateComparedGroup(state:any, payload:any) {
+        if(payload != null){
+            state.comparedRepoGroups = payload
+        }
+    },
+
+    resetCompareManager(state:any, payload:any) {
         state.baseRepo = '';
         state.baseGroup = '';
         state.baseType = false;
         state.comparedRepos = [];
         state.comparedRepoGroups = [];
     },
+    resetCompared (state: any) {
+      state.comparedRepos = []
+      state.comparedGrops = []
+      // router.push({
+      //   name: state.tab,
+      //   params: {owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
+      // })
+    },
+
+    setCompare(state:any, payload:any){
+        state.compare = payload
+    },
+    setVizOptions (state:any, payload:any) {
+        if (payload.trailingAverage) {
+          state.trailingAverage = parseInt(payload.trailingAverage, 10)
+        }
+        if (typeof payload.rawWeekly !== 'undefined') {
+          state.rawWeekly = payload.rawWeekly
+        }
+        if (typeof payload.showBelowAverage !== 'undefined') {
+          state.showBelowAverage = payload.showBelowAverage
+        }
+        if (typeof payload.showArea !== 'undefined') {
+          state.showArea = payload.showArea
+        }
+        if (typeof payload.showTooltip !== 'undefined') {
+          state.showTooltip = payload.showTooltip
+        }
+        if (typeof payload.showDetail !== 'undefined') {
+          state.showDetail = payload.showDetail
+        }
+      },
+
+    mutateStartDateChange(state:any, payload:Date) {
+        state.startDate = payload
+    },
+    mutateEndDateChange(state:any, payload:Date) {
+        state.endDate = payload
+    }
 
 
     // addComparedRepo(state: any, payload: any) {

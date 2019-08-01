@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="comp_info">
-                  {{ base.url || base.rg_name}}
+                  {{ base.name || base.rg_name || 'No base repo/group selected'}}
                 </div>
 
                 <div class="comp_info">
@@ -66,7 +66,7 @@
 
               <div class="row" style="position: absolute; bottom: 0; padding-left: 0px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
-                  <a href="" v-on:click="resetCompare()">
+                  <a href="" v-on:click="resetCompareManager()">
                   <d-link class="nav-link" style="padding: 0.7rem 0.7rem 0.7rem 1.5rem; margin-left: 1rem">
                     <i class="material-icons">autorenew</i>
                     <span>Reset</span>
@@ -117,7 +117,7 @@
     },
     methods: {
       ...mapMutations('compare',[
-        'resetCompare',
+        'resetCompareManager',
       ])
     },
   })
@@ -168,7 +168,7 @@
     // state declared computed
     comparisonType!: string;
     base!:string;
-    resetCompare!:any;
+    resetCompareManager!:any;
     comparisionSize!:any;
 
     // method

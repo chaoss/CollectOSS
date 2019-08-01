@@ -14,5 +14,7 @@ export default new Vuex.Store({
 	modules: {
 		common,
 		compare
-	}
+	},
+	plugins: [createPersistedState({paths:['common.cache']})]
+
 })

@@ -40,14 +40,14 @@ export default {
             return rootGetters['common/apiGroups'][state.baseGroup] || {'url': 'No base repo/group selected'}
         }
 
-        return {'url': 'No base repo/group selected'}
+        return {}
     },
 
-    isDefinedType: (state:any, getters:any, rootState:any, rootGetters:any) => {
-        if(state.baseRepo == '' || state.baseGroup == '') {
-            return false
-        } else {
+    isGroup: (state:any, getters:any, rootState:any, rootGetters:any) => {
+        if(state.baseGroup != ''){
             return true
+        } else {
+            return false
         }
     },
 
@@ -58,6 +58,41 @@ export default {
             return state.comparedRepoGroups.length
         }
         return  'No'
-    }
-
+    },
+    compare: (state:any) => {
+        return state.compare
+    },
+    trailingAverage: (state:any) => {
+        return state.trailingAverage
+    },
+    showArea: (state:any) => {
+        return state.showArea
+    },
+    startDate: (state:any) => {
+        return state.startDate
+    },
+    endDate: (state:any) => {
+        return state.endDate
+    },
+    showDetail: (state:any) => {
+        return state.showDetail
+    },
+    showTooltip: (state:any) => {
+        return state.showTooltip
+    },
+    byDate: (state:any) => {
+        return state.byDate
+    },
+    rawWeekly: (state:any) => {
+        return state.byDate
+    },
+    showBelowAverage: (state:any) => {
+        return state.showBelowAverage
+    },
+    comparedRepoGroups: (state:any) => {
+        return  state.comparedRepoGroups
+    },
+    comparedRepos: (state:any) => {
+        return state.comparedRepos
+    },
 };

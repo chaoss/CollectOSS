@@ -5,7 +5,7 @@ export default {
       // Move down between future relation endpoint
       repoRelations[group.rg_name] = {};
       repos.filter((repo: any) => {
-        return repo.gitURL === group.rg_name;
+        return repo.rg_name === group.rg_name;
       }).forEach((repo: any) => {
         repoRelations[group.rg_name][repo.url] = repo
       });
@@ -13,10 +13,10 @@ export default {
     return repoRelations;
   },
   repoGroups: (state:any) => {
-    return state.cache.getRepoGroups;
+    return state.cache.getRepoGroups || [];
   },
   repos: (state: any) => {
-    return state.cache.getRepos
+    return state.cache.getRepos || []
   },
   apiGroups: (state: any) => {
     return state.apiGroups;
@@ -29,9 +29,6 @@ export default {
   // },
   AugurAPI: (state: any) => {
     return state.AugurAPI;
-  },
-  repo: (state: any) => {
-      return state.baseRepo;
   },
   gitRepo: (state: any) => {
       return state.gitRepo;
