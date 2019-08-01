@@ -47,7 +47,7 @@ class Augur(object):
     @annotate(tag='code-changes')
     def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
-        Returns a timeseries of the count of code commits.
+        Returns a timeseries of the count of commits.
 
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
@@ -73,7 +73,7 @@ class Augur(object):
                 FROM commits JOIN repo ON repo.repo_id = commits.repo_id
                 WHERE commits.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY commits.repo_id, date, repo_name
+                GROUP BY commits.repo_id, date, repo_name, cmt_commit_hash
                 ORDER BY commits.repo_id, date
             """)
 
@@ -90,7 +90,7 @@ class Augur(object):
                 FROM commits JOIN repo ON commits.repo_id = repo.repo_id
                 WHERE commits.repo_id = :repo_id
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY date, repo_name
+                GROUP BY date, repo_name, cmt_commit_hash
                 ORDER BY date
             """)
 
