@@ -20,6 +20,7 @@ const state = {
     showDetail: false,
     showTooltip: true,
     byDate: false,
+    showBelowAverage: false,
 };
 
 export default {

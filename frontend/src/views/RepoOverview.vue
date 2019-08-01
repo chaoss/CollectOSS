@@ -1,8 +1,8 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-    <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px" :items="breadcrumbItems">
-      <d-breadcrumb-item :active="false" :text="project" href="#" />
-      <d-breadcrumb-item :active="true" :text="gitRepo" href="#" />
+    <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
+      <d-breadcrumb-item :active="false" :text="base.owner" href="#" />
+      <d-breadcrumb-item :active="true" :text="base.name" href="#" />
     </d-breadcrumb>
     <!-- Page Header -->
     <!-- <div class="page-header row no-gutters py-4">
@@ -10,9 +10,11 @@
         <h3 class="page-title" style="font-size: 1rem">Insights</h3>
       </div>
     </div> -->
+    <!-- Compare Control -->
+    <compare-control></compare-control>
 
     <!-- Overview Section -->
-    <div class="page-header row no-gutters py-4">
+    <div class="page-header row no-gutters py-4" >
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <!-- <span class="text-uppercase page-subtitle">Components</span> -->
         <h3 class="page-title" style="font-size: 1rem">Overview</h3>
@@ -51,7 +53,7 @@
     <spinner :v-show="!loaded_evolution"></spinner>
     
     <!-- <div class="row" :v-show="loaded_evolution"> -->
-    <div class="row">
+    <div class="row" v-if="false">
 
       <div class="col col-6">
         <dynamic-line-chart source="issuesClosed"
@@ -84,11 +86,11 @@
     <!-- <spinner :v-show="!loaded_issues"></spinner> -->
     
     <!-- <div class="row" :v-show="loaded_issues"> -->
-    <div class="row">
+    <div class="row" v-if="false">
 
       <div class="col col-12" style="padding-right: 35px">
         <dual-line-chart source=""
-          :title="'Issue Count History for ' + repo + ' - Grouped by Week'"
+          :title="'Issue Count History for ' + base.name + ' - Grouped by Week'"
           fieldone="open_count"
           fieldtwo="closed_count">
           <!-- :data="values['repo_issues']"> -->
@@ -116,7 +118,7 @@
     <!-- <spinner :v-show="!loaded_experimental"></spinner> -->
     
     <!-- <div class="row" :v-show="loaded_experimental"> -->
-    <div class="row">
+    <div class="row" v-if="false">
 
       <div class="col col-6">
         <dynamic-line-chart source="commitComments"
@@ -199,6 +201,7 @@ import StackedBarChart from '../components/charts/StackedBarChart.vue'
 import DynamicLineChart from '../components/charts/DynamicLineChart.vue'
 import DualLineChart from '../components/charts/DualLineChart.vue'
 import Spinner from '../components/Spinner.vue'
+import CompareControl from '../components/common/CompareControl.vue'
 
 @Component({
   components: {
@@ -213,22 +216,21 @@ import Spinner from '../components/Spinner.vue'
     DynamicLineChart,
     StackedBarChart,
     DualLineChart,
-    Spinner
+    Spinner,
+    CompareControl,
   },
   methods: {
     ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
-      'getRepoRelations',
     ])
   },
   computed: {
     ...mapGetters('common',[
-      'repoRelationsInfo',
-      'groupsInfo',
-      'gitRepo',
-      'repo',
-    ])
+    ]),
+    ...mapGetters('compare',[
+      'base'
+    ]),
   },
 })
 
@@ -247,12 +249,11 @@ export default class RepoOverview extends Vue{
   loaded_activity= false
 
   // deflare vuex action, getter, mutations
-  repoRelationsInfo!: any;
   groupsInfo!:any;
-  getRepoRelations!: any;
   getRepoGroups!:any;
   repo_groups!:any[];
   sorted_repo_groups!:any[];
+  base!:any;
 
   getOwner(url:string) {
       let first = url.indexOf(".")

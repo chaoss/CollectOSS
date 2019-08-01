@@ -62,7 +62,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="group in sorted_repo_groups(sortColumn, ascending)">
+                <tr v-for="(group, index) in sorted_repo_groups(sortColumn, ascending)">
                   <td>
                     <a href="#" @click="onRepoGroup(group)">{{ group.rg_name }}</a>
                   </td>
@@ -73,19 +73,21 @@
                   <td>{{ group.repo_count }}</td>
                   <td>
                     <div class="row">
-                      <d-link id="favorite" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0">
-                        <i class="material-icons">star_rate</i>
-                        <div class="item-icon-wrapper" />
-                      </d-link>
-                      <d-tooltip target="#favorite"
+                      <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0; border: none; background: none;">
+                        <i class="material-icons" style="color:#007bff;">star_rate</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#favorite'+index"
+                        :triggers="['hover']"
                         container=".shards-demo--example--tooltip-01">
                         Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
                       </d-tooltip>
-                      <d-link id="add_compare" class="nav-link col col-2" style="padding: 0">
-                        <i class="material-icons">library_add</i>
-                        <div class="item-icon-wrapper" />
-                      </d-link>
-                      <d-tooltip target="#add_compare"
+                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0; border: none; background: none;" v-on:click="onRepoGroup(group)">
+                        <i class="material-icons" style="color:#007bff;">library_add</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#add_compare'+index"
+                        :triggers="['hover']"
                         container=".shards-demo--example--tooltip-01">
                         Add this repo group to your current compared repos
                       </d-tooltip>
@@ -115,12 +117,15 @@
         'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                     // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
         'getRepoRelations',
-        'getRepoGroups',
+        'loadRepoGroups',
         'addRepoGroup',
       ]),
       ...mapMutations('common',[
-      'setComapreType',
+        'setComapreType',
       ]),
+      ...mapActions('compare', [
+        'addComparedGroup',
+      ])
     },
     computed: {
       ...mapGetters('common',[
@@ -149,17 +154,18 @@
     repoRelationsInfo!: any;
     groupsInfo!:any;
     getRepoRelations!: any;
-    getRepoGroups!:any;
+    loadRepoGroups!:any;
     repo_groups!:any[];
     sorted_repo_groups!:any[];
     loaded_groups!:boolean;
     addRepoGroup!:any;
-    setComapreType!:any;
 
+    // compare module store
+    addComparedGroup!:any;
 
     created() {
       if(!this.loaded_groups){
-        this.getRepoGroups()
+        this.loadRepoGroups()
       }
     }
 
@@ -172,9 +178,9 @@
       }
     }
 
-    onRepoGrouop(e:any) {
-      this.addRepoGroup(e)
-      this.setComapreType('repo_group')
+    onRepoGroup(e:any) {
+      // this.addRepoGroup(e)
+      this.addComparedGroup(e)
     }
     
   }
