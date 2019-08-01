@@ -95,20 +95,11 @@ export default {
       }
     }
   },
-  mutateRepoRelation(state:any, payload:any) {
-    if(state.cache.repoRelations == null) {
-      Vue.set(state.cache, 'repoRelations', {})
-    }
-    if(state.cache.repoRelations[payload.rg_name] == null) {
-      Vue.set(state.cache.repoRelations, payload.rg_name, {})
-    }
-    Vue.set(state.cache.repoRelations[payload.rg_name], payload.url, payload.repo)
+  mutateAPIRepo(state:any, payload:any) {
+    Vue.set(state.apiRepos, payload.url, payload.repo)
   },
-  mutateRepoGroup(state:any, payload:any) {
-    if(state.cache.repoGroups == null){
-      Vue.set(state.cache, 'repoGroups', {})
-    }
-    Vue.set(state.cache.repoGroups, payload.rg_name, payload.group)
+  mutateAPIGroup(state:any, payload:any) {
+    Vue.set(state.apiGroups, payload.rg_name, payload.group)
   },
   // setDates (state: any, payload: any) {
   //   if (payload.startDate) {

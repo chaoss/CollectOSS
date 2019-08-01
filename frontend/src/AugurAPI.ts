@@ -293,7 +293,7 @@ class Repo extends BaseRepo{
     this.repo_id = metadata.repo_id || undefined
     this.repo_group_id = metadata.repo_group_id || undefined
     this.url = this.gitURL || this.githubURL || undefined
-    // this.getRepoNameAndID()
+    this.getRepoNameAndID()
     this.initialLegacyMetric()
     this.initialMetric()
   }
