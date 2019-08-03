@@ -73,7 +73,7 @@ class Augur(object):
                 FROM commits JOIN repo ON repo.repo_id = commits.repo_id
                 WHERE commits.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY commits.repo_id, date, repo_name, cmt_commit_hash
+                GROUP BY commits.repo_id, date, repo_name
                 ORDER BY commits.repo_id, date
             """)
 
@@ -90,7 +90,7 @@ class Augur(object):
                 FROM commits JOIN repo ON commits.repo_id = repo.repo_id
                 WHERE commits.repo_id = :repo_id
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
-                GROUP BY date, repo_name, cmt_commit_hash
+                GROUP BY date, repo_name
                 ORDER BY date
             """)
 
