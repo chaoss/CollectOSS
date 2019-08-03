@@ -62,7 +62,15 @@ def annotate(metadata=None, **kwargs):
         if not hasattr(func, 'metadata'):
             func.metadata = {}
             metric_metadata.append(func.metadata)
+
         func.metadata.update(metadata)
+        if kwargs.get('endpoint_type', None):
+            endpoint_type = kwargs.pop('endpoint_type')
+            if endpoint_type == 'repo':
+                func.metadata['repo_endpoint'] = kwargs.get('endpoint')
+            else:
+                func.metadata['group_endpoint'] = kwargs.get('endpoint')
+
         func.metadata.update(dict(kwargs))
 
         func.metadata['metric_name'] = re.sub('_', ' ', func.__name__).title()
