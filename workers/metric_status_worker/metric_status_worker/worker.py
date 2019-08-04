@@ -290,7 +290,8 @@ class FrontendStatusExtractor(object):
 
     def __init__(self):
         pass
-        self.api_text = open("../../../frontend/src/AugurAPI.ts", 'r').read()
+        self.api_text = open(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd()))) +
+                             "/frontend/src/AugurAPI.ts", 'r').read()
         self.attributes = re.findall(
             r'(?:(GitEndpoint|Endpoint|Timeseries|addRepoMetric|addRepoGroupMetric)\()\'(.*)\', \'(.*)\'',
             self.api_text)
