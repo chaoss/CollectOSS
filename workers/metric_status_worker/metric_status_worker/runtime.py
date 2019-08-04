@@ -43,7 +43,7 @@ def create_server(app, gw):
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51238, help='Port')
+@click.option('--port', default=51263, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
@@ -51,11 +51,13 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
+    worker_info = read_config("Workers", use_main_config=1)
+    worker_port = worker_info['port'] if 'port' in worker_info else port
 
     config = { 
             "id": "com.augurlabs.core.metric_status_worker",
+            "location": "http://localhost:{}".format(worker_port),
             "broker_port": server['port'],
-            #"zombie_id": credentials["zombie_id"],
             "host": credentials["host"],
             "key": credentials["key"],
             "password": credentials["password"],
@@ -63,12 +65,8 @@ def main(augur_url, host, port):
             "user": credentials["user"],
             "database": credentials["database"],
             "table": "chaoss_metric_status",
-            # "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
-            "display_name": "",
-            "description": "",
-            "required": 1,
+            "endpoint": "http://localhost:{}/api/unstable/metrics/status".format(server['port']),
             "type": "string"
-
         }
 
     #create instance of the worker

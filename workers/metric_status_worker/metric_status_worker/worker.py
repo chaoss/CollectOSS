@@ -66,10 +66,10 @@ class MetricStatusWorker:
 
         specs = {
             "id": self.config['id'],
-            "location": "http://localhost:51238",
+            "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [[None]],
+                    "given": [["git_url"]],
                     "models":["chaoss_metric_status"]
                 }
             ],
@@ -85,10 +85,6 @@ class MetricStatusWorker:
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
                                   connect_args={'options': '-csearch_path={}'.format(dbschema)})
-
-        helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
-                                         connect_args={'options': '-csearch_path={}'.format(helper_schema)})
 
         metadata = MetaData()
         helper_metadata = MetaData()
@@ -144,7 +140,7 @@ class MetricStatusWorker:
         except Exception as e:
             logging.error("Error: {},".format(str(e)))
 
-        self._task = CollectorTask('TASK', {})
+        self._task = CollectorTask(message_type='TASK', entry_info={})
         self.run()
 
     def cancel(self):
