@@ -51,7 +51,7 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
-    worker_info = read_config("Workers", use_main_config=1)
+    worker_info = read_config("Workers", use_main_config=1)['metric_status_worker']
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
     config = { 
@@ -116,9 +116,9 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
 
         # Options to export the loaded configuration as environment variables for Docker
-       
+
         if __export_env:
-            
+
             export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
             __export_file = open(export_filename, 'w+')
             # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
@@ -141,6 +141,3 @@ def read_config(section, name=None, environment_variable=None, default=None, con
             __config = __default_config
             return(__config[section][name])
 
-
-if __name__ == "__main__":
-    main()
