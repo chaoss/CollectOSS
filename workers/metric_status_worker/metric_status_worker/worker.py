@@ -392,34 +392,40 @@ class ImplementedMetric(Metric):
                 self.endpoint_group = metadata['group_endpoint']
             if 'repo_endpoint' in metadata:
                 self.endpoint_repo = metadata['repo_endpoint']
-            self.endpoint_repo = metadata['endpoint']
+            else:
+                self.endpoint_repo = metadata['endpoint']
             frontend_status_extractor.determine_frontend_status(self)
 
 
 class MetricsStatus(object):
     wg_evolution = {
         "repo": "chaoss/wg-evolution",
-        "focus_area": "focus_areas"
+        "focus_area": "focus_areas",
+        "name": 'evolution'
     }
 
     wg_diversity_inclusion = {
         "repo": "chaoss/wg-diversity-inclusion",
-        "focus_area": "focus-areas"
+        "focus_area": "focus-areas",
+        "name": "diversity-inclusion"
     }
 
     wg_value = {
         "repo": "chaoss/wg-value",
-        "focus_area": 'focus-areas'
+        "focus_area": 'focus-areas',
+        "name": "value"
     }
 
     wg_common = {
         "repo": "chaoss/wg-common",
-        "focus_area": "focus-areas"
+        "focus_area": "focus-areas",
+        "name": "common"
     }
 
     wg_risk = {
         "repo": "chaoss/wg-risk",
-        "focus_area": "focus-areas"
+        "focus_area": "focus-areas",
+        "name": "risk"
     }
 
     def __init__(self, githubapi):
@@ -501,7 +507,7 @@ class MetricsStatus(object):
 
         remote_metrics = []
         for metric in metrics:
-            remote_metrics.append(GroupedMetric(metric.display_name, re.sub('chaoss\/','',group['repo']), metric.tag,
+            remote_metrics.append(GroupedMetric(metric.display_name, group['name'], metric.tag,
                                                 metric.focus_area))
 
         return remote_metrics
