@@ -61,17 +61,15 @@ def cli(app):
     app.schedule_updates()
     master = None
 
-    
-
     manager = None
     broker = None
     housekeeper = None
     
-    logger.info("Booting broker and its manager")
+    logger.info("Booting broker and its manager...")
     manager = mp.Manager()
     broker = manager.dict()
         
-    logger.info("Booting housekeeper")
+    logger.info("Booting housekeeper...")
     jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
     housekeeper = Housekeeper(
             jobs,
@@ -153,5 +151,5 @@ def cli(app):
     master = Arbiter(AugurGunicornApp(options, manager=manager, broker=broker, housekeeper=housekeeper)).run()
 
 def worker_start(worker_name=None):
-    logger.info("Booting {} worker".format(worker_name))
+    logger.info("Booting {}".format(worker_name))
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)

@@ -91,12 +91,12 @@ def create_broker_routes(server):
             server.broker[worker['id']]['status'] = 'Idle'
             server.broker[worker['id']]['location'] = worker['location']
         else:
-            logging.info("Worker: {} has been reconnected.")
+            logging.info("Worker: {} has been reconnected.".format(worker['id']))
             models = server.broker[worker['id']]['models']
             givens = server.broker[worker['id']]['given']
             user_queue = server.broker[worker['id']]['user_queue']
             maintain_queue = server.broker[worker['id']]['maintain_queue']
-            send_task(task, server.broker[worker])
+            send_task(task, server.broker[worker['id']])
 
         return Response(response=worker['id'],
                         status=200,
