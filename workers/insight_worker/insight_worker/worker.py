@@ -173,7 +173,7 @@ class InsightWorker:
         Query the github api for contributors and issues (not yet implemented)
         """
         # Update table of endpoints before we query them all
-        self.update_metrics()
+        # self.update_metrics()
         
         # insights = []
 

@@ -3,7 +3,9 @@ import logging
 import os
 import re
 import sys
+import json
 import time
+from abc import ABC
 from datetime import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
@@ -64,10 +66,10 @@ class MetricStatusWorker:
 
         specs = {
             "id": self.config['id'],
-            "location": "http://localhost:51238",
+            "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [[None]],
+                    "given": [["git_url"]],
                     "models":["chaoss_metric_status"]
                 }
             ],
@@ -83,10 +85,6 @@ class MetricStatusWorker:
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
                                   connect_args={'options': '-csearch_path={}'.format(dbschema)})
-
-        helper_schema = 'augur_operations'
-        self.helper_db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
-                                         connect_args={'options': '-csearch_path={}'.format(helper_schema)})
 
         metadata = MetaData()
         helper_metadata = MetaData()
@@ -129,7 +127,7 @@ class MetricStatusWorker:
         return self._task
 
     @task.setter
-    def task(self, value):  
+    def task(self, value):
         try:
             if value['job_type'] == 'UPDATE':
                 self._queue.put(CollectorTask('TASK', {}))
@@ -142,7 +140,7 @@ class MetricStatusWorker:
         except Exception as e:
             logging.error("Error: {},".format(str(e)))
 
-        self._task = CollectorTask('TASK', {})
+        self._task = CollectorTask(message_type='TASK', entry_info={})
         self.run()
 
     def cancel(self):
@@ -184,60 +182,83 @@ class MetricStatusWorker:
         Query the github api for metric status
         """
         status = MetricsStatus(self.API_KEY)
-        metrics = status.update_metrics()
-        
-        # convert to dict
+        status.create_metrics_status()
+        metrics = status.metrics_status
+
+    # convert to dict
         dict_metrics = []
         for metric in metrics:
             metric_info = {
-                'cm_group': metric.group,
-                'cm_source': metric.html_url,
-                'cm_type': 'metric',
-                'cm_backend_status': metric.backend_status,
-                'cm_frontend_status': metric.frontend_status,
-                'cm_api_endpoint_repo': metric.endpoint_repo,
-                'cm_api_endpoint_rg': metric.endpoint_group,
-                'cm_defined': metric.defined,
-                'cm_name': metric.display_name,
-                'cm_working_group': metric.group,
-                'cm_info': re.sub('_', '-', metric.tag),
-                'cm_working_group_focus_area': metric.focus_area,
+                'cm_group': metric['group'],
+                'cm_source': metric['data_source'],
+                'cm_type': metric['metric_type'],
+                'cm_backend_status': metric['backend_status'],
+                'cm_frontend_status': metric['frontend_status'],
+                'cm_api_endpoint_repo': metric['endpoint_repo'],
+                'cm_api_endpoint_rg': metric['endpoint_group'],
+                'cm_defined': metric['is_defined'],
+                'cm_name': metric['display_name'],
+                'cm_working_group': metric['group'],
+                'cm_info':  metric['tag'],
+                'cm_working_group_focus_area': metric['focus_area'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
             dict_metrics.append(metric_info)
-        
-        self.update_exist_metrics(dict_metrics)
-        need_insertion = self.filter_duplicates(dict_metrics)
+
+        need_insertion = self.filter_duplicates({'cm_api_endpoint_repo': "cm_api_endpoint_repo", 'cm_backend_status':'cm_api_endpoint_rg'}, ['chaoss_metric_status'],
+                                                dict_metrics)
         logging.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
         for metric in need_insertion:
             result = self.db.execute(self.chaoss_metric_status_table.insert().values(metric))
             logging.info("Primary key inserted into the metrics table: " + str(result.inserted_primary_key))
             self.results_counter += 1
-    
+
         self.register_task_completion()
 
-            
-    def filter_duplicates(self, og_data): 
-        need_insertion = []
-        colSQL = s.sql.text("""
-            SELECT * FROM chaoss_metric_status
-        """)
-        values = pd.read_sql(colSQL, self.db)
-        for obj in og_data:
-            location = values.loc[ (values['cm_name']==obj['cm_name'] ) & ( values['cm_working_group']==obj['cm_working_group'])]
-            if not location.empty:
-                logging.info("value of tuple exists: " + str(obj['cm_name']))
-            else:
-                need_insertion.append(obj)
-        
-        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) + 
-                " to " + str(len(need_insertion)) + "\n")
 
+    # def filter_duplicates(self, og_data):
+    #     need_insertion = []
+    #     colSQL = s.sql.text("""
+    #         SELECT * FROM chaoss_metric_status
+    #     """)
+    #     values = pd.read_sql(colSQL, self.db)
+    #     for obj in og_data:
+    #         location = values.loc[ (values['cm_name']==obj['cm_name'] ) & ( values['cm_working_group']==obj[
+    #             'cm_working_group']) & ()]
+    #         if not location.empty:
+    #             logging.info("value of tuple exists: " + str(obj['cm_name']))
+    #         else:
+    #             need_insertion.append(obj)
+    #
+    #     logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) +
+    #             " to " + str(len(need_insertion)) + "\n")
+    #
+    #     return need_insertion
+
+    def filter_duplicates(self, cols, tables, og_data):
+        need_insertion = []
+
+        table_str = tables[0]
+        del tables[0]
+        for table in tables:
+            table_str += ", " + table
+        for col in cols.keys():
+            colSQL = s.sql.text("""
+                SELECT {} FROM {}
+                """.format(col, table_str))
+            values = pd.read_sql(colSQL, self.db, params={})
+
+            for obj in og_data:
+                if values.isin([obj[cols[col]]]).any().any():
+                    logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
+                elif obj not in need_insertion:
+                    need_insertion.append(obj)
+        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) +
+                     " to " + str(len(need_insertion)) + "\n")
         return need_insertion
-    
+
     def update_exist_metrics(self, metrics):
         need_update = []
         need_insert = []
@@ -266,102 +287,230 @@ class MetricStatusWorker:
 
 
 class FrontendStatusExtractor(object):
+
     def __init__(self):
-        self.api_text = open(os.path.abspath((os.path.dirname(os.path.dirname(os.getcwd()))) + '/frontend/src/AugurAPI.ts'), 'r').read()
+        pass
+        self.api_text = open(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd()))) +
+                             "/frontend/src/AugurAPI.ts", 'r').read()
         self.attributes = re.findall(
-            r'(?:(addRepoMetric|addRepoGroupMetric)\(repo, )\'(.*)\', \'(.*)\'', self.api_text)
-        self.endpoints = list(dict.fromkeys(
-            [attribute[2] for attribute in self.attributes]))
+            r'(?:(GitEndpoint|Endpoint|Timeseries|addRepoMetric|addRepoGroupMetric)\()\'(.*)\', \'(.*)\'',
+            self.api_text)
+        self.timeseries = [
+            attribute for attribute in self.attributes if attribute[0] == "Timeseries"]
+        self.endpoints = [
+            attribute for attribute in self.attributes if attribute[0] == "Endpoint"]
+        self.git_endpoints = [
+            attribute for attribute in self.attributes if attribute[0] == "GitEndpoint"]
+        self.repo_metrics = [
+            attribute for attribute in self.attributes if attribute[0] == 'addRepoMetric']
+        self.group_metric = [
+            attribute for attribute in self.attributes if attribute[0] == 'addRepoMetric']
 
     def determine_frontend_status(self, metric):
-        tag = re.sub('_', '-', metric.tag)
-        if tag in self.endpoints:
+        metric.frontend_status = 'unimplemented'
+        attribute = None
+
+        if metric.metric_type == "timeseries":
+            attribute = next((attribute for attribute in self.timeseries if
+                              "/api/unstable/<owner>/<repo>/timeseries/{}".format(attribute[2]) == metric.endpoint_repo),
+                             None)
+
+        elif metric.metric_type == "metric":
+            attribute = next((attribute for attribute in self.endpoints if
+                              "/api/unstable/<owner>/<repo>/{}".format(attribute[2]) == metric.endpoint_repo), None)
+            if not attribute:
+                attribute = next((attribute for attribute in self.repo_metrics if
+                              "/api/unstable/repo-groups/<repo_group_id>/repos/<repo_id>/{}".format(
+                                  attribute[2]) == metric.endpoint_repo), None)
+            if not attribute and metric.endpoint_group:
+                attribute = next((attribute for attribute in self.repo_metrics if
+                              "/api/unstable/repo-groups/<repo_group_id>/{}".format(attribute[2]) == metric.endpoint_group), None)
+
+        elif metric.metric_type == "git":
+            attribute = next((attribute for attribute in self.git_endpoints if
+                              "/api/unstable/git/{}".format(attribute[2]) == metric.endpoint_repo), None)
+
+        if attribute is not None:
             metric.frontend_status = 'implemented'
+            metric.chart_mapping = attribute[1]
         else:
             metric.frontend_status = 'unimplemented'
 
 
-class BackendStatusExtractor(object):
+class Metric(ABC):
+
     def __init__(self):
-        self.api_text = open(os.path.abspath(os.path.dirname(os.path.dirname(os.getcwd())) + '/augur/datasources/augur_db/routes.py'), 'r').read()
-
-        self.attributes = re.findall(
-            r'server\.addRepoMetric\([\n]?.*\,\s?\'(.*)\'\)', self.api_text)
-                
-        self.endpoints = list(dict.fromkeys(
-            [attribute for attribute in self.attributes]))
-
-    def determine_backend_status(self, metric):
-        tag = re.sub('_', '-', metric.tag)
-        if tag in self.endpoints:
-            metric.backend_status = 'implemented'
-            metric.endpoint_group = '/repo_groups/<repo_group_id>/{}'.format(
-                tag)
-            metric.endpoint_repo = '/repo_groups/<repo_group_id>/repo/<repo_id>/{}'.format(
-                tag)
-        else:
-            metric.backend_status = 'unimplemented'
+        self.ID = None
+        self.tag = None
+        self.display_name = None
+        self.group = None
+        self.backend_status = 'unimplemented'
+        self.frontend_status = 'unimplemented'
+        self.chart_mapping = None
+        self.data_source = None
+        self.metric_type = None
+        self.documentation_url = None
+        self.is_defined = False
+        self.focus_area = None
+        self.endpoint_group = None
+        self.endpoint_repo = None
 
 
+class GroupedMetric(Metric):
 
-class Metric:
-    def __init__(self, tag, display_name, focus_area):
+    def __init__(self, display_name, group, tag, focus_area):
+        Metric.__init__(self)
+        self.display_name = display_name
         self.tag = tag
-        self.display_name = display_name  # cm_name
-        self.group = None  # cm_group
-        self.source = None  # cm_source
-        self.backend_status = 'unimplemented'  # cm_backend_status
-        self.frontend_status = 'unimplemented'  # cm_frontend_status
-        self.endpoint_group = None  # cm_api_endpoint_rg
-        self.endpoint_repo = None  # cm_api_endpoint_repo
-        self.html_url = None
-        self.defined = False
+        self.ID = re.sub(r'-$|\*', '', 'none' + '-' + self.tag)
+        self.group = group
         self.focus_area = focus_area
 
 
-class MetricsStatus:
-    def __init__(self, github_api):
-        self.github = Github(github_api)
-        self.repo_groups = [('chaoss/wg-evolution', 'focus_areas'), ('chaoss/wg-diversity-inclusion', 'focus-areas'),
-                            ('chaoss/wg-value', 'focus-areas'), ('chaoss/wg-common', 'focus-areas'), ('chaoss/wg-risk', 'focus-areas')]
+class ImplementedMetric(Metric):
 
-    def update_metrics(self):
-        tag_url_map = {}
-        metrics = []
-        frontend_extractor = FrontendStatusExtractor()
-        beackend_extractor = BackendStatusExtractor()
-        # check metric defined or not
-        for group in self.repo_groups:
-            group_name = re.sub('chaoss/', '',group[0])
-            tag_url_map = self.find_defined_metrics(group[0])
-            cur_metrics = self.find_metrics_from_focus_area(group[0], group[1])
-            for metric in cur_metrics:
-                frontend_extractor.determine_frontend_status(metric)
-                beackend_extractor.determine_backend_status(metric)
-                metric.group = group_name
-                if metric.tag in tag_url_map.keys():
-                    metric.defined = True
-                    metric.html_url = tag_url_map[metric.tag]
-                
-            metrics.extend(cur_metrics)
+    def __init__(self, metadata, frontend_status_extractor):
+        Metric.__init__(self)
 
-        return metrics
+        self.ID = metadata['ID']
+        self.tag = metadata['tag']
+        self.display_name = metadata['metric_name']
+        self.backend_status = 'implemented'
+        self.data_source = metadata['source']
+        self.group = "experimental"
+        self.endpoint_group = None
+        self.endpoint_repo = None
 
-    def find_defined_metrics(self, repo_name):
-        # return map {tag: html_url}
 
-        repo = self.github.get_repo(repo_name)
-        contents = repo.get_contents("")
-        md_files = {}
-        while len(contents) > 1:
-            file_content = contents.pop(0)
-            if file_content.type == "dir":
-                contents.extend(repo.get_contents(file_content.path))
-            elif '.md' in file_content.name:
-                name = re.sub('.md', '', file_content.name)
-                md_files[name.lower()] = file_content.html_url
+        if 'metric_type' in metadata:
+            self.metric_type = metadata['metric_type']
+        else:
+            self.metric_type = 'metric'
 
-        return md_files
+        if 'endpoint' in metadata:
+            if 'group_endpoint' in metadata:
+                self.endpoint_group = metadata['group_endpoint']
+            if 'repo_endpoint' in metadata:
+                self.endpoint_repo = metadata['repo_endpoint']
+            else:
+                self.endpoint_repo = metadata['endpoint']
+            frontend_status_extractor.determine_frontend_status(self)
+
+
+class MetricsStatus(object):
+    wg_evolution = {
+        "repo": "chaoss/wg-evolution",
+        "focus_area": "focus_areas",
+        "name": 'evolution'
+    }
+
+    wg_diversity_inclusion = {
+        "repo": "chaoss/wg-diversity-inclusion",
+        "focus_area": "focus-areas",
+        "name": "diversity-inclusion"
+    }
+
+    wg_value = {
+        "repo": "chaoss/wg-value",
+        "focus_area": 'focus-areas',
+        "name": "value"
+    }
+
+    wg_common = {
+        "repo": "chaoss/wg-common",
+        "focus_area": "focus-areas",
+        "name": "common"
+    }
+
+    wg_risk = {
+        "repo": "chaoss/wg-risk",
+        "focus_area": "focus-areas",
+        "name": "risk"
+    }
+
+    def __init__(self, githubapi):
+        self.__githubapi = githubapi
+        self.github = Github(self.__githubapi)
+
+        # TODO: don't hardcode this
+        self.groups = {
+            "evolution": "Evolution",
+            "diversity-inclusion": "Diversity and Inclusion metrics",
+            "value": "Value",
+            "risk": "Risk",
+            "common": "Common",
+            "experimental": "Experimental",
+            "all": "All"
+        }
+
+        self.implemented_metrics = []
+
+        self.evo_metrics = []
+        self.di_metrics = []
+        self.risk_metrics = []
+        self.value_metrics = []
+        self.common_metrics = []
+        self.experimental_metrics = []
+
+        self.metrics_by_group = []
+
+        self.metrics_status = []
+
+        self.data_sources = []
+        self.metric_types = []
+        self.tags = {}
+        self.metadata = []
+
+    def create_metrics_status(self):
+
+        self.build_implemented_metrics()
+
+        self.evo_metrics = self.create_grouped_metrics(
+            self.wg_evolution, "evolution")
+        self.risk_metrics = self.create_grouped_metrics(self.wg_risk, "risk")
+        self.common_metrics = self.create_grouped_metrics(
+            self.wg_common, 'common')
+        self.di_metrics = self.create_grouped_metrics(
+            self.wg_diversity_inclusion, 'diversity-inclusion')
+        self.value_metrics = self.create_grouped_metrics(
+            self.wg_value, 'value')
+
+        self.metrics_by_group = [self.evo_metrics, self.risk_metrics,
+                                 self.common_metrics, self.di_metrics, self.value_metrics]
+
+        self.create_experimental_metrics()
+        self.metrics_by_group.append(self.experimental_metrics)
+        #
+        self.copy_implemented_metrics()
+
+        self.find_defined_metrics()
+
+        self.build_metrics_status()
+
+        # self.build_metadata()
+
+    def build_implemented_metrics(self):
+        frontend_status_extractor = FrontendStatusExtractor()
+
+        r = requests.get(
+            url='http://localhost:5000/api/unstable/batch/metadata')
+        data = json.loads(r.text)
+
+        for metric in data:
+            if "ID" in metric.keys():
+                self.implemented_metrics.append(
+                    ImplementedMetric(metric, frontend_status_extractor))
+
+    def create_grouped_metrics(self, group, group_name):
+        metrics = self.find_metrics_from_focus_area(
+            group['repo'], group['focus_area'])
+
+        remote_metrics = []
+        for metric in metrics:
+            remote_metrics.append(GroupedMetric(metric.display_name, group['name'], metric.tag,
+                                                metric.focus_area))
+
+        return remote_metrics
 
     def find_metrics_from_focus_area(self, repo_name, focus_area_path):
         focus_areas = self.github.get_repo(
@@ -393,7 +542,11 @@ class MetricsStatus:
                 decoded_content) or self.parse_list(decoded_content)
 
             for name, tag in metric_name_tag.items():
-                add_metric = Metric(tag, name,focus_area_name)
+                add_metric = Metric()
+                add_metric.display_name = name
+                add_metric.tag = tag
+                add_metric.focus_area = focus_area_name
+
                 metrics.append(add_metric)
 
             if metric_name_tag is None:
@@ -404,13 +557,14 @@ class MetricsStatus:
     def parse_table(self, md_content):
         # group 0 is header, group 2 is |---|--|, and group 3 is table content
         tables = re.findall(
-            r'^(\|?[^\n]+\|[^\n]+\|?\r?\n)((?:\|?\s*:?[-]+\s*:?)+\|?)(\n(?:\|?[^\n]+\|[^\n]+\|?\r?\n?)*)?$', md_content, re.MULTILINE)
+            r'^(\|?[^\n]+\|[^\n]+\|?\r?\n)((?:\|?\s*:?[-]+\s*:?)+\|?)(\n(?:\|?[^\n]+\|[^\n]+\|?\r?\n?)*)?$', md_content,
+            re.MULTILINE)
 
         if not tables:
             return None
 
         box = []
-        metrics_name_link = {}
+        metrics_name_tag = {}
         for table in tables:
             # get metric name by 'metric_name' index in column
             metric_index, length_in_row = self.get_metric_index_in_table_row(
@@ -427,11 +581,13 @@ class MetricsStatus:
             for raw_metric in raw_metrics:
                 metric_name, metric_link = self.is_has_link(
                     raw_metric, md_content)
-                metric_name = re.sub('[\[]|[\]]','', metric_name)
-                metrics_name_link[metric_name] = self.link_to_tag(
+                metric_name = re.sub('[\[]|[\]]', '', metric_name)
+                if not metric_link:
+                    metric_link = re.sub(' ', '-', metric_name).lower()
+                metrics_name_tag[metric_name] = self.link_to_tag(
                     metric_name, str(metric_link))
 
-        return metrics_name_link
+        return metrics_name_tag
 
     def get_metric_index_in_table_row(self, row):
         header_names = [x.strip().lower() for x in row.split('|')]
@@ -453,7 +609,7 @@ class MetricsStatus:
             metirc_name = re.sub(r'.+:\s', '', matched)
             metirc_name, metric_link = self.is_has_link(
                 metirc_name, md_content)
-            metric_name = re.sub('[\[]|[\]]','', metirc_name)
+            metirc_name = re.sub('[\[]|[\]]', '', metirc_name)
             metric_names[metirc_name] = self.link_to_tag(
                 metirc_name, metric_link)
         return metric_names
@@ -477,17 +633,115 @@ class MetricsStatus:
             if res:
                 return match2.group(1), res.group(1)
         else:
-            return s, 'undefined'
+            return s, None
 
     def link_to_tag(self, name, s):
 
         # generate tag if undefined metric
-        if s == 'undefined':
+        if not s:
             return re.sub(' ', '-', name.lower())
 
         pattern = re.compile(r'\/?([a-zA-Z_-]+)(\.md)?$')
         m = pattern.search(s)
         if m:
-            return re.sub('.md', '', m.group(1).lower())
+            return re.sub('_', '-', re.sub('.md', '', m.group(1).lower()))
         else:
-            return re.sub(' ', '-', name)
+            return re.sub(' ', '-', re.sub('\(s\)', 's', name))
+
+    def create_experimental_metrics(self):
+        tags = []
+        for group in self.metrics_by_group:
+            for metric in group:
+                tags.append(metric.tag)
+
+        self.experimental_metrics = [
+            metric for metric in self.implemented_metrics if metric.tag not in tags]
+
+    def copy_implemented_metrics(self):
+        # takes implemented metrics and copies their data to the appropriate metric object
+        # I am so very sorry
+        # TODO: burn this into the ground
+        for group in enumerate(self.metrics_by_group):
+            if group[1] is not self.experimental_metrics:
+                for grouped_metric in group[1]:
+                    defined_implemented_metrics = [
+                        metric for metric in self.implemented_metrics if grouped_metric.tag == metric.tag]
+                    if defined_implemented_metrics != []:
+                        for metric in defined_implemented_metrics:
+                            metric.group = group[1][0].group
+                            metric.focus_area = grouped_metric.focus_area
+                            group[1].append(metric)
+                            self.implemented_metrics.remove(metric)
+                        grouped_metric.ID = 'n/a'
+                self.metrics_by_group[group[0]] = [
+                    metric for metric in group[1] if metric.ID != 'n/a']
+
+    def find_defined_metrics(self):
+        # return map {tag: html_url}
+        repo_names = [self.wg_common['repo'], self.wg_evolution['repo'],
+                      self.wg_diversity_inclusion['repo'], self.wg_risk['repo'], self.wg_value['repo']]
+
+        md_files = {}
+
+        for repo_name in repo_names:
+            repo = self.github.get_repo(repo_name)
+            contents = repo.get_contents("")
+
+            while len(contents) > 1:
+                file_content = contents.pop(0)
+                if file_content.type == "dir":
+                    contents.extend(repo.get_contents(file_content.path))
+                elif '.md' in file_content.name:
+                    name = re.sub(
+                        '_', '-', re.sub('.md', '', file_content.name))
+                    md_files[name.lower()] = file_content.html_url
+
+        for group in self.metrics_by_group:
+            for metric in group:
+                if metric.tag in md_files.keys():
+                    metric.is_defined = True
+                    metric.documentation_url = md_files[metric.tag]
+
+    def build_metrics_status(self):
+        for group in self.metrics_by_group:
+            for metric in group:
+                self.metrics_status.append(metric.__dict__)
+
+    def build_metadata(self):
+        self.get_metric_sources()
+        self.get_metric_types()
+        self.get_metric_tags()
+
+        self.metadata = {
+            "remotes": {
+                "diversity_inclusion_urls": self.diversity_inclusion_urls,
+                "growth_maturity_decline_urls": self.growth_maturity_decline_urls,
+                "risk_urls": self.risk_urls,
+                "value_urls": self.value_urls,
+                "activity_repo_urls": self.activity_urls
+            },
+            "groups": self.groups,
+            "data_sources": self.data_sources,
+            "metric_types": self.metric_types,
+            "tags": self.tags
+        }
+
+    def get_metric_sources(self):
+        for data_source in [metric['data_source'] for metric in self.metrics_status]:
+            data_source = data_source.lower()
+            if data_source not in self.data_sources and data_source != "none":
+                self.data_sources.append(data_source)
+        self.data_sources.append("all")
+
+    def get_metric_types(self):
+        for metric_type in [metric['metric_type'] for metric in self.metrics_status]:
+            metric_type = metric_type.lower()
+            if metric_type not in self.metric_types and metric_type != "none":
+                self.metric_types.append(metric_type)
+        self.metric_types.append("all")
+
+    def get_metric_tags(self):
+        for tag in [(metric['tag'], metric['group']) for metric in self.metrics_status]:
+            # tag[0] = tag[0].lower()
+            if tag[0] not in [tag[0] for tag in self.tags] and tag[0] != "none":
+                self.tags[tag[0]] = tag[1]

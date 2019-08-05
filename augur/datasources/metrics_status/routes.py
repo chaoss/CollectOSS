@@ -11,12 +11,11 @@ def filter_by(status, key, value):
     if value == "all" or value == '' or value is None:
         return status
     if value is not None:
-        return [metric for metric in status if metric[key].lower() == value.lower()]
+        return [metric for metric in status if (metric[key] or 'none').lower() == value.lower()]
 
 def create_routes(server):
 
     metrics_status = server._augur['metrics_status']()
-    metrics_status.create_metrics_status()
 
     metrics_status_url = "metrics/status"
 
@@ -28,51 +27,37 @@ def create_routes(server):
 
     @apiSuccessExample {json} Success-Response:
                     [
-                        {
-                        
-                            "ID": "ghtorrent-fakes",
-                            "tag": "fakes",
-                            "name": "Fakes",
-                            "group": "experimental",
-                            "backend_status": "implemented",
-                            "frontend_status": "implemented",
-                            "endpoint": "/api/unstable/<owner>/<repo>/timeseries/fakes",
-                            "source": "ghtorrent",
-                            "metric_type": "timeseries",
-                            "url": "/",
-                            "is_defined": "false"
+                         {  
+                            "tag":"committers",
+                            "group":"wg-risk",
+                            "name":"Committers",
+                            "backend_status":"implemented",
+                            "frontend_status":"unimplemented",
+                            "endpoint_repo":"/api/unstable/repo-groups/<repo_group_id>/repos/<repo_id>/committers",
+                            "endpoint_rg":"/api/unstable/repo-groups/<repo_group_id>/committers",
+                            "source":"augur_db",
+                            "metric_type":"metric",
+                            "is_defined":true,
+                            "working_group":"wg-risk"
                         },
-                        {
-                            "ID": "ghtorrentplus-closed-issue-resolution-duration",
-                            "tag": "closed-issue-resolution-duration",
-                            "name": "Closed Issue Resolution Duration",
-                            "group": "experimental",
-                            "backend_status": "implemented",
-                            "frontend_status": "unimplemented",
-                            "endpoint": "/api/unstable/<owner>/<repo>/issues/time_to_close",
-                            "source": "ghtorrentplus",
-                            "metric_type": "metric",
-                            "url": "activity-metrics/closed-issue-resolution-duration.md",
-                            "is_defined": "true"
-                        },
-                        {
-                            "ID": "githubapi-lines-of-code-changed",
-                            "tag": "lines-of-code-changed",
-                            "name": "Lines Of Code Changed",
-                            "group": "experimental",
-                            "backend_status": "implemented",
-                            "frontend_status": "implemented",
-                            "endpoint": "/api/unstable/<owner>/<repo>/timeseries/lines_changed",
-                            "source": "githubapi",
-                            "metric_type": "timeseries",
-                            "url": "activity-metrics/lines-of-code-changed.md",
-                            "is_defined": "true"
+                        {  
+                            "tag":"pull-requests-merged",
+                            "group":"wg-evolution",
+                            "name":"Pull Requests Merged",
+                            "backend_status":"unimplemented",
+                            "frontend_status":"unimplemented",
+                            "endpoint_repo":null,
+                            "endpoint_rg":null,
+                            "source":null,
+                            "metric_type":null,
+                            "is_defined":false,
+                            "working_group":"wg-evolution"
                         }
                     ]
     """
     @server.app.route("/{}/{}".format(server.api_version, metrics_status_url))
     def metrics_status_view():
-        return Response(response=json.dumps(metrics_status.metrics_status),
+        return Response(response=(metrics_status.get_metrics_status().to_json(orient='records')),
                         status=200,
                         mimetype="application/json")
 
@@ -85,34 +70,32 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "groups": [
-                                {
-                                    "diversity-inclusion": "Diversity and Inclusion",
-                                    "growth-maturity-decline": "Growth, Maturity, and Decline",
-                                    "risk": "Risk",
-                                    "value": "Value",
-                                    "activity": "Activity",
-                                    "experimental": "Experimental"
-                                }
-                            ],
-                            "sources": [
-                                "ghtorrent",
-                                "ghtorrentplus",
-                                "githubapi",
-                                "downloads",
-                                "facade",
-                                "publicwww",
-                                "librariesio",
-                                "git"
-                            ],
-                            "metric_types": [
-                                "timeseries",
-                                "metric",
-                                "git"
-                            ],
-                            "tags": {
-                                "listening": "diversity-inclusion",
-                                "speaking": "diversity-inclusion",
+                            "groups":{  
+                            "evolution":"Evolution",
+                            "diversity-inclusion":"Diversity and Inclusion metrics",
+                            "value":"Value",
+                            "risk":"Risk",
+                            "common":"Common",
+                            "experimental":"Experimental",
+                            "all":"All"
+                        },
+                        "data_sources":[  
+                            "githubapi",
+                            "librariesio",
+                            "ghtorrent",
+                            "downloads",
+                            "facade",
+                            "augur_db"
+                        ],
+                        "metric_types":[  
+                            "timeseries",
+                            "git",
+                            "metric"
+                        ],
+                        "tags":[  
+                            "\"alternative-packages\"",
+                            "\"organizations\"",
+                            "\"contribution-type\"",
                                 ...
                             }
                         }
@@ -120,7 +103,7 @@ def create_routes(server):
     """
     @server.app.route("/{}/{}/metadata".format(server.api_version, metrics_status_url))
     def metrics_status_metadata_view():
-        return Response(response=json.dumps([metrics_status.metadata]),
+        return Response(response=json.dumps(metrics_status.get_metrics_metadata()),
                         status=200,
                         mimetype="application/json")
 
@@ -130,7 +113,6 @@ def create_routes(server):
     @apiGroup Metrics-Status
     @apiDescription Metrics Status that allows for filtering of the results via the query string. Filters can be combined.
 
-    @apiParam {string} [ID] Returns the status of the metric that matches this ID
     @apiParam {string} [tag] Returns all the statuses of all metrics that have this tag
     @apiParam {string} [group] Returns all the metrics in this metric grouping
     @apiParam {string="unimplemented", "undefined", "implemented"} [backend_status]
@@ -140,43 +122,43 @@ def create_routes(server):
     @apiParam {string="true", "false"} [is_defined] Returns the statuses of metrics that are or aren't defined
 
     @apiParamExample {string} Sample Query String: 
-    metrics/status/filter?group=growth-maturity-decline&metric_type=metric
+    metrics/status/filter?group=evolution&metric_type=metric
                     
 
     @apiSuccessExample {json} Success-Response:
-                    [
-                        {
-                            "ID": "ghtorrentplus-closed-issue-resolution-duration",
-                            "tag": "closed-issue-resolution-duration",
-                            "name": "Closed Issue Resolution Duration",
-                            "group": "growth-maturity-decline",
-                            "backend_status": "implemented",
-                            "frontend_status": "unimplemented",
-                            "endpoint": "/api/unstable/<owner>/<repo>/issues/time_to_close",
-                            "source": "ghtorrentplus",
-                            "metric_type": "metric",
-                            "url": "activity-metrics/closed-issue-resolution-duration.md",
-                            "is_defined": "true"
+                    [  
+                        {  
+                            "tag":"reviews-duration",
+                            "group":"evolution",
+                            "name":"Reviews_Duration",
+                            "backend_status":"unimplemented",
+                            "frontend_status":"unimplemented",
+                            "endpoint_repo":null,
+                            "endpoint_rg":null,
+                            "source":null,
+                            "metric_type":null,
+                            "is_defined":true,
+                            "working_group":"evolution"
                         },
-                        {
-                            "ID": "ghtorrent-contributors",
-                            "tag": "contributors",
-                            "name": "Contributors",
-                            "group": "growth-maturity-decline",
-                            "backend_status": "implemented",
-                            "frontend_status": "implemented",
-                            "endpoint": "/api/unstable/<owner>/<repo>/contributors",
-                            "source": "ghtorrent",
-                            "metric_type": "metric",
-                            "url": "activity-metrics/contributors.md",
-                            "is_defined": "true"
+                        {  
+                            "tag":"pull-requests-merged",
+                            "group":"evolution",
+                            "name":"Pull Requests Merged",
+                            "backend_status":"unimplemented",
+                            "frontend_status":"unimplemented",
+                            "endpoint_repo":null,
+                            "endpoint_rg":null,
+                            "source":null,
+                            "metric_type":null,
+                            "is_defined":false,
+                            "working_group":"evolution"
                         }
                     ]
     """
     @server.app.route("/{}/{}/filter".format(server.api_version, metrics_status_url))
     def filtered_metrics_status_view():
 
-        filtered_metrics_status = metrics_status.metrics_status
+        filtered_metrics_status = metrics_status.get_metrics_status().to_dict('records')
 
         valid_filters = [key for key in Metric().__dict__ if key not in ('name', 'url')]
 

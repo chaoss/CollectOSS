@@ -43,7 +43,7 @@ def create_server(app, gw):
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
 @click.option('--host', default='localhost', help='Host')
-@click.option('--port', default=51238, help='Port')
+@click.option('--port', default=51263, help='Port')
 def main(augur_url, host, port):
     """ Declares singular worker and creates the server and flask app that it will be running on
     """
@@ -51,11 +51,13 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database", use_main_config=1)
     server = read_config("Server", use_main_config=1)
+    worker_info = read_config("Workers", use_main_config=1)['metric_status_worker']
+    worker_port = worker_info['port'] if 'port' in worker_info else port
 
     config = { 
             "id": "com.augurlabs.core.metric_status_worker",
+            "location": "http://localhost:{}".format(worker_port),
             "broker_port": server['port'],
-            #"zombie_id": credentials["zombie_id"],
             "host": credentials["host"],
             "key": credentials["key"],
             "password": credentials["password"],
@@ -63,12 +65,8 @@ def main(augur_url, host, port):
             "user": credentials["user"],
             "database": credentials["database"],
             "table": "chaoss_metric_status",
-            # "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
-            "display_name": "",
-            "description": "",
-            "required": 1,
+            "endpoint": "http://localhost:{}/api/unstable/metrics/status".format(server['port']),
             "type": "string"
-
         }
 
     #create instance of the worker
@@ -118,9 +116,9 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
 
         # Options to export the loaded configuration as environment variables for Docker
-       
+
         if __export_env:
-            
+
             export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
             __export_file = open(export_filename, 'w+')
             # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
@@ -143,6 +141,3 @@ def read_config(section, name=None, environment_variable=None, default=None, con
             __config = __default_config
             return(__config[section][name])
 
-
-if __name__ == "__main__":
-    main()
