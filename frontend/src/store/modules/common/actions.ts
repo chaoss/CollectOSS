@@ -32,7 +32,7 @@ export default {
     async endpoint(context: any, payload: any) {
         try {
             return new Promise((resolve, reject) => {
-                let tempCache = context.state.cache;
+                let tempCache = context.state.cache || {};
                 if ('endpoints' in payload) {
                     console.log(payload.endpoints)
                     if ('repos' in payload) {
@@ -64,8 +64,8 @@ export default {
                         });
                     }
                 }
-                console.log(tempCache.topInsights)
-                resolve(tempCache.topInsights)
+                console.log(tempCache)
+                resolve(tempCache)
                 // context.commit('mutate', {
                 //     property: 'cache',
                 //     with: tempCache,
