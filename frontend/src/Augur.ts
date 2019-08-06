@@ -10,9 +10,9 @@ import jQuery from 'jquery';
 import _ from 'lodash';
 import d3 from 'd3';
 import SvgSaver from 'svgsaver';
-import vegaEmbed from 'vega-embed';
 import vega from 'vega';
 import vegaLite from 'vega-lite';
+import vegaEmbed from 'vega-embed'
 
 // Styles
 import 'bootstrap/dist/css/bootstrap.css';

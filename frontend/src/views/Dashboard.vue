@@ -8,35 +8,35 @@
     </div> -->
 
     <!-- First Row of Posts -->
-<!-- 
+
         <d-row>
-          <div v-if="!loadedGroups" class="col-md-8 col-lg-9">
+          <div v-if="!loadedInsights" class="col-md-8 col-lg-9">
             <spinner style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
           </div>
-          <d-col v-if="loadedGroups" v-for="(group, idx) in repoGroups" :key="idx" lg="3" md="4" sm="8" class="mb-4">
+          <d-col v-if="loadedInsights" v-for="(group, idx) in Object.keys(apiGroups)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             
             <d-card v-if="idx < 4" class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
-                <insight-chart style="transform: translateX(-30px)" :data="values[testEndpoints[idx]]" :url="repoRelations[group][0].url" :color="colors[idx]"></insight-chart>
+                <insight-chart style="transform: translateX(-30px)" :data="values[test[0]]['Code Changes']" :url="test[0]" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
-                  <a href="#" :style="getColor(idx)" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
-                    <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%)">{{ getDirection(idx) }}</i>
+                  <a href="#" :style="colors[idx]" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
+                    <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%)">arrow_upward</i>
                   </a>
                 </div>
               </div>
               <d-card-body>
                 <h5 class="card-title">
-                  <a href="#" class="text-fiord-blue">{{ getOwner(repoRelations[group][0].url) }}/{{ getRepo(repoRelations[group][0].url) }}</a>
+                  <a href="#" class="text-fiord-blue">{{ getOwner(test[0]) }}/{{ getRepo(test[0]) }}</a>
                 </h5>
-                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository {{ getPhrase(idx) }} in {{ testEndpoints[idx] }} in the past {{ testTimeframes[idx] }}</p>
-                <span class="text-muted" style="font-size: .75rem">{{ testTimeframes[idx] }}</span>
+                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository increased in Code Commits in the past week</p>
+                <span class="text-muted" style="font-size: .75rem">1 week</span>
               </d-card-body>
             </d-card>
           </d-col>
         </d-row>
- -->
+
         <div style="transform: translateY(-0px)">
           <div class="page-header row no-gutters py-4" style="padding-top: 5 !important;">
             <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
@@ -59,12 +59,13 @@
                 </div>
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
-                    <div v-for="(repo, i) in Object.keys(repoRelations[group])" v-if="i < 6" class="d-flex px-3 list-group-item" style="text-align: left">
+                    <!-- Object.keys(repoRelations[group]) -->
+                    <div v-for="(repo, i) in test" v-if="i < desiredReposPerGroup" class="d-flex px-3 list-group-item" style="text-align: left">
                       <d-link :to="{name: 'repo_overview', params: {repo: repo}}" @click="setBaseRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
                       </d-link>
-                      <div v-if="loadedSparks[idx]">
-                        <spark-chart :color="colors[idx]" :url="repo" :data="cache[repo].codeChanges" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;"/>
+                      <div v-if="loadedInsights">
+                        <spark-chart :color="colors[idx]" :url="repo" :data="values[repo]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;"/>
                       </div>
                       
                     </div>
@@ -104,7 +105,8 @@ interface FlexObject<TValue> {
       'repoGroups',
       'repos',
       'apiRepos',
-      'apiGroups'
+      'apiGroups',
+      'cache'
       // 'repoRelations'
     ]),
     // repoRelations() {
@@ -129,13 +131,17 @@ interface FlexObject<TValue> {
 export default class Dashboard extends Vue {
   
   // Data properties
+  chart: any = null
   colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
   tempInsightEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
   tempInsightRepos: any[] = [];
   tempInsightTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
   themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
-  loadedRelations: boolean = false;
-  loadedSparks: FlexObject<any> = {1:false,2:false,3:false,4:false,5:false,6:false};
+  loadedRelations: boolean = false
+  loadedInsights: boolean = false
+  desiredReposPerGroup: number = 5
+  values: any = {}
+  test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/rails/rails.git']
 
   // Allow access to vuex getters
   repoRelations!: any;
@@ -143,6 +149,7 @@ export default class Dashboard extends Vue {
   repoGroups!:any;
   apiRepos!:any;
   apiGroups!:any;
+  cache!:any;
 
   // Allow access to vuex actions
   loadRepoGroups!:any;
@@ -150,32 +157,42 @@ export default class Dashboard extends Vue {
   createAPIObjects!:any;
   endpoint!:any;
 
+  // 'created' lifecycle hook
   // Gets ran on component initialization, data collection should be handled here
   created () {
     // Load the data we need
     this.loadRepoGroups().then(() => {
       this.loadRepos().then(() => {
         // Creating AugurAPI objects for the entities we will query
-        for (let n = 0; n < 6; n++){
+        for (let n = 0; n < 3; n++){
           let group = this.repoGroups[n]
-          console.log(this.repoRelations)
-          let relatedRepos:any[] = [], numDesiredRepos = 5
-          for (let i = 0; i < numDesiredRepos && Object.keys(this.repoRelations[group.rg_name]).length > i; i++) {
+          let relatedRepos:any[] = []
+          for (let i = 0; i < this.desiredReposPerGroup && Object.keys(this.repoRelations[group.rg_name]).length > i; i++) {
             relatedRepos.push(this.repoRelations[group.rg_name][Object.keys(this.repoRelations[group.rg_name])[i]])
           }
           this.createAPIObjects({groups: [group], repos: relatedRepos})
           // Spark data
           let sparkRepos:any[] = []
-          console.log(relatedRepos)
           relatedRepos.forEach((repo:any) => {
-            console.log(repo)
             sparkRepos.push(this.apiRepos[repo.url])
           })
-
-          this.endpoint({repos: sparkRepos, endpoints: ['codeChanges']}).then(() => {
-            this.loadedSparks[n] = true
-          })
         }
+        this.endpoint({endpoints: ['topInsights']}).then((tuples:any) => {
+          tuples.topInsights.forEach((tuple:any) => {
+            // tuple.value = +tuple.value
+            if (this.values[tuple.repo_git]){
+              if (this.values[tuple.repo_git][tuple.ri_metric]) {
+                this.values[tuple.repo_git][tuple.ri_metric].push(tuple)
+              } else {
+                this.values[tuple.repo_git][tuple.ri_metric] = [tuple]
+              } 
+            } else {
+              this.values[tuple.repo_git] = {}
+              this.values[tuple.repo_git][tuple.ri_metric] = [tuple]
+            }
+          })
+          this.loadedInsights = true
+        })
         this.loadedRelations = true
 
         

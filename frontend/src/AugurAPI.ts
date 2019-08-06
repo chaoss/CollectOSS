@@ -16,6 +16,7 @@ export default class AugurAPI {
   getDownloadedGitRepos: any
   getRepos: any
   getRepoGroups: any
+  topInsights: any
   openRequests: number
   getMetricsStatus: any
   getMetricsStatusMetadata: any
@@ -36,6 +37,7 @@ export default class AugurAPI {
     // this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.getRepos = this.__EndpointFactory('repos')
     this.getRepoGroups = this.__EndpointFactory('repo-groups')
+    this.topInsights = this.__EndpointFactory('top-insights')
 
     this.openRequests = 0
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')

@@ -2930,3 +2930,24 @@ class Augur(object):
             results = pd.read_sql(prAccRateSQL, self.db, params={'repo_id': repo_id, 'group_by': group_by,
                                                             'begin_date': begin_date, 'end_date': end_date})
             return results
+
+    ###########################
+    ###       UTILITY       ###
+    ###########################
+    @annotate(tag='top-insights')
+    def top_insights(self):
+        """
+        Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+
+        :return: DataFrame with top insights across all repos
+        """
+
+        topInsightsSQL = s.sql.text("""
+            SELECT repo_insights.repo_id, repo_git, ri_metric, ri_value as value, 
+                ri_date as date, cms_id as rating, ri_fresh as discovered
+            FROM repo_insights JOIN repo on repo.repo_id = repo_insights.repo_id
+            WHERE cms_id = 1
+        """)
+        results = pd.read_sql(topInsightsSQL, self.db)
+        return results
+
