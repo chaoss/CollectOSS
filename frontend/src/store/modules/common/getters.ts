@@ -24,9 +24,9 @@ export default {
   apiRepos: (state: any) => {
     return state.apiRepos;
   },
-  // groupsList: (state: any) => {
-  //   return Object.keys(state.cache.groupsInfo);
-  // },
+  cache: (state:any) => (repo: string, endpoint: string) =>{
+    return state.cache[repo][endpoint];
+  },
   AugurAPI: (state: any) => {
     return state.AugurAPI;
   },
@@ -36,7 +36,7 @@ export default {
   repo_groups: (state: any) => {
     return state.cache.getRepoGroups
   },
-  sorted_repos: (state:any)=> (col: string, ascending: boolean) => {
+  sorted_repos: (state:any) => (col: string, ascending: boolean) => {
       if (state.cache.getRepos == undefined) {
           return []
       }

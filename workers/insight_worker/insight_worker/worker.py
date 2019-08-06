@@ -5,17 +5,12 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
+import statistics
 import logging
+import json
+import numpy as np
+import scipy.stats
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
-
-class CollectorTask:
-    """ Worker's perception of a task in its queue
-    Holds a message type (EXIT, TASK, etc) so the worker knows how to process the queue entry
-    and the github_url given that it will be collecting data for
-    """
-    def __init__(self, message_type='TASK', entry_info=None):
-        self.type = message_type
-        self.entry_info = entry_info
 
 def dump_queue(queue):
     """
@@ -43,15 +38,16 @@ class InsightWorker:
         self.db = None
         self.tool_source = 'Insight Worker'
         self.tool_version = '0.0.1' # See __init__.py
+        self.data_source = 'Augur API'
 
-        logging.info("Worker initializing...\n")
+        logging.info("Worker initializing...")
         
         specs = {
             "id": "com.augurlabs.core.insight_worker",
             "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [["git_url"]],
+                    "given": [["repo_git"]],
                     "models":["insights"]
                 }
             ],
@@ -89,12 +85,26 @@ class InsightWorker:
         Base.prepare()
 
         # mapped classes are ready
-        self.metrics_table = Base.classes['chaoss_metric_status'].__table__
-        self.insights_table = Base.classes['repo_insights'].__table__
+        self.chaoss_metric_status_table = Base.classes['chaoss_metric_status'].__table__
+        self.repo_insights_table = Base.classes['repo_insights'].__table__
 
         requests.post('http://localhost:{}/api/unstable/workers'.format(
             self.config['broker_port']), json=specs) #hello message
-        
+
+        # Query all repos and last repo id
+        repoUrlSQL = s.sql.text("""
+                SELECT repo_git, repo_id FROM repo ORDER BY repo_id DESC
+            """)
+        rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
+        pop_off = 100
+        i = 0
+        while i < pop_off:
+            rs = rs[1:]
+            i += 1
+        for row in rs:
+            self._queue.put({'repo_id': row['repo_id'], 'repo_git': row['repo_git']})
+        self.run()
+        # self.discover_insights({'repo_id': 21420, 'repo_git': 'https://github.com/rails/ruby-coffee-script.git'})
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -119,20 +129,20 @@ class InsightWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        git_url = value['given']['git_url']
+        repo_git = value['given']['repo_git']
 
         """ Query all repos """
         repoUrlSQL = s.sql.text("""
             SELECT repo_id, repo_group_id FROM repo WHERE repo_git = '{}'
-            """.format(git_url))
+            """.format(repo_git))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, 
+            self._queue.put(CollectorTask(message_type='TASK', entry_info={"repo_git": repo_git, 
                 "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]}))
         except:
             print("that repo is not in our database")
         if self._queue.empty(): 
-            if 'github.com' in git_url:
+            if 'github.com' in repo_git:
                 self._task = value
                 self.run()
 
@@ -160,38 +170,105 @@ class InsightWorker:
                 message = self._queue.get()
             else:
                 break
-            if message.type == 'EXIT':
-                break
-            if message.type != 'TASK':
-                raise ValueError(f'{message.type} is not a recognized task type')
+            self.discover_insights(message)
 
-            if message.type == 'TASK':
-                self.query(message.entry_info)
-
-    def query(self, entry_info):
+    def discover_insights(self, entry_info):
         """ Data collection function
         Query the github api for contributors and issues (not yet implemented)
         """
         # Update table of endpoints before we query them all
         # self.update_metrics()
-        
-        # insights = []
-
+        logging.info("Discovering insights for task with entry info: {}".format(entry_info))
+    
         # """ Query all endpoints """
         endpointSQL = s.sql.text("""
             SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
             """)
-        endpoints = pd.read_sql(endpointSQL, self.db, params={}).to_json()
+        endpoints = pd.read_sql(endpointSQL, self.db, params={}).to_records()
 
-        # base_url = 'http://localhost:{}/api/unstable/repo-groups/{}/repos/{}/'.format(
-        #     self.config['broker_port'], entry_info['repo_id'], entry_info['repo_group_id'])
-        # for endpoint in endpoints:
-        #     url = base_url + endpoint['cm_info']
-        #     logging.info("Hitting endpoint: " + url + "\n")
-        #     r = requests.get(url=url)
-        #     data = r.json()
-        #     insights.append(create_insights(data))
+        if 'repo_group_id' in entry_info:
+            base_url = 'http://localhost:{}/api/unstable/repo-groups/{}'.format(
+                self.config['broker_port'], entry_info['repo_group_id'])
+        else:
+            base_url = 'http://localhost:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
+                self.config['broker_port'], entry_info['repo_id'])
 
+        for endpoint in endpoints:
+            url = base_url + endpoint['cm_info']
+            logging.info("Hitting endpoint: " + url + "\n")
+            r = requests.get(url=url)
+            data = r.json()
+
+            def is_unique_key(key):
+                return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and key != 'repo_name' and key != 'rg_name'
+            raw_values = {}
+
+            if len(data) > 0:
+                try:
+                    unique_keys = list(filter(is_unique_key, data[0].keys()))
+                except:
+                    logging.info("Length bigger than 0 but cannot get 0th element? : {}".format(data))
+            else:
+                logging.info("Endpoint with url: {} returned an empty response. Moving on to next endpoint.\n".format(url))
+                continue
+            logging.info("Found the following unique keys for this endpoint: {}".format(unique_keys))
+            for dict in data:
+                for key in unique_keys:
+                    try:
+                        trash = int(dict[key]) * 2 + 1
+                        raw_values[key].append(int(dict[key]))
+                    except:
+                        try:
+                            trash = int(dict[key]) * 2 + 1
+                            raw_values[key] = [int(dict[key])]
+                        except:
+                            logging.info("Key: {} is non-numerical, moving to next key.".format(key))
+
+            for key in raw_values.keys():
+                if len(raw_values[key]) > 0:
+                    confidence = 0.95
+                    mean, lower, upper = self.confidence_interval(raw_values[key], confidence=confidence)
+                    logging.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
+                    i = 0
+                    insight = False
+                    for value in raw_values[key]:
+                        if value > upper:
+                            logging.info("Upper band breached. Marking discovery.")
+                            insight = True
+                            break
+                        if value < lower:
+                            logging.info("Lower band breached. Marking discovery.")
+                            insight = True
+                            break
+                        i += 1
+                    if insight and 'date' in data[0]:
+                        self.clear_insight(entry_info['repo_id'], 1)
+                        j = i - 50
+                        while j <= i + 50:
+                            try:
+                                data_point = {
+                                    'repo_id': int(entry_info['repo_id']),
+                                    'ri_metric': endpoint['cm_name'],
+                                    'ri_value': data[j][key],
+                                    'ri_date': data[j]['date'],
+                                    'cms_id': 1,
+                                    'ri_fresh': 0 if j < i else 1,
+                                    "tool_source": self.tool_source,
+                                    "tool_version": self.tool_version,
+                                    "data_source": self.data_source
+                                }
+                                result = self.db.execute(self.repo_insights_table.insert().values(data_point))
+                                logging.info("Primary key inserted into the repo_insights table: " + str(result.inserted_primary_key))
+                                self.insight_results_counter += 1
+
+                                logging.info("Inserted data point for endpoint: {}\n".format(endpoint['cm_name']))
+                                j += 1
+                            except:
+                                break
+                else:
+                    logging.info("Key: {} has empty raw_values, should not have key here".format(key))
+
+    # HIGHEST PERCENTAGE STUFF, WILL MOVE TO NEW METHOD
         # greatest_week_name = greatest_month_name = insights[0]['cm_name']
         # greatest_week_val = abs(insights[0]['change_week'])
         # greatest_month_val = abs(insights[0]['change_month'])
@@ -218,16 +295,39 @@ class InsightWorker:
 
         
         # self.db.execute(self.table.insert().values(data[0]))
-        # requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
+        # requests.post('http://localhost:{}/api/completed_task'.format(
+            # self.config['broker_port']), json=entry_info['repo_git'])
 
-    # def detect_high_activity(self, timeperiod):
-    #     """ Method to find high activity issues in the past specified timeperiod """
+    def clear_insight(self, repo_id, cms_id):
+        logging.info("Checking if insight slot filled...")
+        insightSQL = s.sql.text("""
+            SELECT *
+            FROM repo_insights
+            WHERE repo_id = {} AND cms_id = {}
+        """.format(repo_id, cms_id))
+        ins = pd.read_sql(insightSQL, self.db, params={})
+        if len(ins.index) > 0:
+            logging.info("insight slot filled for repo {} slot {}".format(repo_id, cms_id))
+            self.repo_insights_table.delete().where(self.repo_insights_table.c.repo_id==repo_id and self.repo_insights_table.c.cms_id==cms_id)
+
+    def confidence_interval(self, data, timeperiod='week', confidence=.8):
+        """ Method to find high activity issues in the past specified timeperiod """
+        a = 1.0 * np.array(data)
+        logging.info("np array: {}".format(a))
+        n = len(a)
+        m, se = np.mean(a), scipy.stats.sem(a)
+        logging.info("Mean: {}, standard error: {}".format(m, se))
+        h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+        logging.info("H: {}".format(h))
+        return m, m-h, m+h
 
 
     def update_metrics(self):
         logging.info("Preparing to update metrics ...\n\n" + 
-            "Hitting endpoint: http://localhost:5000/api/unstable/metrics/status ...\n")
-        r = requests.get(url='http://localhost:5000/api/unstable/metrics/status')
+            "Hitting endpoint: http://localhost:{}/api/unstable/metrics/status ...\n".format(
+            self.config['broker_port']))
+        r = requests.get(url='http://localhost:{}/api/unstable/metrics/status'.format(
+            self.config['broker_port']))
         data = r.json()
 
         active_metrics = [metric for metric in data if metric['backend_status'] == 'implemented']
@@ -255,7 +355,7 @@ class InsightWorker:
                 "data_source": metric['data_source']
             }
             # Commit metric insertion to the chaoss metrics table
-            result = self.db.execute(self.metrics_table.insert().values(tuple))
+            result = self.db.execute(self.chaoss_metric_status_table.insert().values(tuple))
             logging.info("Primary key inserted into the metrics table: " + str(result.inserted_primary_key))
             self.metric_results_counter += 1
 
@@ -283,7 +383,7 @@ class InsightWorker:
             " to " + str(len(need_insertion)) + "\n")
         return need_insertion
 
-    def create_insights(self):
+    def greatest_percentage(self):
 
         querySQL = s.sql.text("""
             SELECT cm_info FROM chaoss_metric_status WHERE data_collection_date = now() - interval '? days'
@@ -309,3 +409,4 @@ class InsightWorker:
         }
 
         return new_insight
+

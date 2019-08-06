@@ -59,7 +59,7 @@ class Housekeeper:
                 if compatible_worker_found:
                     logging.info("Housekeeper recognized that the broker has a worker that " + 
                         "can handle the {} model... beginning to distribute maintained tasks".format(model))
-                    time.sleep(10)
+                    time.sleep(4)
                     while True:
                         logging.info('Housekeeper updating {} model for subsection: {} with given {}...'.format(
                             model, repo_group_id, given[0]))

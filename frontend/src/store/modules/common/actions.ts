@@ -34,8 +34,8 @@ export default {
             return new Promise((resolve, reject) => {
                 let tempCache = context.state.cache;
                 if ('endpoints' in payload) {
+                    console.log(payload.endpoints)
                     if ('repos' in payload) {
-                        console.log(payload.repos, payload.endpoints)
                         context.state.AugurAPI.batchMapped(payload.repos, payload.endpoints).then(
                             (data: object[]) => {
                                 console.log(data)
@@ -55,9 +55,10 @@ export default {
                                 });
                             });
                     }
-                    if (!('endpoints' in payload) && !('repoGroups' in payload)) {
+                    if (!('repos' in payload) && !('repoGroups' in payload)) {
                         payload.endpoints.forEach((endpoint: string) => {
-                            context.state.AugurAPI[endpoint].then((data: object[]) => {
+                            console.log(endpoint)
+                            context.state.AugurAPI[endpoint]().then((data: object[]) => {
                                 tempCache[endpoint] = data;
                             });
                         });
