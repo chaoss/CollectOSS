@@ -514,7 +514,7 @@ class GHTorrent(object):
         repoid = self.repoid(owner, repo)
         durationSQL = s.sql.text("""
         SELECT
-	        pull_request_history.id AS "pull_request_id" ,
+            pull_request_history.id AS "pull_request_id" ,
             pull_request_history.created_at AS "opened" ,
             MIN( pull_request_comments.created_at ) AS "first_pr_comment",
             TIMESTAMPDIFF( MINUTE ,
@@ -525,17 +525,17 @@ class GHTorrent(object):
             pull_request_history.created_at ,
             MAX( pull_request_comments.created_at )) AS "minutes_to_recent_pr_comment" 
         FROM
-	        pull_request_history
+            pull_request_history
         JOIN pull_requests ON pull_request_history.pull_request_id = pull_requests.id
         JOIN pull_request_comments ON pull_request_comments.pull_request_id = pull_requests.id
         WHERE
-	        pull_requests.base_repo_id = :repoid  AND pull_request_history.action = 'opened'
+            pull_requests.base_repo_id = :repoid  AND pull_request_history.action = 'opened'
         GROUP BY
-	        pull_request_history.id ,
-	        pull_requests.base_repo_id ,
-	        pull_request_history.created_at
+            pull_request_history.id ,
+            pull_requests.base_repo_id ,
+            pull_request_history.created_at
         ORDER BY
-	        pull_request_history.created_at
+            pull_request_history.created_at
         """)
 
         return pd.read_sql(durationSQL, self.db, params={"repoid": str(repoid)})
