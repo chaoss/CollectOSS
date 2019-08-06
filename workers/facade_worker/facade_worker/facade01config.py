@@ -352,7 +352,7 @@ class Config:
             options=f'-c search_path={db_schema}',
             connect_timeout = 31536000,)
 
-        cursor = db.cursor()#pymysql.cursors.DictCursor)
+        self.cursor = db.cursor()#pymysql.cursors.DictCursor)
 
         if people and not multi_threaded_connection:
             self.cursor_people = cursor
@@ -377,7 +377,7 @@ class Config:
         # Figure out how much we're going to log
         self.log_level = self.get_setting('log_level')
 
-        return db, cursor
+        return db, self.cursor
         
 
     def get_setting(self, setting):
