@@ -130,7 +130,7 @@ export default class Dashboard extends Vue {
   
   // Data properties
   chart: any = null //"#343A40", 
-  colors: string[] = ["#24a2b7", "#FF3647","#159dfb", "#FFC107","#FF3647","#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
+  colors: string[] = ["#24a2b7", "#FF3647","#159dfb", "#FFC107","#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
   tempInsightEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
   tempInsightRepos: any[] = [];
   tempInsightTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
@@ -160,6 +160,9 @@ export default class Dashboard extends Vue {
   // 'created' lifecycle hook
   // Gets ran on component initialization, data collection should be handled here
   created () {
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
     // Load the data we need
     this.loadRepoGroups().then(() => {
       this.loadRepos().then(() => {
@@ -178,8 +181,10 @@ export default class Dashboard extends Vue {
         //   })
         // }
         this.endpoint({endpoints: ['topInsights']}).then((tuples:any) => {
-          // console.log(tuples)
+          console.log(Object.keys(tuples))
           tuples.topInsights;
+          // sleep(5000)
+          // console.log(Object.keys(tuples))
           if ('topInsights' in tuples){
             tuples.topInsights.forEach((tuple:any) => {
               // tuple.value = +tuple.value
