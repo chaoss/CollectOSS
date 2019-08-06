@@ -93,11 +93,11 @@
                       
                     </div>
                     <div  class="d-flex px-3 list-group-item" style="text-align: left">
-                      <d-link :to="{name: 'repo_overview', params: {repo: test[1]}}" @click="setBaseRepo(test[1])">
-                        <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ test[1] }}</span>
+                      <d-link :to="{name: 'repo_overview', params: {repo: test[5]}}" @click="setBaseRepo(test[1])">
+                        <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ test[5] }}</span>
                       </d-link>
                       <div v-if="loadedInsights" style="margin: 0 0 0 auto; float:right">
-                        <spark-chart :color="colors[1]" :url="test[1]" :data="values[test[1]]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
+                        <spark-chart :color="colors[1]" :url="test[5]" :data="values[test[5]]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
                       </div>
                       
                     </div>
@@ -160,6 +160,30 @@
                 </div>
               </d-card>
             </d-col>
+            <d-col  v-if="apiGroups != {}" :key="3" lg="4" sm="12" class="mb-4">
+              <!-- v-for="(group, idx) in Object.keys(apiGroups)" -->
+              <d-card class="card-small card">
+                <div class="border-bottom card-header">
+                  <h6 class="m-0">Comcast</h6>
+                  <div class="block-handle"></div>
+                </div>
+                <div class="p-0 card-body">
+                  <div class="list-group-small list-group list-group-flush">
+                    <!-- Object.keys(repoRelations[group]) -->
+                    <div  class="d-flex px-3 list-group-item" style="text-align: left">
+                      <d-link :to="{name: 'repo_overview', params: {repo: test[1]}}" @click="setBaseRepo(test[1])">
+                        <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ test[1] }}</span>
+                      </d-link>
+                      <div v-if="loadedInsights" style="margin: 0 0 0 auto; float:right">
+                        <spark-chart :color="colors[4]" :url="test[1]" :data="values[test[1]]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
+                      </div>
+                      
+                    </div>
+
+                  </div>
+                </div>
+              </d-card>
+            </d-col>
           </d-row>
         </div>
   </d-container>
@@ -218,19 +242,19 @@ interface FlexObject<TValue> {
 export default class Dashboard extends Vue {
   
   // Data properties
-  chart: any = null
-  colors: string[] = ["#24a2b7", "#24a2b7", "#159dfb", "#FFC107","#FF3647", "#343A40","#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
+  chart: any = null //"#343A40", 
+  colors: string[] = ["#24a2b7", "#FF3647","#159dfb", "#FFC107","#FF3647","#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
   tempInsightEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
   tempInsightRepos: any[] = [];
   tempInsightTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
-  themes: string[] = ['info', 'info', 'royal-blue', 'warning', 'dark'];
+  themes: string[] = ['info', 'danger','royal-blue', 'warning', 'dark'];
   loadedRelations: boolean = false
   loadedInsights: boolean = false
   desiredReposPerGroup: number = 5
   values: any = {}
-  test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/rails/rails.git','https://github.com/apache/jclouds-site.git',
-    'https://github.com/apache/karaf-jclouds.git', 'https://github.com/openssl/openssl']
-  testGroups: any[] = ['Rails', 'Rails', 'Risk Working Group', 'Apache']
+  test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/Comcast/Hygieia.git','https://github.com/apache/jclouds-site.git',
+    'https://github.com/apache/karaf-jclouds.git', 'https://github.com/openssl/openssl', 'https://github.com/rails/ruby-coffee-script.git']
+  testGroups: any[] = ['Rails', 'Comcast', 'Risk Working Group', 'Apache']
 
   // Allow access to vuex getters
   repoRelations!: any;
