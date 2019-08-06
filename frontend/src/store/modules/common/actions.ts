@@ -65,11 +65,12 @@ export default {
                     }
                 }
                 console.log(tempCache)
-                context.commit('mutate', {
-                    property: 'cache',
-                    with: tempCache,
-                });
                 resolve(tempCache)
+                // context.commit('mutate', {
+                //     property: 'cache',
+                //     with: tempCache,
+                // });
+                // resolve(tempCache)
             });
         } catch (error) {
             throw error;

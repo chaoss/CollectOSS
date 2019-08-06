@@ -88,7 +88,7 @@
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ test[0] }}</span>
                       </d-link>
                       <div v-if="loadedInsights" style="margin: 0 0 0 auto; float:right">
-                        <spark-chart :color="colors[1]" :url="test[0]" :data="values[test[0]]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
+                        <spark-chart :color="colors[0]" :url="test[0]" :data="values[test[0]]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
                       </div>
                       
                     </div>
@@ -97,7 +97,7 @@
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ test[5] }}</span>
                       </d-link>
                       <div v-if="loadedInsights" style="margin: 0 0 0 auto; float:right">
-                        <spark-chart :color="colors[1]" :url="test[5]" :data="values[test[5]]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
+                        <spark-chart :color="colors[0]" :url="test[5]" :data="values[test[5]]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
                       </div>
                       
                     </div>
@@ -160,7 +160,7 @@
                 </div>
               </d-card>
             </d-col>
-            <d-col  v-if="apiGroups != {}" :key="3" lg="4" sm="12" class="mb-4">
+            <d-col  v-if="apiGroups != {}" :key="4" lg="4" sm="12" class="mb-4">
               <!-- v-for="(group, idx) in Object.keys(apiGroups)" -->
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
@@ -291,6 +291,7 @@ export default class Dashboard extends Vue {
         //   })
         // }
         this.endpoint({endpoints: ['topInsights']}).then((tuples:any) => {
+          console.log(tuples)
           if ('topInsights' in tuples){
             tuples.topInsights.forEach((tuple:any) => {
               // tuple.value = +tuple.value
