@@ -292,7 +292,7 @@ export default class Dashboard extends Vue {
         // }
         this.endpoint({endpoints: ['topInsights']}).then((tuples:any) => {
           console.log(tuples)
-          if ('topInsights' in tuples){
+          // if ('topInsights' in tuples){
             tuples.topInsights.forEach((tuple:any) => {
               // tuple.value = +tuple.value
               if (this.values[tuple.repo_git]){
@@ -307,9 +307,9 @@ export default class Dashboard extends Vue {
               }
             })
             this.loadedInsights = true
-          } else {
-            console.log("top insights did not load correctly")
-          }
+          // } else {
+          //   console.log("top insights did not load correctly")
+          // }
         })
         this.loadedRelations = true
       })
