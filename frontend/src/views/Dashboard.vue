@@ -1,17 +1,17 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <!-- Page Header -->
-    <!-- <div class="page-header row no-gutters py-4">
+    <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <h3 class="page-title" style="font-size: 1rem">Insights</h3>
       </div>
-    </div> -->
+    </div>
 
     <!-- First Row of Posts -->
 
         <d-row>
           <div v-if="!loadedInsights" class="col-md-8 col-lg-9">
-            <spinner style="top: 30%; position: relative; transform: translateY(-50%);"></spinner>
+            <spinner style="top: 30%; padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
           </div>
           <d-col v-if="loadedInsights" v-for="(group, idx) in Object.keys(apiGroups)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             
@@ -28,7 +28,7 @@
               </div>
               <d-card-body>
                 <h5 class="card-title">
-                  <a href="#" class="text-fiord-blue">{{ getOwner(test[0]) }}/{{ getRepo(test[0]) }}</a>
+                  <a href="#" class="text-fiord-blue">{{ test[0].substr(19) }}</a>
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository increased in Code Commits in the past week</p>
                 <span class="text-muted" style="font-size: .75rem">1 week</span>
@@ -64,8 +64,8 @@
                       <d-link :to="{name: 'repo_overview', params: {repo: repo}}" @click="setBaseRepo(repo)">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
                       </d-link>
-                      <div v-if="loadedInsights">
-                        <spark-chart :color="colors[idx]" :url="repo" :data="values[repo]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; margin-left:auto; margin-right:0;"/>
+                      <div v-if="loadedInsights" style="margin: 0 0 0 auto; float:right">
+                        <spark-chart :color="colors[idx]" :url="repo" :data="values[repo]['Code Changes']" style="max-height: 50px; padding-bottom: 0px; "/>
                       </div>
                       
                     </div>
@@ -194,8 +194,6 @@ export default class Dashboard extends Vue {
           this.loadedInsights = true
         })
         this.loadedRelations = true
-
-        
       })
     })
   }
@@ -207,6 +205,10 @@ export default class Dashboard extends Vue {
     let owner = null
     let repo = null
     let extension = false
+    if (url.includes("https://")){
+      url = url.substr(8)
+      console.log(url)
+    }
 
     if (first == last) { //normal github
       domain = url.substring(0, first)
