@@ -1895,8 +1895,8 @@ def create_routes(server):
     server.addRepoMetric(augur_db.languages, 'languages')
 
     """
-    @api {get} /repo-groups/:repo_group_id/license-declared License Declared (Repo Group)
-    @apiName license-declared-repo-group
+    @api {get} /repo-groups/:repo_group_id/license-count License Declared (Repo Group)
+    @apiName license-count-repo-group
     @apiGroup Risk
     @apiDescription The declared software package license (fetched from CII Best Practices badging data).
                     <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md">CHAOSS Metric Definition</a>
@@ -1904,22 +1904,22 @@ def create_routes(server):
     @apiSuccessExample {json} Success-Response:
                     [
                         {
-                            "repo_id": 21252,
-                            "repo_name": "php-legal-licenses",
-                            "license": "Apache-2.0"
+                            "name": "ActorServiceRegistry",
+                            "number_of_license": 2,
+                            "file_without_licenses": true
                         },
                         {
-                            "repo_id": 21277,
-                            "repo_name": "trickster",
-                            "license": "Apache-2.0"
-                        }
+                            "name": "adyen-api",
+                            "number_of_license": 1,
+                            "file_without_licenses": true
+                        },
                     ]
     """
-    server.addRepoGroupMetric(augur_db.license_declared, 'license-declared')
+    server.addRepoGroupMetric(augur_db.license_declared, 'license-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/license-declared License Declared (Repo)
-    @apiName license-declared-repo
+    @api {get} /repo-groups/:repo_group_id/license-count License Declared (Repo)
+    @apiName license-count-repo
     @apiGroup Risk
     @apiDescription The declared software package license (fetched from CII Best Practices badging data).
                     <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/licensing.md">CHAOSS Metric Definition</a>
@@ -1927,17 +1927,20 @@ def create_routes(server):
     @apiParam {string} repo_id Repository ID.
     @apiSuccessExample {json} Success-Response:
                     [
-                        {
-                            "repo_name":"php-legal-licenses",
-                            "license": "Apache-2.0"
-                        }
+                        [
+                            {
+                                "name": "zucchini",
+                                "number_of_license": 2,
+                                "file_without_licenses": true
+                            }
+                        ]
                     ]
     """
-    server.addRepoMetric(augur_db.license_declared, 'license-declared')
+    server.addRepoMetric(augur_db.license_count, 'license-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/committers Committers
-    @apiName committers(Repo)
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/committers Committers(Repo)
+    @apiName committers-repo
     @apiGroup Risk
     @apiDescription Number of persons contributing with an accepted commit for the first time.
                 <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md">CHAOSS Metric Definition</a>
@@ -1970,8 +1973,8 @@ def create_routes(server):
 
     """
     @api {get} /repo-groups/:repo_group_id/Committers (Repo Group)
-    @apiName committers(Repo Group)
-    @apiGroup []
+    @apiName committers-repo-group
+    @apiGroup Risk
     @apiDescription Number of persons opening an issue for the first time.
                     <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md">CHAOSS Metric Definition</a>
     @apiParam {string} repo_group_id Repository Group ID
