@@ -18,7 +18,7 @@
             <d-card v-if="idx < 4" class="card-small card-post card-post--1">
               <div class="card-post__image">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
-                <insight-chart style="transform: translateX(-30px)" :data="values[test[idx]]['Code Changes']" :url="test[0]" :color="colors[idx]"></insight-chart>
+                <insight-chart style="transform: translateX(-3.35rem)" :data="values[test[idx]]['Code Changes']" :url="test[0]" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
                   <a href="#" :style="colors[idx]" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
@@ -30,8 +30,8 @@
                 <h5 class="card-title">
                   <a href="#" class="text-fiord-blue">{{ test[idx].substr(19) }}</a>
                 </h5>
-                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository increased in Code Commits in the past week</p>
-                <span class="text-muted" style="font-size: .75rem">1 week</span>
+                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(values[test[idx]]['Code Changes']) }} in Code Commits within the past month</p>
+                <span class="text-muted" style="font-size: .75rem">1 month</span>
               </d-card-body>
             </d-card>
           </d-col>
@@ -219,11 +219,11 @@ export default class Dashboard extends Vue {
   
   // Data properties
   chart: any = null
-  colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
+  colors: string[] = ["#24a2b7", "#24a2b7", "#159dfb", "#FFC107","#FF3647", "#343A40","#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
   tempInsightEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
   tempInsightRepos: any[] = [];
   tempInsightTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
-  themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
+  themes: string[] = ['info', 'info', 'royal-blue', 'warning', 'dark'];
   loadedRelations: boolean = false
   loadedInsights: boolean = false
   desiredReposPerGroup: number = 5
@@ -361,6 +361,19 @@ export default class Dashboard extends Vue {
       return 'arrow_upward'
     else
       return 'arrow_downward'
+  }
+
+  getPhrase (values: any[]) {
+    let i = 0
+    for (i = 0; i < values.length; i++){
+      if (values[i].discovered){
+        break
+      }
+    }
+    if (values[i+1].value > values[i].value) 
+      return 'increase'
+    else
+      return 'decrease'
   }
 
   setBaseRepo (e: any) {
