@@ -2003,6 +2003,52 @@ def create_routes(server):
     server.addRepoGroupMetric(
         augur_db.committers, 'committers')
 
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/license-coverage
+    @apiName license-coverage-repo
+    @apiGroup Risk
+    @apiDescription Number of persons contributing with an accepted commit for the first time.
+                <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "zucchini",
+                            "total_files": 95,
+                            "license_declared_file": 33,
+                            "coverage": 0.347
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.license_coverage, 'license-coverage')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/license-coverage
+    @apiName license-coverage-repo-group
+    @apiGroup Risk
+    @apiDescription Number of persons opening an issue for the first time.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "name": "ActorServiceRegistry",
+                            "total_files": 51,
+                            "license_declared_files": 19,
+                            "coverage": 0.373
+                        },
+                        {
+                            "name": "adyen-api",
+                            "total_files": 92,
+                            "license_declared_files": 55,
+                            "coverage": 0.598
+                        }
+                    ]
+    """
+
+    server.addRepoGroupMetric(augur_db.license_coverage, 'license-coverage')
+
 
 
     #####################################
