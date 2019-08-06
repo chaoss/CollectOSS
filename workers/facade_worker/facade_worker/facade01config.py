@@ -408,7 +408,7 @@ class Config:
         if self.log_level == 'Debug' and level == 'Debug':
             return
 
-        if log_options.index(level) <= log_options.index(self.log_level):
-            query = ("INSERT INTO utility_log (level,status) VALUES (%s,%s)")
-            self.cursor.execute(query, (level, status))
-            self.db.commit()
+        #if log_options.index(level) <= log_options.index(self.log_level):
+        query = ("INSERT INTO utility_log (level,status) VALUES (%s,%s)")
+        self.cursor.execute(query, (level, status))
+        self.db.commit()
