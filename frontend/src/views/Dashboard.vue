@@ -293,7 +293,7 @@ export default class Dashboard extends Vue {
         this.endpoint({endpoints: ['topInsights']}).then((tuples:any) => {
           console.log(tuples)
           // if ('topInsights' in tuples){
-            tuples.topInsights.forEach((tuple:any) => {
+            tuples.forEach((tuple:any) => {
               // tuple.value = +tuple.value
               if (this.values[tuple.repo_git]){
                 if (this.values[tuple.repo_git][tuple.ri_metric]) {

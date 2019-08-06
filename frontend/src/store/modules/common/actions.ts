@@ -64,8 +64,8 @@ export default {
                         });
                     }
                 }
-                console.log(tempCache)
-                resolve(tempCache)
+                console.log(tempCache.topInsights)
+                resolve(tempCache.topInsights)
                 // context.commit('mutate', {
                 //     property: 'cache',
                 //     with: tempCache,
