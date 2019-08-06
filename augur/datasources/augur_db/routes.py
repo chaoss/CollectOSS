@@ -1895,7 +1895,7 @@ def create_routes(server):
     server.addRepoMetric(augur_db.languages, 'languages')
 
     """
-    @api {get} /repo-groups/:repo_group_id/license-count License Declared (Repo Group)
+    @api {get} /repo-groups/:repo_group_id/license-count License Count (Repo Group)
     @apiName license-count-repo-group
     @apiGroup Risk
     @apiDescription The declared software package license (fetched from CII Best Practices badging data).
@@ -1915,10 +1915,10 @@ def create_routes(server):
                         },
                     ]
     """
-    server.addRepoGroupMetric(augur_db.license_declared, 'license-count')
+    server.addRepoGroupMetric(augur_db.license_count, 'license-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/license-count License Declared (Repo)
+    @api {get} /repo-groups/:repo_group_id/license-count License Count (Repo)
     @apiName license-count-repo
     @apiGroup Risk
     @apiDescription The declared software package license (fetched from CII Best Practices badging data).
@@ -2004,7 +2004,7 @@ def create_routes(server):
         augur_db.committers, 'committers')
 
     """
-    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/license-coverage
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/license-coverage License Coverage(Repo)
     @apiName license-coverage-repo
     @apiGroup Risk
     @apiDescription Number of persons contributing with an accepted commit for the first time.
@@ -2024,7 +2024,7 @@ def create_routes(server):
     server.addRepoMetric(augur_db.license_coverage, 'license-coverage')
 
     """
-    @api {get} /repo-groups/:repo_group_id/license-coverage
+    @api {get} /repo-groups/:repo_group_id/license-coverage License Coverage(Repo Group)
     @apiName license-coverage-repo-group
     @apiGroup Risk
     @apiDescription Number of persons opening an issue for the first time.
@@ -2048,6 +2048,49 @@ def create_routes(server):
     """
 
     server.addRepoGroupMetric(augur_db.license_coverage, 'license-coverage')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/license-declared License Declared(Repo)
+    @apiName license-declared-repo
+    @apiGroup Risk
+    @apiDescription Number of persons contributing with an accepted commit for the first time.
+                <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "name": "trickster",
+                            "short_name": "Apache-2.0",
+                            "note": ""
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.license_declared, 'license-declared')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/license-declared License Declared(Repo Group)
+    @apiName license-declared-repo-group
+    @apiGroup Risk
+    @apiDescription Number of persons opening an issue for the first time.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/License_Coverage.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                       {
+                            "name": "trickster",
+                            "short_name": "Apache-2.0",
+                            "note": ""
+                        },
+                        {
+                            "name": "dialyzex",
+                            "short_name": "Apache-2.0",
+                            "note": ""
+                        }
+                    ]
+    """
+
+    server.addRepoGroupMetric(augur_db.license_declared, 'license-declared')
 
 
 
