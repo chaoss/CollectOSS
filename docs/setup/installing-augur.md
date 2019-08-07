@@ -72,10 +72,12 @@
 From the root directory inside of your augur clone (assuming an activated Python virtualenv from the beginning steps: `source newaugur/bin/activate`)
 1. `pip install pipreqs sphinx`
 2. `sudo npm install -g apidoc brunch newman` 
+3. If you are building for a second time, `rm -rf build/*`
 3. `pip install -e .` 
 4. `pip install ipykernel`
 5. `pip install xlsxwriter` (you will need this for the facade worker later)
 5. `python -m ipykernel install --user --name augur --display-name "Python (augur)"`
+6. `python setup.py install`
 
 ## Augur Back End
 1. Create a file in the root of your augur project called `augur.config.json`. [Here is a sample augur.config.json file](./augur-sample-cnfg.json). There are a number of places where you need to provide
