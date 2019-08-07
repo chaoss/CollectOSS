@@ -89,7 +89,9 @@ class Server(object):
                 session_data = {}
                 if current_user and hasattr(current_user, 'username'):
                     session_data = { 'username': current_user.username }
-                return render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
+                return Response(response=json.dumps(session_data),
+                            status=405,
+                            mimetype="application/json")#render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
 
         @app.route('/static/<path:path>')
         def send_static(path):
