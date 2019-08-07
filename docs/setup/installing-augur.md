@@ -71,7 +71,7 @@
 ## Build Your Augur Backend Environment
 From the root directory inside of your augur clone (assuming an activated Python virtualenv from the beginning steps: `source newaugur/bin/activate`)
 1. `pip install pipreqs sphinx`
-2. `sudo npm install -g apidoc brunch newman` 
+2. `npm install -g apidoc brunch newman` 
 3. If you are building for a second time, `rm -rf build/*`
 3. `pip install -e .` 
 4. `pip install ipykernel`
