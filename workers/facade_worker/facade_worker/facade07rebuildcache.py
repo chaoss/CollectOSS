@@ -411,7 +411,8 @@ def invalidate_caches(cfg):
 	cfg.log_activity('Info','Invalidating caches (complete)')
 
 def rebuild_unknown_affiliation_and_web_caches(cfg):
-
+        print("WORKING")
+        cfg.log_activity("Info", "WORKING YA")
 # When there's a lot of analysis data, calculating display data on the fly gets
 # pretty expensive. Instead, we crunch the data based upon the user's preferred
 # statistics (author or committer) and store them. We also store all records
