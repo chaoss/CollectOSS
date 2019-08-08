@@ -21,7 +21,7 @@ class AugurPlugin(AugurPlugin):
                 password=self._augur.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
                 host=self._augur.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
                 port=self._augur.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433'),
-                dbname=self._augur.read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur'),
+                dbname=self._augur.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur'),
                 schema=self._augur.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
             )
         return self.__augur_db

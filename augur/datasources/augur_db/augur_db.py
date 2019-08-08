@@ -24,7 +24,7 @@ class Augur(object):
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
         )
-
+        
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
@@ -2773,81 +2773,182 @@ class Augur(object):
 
         if not repo_id:
             summarySQL = s.sql.text("""
-                SELECT (
-                    SELECT sum(watchers_count) AS watcher_count
+                SELECT
+                (
+                    SELECT watchers_count AS watcher_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT watchers_count AS watcher_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
                 ) AS watcher_count,
                 (
-                    SELECT sum(stars_count) AS star_count
+                    SELECT stars_count AS stars_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
-                ) AS star_count,
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT stars_count AS stars_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS stars_count,
                 (
-                    SELECT sum(fork_count) AS fork_count
+                    SELECT fork_count AS fork_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT fork_count AS fork_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
                 ) AS fork_count,
                 (
-                    SELECT count(*) AS merged_count
-                    FROM (
-                        SELECT DISTINCT issue_events.issue_id
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id JOIN repo ON issues.repo_id = repo.repo_id
-                        WHERE action = 'merged'
-                        AND repo_group_id = :repo_group_id
-                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
-                    ) a 
-                ) AS merged_count,
-                committer_count, commit_count FROM (
-                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
-                    FROM (
-                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits JOIN repo ON commits.repo_id = repo.repo_id
-                        WHERE repo_group_id = :repo_group_id
-                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
-                        GROUP BY cmt_author_name
-                    ) temp
-                ) commit_data
+                    SELECT pull_requests_merged AS pull_requests_merged
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT pull_requests_merged AS pull_requests_merged
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS pull_requests_merged,
+                (
+                    SELECT committers_count AS committers_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT committers_count AS committers_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS committers_count,
+                (
+                    SELECT commit_count AS commit_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT commit_count AS commit_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS commit_count
             """)
             results = pd.read_sql(summarySQL, self.db, params={'repo_group_id': repo_group_id,
                                                             'begin_date': begin_date, 'end_date': end_date})
             return results
         else:
             summarySQL = s.sql.text("""
-                SELECT 
+                SELECT
                 (
-                    SELECT sum(watchers_count) AS watcher_count
-                    FROM repo_info 
-                    WHERE repo_info.repo_id = :repo_id
+                    SELECT watchers_count AS watcher_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT watchers_count AS watcher_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
                 ) AS watcher_count,
                 (
-                    SELECT sum(stars_count) AS star_count
+                    SELECT stars_count AS stars_count
                     FROM repo_info
-                    WHERE repo_info.repo_id = :repo_id
-                ) AS star_count,
+                    WHERE repo_id = :repo_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT stars_count AS stars_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS stars_count,
                 (
-                    SELECT sum(fork_count) AS fork_count
+                    SELECT fork_count AS fork_count
                     FROM repo_info
-                    WHERE repo_info.repo_id = :repo_id
+                    WHERE repo_id = :repo_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT fork_count AS fork_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
                 ) AS fork_count,
                 (
-                    SELECT count(*) AS merged_count
-                    FROM (
-                        SELECT DISTINCT issue_events.issue_id
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
-                        WHERE action = 'merged'
-                        AND repo_id = :repo_id
-                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
-                    ) a 
-                ) AS merged_count,
-                committer_count, commit_count FROM (
-                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
-                    FROM (
-                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits
-                        WHERE repo_id = :repo_id
-                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
-                        GROUP BY cmt_author_name
-                    ) temp
-                ) commit_data
+                    SELECT pull_requests_merged AS pull_requests_merged
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT pull_requests_merged AS pull_requests_merged
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS pull_requests_merged,
+                (
+                    SELECT committers_count AS committers_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT committers_count AS committers_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS committers_count,
+                (
+                    SELECT commit_count AS commit_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    ORDER BY last_updated DESC
+                    LIMIT 1
+                ) - (
+                    SELECT commit_count AS commit_count
+                    FROM repo_info
+                    WHERE repo_id = :repo_id
+                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    ORDER BY last_updated ASC
+                    LIMIT 1
+                ) AS commit_count
             """)
             results = pd.read_sql(summarySQL, self.db, params={'repo_id': repo_id,
                                                             'begin_date': begin_date, 'end_date': end_date})
