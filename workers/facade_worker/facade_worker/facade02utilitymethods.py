@@ -48,7 +48,7 @@ logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 def update_repo_log(cfg, repos_id,status):
 
 # Log a repo's fetch status
-	cfg.log_activity("{} {}".format(status, repos_id))
+	cfg.log_activity("Info","{} {}".format(status, repos_id))
 	log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
 		"VALUES (%s,%s)")
 	try:
