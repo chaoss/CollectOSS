@@ -61,11 +61,14 @@ def analysis(cfg, multithreaded):
 
 	# Log a repo's analysis status
 
-		log_message = ("INSERT INTO analysis_log (repos_id,status) "
-			"VALUES (%s,%s)")
+	    log_message = ("INSERT INTO analysis_log (repos_id,status) "
+	    	"VALUES (%s,%s)")
 
-		cfg.cursor.execute(log_message, (repos_id,status))
-		cfg.db.commit()
+            try:
+                cfg.cursor.execute(log_message, (repos_id,status))
+                cfg.db.commit()
+            except:
+                pass
 
 ### The real function starts here ###
 
