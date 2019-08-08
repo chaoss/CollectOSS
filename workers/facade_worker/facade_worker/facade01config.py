@@ -410,5 +410,25 @@ class Config:
 
         #if log_options.index(level) <= log_options.index(self.log_level):
         query = ("INSERT INTO utility_log (level,status) VALUES (%s,%s)")
-        self.cursor.execute(query, (level, status))
-        self.db.commit()
+        try:
+            self.cursor.execute(query, (level, status))
+            self.db.commit()
+        except:
+            # Set up the database
+            json = self.read_config("Database", use_main_config=1)#self.cfg.migrate_database_config("Credentials")
+            db_user = json['user']
+            db_pass = json['password']
+            db_name = json['database']
+            db_host = json['host']
+            db_user_people = json['user']
+            db_pass_people = json['password']
+            db_name_people = json['database']
+            db_host_people = json['host']
+            # Open a general-purpose connection
+            db,cursor = self.cfg.database_connection(
+                db_host,
+                db_user,
+                db_pass,
+                db_name, False, False)
+            self.cursor.execute(query, (level, status))
+            self.db.commit()
