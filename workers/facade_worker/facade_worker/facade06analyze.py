@@ -64,11 +64,11 @@ def analysis(cfg, multithreaded):
         log_message = ("INSERT INTO analysis_log (repos_id,status) "
             "VALUES (%s,%s)")
 
-            try:
-                cfg.cursor.execute(log_message, (repos_id,status))
-                cfg.db.commit()
-            except:
-                pass
+        try:
+            cfg.cursor.execute(log_message, (repos_id,status))
+            cfg.db.commit()
+        except:
+            pass
 
 ### The real function starts here ###
 
@@ -179,8 +179,10 @@ def analysis(cfg, multithreaded):
             trim_commit(cfg, repo[0],commit)
 
         set_complete = "UPDATE repo SET repo_status='Complete' WHERE repo_id=%s and repo_status != 'Empty'"
-
-        cfg.cursor.execute(set_complete, (repo[0], ))
+        try:
+            cfg.cursor.execute(set_complete, (repo[0], ))
+        except:
+            pass
 
         update_analysis_log(repo[0],'Commit trimming complete')
 
