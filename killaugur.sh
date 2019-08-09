@@ -1,2 +1,2 @@
-ps aux | grep -ie augur3 | grep -v test | grep sean | awk '{print "kill -9 " $2}'
+ps aux | grep -ie augur | grep sean | awk '{print "kill -9 " $2}'
 
