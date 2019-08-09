@@ -264,6 +264,24 @@ class GHRepoInfoWorker:
                         name
                         url
                     }
+                    issue_count: issues {
+                        totalCount
+                    }
+                    issues_closed: issues(states:CLOSED) {
+                        totalCount
+                    }
+                    pr_count: pullRequests {
+                        totalCount
+                    }
+                    pr_open: pullRequests(states: OPEN) {
+                        totalCount
+                    }
+                    pr_closed: pullRequests(states: CLOSED) {
+                        totalCount
+                    }
+                    pr_merged: pullRequests(states: MERGED) {
+                        totalCount
+                    }
                 }
             }
         """ % (owner, repo)
@@ -284,7 +302,10 @@ class GHRepoInfoWorker:
         except requests.exceptions.ConnectionError:
             logger.error('Could not connect to api.github.com')
         except Exception as e:
-            logger.error(f'Caught Exception: {e}')
+            logger.exception(f'Caught Exception: {e}')
+
+        committers_count = self.query_committers_count(owner, repo)
+        commit_count = self.query_commit_count(owner, repo)
 
         logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
 
@@ -303,7 +324,7 @@ class GHRepoInfoWorker:
             'UUID': None,
             'license': j['licenseInfo']['name'] if j['licenseInfo'] else None,
             'stars_count': j['stargazers']['totalCount'] if j['stargazers'] else None,
-            'committers_count': None,
+            'committers_count': committers_count,
             'issue_contributors_count': None,
             'changelog_file': None,
             'contributing_file': None,
@@ -313,6 +334,13 @@ class GHRepoInfoWorker:
             'security_audit_file': None,
             'status': None,
             'keywords': None,
+            'commit_count': commit_count,
+            'issues_count': j['issue_count']['totalCount'] if j['issue_count'] else None,
+            'issues_closed': j['issues_closed']['totalCount'] if j['issues_closed'] else None,
+            'pull_request_count': j['pr_count']['totalCount'] if j['pr_count'] else None,
+            'pull_requests_open': j['pr_open']['totalCount'] if j['pr_open'] else None,
+            'pull_requests_closed': j['pr_closed']['totalCount'] if j['pr_closed'] else None,
+            'pull_requests_merged': j['pr_merged']['totalCount'] if j['pr_merged'] else None,
             'tool_source': self.tool_source,
             'tool_version': self.tool_version,
             'data_source': self.data_source,
@@ -328,6 +356,51 @@ class GHRepoInfoWorker:
         self.info_id_inc += 1
 
         self.register_task_completion(repo_id, git_url)
+
+    def query_committers_count(self, owner, repo):
+        logger.info('Querying committers count')
+        url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
+        committers = 0
+
+        try:
+            while True:
+                r = requests.get(url, headers=self.headers)
+                self.update_rate_limit(r)
+                committers += len(r.json())
+
+                if 'next' not in r.links:
+                    break
+                else:
+                    url = r.links['next']['url']
+        except Exception:
+            logger.exceptioin('An error occured while querying contributor count')
+
+        return committers
+
+    def query_commit_count(self, owner, repo):
+        logger.info('Querying commit count')
+        commits_url = f'https://api.github.com/repos/{owner}/{repo}/commits'
+        r = requests.get(commits_url, headers=self.headers)
+        self.update_rate_limit(r)
+
+        first_commit_sha = None
+        last_commit_sha = r.json()[0]['sha']
+
+        if 'last' in r.links:
+            r = requests.get(r.links['last']['url'], headers=self.headers)
+            self.update_rate_limit(r)
+
+            first_commit_sha = r.json()[-1]['sha']
+
+        else:
+            first_commit_sha = r.json()[-1]['sha']
+
+        compare_url = (f'https://api.github.com/repos/{owner}/{repo}/'
+                    + f'compare/{first_commit_sha}...{last_commit_sha}')
+        r = requests.get(compare_url, headers=self.headers)
+        self.update_rate_limit(r)
+
+        return r.json()['total_commits'] + 1
 
 
 
