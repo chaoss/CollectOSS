@@ -2774,7 +2774,7 @@ class Augur(object):
         if not repo_id:
             summarySQL = s.sql.text("""
                 SELECT
-                (
+                (   
                     SELECT watchers_count AS watcher_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
@@ -2819,7 +2819,8 @@ class Augur(object):
                 (
                     SELECT pull_requests_merged AS pull_requests_merged
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
-                    WHERE repo_group_id = :repo_group_id
+                    WHERE repo_group_id = :repo_group_id 
+                    AND pull_requests_merged is not NULL
                     ORDER BY last_updated DESC
                     LIMIT 1
                 ) - (
@@ -2827,6 +2828,7 @@ class Augur(object):
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
                     AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    AND pull_requests_merged is not NULL
                     ORDER BY last_updated ASC
                     LIMIT 1
                 ) AS pull_requests_merged,
@@ -2834,6 +2836,7 @@ class Augur(object):
                     SELECT committers_count AS committers_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
+                    AND committers_count is not NULL
                     ORDER BY last_updated DESC
                     LIMIT 1
                 ) - (
@@ -2841,6 +2844,7 @@ class Augur(object):
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
                     AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    AND committers_count is not NULL
                     ORDER BY last_updated ASC
                     LIMIT 1
                 ) AS committers_count,
@@ -2848,6 +2852,7 @@ class Augur(object):
                     SELECT commit_count AS commit_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
+                    AND commit_count is not NULL
                     ORDER BY last_updated DESC
                     LIMIT 1
                 ) - (
@@ -2855,6 +2860,7 @@ class Augur(object):
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
                     AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    AND commit_count is not NULL
                     ORDER BY last_updated ASC
                     LIMIT 1
                 ) AS commit_count
@@ -2911,6 +2917,7 @@ class Augur(object):
                     SELECT pull_requests_merged AS pull_requests_merged
                     FROM repo_info
                     WHERE repo_id = :repo_id
+                    AND pull_requests_merged is not NULL
                     ORDER BY last_updated DESC
                     LIMIT 1
                 ) - (
@@ -2918,6 +2925,7 @@ class Augur(object):
                     FROM repo_info
                     WHERE repo_id = :repo_id
                     AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    AND pull_requests_merged is not NULL
                     ORDER BY last_updated ASC
                     LIMIT 1
                 ) AS pull_requests_merged,
@@ -2925,6 +2933,7 @@ class Augur(object):
                     SELECT committers_count AS committers_count
                     FROM repo_info
                     WHERE repo_id = :repo_id
+                    AND committers_count is not NULL
                     ORDER BY last_updated DESC
                     LIMIT 1
                 ) - (
@@ -2932,6 +2941,7 @@ class Augur(object):
                     FROM repo_info
                     WHERE repo_id = :repo_id
                     AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    AND committers_count is not NULL
                     ORDER BY last_updated ASC
                     LIMIT 1
                 ) AS committers_count,
@@ -2939,6 +2949,7 @@ class Augur(object):
                     SELECT commit_count AS commit_count
                     FROM repo_info
                     WHERE repo_id = :repo_id
+                    AND commit_count is not NULL
                     ORDER BY last_updated DESC
                     LIMIT 1
                 ) - (
@@ -2946,6 +2957,7 @@ class Augur(object):
                     FROM repo_info
                     WHERE repo_id = :repo_id
                     AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
+                    AND commit_count is not NULL
                     ORDER BY last_updated ASC
                     LIMIT 1
                 ) AS commit_count

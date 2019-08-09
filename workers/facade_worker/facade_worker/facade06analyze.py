@@ -189,4 +189,3 @@ def analysis(cfg, multithreaded):
         update_analysis_log(repo[0],'Complete')
 
     cfg.log_activity('Info','Running analysis (complete)')
-
