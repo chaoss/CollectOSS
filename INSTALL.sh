@@ -1,2 +1,23 @@
-pip install pipreqs sphinx;npm install -g apidoc brunch newman; pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
-python setup.py install
+rm -rf build/*; pip install pipreqs sphinx;npm install -g apidoc brunch newman; pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
+python setup.py install; 
+cd workers/;
+cd facade_worker;
+python setup.py install;
+pip install .;
+cd ../github_worker;
+python setup.py install; 
+pip install .;
+cd ../insight_worker; 
+python setup.py install; 
+pip install .;
+cd ../linux_badge_worker; 
+python setup.py install;
+pip install .;
+cd ../pull_reqeust_worker; 
+python setup.py install;
+pip install .; 
+cd ../repo_info_worker;
+rm -rf build/*;
+python setup.py install; 
+pip install .;
+cd ../..;
