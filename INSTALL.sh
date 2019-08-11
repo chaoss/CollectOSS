@@ -1,4 +1,7 @@
-rm -rf build/*; pip install pipreqs sphinx;npm install -g apidoc brunch newman; pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
+rm -rf build/*; rm $VIRTUAL_ENV/bin/*worker_start*; 
+pip install pipreqs sphinx; 
+sudo npm install -g apidoc brunch newman >npm.log 2>stderr; 
+pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
 python setup.py install; 
 cd workers/;
 cd facade_worker;
@@ -21,3 +24,4 @@ rm -rf build/*;
 python setup.py install; 
 pip install .;
 cd ../..;
+cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs;
