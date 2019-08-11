@@ -2623,8 +2623,8 @@ class Augur(object):
         results = pd.read_sql(repos_in_repo_groups_SQL, self.db, params={'repo_group_id': repo_group_id})
         return results
 
-    @annotate(tag='get-repo')
-    def get_repo(self, owner, repo):
+    @annotate(tag='get-repo-by-git-name')
+    def get_repo_by_git_name(self, owner, repo):
         """
         Returns repo id and repo group id by owner and repo
 
@@ -2640,6 +2640,25 @@ class Augur(object):
 
         results = pd.read_sql(getRepoSQL, self.db, params={'owner': '%{}_'.format(owner), 'repo': repo,})
 
+        return results
+
+    @annotate(tag='get-repo-by-name')
+    def get_repo_by_name(self, rg_name, repo_name):
+        """
+        Returns repo id and repo group id by rg_name and repo_name
+
+        :param owner: the owner of the repo
+        :param repo: the name of the repo
+        """
+
+        repoSQL = s.sql.text("""
+            SELECT repo_id, repo.repo_group_id, repo_git
+            FROM repo, repo_groups
+            WHERE repo.repo_group_id = repo_groups.repo_group_id
+            AND LOWER(rg_name) = LOWER(:rg_name)
+            AND LOWER(repo_name) = LOWER(:repo_name)
+        """)
+        results = pd.read_sql(repoSQL, self.db, params={'rg_name': rg_name, 'repo_name': repo_name})
         return results
 
     # @annotate(tag='dosocs-repos')

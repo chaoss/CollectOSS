@@ -126,7 +126,7 @@ def create_routes(server):
     server.addRepoGroupMetric(augur_db.repos_in_repo_groups, 'repos')
 
     """
-    @api {get} /repos/:owner/:repo Get Repo
+    @api {get} /owner/:owner/repo/:repo Get Repo
     @apiName get-repo
     @apiGroup Utility
     @apiDescription Get the `repo_group_id` & `repo_id` of a particular repo.
@@ -142,15 +142,35 @@ def create_routes(server):
                         }
                     ]
     """
-    @server.app.route('/{}/repos/<owner>/<repo>'.format(server.api_version))
-    def get_repo(owner, repo):
+    @server.app.route('/{}/owner/<owner>/name/<repo>'.format(server.api_version))
+    def get_repo_by_git_name(owner, repo):
         a = [owner, repo]
-        gre = server.transform(augur_db.get_repo, args = a)
+        gre = server.transform(augur_db.get_repo_by_git_name, args = a)
         return Response(response=gre,
                         status=200,
                         mimetype="application/json")
 
-    server.updateMetricMetadata(function=augur_db.get_repo, endpoint='/{}/repos/<owner>/<repo>'.format(server.api_version), metric_type='git')
+    """
+    @api {get} /rg-names/:rg_name/repo-name/:repo_name Get Repo
+    @apiName get-repo
+    @apiGroup Utility
+    @apiDescription Get the `repo_group_id` & `repo_id` of a particular repo.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21000,
+                            "repo_group_id": 20,
+                            "repo_git":"https://github.com/rails/rails.git"
+                        },
+                    ]
+    """
+    @server.app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(server.api_version))
+    def get_repo_by_name(rg_name, repo_name):
+        arg = [rg_name, repo_name]
+        gre = server.transform(augur_db.get_repo_by_name, args=arg)
+        return Response(response=gre,
+                        status=200,
+                        mimetype="application/json")
 
     @server.app.route('/{}/dosocs/repos'.format(server.api_version))
     def get_repos_for_dosocs():
