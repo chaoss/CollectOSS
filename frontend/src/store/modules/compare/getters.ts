@@ -39,12 +39,11 @@ export default {
         } else if (state.baseGroup) {
             return rootGetters['common/apiGroups'][state.baseGroup] || {'url': 'No base repo/group selected'}
         }
-
         return {}
     },
 
     isGroup: (state:any, getters:any, rootState:any, rootGetters:any) => {
-        if(state.baseGroup != ''){
+        if (state.baseGroup != ''){
             return true
         } else {
             return false
@@ -57,7 +56,7 @@ export default {
         } else if (state.comparedRepoGroups.length) {
             return state.comparedRepoGroups.length
         }
-        return  'No'
+        return 0
     },
     compare: (state:any) => {
         return state.compare

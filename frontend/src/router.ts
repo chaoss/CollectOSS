@@ -2,6 +2,7 @@
 /* tslint:disable */
 import Vue from 'vue';
 import Router from 'vue-router';
+import store from '@/store/store';
 Vue.use(Router);
 import _ from 'lodash';
 var AugurAPIModule = require('@/AugurAPI').default;
@@ -128,7 +129,36 @@ const routes = [
                         },
                   },
             ],
+            beforeEnter: (to:any, from:any, next:any) => {
+                  let repo = to.params.repo;
+                  let group = to.params.group;
+                  store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
+                  next()
+            }
       },
+    {
+      path: '/repo/:group/:repo/comparedTo/:compares',
+      component: Default,
+      children: [
+        {
+          path: '',
+          name: 'repo_overview_compare',
+          components: {
+            sidebar: MainSidebar,
+            navbar: MainNavbar,
+            content: RepoOverview,
+          },
+        },
+      ],
+      beforeEnter: (to:any, from:any, next:any) => {
+        let repo = to.params.repo;
+        let group = to.params.group;
+        store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
+        let compares = to.params.compares === ''? [] : to.params.compares.split(',');
+        store.dispatch('compare/setComparedRepos',compares);
+        next()
+      }
+    },
     {
       path: '/blog-overview',
       name: 'blog-overview',

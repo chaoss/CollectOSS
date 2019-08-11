@@ -2652,13 +2652,14 @@ class Augur(object):
         """
 
         repoSQL = s.sql.text("""
-            SELECT repo_id, repo.repo_group_id, repo_git
+            SELECT repo_id, repo.repo_group_id, repo_git as url
             FROM repo, repo_groups
             WHERE repo.repo_group_id = repo_groups.repo_group_id
             AND LOWER(rg_name) = LOWER(:rg_name)
             AND LOWER(repo_name) = LOWER(:repo_name)
         """)
         results = pd.read_sql(repoSQL, self.db, params={'rg_name': rg_name, 'repo_name': repo_name})
+        results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
         return results
 
     # @annotate(tag='dosocs-repos')
