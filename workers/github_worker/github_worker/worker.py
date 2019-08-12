@@ -263,7 +263,8 @@ class GitHubWorker:
                             "gh_site_admin": contributor['site_admin'],
                             "tool_source": self.tool_source,
                             "tool_version": self.tool_version,
-                            "data_source": self.data_source
+                            "data_source": self.data_source,
+                            'cntrb_full_name': cmt_cntrb['fname'] + ' ' + cmt_cntrb['lname']
                         }
 
                         # Commit insertion to table
