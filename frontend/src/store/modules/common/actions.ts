@@ -175,7 +175,6 @@ export default {
                     rg_name: rg_name,
                     repo_name: repo_name
                 })
-
                 context.commit('mutateAPIRepo', {repo: repo, name: repo.toString()})
                 resolve(repo)
             }, 2000)

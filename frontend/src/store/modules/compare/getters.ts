@@ -1,4 +1,6 @@
 import construct = Reflect.construct;
+import Repo from '@/AugurAPI'
+import RepoGroups from "@/views/RepoGroups.vue";
 
 export default {
     comparisonType: (state:any) => {
@@ -40,6 +42,26 @@ export default {
             return rootGetters['common/apiGroups'][state.baseGroup] || {'url': 'No base repo/group selected'}
         }
         return {}
+    },
+
+    comparedAPIRepos: (state:any, getters:any, rootState:any, rootGetters:any) => {
+        let compares: Repo[] = []
+        for (let repo of state.comparedRepos) {
+          if (rootGetters['common/apiRepos'][repo]) {
+            compares.push(rootGetters['common/apiRepos'][repo])
+          }
+        }
+        return compares
+    },
+
+    comparedAPIGroups: (state:any, getters:any, rootState:any, rootGetters:any) => {
+      let compares: RepoGroups[] = []
+      for (let group of state.comparedRepoGroups) {
+        if (rootGetters['common/apiGroups'][group]) {
+          compares.push(rootGetters['common/apiGroups'][group])
+        }
+      }
+      return compares
     },
 
     isGroup: (state:any, getters:any, rootState:any, rootGetters:any) => {

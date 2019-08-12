@@ -1,4 +1,5 @@
 import {forEach} from "vega-lite/build/src/encoding";
+import {data} from "vega-lite";
 
 export default {
     async addComparedRepo(context:any, payload:any) {
@@ -39,30 +40,54 @@ export default {
     },
 
     async setBaseRepo(context: any, payload: any) {
-
-        context.state.baseRepo = payload.rg_name && payload.repo_name? payload.rg_name + '/' + payload.repo_name : payload.url
-
-        if (!(context.state.baseRepo in context.rootGetters['common/apiRepos'])) {
-            console.log("fetch repo")
-            context.dispatch('common/addRepo',payload,{root:true})
-        }
+        return new Promise((resolve:any, reject:any)=>{
+            setTimeout(()=>{
+                let baseRepo = payload.rg_name && payload.repo_name? payload.rg_name + '/' + payload.repo_name : payload.url
+                if (!(baseRepo in context.rootGetters['common/apiRepos'])) {
+                    context.dispatch('common/addRepo',payload,{root:true}).then((data:any) =>{
+                        context.state.baseRepo = baseRepo
+                        resolve(data)
+                    })
+                } else{
+                    context.state.baseRepo = baseRepo
+                    resolve({})
+                }
+            },2000)
+        })
     },
 
     async setBaseGroup(context: any, payload:any) {
-        context.state.baseGroup = payload.rg_name
-
-        if (!(payload.rg_name in context.rootGetters['common/apiGroups'])) {
-            context.dispatch('common/addRepoGroup',payload,{root:true})
-        }
+        return new Promise((resolve:any, reject:any)=>{
+            setTimeout(()=>{
+                if (!(payload.rg_name in context.rootGetters['common/apiGroups'])) {
+                    context.dispatch('common/addRepoGroup',payload,{root:true}).then((data:any) => {
+                        context.state.baseGroup = payload.rg_name
+                        resolve(data)
+                    })
+                } else {
+                    context.state.baseGroup = payload.rg_name
+                    resolve({})
+                }
+            },2000)
+        })
     },
 
     async setComparedRepos(context:any, payload:any) {
-        context.state.comparedRepos = payload
-        payload.forEach((repo:any) => {
-            if (!(repo in context.rootGetters['common/apiGroups'])) {
-                let split:string[]= repo.split('/');
-                context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0]},{root:true})
-            }
+        return new Promise((resolve:any, reject:any)=>{
+            setTimeout(()=>{
+                let promises:any[] = [];
+                for(let repo of payload) {
+                    if (!(repo in context.rootGetters['common/apiGroups'])) {
+                        let split:string[]= repo.split('/');
+                        promises.push(context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0]},{root:true}))
+                    }
+                }
+                 Promise.all(promises).then( (values:any) => {
+                     context.state.comparedRepos = payload
+                     resolve(values)
+                  }
+                )
+            },2000)
         })
     },
 

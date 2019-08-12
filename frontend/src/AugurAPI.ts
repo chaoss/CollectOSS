@@ -298,9 +298,13 @@ class Repo extends BaseRepo{
     this.rg_name = metadata.rg_name || undefined
     this.repo_name = metadata.repo_name || undefined
     this.url = this.gitURL || this.githubURL || undefined
-    this.getRepoNameAndID()
-    this.initialLegacyMetric()
     this.initialMetric()
+  }
+
+   initialMetric(){
+    this.getRepoNameAndID()
+    this.initialDBMetric()
+    this.initialLegacyMetric()
   }
 
   toString(){
@@ -318,35 +322,34 @@ class Repo extends BaseRepo{
     }
 
     if (this.rg_name && this.repo_name) {
-      return $.ajax({
-        type: 'GET',
-        url: this.__endpointURL('rg-name/' + this.rg_name + '/repo-name/' + this.repo_name),
-        async: false,
-      }).then((data:any) => {
-        if (data.length != 0){
-          this.repo_id = data[0].repo_id
-          this.repo_group_id = data[0].repo_group_id
-          this.gitURL = data[0].repo_git
-        }
-        this.parseURL();
-        return
-      })
-    }
-
-    this.parseURL();
-    if (this.owner && this.name) {
-      return $.ajax({
-        type: "GET",
-        async: false,
-        url: this.__endpointURL('owner/' + this.owner + '/repo/' + this.name),
-      }).then((data:any)=>{
-        if (data.length != 0) {
-          this.repo_id = data[0].repo_id
-          this.repo_group_id = data[0].repo_group_id
-          this.rg_name = data[0].rg_name
-        }
-        return
-      })
+        $.ajax({
+          type: 'GET',
+          url: this.__endpointURL('rg-name/' + this.rg_name + '/repo-name/' + this.repo_name),
+          async: false,
+          success: (data:any) => {
+            this.repo_id = data[0].repo_id
+            this.repo_group_id = data[0].repo_group_id
+            this.gitURL = data[0].url
+            this.url = data[0].url
+            this.parseURL();
+          }
+        })
+    } else {
+      this.parseURL();
+      if(this.owner && this.name) {
+         $.ajax({
+           type: "GET",
+           async: false,
+           url: this.__endpointURL('owner/' + this.owner + '/repo/' + this.name),
+           success: (data:any) => {
+             if (data.length != 0) {
+               this.repo_id = data[0].repo_id
+               this.repo_group_id = data[0].repo_group_id
+               this.rg_name = data[0].rg_name
+             }
+           }
+        })
+      }
     }
   }
 
@@ -437,7 +440,7 @@ class Repo extends BaseRepo{
       this.Timeseries('tags', 'tags')
     }
   }
-  initialMetric(){
+  initialDBMetric(){
     this.addRepoMetric('codeChanges', 'code-changes')
     this.addRepoMetric('codeChangesLines', 'code-changes-lines')
     this.addRepoMetric('issueNew', 'issues-new')
