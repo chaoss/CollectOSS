@@ -1840,7 +1840,7 @@ class Augur(object):
         return results
 
     @annotate(tag='committers')
-    def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='day'):
+    def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='week'):
 
         if not begin_date:
             begin_date = '1970-1-1 00:00:01'

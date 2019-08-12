@@ -116,4 +116,7 @@ export default {
     comparedRepos: (state:any) => {
         return state.comparedRepos
     },
+    baseRepo: (state:any) => {
+        return state.baseRepo
+    }
 };

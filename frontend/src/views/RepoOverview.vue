@@ -13,6 +13,10 @@
     <!-- Compare Control -->
     <compare-control></compare-control>
 
+    <div class="row">
+      <d-button><d-link :to="{name: 'risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
+    </div>
+
     <!-- Overview Section -->
     <div class="page-header row no-gutters py-4" >
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
@@ -50,11 +54,10 @@
       </div>
     </div>
 
-    <spinner :v-show="!loaded_evolution"></spinner>
-    
-    <!-- <div class="row" :v-show="loaded_evolution"> -->
-    <div class="row" v-if="true">
+    <spinner v-show="!loaded_evolution"></spinner>
 
+    <!-- <div class="row" :v-show="loaded_evolution"> -->
+    <div class="row" v-if="loaded_evolution">
       <div class="col col-6">
         <dynamic-line-chart source="issuesClosed"
                       title="Number of issuesClosed"
@@ -86,7 +89,8 @@
     <!-- <spinner :v-show="!loaded_issues"></spinner> -->
     
     <!-- <div class="row" :v-show="loaded_issues"> -->
-    <div class="row" v-if="false">
+    <spinner v-show="!loaded_issues"></spinner>
+    <div class="row" v-if="loaded_issues">
 
       <div class="col col-12" style="padding-right: 35px">
         <dual-line-chart source=""
@@ -95,15 +99,6 @@
           fieldtwo="closed_count">
           <!-- :data="values['repo_issues']"> -->
         </dual-line-chart>
-      </div>
-
-      <div class="col col-12" style="padding-right: 35px">
-        <dual-line-chart source=""
-          :title="'Issue Count History for this Repo Group:  ' + group + ' - Grouped by Week'"
-          fieldone="open_count"
-          fieldtwo="closed_count">
-        </dual-line-chart>
-        <!-- :data="values['group_issues']"></dual-line-chart> -->
       </div>
 
     </div>
@@ -116,9 +111,9 @@
     </div>
 
     <!-- <spinner :v-show="!loaded_experimental"></spinner> -->
-    
+    <spinner v-show="!loaded_experimental"></spinner>
     <!-- <div class="row" :v-show="loaded_experimental"> -->
-    <div class="row" v-if="false">
+    <div class="row" v-if="loaded_experimental">
 
       <div class="col col-6">
         <dynamic-line-chart source="commitComments"
@@ -202,6 +197,7 @@ import DynamicLineChart from '../components/charts/DynamicLineChart.vue'
 import DualLineChart from '../components/charts/DualLineChart.vue'
 import Spinner from '../components/Spinner.vue'
 import CompareControl from '../components/common/CompareControl.vue'
+import router from "@/router";
 
 @Component({
   components: {
@@ -236,7 +232,7 @@ import CompareControl from '../components/common/CompareControl.vue'
 
 export default class RepoOverview extends Vue {
   colors = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
-  testEndpoints = ['closedIssues', 'openIssues', 'codeCommits']
+  testEndpoints = ['closedIssuesCount']
   testTimeframes = ['past 1 month', 'past 3 months', 'past 2 weeks']
   repos = {}
   projects = []
@@ -259,10 +255,11 @@ export default class RepoOverview extends Vue {
   endpoint!: any;
 
   created() {
-    this.endpoint({endpoints:this.testEndpoints,repos:[this.base]}).then((tuples:any) => {
-
-    })
+    // this.endpoint({endpoints:this.testEndpoints,repos:[this.base]}).then((tuples:any) => {
+    //   this.loaded_evolution = true
+    // })
   }
+
 }
 </script>
 

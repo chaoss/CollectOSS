@@ -1,6 +1,3 @@
-import {forEach} from "vega-lite/build/src/encoding";
-import {data} from "vega-lite";
-
 export default {
     async addComparedRepo(context:any, payload:any) {
 

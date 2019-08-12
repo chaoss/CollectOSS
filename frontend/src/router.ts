@@ -9,7 +9,7 @@ var AugurAPIModule = require('@/AugurAPI').default;
 var AugurAPI = new AugurAPIModule();
 // import MetricsStatusCard from './components/MetricsStatusCard.vue';
 // import BaseRepoActivityCard from './components/BaseRepoActivityCard.vue';
-// import BaseRepoEcosystemCard from './components/BaseRepoEcosystemCard.vue';
+// import BaseRepoEcosystemCard  from './components/BaseRepoEcosystemCard.vue';
 // import GrowthMaturityDeclineCard from './components/GrowthMaturityDeclineCard.vue';
 // import RiskCard from './components/RiskCard.vue';
 // import ValueCard from './components/ValueCard.vue';
@@ -38,6 +38,7 @@ import MainNavbar from './components/layout/MainNavbar/MainNavbar.vue';
 import RepoOverview from './views/RepoOverview.vue';
 import RepoGroups from './views/RepoGroups.vue';
 import Repos from './views/Repos.vue';
+import RiskMetrics from "@/views/RiskMetrics.vue";
 
 const routes = [
       {
@@ -120,12 +121,21 @@ const routes = [
             component: Default,
             children: [
                   {
-                        path: '',
+                        path: 'overview',
                         name: 'repo_overview',
                         components: {
                               sidebar: MainSidebar,
                               navbar: MainNavbar,
                               content: RepoOverview,
+                        },
+                  },
+                  {
+                        path: 'risk',
+                        name: 'risk',
+                        components: {
+                          sidebar: MainSidebar,
+                          navbar: MainNavbar,
+                          content: RiskMetrics,
                         },
                   },
             ],

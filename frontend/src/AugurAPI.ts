@@ -154,7 +154,7 @@ export default class AugurAPI {
         if (Array.isArray(data)) {
           data.forEach((response) => {
             if (response.status === 200 && reverseMap[response.path]) {
-              processedData[reverseMap[response.path].owner] = {}
+              processedData[reverseMap[response.path].owner] = processedData[reverseMap[response.path].owner] || {}
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = []
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
               console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
@@ -458,6 +458,10 @@ class Repo extends BaseRepo{
     this.addRepoMetric('issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
     this.addRepoMetric('issueActive', 'issues-active')
     this.addRepoMetric('getIssues', 'get-issues')
+    this.addRepoMetric('getForks','forks')
+    this.addRepoMetric('forkCount','fork-count')
+    this.addRepoMetric('languages','languages')
+    this.addRepoMetric('committers','committers')
   }
 }
 
@@ -495,6 +499,10 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('issuesClosedResolutionDuration','issues-closed-resolution-duration')
       this.addRepoGroupMetric('issueActive', 'issues-active')
       this.addRepoGroupMetric('getIssues', 'get-issues')
+      this.addRepoGroupMetric('getForks','forks')
+      this.addRepoGroupMetric('forkCount','fork-count')
+      this.addRepoGroupMetric('languages','languages')
+      this.addRepoGroupMetric('committers','committers')
     }
   }
 }

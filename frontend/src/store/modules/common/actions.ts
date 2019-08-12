@@ -41,8 +41,10 @@ export default {
                                 console.log(data)
                                 tempCache = {...tempCache, ...data};
                                 payload.repos.forEach((repo: any) => {
-                                    tempCache[repo.toString()] = {...tempCache[repo.url], ...data[repo.url]};
+                                    tempCache[repo.toString()] = {...tempCache[repo.toString()], ...data[repo.toString()]};
                                 });
+                                console.log(tempCache)
+                                resolve(tempCache)
                             });
                     }
                     if ('repoGroups' in payload) {
@@ -53,6 +55,8 @@ export default {
                                     tempCache[group.rg_name] = {...tempCache[group.rg_name],
                                         ...data[group.rg_name]};
                                 });
+                                console.log(tempCache)
+                                resolve(tempCache)
                             });
                     }
                     if (!('repos' in payload) && !('repoGroups' in payload)) {
@@ -60,12 +64,14 @@ export default {
                             console.log(endpoint)
                             context.state.AugurAPI[endpoint]().then((data: object[]) => {
                                 tempCache[endpoint] = data;
+                                console.log(tempCache)
+                                resolve(tempCache)
                             });
                         });
                     }
                 }
-                console.log(tempCache)
-                resolve(tempCache)
+                // console.log(tempCache)
+                // resolve(tempCache)
                 // context.commit('mutate', {
                 //     property: 'cache',
                 //     with: tempCache,
