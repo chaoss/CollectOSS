@@ -82,3 +82,7 @@ augur/plugins/
 frontend/public/*.map
 docs/python/build/doctrees/AugurContext.doctree
 docs/python/build/doctrees/augurcontext.doctree
+
+# build directories #
+#####################
+build/
