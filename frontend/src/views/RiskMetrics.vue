@@ -42,7 +42,7 @@
   import DualLineChart from '../components/charts/DualLineChart.vue'
   import CompareControl from '../components/common/CompareControl.vue'
   import CountBlock from "@/components/charts/CountBlock.vue";
-  // import LineChart from "@/components/charts/LineChart.vue";
+  import LineChart from "@/components/charts/LineChart.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
   import router from "@/router";
 
