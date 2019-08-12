@@ -79,21 +79,21 @@ def test_issues_new_by_group(augur_db_routes):
     assert data[0]['issues'] > 0
 
 def test_issues_new_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21339/issues-new')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/issues-new')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]['issues'] > 0
 
 def test_issues_active_by_group(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issues-active')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/issues-active')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]['issues'] > 0
 
 def test_issues_active_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21339/issues-active')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21000/issues-active')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
