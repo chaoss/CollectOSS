@@ -462,6 +462,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('forkCount','fork-count')
     this.addRepoMetric('languages','languages')
     this.addRepoMetric('committers','committers')
+    this.addRepoMetric('licenseDeclared','license-declared')
   }
 }
 
@@ -503,6 +504,8 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('forkCount','fork-count')
       this.addRepoGroupMetric('languages','languages')
       this.addRepoGroupMetric('committers','committers')
+      this.addRepoGroupMetric('licenseDeclared','license-declared')
+
     }
   }
 }

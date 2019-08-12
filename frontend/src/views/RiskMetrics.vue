@@ -31,6 +31,13 @@
       </div>
     </div>
 
+    <div class="row mb-5" v-if="loaded_rsik_1">
+      <div class="col-6">
+        <license-table :data="values1" source="licenseDeclared"  :headers="['Short Name','Note']"
+                       :fields="['short_name','note']"  title="License Declared"></license-table>
+      </div>
+    </div>
+
   </d-container>
 </template>
 
@@ -43,6 +50,7 @@
   import CompareControl from '../components/common/CompareControl.vue'
   import CountBlock from "@/components/charts/CountBlock.vue";
   import LineChart from "@/components/charts/LineChart.vue";
+  import LicenseTable from "@/components/charts/LicenseTable.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
   import router from "@/router";
 
@@ -53,6 +61,7 @@
       CompareControl,
       CountBlock,
       LineChart,
+      LicenseTable,
       // PieChart,
     },
     methods: {
@@ -94,7 +103,7 @@
 
 
     // endpoints
-    risk_endpoints_1 = ['forkCount']
+    risk_endpoints_1 = ['forkCount','licenseDeclared']
 
     risk_endpoints_2 = ['getForks', 'committers']
 
