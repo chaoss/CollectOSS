@@ -63,7 +63,7 @@ class GHRepoInfoWorker:
 
         specs = {
             "id": self.config['id'],
-            "location": "http://localhost:51237",
+            "location": self.config['location'],
             "qualifications":  [
                 {
                     "given": [["git_url"]],

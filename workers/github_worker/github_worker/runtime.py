@@ -153,5 +153,8 @@ def read_config(section, name=None, environment_variable=None, default=None, con
                 # logger.error('%s could not be parsed, using defaults. Fix that file, or delete it and run this again to regenerate it. Error: %s', __config_file_path, str(e))
 
             __config = __default_config
-            return(__config[section][name])
+            try:
+                return(__config[section][name])
+            except:
+                return(__config[section])
 
