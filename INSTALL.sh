@@ -1,6 +1,6 @@
 rm -rf build/*; rm $VIRTUAL_ENV/bin/*worker_start*; 
 pip install pipreqs sphinx; 
-sudo npm install -g apidoc brunch newman >npm.log 2>stderr; 
+yarn global add apidoc brunch newman @vue/cli; 
 pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
 python setup.py install; 
 cd workers/;
