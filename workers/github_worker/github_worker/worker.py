@@ -69,7 +69,7 @@ class GitHubWorker:
             "qualifications":  [
                 {
                     "given": [["git_url"]],
-                    "models":["issues"]
+                    "models":["issues", "contributors"]
                 }
             ],
             "config": [self.config]
@@ -94,7 +94,7 @@ class GitHubWorker:
 
         metadata.reflect(self.db, only=['contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events',
-            'issue_assignees'])
+            'issue_assignees','contributors_aliases'])
         helper_metadata.reflect(self.helper_db, only=['gh_worker_history', 'gh_worker_job'])
 
         Base = automap_base(metadata=metadata)
@@ -110,40 +110,198 @@ class GitHubWorker:
         self.message_table = Base.classes.message.__table__
         self.issues_message_ref_table = Base.classes.issue_message_ref.__table__
         self.issue_assignees_table = Base.classes.issue_assignees.__table__
+        self.contributors_aliases_table = Base.classes.contributors_aliases.__table__
 
         self.history_table = HelperBase.classes.gh_worker_history.__table__
         self.job_table = HelperBase.classes.gh_worker_job.__table__
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
-        logging.info("Querying starting ids info...")
-        maxIssueCntrbSQL = s.sql.text("""
-            SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
-            FROM issues, contributors
-        """)
-        rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
+        # logging.info("Querying starting ids info...")
+        # maxIssueCntrbSQL = s.sql.text("""
+        #     SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
+        #     FROM issues, contributors
+        # """)
+        # rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
 
-        issue_start = int(rs.iloc[0]["issue_id"]) if rs.iloc[0]["issue_id"] is not None else 25150
-        cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
+        # issue_start = int(rs.iloc[0]["issue_id"]) if rs.iloc[0]["issue_id"] is not None else 25150
+        # cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
 
-        maxMsgSQL = s.sql.text("""
-            SELECT max(msg_id) AS msg_id
-            FROM message
-        """)
-        rs = pd.read_sql(maxMsgSQL, self.db, params={})
+        # maxMsgSQL = s.sql.text("""
+        #     SELECT max(msg_id) AS msg_id
+        #     FROM message
+        # """)
+        # rs = pd.read_sql(maxMsgSQL, self.db, params={})
 
-        msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
+        # msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
 
-        # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        self.issue_id_inc = (issue_start + 1)
-        self.cntrb_id_inc = (cntrb_start + 1)
-        self.msg_id_inc = (msg_start + 1)
+        # # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        # self.issue_id_inc = (issue_start + 1)
+        # self.cntrb_id_inc = (cntrb_start + 1)
+        # self.msg_id_inc = (msg_start + 1)
 
-        try:
-            requests.post('http://localhost:{}/api/unstable/workers'.format(
-                self.config['broker_port']), json=specs) #hello message
-        except:
-            logging.info("Broker's port is busy, worker will not be able to accept tasks, "
-                "please restart Augur if you want this worker to attempt connection again.")
+        # try:
+        #     requests.post('http://localhost:{}/api/unstable/workers'.format(
+        #         self.config['broker_port']), json=specs) #hello message
+        # except:
+        #     logging.info("Broker's port is busy, worker will not be able to accept tasks, "
+        #         "please restart Augur if you want this worker to attempt connection again.")
+
+        logging.info('about to call')
+        self.search_users({'repo_git': 'https://github.com/rails/rails.git', 'repo_id': 21000})
+
+    def search_users(self, entry_info):
+        logging.info("Searching users for commits from the facade worker for repo with entry info: {}".format(entry_info))
+        userSQL = s.sql.text("""
+            SELECT distinct(cmt_author_name), cmt_author_email, 
+                cmt_committer_name, cmt_committer_email
+            FROM commits
+            WHERE repo_id = {}
+        """.format(entry_info['repo_id']))
+        # cmt_author_raw_email
+        # cmt_committer_raw_email
+        rs = pd.read_sql(userSQL, self.db, params={})
+        commits = rs.to_json(orient="records")
+        commits = json.loads(commits)
+        logging.info("We found {} distinct contributors to search for in this repo (repo_id = {})".format(
+            len(commits), entry_info['repo_id']))
+
+        pseudo_key_gh = 'login'
+        pseudo_key_augur = 'cntrb_login'
+        table = 'contributors'
+        cntrb_table_values = self.get_table_values([pseudo_key_augur, 'cntrb_email', 'cntrb_id'], [table])
+        for tuple in commits:
+            try:
+                author = {'fname': tuple['cmt_author_name'].split()[0], 'lname': tuple['cmt_author_name'].split()[1],
+                    'email': tuple['cmt_author_email']}
+                committer = {'fname': tuple['cmt_committer_name'].split()[0], 'lname': tuple['cmt_committer_name'].split()[1],
+                    'email': tuple['cmt_committer_email']}
+            except:
+                author = {'fname': tuple['cmt_author_name'].split()[0], 'lname': '',
+                    'email': tuple['cmt_author_email']}
+                committer = {'fname': tuple['cmt_committer_name'].split()[0], 'lname': '',
+                    'email': tuple['cmt_committer_email']}
+            if author == committer:
+                contributors = [author]
+            else:
+                contributors = [author, committer]
+            for cmt_cntrb in contributors:
+                url = 'https://api.github.com/search/users?q={}+in:email+fullname:{}+{}'.format(
+                    cmt_cntrb['email'],cmt_cntrb['fname'],cmt_cntrb['lname'])
+                logging.info("Hitting endpoint: " + url + " ...\n")
+                r = requests.get(url=url, headers=self.headers)
+                self.update_rate_limit(r)
+
+                results = r.json()
+                if 'total_count' in results:
+                    if results['total_count'] != 0:
+                        logging.info("When searching for a contributor with info {}, we found the following users: {}".format(
+                            cmt_cntrb, results))
+                        match = results['items'][0]
+                        for item in results['items']:
+                            if item['score'] > match['score']:
+                                match = item
+
+                        match = self.assign_tuple_action([match], cntrb_table_values, 
+                            {'cntrb_email': 'email'}, {pseudo_key_augur: pseudo_key_gh}, 'cntrb_id')[0]
+                        
+                        cntrb_url = ("https://api.github.com/users/" + match['login'])
+                        logging.info("Hitting endpoint: " + cntrb_url + " ...\n")
+                        r = requests.get(url=cntrb_url, headers=self.headers)
+                        self.update_rate_limit(r)
+                        contributor = r.json()
+
+                        company = None
+                        location = None
+                        email = cmt_cntrb['email']
+                        canonical_email = cmt_cntrb['email']
+                        alias = False
+                        if 'company' in contributor:
+                            company = contributor['company']
+                        if 'location' in contributor:
+                            location = contributor['location']
+                        if 'email' in contributor:
+                            email = contributor['email']
+                            if email != cmt_cntrb['email']:
+                                alias = True
+
+
+
+                        # aliasSQL = s.sql.text("""
+                        #     SELECT canonical_email
+                        #     FROM contributors_aliases
+                        #     WHERE alias_email = {}
+                        # """.format(contributor['email']))
+                        # rs = pd.read_sql(aliasSQL, self.db, params={})
+
+                        #rs.iloc[0]["canonical_email"]
+
+                        cntrb = {
+                            "cntrb_login": contributor['login'],
+                            "cntrb_created_at": contributor['created_at'],
+                            "cntrb_email": email,
+                            "cntrb_company": company,
+                            "cntrb_location": location,
+                            # "cntrb_type": , dont have a use for this as of now ... let it default to null
+                            "cntrb_canonical": canonical_email,
+                            "gh_user_id": contributor['id'],
+                            "gh_login": contributor['login'],
+                            "gh_url": contributor['url'],
+                            "gh_html_url": contributor['html_url'],
+                            "gh_node_id": contributor['node_id'],
+                            "gh_avatar_url": contributor['avatar_url'],
+                            "gh_gravatar_id": contributor['gravatar_id'],
+                            "gh_followers_url": contributor['followers_url'],
+                            "gh_following_url": contributor['following_url'],
+                            "gh_gists_url": contributor['gists_url'],
+                            "gh_starred_url": contributor['starred_url'],
+                            "gh_subscriptions_url": contributor['subscriptions_url'],
+                            "gh_organizations_url": contributor['organizations_url'],
+                            "gh_repos_url": contributor['repos_url'],
+                            "gh_events_url": contributor['events_url'],
+                            "gh_received_events_url": contributor['received_events_url'],
+                            "gh_type": contributor['type'],
+                            "gh_site_admin": contributor['site_admin'],
+                            "tool_source": self.tool_source,
+                            "tool_version": self.tool_version,
+                            "data_source": self.data_source
+                        }
+
+                        # Commit insertion to table
+                        if match['flag'] == 'need_update':
+                            result = self.db.execute(self.contributors_table.update().where(
+                                self.history_table.c.cntrb_email==email).values(cntrb))
+                            logging.info("Updated tuple in the contributors table with existing email: {}".format(email))
+                            self.cntrb_id_inc = match['pkey']
+                        elif match['flag'] == 'need_insertion':
+                            result = self.db.execute(self.contributors_table.insert().values(cntrb))
+                            logging.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
+                            self.results_counter += 1
+            
+                            logging.info("Inserted contributor: " + contributor['login'] + "\n")
+
+                            # Increment our global track of the cntrb id for the possibility of it being used as a FK
+                            self.cntrb_id_inc = int(result.inserted_primary_key[0])
+
+                        if alias:
+                            try:
+                                alias_tuple = {
+                                    'cntrb_id': match['pkey'] if match['flag'] == 'need_update' else int(result.inserted_primary_key[0]),
+                                    'cntrb_a_id': match['pkey'] if match['flag'] == 'need_update' else int(result.inserted_primary_key[0]),
+                                    'canonical_email': cmt_cntrb['email'],
+                                    'alias_email': contributor['email'],
+                                    'cntrb_active': 1,
+                                    "tool_source": self.tool_source,
+                                    "tool_version": self.tool_version,
+                                    "data_source": self.data_source
+                                }
+                                result = self.db.execute(self.contributors_aliases_table.insert().values(alias_tuple))
+                                logging.info("Inserted alias with email: {}".format(email))
+                            except Exception as e:
+                                logging.info("Error inserting alias w emails {} and {}: {}".format(contributor['email'], cmt_cntrb['email'], e))
+
+
+
+
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -184,6 +342,7 @@ class GitHubWorker:
                 self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
             if 'focused_task' in value:
                 if value['focused_task'] == 1:
+                    logging.info("focused task is ON")
                     self.finishing_task = True
 
         except Exception as e:
@@ -232,7 +391,10 @@ class GitHubWorker:
             if message.type == 'TASK':
                 try:
                     git_url = message.entry_info['task']['given']['git_url']
-                    self.query_issues({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                    if message.entry_info['task']['models'][0] == 'contributors':
+                        self.search_users({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                    if message.entry_info['task']['models'][0] == 'issues':
+                        self.query_issues({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
                 except Exception as e:
                     logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
                     logging.info("Error encountered: " + repr(e) + "\n")
@@ -424,7 +586,7 @@ class GitHubWorker:
                         self.history_table.c.cntrb_email==email).values(cntrb))
                     logging.info("Updated tuple in the contributors table with existing email: {}".format(email))
                     self.cntrb_id_inc = repo_contributor['pkey']
-                elif repo_contributor['flag'] == 'need_insert':
+                elif repo_contributor['flag'] == 'need_insertion':
                     result = self.db.execute(self.contributors_table.insert().values(cntrb))
                     logging.info("Primary key inserted into the contributors table: {}".format(result.inserted_primary_key))
                     self.results_counter += 1
@@ -1017,8 +1179,8 @@ class GitHubWorker:
                         "exists in our db: {}\n".format(str(obj[key])))
                 else:
                     need_insertion.append(obj)
-        logging.info("Page recieved has {} tuples, while filtering duplicates this" +
-            "was reduced to {} tuples.\n".format(str(len(new_data)), str(len(need_insertion))))
+        logging.info("Page recieved has {} tuples, while filtering duplicates this".format(str(len(new_data))) +
+            " was reduced to {} tuples.\n".format(str(len(need_insertion))))
         return need_insertion
 
     def assign_tuple_action(self, new_data, table_values, update_col_map, duplicate_key_map, db_pkey):
