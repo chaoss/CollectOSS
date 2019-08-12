@@ -116,38 +116,37 @@ class GitHubWorker:
         self.job_table = HelperBase.classes.gh_worker_job.__table__
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
-        # logging.info("Querying starting ids info...")
-        # maxIssueCntrbSQL = s.sql.text("""
-        #     SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
-        #     FROM issues, contributors
-        # """)
-        # rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
+        logging.info("Querying starting ids info...")
+        maxIssueCntrbSQL = s.sql.text("""
+            SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
+            FROM issues, contributors
+        """)
+        rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
 
-        # issue_start = int(rs.iloc[0]["issue_id"]) if rs.iloc[0]["issue_id"] is not None else 25150
-        # cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
+        issue_start = int(rs.iloc[0]["issue_id"]) if rs.iloc[0]["issue_id"] is not None else 25150
+        cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
 
-        # maxMsgSQL = s.sql.text("""
-        #     SELECT max(msg_id) AS msg_id
-        #     FROM message
-        # """)
-        # rs = pd.read_sql(maxMsgSQL, self.db, params={})
+        maxMsgSQL = s.sql.text("""
+            SELECT max(msg_id) AS msg_id
+            FROM message
+        """)
+        rs = pd.read_sql(maxMsgSQL, self.db, params={})
 
-        # msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
+        msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
 
-        # # Increment so we are ready to insert the 'next one' of each of these most recent ids
-        # self.issue_id_inc = (issue_start + 1)
-        # self.cntrb_id_inc = (cntrb_start + 1)
-        # self.msg_id_inc = (msg_start + 1)
+        # Increment so we are ready to insert the 'next one' of each of these most recent ids
+        self.issue_id_inc = (issue_start + 1)
+        self.cntrb_id_inc = (cntrb_start + 1)
+        self.msg_id_inc = (msg_start + 1)
 
-        # try:
-        #     requests.post('http://localhost:{}/api/unstable/workers'.format(
-        #         self.config['broker_port']), json=specs) #hello message
-        # except:
-        #     logging.info("Broker's port is busy, worker will not be able to accept tasks, "
-        #         "please restart Augur if you want this worker to attempt connection again.")
+        try:
+            requests.post('http://localhost:{}/api/unstable/workers'.format(
+                self.config['broker_port']), json=specs) #hello message
+        except:
+            logging.info("Broker's port is busy, worker will not be able to accept tasks, "
+                "please restart Augur if you want this worker to attempt connection again.")
 
-        logging.info('about to call')
-        self.search_users({'repo_git': 'https://github.com/rails/rails.git', 'repo_id': 21000})
+        # self.search_users({'repo_git': 'https://github.com/rails/rails.git', 'repo_id': 21000})
 
     def search_users(self, entry_info):
         logging.info("Searching users for commits from the facade worker for repo with entry info: {}".format(entry_info))
