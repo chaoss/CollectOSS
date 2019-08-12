@@ -96,7 +96,7 @@ export default {
     }
   },
   mutateAPIRepo(state:any, payload:any) {
-    Vue.set(state.apiRepos, payload.url, payload.repo)
+    Vue.set(state.apiRepos, payload.name, payload.repo)
   },
   mutateAPIGroup(state:any, payload:any) {
     Vue.set(state.apiGroups, payload.rg_name, payload.group)

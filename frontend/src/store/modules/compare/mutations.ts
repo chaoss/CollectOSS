@@ -3,35 +3,31 @@ import Vue from 'vue';
 import router from '@/router';
 
 export default {
-    setBaseRepo(state: any, payload: any) {
+    mutateBaseRepo(state: any, payload: any) {
         // pass url into function
-        state.baseRepo = payload.url
+            state.baseRepo = payload.url
     },
 
-    setBaseGroup(state: any, payload: any) {
+    mutateBaseGroup(state: any, payload: any) {
         // pass url into function
         state.baseGroup = payload.rg_name
     },
 
-    addComparedRepo(state:any, payload:any) {
-        state.comparedRepos.push(payload)
-    },
-
-    addComparedRepoGroups(state:any, payload:any) {
-        if(payload != null){
-            state.comparedRepoGroups.push(payload)
-        }
-    },
-
     mutateComparedRepo(state:any, payload:any) {
         if(payload != null){
-            state.comparedRepos = payload
+            state.comparedRepos = []
+            payload.forEach( (repo:any) => {
+              state.comparedRepos.push(repo)
+            });
         }
     },
 
     mutateComparedGroup(state:any, payload:any) {
         if(payload != null){
-            state.comparedRepoGroups = payload
+            state.comparedRepoGroups = []
+            payload.forEach((group:any) => {
+              state.comparedRepoGroups.push(group)
+            })
         }
     },
 

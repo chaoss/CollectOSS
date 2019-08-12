@@ -46,7 +46,7 @@ Vue.use(VueVega);
 export default function Augur () {
   // AugurApp.store = store
   // Object.defineProperty(AugurApp, 'store', store);
-  
+
 
   // router.beforeEach((to:any, from:any, next:any) => {
   //   if (to.params.repo || to.params.groupid){

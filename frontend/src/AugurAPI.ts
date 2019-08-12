@@ -25,7 +25,7 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-  constructor(hostURL: string = 'http://localhost:5002', version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://localhost:5000', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
@@ -154,7 +154,7 @@ export default class AugurAPI {
         if (Array.isArray(data)) {
           data.forEach((response) => {
             if (response.status === 200 && reverseMap[response.path]) {
-              processedData[reverseMap[response.path].owner] = {}
+              processedData[reverseMap[response.path].owner] = processedData[reverseMap[response.path].owner] || {}
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = []
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
               console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
@@ -174,7 +174,7 @@ export default class AugurAPI {
     })
   }
 
-  Repo(repo: {githubURL?:string, gitURL?:string, url?:string, repo_id?: number, repo_group_id?:number}){
+  Repo(repo: {githubURL?:string, gitURL?:string, url?:string, repo_id?: number, repo_group_id?:number, rg_name?:string, repo_name?:string}){
     return new Repo(this, repo)
   }
 
@@ -287,28 +287,73 @@ abstract class BaseRepo {
 
 class Repo extends BaseRepo{
   public rg_name?:string
+  public repo_name?:string
   public url?:string
-  constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number}){
+  constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number, rg_name?:string, repo_name?:string}){
     super(parent)
     this.gitURL = metadata.gitURL || undefined
     this.githubURL = metadata.githubURL || undefined
     this.repo_id = metadata.repo_id || undefined
     this.repo_group_id = metadata.repo_group_id || undefined
+    this.rg_name = metadata.rg_name || undefined
+    this.repo_name = metadata.repo_name || undefined
     this.url = this.gitURL || this.githubURL || undefined
-    this.getRepoNameAndID()
-    this.initialLegacyMetric()
     this.initialMetric()
   }
 
+   initialMetric(){
+    this.getRepoNameAndID()
+    this.initialDBMetric()
+    this.initialLegacyMetric()
+  }
+
   toString(){
-    if (this.owner && this.name) {
-      return this.owner + '/' + this.name
+    if (this.rg_name && this.repo_name) {
+      return this.rg_name + '/' + this.repo_name
     } else {
-      return this.gitURL||this.githubURL||this.repo_group_id +'/' + this.repo_id
+      return this.url||this.repo_group_id +'/' + this.repo_id
     }
   }
 
   getRepoNameAndID(): void {
+
+    if (this.repo_id && this.repo_group_id) {
+      return
+    }
+
+    if (this.rg_name && this.repo_name) {
+        $.ajax({
+          type: 'GET',
+          url: this.__endpointURL('rg-name/' + this.rg_name + '/repo-name/' + this.repo_name),
+          async: false,
+          success: (data:any) => {
+            this.repo_id = data[0].repo_id
+            this.repo_group_id = data[0].repo_group_id
+            this.gitURL = data[0].url
+            this.url = data[0].url
+            this.parseURL();
+          }
+        })
+    } else {
+      this.parseURL();
+      if(this.owner && this.name) {
+         $.ajax({
+           type: "GET",
+           async: false,
+           url: this.__endpointURL('owner/' + this.owner + '/repo/' + this.name),
+           success: (data:any) => {
+             if (data.length != 0) {
+               this.repo_id = data[0].repo_id
+               this.repo_group_id = data[0].repo_group_id
+               this.rg_name = data[0].rg_name
+             }
+           }
+        })
+      }
+    }
+  }
+
+  parseURL() {
     if (this.githubURL) {
       let splitURL = this.githubURL.split('/')
       if (splitURL.length < 3) {
@@ -330,25 +375,8 @@ class Repo extends BaseRepo{
         this.name = splitURL[1]
       }
     }
-    if (this.owner && this.name) {
-      if (this.repo_id == null || this.repo_group_id == null) {
-        let res: any = []
-        $.ajax({
-          type: "GET",
-          url: this.__endpointURL + '/repos/' + this.owner + '/' + this.name,
-          async: false,
-          success: function (data: any) {
-            res = data;
-          }
-        })
-        if (res.length != 0) {
-          this.repo_id = res[0].repo_id
-          this.repo_group_id = res[0].repo_group_id
-          this.rg_name = res[0].rg_name
-        }
-      }
-    }
-  } 
+  }
+
   initialLegacyMetric() {
     if (this.owner && this.name) {
       // DIVERSITY AND INCLUSION
@@ -412,7 +440,7 @@ class Repo extends BaseRepo{
       this.Timeseries('tags', 'tags')
     }
   }
-  initialMetric(){
+  initialDBMetric(){
     this.addRepoMetric('codeChanges', 'code-changes')
     this.addRepoMetric('codeChangesLines', 'code-changes-lines')
     this.addRepoMetric('issueNew', 'issues-new')
@@ -430,6 +458,11 @@ class Repo extends BaseRepo{
     this.addRepoMetric('issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
     this.addRepoMetric('issueActive', 'issues-active')
     this.addRepoMetric('getIssues', 'get-issues')
+    this.addRepoMetric('getForks','forks')
+    this.addRepoMetric('forkCount','fork-count')
+    this.addRepoMetric('languages','languages')
+    this.addRepoMetric('committers','committers')
+    this.addRepoMetric('licenseDeclared','license-declared')
   }
 }
 
@@ -467,6 +500,12 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('issuesClosedResolutionDuration','issues-closed-resolution-duration')
       this.addRepoGroupMetric('issueActive', 'issues-active')
       this.addRepoGroupMetric('getIssues', 'get-issues')
+      this.addRepoGroupMetric('getForks','forks')
+      this.addRepoGroupMetric('forkCount','fork-count')
+      this.addRepoGroupMetric('languages','languages')
+      this.addRepoGroupMetric('committers','committers')
+      this.addRepoGroupMetric('licenseDeclared','license-declared')
+
     }
   }
 }

@@ -126,15 +126,14 @@ import Spinner from '../components/Spinner.vue'
       'addRepo'
     ]),
     ...mapMutations('compare',[
-      'setBaseRepo',
     ]),
     ...mapActions('compare',[
       'addComparedRepo',
+      'setBaseRepo',
     ])
   },
   computed: {
     ...mapGetters('common', [
-      'groupsInfo',
       'sorted_repos',
       'loaded_repos'
     ]),
@@ -154,7 +153,6 @@ export default class Repos extends Vue{
   // loadedRepos: boolean = false;
   ascending:boolean = false;
   sortColumn: string ='commits_all_time';
-  groupsInfo!:any;
   getRepoRelations!: any
   sorted_repos!:any
   loadRepos!:any;
@@ -182,38 +180,8 @@ export default class Repos extends Vue{
   }
 
   onGitRepo (e: any) {
-      let first = e.url.indexOf(".")
-      let last = e.url.lastIndexOf(".")
-      let domain = null
-      let owner = null
-      let repo = null
-      let extension = false
-
-      if (first == last){ //normal github
-        domain = e.url.substring(0, first)
-        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
-        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
-      } else if (e.url.slice(last) == '.git'){ //github with extension
-        domain = e.url.substring(0, first)
-        extension = true
-        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
-        repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4)
-      } else { //gluster
-        domain = e.url.substring(first + 1, last)
-        owner = null //e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
-        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
-      }
-      // this.$store.commit('setRepo', {
-      //   gitURL: e.url
-      // })
 
       this.setBaseRepo(e);
-
-      this.addRepo(e);
-
-      // this.$store.commit('setTab', {
-      //   tab: 'git'
-      // })
 
       this.$router.push({
         name: 'repo_overview',
