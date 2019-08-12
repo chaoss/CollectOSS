@@ -41,8 +41,10 @@ export default {
                                 console.log(data)
                                 tempCache = {...tempCache, ...data};
                                 payload.repos.forEach((repo: any) => {
-                                    tempCache[repo.url] = {...tempCache[repo.url], ...data[repo.url]};
+                                    tempCache[repo.toString()] = {...tempCache[repo.toString()], ...data[repo.toString()]};
                                 });
+                                console.log(tempCache)
+                                resolve(tempCache)
                             });
                     }
                     if ('repoGroups' in payload) {
@@ -53,6 +55,8 @@ export default {
                                     tempCache[group.rg_name] = {...tempCache[group.rg_name],
                                         ...data[group.rg_name]};
                                 });
+                                console.log(tempCache)
+                                resolve(tempCache)
                             });
                     }
                     if (!('repos' in payload) && !('repoGroups' in payload)) {
@@ -60,12 +64,14 @@ export default {
                             console.log(endpoint)
                             context.state.AugurAPI[endpoint]().then((data: object[]) => {
                                 tempCache[endpoint] = data;
+                                console.log(tempCache)
+                                resolve(tempCache)
                             });
                         });
                     }
                 }
-                console.log(tempCache)
-                resolve(tempCache)
+                // console.log(tempCache)
+                // resolve(tempCache)
                 // context.commit('mutate', {
                 //     property: 'cache',
                 //     with: tempCache,
@@ -159,19 +165,26 @@ export default {
     //         }, 2000)
     //     })
     // },
-    async addRepo(context:any, payload:any) {
-         return new Promise((resolve, reject) => {
-             setTimeout(()=>{
+    async addRepo(context: any, payload: any) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
                 let rg_name = payload.rg_name || undefined
+                let repo_name = payload.repo_name || undefined
                 let repo_id = payload.repo_id || undefined
                 let repo_group_id = payload.repo_group_id || undefined
                 let gitURL = payload.url || undefined
-                let repo:Repo = context.state.AugurAPI.Repo({gitURL:gitURL,repo_id:repo_id,repo_group_id:repo_group_id})
-                
-                context.commit('mutateAPIRepo', {repo:repo, url: gitURL})
+
+                let repo: Repo = context.state.AugurAPI.Repo({
+                    gitURL: gitURL,
+                    repo_id: repo_id,
+                    repo_group_id: repo_group_id,
+                    rg_name: rg_name,
+                    repo_name: repo_name
+                })
+                context.commit('mutateAPIRepo', {repo: repo, name: repo.toString()})
                 resolve(repo)
-             },2000)
-         })
+            }, 2000)
+        })
     },
     async addRepoGroup(context:any, payload:any) {
         return new Promise((resolve,reject)=>{

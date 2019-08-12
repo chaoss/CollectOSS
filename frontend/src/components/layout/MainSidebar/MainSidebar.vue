@@ -55,11 +55,11 @@
                 </div>
 
                 <div class="comp_info">
-                  {{ base.name || base.rg_name || 'No base repo/group selected'}}
+                  {{  base.repo_name? base.rg_name+'/'+base.repo_name : base.rg_name || 'No base repo/group selected'}}
                 </div>
 
                 <div class="comp_info">
-                  {{comparisionSize}} comparison(s) selected
+                  {{comparisionSize == 0? 'No': comparisionSize}} comparison(s) selected
                 </div>
               </div>
               

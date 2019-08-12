@@ -1,7 +1,16 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-      <vega-lite :encoding="encoding" :data="values" :width="340" :height="320" :mark="mark"></vega-lite>
+      <table style="width: 100%">
+        <thead class="bg-light">
+          <th v-for="header in headers">{{header}}</th>
+        </thead>
+        <tbody>
+          <tr v-for="el in values">
+            <td v-for="field in fields">{{el[field]}}</td>
+          </tr>
+        </tbody>
+      </table>
     </d-card-body>
   </d-card>
 </template>
@@ -15,9 +24,8 @@
       title: String,
       data: Object,
       source: String,
-      field: String,
-      filedTime: String,
-      fieldCount: String
+      headers: Array,
+      fields: Array,
     }
   })
 
@@ -29,25 +37,15 @@
       ]),
     },
   })
-  export default class LineChart extends AppProps{
+  export default class CountBlock extends AppProps{
 
     // compare.getter
     baseRepo!:any
     comparedRepos!:any
 
-    get values(){
-      console.log(this.data[this.baseRepo][this.source])
-      return this.data[this.baseRepo][this.source]
-    }
-    get encoding() {
-      return {
-        x: {field: this.filedTime, type: 'temporal'},
-        y: {field: this.fieldCount, type: 'quantitative'}
-      }
-    }
 
-    get mark() {
-      return 'line'
+    get values(){
+      return this.data[this.baseRepo][this.source]
     }
 
   }

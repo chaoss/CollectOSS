@@ -7,23 +7,26 @@
             <div class="text-center text-lg-center ">Compare from your repos:</div>
           </d-col>
           <d-col cols="12" lg="3">
-            <multiselect v-model="selectedGroups" track-by="rg_name" label="rg_name" :options="GroupOptions"
+            <multiselect v-model="selectedGroups" :options="GroupOptions"
                          placeholder="Select Group">
-              <template slot="singleLabel" slot-scope="{ option }">{{option.rg_name}}</template>
+              <template slot="singleLabel" slot-scope="{ option }">{{option}}</template>
             </multiselect>
           </d-col>
           <d-col cols="12" lg="3" v-if="!isGroup">
             <multiselect v-model="selectedRepos" :multiple="true" :close-on-select="false" :clear-on-select="false"
-                         :preserve-search="true" :options="RepoOptions" track-by="repo_name" label="repo_name"
+                         :preserve-search="true" :options="RepoOptions"
                          :disabled="getSelectedGroups.length === 0" placeholder="Select Repo" >
               <template slot="selection" slot-scope="{ values, search, isOpen }"><span
                 class="multiselect__single" v-if="values.length && !isOpen">{{ values.length }} options selected</span>
+              </template>
+              <template slot="option" slot-scope="props">
+                <div class="option__desc">{{props.option.split('/')[1]}}</div>
               </template>
             </multiselect>
           </d-col>
           <d-col cols="12" lg="1">
             <d-button-group size="small">
-              <d-button>Apply</d-button>
+              <d-button @click="onCompare">Apply</d-button>
               <d-button @click="onReset">Reset</d-button>
             </d-button-group>
           </d-col>
@@ -39,11 +42,11 @@
         </d-row>
         <d-row>
             <d-badge theme="primary" v-if="!isGroup" pill class="mx-2 mt-2" v-for="item in getSelectedRepos">
-              {{item.rg_name + '/'+item.repo_name}}
+              {{item}}
               <a @click="removeSelectedRepos(item)">&nbsp;&nbsp;x</a>
             </d-badge>
             <d-badge theme="primary" v-if="isGroup" pill class="mx-2 mt-2" v-for="item in getSelectedGroups">
-              {{item.rg_name}}
+              {{item}}
               <a @click="removeSelectedGroups(item)">&nbsp;&nbsp;x</a>
             </d-badge>
         </d-row>
@@ -164,6 +167,7 @@
   import Multiselect from 'vue-multiselect';
   import {Component, Vue} from 'vue-property-decorator';
   import {mapActions, mapGetters, mapMutations} from "vuex";
+  import router from '@/router'
   import style from "vega-embed/src/style";
   import {keys} from "vega-lite/build/src/util";
 
@@ -193,6 +197,7 @@
         'isGroup',
         'comparedRepos',
         'comparedRepoGroups',
+        'comparisionSize',
       ])
     },
     methods: {
@@ -204,6 +209,10 @@
         'resetCompared',
         'mutateComparedRepo',
         'mutateComparedGroup'
+      ]),
+      ...mapActions('compare',[
+        'setComparedRepos',
+        'setComparedGroup'
       ]),
       ...mapActions('common', [
         'loadRepoGroups',
@@ -242,12 +251,16 @@
     loaded_groups!: boolean;
     comparedRepoGroups!:any;
     comparedRepos!:any;
+    comparisionSize!:any;
 
     mutateStartDateChange!: any;
     mutateEndDateChange!: any;
     mutateComparedRepo!:any;
     mutateComparedGroup!:any;
     setCompare!:any;
+
+    setComparedRepos!:any;
+    setComparedGroup!:any;
 
 
     loadRepoGroups!: any;
@@ -281,16 +294,20 @@
     }
 
     get GroupOptions() {
-      return this.repoGroups
+      let rg_names:string[] = []
+      this.repoGroups.forEach((rg:any)=>{
+        rg_names.push(rg.rg_name)
+      })
+      return rg_names
     }
 
     get RepoOptions() {
-
-      let group = this.selectedGroups || {}
-      let rg_name = group.rg_name || []
-
-      console.log("1111", this.selectedGroups, group, rg_name)
-      return Object.values(this.repoRelations[rg_name] || [])
+      let repos =  Object.values(this.repoRelations[this.selectedGroups] || [])
+      let names:string[] = []
+      repos.forEach((repo:any)=> {
+        names.push(this.selectedGroups + '/' + repo.repo_name)
+      })
+      return names
     }
 
 
@@ -340,9 +357,15 @@
 
     onCompare(e: any) {
       if(!this.isGroup) {
-        this.mutateComparedRepo(this.selectedRepos)
-      } else {
 
+        this.setComparedRepos(this.selectedRepos)
+
+        router.push({
+          name: 'repo_overview_compare',
+          params: {group: this.base.rg_name, repo: this.base.repo_name, compares: this.selectedRepos.join(',')}
+        })
+      } else {
+        this.setComparedGroup(this.selectedGroups)
       }
     }
 
@@ -367,6 +390,14 @@
       this.mutateStartDateChange(initialState.startDate)
       this.mutateEndDateChange(initialState.endDate)
       this.resetCompared()
+
+      if (!this.isGroup) {
+        router.push({
+          name: 'repo_overview',
+          params: {group: this.base.rg_name, repo: this.base.repo_name}
+        })
+      }
+
     }
     removeSelectedRepos(e:any) {
       let index = this.selectedRepos.indexOf(e);
