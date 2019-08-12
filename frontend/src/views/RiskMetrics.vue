@@ -53,7 +53,7 @@
       CompareControl,
       CountBlock,
       LineChart,
-      PieChart,
+      // PieChart,
     },
     methods: {
       ...mapActions('common',[
