@@ -42,21 +42,21 @@ def test_get_repo_for_dosocs(augur_db_routes):
 #####################################
 
 def test_code_changes_by_group(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/code-changes')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/code-changes')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]['commit_count'] > 0
 
 def test_code_changes_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21350/code-changes')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/code-changes')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]['commit_count'] > 0
 
 def test_code_changes_lines_by_group(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/code-changes-lines')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/code-changes-lines')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -64,7 +64,7 @@ def test_code_changes_lines_by_group(augur_db_routes):
     assert data[0]['removed'] >= 0
 
 def test_code_changes_lines_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21350/code-changes-lines')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/code-changes-lines')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -72,7 +72,7 @@ def test_code_changes_lines_by_repo(augur_db_routes):
     assert data[0]['removed'] >= 0
 
 def test_issues_new_by_group(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issues-new')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/issues-new')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -93,7 +93,7 @@ def test_issues_active_by_group(augur_db_routes):
     assert data[0]['issues'] > 0
 
 def test_issues_active_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21000/issues-active')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/issues-active')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -126,14 +126,14 @@ def test_issue_duration_by_repo(augur_db_routes):
     assert len(data) >= 1
 
 def test_issue_participants_by_group(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issue-participants')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/issue-participants')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]['participants'] > 0
 
 def test_issue_participants_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21403/issue-participants')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21000/issue-participants')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -154,14 +154,14 @@ def test_issue_throughput_by_repo(augur_db_routes):
     assert data[0]['throughput'] >= 0
 
 def test_issue_backlog_by_group(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/issue-backlog')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/issue-backlog')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
     assert data[0]['issue_backlog'] > 0
 
 def test_issue_backlog_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/23/repos/21403/issue-backlog')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21403/issue-backlog')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
