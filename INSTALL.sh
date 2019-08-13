@@ -1,6 +1,10 @@
 rm -rf build/*; rm $VIRTUAL_ENV/bin/*worker_start*; 
 pip install pipreqs sphinx; 
 yarn global add apidoc brunch newman @vue/cli; 
+cd frontend/;
+yarn install;
+yarn build; 
+cd ../;
 pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
 python setup.py install; 
 cd workers/;
