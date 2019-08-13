@@ -28,25 +28,25 @@
     <!-- <spinner :v-show="!loaded_overview"></spinner> -->
     
     <!-- <div class="row" :v-show="loaded_overview"> -->
-    <!-- <div class="row"> -->
+    <!-- <div class="row">
 
-        <!-- <div class="col col-6" style="padding-right: 35px">
+        <div class="col col-6" style="padding-right: 35px">
           <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
             title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
-            field="commit"
-            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
-          </grouped-bar-chart>
-        </div> -->
-     <!--    <div class="col col-6" style="padding-right: 35px">
+            field="commit">
+            <!-- :data="values['annualCommitCountRankedByRepoInRepoGroup']"> -->
+          <!-- </grouped-bar-chart>
+        </div>
+        <div class="col col-6" style="padding-right: 35px">
           <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
             title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
             field="loc"> -->
             <!-- :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']"> -->
           <!-- </grouped-bar-chart>
-        </div> -->
+        </div>
 
-    <!-- </div> -->
-
+    </div> -->
+ 
     <!-- Evolution section -->
     <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
@@ -90,7 +90,7 @@
     
     <!-- <div class="row" :v-show="loaded_issues"> -->
     <spinner v-show="!loaded_issues"></spinner>
-    <div class="row" v-if="loaded_issues">
+    <div class="row">
 
       <div class="col col-12" style="padding-right: 35px">
         <dual-line-chart source=""
@@ -255,9 +255,10 @@ export default class RepoOverview extends Vue {
   endpoint!: any;
 
   created() {
-    // this.endpoint({endpoints:this.testEndpoints,repos:[this.base]}).then((tuples:any) => {
-    //   this.loaded_evolution = true
-    // })
+    console.log(this.base)
+    this.endpoint({endpoints:this.testEndpoints,repos:[this.base]}).then((tuples:any) => {
+      this.loaded_evolution = true
+    })
   }
 
 }

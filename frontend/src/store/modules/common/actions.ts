@@ -5,6 +5,7 @@ export default {
         try {
             let apiGroups = context.state.getRepoGroups || {};
             let apiRepos = context.state.getRepos || {};
+            console.log("DOING IT")
             if ('repos' in payload) {
                 payload.repos.forEach((repo: any) => {
                     apiRepos[repo.url] = context.state.AugurAPI.Repo({gitURL: repo.url,
@@ -34,7 +35,6 @@ export default {
             return new Promise((resolve, reject) => {
                 let tempCache = context.state.cache || {};
                 if ('endpoints' in payload) {
-                    console.log(payload.endpoints)
                     if ('repos' in payload) {
                         context.state.AugurAPI.batchMapped(payload.repos, payload.endpoints).then(
                             (data: object[]) => {

@@ -39,12 +39,14 @@ export default {
     async setBaseRepo(context: any, payload: any) {
         return new Promise((resolve:any, reject:any)=>{
             setTimeout(()=>{
+                console.log(payload)
                 let baseRepo = payload.rg_name && payload.repo_name? payload.rg_name + '/' + payload.repo_name : payload.url
                 if (!(baseRepo in context.rootGetters['common/apiRepos'])) {
                     context.dispatch('common/addRepo',payload,{root:true}).then((data:any) =>{
                         context.state.baseRepo = baseRepo
                         resolve(data)
                     })
+                    context.commit('mutate', {property: baseRepo, with: payload.url})
                 } else{
                     context.state.baseRepo = baseRepo
                     resolve({})

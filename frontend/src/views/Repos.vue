@@ -125,11 +125,10 @@ import Spinner from '../components/Spinner.vue'
       'loadRepos',
       'addRepo'
     ]),
-    ...mapMutations('compare',[
-    ]),
+
     ...mapActions('compare',[
       'addComparedRepo',
-      'setBaseRepo',
+      'setBaseRepo'
     ])
   },
   computed: {
@@ -180,8 +179,8 @@ export default class Repos extends Vue{
   }
 
   onGitRepo (e: any) {
-
-      this.setBaseRepo(e);
+    console.log(e, {gitURL: e.url, repo_id: e.repo_id, repo_group_id: e.repo_group_id, rg_name:e.rg_name, repo_name:e.repo_name})
+      this.setBaseRepo({gitURL: e.url, repo_id: e.repo_id, repo_group_id: e.repo_group_id, rg_name:e.rg_name, repo_name:e.repo_name});
 
       this.$router.push({
         name: 'repo_overview',

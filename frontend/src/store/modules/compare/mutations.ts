@@ -3,6 +3,9 @@ import Vue from 'vue';
 import router from '@/router';
 
 export default {
+    mutate(state: any, payload: any) {
+        Vue.set(state, payload.property, payload.with);
+      },
     mutateBaseRepo(state: any, payload: any) {
         // pass url into function
             state.baseRepo = payload.url
@@ -21,6 +24,22 @@ export default {
             });
         }
     },
+
+    // setBaseRepo (state: any, payload: any) {
+    //     console.log("HI",state)
+    //     state.gitRepo = payload.url;
+    //     state.baseRepo = payload.url;
+    //     state.hasState = true;
+    //     console.log(state)
+
+    //     // let repo = state.AugurAPI.Repo(payload)
+    //     // state.c
+    //     // if (!AugurRepos[repo.toString()]) {
+    //       // AugurRepos[repo.toString()] = repo
+    //     // } else {
+    //       // repo = AugurRepos[repo.toString()]
+    //     // }
+    //   },
 
     mutateComparedGroup(state:any, payload:any) {
         if(payload != null){

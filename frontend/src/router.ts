@@ -142,7 +142,7 @@ const routes = [
             beforeEnter: async (to:any, from:any, next:any) => {
                   let repo = to.params.repo;
                   let group = to.params.group;
-                  await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
+                  // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
                   next()
             }
       },
@@ -163,9 +163,9 @@ const routes = [
       beforeEnter: async (to:any, from:any, next:any) => {
         let repo = to.params.repo;
         let group = to.params.group;
-        await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
+        // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
         let compares = to.params.compares === ''? [] : to.params.compares.split(',');
-        await store.dispatch('compare/setComparedRepos',compares);
+        // await store.dispatch('compare/setComparedRepos',compares);
         next()
       }
     },
