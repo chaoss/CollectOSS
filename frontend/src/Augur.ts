@@ -14,12 +14,12 @@ import SvgSaver from 'svgsaver';
 import vega from 'vega';
 import vegaLite from 'vega-lite';
 import vegaEmbed from 'vega-embed'
-
+import NProgress from 'nprogress'
 // Styles
 import 'bootstrap/dist/css/bootstrap.css';
 import '@/styles/shards-dashboards.scss';
 import '@/assets/scss/date-range.scss';
-
+import 'nprogress/nprogress.css'
 // Core
 import AugurApp from '@/components/AugurApp.vue';
 import router from './router';
@@ -48,6 +48,16 @@ export default function Augur () {
   // AugurApp.store = store
   // Object.defineProperty(AugurApp, 'store', store);
 
+  router.beforeEach((to:any, from:any, next:any) => {
+    NProgress.start()
+    NProgress.set(0.4);
+    next()
+  })
+
+  router.afterEach(() => {
+    // 在即将进入新的页面组件前，关闭掉进度条
+    NProgress.done()
+  })
 
   // router.beforeEach((to:any, from:any, next:any) => {
   //   if (to.params.repo || to.params.groupid){

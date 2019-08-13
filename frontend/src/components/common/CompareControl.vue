@@ -8,8 +8,11 @@
           </d-col>
           <d-col cols="12" lg="3">
             <multiselect v-model="selectedGroups" :options="GroupOptions"
-                         placeholder="Select Group">
-              <template slot="singleLabel" slot-scope="{ option }">{{option}}</template>
+                         placeholder="Select Group" :close-on-select="false" :clear-on-select="false"
+                         :preserve-search="true"  :multiple="isGroup">
+              <template slot="selection" slot-scope="{ values, search, isOpen }"><span
+                class="multiselect__single" v-if="values.length && !isOpen">{{ values.length }} options selected</span>
+              </template>
             </multiselect>
           </d-col>
           <d-col cols="12" lg="3" v-if="!isGroup">
@@ -30,7 +33,7 @@
               <d-button @click="onReset">Reset</d-button>
             </d-button-group>
           </d-col>
-          <d-col cols="12" lg="3" :class="{'offset-md-4':isGroup}">
+          <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
             <div v-d-toggle.my-collapse variant="primary" size="small" class="float-right"
                  @click="isCollpase = !isCollpase">
               <div v-if="isCollpase">More configuration options<i class="material-icons" style="font-size: 1.3rem
@@ -357,9 +360,6 @@
 
     onCompare(e: any) {
       if(!this.isGroup) {
-
-        this.setComparedRepos(this.selectedRepos)
-
         router.push({
           name: 'repo_overview_compare',
           params: {group: this.base.rg_name, repo: this.base.repo_name, compares: this.selectedRepos.join(',')}

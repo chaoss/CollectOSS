@@ -82,7 +82,8 @@
                         container=".shards-demo--example--tooltip-01">
                         Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
                       </d-tooltip>
-                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0; border: none; background: none;" v-on:click="onRepoGroup(group)">
+                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0; border: none;
+                      background: none;" v-on:click="addComparedGroup(group)">
                         <i class="material-icons" style="color:#007bff;">library_add</i>
                         <div class="item-icon-wrapper"></div>
                       </button>
@@ -130,8 +131,6 @@
     },
     computed: {
       ...mapGetters('common',[
-        'repoRelationsInfo',
-        'groupsInfo',
         'sorted_repo_groups',
         'repo_groups',
         'loaded_groups',
@@ -152,8 +151,7 @@
     sortColumn: string ='rg_last_modified';
 
     // declare Vuex action and getter
-    repoRelationsInfo!: any;
-    groupsInfo!:any;
+
     getRepoRelations!: any;
     loadRepoGroups!:any;
     repo_groups!:any[];

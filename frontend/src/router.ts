@@ -41,6 +41,8 @@ import RepoGroups from './views/RepoGroups.vue';
 import Repos from './views/Repos.vue';
 import SingleComparison from './views/SingleComparison.vue';
 import RiskMetrics from "@/views/RiskMetrics.vue";
+import GroupOverview from "@/views/GroupOverview.vue";
+import NProgress from "nprogress";
 
 const routes = [
       {
@@ -141,60 +143,69 @@ const routes = [
                         },
                   },
             ],
-            beforeEnter: async (to:any, from:any, next:any) => {
+            beforeEnter: (to:any, from:any, next:any) => {
                   let repo = to.params.repo;
                   let group = to.params.group;
-                  // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
-                  next()
+
+                  store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo}).finally(()=>{
+                    next()
+                  })
+
             }
       },
-      {
-            path: '/group/:group',
-            component: Default,
-            children: [
-                  {
-                        path: 'overview',
-                        name: 'group_overview',
-                        components: {
-                              sidebar: MainSidebar,
-                              navbar: MainNavbar,
-                              content: GroupOverview,
-                        },
-                  }
-            ],
-            beforeEnter: async (to:any, from:any, next:any) => {
-                  let group = to.params.group;
-                  // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
-                  next()
-            }
-      },
-      {
-            path: '/repo/:group/:repo/comparedTo/:compares',
-            component: Default,
-            children: [
-              {
-                path: '',
-                name: 'repo_overview_compare',
-                components: {
-                  sidebar: MainSidebar,
-                  navbar: MainNavbar,
-                  content: SingleComparison,
-                },
-              },
-            ],
-            beforeEnter: async (to:any, from:any, next:any) => {
-              let repo = to.params.repo;
-              let group = to.params.group;
-              // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
-              let compares = to.params.compares === ''? [] : to.params.compares.split(',');
-              // await store.dispatch('compare/setComparedRepos',compares);
-              next()
-            }
-      },
-      {
-            path: '*',
-            redirect: '/errors',
-      },
+    {
+      path: '/repo/:group/:repo/comparedTo/:compares',
+      component: Default,
+      children: [
+        {
+          path: '',
+          name: 'repo_overview_compare',
+          components: {
+            sidebar: MainSidebar,
+            navbar: MainNavbar,
+            content: RepoOverview,
+          },
+        },
+      ],
+      beforeEnter: (to:any, from:any, next:any) => {
+        let repo = to.params.repo;
+        let group = to.params.group;
+        let compares = to.params.compares === ''? [] : to.params.compares.split(',');
+        store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo}).then((data:any)=>{
+          return store.dispatch('compare/setComparedRepos',compares)
+        }).finally(()=>{
+          next()
+        })
+      }
+    },
+    {
+      path: '/group/:group',
+      component: Default,
+      children: [
+        {
+          path: 'overview',
+          name: 'group_overview',
+          components: {
+            sidebar: MainSidebar,
+            navbar: MainNavbar,
+            content: GroupOverview,
+          },
+        },
+      ],
+      beforeEnter: async (to:any, from:any, next:any) => {
+        let group = to.params.group
+        await store.dispatch('compare/setBaseGroup', {rg_name:group})
+        next()
+      }
+    },
+    {
+      path: '/errors',
+      name: 'errors',
+      component: Errors,
+      path: '*',
+      redirect: '/errors',
+    },
+    {
       //   {path: '/', component: Default,
       //   // children: [
       //   //   {

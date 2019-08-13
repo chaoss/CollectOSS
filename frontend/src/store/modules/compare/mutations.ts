@@ -50,13 +50,7 @@ export default {
         }
     },
 
-    resetCompareManager(state:any, payload:any) {
-        state.baseRepo = '';
-        state.baseGroup = '';
-        state.baseType = false;
-        state.comparedRepos = [];
-        state.comparedRepoGroups = [];
-    },
+
     resetCompared (state: any) {
       state.comparedRepos = []
       state.comparedGrops = []
