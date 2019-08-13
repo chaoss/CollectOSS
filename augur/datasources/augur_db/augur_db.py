@@ -1033,7 +1033,7 @@ class Augur(object):
 
     @annotate(tag='review-duration')
     def review_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
-        """ Returns the duartion of each accepted review.
+        """ Returns the duration of each accepted review.
 
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
