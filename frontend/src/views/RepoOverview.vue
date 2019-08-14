@@ -24,6 +24,521 @@
         <h3 class="page-title" style="font-size: 1rem">Overview</h3>
       </div>
     </div>
+  <spinner :v-show="!loaded_overview"></spinner> 
+    
+    <div class="row" :v-show="loaded_overview">
+    <div class="row">
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+            field="commit"
+            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
+          </grouped-bar-chart>
+        </div>
+
+         <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+            field="loc"
+            :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']">
+           </grouped-bar-chart>
+        </div>
+
+        <!-- <div class="col col-6" style="padding-right: 35px">
+         <time-interval-bar-chart source="???"
+           title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+           field="commit"
+           :data="values['???']">
+         </time-interval-bar-chart>
+       </div> -->
+
+       <div class="col col-12" style="padding-right: 35px">
+          <time-interval-bar-chart source="cdRepTpIntervalLocCommits"
+          title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+          field="loc"></time-interval-bar-chart>
+        </div>
+
+       <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"></grouped-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"></grouped-bar-chart>
+      </div>
+
+     </div>
+   </div>
+
+
+
+
+    <div class="row" style="transform: translateY(-10px) !important" v-if="loaded">
+        <div class="col col-12">
+          <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+        </div>
+        <!--<div class="col col-12">
+          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+        </div> -->
+
+        <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+          <normalized-stacked-bar-chart 
+          title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+          source="changesByAuthor1" :data="values['changesByAuthor']">
+          </normalized-stacked-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div style="padding-top: 0px"></div>
+          <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+          source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+        </div>
+      </div>
+
+       <div style="transform: translateY(-30px) !important" class="row" v-if="loaded">
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+      </div>
+
+      <div class="row" style="transform: translateY(-40px) !important" v-if="loaded">
+        <lines-of-code-chart></lines-of-code-chart>
+      </div>
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+            field="commit"
+            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
+          </grouped-bar-chart>
+        </div>
+
+         <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+            field="loc"
+            :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']">
+           </grouped-bar-chart>
+        </div>
+
+        <!-- <div class="col col-6" style="padding-right: 35px">
+         <time-interval-bar-chart source="???"
+           title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+           field="commit"
+           :data="values['???']">
+         </time-interval-bar-chart>
+       </div> -->
+
+       <div class="col col-12" style="padding-right: 35px">
+          <time-interval-bar-chart source="cdRepTpIntervalLocCommits"
+          title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+          field="loc"></time-interval-bar-chart>
+        </div>
+
+       <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"></grouped-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"></grouped-bar-chart>
+      </div>
+
+     </div>
+   </div>
+
+
+
+
+    <div class="row" style="transform: translateY(-10px) !important" v-if="loaded">
+        <div class="col col-12">
+          <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+        </div>
+        <!--<div class="col col-12">
+          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+        </div> -->
+
+        <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+          <normalized-stacked-bar-chart 
+          title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+          source="changesByAuthor1" :data="values['changesByAuthor']">
+          </normalized-stacked-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div style="padding-top: 0px"></div>
+          <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+          source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+        </div>
+      </div>
+
+       <div style="transform: translateY(-30px) !important" class="row" v-if="loaded">
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+      </div>
+
+      <div class="row" style="transform: translateY(-40px) !important" v-if="loaded">
+        <lines-of-code-chart></lines-of-code-chart>
+      </div>
+
+
+
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+            field="commit"
+            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
+          </grouped-bar-chart>
+        </div>
+
+         <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+            field="loc"
+            :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']">
+           </grouped-bar-chart>
+        </div>
+
+        <!-- <div class="col col-6" style="padding-right: 35px">
+         <time-interval-bar-chart source="???"
+           title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+           field="commit"
+           :data="values['???']">
+         </time-interval-bar-chart>
+       </div> -->
+
+       <div class="col col-12" style="padding-right: 35px">
+          <time-interval-bar-chart source="cdRepTpIntervalLocCommits"
+          title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+          field="loc"></time-interval-bar-chart>
+        </div>
+
+       <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"></grouped-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"></grouped-bar-chart>
+      </div>
+
+     </div>
+   </div>
+
+
+
+
+    <div class="row" style="transform: translateY(-10px) !important" v-if="loaded">
+        <div class="col col-12">
+          <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+        </div>
+        <!--<div class="col col-12">
+          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+        </div> -->
+
+        <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+          <normalized-stacked-bar-chart 
+          title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+          source="changesByAuthor1" :data="values['changesByAuthor']">
+          </normalized-stacked-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div style="padding-top: 0px"></div>
+          <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+          source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+        </div>
+      </div>
+
+       <div style="transform: translateY(-30px) !important" class="row" v-if="loaded">
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+      </div>
+
+      <div class="row" style="transform: translateY(-40px) !important" v-if="loaded">
+        <lines-of-code-chart></lines-of-code-chart>
+      </div>
+
+
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+            field="commit"
+            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
+          </grouped-bar-chart>
+        </div>
+
+         <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+            field="loc"
+            :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']">
+           </grouped-bar-chart>
+        </div>
+
+        <!-- <div class="col col-6" style="padding-right: 35px">
+         <time-interval-bar-chart source="???"
+           title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+           field="commit"
+           :data="values['???']">
+         </time-interval-bar-chart>
+       </div> -->
+
+       <div class="col col-12" style="padding-right: 35px">
+          <time-interval-bar-chart source="cdRepTpIntervalLocCommits"
+          title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+          field="loc"></time-interval-bar-chart>
+        </div>
+
+       <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"></grouped-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"></grouped-bar-chart>
+      </div>
+
+     </div>
+   </div>
+
+
+
+
+    <div class="row" style="transform: translateY(-10px) !important" v-if="loaded">
+        <div class="col col-12">
+          <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+        </div>
+        <!--<div class="col col-12">
+          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+        </div> -->
+
+        <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+          <normalized-stacked-bar-chart 
+          title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+          source="changesByAuthor1" :data="values['changesByAuthor']">
+          </normalized-stacked-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div style="padding-top: 0px"></div>
+          <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+          source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+        </div>
+      </div>
+
+       <div style="transform: translateY(-30px) !important" class="row" v-if="loaded">
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+      </div>
+
+      <div class="row" style="transform: translateY(-40px) !important" v-if="loaded">
+        <lines-of-code-chart></lines-of-code-chart>
+      </div>
+    
+    <div class="row" :v-show="loaded_overview">
+    <div class="row">
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+            field="commit"
+            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
+          </grouped-bar-chart>
+        </div>
+
+         <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+            field="loc"
+            :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']">
+           </grouped-bar-chart>
+        </div>
+
+        <!-- <div class="col col-6" style="padding-right: 35px">
+         <time-interval-bar-chart source="???"
+           title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+           field="commit"
+           :data="values['???']">
+         </time-interval-bar-chart>
+       </div> -->
+
+       <div class="col col-12" style="padding-right: 35px">
+          <time-interval-bar-chart source="cdRepTpIntervalLocCommits"
+          title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+          field="loc"></time-interval-bar-chart>
+        </div>
+
+       <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"></grouped-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"></grouped-bar-chart>
+      </div>
+
+     </div>
+   </div>
+
+
+
+
+    <div class="row" style="transform: translateY(-10px) !important" v-if="loaded">
+        <div class="col col-12">
+          <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+        </div>
+        <!--<div class="col col-12">
+          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+        </div> -->
+
+        <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+          <normalized-stacked-bar-chart 
+          title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+          source="changesByAuthor1" :data="values['changesByAuthor']">
+          </normalized-stacked-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div style="padding-top: 0px"></div>
+          <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+          source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+        </div>
+      </div>
+
+       <div style="transform: translateY(-30px) !important" class="row" v-if="loaded">
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+      </div>
+
+      <div class="row" style="transform: translateY(-40px) !important" v-if="loaded">
+        <lines-of-code-chart></lines-of-code-chart>
+      </div>
+
+
+    <!-- <spinner :v-show="!loaded_overview"></spinner> -->
+
+    
+    <div class="row" :v-show="loaded_overview">
+    <div class="row">
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualCommitCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Commits with Baseline Averages - Sorted"
+            field="commit"
+            :data="values['annualCommitCountRankedByRepoInRepoGroup']">
+          </grouped-bar-chart>
+        </div>
+
+         <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="annualLinesOfCodeCountRankedByRepoInRepoGroup"
+            title="Top Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+            field="loc"
+            :data="values['annualLinesOfCodeCountRankedByRepoInRepoGroup']">
+           </grouped-bar-chart>
+        </div>
+
+        <!-- <div class="col col-6" style="padding-right: 35px">
+         <time-interval-bar-chart source="???"
+           title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+           field="commit"
+           :data="values['???']">
+         </time-interval-bar-chart>
+       </div> -->
+
+       <div class="col col-12" style="padding-right: 35px">
+          <time-interval-bar-chart source="cdRepTpIntervalLocCommits"
+          title="Contributions in 2018 by Monthly Intervals with Baseline Averages"
+          field="loc"></time-interval-bar-chart>
+        </div>
+
+       <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedCommits"
+          title="Top New Repos in 2018 by Commits with Baseline Averages - Sorted"
+          field="commit"></grouped-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-right: 35px">
+          <grouped-bar-chart source="cdRgNewrepRankedLoc"
+          title="Top New Repos in 2018 by Net LoC with Baseline Averages - Sorted"
+          field="loc"></grouped-bar-chart>
+      </div>
+
+     </div>
+   </div>
+
+    <div class="row" style="transform: translateY(-10px) !important" v-if="loaded">
+        <div class="col col-12">
+          <tick-chart source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+        </div>
+        <!--<div class="col col-12">
+          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+        </div> -->
+
+        <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+          <normalized-stacked-bar-chart 
+          title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+          source="changesByAuthor1" :data="values['changesByAuthor']">
+          </normalized-stacked-bar-chart>
+        </div>
+
+        <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div style="padding-top: 0px"></div>
+          <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+          source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+        </div>
+      </div>
+
+       <div style="transform: translateY(-30px) !important" class="row" v-if="loaded">
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+        <div class="col col-6">
+          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"></one-dimensional-stacked-bar-chart>
+        </div>
+      </div>
+
+      <div class="row" style="transform: translateY(-40px) !important" v-if="loaded">
+        <lines-of-code-chart></lines-of-code-chart>
+      </div>
+
 
     <!-- <spinner :v-show="!loaded_overview"></spinner> -->
     
@@ -61,8 +576,11 @@
         </div>
       </div>
 
-    </div>
- 
+
+
+    <!-- <div class="row">
+      <div class="row" :v-show="loaded_overview" -->
+
     <!-- Evolution section -->
     <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
@@ -82,6 +600,15 @@
                       cite-text="issuesClosed"
                       :data="values['issuesClosed']">
         </dynamic-line-chart>
+      </div>
+
+      <div class="col col-12">
+        <bubble-chart source="ContributingGithubOrganizations"
+                      title="Contributing Github Organizations Overview"
+                      size="total"
+                      cite-url="https://github.com/chaoss/metrics/blob/master/activity-contributing-organizations.md"
+                      cite-text="Contributing Organizations">
+        </bubble-chart>
       </div>
 
       <!-- <div class="col col-6">
@@ -366,6 +893,7 @@ import DualLineChart from '../components/charts/DualLineChart.vue'
 import Spinner from '../components/Spinner.vue'
 import CompareControl from '../components/common/CompareControl.vue'
 import router from "@/router";
+import BubbleChart from '../components/charts/BubbleChart.vue'
 
 @Component({
   components: {
@@ -382,6 +910,7 @@ import router from "@/router";
     DualLineChart,
     Spinner,
     CompareControl,
+    BubbleChart,
   },
   methods: {
     ...mapActions('common',[
