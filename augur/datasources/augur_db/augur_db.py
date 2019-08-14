@@ -1428,7 +1428,7 @@ class Augur(object):
         """
         if repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SSELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
+                SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
                     achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
                 FROM repo_badging, repo, repo_groups
                 WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
@@ -1437,6 +1437,7 @@ class Augur(object):
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_group_id': repo_group_id})
+            print(results)
             return results
 
         else:
@@ -1450,6 +1451,7 @@ class Augur(object):
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
+            print(results)
             return results
 
     @annotate(tag='average-issue-resolution-time')
