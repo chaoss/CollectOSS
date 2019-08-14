@@ -2777,53 +2777,24 @@ class Augur(object):
                     LIMIT 1
                 ) AS fork_count,
                 (
-                    SELECT pull_requests_merged AS pull_requests_merged
-                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
-                    WHERE repo_group_id = :repo_group_id 
-                    AND pull_requests_merged is not NULL
-                    ORDER BY last_updated DESC
-                    LIMIT 1
-                ) - (
-                    SELECT pull_requests_merged AS pull_requests_merged
-                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
-                    WHERE repo_group_id = :repo_group_id
-                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
-                    AND pull_requests_merged is not NULL
-                    ORDER BY last_updated ASC
-                    LIMIT 1
-                ) AS pull_requests_merged,
-                (
-                    SELECT committers_count AS committers_count
-                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
-                    WHERE repo_group_id = :repo_group_id
-                    AND committers_count is not NULL
-                    ORDER BY last_updated DESC
-                    LIMIT 1
-                ) - (
-                    SELECT committers_count AS committers_count
-                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
-                    WHERE repo_group_id = :repo_group_id
-                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
-                    AND committers_count is not NULL
-                    ORDER BY last_updated ASC
-                    LIMIT 1
-                ) AS committers_count,
-                (
-                    SELECT commit_count AS commit_count
-                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
-                    WHERE repo_group_id = :repo_group_id
-                    AND commit_count is not NULL
-                    ORDER BY last_updated DESC
-                    LIMIT 1
-                ) - (
-                    SELECT commit_count AS commit_count
-                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
-                    WHERE repo_group_id = :repo_group_id
-                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
-                    AND commit_count is not NULL
-                    ORDER BY last_updated ASC
-                    LIMIT 1
-                ) AS commit_count
+                    SELECT count(*) AS merged_count
+                    FROM (
+                        SELECT DISTINCT issue_events.issue_id
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id JOIN repo ON issues.repo_id = repo.repo_id
+                        WHERE action = 'merged'
+                        AND repo_group_id = :repo_group_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    ) a 
+                ) AS merged_count,
+                committer_count, commit_count FROM (
+                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
+                    FROM (
+                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits JOIN repo ON commits.repo_id = repo.repo_id
+                        WHERE repo_group_id = :repo_group_id
+                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_author_name
+                    ) temp
+                ) commit_data
             """)
             results = pd.read_sql(summarySQL, self.db, params={'repo_group_id': repo_group_id,
                                                             'begin_date': begin_date, 'end_date': end_date})
@@ -2874,53 +2845,24 @@ class Augur(object):
                     LIMIT 1
                 ) AS fork_count,
                 (
-                    SELECT pull_requests_merged AS pull_requests_merged
-                    FROM repo_info
-                    WHERE repo_id = :repo_id
-                    AND pull_requests_merged is not NULL
-                    ORDER BY last_updated DESC
-                    LIMIT 1
-                ) - (
-                    SELECT pull_requests_merged AS pull_requests_merged
-                    FROM repo_info
-                    WHERE repo_id = :repo_id
-                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
-                    AND pull_requests_merged is not NULL
-                    ORDER BY last_updated ASC
-                    LIMIT 1
-                ) AS pull_requests_merged,
-                (
-                    SELECT committers_count AS committers_count
-                    FROM repo_info
-                    WHERE repo_id = :repo_id
-                    AND committers_count is not NULL
-                    ORDER BY last_updated DESC
-                    LIMIT 1
-                ) - (
-                    SELECT committers_count AS committers_count
-                    FROM repo_info
-                    WHERE repo_id = :repo_id
-                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
-                    AND committers_count is not NULL
-                    ORDER BY last_updated ASC
-                    LIMIT 1
-                ) AS committers_count,
-                (
-                    SELECT commit_count AS commit_count
-                    FROM repo_info
-                    WHERE repo_id = :repo_id
-                    AND commit_count is not NULL
-                    ORDER BY last_updated DESC
-                    LIMIT 1
-                ) - (
-                    SELECT commit_count AS commit_count
-                    FROM repo_info
-                    WHERE repo_id = :repo_id
-                    AND last_updated >= date_trunc('day', NOW() - INTERVAL '1 year')
-                    AND commit_count is not NULL
-                    ORDER BY last_updated ASC
-                    LIMIT 1
-                ) AS commit_count
+                    SELECT count(*) AS merged_count
+                    FROM (
+                        SELECT DISTINCT issue_events.issue_id
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
+                        WHERE action = 'merged'
+                        AND repo_id = :repo_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    ) a 
+                ) AS merged_count,
+                committer_count, commit_count FROM (
+                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
+                    FROM (
+                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits
+                        WHERE repo_id = :repo_id
+                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_author_name
+                    ) temp
+                ) commit_data
             """)
             results = pd.read_sql(summarySQL, self.db, params={'repo_id': repo_id,
                                                             'begin_date': begin_date, 'end_date': end_date})
