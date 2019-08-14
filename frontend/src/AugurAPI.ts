@@ -25,7 +25,7 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-  constructor(hostURL: string = 'http://localhost:5000', version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://localhost:5002', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
@@ -76,20 +76,22 @@ export default class AugurAPI {
   }
 
   __URLFunctionFactory(url: string) {
-    var self = this
-    return function (params: any, callback: any) {
+    console.log(this)
+    console.log(this.__cache)
+    return (params: any, callback: any) => {
       var cacheKey = window.btoa(url + JSON.stringify(params))
-      self.openRequests++
-      if (self.__cache[cacheKey]) {
-        if (self.__cache[cacheKey].created_at > Date.now() - 1000 * 60) {
-          return new Promise((resolve, reject) => {
-            resolve(self.__cache[cacheKey].data)
-          })
-        }
-      }
+      this.openRequests++
+      // if (this.__cache[cacheKey]) {
+      //   if (this.__cache[cacheKey].created_at > Date.now() - 1000 * 60) {
+      //     return new Promise((resolve, reject) => {
+      //       resolve(this.__cache[cacheKey].data)
+      //     })
+      //   }
+      // }
+      this.__cache = this.__cache || {}
       return $.get(url, params).then((data: any) => {
-        self.openRequests--
-        self.__cache[cacheKey] = {
+        this.openRequests--
+        this.__cache[cacheKey] = {
           created_at: Date.now(),
           data: data
         }
@@ -123,10 +125,12 @@ export default class AugurAPI {
     }).then((data: any) => {
       this.openRequests--
       // Save to cache
+      this.__cache = this.__cache || {}
       this.__cache[window.btoa(url + endpoints.join(','))] = {
         created_at: Date.now(),
         data: data
       }
+      console.log(data)
       return data
     })
   }
@@ -291,6 +295,7 @@ class Repo extends BaseRepo{
   public url?:string
   constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number, rg_name?:string, repo_name?:string}){
     super(parent)
+    console.log(metadata)
     this.gitURL = metadata.gitURL || undefined
     this.githubURL = metadata.githubURL || undefined
     this.repo_id = metadata.repo_id || undefined

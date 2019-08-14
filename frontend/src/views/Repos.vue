@@ -180,12 +180,14 @@ export default class Repos extends Vue{
 
   onGitRepo (e: any) {
     console.log(e, {gitURL: e.url, repo_id: e.repo_id, repo_group_id: e.repo_group_id, rg_name:e.rg_name, repo_name:e.repo_name})
-      this.setBaseRepo({gitURL: e.url, repo_id: e.repo_id, repo_group_id: e.repo_group_id, rg_name:e.rg_name, repo_name:e.repo_name});
-
+    this.setBaseRepo({gitURL: e.url, repo_id: e.repo_id, repo_group_id: e.repo_group_id, rg_name:e.rg_name, repo_name:e.repo_name}).then((repo: any) => {
       this.$router.push({
         name: 'repo_overview',
         params: {group:e.rg_name, repo:e.repo_name}
       })
+    })
+
+      
   }
 }
 

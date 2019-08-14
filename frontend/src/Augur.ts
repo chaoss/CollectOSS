@@ -7,6 +7,7 @@ import Vue from 'vue';
 import ShardsVue from 'shards-vue';
 import VueVega from 'vue-vega';
 import jQuery from 'jquery';
+import $ from 'jquery';
 import _ from 'lodash';
 import d3 from 'd3';
 import SvgSaver from 'svgsaver';

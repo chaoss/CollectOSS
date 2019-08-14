@@ -36,16 +36,31 @@ export default {
                 let tempCache = context.state.cache || {};
                 if ('endpoints' in payload) {
                     if ('repos' in payload) {
-                        context.state.AugurAPI.batchMapped(payload.repos, payload.endpoints).then(
-                            (data: object[]) => {
-                                console.log(data)
-                                tempCache = {...tempCache, ...data};
-                                payload.repos.forEach((repo: any) => {
-                                    tempCache[repo.toString()] = {...tempCache[repo.toString()], ...data[repo.toString()]};
-                                });
-                                console.log(tempCache)
-                                resolve(tempCache)
-                            });
+                        payload.repos.forEach((repo: any) => {
+                            tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
+                            tempCache[repo.rg_name][repo.url] = tempCache[repo.rg_name][repo.url] || {}
+                            payload.endpoints.forEach((endpoint: string) => {
+                                tempCache[repo.rg_name][repo.url][endpoint] = tempCache[repo.rg_name][repo.url][endpoint] || []
+                                console.log(repo,endpoint)
+                                console.log(repo[endpoint])
+                                repo[endpoint]().then((data: any) => {
+                                    tempCache[repo.rg_name][repo.url][endpoint] = data// || []
+                                    console.log(data)
+                                    resolve(tempCache)
+                                })
+                            })
+                        })
+                        
+                        // context.state.AugurAPI.batchMapped(payload.repos, payload.endpoints).then(
+                        //     (data: object[]) => {
+                        //         console.log(data)
+                        //         tempCache = {...tempCache, ...data};
+                        //         payload.repos.forEach((repo: any) => {
+                        //             tempCache[repo.toString()] = {...tempCache[repo.toString()], ...data[repo.toString()]};
+                        //         });
+                        //         console.log(tempCache)
+                        //         resolve(tempCache)
+                        //     });
                     }
                     if ('repoGroups' in payload) {
                         context.state.AugurAPI.batchMapped(payload.repoGroups, payload.endpoints).then(
@@ -172,7 +187,7 @@ export default {
                 let repo_name = payload.repo_name || undefined
                 let repo_id = payload.repo_id || undefined
                 let repo_group_id = payload.repo_group_id || undefined
-                let gitURL = payload.url || undefined
+                let gitURL = payload.gitURL || payload.url || undefined
 
                 let repo: Repo = context.state.AugurAPI.Repo({
                     gitURL: gitURL,
