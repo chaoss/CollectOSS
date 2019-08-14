@@ -32,6 +32,7 @@ cd ../repo_info_worker;
 rm -rf build/*;
 python setup.py install; 
 pip install .;
+python setup.py install;
 cd ../..;
 
 ## API Docs
