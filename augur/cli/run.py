@@ -17,36 +17,7 @@ import atexit
 import click
 import subprocess
 
-class AugurGunicornApp(gunicorn.app.base.BaseApplication):
-    """
-    Loads configurations, initializes Gunicorn, loads server
-    """
-
-    def __init__(self, options=None, manager=None, broker=None, housekeeper=None):
-        self.options = options or {}
-        self.manager = manager
-        self.broker = broker
-        self.housekeeper = housekeeper
-        super(AugurGunicornApp, self).__init__()
-        # self.cfg.pre_request.set(pre_request)
-
-    def load_config(self):
-        """
-        Sets the values for configurations
-        """
-        config = dict([(key, value) for key, value in iteritems(self.options)
-                       if key in self.cfg.settings and value is not None])
-        for key, value in iteritems(config):
-            self.cfg.set(key.lower(), value)
-
-    def load(self):
-        """
-        Returns the loaded server
-        """
-        server = Server(manager=self.manager, broker=self.broker, housekeeper=self.housekeeper)
-        return server.app
-
-@click.command('run', short_help='Run the Augur server')
+@click.command('run')
 @pass_application
 def cli(app):
 
@@ -85,23 +56,24 @@ def cli(app):
     controller = app.read_config('Workers')
     worker_pids = []
     worker_processes = []
-    for worker in controller.keys():
-        if controller[worker]['switch']:
-            pids = get_process_id("/bin/sh -c cd workers/{} && {}_start".format(worker, worker))
-            worker_pids += pids
-            if len(pids) > 0:
-                worker_pids.append(pids[0] + 1)
-                pids.append(pids[0] + 1)
-                logger.info("Found and preparing to kill previous {} worker pids: {}".format(worker,pids))
-                for pid in pids:
-                    try:
-                        os.kill(pid, 9)
-                    except:
-                        logger.info("Worker process {} already killed".format(pid))
-            worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker}, daemon=True)
-            worker_process.start()
-            worker_processes.append(worker_process)
-            time.sleep(2.5)
+    if controller:
+        for worker in controller.keys():
+            if controller[worker]['switch']:
+                pids = get_process_id("/bin/sh -c cd workers/{} && {}_start".format(worker, worker))
+                worker_pids += pids
+                if len(pids) > 0:
+                    worker_pids.append(pids[0] + 1)
+                    pids.append(pids[0] + 1)
+                    logger.info("Found and preparing to kill previous {} worker pids: {}".format(worker,pids))
+                    for pid in pids:
+                        try:
+                            os.kill(pid, 9)
+                        except:
+                            logger.info("Worker process {} already killed".format(pid))
+                worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker}, daemon=True)
+                worker_process.start()
+                worker_processes.append(worker_process)
+                time.sleep(2.5)
 
     @atexit.register
     def exit():
@@ -153,3 +125,33 @@ def cli(app):
 def worker_start(worker_name=None):
     logger.info("Booting {}".format(worker_name))
     process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True)
+
+class AugurGunicornApp(gunicorn.app.base.BaseApplication):
+    """
+    Loads configurations, initializes Gunicorn, loads server
+    """
+
+    def __init__(self, options=None, manager=None, broker=None, housekeeper=None):
+        self.options = options or {}
+        self.manager = manager
+        self.broker = broker
+        self.housekeeper = housekeeper
+        super(AugurGunicornApp, self).__init__()
+        # self.cfg.pre_request.set(pre_request)
+
+    def load_config(self):
+        """
+        Sets the values for configurations
+        """
+        config = dict([(key, value) for key, value in iteritems(self.options)
+                       if key in self.cfg.settings and value is not None])
+        for key, value in iteritems(config):
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        """
+        Returns the loaded server
+        """
+        server = Server(manager=self.manager, broker=self.broker, housekeeper=self.housekeeper)
+        return server.app
+

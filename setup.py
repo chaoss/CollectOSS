@@ -49,6 +49,7 @@ setup(
     entry_points={
         'console_scripts': [
             'augur=augur.runtime:run',
+            'augur_run=augur.cli.run:run'
         ],
     },
 )
