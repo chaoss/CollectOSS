@@ -89,7 +89,9 @@ class Server(object):
                 session_data = {}
                 if current_user and hasattr(current_user, 'username'):
                     session_data = { 'username': current_user.username }
-                return render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
+                return Response(response=json.dumps(session_data),
+                            status=405,
+                            mimetype="application/json")#render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
 
         @app.route('/static/<path:path>')
         def send_static(path):
@@ -374,12 +376,14 @@ class Server(object):
         """Simplifies adding routes that accept repo_group_id"""
         endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
         self.app.route(endpoint)(self.routify(function, 'repo_group'))
+        kwargs['endpoint_type'] = 'repo_group'
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addRepoMetric(self, function, endpoint, **kwargs):
         """Simplifies adding routes that accept repo_group_id and repo_id"""
         endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
         self.app.route(endpoint)(self.routify(function, 'repo'))
+        kwargs['endpoint_type'] = 'repo'
         self.updateMetricMetadata(function, endpoint, **kwargs)
 
     def addMetric(self, function, endpoint, cache=True, **kwargs):
@@ -404,7 +408,7 @@ class Server(object):
         """
         self.addMetric(function, 'timeseries/{}'.format(endpoint), metric_type='timeseries')
 
-    def updateMetricMetadata(self, function, endpoint, **kwargs):
+    def updateMetricMetadata(self, function, endpoint=None, **kwargs):
         """
         Updates a given metric's metadata
         """

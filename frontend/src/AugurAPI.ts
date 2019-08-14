@@ -16,6 +16,7 @@ export default class AugurAPI {
   getDownloadedGitRepos: any
   getRepos: any
   getRepoGroups: any
+  topInsights: any
   openRequests: number
   getMetricsStatus: any
   getMetricsStatusMetadata: any
@@ -24,24 +25,32 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-
-  constructor(hostURL: string = 'http://' + window.location.host, version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://localhost:5002', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
-    this._host = hostURL || 'http://' + window.location.host
+    this._host = hostURL || 'http://localhost:5002'
     this.__cache = {}
     this.__timeout = null
     this.__pending = {}
 
-    this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
+    // this.getDownloadedGitRepos = this.__EndpointFactory('git/repos')
     this.getRepos = this.__EndpointFactory('repos')
     this.getRepoGroups = this.__EndpointFactory('repo-groups')
+    this.topInsights = this.__EndpointFactory('top-insights')
 
     this.openRequests = 0
     this.getMetricsStatus = this.__EndpointFactory('metrics/status/filter')
     this.getMetricsStatusMetadata = this.__EndpointFactory('metrics/status/metadata')
     this.__reverseEndpointMap = {}
+
+    // Need to redundantly declare this. methods bc typescript
+    this.Repo = this.Repo;
+    this.__URLFunctionFactory = this.__URLFunctionFactory;
+    this.RepoGroup = this.RepoGroup;
+    this.batchMapped = this.batchMapped;
+    this.batch = this.batch;
+    this.__endpointURL = this.__endpointURL;
   }
 
   // __autobatcher (url, params, fireTimeout) {
@@ -122,16 +131,18 @@ export default class AugurAPI {
     })
   }
 
-  batchMapped(repos: Array<AugurAPI>, fields: { forEach: (arg0: (field: any) => void) => void; }) {
+  batchMapped (repos: any[], fields: string[]){//{ forEach: (arg0: (field: any) => void) => void; }) {// { forEach: (arg0: (field: any) => void) => void; }) {
     let endpoints: String[] | any[] = []
     let reverseMap: any = {}
     let processedData: any = {}
-    repos.forEach((repo) => {
+    console.log(repos)
+    repos.forEach((repo:any) => {
       // Array.prototype.push.apply(endpoints, repo.batch(fields, true))
       // _.assign(reverseMap, repo.__reverseEndpointMap)
       processedData[repo.toString()] = {}
-      fields.forEach((field) => {
-        console.log("endpoint_map: ", field, repo, repo.__endpointMap[field])
+      fields.forEach((field:any) => {
+        console.log("endpoint_map: ", field, repo)
+        console.log(repo.__endpointMap[field])
         endpoints.push(repo.__endpointMap[field])
         reverseMap[repo.__endpointMap[field]] = repo.__reverseEndpointMap[repo.__endpointMap[field]]
       })
@@ -163,260 +174,299 @@ export default class AugurAPI {
     })
   }
 
+  Repo(repo: {githubURL?:string, gitURL?:string, url?:string, repo_id?: number, repo_group_id?:number}){
+    return new Repo(this, repo)
+  }
 
-  Repo(repo: any) {
-    if (repo.githubURL) {
-      let splitURL = repo.githubURL.split('/')
+  RepoGroup(rg: {rg_name?:any, repo_group_id?:number}) {
+    return new RepoGroup(this, rg)
+  }
+}
+
+abstract class BaseRepo {
+  private parent: AugurAPI
+  public __endpointMap: {[key:string]:any}
+  public __reverseEndpointMap: {[key:string]:{name:string, owner:string}}
+  public _version: string
+  public _host: string
+  public gitURL?: string
+  public githubURL?: string
+  public name?:string
+  public owner?:string
+  public repo_group_id?:number
+  public repo_id?:number
+  __URLFunctionFactory: (url:string) => any
+  [k: string]: any
+  
+  constructor(parent: AugurAPI){
+    this._host = parent._host || 'http://localhost:5002'
+    this._version = parent._version
+    this.__URLFunctionFactory = parent.__URLFunctionFactory
+    this.parent = parent
+    this.__endpointMap = {}
+    this.__reverseEndpointMap = {}
+  }
+
+
+  __Endpoint(name: string, url: string){
+    this[name] = this.__URLFunctionFactory(url)
+    return this[name]
+  }
+
+  __endpointURL(endpoint: string) {
+    return '' + this._host + this._version + '/' + endpoint
+  }
+
+  Endpoint(name: string, endpoint: string) {
+    var fullEndpoint = this._version + '/' + this.owner + '/' + this.name + '/' + endpoint
+    var url = this._host + fullEndpoint
+    this.__endpointMap[name] = fullEndpoint
+    this.__reverseEndpointMap[fullEndpoint] = { name: name, owner: this.toString() }
+    return this.__Endpoint(name, url)
+  }
+
+  Timeseries(jsName: string, endpoint: string){
+    let func = this.Endpoint(jsName, 'timeseries/' + endpoint)
+    // func.relativeTo = (baselineRepo:any, params:any, callback:any) => {
+    //   var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name
+    //   return Endpoint(url)()
+    // }
+    return func
+  }
+
+  GitEndpoint(jsName: string, endpoint: string) {
+    var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(this.gitURL||''))
+    return this.__Endpoint(jsName, url)
+  }
+
+  addRepoMetric(jsName: string, endpoint: string){
+    var url = this.__endpointURL('repo-groups/' + this.repo_group_id + '/repos/' + this.repo_id + '/' + endpoint)
+    var fullEndpoint = this._version + '/repo-groups/' + this.repo_group_id + '/repos/' + this.repo_id + '/' + endpoint
+    this.__endpointMap[jsName] = fullEndpoint
+    this.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: this.toString() }
+    return this.__Endpoint(jsName, url)
+  }
+
+  addRepoGroupMetric(jsName: string, endpoint: string){
+    var url = this.__endpointURL('repo-groups/' + this.repo_group_id + '/' + endpoint)
+    var fullEndpoint = this._version + '/' + 'repo-groups/' + this.repo_group_id + '/' + endpoint
+    this.__endpointMap[jsName] = fullEndpoint
+    this.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: this.toString() }
+    return this.__Endpoint(jsName, url)
+  }
+
+  abstract toString():string
+
+  batch(jsNameArray: Array<string>, noExecute: boolean) {
+    var routes = jsNameArray.map((e: any) => { return this.__endpointMap[e] })
+    if (noExecute) {
+      return routes
+    }
+    return this.parent.batch(routes).then((data: any) => {
+      return new Promise((resolve, reject) => {
+        if (Array.isArray(data)) {
+          let mapped: { [key: string]: any } = {}
+          data.forEach(response => {
+            if (response.status === 200) {
+              mapped[this.__reverseEndpointMap[response.path].name] = JSON.parse(response.response)
+              console.log('mapped:', mapped)
+            } else {
+              mapped[this.__reverseEndpointMap[response.path].name] = null
+              console.log('mapped null:', mapped, this.__reverseEndpointMap[response.path])
+            }
+          })
+          resolve(mapped)
+        } else {
+          reject(new Error('data-not-array'))
+        }
+      })
+    })
+  }
+}
+
+
+class Repo extends BaseRepo{
+  public rg_name?:string
+  public url?:string
+  constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number}){
+    super(parent)
+    this.gitURL = metadata.gitURL || undefined
+    this.githubURL = metadata.githubURL || undefined
+    this.repo_id = metadata.repo_id || undefined
+    this.repo_group_id = metadata.repo_group_id || undefined
+    this.url = this.gitURL || this.githubURL || undefined
+    this.getRepoNameAndID()
+    this.initialLegacyMetric()
+    this.initialMetric()
+  }
+
+  toString(){
+    if (this.owner && this.name) {
+      return this.owner + '/' + this.name
+    } else {
+      return this.gitURL||this.githubURL||this.repo_group_id +'/' + this.repo_id
+    }
+  }
+
+  getRepoNameAndID(): void {
+    if (this.githubURL) {
+      let splitURL = this.githubURL.split('/')
       if (splitURL.length < 3) {
-        repo.owner = splitURL[0]
-        repo.name = splitURL[1]
+        this.owner = splitURL[0]
+        this.name = splitURL[1]
       } else {
-        repo.owner = splitURL[3]
-        repo.name = splitURL[4]
+        this.owner = splitURL[3]
+        this.name = splitURL[4]
       }
     }
-
-    if (repo.gitURL) {
-      if (repo.gitURL.includes('github.com')) {
-        let splitURL = repo.gitURL.split('/')
-        repo.owner = splitURL[1]
-        repo.name = splitURL[2].split('.')[0]
+    if (this.gitURL) {
+      if (this.gitURL.includes('github.com')) {
+        let splitURL = this.gitURL.split('/')
+        this.owner = splitURL[1]
+        this.name = splitURL[2].split('.')[0]
       } else {
-        let splitURL = repo.gitURL.split('/')
-        repo.owner = splitURL[0]
-        repo.name = splitURL[1]
+        let splitURL = this.gitURL.split('/')
+        this.owner = splitURL[0]
+        this.name = splitURL[1]
       }
     }
-
-    if (repo.owner && repo.name) {
-      if (repo.repo_id == null || repo.repo_group_id == null) {
+    if (this.owner && this.name) {
+      if (this.repo_id == null || this.repo_group_id == null) {
         let res: any = []
         $.ajax({
           type: "GET",
-          url: this._version + '/repos/' + repo.owner + '/' + repo.name,
+          url: this.__endpointURL + '/repos/' + this.owner + '/' + this.name,
           async: false,
           success: function (data: any) {
             res = data;
           }
         })
-        repo.repo_id = res[0].repo_id
-        repo.repo_group_id = res[0].repo_group_id
-        repo.rg_name = res[0].rg_name
+        if (res.length != 0) {
+          this.repo_id = res[0].repo_id
+          this.repo_group_id = res[0].repo_group_id
+          this.rg_name = res[0].rg_name
+        }
       }
     }
-
-    repo.toString = () => {
-      if (repo.owner && repo.name) {
-        return repo.owner + '/' + repo.name
-      } else {
-        return JSON.stringify(repo)
-      }
-    }
-    repo.__endpointMap = {}
-    repo.__reverseEndpointMap = {}
-
-    repo.getDownloadedStatus = () => {
-      this.getDownloadedGitRepos().then((data: any) => {
-        let rs = false
-        data.forEach((gitURL: string) => {
-          if (gitURL.includes('github.com')) {
-            let splitURL = gitURL.split('/')
-            let owner = splitURL[3]
-            let name = splitURL[4].split('.')[0]
-            if (repo.toString() === (owner + '/' + name)) {
-              rs = true
-            }
-          }
-        })
-        return rs
-      })
-    }
-
-    var __Endpoint = (r: any, name: string, url: string) => {
-      r[name] = this.__URLFunctionFactory(url)
-      return r[name]
-    }
-
-    var Endpoint = (r: any, name: string, endpoint: string) => {
-      var fullEndpoint = this._version + '/' + repo.owner + '/' + repo.name + '/' + endpoint
-      var url = this._host + fullEndpoint
-      r.__endpointMap[name] = fullEndpoint
-      r.__reverseEndpointMap[fullEndpoint] = { name: name, owner: repo.toString() }
-      return __Endpoint(r, name, url)
-    }
-
-    var Timeseries = (r: any, jsName: string, endpoint: string) => {
-      let func = Endpoint(r, jsName, 'timeseries/' + endpoint)
-      // func.relativeTo = (baselineRepo:any, params:any, callback:any) => {
-      //   var url = 'timeseries/' + endpoint + '/relative_to/' + baselineRepo.owner + '/' + baselineRepo.name
-      //   return Endpoint(url)()
-      // }
-      return func
-    }
-
-    var GitEndpoint = (r: any, jsName: string, endpoint: string) => {
-      var url = this.__endpointURL('git/' + endpoint + '/?repo_url_base=' + window.btoa(r.gitURL))
-      return __Endpoint(r, jsName, url)
-    }
-
-    var addRepoMetric = (r: any, jsName: string, endpoint: string) => {
-      var fullEndpoint = this._version + '/repo-groups/' + repo.repo_group_id + '/repos/' + repo.repo_id + '/' + endpoint
-      var url = this.__endpointURL('repo-groups/' + repo.repo_group_id + '/repos/' + repo.repo_id + '/' + endpoint)
-      var fullEndpoint = this._version + '/repo-groups/' + repo.repo_group_id + '/repos/' + repo.repo_id + '/' + endpoint
-      r.__endpointMap[jsName] = fullEndpoint
-      r.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: repo.toString() }
-      return __Endpoint(r, jsName, url)
-    }
-
-    var addRepoGroupMetric = (r: any, jsName: string, endpoint: string) => {
-      var url = this.__endpointURL('repo-groups/' + repo.repo_group_id + '/' + endpoint)
-      var fullEndpoint = this._version + '/' + 'repo-groups/' + repo.repo_group_id + '/' + endpoint
-      r.__endpointMap[jsName] = fullEndpoint
-      r.__reverseEndpointMap[fullEndpoint] = { name: jsName, owner: repo.toString() }
-      return __Endpoint(r, jsName, url)
-    }
-
-    repo.batch = (jsNameArray: Array<string>, noExecute: boolean) => {
-      var routes = jsNameArray.map((e: any) => { return repo.__endpointMap[e] })
-      if (noExecute) {
-        return routes
-      }
-      return this.batch(routes).then((data: any) => {
-        return new Promise((resolve, reject) => {
-          if (Array.isArray(data)) {
-            let mapped: { [key: string]: any } = {}
-            console.log()
-            data.forEach(response => {
-              if (response.status === 200) {
-                mapped[repo.__reverseEndpointMap[response.path].name] = JSON.parse(response.response)
-                console.log('mapped:', mapped)
-              } else {
-                mapped[repo.__reverseEndpointMap[response.path].name] = null
-                console.log('mapped null:', mapped, repo.__reverseEndpointMap[response.path])
-              }
-            })
-            resolve(mapped)
-          } else {
-            console.log("didnt work")
-            reject(new Error('data-not-array'))
-          }
-        })
-      })
-    }
-
-    if (repo.owner && repo.name) {
+  } 
+  initialLegacyMetric() {
+    if (this.owner && this.name) {
       // DIVERSITY AND INCLUSION
 
       // GROWTH, MATURITY, AND DECLINE
-      Timeseries(repo, 'closedIssues', 'issues/closed')
-      Timeseries(repo, 'closedIssueResolutionDuration', 'issues/time_to_close')
-      Timeseries(repo, 'codeCommits', 'commits')
-      // Timeseries(repo, 'codeReviews', 'code_reviews')
-      Timeseries(repo, 'codeReviewIteration', 'code_review_iteration')
-      Timeseries(repo, 'contributionAcceptance', 'contribution_acceptance')
-      Endpoint(repo, 'contributingGithubOrganizations', 'contributing_github_organizations')
-      Timeseries(repo, 'firstResponseToIssueDuration', 'issues/response_time')
-      Timeseries(repo, 'forks', 'forks')
-      Timeseries(repo, 'linesOfCodeChanged', 'lines_changed')
-      Timeseries(repo, 'maintainerResponseToMergeRequestDuration', 'pulls/maintainer_response_time')
-      Timeseries(repo, 'newContributingGithubOrganizations', 'new_contributing_github_organizations')
-      Timeseries(repo, 'openIssues', 'issues')
-      Timeseries(repo, 'pullRequestComments', 'pulls/comments')
-      Timeseries(repo, 'pullRequestsOpen', 'pulls')
+      this.Timeseries('closedIssues', 'issues/closed')
+      this.Timeseries('closedIssueResolutionDuration', 'issues/time_to_close')
+      this.Timeseries( 'codeCommits', 'commits')
+      // Timeseries('codeReviews', 'code_reviews')
+      this.Timeseries('codeReviewIteration', 'code_review_iteration')
+      this.Timeseries('contributionAcceptance', 'contribution_acceptance')
+      this.Endpoint('contributingGithubOrganizations', 'contributing_github_organizations')
+      this.Timeseries('firstResponseToIssueDuration', 'issues/response_time')
+      this.Timeseries('forks', 'forks')
+      this.Timeseries('linesOfCodeChanged', 'lines_changed')
+      this.Timeseries('maintainerResponseToMergeRequestDuration', 'pulls/maintainer_response_time')
+      this.Timeseries('newContributingGithubOrganizations', 'new_contributing_github_organizations')
+      this.Timeseries('openIssues', 'issues')
+      this.Timeseries('pullRequestComments', 'pulls/comments')
+      this.Timeseries('pullRequestsOpen', 'pulls')
 
       // RISK
 
       // VALUE
 
       // ACTIVITY
-      Timeseries(repo, 'issueComments', 'issue_comments')
-      Timeseries(repo, 'pullRequestsMadeClosed', 'pulls/made_closed')
-      Timeseries(repo, 'watchers', 'watchers')
+      this.Timeseries('issueComments', 'issue_comments')
+      this.Timeseries('pullRequestsMadeClosed', 'pulls/made_closed')
+      this.Timeseries('watchers', 'watchers')
 
       // EXPERIMENTAL
 
       // Commit Related
-      Timeseries(repo, 'commits100', 'commits100')
-      Timeseries(repo, 'commitComments', 'commits/comments')
-      Endpoint(repo, 'committerLocations', 'committer_locations')
-      Timeseries(repo, 'totalCommitters', 'total_committers')
+      this.Timeseries('commits100', 'commits100')
+      this.Timeseries('commitComments', 'commits/comments')
+      this.Endpoint('committerLocations', 'committer_locations')
+      this.Timeseries('totalCommitters', 'total_committers')
 
       // Issue Related
-      Timeseries(repo, 'issueActivity', 'issues/activity')
+      this.Timeseries('issueActivity', 'issues/activity')
 
       // Community / Contributions
-      Endpoint(repo, 'communityAge', 'community_age')
-      Timeseries(repo, 'communityEngagement', 'community_engagement')
-      Endpoint(repo, 'contributors', 'contributors')
-      Endpoint(repo, 'contributions', 'contributions')
-      Endpoint(repo, 'projectAge', 'project_age')
+      this.Endpoint('communityAge', 'community_age')
+      this.Timeseries('communityEngagement', 'community_engagement')
+      this.Endpoint('contributors', 'contributors')
+      this.Endpoint('contributions', 'contributions')
+      this.Endpoint('projectAge', 'project_age')
 
       // Dependency Related
-      Endpoint(repo, 'dependencies', 'dependencies')
-      Endpoint(repo, 'dependencyStats', 'dependency_stats')
-      Endpoint(repo, 'dependents', 'dependents')
+      this.Endpoint('dependencies', 'dependencies')
+      this.Endpoint('dependencyStats', 'dependency_stats')
+      this.Endpoint('dependents', 'dependents')
 
       // Other
-      Endpoint(repo, 'busFactor', 'bus_factor')
-      Timeseries(repo, 'downloads', 'downloads')
-      Timeseries(repo, 'fakes', 'fakes')
-      Endpoint(repo, 'linkingWebsites', 'linking_websites')
-      Timeseries(repo, 'majorTags', 'tags/major')
-      Timeseries(repo, 'newWatchers', 'new_watchers')
-      Timeseries(repo, 'tags', 'tags')
+      this.Endpoint('busFactor', 'bus_factor')
+      this.Timeseries('downloads', 'downloads')
+      this.Timeseries('fakes', 'fakes')
+      this.Endpoint('linkingWebsites', 'linking_websites')
+      this.Timeseries('majorTags', 'tags/major')
+      this.Timeseries('newWatchers', 'new_watchers')
+      this.Timeseries('tags', 'tags')
     }
+  }
+  initialMetric(){
+    this.addRepoMetric('codeChanges', 'code-changes')
+    this.addRepoMetric('codeChangesLines', 'code-changes-lines')
+    this.addRepoMetric('issueNew', 'issues-new')
+    this.addRepoMetric('issuesClosed', 'issues-closed')
+    this.addRepoMetric('issueBacklog', 'issue-backlog')
+    this.addRepoMetric('pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
+    this.addRepoMetric('issuesFirstTimeOpened', 'issues-first-time-opened')
+    this.addRepoMetric('issuesFirstTimeClosed', 'issues-first-time-closed')
+    this.addRepoMetric('subProject', 'sub-projects')
+    this.addRepoMetric('contributors', 'contributors')
+    this.addRepoMetric('contributorsNew', 'contributors-new')
+    this.addRepoMetric('openIssuesCount', 'open-issues-count')
+    this.addRepoMetric('closedIssuesCount', 'closed-issues-count')
+    this.addRepoMetric('issuesOpenAge', 'issues-open-age')
+    this.addRepoMetric('issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
+    this.addRepoMetric('issueActive', 'issues-active')
+    this.addRepoMetric('getIssues', 'get-issues')
+  }
+}
 
-    if (repo.gitURL) {
-      // Other
-      GitEndpoint(repo, 'changesByAuthor', 'changes_by_author')
-      GitEndpoint(repo, 'linesOfCodeCommitCountsByCalendarYearGrouped', 'lines_of_code_commit_counts_by_calendar_year_grouped')
-      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_repo_in_repo_group')
-      GitEndpoint(repo, 'annualCommitCountRankedByRepoInRepoGroup', 'annual_commit_count_ranked_by_repo_in_repo_group')
-      GitEndpoint(repo, 'annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual_lines_of_code_count_ranked_by_new_repo_in_repo_group')
-      GitEndpoint(repo, 'annualCommitCountRankedByNewRepoInRepoGroup', 'annual_commit_count_ranked_by_new_repo_in_repo_group')
-      GitEndpoint(repo, 'facadeProject', 'facade_project')
+
+class RepoGroup extends BaseRepo {
+  public rg_name?: string
+  constructor(parent: AugurAPI, metadata:{rg_name?:any, repo_group_id?:number}){
+    super(parent)
+    
+    this.repo_group_id = metadata.repo_group_id || undefined
+    this.rg_name = metadata.rg_name || null
+    // this.initialMetric()
+  }
+
+  toString(){
+    return String(this.rg_name)
+  }
+
+  initialMetric(){
+    if (this.repo_group_id) {
+      this.addRepoGroupMetric('codeChanges', 'code-changes')
+      this.addRepoGroupMetric('codeChangesLines', 'code-changes-lines')
+      this.addRepoGroupMetric('issueNew', 'issues-new')
+      this.addRepoGroupMetric('issuesClosed', 'issues-closed')
+      this.addRepoGroupMetric('issueBacklog', 'issue-backlog')
+      this.addRepoGroupMetric('pullRequestsMergeContributorNew','pull-requests-merge-contributor-new')
+      this.addRepoGroupMetric('issuesFirstTimeOpened', 'issues-first-time-opened')
+      this.addRepoGroupMetric('issuesFirstTimeClosed', 'issues-first-time-closed')
+      this.addRepoGroupMetric('subProject', 'sub-projects')
+      this.addRepoGroupMetric('contributors', 'contributors')
+      this.addRepoGroupMetric('contributorsNew', 'contributors-new')
+      this.addRepoGroupMetric('openIssuesCount', 'open-issues-count')
+      this.addRepoGroupMetric('closedIssuesCount', 'closed-issues-count')
+      this.addRepoGroupMetric('issuesOpenAge', 'issues-open-age')
+      this.addRepoGroupMetric('issuesClosedResolutionDuration','issues-closed-resolution-duration')
+      this.addRepoGroupMetric('issueActive', 'issues-active')
+      this.addRepoGroupMetric('getIssues', 'get-issues')
     }
-
-    if (repo.repo_group_id && repo.repo_id) {
-      addRepoMetric(repo, 'codeChanges', 'code-changes')
-      addRepoMetric(repo, 'codeChangesLines', 'code-changes-lines')
-      addRepoMetric(repo, 'issueNew', 'issues-new')
-      addRepoMetric(repo, 'issuesClosed', 'issues-closed')
-      addRepoMetric(repo, 'issueBacklog', 'issue-backlog')
-      addRepoMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
-      addRepoMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened')
-      addRepoMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed')
-      addRepoMetric(repo, 'subProject', 'sub-projects')
-      addRepoMetric(repo, 'contributors', 'contributors')
-      addRepoMetric(repo, 'contributorsNew', 'contributors-new')
-      addRepoMetric(repo, 'openIssuesCount', 'open-issues-count')
-      addRepoMetric(repo, 'closedIssuesCount', 'closed-issues-count')
-      addRepoMetric(repo, 'issuesOpenAge', 'issues-open-age')
-      addRepoMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
-      addRepoMetric(repo, 'issueActive', 'issues-active')
-      addRepoMetric(repo, 'getIssues', 'get-issues')
-    }
-
-    if (repo.repo_group_id && repo.repo_id == null) {
-      addRepoGroupMetric(repo, 'codeChanges', 'code-changes')
-      addRepoGroupMetric(repo, 'codeChangesLines', 'code-changes-lines')
-      addRepoGroupMetric(repo, 'issueNew', 'issues-new')
-      addRepoGroupMetric(repo, 'issuesClosed', 'issues-closed')
-      addRepoGroupMetric(repo, 'issueBacklog', 'issue-backlog')
-      addRepoGroupMetric(repo, 'pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
-      addRepoGroupMetric(repo, 'issuesFirstTimeOpened', 'issues-first-time-opened')
-      addRepoGroupMetric(repo, 'issuesFirstTimeClosed', 'issues-first-time-closed')
-      addRepoGroupMetric(repo, 'subProject', 'sub-projects')
-      addRepoGroupMetric(repo, 'contributors', 'contributors')
-      addRepoGroupMetric(repo, 'contributorsNew', 'contributors-new')
-      addRepoGroupMetric(repo, 'openIssuesCount', 'open-issues-count')
-      addRepoGroupMetric(repo, 'closedIssuesCount', 'closed-issues-count')
-      addRepoGroupMetric(repo, 'issuesOpenAge', 'issues-open-age')
-      addRepoGroupMetric(repo, 'issuesClosedResolutionDuration', 'issues-closed-resolution-duration')
-      addRepoGroupMetric(repo, 'issueActive', 'issues-active')
-      addRepoGroupMetric(repo, 'getIssues', 'get-issues')
-    }
-
-    return repo;
   }
 }

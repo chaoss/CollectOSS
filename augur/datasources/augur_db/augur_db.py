@@ -28,8 +28,12 @@ class Augur(object):
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
-        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+        spdx_schema = 'spdx'
+        self.spdx_db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(spdx_schema)})
 
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
+        logger.debug('Augur DB: Connecting to {} schema of {}:{}/{} as {}'.format(schema, host, port, dbname, user))
         self.projects = projects
         # try:
         #     self.userid('howderek')
@@ -43,7 +47,7 @@ class Augur(object):
     @annotate(tag='code-changes')
     def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
-        Returns a timeseries of the count of code commits.
+        Returns a timeseries of the count of commits.
 
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
@@ -65,7 +69,7 @@ class Augur(object):
                     commits.repo_id,
                     repo_name,
                     date_trunc(:period, cmt_committer_date::DATE) as date,
-                    COUNT(cmt_commit_hash) as commit_count
+                    COUNT(DISTINCT cmt_commit_hash) as commit_count
                 FROM commits JOIN repo ON repo.repo_id = commits.repo_id
                 WHERE commits.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
@@ -82,7 +86,7 @@ class Augur(object):
                 SELECT
                     repo_name,
                     date_trunc(:period, cmt_committer_date::DATE) as date,
-                    COUNT(cmt_commit_hash) as commit_count
+                    COUNT(DISTINCT cmt_commit_hash) as commit_count
                 FROM commits JOIN repo ON commits.repo_id = repo.repo_id
                 WHERE commits.repo_id = :repo_id
                 AND cmt_committer_date BETWEEN :begin_date AND :end_date
@@ -222,7 +226,7 @@ class Augur(object):
 
         :param repo_id: The repository's id
         :param repo_group_id: The repository's group id
-        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param period: To set the periodicity to 'day', 'week', 'month', or 'year', defaults to 'day'
         :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
         :param end_date: Specifies the end date, defaults to datetime.now()
         :return: DataFrame of persons/period
@@ -688,6 +692,182 @@ class Augur(object):
                                                                            'begin_date': begin_date, 'end_date': end_date})
             return results
 
+    @annotate(tag='reviews')
+    def reviews(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+        """ Returns a timeseris of new reviews or pull requests opened
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of new reviews/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            reviews_SQL = s.sql.text("""
+                SELECT
+                    pull_requests.repo_id,
+                    repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_created_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id IN
+                    (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND pull_requests.pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                GROUP BY pull_requests.repo_id, repo_name, date
+                ORDER BY pull_requests.repo_id, date
+            """)
+
+            results = pd.read_sql(reviews_SQL, self.db,
+                                  params={'period': period, 'repo_group_id': repo_group_id,
+                                          'begin_date': begin_date, 'end_date': end_date })
+            return results
+
+        else:
+            reviews_SQL = s.sql.text("""
+                SELECT
+                    repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_created_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id = :repo_id
+                AND pull_requests.pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                GROUP BY date, repo_name
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(reviews_SQL, self.db,
+                                  params={'period': period, 'repo_id': repo_id,
+                                          'begin_date': begin_date, 'end_date': end_date})
+            return results
+
+    @annotate(tag='reviews-accepted')
+    def reviews_accepted(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+        """Returns a timeseries of number of reviews or pull requests accepted.
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of accepted reviews/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            reviews_accepted_SQL = s.sql.text("""
+                SELECT
+                    pull_requests.repo_id,
+                    repo.repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_merged_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id IN
+                    (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND pr_merged_at IS NOT NULL
+                AND pr_merged_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                GROUP BY pull_requests.repo_id, repo_name, date
+                ORDER BY pull_requests.repo_id, date
+            """)
+
+            results = pd.read_sql(reviews_accepted_SQL, self.db,
+                                  params={'period': period, 'repo_group_id': repo_group_id,
+                                          'begin_date': begin_date, 'end_date': end_date})
+            return results
+        else:
+            reviews_accepted_SQL = s.sql.text("""
+                SELECT
+                    repo.repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_merged_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id = :repo_id
+                AND pr_merged_at IS NOT NULL
+                AND pr_merged_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                GROUP BY date, repo.repo_name
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(reviews_accepted_SQL, self.db,
+                                  params={'period': period, 'repo_id': repo_id,
+                                          'begin_date': begin_date, 'end_date': end_date})
+            return results
+
+    @annotate(tag='reviews-declined')
+    def reviews_declined(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+        """ Returns a time series of reivews declined
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of declined reviews/period
+        """
+        if not begin_date:
+            begin_date = '1970-1-1'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            reviews_declined_SQL = s.sql.text("""
+                SELECT
+                    pull_requests.repo_id,
+                    repo.repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_closed_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id IN
+                    (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND pr_src_state = 'closed' AND pr_merged_at IS NULL
+                AND pr_closed_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                GROUP BY pull_requests.repo_id, repo_name, date
+                ORDER BY pull_requests.repo_id, date
+            """)
+
+            results = pd.read_sql(reviews_declined_SQL, self.db,
+                                  params={'period': period, 'repo_group_id': repo_group_id,
+                                          'begin_date': begin_date, 'end_date': end_date })
+            return results
+        else:
+            reviews_declined_SQL = s.sql.text("""
+                SELECT
+                    repo.repo_name,
+                    DATE_TRUNC(:period, pull_requests.pr_closed_at) AS date,
+                    COUNT(pr_src_id) AS pull_requests
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id = :repo_id
+                AND pr_src_state = 'closed' AND pr_merged_at IS NULL
+                AND pr_closed_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                GROUP BY date, repo.repo_name
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(reviews_declined_SQL, self.db,
+                                  params={'period': period, 'repo_id': repo_id,
+                                          'begin_date': begin_date, 'end_date': end_date})
+            return results
+
     @annotate(tag='issues-new')
     def issues_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """Returns a timeseries of new issues opened.
@@ -849,6 +1029,70 @@ class Augur(object):
 
             results = pd.read_sql(issues_closed_SQL, self.db, params={'repo_id': repo_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
+            return results
+
+    @annotate(tag='review-duration')
+    def review_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
+        """ Returns the duartion of each accepted review.
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+        :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of pull request id with the corresponding duration
+        """
+        if not begin_date:
+            begin_date = '1970-1-1'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            review_duration_SQL = s.sql.text("""
+                SELECT
+                    pull_requests.repo_id,
+                    repo.repo_name,
+                    pull_requests.pull_request_id,
+                    pull_requests.pr_created_at AS created_at,
+                    pull_requests.pr_merged_at AS merged_at,
+                    (pr_merged_at - pr_created_at) AS duration
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id IN
+                    (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+                AND pr_merged_at IS NOT NULL
+                AND pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                ORDER BY pull_requests.repo_id, pull_requests.pull_request_id
+            """)
+
+            results = pd.read_sql(review_duration_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id,
+                                          'begin_date': begin_date,
+                                          'end_date': end_date})
+            results['duration'] = results['duration'].astype(str)
+            return results
+        else:
+            review_duration_SQL = s.sql.text("""
+                SELECT
+                    repo_name,
+                    pull_request_id,
+                    pr_created_at AS created_at,
+                    pr_merged_at AS merged_at,
+                    (pr_merged_at - pr_created_at) AS duration
+                FROM pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+                WHERE pull_requests.repo_id = :repo_id
+                AND pr_merged_at IS NOT NULL
+                AND pr_created_at
+                    BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD')
+                    AND to_timestamp(:end_date, 'YYYY-MM-DD')
+                ORDER BY pull_requests.repo_id, pull_request_id
+            """)
+
+            results = pd.read_sql(review_duration_SQL, self.db,
+                                  params={'repo_id': repo_id,
+                                          'begin_date': begin_date,
+                                          'end_date': end_date})
+            results['duration'] = results['duration'].astype(str)
             return results
 
     @annotate(tag='issue-duration')
@@ -1182,11 +1426,14 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: CII best parctices badge level
         """
-        if not repo_id:
+        if repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT repo_badging.repo_id, repo_name, badge_level
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                SSELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
+                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                FROM repo_badging, repo, repo_groups
+                WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
+                AND repo_badging.repo_id = :repo_id
+                ORDER BY date DESC
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_group_id': repo_group_id})
@@ -1194,12 +1441,57 @@ class Augur(object):
 
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
-                SELECT repo_name, badge_level
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id = :repo_id
+                SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
+                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                FROM repo_badging, repo, repo_groups
+                WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
+                AND repo.repo_group_id = :repo_group_id
+                ORDER BY date DESC
             """)
 
             results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
+            return results
+
+    @annotate(tag='average-issue-resolution-time')
+    def average_issue_resolution_time(self, repo_group_id, repo_id=None):
+        """
+        Returns the average issue resolution time
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Average issue resolution time
+        """
+        if not repo_id:
+            avg_issue_resolution_SQL = s.sql.text("""
+                SELECT
+                    issues.repo_id,
+                    repo.repo_name,
+                    AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id IN
+                    (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                AND closed_at IS NOT NULL
+                GROUP BY issues.repo_id, repo.repo_name
+                ORDER BY issues.repo_id
+            """)
+
+            results = pd.read_sql(avg_issue_resolution_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            avg_issue_resolution_SQL = s.sql.text("""
+                SELECT
+                    repo.repo_name,
+                    AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
+                FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+                WHERE issues.repo_id = :repo_id
+                AND closed_at IS NOT NULL
+                GROUP BY repo.repo_name
+            """)
+
+            results = pd.read_sql(avg_issue_resolution_SQL, self.db,
+                                  params={'repo_id': repo_id})
             return results
 
     @annotate(tag='forks')
@@ -1313,25 +1605,227 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: Declared License
         """
-        if not repo_id:
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        if repo_id:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_id = :repo_id'),self.db, params={'repo_id': repo_id})
+            # if repo_id is not in the list ,return empty dataframe
+            if repo_name.empty:
+                return pd.DataFrame()
+            repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT repo_badging.repo_id, repo_name, license
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id);
+                SELECT packages.name as repo_name, licenses.short_name, COUNT(files_licenses.file_id) as count
+                FROM packages, files_licenses, licenses, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND packages.package_id = packages_files.package_id
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id
+                GROUP BY licenses.short_name, repo_name
+                ORDER BY count DESC
             """)
-
-            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_group_id': repo_group_id})
-            return results
-
         else:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
+            if repo_name.empty:
+                return pd.DataFrame()
+
+            repo_name_list = repo_name['repo_name'].tolist()
             license_declared_SQL = s.sql.text("""
-                SELECT repo_name, license
-                FROM repo_badging JOIN repo ON repo_badging.repo_id = repo.repo_id
-                WHERE repo_badging.repo_id = :repo_id;
+                SELECT packages.name as repo_name, licenses.short_name, COUNT(files_licenses.file_id) as count
+                FROM packages, files_licenses, licenses, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND packages.package_id = packages_files.package_id
+                AND files_licenses.license_id = licenses.license_id AND packages_files.file_id = files_licenses.file_id
+                GROUP BY licenses.short_name, repo_name
+                ORDER BY count DESC
             """)
 
-            results = pd.read_sql(license_declared_SQL, self.db, params={'repo_id': repo_id})
-            return results
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
+
+        return results
+
+    @annotate(tag='license-coverage')
+    def license_coverage(self, repo_group_id, repo_id=None):
+        """Returns the declared license
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Declared License
+        """
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        if repo_id:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_id = :repo_id'),self.db, params={'repo_id': repo_id})
+            # if repo_id is not in the list ,return empty dataframe
+            if repo_name.empty:
+                return pd.DataFrame()
+            repo_name_list = repo_name['repo_name'].tolist()
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.total_files, b.license_declared_file,  round(b.license_declared_file::numeric / a.total_files::numeric,3) as coverage
+                FROM (SELECT packages.name as name,count(files.file_id) as total_files
+                FROM packages, files, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND packages.package_id = packages_files.package_id
+                AND  packages_files.file_id = files.file_id
+                GROUP BY packages.name
+                ) a, (
+                    SELECT packages.name as name, count(files_licenses) As license_declared_file
+                    FROM packages,
+                        files_licenses,
+                        licenses,
+                        packages_files
+                    WHERE packages.name = ANY (:repo_name_list)
+                    AND packages.package_id = packages_files.package_id
+                    AND files_licenses.license_id = licenses.license_id
+                    AND packages_files.file_id = files_licenses.file_id
+                    GROUP BY packages.name
+                    ORDER BY license_declared_file DESC
+                )b
+                WHERE a.name = b.name
+            """)
+        else:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
+            if repo_name.empty:
+                return pd.DataFrame()
+
+            repo_name_list = repo_name['repo_name'].tolist()
+
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.total_files, b.license_declared_file,  round(b.license_declared_file::numeric / a.total_files::numeric,3) as coverage
+                FROM (SELECT packages.name as name,count(files.file_id) as total_files
+                FROM packages, files, packages_files
+                WHERE packages.name = ANY(:repo_name_list)
+                AND  packages_files.file_id = files.file_id
+                GROUP BY packages.name
+                ) a, (
+                    SELECT packages.name as name, count(files_licenses) As license_declared_file
+                    FROM packages,
+                        files_licenses,
+                        licenses,
+                        packages_files
+                    WHERE packages.name = ANY (:repo_name_list)
+                    AND packages.package_id = packages_files.package_id
+                    AND packages.package_id = packages_files.package_id
+                    AND files_licenses.license_id = licenses.license_id
+                    AND packages_files.file_id = files_licenses.file_id
+                    GROUP BY packages.name
+                    ORDER BY license_declared_file DESC
+                )b
+                WHERE a.name = b.name
+            """)
+
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
+
+        return results
+
+    @annotate(tag='license_count')
+    def license_count(self, repo_group_id, repo_id=None):
+        """Returns the declared license
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: Declared License
+        """
+        license_declared_SQL = None
+        repo_id_SQL = None
+        repo_name_list = None
+
+        if repo_id:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_id = :repo_id'),self.db, params={'repo_id': repo_id})
+            # if repo_id is not in the list ,return empty dataframe
+            if repo_name.empty:
+                return pd.DataFrame()
+            repo_name_list = repo_name['repo_name'].tolist()
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.license_count, b.total_files - c.license_declared_file > 0 as fils_without_license
+                FROM (
+                        SELECT packages.name as name, COUNT(distinct licenses.license_id) as license_count
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        group by packages.name) a,
+                    (SELECT packages.name as name, count(files.file_id) as total_files
+                    FROM packages,
+                        files,
+                        packages_files
+                    WHERE packages.name = ANY (repo_name_list)
+                        AND packages_files.file_id = files.file_id
+                    GROUP BY packages.name
+                    ) b,
+                    (
+                        SELECT packages.name as name, count(files_licenses) As license_declared_file
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        GROUP BY packages.name
+                        ORDER BY license_declared_file DESC
+                    ) c
+                WHERE a.name = b.name
+                AND b.name = c.name
+            """)
+        else:
+            repo_name = pd.read_sql(s.sql.text('SELECT repo_name FROM repo WHERE repo_group_id = :repo_group_id'), self.spdx_db, params={'repo_group_id', repo_group_id})
+            if repo_name.empty:
+                return pd.DataFrame()
+
+            repo_name_list = repo_name['repo_name'].tolist()
+
+            license_declared_SQL = s.sql.text("""
+                SELECT a.name as repo_name, a.license_count, b.total_files - c.license_declared_file > 0 as fils_without_license
+                FROM (
+                        SELECT packages.name as name, COUNT(distinct licenses.license_id) as license_count
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        group by packages.name) a,
+                    (SELECT packages.name as name, count(files.file_id) as total_files
+                    FROM packages,
+                        files,
+                        packages_files
+                    WHERE packages.name = ANY (repo_name_list)
+                        AND packages_files.file_id = files.file_id
+                    GROUP BY packages.name
+                    ) b,
+                    (
+                        SELECT packages.name as name, count(files_licenses) As license_declared_file
+                        FROM packages,
+                            files_licenses,
+                            licenses,
+                            packages_files
+                        WHERE packages.name = ANY (repo_name_list)
+                        AND packages.package_id = packages_files.package_id
+                        AND packages.package_id = packages_files.package_id
+                        AND files_licenses.license_id = licenses.license_id
+                        AND packages_files.file_id = files_licenses.file_id
+                        GROUP BY packages.name
+                        ORDER BY license_declared_file DESC
+                    ) c
+                WHERE a.name = b.name
+                AND b.name = c.name
+            """)
+
+        results = pd.read_sql(license_declared_SQL, self.spdx_db, params={'repo_name_list': repo_name_list})
+
+        return results
+
 
     @annotate(tag='issues-maintainer-response-duration')
     def issues_maintainer_response_duration(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
@@ -1344,7 +1838,7 @@ class Augur(object):
         issuesSQL = None
         if repo_id:
             issuesSQL = s.sql.text("""
-                select repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
+                SELECT repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
                 from (
                         select repo_id,
                                 repo_name,
@@ -1373,7 +1867,7 @@ class Augur(object):
             """)
         else:
             issuesSQL = s.sql.text("""
-                select repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
+                SELECT repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
                 from (
                         select repo_id,
                                 repo_name,
@@ -1404,6 +1898,56 @@ class Augur(object):
         results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
 
         return results
+
+    @annotate(tag='committers')
+    def committers(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, period='day'):
+
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        committersSQL = None
+
+        if repo_id:
+            committersSQL = s.sql.text(
+                """
+                    SELECT
+                        date_trunc(:period, commits.cmt_author_date::date) as date,
+                        repo_name,
+                        rg_name,
+                        count(cmt_author_name)
+                    FROM
+                        commits, repo, repo_groups
+                    WHERE
+                        commits.repo_id = :repo_id AND commits.repo_id = repo.repo_id
+                        AND repo.repo_group_id = repo_groups.repo_group_id
+                        AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                    GROUP BY date, repo_name, rg_name
+                    ORDER BY date DESC
+                """
+            )
+        else:
+            committersSQL = s.sql.text(
+                """
+                SELECT
+                    date_trunc(:period, commits.cmt_author_date::date) as date,
+                    rg_name,
+                    count(cmt_author_name)
+                FROM
+                    commits, repo, repo_groups
+                WHERE
+                    repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_group_id = :repo_group_id
+                    AND repo.repo_id = commits.repo_id
+                    AND commits.cmt_author_date BETWEEN :begin_date and :end_date
+                GROUP BY date, rg_name
+                """
+            )
+
+        results = pd.read_sql(committersSQL, self.db, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date, 'period':period})
+
+        return results
+
 
     #####################################
     ###             VALUE             ###
@@ -1676,7 +2220,7 @@ class Augur(object):
         """
         if calendar_year == None:
             calendar_year = 2019
-        
+
         cdRgNewrepRankedCommitsSQL = None
 
         if not repo_id:
@@ -1691,7 +2235,7 @@ class Augur(object):
                 ORDER BY net desc
                 LIMIT 10
             """)
-        else: 
+        else:
             cdRgNewrepRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
                 FROM dm_repo_annual, repo, repo_groups
@@ -1710,15 +2254,15 @@ class Augur(object):
     @annotate(tag='annual-commit-count-ranked-by-repo-in-repo-group')
     def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of commits to lowest by default.
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :param calendar_year: the calendar year a repo is created in to be considered "new"
-        """    
+        """
         if timeframe == None:
             timeframe = 'all'
-        
+
         cdRgTpRankedCommitsSQL = None
 
         if repo_id:
@@ -1758,7 +2302,7 @@ class Augur(object):
                     order by net desc
                     LIMIT 10
                 """)
-        else: 
+        else:
             if timeframe == 'all':
                 cdRgTpRankedCommitsSQL = s.sql.text("""
                     SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
@@ -1816,7 +2360,7 @@ class Augur(object):
         """
         if calendar_year == None:
             calendar_year = 2019
-        
+
         cdRgNewrepRankedCommitsSQL = None
 
         if not repo_id:
@@ -1831,7 +2375,7 @@ class Augur(object):
                 ORDER BY net desc
                 LIMIT 10
             """)
-        else: 
+        else:
             cdRgNewrepRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, sum(cast(added as INTEGER) - cast(removed as INTEGER) - cast(whitespace as INTEGER)) as net, patches, repo_name
                 FROM dm_repo_annual, repo, repo_groups
@@ -1850,15 +2394,15 @@ class Augur(object):
     @annotate(tag='annual-lines-of-code-count-ranked-by-repo-in-repo-group')
     def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_id=None, timeframe=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of commits to lowest by default.
         :param repo_group_id: The repository's repo_group_id
         :param repo_id: The repository's repo_id, defaults to None
         :param calendar_year: the calendar year a repo is created in to be considered "new"
-        """    
+        """
         if timeframe == None:
             timeframe = 'all'
-        
+
         cdRgTpRankedCommitsSQL = None
 
         if repo_id:
@@ -1898,7 +2442,7 @@ class Augur(object):
                     order by net desc
                     LIMIT 10
                 """)
-        else: 
+        else:
             if timeframe == 'all':
                 cdRgTpRankedCommitsSQL = s.sql.text("""
                     SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
@@ -1943,6 +2487,107 @@ class Augur(object):
         "repo_id": repo_id})
         return results
 
+    @annotate(tag='top-committers')
+    def top_committers(self, repo_group_id, repo_id=None, year=None, threshold=0.5):
+        """
+        Returns a list of contributors contributing N% of all commits.
+
+        :param repo_group_id: Repo group ID
+        :param repo_id: Repo ID.
+        :param year: Year. eg: 2018, 2107. Defaults to current year.
+        :param threshold: The threshold to specify N%. Defaults to 0.5
+        """
+        threshold = float(threshold)
+        if threshold < 0 or threshold > 1:
+            raise ValueError('threshold should be between 0 and 1')
+
+        if year is None:
+            year = datetime.datetime.now().year
+
+        if not repo_id:
+            total_commits_SQL = s.sql.text("""
+                SELECT SUM(patches)::int
+                FROM
+                    (SELECT repo_group_id, email, year, patches
+                    FROM dm_repo_group_annual
+                    WHERE year = :year AND repo_group_id = :repo_group_id
+                    ORDER BY patches DESC) a
+            """)
+
+            results = pd.read_sql(total_commits_SQL, self.db,
+                                params={'year': year, 'repo_group_id': repo_group_id})
+        else:
+            total_commits_SQL = s.sql.text("""
+                SELECT SUM(patches)::int
+                FROM
+                    (SELECT repo_id, email, year, patches
+                    FROM dm_repo_annual
+                    WHERE year = :year AND repo_id = :repo_id
+                    ORDER BY patches DESC) a
+            """)
+
+            results = pd.read_sql(total_commits_SQL, self.db,
+                                params={'year': year, 'repo_id': repo_id})
+
+        total_commits = int(results.iloc[0]['sum'])
+        threshold_commits = round(threshold * total_commits)
+
+        if not repo_id:
+            committers_SQL = s.sql.text("""
+                SELECT
+                    a.repo_group_id,
+                    rg_name AS repo_group_name,
+                    a.email,
+                    SUM(a.patches)::int AS commits
+                FROM
+                    (SELECT repo_group_id, email, year, patches
+                    FROM dm_repo_group_annual
+                    WHERE year = :year AND repo_group_id = :repo_group_id
+                    ORDER BY patches DESC) a, repo_groups
+                WHERE a.repo_group_id = repo_groups.repo_group_id
+                GROUP BY a.repo_group_id, repo_group_name, a.email
+                ORDER BY commits DESC
+            """)
+
+            results = pd.read_sql(committers_SQL, self.db,
+                                params={'year': year, 'repo_group_id': repo_group_id})
+        else:
+            committers_SQL = s.sql.text("""
+                SELECT
+                    a.repo_id,
+                    repo.repo_name,
+                    a.email,
+                    SUM(a.patches)::int AS commits
+                FROM
+                    (SELECT repo_id, email, year, patches
+                    FROM dm_repo_annual
+                    WHERE year = :year AND repo_id = :repo_id
+                    ORDER BY patches DESC) a, repo
+                WHERE a.repo_id = repo.repo_id
+                GROUP BY a.repo_id, repo.repo_name, a.email
+                ORDER BY commits DESC
+            """)
+
+            results = pd.read_sql(committers_SQL, self.db,
+                                  params={'year': year, 'repo_id': repo_id})
+
+        cumsum = 0
+        for i, row in results.iterrows():
+            cumsum += row['commits']
+            if cumsum >= threshold_commits:
+                results = results[:i + 1]
+                break
+
+        if not repo_id:
+            rg_name = results.iloc[0]['repo_group_name']
+            results.loc[i+1] = [repo_group_id, rg_name, 'other_contributors',
+                                int(total_commits - cumsum)]
+        else:
+            repo_name = results.iloc[0]['repo_name']
+            results.loc[i+1] = [repo_id, repo_name, 'other_contributors',
+                                int(total_commits - cumsum)]
+
+        return results
 
 #####################################
 ###           UTILITIES           ###
@@ -1976,7 +2621,8 @@ class Augur(object):
                 repo.repo_status,
                 a.commits_all_time,
                 b.issues_all_time ,
-                rg_name
+                rg_name,
+                repo.repo_group_id
             FROM
                 repo
                 left outer join
@@ -2110,3 +2756,198 @@ class Augur(object):
             """)
             results = pd.read_sql(issuesSQL, self.db, params={'repo_id': repo_id})
             return results
+
+    @annotate(tag="aggregate-summary")
+    def aggregate_summary(self, repo_group_id, repo_id=None, begin_date=None, end_date=None):
+
+        if not begin_date:
+            begin_date = datetime.datetime.now()
+            # Subtract 1 year and leap year check
+            try:
+                begin_date = begin_date.replace(year=begin_date.year-1)
+            except ValueError:
+                begin_date = begin_date.replace(year=begin_date.year-1, day=begin_date.day-1)
+            begin_date = begin_date.strftime('%Y-%m-%d')
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if not repo_id:
+            summarySQL = s.sql.text("""
+                SELECT (
+                    SELECT sum(watchers_count) AS watcher_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                ) AS watcher_count,
+                (
+                    SELECT sum(stars_count) AS star_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                ) AS star_count,
+                (
+                    SELECT sum(fork_count) AS fork_count
+                    FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+                    WHERE repo_group_id = :repo_group_id
+                ) AS fork_count,
+                (
+                    SELECT count(*) AS merged_count
+                    FROM (
+                        SELECT DISTINCT issue_events.issue_id
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id JOIN repo ON issues.repo_id = repo.repo_id
+                        WHERE action = 'merged'
+                        AND repo_group_id = :repo_group_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    ) a 
+                ) AS merged_count,
+                committer_count, commit_count FROM (
+                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
+                    FROM (
+                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits JOIN repo ON commits.repo_id = repo.repo_id
+                        WHERE repo_group_id = :repo_group_id
+                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_author_name
+                    ) temp
+                ) commit_data
+            """)
+            results = pd.read_sql(summarySQL, self.db, params={'repo_group_id': repo_group_id,
+                                                            'begin_date': begin_date, 'end_date': end_date})
+            return results
+        else:
+            summarySQL = s.sql.text("""
+                SELECT 
+                (
+                    SELECT sum(watchers_count) AS watcher_count
+                    FROM repo_info 
+                    WHERE repo_info.repo_id = :repo_id
+                ) AS watcher_count,
+                (
+                    SELECT sum(stars_count) AS star_count
+                    FROM repo_info
+                    WHERE repo_info.repo_id = :repo_id
+                ) AS star_count,
+                (
+                    SELECT sum(fork_count) AS fork_count
+                    FROM repo_info
+                    WHERE repo_info.repo_id = :repo_id
+                ) AS fork_count,
+                (
+                    SELECT count(*) AS merged_count
+                    FROM (
+                        SELECT DISTINCT issue_events.issue_id
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
+                        WHERE action = 'merged'
+                        AND repo_id = :repo_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                    ) a 
+                ) AS merged_count,
+                committer_count, commit_count FROM (
+                    SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
+                    FROM (
+                        SELECT DISTINCT cmt_author_name, COUNT(cmt_id) AS commit_count FROM commits
+                        WHERE repo_id = :repo_id
+                        AND commits.cmt_committer_date BETWEEN :begin_date AND :end_date
+                        GROUP BY cmt_author_name
+                    ) temp
+                ) commit_data
+            """)
+            results = pd.read_sql(summarySQL, self.db, params={'repo_id': repo_id,
+                                                            'begin_date': begin_date, 'end_date': end_date})
+            return results
+
+
+    @annotate(tag='pull-request-acceptance-rate')
+    def pull_request_acceptance_rate(self, repo_group_id, repo_id=None, begin_date=None, end_date=None, group_by='week'):
+        """
+        Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+
+        :param repo_group_id: The repository's repo_group_id
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: DataFrame with ratio/day
+        """
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        if not repo_id:
+            prAccRateSQL = s.sql.text("""
+                SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
+                FROM
+                    (
+                        SELECT count(issue_events.issue_id) AS num_approved, 
+                            date_trunc(:group_by,issue_events.created_at) AS accepted_on
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                            JOIN repo ON issues.repo_id = repo.repo_id
+                        WHERE action = 'merged'
+                        AND repo_group_id = :repo_group_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY accepted_on
+                        ORDER BY accepted_on
+                    ) accepted
+                JOIN
+                    (
+                        SELECT count(issue_events.issue_id) AS num_open, 
+                            date_trunc(:group_by,issue_events.created_at) AS date_created
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                            JOIN repo ON issues.repo_id = repo.repo_id
+                        WHERE action = 'ready_for_review'
+                        AND repo_group_id = :repo_group_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY date_created
+                        ORDER BY date_created
+                    ) opened
+                ON opened.date_created = accepted.accepted_on
+            """)
+            results = pd.read_sql(prAccRateSQL, self.db, params={'repo_group_id': repo_group_id, 'group_by': group_by,
+                                                            'begin_date': begin_date, 'end_date': end_date})
+            return results
+        else:
+            prAccRateSQL = s.sql.text("""
+                SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
+                FROM
+                    (
+                        SELECT count(issue_events.issue_id) AS num_approved, 
+                            date_trunc(:group_by,issue_events.created_at) AS accepted_on
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        WHERE action = 'merged'
+                        AND repo_id = :repo_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY accepted_on
+                        ORDER BY accepted_on
+                    ) accepted
+                JOIN
+                    (
+                        SELECT count(issue_events.issue_id) AS num_open, 
+                            date_trunc(:group_by,issue_events.created_at) AS date_created
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        WHERE action = 'ready_for_review'
+                        AND repo_id = :repo_id
+                        AND issue_events.created_at BETWEEN :begin_date AND :end_date
+                        GROUP BY date_created
+                        ORDER BY date_created
+                    ) opened
+                ON opened.date_created = accepted.accepted_on
+            """)
+            results = pd.read_sql(prAccRateSQL, self.db, params={'repo_id': repo_id, 'group_by': group_by,
+                                                            'begin_date': begin_date, 'end_date': end_date})
+            return results
+
+    ###########################
+    ###       UTILITY       ###
+    ###########################
+    @annotate(tag='top-insights')
+    def top_insights(self):
+        """
+        Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+
+        :return: DataFrame with top insights across all repos
+        """
+
+        topInsightsSQL = s.sql.text("""
+            SELECT repo_insights.repo_id, repo_git, ri_metric, ri_value as value, 
+                ri_date as date, cms_id as rating, ri_fresh as discovered
+            FROM repo_insights JOIN repo on repo.repo_id = repo_insights.repo_id
+            WHERE cms_id = 1
+        """)
+        results = pd.read_sql(topInsightsSQL, self.db)
+        return results
+

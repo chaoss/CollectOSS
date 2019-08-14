@@ -8,8 +8,10 @@
       </div>
     </div>
 
+
+    <spinner v-if="!loaded_groups"></spinner>
     <!-- Default Light Table -->
-    <div :v-show="loaded" class="row">
+    <div v-if="loaded_groups" class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
@@ -22,46 +24,47 @@
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
                     <div class="row">
                       <div class="col col-9">Name</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn">
+                      </div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_description')"> 
                     <div class="row">
                       <div class="col col-9">Description</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_description' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_website')"> 
                     <div class="row">
                       <div class="col col-9">Website</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_website' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_last_modified')"> 
                     <div class="row">
                       <div class="col col-9">Last Modified</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_last_modified' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('rg_type')"> 
                     <div class="row">
                       <div class="col col-9">Type</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_type' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
                     <div class="row">
                       <div class="col col-9">Repo Count</div>
-                      <div class="col col-3 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
                   </th>
                   <th scope="col" class="border-0">Options</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="group in repo_groups">
+                <tr v-for="(group, index) in sorted_repo_groups(sortColumn, ascending)">
                   <td>
-                    <a href="#" @click="onGitRepo(repo)">{{ group.rg_name }}</a>
+                    <a href="#" @click="onRepoGroup(group)">{{ group.rg_name }}</a>
                   </td>
                   <td>{{ group.rg_description }}</td>
                   <td>{{ group.rg_website }}</td>
@@ -70,19 +73,21 @@
                   <td>{{ group.repo_count }}</td>
                   <td>
                     <div class="row">
-                      <d-link id="favorite" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0">
-                        <i class="material-icons">star_rate</i>
-                        <div class="item-icon-wrapper" />
-                      </d-link>
-                      <d-tooltip target="#favorite"
+                      <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0; border: none; background: none;">
+                        <i class="material-icons" style="color:#007bff;">star_rate</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#favorite'+index"
+                        :triggers="['hover']"
                         container=".shards-demo--example--tooltip-01">
                         Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
                       </d-tooltip>
-                      <d-link id="add_compare" class="nav-link col col-2" style="padding: 0">
-                        <i class="material-icons">library_add</i>
-                        <div class="item-icon-wrapper" />
-                      </d-link>
-                      <d-tooltip target="#add_compare"
+                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0; border: none; background: none;" v-on:click="onRepoGroup(group)">
+                        <i class="material-icons" style="color:#007bff;">library_add</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#add_compare'+index"
+                        :triggers="['hover']"
                         container=".shards-demo--example--tooltip-01">
                         Add this repo group to your current compared repos
                       </d-tooltip>
@@ -97,52 +102,133 @@
     </div>
   </div>
 </template>
-<script>
 
-export default {
-  components: {
-
-  },
-  computed: {
-  },
-  data() {
-    return {
-      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
-      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-      repos: [],
-      repo_groups: [],
-      repo_relations: {},
-      themes: ['dark', 'info', 'royal-blue', 'warning'],
-    }
-  },
-  methods: {
-    getRepoGroups() {
-      console.log("START")
-      window.AugurAPI.getRepos().then((data) => {
-        this.repos = data
-        console.log("LOADED repos", this.repos)
-        window.AugurAPI.getRepoGroups().then((data) => {
-          $(this.$el).find('.spinner').removeClass('loader')
-          $(this.$el).find('.spinner').removeClass('relative')
-          this.repo_groups = data
-          //move down between future relation endpoint
-          this.repo_groups.forEach((group) => {
-            this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
-              return repo.rg_name == group.rg_name
-            })
-            group.repo_count = this.repo_relations[group.rg_name].length
-          })
-          console.log("LOADED repo groups", this.repo_relations)
-        })
-      })
+<script lang="ts">
+  import Component from 'vue-class-component';
+  import Vue from 'vue';
+  import {mapActions, mapGetters, mapMutations} from "vuex";
+  import Spinner from "@/components/Spinner.vue";
+  @Component({
+    components: {
+      Spinner,
     },
-    btoa(s) {
-      return window.btoa(s)
+    methods: {
+      ...mapActions('common',[
+        'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+                    // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+        'getRepoRelations',
+        'loadRepoGroups',
+        'addRepoGroup',
+      ]),
+      ...mapMutations('common',[
+        'setComapreType',
+      ]),
+      ...mapActions('compare', [
+        'addComparedGroup',
+      ])
+    },
+    computed: {
+      ...mapGetters('common',[
+        'repoRelationsInfo',
+        'groupsInfo',
+        'sorted_repo_groups',
+        'repo_groups',
+        'loaded_groups',
+      ])
+    },
+  })
+
+  export default class RepoGroups extends Vue{
+    colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
+    testEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
+    testTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
+    repos: any[] = [];
+    repo_relations:any[] =  [];
+    themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
+    loadedGroups: boolean = false;
+    loadedSparks: boolean = false;
+    ascending:boolean = false;
+    sortColumn: string ='rg_last_modified';
+
+    // declare Vuex action and getter
+    repoRelationsInfo!: any;
+    groupsInfo!:any;
+    getRepoRelations!: any;
+    loadRepoGroups!:any;
+    repo_groups!:any[];
+    sorted_repo_groups!:any[];
+    loaded_groups!:boolean;
+    addRepoGroup!:any;
+
+    // compare module store
+    addComparedGroup!:any;
+
+    created() {
+      if(!this.loaded_groups){
+        this.loadRepoGroups()
+      }
     }
-  },
-  created() {
-    this.getRepoGroups()
-  },
-}
+
+    sortTable(col: string) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+    }
+
+    onRepoGroup(e:any) {
+      // this.addRepoGroup(e)
+      this.addComparedGroup(e)
+    }
+    
+  }
+
+// export default {
+//   components: {
+//
+//   },
+//   computed: {
+//   },
+//   data() {
+//     return {
+//       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
+//       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
+//       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
+//       repos: [],
+//       repo_groups: [],
+//       repo_relations: {},
+//       themes: ['dark', 'info', 'royal-blue', 'warning'],
+//     }
+//   },
+//   methods: {
+//     getRepoGroups() {
+//       console.log("START")
+//       window.AugurAPI.getRepos().then((data) => {
+//         this.repos = data
+//         console.log("LOADED repos", this.repos)
+//         window.AugurAPI.getRepoGroups().then((data) => {
+//           $(this.$el).find('.spinner').removeClass('loader')
+//           $(this.$el).find('.spinner').removeClass('relative')
+//           this.repo_groups = data
+//           //move down between future relation endpoint
+//           this.repo_groups.forEach((group) => {
+//             this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
+//               return repo.rg_name == group.rg_name
+//             })
+//             group.repo_count = this.repo_relations[group.rg_name].length
+//           })
+//           console.log("LOADED repo groups", this.repo_relations)
+//         })
+//       })
+//     },
+//     btoa(s) {
+//       return window.btoa(s)
+//     }
+//   },
+//   created() {
+//     this.getRepoGroups()
+//   },
+// }
 </script>

@@ -10,9 +10,9 @@ import jQuery from 'jquery';
 import _ from 'lodash';
 import d3 from 'd3';
 import SvgSaver from 'svgsaver';
-import vegaEmbed from 'vega-embed';
 import vega from 'vega';
 import vegaLite from 'vega-lite';
+import vegaEmbed from 'vega-embed'
 
 // Styles
 import 'bootstrap/dist/css/bootstrap.css';
@@ -22,8 +22,8 @@ import '@/assets/scss/date-range.scss';
 // Core
 import AugurApp from '@/components/AugurApp.vue';
 import router from './router';
-var store = require('@/store').default;
-console.log("STore", store)
+var store = require('@/store/store').default;
+
 // Layouts
 import Default from '@/layouts/Default.vue';
 

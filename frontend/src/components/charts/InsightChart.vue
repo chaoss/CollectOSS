@@ -1,6 +1,6 @@
 <template>
   <div ref="holder" style="position: relative; z-index: 5; transform: translateY(-50%); ">
-    <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 3.9rem 0px auto;"></spinner>
+    <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 5.9rem 0px auto;"></spinner>
     <div v-if="loaded" class="chart hidefirst ">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
@@ -17,7 +17,7 @@ import AugurStats from '@/AugurStats.ts'
 import Spinner from '../Spinner.vue'
 
 export default {
-  props: ['url', 'source', 'title', 'color'],
+  props: ['url', 'source', 'title', 'color', 'data'],
   components: {
     Spinner
   },
@@ -25,15 +25,15 @@ export default {
     return {
       values: [],
       user: null,
-      loaded: false
+      loaded: true
     }
   },
   computed: {
     spec() {
-      let repo = window.AugurAPI.Repo({"gitURL": this.url})
-      repo[this.source]().then((data) => {
-        this.values = this.convertKey(data)
-      })
+      // repo[this.source]().then((data) => {
+        this.values = this.data//this.convertKey(this.data)
+      // })
+      console.log(this.values)
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -73,7 +73,6 @@ export default {
         let field = null
         keys.forEach((key) => {
           if (el[key] != null && key != 'date'){
-            console.log(key)
             field = key
           }
         })

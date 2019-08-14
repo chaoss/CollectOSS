@@ -1,7 +1,8 @@
 <template>
   <div ref="holder" style="position: relative; z-index: 5">
-    <spinner v-if="!loaded" :size="30" style="top: 5%; position: relative; transform: translateY(-50%);"></spinner>
-    <div class="chart hidefirst">
+    <!-- <spinner :size="30" style="top: 5%; position: relative; transform: translateY(-50%);"></spinner> -->
+    <div class="chart">
+      <!-- <div id="hi"></div> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
     </div>
@@ -24,15 +25,13 @@ export default {
     return {
       values: [],
       user: null,
-      loaded: false
+      loaded: false,
+      chart: null
     }
   },
   computed: {
     spec() {
-      let repo = window.AugurAPI.Repo({"gitURL": this.url})
-      repo[this.source]().then((data) => {
-        this.values = this.convertKey(data)
-      })
+      this.values = this.data//this.convertKey(this.data)
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
@@ -56,10 +55,13 @@ export default {
         }
 
       }
-
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-      this.loaded = true
-
+      // if (config.data.length == 0){
+      //   this.spec;
+      //   this.renderError()
+      //   return
+      // }
+      // config.data = {"values": this.values}
+      // vegaEmbed('#hi', config, {tooltip: {offsetY: -110}, mode: 'vega-lite'}) 
       return config
 
     }
@@ -75,7 +77,6 @@ export default {
         let field = null
         keys.forEach((key) => {
           if (el[key] != null && key != 'date'){
-            console.log(key)
             field = key
           }
         })

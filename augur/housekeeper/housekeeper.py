@@ -35,14 +35,13 @@ class Housekeeper:
         all_repos = rs['repo_git'].values.tolist()
 
         # List of tasks that need periodic updates
-        self.__updatable = self.sort_issue_repos(jobs)
+        self.__updatable = self.prep_jobs(jobs)
 
         self.__processes = []
-        # logging.info("HK pid: {}".format(str(os.getpid())))
         self.__updater()
 
     @staticmethod
-    def updater_process(broker_port, broker, model, delay, repos, repo_group_id):
+    def updater_process(broker_port, broker, model, given, delay, repos, repo_group_id):
         """
         Controls a given plugin's update process
         :param name: name of object to be updated 
@@ -51,19 +50,26 @@ class Housekeeper:
         """
         logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, repo_group_id, os.getpid()))
         try:
-            # Waiting for 1 alive worker
+            compatible_worker_found = False
+            # Waiting for compatible worker
             while True:
-                if broker is not None:
-                    if len(broker._getvalue().keys()) > 1:
-                        logging.info("Housekeeper recognized that the broker has at least one worker... beginning to distribute maintained tasks")
-                        time.sleep(10)
-                        while True:
-                            logging.info('Housekeeper updating {} model for subsection: {}...'.format(model, repo_group_id))
-                            
+                for worker in list(broker._getvalue().keys()):
+                    if model in broker[worker]['models'] and given in broker[worker]['given']:
+                        compatible_worker_found = True
+                if compatible_worker_found:
+                    logging.info("Housekeeper recognized that the broker has a worker that " + 
+                        "can handle the {} model... beginning to distribute maintained tasks".format(model))
+                    time.sleep(4)
+                    while True:
+                        logging.info('Housekeeper updating {} model for subsection: {} with given {}...'.format(
+                            model, repo_group_id, given[0]))
+                        
+                        if given[0] == 'git_url':
                             for repo in repos:
                                 task = {
                                     "job_type": "MAINTAIN", 
                                     "models": [model], 
+                                    "display_name": "{} model for git url: {}".format(model, repo['repo_git']),
                                     "given": {
                                         "git_url": repo['repo_git']
                                     }
@@ -74,12 +80,27 @@ class Housekeeper:
                                     requests.post('http://localhost:{}/api/unstable/task'.format(
                                         broker_port), json=task, timeout=10)
                                 except Exception as e:
-                                    logging.info(str(e))
+                                    logging.info("Error encountered: {}".format(e))
 
                                 time.sleep(0.5)
-                            logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(str(len(repos))))
-                            time.sleep(delay)
-                        break
+                        elif given[0] == 'repo_group':
+                            task = {
+                                    "job_type": "MAINTAIN", 
+                                    "models": [model], 
+                                    "display_name": "{} model for repo group id: {}".format(model, repo_group_id),
+                                    "given": {
+                                        "repo_group": repos
+                                    }
+                                }
+                            try:
+                                requests.post('http://localhost:{}/api/unstable/task'.format(
+                                    broker_port), json=task, timeout=10)
+                            except Exception as e:
+                                logging.info("Error encountered: {}".format(e))
+
+                        logging.info("Housekeeper finished sending {} tasks to the broker for it to distribute to your worker(s)".format(len(repos)))
+                        time.sleep(delay)
+                    break
                 time.sleep(3)
                 
         except KeyboardInterrupt:
@@ -97,7 +118,7 @@ class Housekeeper:
             updates = self.__updatable
         for update in updates:
             up = Process(target=self.updater_process, args=(self.broker_port, self.broker, update['model'], 
-                update['delay'], update['repos'], update['repo_group_id']), daemon=True)
+                update['given'], update['delay'], update['repos'], update['repo_group_id']), daemon=True)
             up.start()
             self.__processes.append(up)
 
@@ -130,11 +151,11 @@ class Housekeeper:
         for process in self.__processes:
             process.terminate()
 
-    def sort_issue_repos(self, jobs):
+    def prep_jobs(self, jobs):
 
         for job in jobs:
             if job['repo_group_id'] != 0:
-            # Query all repos and last repo id
+                # Query all repos and last repo id
                 repoUrlSQL = s.sql.text("""
                         SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
                     """.format(job['repo_group_id']))
@@ -149,11 +170,17 @@ class Housekeeper:
 
             repoIdSQL = s.sql.text("""
                     SELECT since_id_str FROM gh_worker_job
-                """)
+                    WHERE job_model = '{}'
+                """.format(job['model']))
 
             job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
 
-            last_id = int(job_df.iloc[0]['since_id_str'])
+            # If a last id is not recorded, start from beginning of repos 
+            #   (first id is not necessarily 0)
+            try:
+                last_id = int(job_df.iloc[0]['since_id_str'])
+            except:
+                last_id = 0
 
             jobHistorySQL = s.sql.text("""
                     SELECT max(history_id) AS history_id, status FROM gh_worker_history
@@ -178,7 +205,9 @@ class Housekeeper:
 
             reorganized_repos = after_repos.append(before_repos)
 
-            reorganized_repos['focused_task'] = 1
+            if 'all_focused' in job:
+                reorganized_repos['focused_task'] = job['all_focused']
+
             reorganized_repos = reorganized_repos.to_dict('records')
             
             if finishing_task:

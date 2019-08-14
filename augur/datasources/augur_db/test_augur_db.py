@@ -224,24 +224,31 @@ def test_lines_changed_by_author(augur_db):
     assert augur_db.lines_changed_by_author(20).iloc[0].additions > 0
     assert augur_db.lines_changed_by_author(20,21000).iloc[0].additions > 0
 
-def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
-    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, calendar_year=2019).iloc[0].net > 0
-
 def test_cii_best_practices_badge(augur_db):
     # repo
-    assert augur_db.cii_best_practices_badge(21, 21252).iloc[0]['badge_level'] == 'in_progress'
+    assert augur_db.cii_best_practices_badge(21, 21252).iloc[0]['tiered_percentage'] >= 85
 
     # repo_group
-    assert augur_db.cii_best_practices_badge(21).iloc[0]['badge_level'] == 'passing'
+    assert augur_db.cii_best_practices_badge(21).iloc[0]['tiered_percentage'] > 80
+
+def test_average_issue_resolution_time(augur_db):
+    #repo
+    assert augur_db.average_issue_resolution_time(24, 21464).isin(
+        ['maven-release', '276 days 13:54:13.2']).any().any()
+
+    # repo_group
+    assert augur_db.average_issue_resolution_time(24).isin(
+        ['maven-release', '276 days 13:54:13.2']).any().any()
 
 def test_languages(augur_db):
     # TODO
     pass
 
 def test_license_declared(augur_db):
-    assert augur_db.license_declared(21, 21252).iloc[0]['license'] == 'Apache-2.0'
+    # TODO need more data
+    pass
+    # assert augur_db.license_declared(21, 21252).isin(['Apache-2.0']).any().any()
 
-    assert augur_db.license_declared(21).iloc[0]['license'] == 'Apache-2.0'
 
 def test_issues_maintainer_response_duration(augur_db):
     assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
@@ -255,8 +262,8 @@ def test_annual_lines_of_code_count_ranked_by_repo_in_repo_group(augur_db):
     assert augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group(20, 21000,timeframe = 'year').iloc[0].net > 0
 
 def test_annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(augur_db):
-    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0 
-    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0 
+    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0
+    assert augur_db.annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0
 
 def test_annual_commit_count_ranked_by_repo_in_repo_group(augur_db):
     assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20).iloc[0].net > 0
@@ -265,9 +272,31 @@ def test_annual_commit_count_ranked_by_repo_in_repo_group(augur_db):
     assert augur_db.annual_commit_count_ranked_by_repo_in_repo_group(20, 21000,timeframe = 'year').iloc[0].net > 0
 
 def test_annual_commit_count_ranked_by_new_repo_in_repo_group(augur_db):
-    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0 
-    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0 
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20).iloc[0].net > 0
+    assert augur_db.annual_commit_count_ranked_by_new_repo_in_repo_group(20, 21000).iloc[0].net > 0
+
+def test_top_committers(augur_db):
+    assert augur_db.top_committers(20).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, year=2017).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, year=2017, threshold=0.7).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000, year=2017).iloc[0]['commits'] > 0
+    assert augur_db.top_committers(20, 21000, year=2017, threshold=0.7).iloc[0]['commits'] > 0
 
 def test_get_repos_for_dosocs(augur_db):
     assert augur_db.get_repos_for_dosocs().isin(
         ['/home/sean/git-repos/23/github.com/rails/rails-dom-testing']).any().any()
+
+def test_committer(augur_db):
+    assert augur_db.committers(21,period='year').iloc[0]['count'] > 100
+    assert augur_db.committers(20,21000,period='year').iloc[0]['count'] > 100
+
+def test_aggregate_summary(augur_db):
+    assert augur_db.aggregate_summary(24).iloc[0]['commit_count'] > 0
+    assert augur_db.aggregate_summary(24,21471,begin_date='2018-1-1 00:00:00',
+                                     end_date='2019-12-31 23:59:59').iloc[0]['commit_count'] > 0
+
+def test_pull_request_acceptance_rate(augur_db):
+    assert augur_db.pull_request_acceptance_rate(24).iloc[0]['rate'] > 0
+    assert augur_db.pull_request_acceptance_rate(24,21000,begin_date='2018-1-1 00:00:00',
+                                     end_date='2019-12-31 23:59:59',group_by='year').iloc[0]['rate'] > 0

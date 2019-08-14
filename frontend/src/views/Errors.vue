@@ -11,3 +11,8 @@
     </div>
   </d-container>
 </template>
+
+<script lang="ts">
+import { Vue } from 'vue-property-decorator';
+export default class Errors extends Vue {}
+</script>

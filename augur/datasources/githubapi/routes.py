@@ -18,10 +18,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/githubapi/issues/closed Closed Issues
     @apiName githubapi-closed-issues
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/issues-closed.md">CHAOSS Metric Definition</a>
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -42,10 +42,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/githubapi/commits Code Commits
     @apiName githubapi-code-commits
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/activity-metrics/code-commits.md">CHAOSS Metric Definition</a>
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -66,10 +66,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/githubapi/contributors List of Contributors & their Contributions
     @apiName githubapi-contributors
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/contributors.md">CHAOSS Metric Definition</a>
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -90,10 +90,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/lines_changed Lines of Code Changed
     @apiName lines-of-code-changed
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/augurlabs/metrics/blob/master/activity-metrics/lines-of-code-changed.md">CHAOSS Metric Definition</a>.  Source: <a href="https://developer.github.com/">GitHub API</a>
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -114,10 +114,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/githubapi/issues Issues Opened
     @apiName githubapi-issues-opened
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/issues-open.md">CHAOSS Metric Definition</a>
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -138,10 +138,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/githubapi/pull_requests_closed Pull Requests Closed
     @apiName githubapi-pull-requests-Closed
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/ComputationalMystics/wg-gmd/blob/master/activity-metrics/pull-requests-closed.md">CHAOSS Metric Definition</a>
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -153,10 +153,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/githubapi/pull_requests_merged Pull Requests Merged
     @apiName githubapi-pull-requests-merged
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription Count of pull requests merged.
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -168,10 +168,10 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/githubapi/pull_requests_open Pull Requests Open
     @apiName githubapi-pull-requests-open
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/ComputationalMystics/wg-gmd/blob/master/activity-metrics/pull-requests-open.md">CHAOSS Metric Definition</a>
 
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiParam {String} owner Username of the owner of the GitHub repository
     @apiParam {String} repo Name of the GitHub repository
 
@@ -195,7 +195,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/githubapi/repository_size Repository Size
     @apiName repository-size
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription <a href="https://github.com/chaoss/wg-gmd/blob/master/metrics/archived_metrics/repository-size.md">CHAOSS Metric Definition</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -220,7 +220,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/bus_factor Bus Factor
     @apiName bus-factor
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -240,7 +240,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/tags/major Major Tags
     @apiName major-tags
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -263,7 +263,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/timeseries/tags/major Tages
     @apiName tags
-    @apiGroup GitHub API (Legacy)
+    @apiGroup _GitHub API (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://developer.github.com/">GitHub API</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository

@@ -9,6 +9,10 @@ def create_routes(server):
 
     augur_db = server._augur['augur_db']()
 
+    #############################
+    ###        UTILITY        ###
+    #############################
+
     """
     @api {get} /repo-groups Repo Groups
     @apiName repo-groups
@@ -157,6 +161,50 @@ def create_routes(server):
 
     server.addRepoGroupMetric(augur_db.get_issues, 'get-issues')
     server.addRepoMetric(augur_db.get_issues, 'get-issues')
+
+    """
+    @api {get} /top-insights Top Insights
+    @apiName top-insights
+    @apiGroup Utility
+    @apiDescription Get all the downloaded repo groups.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_group_id": 20,
+                            "rg_name": "Rails",
+                            "rg_description": "Rails Ecosystem.",
+                            "rg_website": "",
+                            "rg_recache": 0,
+                            "rg_last_modified": "2019-06-03T15:55:20.000Z",
+                            "rg_type": "GitHub Organization",
+                            "tool_source": "load",
+                            "tool_version": "one",
+                            "data_source": "git",
+                            "data_collection_date": "2019-06-05T13:36:25.000Z"
+                        },
+                        {
+                            "repo_group_id": 23,
+                            "rg_name": "Netflix",
+                            "rg_description": "Netflix Ecosystem.",
+                            "rg_website": "",
+                            "rg_recache": 0,
+                            "rg_last_modified": "2019-06-03T15:55:20.000Z",
+                            "rg_type": "GitHub Organization",
+                            "tool_source": "load",
+                            "tool_version": "one",
+                            "data_source": "git",
+                            "data_collection_date": "2019-06-05T13:36:36.000Z"
+                        }
+                    ]
+    """
+    @server.app.route('/{}/top-insights'.format(server.api_version))
+    def top_insights(): #TODO: make this name automatic - wrapper?
+        tis = server.transform(augur_db.top_insights)
+        return Response(response=tis,
+                        status=200,
+                        mimetype="application/json")
+    server.updateMetricMetadata(function=augur_db.top_insights, endpoint='/{}/top-insights'.format(server.api_version), metric_type='git')
+    
     #####################################
     ###           EVOLUTION           ###
     #####################################
@@ -293,6 +341,210 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.code_changes_lines, 'code-changes-lines')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/reviews Reviews (Repo Group)
+    @apiName reviews-repo-group
+    @apiGroup Evolution
+    @apiDescription Time series of number of new reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/reviews.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21035,
+                            "repo_name": "prototype-ujs",
+                            "date": "2010-01-01T00:00:00.000Z",
+                            "pull_requests": 1
+                        },
+                        {
+                            "repo_id": 21035,
+                            "repo_name": "prototype-ujs",
+                            "date": "2011-01-01T00:00:00.000Z",
+                            "pull_requests": 5
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2011-01-01T00:00:00.000Z",
+                            "pull_requests": 16
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2012-01-01T00:00:00.000Z",
+                            "pull_requests": 14
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.reviews, 'reviews')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/reviews Reviews (Repo)
+    @apiName reviews-repo
+    @apiGroup Evolution
+    @apiDescription Time series of number of new reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/reviews.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2016-01-01T00:00:00.000Z",
+                            "pull_requests": 37
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2017-01-01T00:00:00.000Z",
+                            "pull_requests": 49
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2018-01-01T00:00:00.000Z",
+                            "pull_requests": 63
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.reviews, 'reviews')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/reviews-accepted Reviews Accepted (Repo Group)
+    @apiName reviews-accepted-repo-group
+    @apiGroup Evolution
+    @apiDescription Time series of number of accepted reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21035,
+                            "repo_name": "prototype-ujs",
+                            "date": "2010-01-01T00:00:00.000Z",
+                            "pull_requests": 1
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2011-01-01T00:00:00.000Z",
+                            "pull_requests": 4
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2012-01-01T00:00:00.000Z",
+                            "pull_requests": 4
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.reviews_accepted, 'reviews-accepted')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/reviews-accepted Reviews Accepted (Repo)
+    @apiName reviews-accepted-repo
+    @apiGroup Evolution
+    @apiDescription Time series of number of accepted reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2016-01-01T00:00:00.000Z",
+                            "pull_requests": 30
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2017-01-01T00:00:00.000Z",
+                            "pull_requests": 37
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2018-01-01T00:00:00.000Z",
+                            "pull_requests": 46
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.reviews_accepted, 'reviews-accepted')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/reviews-declined Reviews Declined (Repo Group)
+    @apiName reviews-declined-repo-group
+    @apiGroup Evolution
+    @apiDescription Time series of number of declined reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21035,
+                            "repo_name": "prototype-ujs",
+                            "date": "2010-01-01T00:00:00.000Z",
+                            "pull_requests": 1
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2011-01-01T00:00:00.000Z",
+                            "pull_requests": 3
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "date": "2012-01-01T00:00:00.000Z",
+                            "pull_requests": 6
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.reviews_declined, 'reviews-declined')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/reviews-declined Reviews Declined (Repo)
+    @apiName reviews-declined-repo
+    @apiGroup Evolution
+    @apiDescription Time series of number of declined reviews / pull requests opened within a certain period.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Accepted.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string=day, week, month, year} [period="day"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2016-01-01T00:00:00.000Z",
+                            "pull_requests": 11
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2017-01-01T00:00:00.000Z",
+                            "pull_requests": 16
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "date": "2018-01-01T00:00:00.000Z",
+                            "pull_requests": 4
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.reviews_declined, 'reviews-declined')
 
     """
     @api {get} /repo-groups/:repo_group_id/issues-new Issues New (Repo Group)
@@ -491,6 +743,75 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.issues_closed, 'issues-closed')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/review-duration Review Duration (Repo Group)
+    @apiName review-duration-repo-group
+    @apiGroup Evolution
+    @apiDescription Time since an review/pull request is proposed until it is accepted.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21035,
+                            "repo_name": "prototype-ujs",
+                            "pull_request_id": 25386,
+                            "created_at": "2010-09-28T19:07:15.000Z",
+                            "merged_at": "2010-09-29T17:46:59.000Z",
+                            "duration": "0 days 22:39:44.000000000"
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "pull_request_id": 25392,
+                            "created_at": "2011-05-18T14:11:23.000Z",
+                            "merged_at": "2011-05-18T19:03:01.000Z",
+                            "duration": "0 days 04:51:38.000000000"
+                        },
+                        {
+                            "repo_id": 21042,
+                            "repo_name": "pjax_rails",
+                            "pull_request_id": 25396,
+                            "created_at": "2011-05-25T10:09:01.000Z",
+                            "merged_at": "2011-05-25T19:30:01.000Z",
+                            "duration": "0 days 09:21:00.000000000"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.review_duration, 'review-duration')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/review-duration review Duration (Repo)
+    @apiName review-duration-repo
+    @apiGroup Evolution
+    @apiDescription Time since an review/pull request is proposed until it is accepted.
+                    <a href="https://github.com/chaoss/wg-evolution/blob/master/metrics/Reviews_Duration.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "graphql-spec",
+                            "pull_request_id": 25374,
+                            "created_at": "2019-01-02T11:02:08.000Z",
+                            "merged_at": "2019-07-05T09:10:45.000Z",
+                            "duration": "183 days 22:08:37.000000000"
+                        },
+                        {
+                            "repo_name": "graphql-spec",
+                            "pull_request_id": 25378,
+                            "created_at": "2019-03-28T13:44:04.000Z",
+                            "merged_at": "2019-07-03T23:10:36.000Z",
+                            "duration": "97 days 09:26:32.000000000"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.review_duration, 'review-duration')
 
     """
     @api {get} /repo-groups/:repo_group_id/issue-duration Issue Duration (Repo Group)
@@ -1393,6 +1714,47 @@ def create_routes(server):
     server.addRepoMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
 
     """
+    @api {get} /repo-groups/:repo_group_id/avgerage-issue-resolution-time Average Issue Resolution Time (Repo Group)
+    @apiName average-issue-resolution-time-repo-group
+    @apiGroup Risk
+    @apiDescription The average issue resolution time.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21353,
+                            "repo_name": "open_id_authentication",
+                            "avg_issue_resolution_time": "1413 days 15:39:48"
+                        },
+                        {
+                            "repo_id": 21362,
+                            "repo_name": "country_select",
+                            "avg_issue_resolution_time": "140 days 09:37:58.2"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.average_issue_resolution_time, 'average-issue-resolution-time')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/avgerage-issue-resolution-time Average Issue Resolution Time (Repo)
+    @apiName average-issue-resolution-time-repo
+    @apiGroup Risk
+    @apiDescription The average issue resolution time.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/focus-areas/business-risk.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_name": "maven-release",
+                            "avg_issue_resolution_time": "276 days 13:54:13.2"
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.average_issue_resolution_time, 'average-issue-resolution-time')
+
+    """
     @api {get} /repo-groups/:repo_group_id/forks Forks (Repo Group)
     @apiName forks-repo-group
     @apiGroup Risk
@@ -1572,6 +1934,73 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.license_declared, 'license-declared')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/committers Committers
+    @apiName committers(Repo)
+    @apiGroup Risk
+    @apiDescription Number of persons contributing with an accepted commit for the first time.
+                <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string=day, week, month, year} [period="week"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date":"2018-10-25T00:00:00.000Z",
+                            "repo_name":"weasel",
+                            "rg_name":"Comcast",
+                            "count":1
+                        },
+                        {
+                            "date":"2018-10-17T00:00:00.000Z","repo_name":"weasel","rg_name":"Comcast","count":11
+                        },
+                        {
+                            "date":"2018-06-21T00:00:00.000Z",
+                            "repo_name":"weasel",
+                            "rg_name":"Comcast",
+                            "count":6
+                        }
+                    ]
+    """
+    server.addRepoMetric(
+        augur_db.committers, 'committers')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/Committers (Repo Group)
+    @apiName committers(Repo Group)
+    @apiGroup []
+    @apiDescription Number of persons opening an issue for the first time.
+                    <a href="https://github.com/chaoss/wg-risk/blob/master/metrics/Committers.md">CHAOSS Metric Definition</a>
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string=day, week, month, year} [period="week"] Periodicity specification.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2007-01-01T00:00:00.000Z",
+                            "rg_name": "Comcast",
+                            "count": 372
+                        },
+                        {
+                            "date": "2008-01-01T00:00:00.000Z",
+                            "rg_name": "Comcast",
+                            "count": 964
+                        },
+                        {
+                            "date": "2009-01-01T00:00:00.000Z",
+                            "rg_name": "Comcast",
+                            "count": 28038
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(
+        augur_db.committers, 'committers')
+
+
 
     #####################################
     ###             VALUE             ###
@@ -1840,7 +2269,7 @@ def create_routes(server):
     """
     @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group Annual Commit Count Ranked by New Repo in Repo Group(Repo Group)
     @apiName annual-commit-count-ranked-by-new-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -1864,7 +2293,7 @@ def create_routes(server):
     """
     @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-new-repo-in-repo-group Annual Commit Count Ranked by New Repo in Repo Group(Repo)
     @apiName annual-commit-count-ranked-by-new-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -1888,7 +2317,7 @@ def create_routes(server):
     """
     @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-repo-in-repo-group Annual Commit Count Ranked by Repo in Repo Group(Repo Group)
     @apiName annual-commit-count-ranked-by-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -1912,7 +2341,7 @@ def create_routes(server):
     """
      @api {get} /repo-groups/:repo_group_id/annual-commit-count-ranked-by-repo-in-repo-group Annual Commit Count Ranked by Repo in Repo Group(Repo)
     @apiName annual-commit-count-ranked-by-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -1933,11 +2362,11 @@ def create_routes(server):
     """
     server.addRepoMetric(augur_db.annual_commit_count_ranked_by_repo_in_repo_group,'annual-commit-count-ranked-by-repo-in-repo-group')
 
-    
+
     """
     @api {get} /repo-groups/:repo_group_id/annual-lines-of-code-count-ranked-by-new-repo-in-repo-group Annual Lines of Code Ranked by New Repo in Repo Group(Repo Group)
     @apiName annual-lines-of-code-count-ranked-by-new-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -1961,7 +2390,7 @@ def create_routes(server):
     """
     @api {get} /repo-groups/:repo_group_id/annual-lines-of-code-count-ranked-by-new-repo-in-repo-group Annual Lines of Code Ranked by New Repo in Repo Group(Repo)
     @apiName annual-lines-of-code-count-ranked-by-new-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -1985,7 +2414,7 @@ def create_routes(server):
     """
     @api {get} /repo-groups/:repo_group_id/annual-lines-of-code-count-ranked-by-repo-in-repo-group Annual Lines of Code Ranked by Repo in Repo Group(Repo Group)
     @apiName annual-lines-of-code-count-ranked-by-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -2009,7 +2438,7 @@ def create_routes(server):
     """
     @api {get} /repo-groups/:repo_group_id/annual-lines-of-code-count-ranked-by-repo-in-repo-group Annual Lines of Code Ranked by Repo in Repo Group(Repo)
     @apiName annual-lines-of-code-count-ranked-by-repo-in-repo-group
-    @apiGroup Experiment
+    @apiGroup Experimental
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: Git Repository
     @apiParam {String} repo_url_base Base64 version of the URL of the GitHub repository as it appears in the Facade DB
     @apiSuccessExample {json} Success-Response:
@@ -2029,3 +2458,167 @@ def create_routes(server):
                         ]
     """
     server.addRepoMetric(augur_db.annual_lines_of_code_count_ranked_by_repo_in_repo_group,'annual-lines-of-code-count-ranked-by-repo-in-repo-group')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/top-committers Top Committers (Repo Group)
+    @apiName top-committers-repo-group
+    @apiGroup Experimental
+    @apiDescription Returns a list of contributors contributing N% of all commits.
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} [year] Specify the year to return the results for. Default value: `current year`
+    @apiParam {string} [threshold=0.5] Specify N%. Accepts a value between `0` & `1` where `0` specifies
+                                        `0%` and `1` specifies `100%`.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_group_id": 20,
+                            "repo_group_name": "Rails",
+                            "email": "kamipo@gmail.com",
+                            "commits": 502
+                        },
+                        {
+                            "repo_group_id": 20,
+                            "repo_group_name": "Rails",
+                            "email": "rafaelmfranca@gmail.com",
+                            "commits": 246
+                        },
+                        {
+                            "repo_group_id": 20,
+                            "repo_group_name": "Rails",
+                            "email": "kaspth@gmail.com",
+                            "commits": 119
+                        },
+                        {
+                            "repo_group_id": "20",
+                            "repo_group_name": "Rails",
+                            "email": "other_contributors",
+                            "commits": 1774
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.top_committers, 'top-committers')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/top-committers Top Committers (Repo)
+    @apiName top-committers-repo
+    @apiGroup Experimental
+    @apiDescription Returns a list of contributors contributing N% of all commits.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [year] Specify the year to return the results for. Default value: `current year`
+    @apiParam {string} [threshold=0.5] Specify N%. Accepts a value between `0` & `1` where `0` specifies
+                                        `0%` and `1` specifies `100%`.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21334,
+                            "repo_name": "graphql",
+                            "email": "caniszczyk@gmail.com",
+                            "commits": 4
+                        },
+                        {
+                            "repo_id": 21334,
+                            "repo_name": "graphql",
+                            "email": "richard.j.schulte@gmail.com",
+                            "commits": 3
+                        },
+                        {
+                            "repo_id": "21334",
+                            "repo_name": "graphql",
+                            "email": "other_contributors",
+                            "commits": 5
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.top_committers, 'top-committers')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/aggregate-summary Aggregate Summary (Repo Group)
+    @apiName aggregate-summary-repo-group
+    @apiGroup Experimental
+    @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "watcher_count": 69106,
+                            "star_count": 460447,
+                            "fork_count": 226841,
+                            "merged_count": 3883,
+                            "committer_count": 8553,
+                            "commit_count": 7890143
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.aggregate_summary, 'aggregate-summary')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/aggregate-summary Aggregate Summary (Repo)
+    @apiName aggregate-summary-repo
+    @apiGroup Experimental
+    @apiDescription Returns the current count of watchers, stars, and forks and the counts of all commits, committers, and pull requests merged between a given beginning and end date (default between now and 365 days ago).
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "watcher_count": 83,
+                            "star_count": 581,
+                            "fork_count": 449,
+                            "merged_count": 0,
+                            "committer_count": 5,
+                            "commit_count": 133
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.aggregate_summary, 'aggregate-summary')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo Group)
+    @apiName pull-request-acceptance-rate-repo-group
+    @apiGroup Experimental
+    @apiDescription Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [group_by="week"] Allows for results to be grouped by day, week, month, or year. E.g. values: `year`, `day`, `month`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-02-11T00:00:00.000Z",
+                            "rate": 120.5
+                        },
+                        {
+                            "date": "2019-02-18T00:00:00.000Z",
+                            "rate": 34
+                        },
+                        {
+                            "date": "2019-02-25T00:00:00.000Z",
+                            "rate": 38.6666666667
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.pull_request_acceptance_rate, 'pull-request-acceptance-rate')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/pull-request-acceptance-rate Pull Request Acceptance Rate (Repo)
+    @apiName pull-request-acceptance-rate-repo
+    @apiGroup Experimental
+    @apiDescription Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiParam {string} [begin_date="1970-1-1 0:0:0"] Beginning date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiParam {string} [end_date="current date"] Ending date specification. E.g. values: `2018`, `2018-05`, `2019-05-01`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "rate": 5.3333333333
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.pull_request_acceptance_rate, 'pull-request-acceptance-rate')

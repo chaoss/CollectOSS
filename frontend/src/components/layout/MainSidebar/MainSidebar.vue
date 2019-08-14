@@ -51,26 +51,28 @@
 
               <div style="text-align: center; border-bottom: 1px solid #e1e5eb;">
                 <div class="comp_info">
-                  Comparison type N/A
+                  {{comparisonType}}
                 </div>
 
                 <div class="comp_info">
-                  {{ repo.url }}
+                  {{ base.name || base.rg_name || 'No base repo/group selected'}}
                 </div>
 
                 <div class="comp_info">
-                  No comparison(s) selected
+                  {{comparisionSize}} comparison(s) selected
                 </div>
               </div>
               
 
               <div class="row" style="position: absolute; bottom: 0; padding-left: 0px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
+                  <a href="" v-on:click="resetCompareManager()">
                   <d-link class="nav-link" style="padding: 0.7rem 0.7rem 0.7rem 1.5rem; margin-left: 1rem">
                     <i class="material-icons">autorenew</i>
                     <span>Reset</span>
                     <div class="item-icon-wrapper" />
                   </d-link>
+                  </a>
                 </div>
                 
                 <div class="col col-6" style="padding: 0px">
@@ -93,119 +95,89 @@
   </aside>
 </template>
 
-<script>
-export default {
-  name: 'main-sidebar',
-  props: {
-    hideLogoText: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  computed: {
-    comparison_type () {
-      if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0 ) {
-        return 'Single Repo'
-      }
-      if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
-        return 'Single Repo Group'
-      }
-      else if (this.$store.state.comparedRepos.length == 1 && this.$store.state.comparedRepoGroups.length == 0) {
-        return '1-on-1 repo comparison'
-      }
-      else if (this.$store.state.comparedRepoGroups.length == 1 && this.$store.state.comparedRepos.length == 0) {
-        return '1-on-1 group comparison'
-      }
-      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
-        return "Multiple Groups"
-      }
-      else if (this.$store.state.comparedRepos.length > 1 && this.$store.state.comparedRepoGroups.length == 0) {
-        return "Custom Group"
-      }
-      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
-        return "Comparison Type N/A"
-      }
-      else {
-        return "Invalid comparison type"
-      }
-    },
-    repo () {
-      return this.$store.state.baseRepo || {'url': 'No base repo selected'}
-    },
-    comparison () {
-      if (this.$store.state.comparedRepos.length == 1) {
-        return this.$store.state.comparedRepos[0].gitURL
-      }
-      else if (this.$store.state.comparedRepoGroups.length == 1) {
-        return this.$store.state.comparedRepoGroups[0].rg_name
-      }
-      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length > 1) {
-        return "Multiple Groups"
-      }
-      else if (this.$store.state.comparedRepos.length > 1 && this.$store.state.comparedRepoGroups.length == 0) {
-        return "Custom Group"
-      }
-      else if (this.$store.state.comparedRepos.length == 0 && this.$store.state.comparedRepoGroups.length == 0) {
-        return "No comparison(s) selected"
-      }
-      else {
-        return "Invalid comparison type"
-      }
-    }
-  },
-  data() {
-    return {
-      sidebarVisible: false,
-      items: [
-        {
-          title: 'Augur Dashboard',
-          to: {
-            name: 'home',
-          },
-          htmlBefore: '<i class="material-icons">vertical_split</i>',
-          htmlAfter: '',
-        }, {
-          title: 'Repos',
-          to: {
-            name: 'repos',
-          },
-          htmlBefore: '<i class="material-icons">table_chart</i>',
-          htmlAfter: '',
-        },
-        {
-          title: 'Workers',
-          to: {
-            name: 'workers',
-          },
-          htmlBefore: '<i class="material-icons">assignment</i>',
-          htmlAfter: '',
-        },
-        {
-          title: 'Repo Groups',
-          to: {
-            name: 'repo_groups',
-          },
-          htmlBefore: '<i class="material-icons">group_work</i>',
-          htmlAfter: '',
-        },
-        {
-          title: 'Explore Insights',
-          to: {
-            name: 'insights',
-          },
-          htmlBefore: '<i class="material-icons">trending_up</i>',
-          htmlAfter: '',
-        },
+<script lang="ts">
+  import Component from 'vue-class-component';
+  import Vue from 'vue';
+  import {mapActions, mapGetters, mapMutations} from "vuex";
+  import Spinner from '../components/Spinner.vue'
 
-      ]
-    };
-  },
-  methods: {
+  @Component({
+    props: {
+      hideLogoText: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    computed: {
+      ...mapGetters('compare',[
+        'base',
+        'comparisonType',
+        'comparisionSize',
+      ])
+    },
+    methods: {
+      ...mapMutations('compare',[
+        'resetCompareManager',
+      ])
+    },
+  })
+  export default class MainSidebar extends Vue {
+    sidebarVisible:boolean = false;
+    items =  [
+      {
+        title: 'Augur Dashboard',
+        to: {
+          name: 'home',
+        },
+        htmlBefore: '<i class="material-icons">vertical_split</i>',
+        htmlAfter: '',
+      }, {
+        title: 'Repos',
+        to: {
+          name: 'repos',
+        },
+        htmlBefore: '<i class="material-icons">table_chart</i>',
+        htmlAfter: '',
+      },
+      {
+        title: 'Workers',
+        to: {
+          name: 'workers',
+        },
+        htmlBefore: '<i class="material-icons">assignment</i>',
+        htmlAfter: '',
+      },
+      {
+        title: 'Repo Groups',
+        to: {
+          name: 'repo_groups',
+        },
+        htmlBefore: '<i class="material-icons">group_work</i>',
+        htmlAfter: '',
+      },
+      {
+        title: 'Explore Insights',
+        to: {
+          name: 'insights',
+        },
+        htmlBefore: '<i class="material-icons">trending_up</i>',
+        htmlAfter: '',
+      },
+    ];
+
+    // state declared computed
+    comparisonType!: string;
+    base!:string;
+    resetCompareManager!:any;
+    comparisionSize!:any;
+
+    // method
     handleToggleSidebar() {
       this.sidebarVisible = !this.sidebarVisible;
-    },
-  },
-};
+    }
+
+
+  }
 </script>
 
 <style lang="scss">

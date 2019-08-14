@@ -1,18 +1,18 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : mudcats augur
+ Source Server         : newaugur
  Source Server Type    : PostgreSQL
- Source Server Version : 110003
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_science
+ Source Server Version : 110004
+ Source Host           : nekocase.augurlabs.io:5433
+ Source Catalog        : augur
  Source Schema         : spdx
 
  Target Server Type    : PostgreSQL
- Target Server Version : 110003
+ Target Server Version : 110004
  File Encoding         : 65001
 
- Date: 18/06/2019 13:49:08
+ Date: 28/07/2019 12:52:14
 */
 
 
@@ -39,6 +39,18 @@ MAXVALUE 2147483647
 START 1
 CACHE 1;
 ALTER SEQUENCE "spdx"."annotations_annotation_id_seq" OWNER TO "augur";
+
+-- ----------------------------
+-- Sequence structure for augur_repo_map_map_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "spdx"."augur_repo_map_map_id_seq";
+CREATE SEQUENCE "spdx"."augur_repo_map_map_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 2147483647
+START 1
+CACHE 1;
+ALTER SEQUENCE "spdx"."augur_repo_map_map_id_seq" OWNER TO "augur";
 
 -- ----------------------------
 -- Sequence structure for creator_types_creator_type_id_seq
@@ -306,6 +318,20 @@ CREATE TABLE "spdx"."annotations" (
 )
 ;
 ALTER TABLE "spdx"."annotations" OWNER TO "augur";
+
+-- ----------------------------
+-- Table structure for augur_repo_map
+-- ----------------------------
+DROP TABLE IF EXISTS "spdx"."augur_repo_map";
+CREATE TABLE "spdx"."augur_repo_map" (
+  "map_id" int4 NOT NULL DEFAULT nextval('"spdx".augur_repo_map_map_id_seq'::regclass),
+  "dosocs_pkg_id" int4,
+  "dosocs_pkg_name" text COLLATE "pg_catalog"."default",
+  "repo_id" int4,
+  "repo_path" text COLLATE "pg_catalog"."default"
+)
+;
+ALTER TABLE "spdx"."augur_repo_map" OWNER TO "augur";
 
 -- ----------------------------
 -- Table structure for creator_types
@@ -591,70 +617,73 @@ ALTER TABLE "spdx"."scanners" OWNER TO "augur";
 -- ----------------------------
 ALTER SEQUENCE "spdx"."annotation_types_annotation_type_id_seq"
 OWNED BY "spdx"."annotation_types"."annotation_type_id";
-SELECT setval('"spdx"."annotation_types_annotation_type_id_seq"', 5, true);
+SELECT setval('"spdx"."annotation_types_annotation_type_id_seq"', 4, true);
 ALTER SEQUENCE "spdx"."annotations_annotation_id_seq"
 OWNED BY "spdx"."annotations"."annotation_id";
-SELECT setval('"spdx"."annotations_annotation_id_seq"', 4, false);
+SELECT setval('"spdx"."annotations_annotation_id_seq"', 3, false);
+ALTER SEQUENCE "spdx"."augur_repo_map_map_id_seq"
+OWNED BY "spdx"."augur_repo_map"."map_id";
+SELECT setval('"spdx"."augur_repo_map_map_id_seq"', 2, false);
 ALTER SEQUENCE "spdx"."creator_types_creator_type_id_seq"
 OWNED BY "spdx"."creator_types"."creator_type_id";
-SELECT setval('"spdx"."creator_types_creator_type_id_seq"', 6, true);
+SELECT setval('"spdx"."creator_types_creator_type_id_seq"', 5, true);
 ALTER SEQUENCE "spdx"."creators_creator_id_seq"
 OWNED BY "spdx"."creators"."creator_id";
-SELECT setval('"spdx"."creators_creator_id_seq"', 4, true);
+SELECT setval('"spdx"."creators_creator_id_seq"', 3, true);
 ALTER SEQUENCE "spdx"."document_namespaces_document_namespace_id_seq"
 OWNED BY "spdx"."document_namespaces"."document_namespace_id";
-SELECT setval('"spdx"."document_namespaces_document_namespace_id_seq"', 16, true);
+SELECT setval('"spdx"."document_namespaces_document_namespace_id_seq"', 15, true);
 ALTER SEQUENCE "spdx"."documents_creators_document_creator_id_seq"
 OWNED BY "spdx"."documents_creators"."document_creator_id";
-SELECT setval('"spdx"."documents_creators_document_creator_id_seq"', 16, true);
+SELECT setval('"spdx"."documents_creators_document_creator_id_seq"', 15, true);
 ALTER SEQUENCE "spdx"."documents_document_id_seq"
 OWNED BY "spdx"."documents"."document_id";
-SELECT setval('"spdx"."documents_document_id_seq"', 16, true);
+SELECT setval('"spdx"."documents_document_id_seq"', 15, true);
 ALTER SEQUENCE "spdx"."external_refs_external_ref_id_seq"
 OWNED BY "spdx"."external_refs"."external_ref_id";
-SELECT setval('"spdx"."external_refs_external_ref_id_seq"', 4, false);
+SELECT setval('"spdx"."external_refs_external_ref_id_seq"', 3, false);
 ALTER SEQUENCE "spdx"."file_contributors_file_contributor_id_seq"
 OWNED BY "spdx"."file_contributors"."file_contributor_id";
-SELECT setval('"spdx"."file_contributors_file_contributor_id_seq"', 4, false);
+SELECT setval('"spdx"."file_contributors_file_contributor_id_seq"', 3, false);
 ALTER SEQUENCE "spdx"."file_types_file_type_id_seq"
 OWNED BY "spdx"."file_types"."file_type_id";
-SELECT setval('"spdx"."file_types_file_type_id_seq"', 14, true);
+SELECT setval('"spdx"."file_types_file_type_id_seq"', 13, true);
 ALTER SEQUENCE "spdx"."files_file_id_seq"
 OWNED BY "spdx"."files"."file_id";
-SELECT setval('"spdx"."files_file_id_seq"', 7607, true);
+SELECT setval('"spdx"."files_file_id_seq"', 7606, true);
 ALTER SEQUENCE "spdx"."files_licenses_file_license_id_seq"
 OWNED BY "spdx"."files_licenses"."file_license_id";
-SELECT setval('"spdx"."files_licenses_file_license_id_seq"', 3079, true);
+SELECT setval('"spdx"."files_licenses_file_license_id_seq"', 3078, true);
 ALTER SEQUENCE "spdx"."files_scans_file_scan_id_seq"
 OWNED BY "spdx"."files_scans"."file_scan_id";
-SELECT setval('"spdx"."files_scans_file_scan_id_seq"', 7607, true);
+SELECT setval('"spdx"."files_scans_file_scan_id_seq"', 7606, true);
 ALTER SEQUENCE "spdx"."identifiers_identifier_id_seq"
 OWNED BY "spdx"."identifiers"."identifier_id";
-SELECT setval('"spdx"."identifiers_identifier_id_seq"', 1030, true);
+SELECT setval('"spdx"."identifiers_identifier_id_seq"', 1029, true);
 ALTER SEQUENCE "spdx"."licenses_license_id_seq"
 OWNED BY "spdx"."licenses"."license_id";
-SELECT setval('"spdx"."licenses_license_id_seq"', 346, true);
+SELECT setval('"spdx"."licenses_license_id_seq"', 345, true);
 ALTER SEQUENCE "spdx"."packages_files_package_file_id_seq"
 OWNED BY "spdx"."packages_files"."package_file_id";
-SELECT setval('"spdx"."packages_files_package_file_id_seq"', 7741, true);
+SELECT setval('"spdx"."packages_files_package_file_id_seq"', 7740, true);
 ALTER SEQUENCE "spdx"."packages_package_id_seq"
 OWNED BY "spdx"."packages"."package_id";
-SELECT setval('"spdx"."packages_package_id_seq"', 8, true);
+SELECT setval('"spdx"."packages_package_id_seq"', 7, true);
 ALTER SEQUENCE "spdx"."packages_scans_package_scan_id_seq"
 OWNED BY "spdx"."packages_scans"."package_scan_id";
-SELECT setval('"spdx"."packages_scans_package_scan_id_seq"', 7, true);
+SELECT setval('"spdx"."packages_scans_package_scan_id_seq"', 6, true);
 ALTER SEQUENCE "spdx"."projects_project_id_seq"
 OWNED BY "spdx"."projects"."project_id";
-SELECT setval('"spdx"."projects_project_id_seq"', 4, false);
+SELECT setval('"spdx"."projects_project_id_seq"', 3, false);
 ALTER SEQUENCE "spdx"."relationship_types_relationship_type_id_seq"
 OWNED BY "spdx"."relationship_types"."relationship_type_id";
-SELECT setval('"spdx"."relationship_types_relationship_type_id_seq"', 33, true);
+SELECT setval('"spdx"."relationship_types_relationship_type_id_seq"', 32, true);
 ALTER SEQUENCE "spdx"."relationships_relationship_id_seq"
 OWNED BY "spdx"."relationships"."relationship_id";
-SELECT setval('"spdx"."relationships_relationship_id_seq"', 4033, true);
+SELECT setval('"spdx"."relationships_relationship_id_seq"', 4032, true);
 ALTER SEQUENCE "spdx"."scanners_scanner_id_seq"
 OWNED BY "spdx"."scanners"."scanner_id";
-SELECT setval('"spdx"."scanners_scanner_id_seq"', 4, true);
+SELECT setval('"spdx"."scanners_scanner_id_seq"', 3, true);
 
 -- ----------------------------
 -- Uniques structure for table annotation_types
@@ -670,6 +699,11 @@ ALTER TABLE "spdx"."annotation_types" ADD CONSTRAINT "annotation_types_pkey" PRI
 -- Primary Key structure for table annotations
 -- ----------------------------
 ALTER TABLE "spdx"."annotations" ADD CONSTRAINT "annotations_pkey" PRIMARY KEY ("annotation_id");
+
+-- ----------------------------
+-- Primary Key structure for table augur_repo_map
+-- ----------------------------
+ALTER TABLE "spdx"."augur_repo_map" ADD CONSTRAINT "augur_repo_map_pkey" PRIMARY KEY ("map_id");
 
 -- ----------------------------
 -- Primary Key structure for table creator_types
