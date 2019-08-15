@@ -431,7 +431,7 @@ def run():
     server = Server()
     host = server._augur.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
     port = server._augur.read_config('Server', 'port', 'AUGUR_PORT', '5000')
-    Server().app.run(host=host, port=int(port))
+    Server().app.run(host=host, port=int(port), debug=True)
 
 
 wsgi_app = None

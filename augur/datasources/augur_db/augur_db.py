@@ -1426,6 +1426,7 @@ class Augur(object):
         :param repo_id: The repository's repo_id, defaults to None
         :return: CII best parctices badge level
         """
+        # Welcome to the Twilight Zone
         if repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
                 SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
@@ -1436,9 +1437,8 @@ class Augur(object):
                 ORDER BY date DESC
             """)
 
-            results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_group_id': repo_group_id})
-            print(results)
-            return results
+            logger.debug(cii_best_practices_badge_SQL)
+            params = {'repo_id': repo_id}
 
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
@@ -1450,9 +1450,10 @@ class Augur(object):
                 ORDER BY date DESC
             """)
 
-            results = pd.read_sql(cii_best_practices_badge_SQL, self.db, params={'repo_id': repo_id})
-            print(results)
-            return results
+            logger.debug(cii_best_practices_badge_SQL)
+            params = {'repo_group_id': repo_group_id}
+
+        return pd.read_sql(cii_best_practices_badge_SQL, self.db, params=params)
 
     @annotate(tag='average-issue-resolution-time')
     def average_issue_resolution_time(self, repo_group_id, repo_id=None):

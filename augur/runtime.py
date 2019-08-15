@@ -40,18 +40,14 @@ class AugurMultiCommand(click.MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
-        # try:
-        print("\n*********************")
-        print("name: " + name)
-        print(ctx.command.list_commands(ctx))
-        print("*********************\n")
-        if sys.version_info[0] == 2:
-            name = name.encode('ascii', 'replace')
-        mod = __import__('augur.cli.' + name,
-                         None, None, ['cli'])
-        # except ImportError as e:
-        #     logger.debug(e)
-        #     return
+        try:
+            if sys.version_info[0] == 2:
+                name = name.encode('ascii', 'replace')
+            mod = __import__('augur.cli.' + name,
+                             None, None, ['cli'])
+        except ImportError as e:
+            logger.debug(e)
+            return
         return mod.cli
 
 
