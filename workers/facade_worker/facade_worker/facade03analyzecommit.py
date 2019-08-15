@@ -107,16 +107,30 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		store = ("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
 			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
 			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
-			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source, data_collection_date)
-			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
+			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
+			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
 
-		cursor_local.execute(store, (
-			repos_id,str(commit),filename,
-			str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
-			committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
-			added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source,datetime.datetime.now(),))
+		try:
+			cursor_local.execute(store, (
+				repos_id,str(commit),filename,
+				str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
+				committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
+				added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source,))
 
-		db_local.commit()
+			db_local.commit()
+		except:
+			try:
+				cfg.log_activity('Info',"""Timezone error caught, inspect values: INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
+				cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
+				cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
+				cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
+				VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""".format(
+					repos_id,str(commit),filename,
+					str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
+					committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
+					added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source))
+			except:
+				cfg.log_activity('Info', 'Something wrong in error log for timezone error')
 
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
 

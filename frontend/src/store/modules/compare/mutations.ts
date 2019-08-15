@@ -3,35 +3,50 @@ import Vue from 'vue';
 import router from '@/router';
 
 export default {
-    setBaseRepo(state: any, payload: any) {
+    mutate(state: any, payload: any) {
+        Vue.set(state, payload.property, payload.with);
+      },
+    mutateBaseRepo(state: any, payload: any) {
         // pass url into function
-        state.baseRepo = payload.url
+            state.baseRepo = payload.url
     },
 
-    setBaseGroup(state: any, payload: any) {
+    mutateBaseGroup(state: any, payload: any) {
         // pass url into function
         state.baseGroup = payload.rg_name
     },
 
-    addComparedRepo(state:any, payload:any) {
-        state.comparedRepos.push(payload)
-    },
-
-    addComparedRepoGroups(state:any, payload:any) {
-        if(payload != null){
-            state.comparedRepoGroups.push(payload)
-        }
-    },
-
     mutateComparedRepo(state:any, payload:any) {
         if(payload != null){
-            state.comparedRepos = payload
+            state.comparedRepos = []
+            payload.forEach( (repo:any) => {
+              state.comparedRepos.push(repo)
+            });
         }
     },
+
+    // setBaseRepo (state: any, payload: any) {
+    //     console.log("HI",state)
+    //     state.gitRepo = payload.url;
+    //     state.baseRepo = payload.url;
+    //     state.hasState = true;
+    //     console.log(state)
+
+    //     // let repo = state.AugurAPI.Repo(payload)
+    //     // state.c
+    //     // if (!AugurRepos[repo.toString()]) {
+    //       // AugurRepos[repo.toString()] = repo
+    //     // } else {
+    //       // repo = AugurRepos[repo.toString()]
+    //     // }
+    //   },
 
     mutateComparedGroup(state:any, payload:any) {
         if(payload != null){
-            state.comparedRepoGroups = payload
+            state.comparedRepoGroups = []
+            payload.forEach((group:any) => {
+              state.comparedRepoGroups.push(group)
+            })
         }
     },
 

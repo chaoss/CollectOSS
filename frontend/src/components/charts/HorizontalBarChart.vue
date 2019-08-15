@@ -85,8 +85,8 @@ export default {
       const colors = ['#FF3647', '#4736FF', '#3cb44b', '#ffe119', '#f58231', '#911eb4', '#42d4f4', '#f032e6'];
       const config = {
         $schema: 'https://vega.github.io/schema/vega-lite/v2.json',
-        width: 450,
-        height: 300,
+        width: 250,
+        height: 150,
         padding: {left: 10, top: 35, right: 5, bottom: 0},
         config: {
           tick: {
@@ -228,17 +228,7 @@ export default {
       };
 
       let repo = null;
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) {
-          repo = window.AugurRepos[this.repo];
-        } else {
-          const repo = window.AugurAPI.Repo({gitURL: this.gitRepo});
-          window.AugurRepos[repo.toString] = repo;
-        }
-      } else {
-        repo =  window.AugurAPI.Repo({ gitURL: this.gitRepo });
-        window.AugurRepos[repo.toString()] = repo;
-      }
+
       const contributors = {};
       const organizations = {};
 
@@ -321,13 +311,13 @@ export default {
       });
 
       this.contributors = flattenAndSort(contributors, 'author_email', 'additions');
-      const careabout = [];
+      let careabout = [];
       this.contributors.slice(0, 10).forEach((obj) => {
         careabout.push(obj.author_email);
       });
 
-      const findObjectByKey = (array, key, value) => {
-          const ary = [];
+      let findObjectByKey = (array, key, value) => {
+          let ary = [];
           for (let i = 0; i < array.length; i++) {
               if (array[i][key] == value) {
                   ary.push(array[i]);
@@ -336,9 +326,9 @@ export default {
           return ary;
       };
 
-      const ary = [];
+      let ary = [];
 
-      for (const key in track) {
+      for (let key in track) {
         if (careabout.includes(key)) {
           ary.push({author_email: key, commits: track[key].commits, lines: track[key].lines, additions: track[key].additions, deletions: track[key].deletions});
         }
@@ -346,9 +336,6 @@ export default {
 
       this.values = ary;
       console.log('TRACK', ary, careabout);
-
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis');
-      $(this.$el).find('.stackedbarchart').removeClass('loader');
 
       // Get the repos we need
       const repos = [];

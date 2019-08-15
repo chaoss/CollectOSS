@@ -92,8 +92,8 @@ export default {
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 450,
-        "height": 300,
+        "width": 250,
+        "height": 150,
         "padding": {"left": 10, "top": 35, "right": 5, "bottom": 0},
         "title": {
           "text": this.title,
@@ -247,17 +247,7 @@ export default {
       }
 
       let repo = null
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) {
-          repo = window.AugurRepos[this.repo]
-        } else {
-          let repo = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-          window.AugurRepos[repo.toString] = repo
-        }
-      } else {
-        repo =  window.AugurAPI.Repo({ gitURL: this.gitRepo })
-        window.AugurRepos[repo.toString()] = repo
-      }
+
       let contributors = {}
       let organizations = {}
 
@@ -357,10 +347,6 @@ export default {
         this.values = ary
 
       
-
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-      $(this.$el).find('.stackedbarchart').removeClass('loader')
-
       // Get the repos we need
       let repos = []
       if (this.repo) {

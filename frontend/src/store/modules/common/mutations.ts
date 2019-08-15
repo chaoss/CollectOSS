@@ -12,18 +12,6 @@ export default {
   mutate(state: any, payload: any) {
     Vue.set(state, payload.property, payload.with);
   },
-  setBaseRepo (state: any, payload: any) {
-    state.gitRepo = payload.gitURL;
-    state.baseRepo = payload.gitURL;
-    state.hasState = true;
-
-    let repo = state.AugurAPI.Repo(payload)
-    // if (!AugurRepos[repo.toString()]) {
-      // AugurRepos[repo.toString()] = repo
-    // } else {
-      // repo = AugurRepos[repo.toString()]
-    // }
-  },
   setGitRepo (state: any, payload: any) {
     state.gitRepo = payload.gitURL
     state.baseRepo = payload.gitURL
@@ -96,7 +84,7 @@ export default {
     }
   },
   mutateAPIRepo(state:any, payload:any) {
-    Vue.set(state.apiRepos, payload.url, payload.repo)
+    Vue.set(state.apiRepos, payload.name, payload.repo)
   },
   mutateAPIGroup(state:any, payload:any) {
     Vue.set(state.apiGroups, payload.rg_name, payload.group)

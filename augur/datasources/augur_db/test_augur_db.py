@@ -244,12 +244,6 @@ def test_languages(augur_db):
     # TODO
     pass
 
-def test_license_declared(augur_db):
-    # TODO need more data
-    pass
-    # assert augur_db.license_declared(21, 21252).isin(['Apache-2.0']).any().any()
-
-
 def test_issues_maintainer_response_duration(augur_db):
     assert augur_db.issues_maintainer_response_duration(20, 21000).iloc[0].average_days_comment > 0
     assert augur_db.issues_maintainer_response_duration(20).iloc[0].average_days_comment > 0
@@ -300,3 +294,15 @@ def test_pull_request_acceptance_rate(augur_db):
     assert augur_db.pull_request_acceptance_rate(24).iloc[0]['rate'] > 0
     assert augur_db.pull_request_acceptance_rate(24,21000,begin_date='2018-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59',group_by='year').iloc[0]['rate'] > 0
+
+def test_license_declared(augur_db):
+    assert augur_db.license_declared(21).iloc[0]['name']
+    assert augur_db.license_declared(21, 21116).iloc[0]['name']
+
+def test_license_count(augur_db):
+    assert augur_db.license_count(21).iloc[0]['number_of_license'] >= 1
+    assert augur_db.license_count(21, 21116).iloc[0]['number_of_license'] >= 1
+
+def test_license_coverage(augur_db):
+    assert augur_db.license_coverage(21).iloc[0]['total_files'] >= 1
+    assert augur_db.license_coverage(21, 21116).iloc[0]['total_files'] >= 1

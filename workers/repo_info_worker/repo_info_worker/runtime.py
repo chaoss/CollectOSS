@@ -76,7 +76,7 @@ def main(augur_url, host, port):
 
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
-    app.run(debug=app.debug, host=host, port=port)
+    app.run(debug=app.debug, host=host, port=worker_port)
     if app.gh_repo_info_worker._child is not None:
         app.gh_repo_info_worker._child.terminate()
     try:
@@ -144,6 +144,3 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
             __config = __default_config
             return(__config[section][name])
-
-if __name__ == "__main__":
-    main()

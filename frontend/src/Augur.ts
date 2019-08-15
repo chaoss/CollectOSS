@@ -7,6 +7,7 @@ import Vue from 'vue';
 import ShardsVue from 'shards-vue';
 import VueVega from 'vue-vega';
 import jQuery from 'jquery';
+import $ from 'jquery';
 import _ from 'lodash';
 import d3 from 'd3';
 import SvgSaver from 'svgsaver';
@@ -46,7 +47,7 @@ Vue.use(VueVega);
 export default function Augur () {
   // AugurApp.store = store
   // Object.defineProperty(AugurApp, 'store', store);
-  
+
 
   // router.beforeEach((to:any, from:any, next:any) => {
   //   if (to.params.repo || to.params.groupid){
