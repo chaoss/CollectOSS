@@ -51,13 +51,19 @@ export default function Augur () {
   router.beforeEach((to:any, from:any, next:any) => {
     NProgress.start()
     NProgress.set(0.4);
-    next()
+
     if(!to.params.repo && !to.params.group) {
+      if(!to.params.compares) {
+        store.commit('compare/resetCompared')
+      }
+
       store.dispatch('compare/setBaseRepo').then((data:any)=>{
         return store.dispatch('compare/setBaseGroup')
       }).finally(()=>{
         next()
       })
+    } else{
+      next()
     }
   })
 

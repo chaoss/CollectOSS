@@ -101,11 +101,17 @@ export default {
     },
 
     async setComparedGroup(context:any, payload:any) {
-        context.state.comparedRepoGroups = payload
-        payload.forEach((group:any) => {
-            if (!(group in context.rootGetters['common/apiGroups'])) {
-                context.dispatch('common/addRepoGroup',{rg_name: group},{root:true})
+        return new Promise((resolve, reject) => {
+            let promises:any[] = [];
+            for(let group of payload) {
+                if (!(group in context.rootGetters['common/apiGroups'])) {
+                    promises.push( context.dispatch('common/addRepoGroup',{rg_name: group},{root:true}))
+                }
             }
+            Promise.all(promises).then((values)=>{
+                context.state.comparedRepoGroups = payload
+                resolve(values)
+            })
         })
     }
 }

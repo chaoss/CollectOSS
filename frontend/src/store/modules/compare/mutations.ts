@@ -50,14 +50,9 @@ export default {
         }
     },
 
-
     resetCompared (state: any) {
       state.comparedRepos = []
-      state.comparedGrops = []
-      // router.push({
-      //   name: state.tab,
-      //   params: {owner: state.baseRepo.substring(0, state.baseRepo.indexOf('/')), repo: state.baseRepo.slice(state.baseRepo.indexOf('/') + 1)}
-      // })
+      state.comparedRepoGroups = []
     },
 
     setCompare(state:any, payload:any){

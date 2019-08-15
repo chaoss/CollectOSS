@@ -210,6 +210,30 @@ const routes = [
       }
     },
     {
+      path: '/group/:group/comparedTo/:compares',
+      component: Default,
+      children: [
+        {
+          path: 'overview',
+          name: 'group_overview_compare',
+          components: {
+            sidebar: MainSidebar,
+            navbar: MainNavbar,
+            content: GroupOverview,
+          },
+        },
+      ],
+      beforeEnter: (to:any, from:any, next:any) => {
+        let group = to.params.group
+        let compares = to.params.compares === ''? [] : to.params.compares.split(',');
+        store.dispatch('compare/setBaseGroup', {rg_name:group}).then((data:any)=>{
+          return store.dispatch('compare/setComparedGroup', compares)
+        }).finally(()=>{
+          next()
+        })
+      }
+    },
+    {
       path: '/errors',
       name: 'errors',
       component: Errors,

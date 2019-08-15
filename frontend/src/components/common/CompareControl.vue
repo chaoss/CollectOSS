@@ -365,7 +365,10 @@
           params: {group: this.base.rg_name, repo: this.base.repo_name, compares: this.selectedRepos.join(',')}
         })
       } else {
-        this.setComparedGroup(this.selectedGroups)
+        router.push({
+          name: 'group_overview_compare',
+          params: {group: this.base.rg_name, compares: this.selectedGroups.join(',')}
+        })
       }
     }
 
@@ -407,7 +410,7 @@
       let index = this.selectedRepos.indexOf(e);
       if (index !== -1) this.selectedRepos.splice(index, 1);
     }
-    removeSelectedGroups(e:any){
+    removeSelectedGroups(e:any) {
       let index = this.selectedGroups.indexOf(e);
       if (index !== -1) this.selectedGroups.splice(index, 1);
     }
