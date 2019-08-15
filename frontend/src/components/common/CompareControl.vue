@@ -396,8 +396,12 @@
           name: 'repo_overview',
           params: {group: this.base.rg_name, repo: this.base.repo_name}
         })
+      } else {
+        router.push({
+          name: 'group_overview',
+          params: {group: this.base.rg_name}
+        })
       }
-
     }
     removeSelectedRepos(e:any) {
       let index = this.selectedRepos.indexOf(e);

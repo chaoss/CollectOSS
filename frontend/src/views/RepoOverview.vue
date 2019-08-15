@@ -133,7 +133,7 @@ export default class RepoOverview extends Vue {
   loaded_issues = false
   loaded_experimental = false
   loaded_activity = false
-  values: any = {'issuesClosed':[], 'changesByAuthor': []}
+  values:{[key:string]:any} = {'issuesClosed':[], 'changesByAuthor': []}
   loadedBars = false
 
   // deflare vuex action, getter, mutations

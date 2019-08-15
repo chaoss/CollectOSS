@@ -135,7 +135,7 @@ const routes = [
                   },
                   {
                         path: 'risk',
-                        name: 'risk',
+                        name: 'repo_risk',
                         components: {
                           sidebar: MainSidebar,
                           navbar: MainNavbar,
@@ -146,6 +146,7 @@ const routes = [
             beforeEnter: (to:any, from:any, next:any) => {
                   let repo = to.params.repo;
                   let group = to.params.group;
+                  NProgress.set(0.8);
 
                   store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo}).finally(()=>{
                     next()
@@ -158,7 +159,7 @@ const routes = [
       component: Default,
       children: [
         {
-          path: '',
+          path: 'overview',
           name: 'repo_overview_compare',
           components: {
             sidebar: MainSidebar,
@@ -166,6 +167,15 @@ const routes = [
             content: RepoOverview,
           },
         },
+        {
+          path: 'risk',
+          name: 'repo_risk_compare',
+          components: {
+            sidebar: MainSidebar,
+            navbar: MainNavbar,
+            content: RiskMetrics,
+          }
+        }
       ],
       beforeEnter: (to:any, from:any, next:any) => {
         let repo = to.params.repo;
@@ -192,10 +202,11 @@ const routes = [
           },
         },
       ],
-      beforeEnter: async (to:any, from:any, next:any) => {
+      beforeEnter: (to:any, from:any, next:any) => {
         let group = to.params.group
-        await store.dispatch('compare/setBaseGroup', {rg_name:group})
-        next()
+        store.dispatch('compare/setBaseGroup', {rg_name:group}).then((data:any)=>{
+          next()
+        })
       }
     },
     {

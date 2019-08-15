@@ -178,12 +178,10 @@
       }
     }
 
-    onRepoGroup(repo_group: any) {
-      this.setBaseGroup(repo_group).then((repo: any) => {
-        this.$router.push({
-          name: 'group_overview',
-          params: {group:repo_group.rg_name}
-        })
+    onRepoGroup(e:any) {
+      this.$router.push({
+        name: 'group_overview',
+        params:{group:e.rg_name}
       })
     } 
   }

@@ -178,10 +178,15 @@
 
     onReset() {
       this.resetCompared()
-
-      this.$router.push({
-        name: 'home'
-      })
+      if (!this.$route.params.repo && this.$route.params.group) {
+        this.$router.push({
+          name: 'repo_groups'
+        })
+      }else if (this.$route.params.repo && this.$route.params.group) {
+        this.$router.push({
+          name: 'repos'
+        })
+      }
     }
 
 
