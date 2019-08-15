@@ -1,3 +1,4 @@
+#!/bin/bash
 ## Back End
 rm -rf build/*; rm $VIRTUAL_ENV/bin/*worker_start*; 
 pip install pipreqs sphinx; 
@@ -13,24 +14,40 @@ cd ../;
 
 ## Workers
 cd workers/;
-cd facade_worker;
+
+cd ./facade_worker;
+rm -rf build/*
+rm -rf dist/*
 python setup.py install;
-pip install .;
+pip install -e .; 
+
 cd ../github_worker;
+rm -rf build/*;
+rm -rf dist/*;
+pip install -e .;
 python setup.py install; 
-pip install .;
+
 cd ../insight_worker; 
-python setup.py install; 
-pip install .;
-cd ../linux_badge_worker; 
+rm -rf build/*;
+rm -rf dist/*;
+pip install -e .;
 python setup.py install;
-pip install .;
+
+cd ../linux_badge_worker;
+rm -rf build/*;
+rm -rf dist/*; 
+pip install -e .;
+python setup.py install;
+
 cd ../pull_reqeust_worker; 
+rm -rf build/*;
+rm -rf dist/*; 
 python setup.py install;
-pip install .; 
+pip install -e .; 
+
 cd ../repo_info_worker;
 rm -rf build/*;
-python setup.py install; 
+rm -rf dist/*; 
 pip install .;
 python setup.py install;
 cd ../..;
