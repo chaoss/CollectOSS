@@ -66,7 +66,7 @@
 
               <div class="row" style="position: absolute; bottom: 0; padding-left: 0px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
-                  <a href="" v-on:click="resetCompareManager()">
+                  <a href="" v-on:click="onReset()">
                   <d-link class="nav-link" style="padding: 0.7rem 0.7rem 0.7rem 1.5rem; margin-left: 1rem">
                     <i class="material-icons">autorenew</i>
                     <span>Reset</span>
@@ -117,7 +117,7 @@
     },
     methods: {
       ...mapMutations('compare',[
-        'resetCompareManager',
+        'resetCompared',
       ])
     },
   })
@@ -168,12 +168,25 @@
     // state declared computed
     comparisonType!: string;
     base!:string;
-    resetCompareManager!:any;
+    resetCompared!:any;
     comparisionSize!:any;
 
     // method
     handleToggleSidebar() {
       this.sidebarVisible = !this.sidebarVisible;
+    }
+
+    onReset() {
+      this.resetCompared()
+      if (!this.$route.params.repo && this.$route.params.group) {
+        this.$router.push({
+          name: 'repo_groups'
+        })
+      }else if (this.$route.params.repo && this.$route.params.group) {
+        this.$router.push({
+          name: 'repos'
+        })
+      }
     }
 
 

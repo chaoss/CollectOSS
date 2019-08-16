@@ -14,7 +14,7 @@ export default {
             }
             if ('groups' in payload) {
                 payload.groups.forEach((group: any) => {
-                    apiGroups[group.rg_name] = context.state.AugurAPI.RepoGroup({rg_name: 
+                    apiGroups[group.rg_name] = context.state.AugurAPI.RepoGroup({rg_name:
                         group.rg_name, repo_group_id: group.repo_group_id})
                 })
             }
@@ -47,7 +47,7 @@ export default {
                                 })
                             })
                         })
-                        
+
                         // context.state.AugurAPI.batchMapped(payload.repos, payload.endpoints).then(
                         //     (data: object[]) => {
                         //         console.log(data)
@@ -175,7 +175,7 @@ export default {
     // },
     async addRepo(context: any, payload: any) {
         return new Promise((resolve, reject) => {
-            setTimeout(() => {
+            setTimeout(()=> {
                 let rg_name = payload.rg_name || undefined
                 let repo_name = payload.repo_name || undefined
                 let repo_id = payload.repo_id || undefined
@@ -183,24 +183,29 @@ export default {
                 let gitURL = payload.gitURL || payload.url || undefined
 
                 let repo: Repo = context.state.AugurAPI.Repo({
-                    gitURL: gitURL,
-                    repo_id: repo_id,
-                    repo_group_id: repo_group_id,
-                    rg_name: rg_name,
-                    repo_name: repo_name
+                  gitURL: gitURL,
+                  repo_id: repo_id,
+                  repo_group_id: repo_group_id,
+                  rg_name: rg_name,
+                  repo_name: repo_name
                 })
                 context.commit('mutateAPIRepo', {repo: repo, name: repo.toString()})
                 resolve(repo)
-            }, 2000)
+            })
         })
     },
     async addRepoGroup(context:any, payload:any) {
         return new Promise((resolve,reject)=>{
-            let rg_name = payload.rg_name || undefined
-            let repo_group_id = payload.repo_group_id || undefined
-            let group:RepoGroup = context.state.AugurAPI.RepoGroup({repo_group_id:repo_group_id,rg_name:rg_name})
-
-            context.commit('mutateAPIGroup', {group:group, rg_name:rg_name})
+            setTimeout(()=> {
+                let rg_name = payload.rg_name || undefined;
+                let repo_group_id = payload.repo_group_id || undefined
+                let group: RepoGroup = context.state.AugurAPI.RepoGroup({
+                    repo_group_id: repo_group_id,
+                    rg_name: rg_name
+                })
+                context.commit('mutateAPIGroup', {group: group, rg_name: rg_name})
+                resolve(group)
+            })
         })
     }
 };

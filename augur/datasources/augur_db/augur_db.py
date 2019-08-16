@@ -2650,8 +2650,8 @@ class Augur(object):
         """
         Returns repo id and repo group id by rg_name and repo_name
 
-        :param owner: the owner of the repo
-        :param repo: the name of the repo
+        :param rg_name: the repo group of the repo
+        :param repo_name: the name of the repo
         """
 
         repoSQL = s.sql.text("""
@@ -2663,6 +2663,20 @@ class Augur(object):
         """)
         results = pd.read_sql(repoSQL, self.db, params={'rg_name': rg_name, 'repo_name': repo_name})
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
+        return results
+
+    def get_group_by_name(self, rg_name):
+        """
+        Returns repo group id by repo group name
+
+        :param rg_name:
+        """
+        groupSQL = s.sql.text("""
+            SELECT repo_group_id, rg_name
+            FROM repo_groups
+            WHERE lower(rg_name) = lower(:rg_name)
+        """)
+        results = pd.read_sql(groupSQL, self.db, params={'rg_name': rg_name})
         return results
 
     # @annotate(tag='dosocs-repos')
