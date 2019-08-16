@@ -14,6 +14,7 @@ Installing the Worker
 To install this worker execute the following command
 
 .. code:: bash
+
     pip install -e .
 
 Running this Worker
@@ -22,6 +23,7 @@ Running this Worker
 To run this worker execute the following command
 
 .. code:: bash
+
     repo_info_worker_start
 
 To Run this Worker in the Background
