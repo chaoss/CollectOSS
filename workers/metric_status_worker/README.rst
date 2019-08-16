@@ -8,17 +8,27 @@ This worker is integrated into Augur's worker architecture and can receieve task
 Usage
 -----
 
+Installing the Worker
+********
+
+To install this worker execute the following command
+
+.. code:: bash
+    pip install -e .
+
 Running this Worker
 ********
 
 To run this worker execute the following command
 
 .. code:: bash
+    repo_info_worker_start
 
-    python -m metric_status_worker.runtime
+To Run this Worker in the Background
+********
 
-
-**Note:** Make sure the broker is running before running the worker
+.. code:: bash
+    nohup repo_info_worker_start >riw.log 2>riw.err &
 
 Sending Tasks
 ********
@@ -34,20 +44,6 @@ to run the worker against.
         'models': ['chaoss_metric_status'],
         'given': {}
     }
-
-Scheduling Tasks
-********
-To make this worker run periodically add a Housekeeper job in ``augur.config.json``.
-To do so, in your ``augur.config.json``, in the Housekeeper section add the following:
-
-.. code:: javascript
-
-    {
-        "model": "chaoss_metric_status",
-        "delay": 60,
-    }
-
-Set ``delay`` to specify the interval (in seconds) the worker waits before running again.
 
 
 Successful Log File
