@@ -1,2 +1,2 @@
-ps aux | grep -ie augur | grep sean | awk '{print "kill -9 " $2}'
-
+ps aux | grep -ie $VIRTUAL_ENV | grep -ie augur |  awk '{print "kill -9 " $2}'
+ps aux | grep -ie $VIRTUAL_ENV | grep -ie augur |  awk '{print "kill -9 " $2}'
