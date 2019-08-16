@@ -18,7 +18,7 @@ class Repo(Base):
    
     # Keys
     url = Column(String(1024), primary_key=True)
-    vcs = Column(String(64), primary_key=True, default='git')
+    vcs = Column(String(64), default='git')
 
     # Fields
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -27,7 +27,7 @@ class Repo(Base):
     repo_groups_member_of = relationship('RepoGroup', secondary=repo_group_has_project, back_populates='projects')
 
     def __repr__(self):
-       return f"<User(giturl='{self.password}')>"
+       return f"<Repo(giturl='{self.password}')>"
 
 
 class RepoGroup(Base):
@@ -38,6 +38,7 @@ class RepoGroup(Base):
 
     # Keys
     id = Column(Integer, primary_key=True)
+    name = Column(String(128))
 
     # Fields
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

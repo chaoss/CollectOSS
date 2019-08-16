@@ -29,12 +29,12 @@ def create_routes(server):
 
     #####################################
     ###         EXPERIMENTAL          ###
-    #####################################   
+    #####################################
 
     """
     @api {get} /:owner/:repo/dependencies Dependencies
     @apiName dependencies
-    @apiGroup Experimental
+    @apiGroup _Libraries.io (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://libraries.io/">LibrariesIO</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -121,11 +121,11 @@ def create_routes(server):
                         ]
     """
     server.addMetric(librariesio.dependencies, 'dependencies')
-    
+
     """
     @api {get} /:owner/:repo/dependency_stats Dependency Stats
     @apiName dependency-stats
-    @apiGroup Experimental
+    @apiGroup _Libraries.io (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://libraries.io/">LibrariesIO</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository
@@ -145,7 +145,7 @@ def create_routes(server):
     """
     @api {get} /:owner/:repo/dependents Dependents
     @apiName dependents
-    @apiGroup Experimental
+    @apiGroup _Libraries.io (Legacy)
     @apiDescription This is an Augur-specific metric. We are currently working to define these more formally. Source: <a href="https://libraries.io/">LibrariesIO</a>
 
     @apiParam {String} owner Username of the owner of the GitHub repository

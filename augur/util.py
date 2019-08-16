@@ -62,7 +62,15 @@ def annotate(metadata=None, **kwargs):
         if not hasattr(func, 'metadata'):
             func.metadata = {}
             metric_metadata.append(func.metadata)
+
         func.metadata.update(metadata)
+        if kwargs.get('endpoint_type', None):
+            endpoint_type = kwargs.pop('endpoint_type')
+            if endpoint_type == 'repo':
+                func.metadata['repo_endpoint'] = kwargs.get('endpoint')
+            else:
+                func.metadata['group_endpoint'] = kwargs.get('endpoint')
+
         func.metadata.update(dict(kwargs))
 
         func.metadata['metric_name'] = re.sub('_', ' ', func.__name__).title()
@@ -71,3 +79,38 @@ def annotate(metadata=None, **kwargs):
 
         return func
     return decorate
+
+
+#
+# IPython
+#
+
+def init_shell_config():
+    from IPython.terminal.prompts import Prompts, Token
+    from traitlets.config.loader import Config
+    
+    class PYRCSSPrompt(Prompts):
+        def in_prompt_tokens(self, cli=None):
+           return [
+                (Token.Prompt, 'augur ['),
+                (Token.PromptNum, str(self.shell.execution_count)),
+                (Token.Prompt, ']: '),
+            ]
+        def out_prompt_tokens(self):
+           return [
+                (Token.OutPrompt, 'output ['),
+                (Token.OutPromptNum, str(self.shell.execution_count)),
+                (Token.OutPrompt, ']: '),
+            ]
+
+    try:
+        get_ipython
+    except NameError:
+        nested = 0
+        cfg = Config()
+        cfg.TerminalInteractiveShell.prompts_class=PYRCSSPrompt
+    else:
+        print("Running nested copies of the augur shell.")
+        cfg = Config()
+        nested = 1
+    return cfg

@@ -16,7 +16,12 @@ class MetricsStatusPlugin(AugurPlugin):
         from .metrics_status import MetricsStatus
         if self.__metrics_status is None:
             logger.debug('Initializing MetricsStatus')
-            self.__metrics_status = MetricsStatus(self._augur['githubapi']())
+            self.__metrics_status = MetricsStatus(user=self._augur.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur'),
+                                                  password=self._augur.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
+                                                  host=self._augur.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+                                                  port=self._augur.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433'),
+                                                  dbname=self._augur.read_config('Database', 'name', 'AUGUR_DB_NAME', 'augur'),
+                                                  schema=self._augur.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data'))
         return self.__metrics_status
 
     def create_routes(self, flask_app):

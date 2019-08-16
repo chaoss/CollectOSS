@@ -5,25 +5,43 @@ Creates a WSGI server that serves the Augur REST API
 
 import json
 import base64
-from flask import Flask, request, Response, redirect, url_for, send_from_directory
+from flask import Flask, request, Response, redirect, url_for, send_from_directory, render_template
 from flask_cors import CORS
+from flask_login import current_user
 import pandas as pd
 import augur
 from augur.util import annotate, metric_metadata, logger
-from augur.routes import create_plugin_routes
+from augur.routes import create_routes
+import os
+from augur.broker.broker import Broker
+from augur.housekeeper.housekeeper import Housekeeper
+import logging
 
 AUGUR_API_VERSION = 'api/unstable'
+
+class VueCompatibleFlask(Flask):
+  jinja_options = Flask.jinja_options.copy()
+  jinja_options.update(dict(
+    block_start_string='(%',
+    block_end_string='%)',
+    variable_start_string='%%',
+    variable_end_string='%%',
+    comment_start_string='(#',
+    comment_end_string='#)',
+  ))
+
 
 class Server(object):
     """
     Defines Augur's server's behavior
     """
-    def __init__(self):
+    def __init__(self, frontend_folder='../frontend/public', manager=None, broker=None, housekeeper=None):
         """
         Initializes the server, creating both the Flask application and Augur application
         """
         # Create Flask application
-        self.app = Flask(__name__, static_folder='../frontend/public')
+
+        self.app = VueCompatibleFlask(__name__, static_folder=frontend_folder, template_folder=frontend_folder)
         self.api_version = AUGUR_API_VERSION
         app = self.app
         CORS(app)
@@ -38,25 +56,46 @@ class Server(object):
         self.cache = augur_app.cache.get_cache('server', expire=expire)
         self.cache.clear()
 
+        app.config['SECRET_KEY'] = augur_app.read_config('Server', 'secret_key', 'AUGUR_SECRET_KEY', os.urandom(32))
+        app.config['WTF_CSRF_ENABLED'] = False
+
         self.show_metadata = False
 
-        create_plugin_routes(self)
+        self.manager = manager
+        self.broker = broker
+        self.housekeeper = housekeeper
+
+        self.worker_pids = []
+
+        create_routes(self)
 
         #####################################
         ###          UTILITY              ###
         #####################################
 
-        @app.route('/', defaults={'path': ''})
-        @app.route('/<path:path>')
-        def index(path):
+        @app.route('/')
+        @app.errorhandler(404)
+        @app.errorhandler(405)
+        def index(err=None):
             """
             Redirects to health check route
             """
-            return app.send_static_file('index.html')
+            if AUGUR_API_VERSION in request.url:
+                return Response(response=json.dumps({'error': 'Not Found'}),
+                            status=404,
+                            mimetype="application/json")
+            else:
+
+                session_data = {}
+                if current_user and hasattr(current_user, 'username'):
+                    session_data = { 'username': current_user.username }
+                return Response(response=json.dumps(session_data),
+                            status=405,
+                            mimetype="application/json")#render_template('index.html', session_script=f'window.AUGUR_SESSION={json.dumps(session_data)}\n')
 
         @app.route('/static/<path:path>')
         def send_static(path):
-            return send_from_directory('../frontend/public', path)
+            return send_from_directory(frontend_folder, path)
 
         @app.route('/{}/'.format(self.api_version))
         def status():
@@ -64,7 +103,8 @@ class Server(object):
             Health check route
             """
             status = {
-                'status': 'OK'
+                'status': 'OK',
+                'plugins': [p for p in self._augur._loaded_plugins]
             }
             return Response(response=json.dumps(status),
                             status=200,
@@ -248,7 +288,7 @@ class Server(object):
                             mimetype="application/json")
 
 
-    def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records', 
+    def transform(self, func, args=None, kwargs=None, repo_url_base=None, orient='records',
         group_by=None, on=None, aggregate='sum', resample=None, date_col='date'):
         """
         Serializes a dataframe in a JSON object and applies specified transformations
@@ -263,7 +303,6 @@ class Server(object):
 
             if repo_url_base:
                 kwargs['repo_url'] = str(base64.b64decode(repo_url_base).decode())
-                print(kwargs['repo_url'])
 
             if not args and not kwargs:
                 data = func()
@@ -271,7 +310,7 @@ class Server(object):
                 data = func(*args)
             else:
                 data = func(*args, **kwargs)
-                
+
             if hasattr(data, 'to_json'):
                 if group_by is not None:
                     data = data.group_by(group_by).aggregate(aggregate)
@@ -315,6 +354,38 @@ class Server(object):
             generated_function.__name__ = func.__self__.__class__.__name__ + " _" + func.__name__
             return generated_function
 
+    def routify(self, func, type_):
+        """
+        Wraps a metric function allowing it to be mapped to a route,
+        get request args and also transforms the metric functions's
+        output to json
+
+        :param func: The function to be wrapped
+        :param type_: The type of API endpoint, i.e. 'repo_group' or 'repo'
+        """
+        def generated_function(*args, **kwargs):
+            kwargs.update(request.args.to_dict())
+            data = self.transform(func, args, kwargs)
+            return Response(response=data,
+                            status=200,
+                            mimetype="application/json")
+        generated_function.__name__ = func.__self__.__class__.__name__ + f"_{type_}_" + func.__name__
+        return generated_function
+
+    def addRepoGroupMetric(self, function, endpoint, **kwargs):
+        """Simplifies adding routes that accept repo_group_id"""
+        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
+        self.app.route(endpoint)(self.routify(function, 'repo_group'))
+        kwargs['endpoint_type'] = 'repo_group'
+        self.updateMetricMetadata(function, endpoint, **kwargs)
+
+    def addRepoMetric(self, function, endpoint, **kwargs):
+        """Simplifies adding routes that accept repo_group_id and repo_id"""
+        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+        self.app.route(endpoint)(self.routify(function, 'repo'))
+        kwargs['endpoint_type'] = 'repo'
+        self.updateMetricMetadata(function, endpoint, **kwargs)
+
     def addMetric(self, function, endpoint, cache=True, **kwargs):
         """Simplifies adding routes that only accept owner/repo"""
         endpoint = '/{}/<owner>/<repo>/{}'.format(self.api_version, endpoint)
@@ -330,14 +401,14 @@ class Server(object):
     def addTimeseries(self, function, endpoint):
         """
         Simplifies adding routes that accept owner/repo and return timeseries
-        
+
         :param app:       Flask app
         :param function:  Function from a datasource to add
         :param endpoint:  GET endpoint to generate
         """
         self.addMetric(function, 'timeseries/{}'.format(endpoint), metric_type='timeseries')
 
-    def updateMetricMetadata(self, function, endpoint, **kwargs):
+    def updateMetricMetadata(self, function, endpoint=None, **kwargs):
         """
         Updates a given metric's metadata
         """
@@ -349,6 +420,10 @@ class Server(object):
         real_func = getattr(function.__self__.__class__, function.__name__)
         annotate(endpoint=endpoint, **kwargs)(real_func)
 
+    def admin(self):
+        return (current_user and current_user.administrator) or (request.args.get('admin_token') == self._augur.read_config('Server', 'admin_token', 'AUGUR_ADMIN_TOKEN', 'changeme'))
+
+
 def run():
     """
     Runs server with configured hosts/ports
@@ -356,10 +431,11 @@ def run():
     server = Server()
     host = server._augur.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
     port = server._augur.read_config('Server', 'port', 'AUGUR_PORT', '5000')
-    Server().app.run(host=host, port=int(port))
+    Server().app.run(host=host, port=int(port), debug=True)
+
 
 wsgi_app = None
-def wsgi(env, start_response):
+def wsgi(environ, start_response):
     """
     Creates WSGI app
     """
@@ -367,7 +443,21 @@ def wsgi(env, start_response):
     if (wsgi_app is None):
         app_instance = Server()
         wsgi_app = app_instance.app
-    return wsgi_app(env, start_response)
+    # Stuff to make proxypass work
+    script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
+    if script_name:
+        environ['SCRIPT_NAME'] = script_name
+        path_info = environ['PATH_INFO']
+        if path_info.startswith(script_name):
+            environ['PATH_INFO'] = path_info[len(script_name):]
+
+    scheme = environ.get('HTTP_X_SCHEME', '')
+    if scheme:
+        environ['wsgi.url_scheme'] = scheme
+    server = environ.get('HTTP_X_FORWARDED_SERVER', '')
+    if server:
+        environ['HTTP_HOST'] = server
+    return wsgi_app(environ, start_response)
 
 if __name__ == "__main__":
     run()

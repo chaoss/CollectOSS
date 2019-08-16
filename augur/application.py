@@ -13,24 +13,24 @@ import pkgutil
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
+from augur.models.common import Base
 from augur import logger
 import augur.plugins
 import augur.datasources
+import logging
+
+logging.basicConfig(filename='test.log', level=logging.INFO)
+
 
 
 class Application(object):
     """Initalizes all classes from Augur using a config file or environment variables"""
 
-    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application', db_str='sqlite:///:memory:'):
+    def __init__(self, config_file='augur.config.json', no_config_file=0, description='Augur application', config=None):
         """
         Reads config, creates DB session, and initializes cache
         """
-        # Command line arguments
-        # TODO: make this useful
-        self.arg_parser = argparse.ArgumentParser(description=description)
-        self.arg_parser.parse_known_args()
-
         # Open the config file
         self.__already_exported = {}
         self.__default_config = { 'Plugins': [] }
@@ -40,6 +40,7 @@ class Application(object):
         self.__config_location = os.path.dirname(self.__config_file_path)
         self.__runtime_location = 'runtime/'
         self.__export_env = os.getenv('AUGUR_ENV_EXPORT', '0') == '1'
+        self.__shell_config = None
         if os.getenv('AUGUR_ENV_ONLY', '0') != '1' and no_config_file == 0:
             try:
                 self.__config_file = open(self.__config_file_path, 'r+')
@@ -71,6 +72,9 @@ class Application(object):
             self.__using_config_file = False
             self.__config = self.__default_config
 
+        if isinstance(config, dict):
+            self.__config.update(config)
+
         # List of data sources that can do periodic updates
         self.__updatable = []
         self.__processes = []
@@ -94,24 +98,28 @@ class Application(object):
         # Create DB Session
         self.db = None
         self.session = None
-        if db_str:
-            self.db = create_engine(db_str)
-            self.__Session = sessionmaker(bind=self.db)
-            self.session = self.__Session()
+        db_str = self.read_config('Database', 'connection_string', 'AUGUR_DATABASE', 'sqlite:///:memory:')
+        self.db = create_engine(db_str)
+        self.__Session = scoped_session(sessionmaker(bind=self.db))
+        self.session = self.__Session()
+        Base.query = self.__Session.query_property()
 
         # Initalize all objects to None
         self.__metrics_status = None
         self._loaded_plugins = {}
 
+        # Application.default_plugins
         for plugin_name in Application.default_plugins:
             self[plugin_name]
+
+
 
     def __getitem__(self, plugin_name):
         """
         Returns plugin matching the name of the parameter 'plugin_name'
 
         :param plugin_name: name of specified plugin
-        """
+        """ 
         if plugin_name not in self._loaded_plugins:
             if plugin_name not in Application.plugins:
                 raise ValueError('Plugin %s not found.' % plugin_name)
@@ -126,7 +134,8 @@ class Application(object):
         """
         if not hasattr(cls, 'plugins'):
             setattr(cls, 'plugins', {})
-        for module in [augur.plugins, augur.datasources]:
+        plugins = [augur.plugins, augur.datasources]
+        for module in plugins:
             for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
                 if ispkg:
                     try:
@@ -206,7 +215,7 @@ class Application(object):
                 self.__processes.append(up)
                 update['started'] = True
 
-    def read_config(self, section, name, environment_variable=None, default=None):
+    def read_config(self, section, name=None, environment_variable=None, default=None):
         """
         Read a variable in specified section of the config file, unless provided an environment variable
 
@@ -218,7 +227,10 @@ class Application(object):
             value = os.getenv(environment_variable)
         if value is None:
             try:
-                value =  self.__config[section][name]
+                if name is not None:
+                    value = self.__config[section][name]
+                else:
+                    value = self.__config[section]
             except Exception as e:
                 value = default
                 if not section in self.__config:
@@ -236,6 +248,14 @@ class Application(object):
             logger.debug('{}:{} = {}'.format(section, name, value))
         return value
 
+    @property
+    def shell(self, banner1='-- Augur Shell --', **kwargs):
+        from IPython.terminal.embed import InteractiveShellEmbed
+        if not self.__shell_config:
+            from augur.util import init_shell_config
+            self.__shell_config = init_shell_config()
+        return InteractiveShellEmbed(config=self.__shell_config, banner1=banner1, **kwargs)
+
     def set_config(self, section, name, value):
         """
         Sets names and values of specified config section
@@ -252,8 +272,6 @@ class Application(object):
         """
         Parse args and generates a valid config if the given one is bad
         """
-        # Parse args with help
-        self.arg_parser.parse_known_args()
         # Close files and save config
         if self.__config_bad:
             logger.info('Regenerating config with missing values...')
@@ -279,7 +297,6 @@ class Application(object):
         """
         Updates all plugins
         """
-        print(self.__updatable)
         for updatable in self.__updatable:
             logger.info('Updating {}...'.format(updatable['name']))
             updatable['update']()
@@ -304,7 +321,8 @@ class Application(object):
         Ends all running update processes
         """
         for process in self.__processes:
-            process.terminate()
+            process.terminate()            
+
 
 Application.plugins = {}
 Application.default_plugins = []

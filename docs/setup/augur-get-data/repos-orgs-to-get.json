@@ -1,0 +1,30 @@
+[
+  {
+    "projectName": "Rails",
+    "projectDescription": "Rails Ecosystem.",
+    "projectRepository": "https://github.com/rails",
+    "projectWebsite": "http://www.rails.org",
+    "category": "Development"
+  },
+    {
+    "projectName": "Apache Camel",
+    "projectDescription": "Camel empowers you to define routing and mediation rules in a variety of domain-specific languages",
+    "projectRepository": "https://github.com/apache/camel",
+    "projectWebsite": "https://camel.apache.org",
+    "category": "Development"
+  },
+  {
+    "projectName": "Apache DeltaSpike",
+    "projectDescription": "Consists of a number of portable CDI extensions that provide useful features for Java application developers",
+    "projectRepository": "https://github.com/apache/deltaspike",
+    "projectWebsite": "https://deltaspike.apache.org",
+    "category": "Development"
+  },
+  {
+    "projectName": "GraphQL",
+    "projectDescription": "GraphQL Ecosystem.",
+    "projectRepository": "https://github.com/graphql",
+    "projectWebsite": "http://www.graphql.org",
+    "category": "Development"
+  }
+]
