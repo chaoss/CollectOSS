@@ -26,32 +26,40 @@
     </div> -->
 
     <div class="row">
-      <spinner v-if="!loadedBars"></spinner>
-      <div class="row col col-7" style="" v-if="loadedBars">
+      
+      <div class="row col col-7" style="" >
+        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
 <!-- look to add commit chart? -->
         <!--<div class="col col-12">
           <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
         </div> -->
-        <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
-          <normalized-stacked-bar-chart 
-          title="Lines of code added by the top 10 authors as Percentages - By Time Period"
-          source="changesByAuthor1" :data="values['changesByAuthor']">
-          </normalized-stacked-bar-chart>
-        </div>
-        <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
-          <div style="padding-top: 0px"></div>
-          <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
-          source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
-        </div>
+        <div class="row col col-12" v-if="loadedBars">
+          <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+            <normalized-stacked-bar-chart 
+            title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+            source="changesByAuthor1" :data="values['changesByAuthor']">
+            </normalized-stacked-bar-chart>
+          </div>
+          <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+            <div style="padding-top: 0px"></div>
+            <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+            source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+          </div>
 
-        <div class="col col-6">
-          <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
-        </div>
-        <div class="col col-6">
-          <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"
-          :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
+          <div class="col col-6">
+            <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
+          </div>
+          <div class="col col-6">
+            <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"
+            :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
+          </div>
         </div>
       </div>
+      <div class="row col col-5">
+        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
+        <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
+      </div>
+
     </div>
 
   </d-container>
@@ -110,7 +118,7 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
 
 export default class RepoOverview extends Vue {
   colors = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
-  barEndpoints = ['closedIssuesCount']
+  barEndpoints = ['changesByAuthor']
   testTimeframes = ['past 1 month', 'past 3 months', 'past 2 weeks']
   repos = {}
   projects = []
@@ -121,7 +129,7 @@ export default class RepoOverview extends Vue {
   loaded_issues = false
   loaded_experimental = false
   loaded_activity = false
-  values = {'issuesClosed':[], 'changesByAuthor': []}
+  values: any = {'issuesClosed':[], 'changesByAuthor': []}
   loadedBars = false
 
   // deflare vuex action, getter, mutations
@@ -141,6 +149,7 @@ export default class RepoOverview extends Vue {
       Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
         this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
       })
+      console.log(this.values)
       this.loadedBars = true
     })
   }

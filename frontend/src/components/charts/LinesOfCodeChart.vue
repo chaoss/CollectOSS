@@ -13,7 +13,7 @@
         </thead>
         <tbody>
           <tr v-for="contributor in contributors.slice(0, 10)">
-            <td>{{ contributor.author_email }}</td>
+            <td>{{ contributor.cmt_author_email }}</td>
             <td v-if="!setYear" v-for="year in years">{{ (contributor[year]) ? contributor[year].additions || 0 : 0}}</td>
             <td v-if="setYear" v-for="month in monthDecimals">{{ (contributor[setYear + '-' + month]) ? contributor[setYear + '-' + month].additions || 0 : 0 }}</td>
             <td v-if="!setYear">{{ contributor.additions }}</td>
@@ -50,7 +50,7 @@
 
 <script>
 export default {
-  props: ['source', 'citeUrl', 'citeText', 'title'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'data'],
   data() {
     let years = []
     for (let i = 9; i >= 0; i--) {
@@ -77,17 +77,7 @@ export default {
     },
     chart() {
       let repo = null
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) {
-          repo = window.AugurRepos[this.repo]
-        } else {
-          let repo = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-          window.AugurRepos[repo.toString] = repo
-        }
-      } else {
-        repo =  window.AugurAPI.Repo({ gitURL: this.gitRepo })
-        window.AugurRepos[repo.toString()] = repo
-      }
+
       let contributors = {}
       let organizations = {}
 
@@ -104,8 +94,8 @@ export default {
 
       let group = (obj, name, change, filter) => {
         if (filter(change)) {
-          let year = (new Date(change.author_date)).getFullYear()
-          let month = (new Date(change.author_date)).getMonth()
+          let year = (new Date(change.cmt_author_date)).getFullYear()
+          let month = (new Date(change.cmt_author_date)).getMonth()
           obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 }
           addChanges(obj[change[name]], change)
           obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 }
@@ -128,24 +118,36 @@ export default {
       }
 
       let filterDates = (change) => {
-        return (new Date(change.author_date)).getFullYear() > this.years[0]
+        return (new Date(change.cmt_author_date)).getFullYear() > this.years[0]
       }
 
-      repo.changesByAuthor().then((changes) => {
+      let processData = (changes) => {
         changes.forEach((change) => {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates)
+            group(contributors, 'cmt_author_email', change, filterDates)
             if (change.author_affiliation !== 'Unknown') {
               group(organizations, 'affiliation', change, filterDates)
             }
           }
         })
+        console.log(contributors)
         
-        this.contributors = flattenAndSort(contributors, 'author_email', 'additions')
+        this.contributors = flattenAndSort(contributors, 'cmt_author_email', 'additions')
         this.organizations = flattenAndSort(organizations, 'name', 'additions')
             
 
-      })
+      }
+
+      if (this.data){
+        console.log(this.data)
+        processData(this.data)
+      }
+      else {
+        repo.changesByAuthor().then((data) => {
+          processData(data)
+        })
+      }
+      
     }
   },
 }

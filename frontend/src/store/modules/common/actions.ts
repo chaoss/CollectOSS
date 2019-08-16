@@ -41,11 +41,8 @@ export default {
                             tempCache[repo.rg_name][repo.url] = tempCache[repo.rg_name][repo.url] || {}
                             payload.endpoints.forEach((endpoint: string) => {
                                 tempCache[repo.rg_name][repo.url][endpoint] = tempCache[repo.rg_name][repo.url][endpoint] || []
-                                console.log(repo,endpoint)
-                                console.log(repo[endpoint])
                                 repo[endpoint]().then((data: any) => {
                                     tempCache[repo.rg_name][repo.url][endpoint] = data// || []
-                                    console.log(data)
                                     resolve(tempCache)
                                 })
                             })
@@ -99,14 +96,12 @@ export default {
     },
     async loadRepos(context:any, payload:any){
         try {
-            return new Promise((resolve, reject) => {
-                context.state.AugurAPI.getRepos().then((repos: object[]) => {
-                    context.commit('mutateCache', {
-                        property: 'getRepos',
-                        with: repos,
-                    });
-                    resolve(repos)
+            return context.state.AugurAPI.getRepos().then((repos: object[]) => {
+                context.commit('mutateCache', {
+                    property: 'getRepos',
+                    with: repos,
                 });
+                return repos
             })
         } catch(error) {
             throw error;
@@ -114,15 +109,13 @@ export default {
     },
     async loadRepoGroups(context:any, payload:any){
         try {
-            return new Promise((resolve, reject) => {
-                context.state.AugurAPI.getRepoGroups().then((rgs: object[]) => {
-                    context.commit('mutateCache', {
-                        property: 'getRepoGroups',
-                        with: rgs,
-                    });
-                    resolve(rgs)
+            return context.state.AugurAPI.getRepoGroups().then((rgs: object[]) => {
+                context.commit('mutateCache', {
+                    property: 'getRepoGroups',
+                    with: rgs,
                 });
-            })
+                return rgs
+            });
         } catch(error) {
             throw error;
         }

@@ -2,7 +2,7 @@
   <div ref="holder">
     <div class="normalbar">
       <!-- <h3>Lines of code added by the top 10 authors as Percentages - All Time</h3> -->
-      <vega-lite :spec="spec" :data="values"></vega-lite>
+      <vega-lite :spec="spec" :data="data"></vega-lite>
       <p> {{ chart }} </p>
     </div>
   </div>
@@ -48,33 +48,6 @@ export default {
       return this.$store.state.endDate
     },
     spec() {
-
-      // let init = () => {
-      //   let type;
-      //   switch(this.tick) {
-      //     case 0: //circle
-      //       type = "circle"
-      //       // bin = false
-      //       // size = {
-      //       //         "field": "total",
-      //       //         "type": "quantitative",
-      //       //         "min": "15"
-      //       //       }
-      //       break
-      //     case 1: //tick
-      //       type = "tick"
-      //       // bin = false
-      //       // size = {}
-      //       break
-      //     case 2: //rect
-      //       type = "rect"
-      //       // bin = {"maxbins": 40}
-      //       // size = {}
-      //     default:
-      //       break
-      //   }
-      //   return type
-      // }
       
       let type = null, bin = null, size = null;
 
@@ -111,14 +84,7 @@ export default {
           },
           "axis":{
             "grid": false
-          },
-
-          // "legend": {
-          //  // "offset": -505,
-          //   "titleFontSize": 10,
-          //   "titlePadding": 10,
-          // },
-          // "scale": {"minSize": 100, "maxSize": 500}
+          }
         },
         "title": {
           "text": this.title,
@@ -153,7 +119,7 @@ export default {
               // "x": {"field": "author_date", "type": "temporal", "bin": true, "axis": {"format": "%b %Y", "title": " "}},
               "x": {"field": "count", "type": "quantitative","sort": {"op": "sum", "order": "descending"},"stack": "normalize", "axis": {"labels": false, "title": null}},
               "color": {
-                "field": "author_email",
+                "field": "cmt_author_email",
                 "type": "nominal",
                 "scale": {"scheme": "category10"},
                 "legend": null

@@ -76,8 +76,6 @@ export default class AugurAPI {
   }
 
   __URLFunctionFactory(url: string) {
-    console.log(this)
-    console.log(this.__cache)
     return (params: any, callback: any) => {
       var cacheKey = window.btoa(url + JSON.stringify(params))
       this.openRequests++
@@ -468,6 +466,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('languages','languages')
     this.addRepoMetric('committers','committers')
     this.addRepoMetric('licenseDeclared','license-declared')
+    this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
   }
 }
 
