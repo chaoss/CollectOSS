@@ -36,8 +36,10 @@ import Default from './layouts/Default.vue';
 import MainSidebar from './components/layout/MainSidebar/MainSidebar.vue';
 import MainNavbar from './components/layout/MainNavbar/MainNavbar.vue';
 import RepoOverview from './views/RepoOverview.vue';
+import GroupOverview from './views/GroupOverview.vue';
 import RepoGroups from './views/RepoGroups.vue';
 import Repos from './views/Repos.vue';
+import SingleComparison from './views/SingleComparison.vue';
 import RiskMetrics from "@/views/RiskMetrics.vue";
 
 const routes = [
@@ -146,67 +148,53 @@ const routes = [
                   next()
             }
       },
-    {
-      path: '/repo/:group/:repo/comparedTo/:compares',
-      component: Default,
-      children: [
-        {
-          path: '',
-          name: 'repo_overview_compare',
-          components: {
-            sidebar: MainSidebar,
-            navbar: MainNavbar,
-            content: RepoOverview,
-          },
-        },
-      ],
-      beforeEnter: async (to:any, from:any, next:any) => {
-        let repo = to.params.repo;
-        let group = to.params.group;
-        // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
-        let compares = to.params.compares === ''? [] : to.params.compares.split(',');
-        // await store.dispatch('compare/setComparedRepos',compares);
-        next()
-      }
-    },
-    {
-      path: '/blog-overview',
-      name: 'blog-overview',
-      component: PersonalBlog,
-    },
-    {
-      path: '/user-profile-lite',
-      name: 'user-profile-lite',
-      component: UserProfileLite,
-    },
-    {
-      path: '/add-new-post',
-      name: 'add-new-post',
-      component: AddNewPost,
-    },
-    {
-      path: '/errors',
-      name: 'errors',
-      component: Errors,
-    },
-    {
-      path: '/components-overview',
-      name: 'components-overview',
-      component: ComponentsOverview,
-    },
-    {
-      path: '/tables',
-      name: 'tables',
-      component: Tables,
-    },
-    {
-      path: '/blog-posts',
-      name: 'blog-posts',
-      component: Dashboard,
-    }, {
-      path: '*',
-      redirect: '/errors',
-    },
+      {
+            path: '/group/:group',
+            component: Default,
+            children: [
+                  {
+                        path: 'overview',
+                        name: 'group_overview',
+                        components: {
+                              sidebar: MainSidebar,
+                              navbar: MainNavbar,
+                              content: GroupOverview,
+                        },
+                  }
+            ],
+            beforeEnter: async (to:any, from:any, next:any) => {
+                  let group = to.params.group;
+                  // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
+                  next()
+            }
+      },
+      {
+            path: '/repo/:group/:repo/comparedTo/:compares',
+            component: Default,
+            children: [
+              {
+                path: '',
+                name: 'repo_overview_compare',
+                components: {
+                  sidebar: MainSidebar,
+                  navbar: MainNavbar,
+                  content: SingleComparison,
+                },
+              },
+            ],
+            beforeEnter: async (to:any, from:any, next:any) => {
+              let repo = to.params.repo;
+              let group = to.params.group;
+              // await store.dispatch('compare/setBaseRepo',{rg_name:group,repo_name:repo});
+              let compares = to.params.compares === ''? [] : to.params.compares.split(',');
+              // await store.dispatch('compare/setComparedRepos',compares);
+              next()
+            }
+      },
+      {
+            path: '*',
+            redirect: '/errors',
+      },
       //   {path: '/', component: Default,
       //   // children: [
       //   //   {

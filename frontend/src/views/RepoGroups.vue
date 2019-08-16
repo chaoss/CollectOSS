@@ -121,10 +121,11 @@
         'addRepoGroup',
       ]),
       ...mapMutations('common',[
-        'setComapreType',
+        'setCompareType',
       ]),
       ...mapActions('compare', [
         'addComparedGroup',
+        'setBaseGroup'
       ])
     },
     computed: {
@@ -159,6 +160,7 @@
     sorted_repo_groups!:any[];
     loaded_groups!:boolean;
     addRepoGroup!:any;
+    setBaseGroup!:any;
 
     // compare module store
     addComparedGroup!:any;
@@ -178,57 +180,13 @@
       }
     }
 
-    onRepoGroup(e:any) {
-      // this.addRepoGroup(e)
-      this.addComparedGroup(e)
-    }
-    
+    onRepoGroup(repo_group: any) {
+      this.setBaseGroup(repo_group).then((repo: any) => {
+        this.$router.push({
+          name: 'group_overview',
+          params: {group:repo_group.rg_name}
+        })
+      })
+    } 
   }
-
-// export default {
-//   components: {
-//
-//   },
-//   computed: {
-//   },
-//   data() {
-//     return {
-//       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-//       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
-//       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-//       repos: [],
-//       repo_groups: [],
-//       repo_relations: {},
-//       themes: ['dark', 'info', 'royal-blue', 'warning'],
-//     }
-//   },
-//   methods: {
-//     getRepoGroups() {
-//       console.log("START")
-//       window.AugurAPI.getRepos().then((data) => {
-//         this.repos = data
-//         console.log("LOADED repos", this.repos)
-//         window.AugurAPI.getRepoGroups().then((data) => {
-//           $(this.$el).find('.spinner').removeClass('loader')
-//           $(this.$el).find('.spinner').removeClass('relative')
-//           this.repo_groups = data
-//           //move down between future relation endpoint
-//           this.repo_groups.forEach((group) => {
-//             this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
-//               return repo.rg_name == group.rg_name
-//             })
-//             group.repo_count = this.repo_relations[group.rg_name].length
-//           })
-//           console.log("LOADED repo groups", this.repo_relations)
-//         })
-//       })
-//     },
-//     btoa(s) {
-//       return window.btoa(s)
-//     }
-//   },
-//   created() {
-//     this.getRepoGroups()
-//   },
-// }
 </script>
