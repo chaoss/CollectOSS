@@ -168,7 +168,7 @@
 
 <script lang="ts">
   import Multiselect from 'vue-multiselect';
-  import {Component, Vue} from 'vue-property-decorator';
+  import {Component, Vue, Watch} from 'vue-property-decorator';
   import {mapActions, mapGetters, mapMutations} from "vuex";
   import router from '@/router'
   import style from "vega-embed/src/style";
@@ -215,7 +215,9 @@
       ]),
       ...mapActions('compare',[
         'setComparedRepos',
-        'setComparedGroup'
+        'setComparedGroup',
+        'setBaseGroup',
+        'setBaseRepo'
       ]),
       ...mapActions('common', [
         'loadRepoGroups',
@@ -264,6 +266,8 @@
 
     setComparedRepos!:any;
     setComparedGroup!:any;
+    setBaseRepo!:any;
+    setBaseGroup!:any;
 
 
     loadRepoGroups!: any;
@@ -360,14 +364,21 @@
 
     onCompare(e: any) {
       if(!this.isGroup) {
+        console.log(this.selectedRepos)
         router.push({
           name: 'repo_overview_compare',
-          params: {group: this.base.rg_name, repo: this.base.repo_name, compares: this.selectedRepos.join(',')}
+          params: {
+            group: this.base.rg_name,
+            repo: this.base.repo_name,
+            repo_group_id: this.base.repo_group_id,
+            repo_id: this.base.repo_id,
+            compares: this.selectedRepos.join(',')}
         })
       } else {
         router.push({
           name: 'group_overview_compare',
-          params: {group: this.base.rg_name, compares: this.selectedGroups.join(',')}
+          params: {group: this.base.rg_name, repo_group_id: this.base.repo_group_id, compares:
+              this.selectedGroups.join(',')}
         })
       }
     }

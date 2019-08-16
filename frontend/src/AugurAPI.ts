@@ -25,7 +25,7 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-  constructor(hostURL: string = 'http://localhost:5002', version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://localhost:5000', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'

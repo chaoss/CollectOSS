@@ -181,7 +181,7 @@
     onRepoGroup(e:any) {
       this.$router.push({
         name: 'group_overview',
-        params:{group:e.rg_name}
+        params:{group:e.rg_name, repo_group_id: e.repo_group_id}
       })
     } 
   }

@@ -23,6 +23,7 @@ import 'nprogress/nprogress.css'
 // Core
 import AugurApp from '@/components/AugurApp.vue';
 import router from './router';
+
 var store = require('@/store/store').default;
 
 // Layouts
@@ -44,25 +45,54 @@ Vue.use(ShardsVue);
 Vue.use(VueVega);
 // Vue.use(VueRouter);
 
-export default function Augur () {
+export default function Augur() {
   // AugurApp.store = store
   // Object.defineProperty(AugurApp, 'store', store);
 
-  router.beforeEach((to:any, from:any, next:any) => {
+  router.beforeEach((to: any, from: any, next: any) => {
     NProgress.start()
     NProgress.set(0.4);
 
-    if(!to.params.repo && !to.params.group) {
-      if(!to.params.compares) {
+    if (!to.params.repo && !to.params.group) {
+      if (!to.params.compares) {
         store.commit('compare/resetCompared')
       }
-
-      store.dispatch('compare/setBaseRepo').then((data:any)=>{
+      store.dispatch('compare/setBaseRepo').then((data: any) => {
         return store.dispatch('compare/setBaseGroup')
+      }).finally(() => {
+        next()
+      })
+    } else if (to.params.group && to.params.repo) {
+      NProgress.set(0.6);
+      store.dispatch('compare/setBaseRepo', {
+        rg_name: to.params.group,
+        repo_name: to.params.repo,
+        repo_group_id: to.params.repo_group_id,
+        repo_id: to.params.repo_id
+      }).then(() => {
+        NProgress.set(0.8);
+        if(to.params.compares) {
+          let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
+          return store.dispatch('compare/setComparedRepos', compares)
+        }
       }).finally(()=>{
         next()
       })
-    } else{
+    } else if (to.params.group && !to.params.repo) {
+      NProgress.set(0.6)
+      store.dispatch('compare/setBaseGroup', {
+        rg_name: to.params.group,
+        repo_group_id: to.params.repo_group_id
+      }).then((data: any) => {
+        NProgress.set(0.8);
+        if(to.params.compares) {
+          let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
+          return store.dispatch('compare/setComparedGroup', compares)
+        }
+      }).finally(()=>{
+        next()
+      })
+    } else {
       next()
     }
   })

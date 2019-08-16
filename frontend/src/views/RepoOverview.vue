@@ -14,7 +14,7 @@
     <compare-control></compare-control>
 
     <div class="row">
-      <d-button><d-link :to="{name: 'risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
+      <d-button><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
     </div>
 
     <!-- Overview Section -->
