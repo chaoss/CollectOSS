@@ -38,36 +38,46 @@ export default {
 
     async setBaseRepo(context: any, payload: any) {
         return new Promise((resolve:any, reject:any)=>{
-            setTimeout(()=>{
-                console.log(payload)
-                let baseRepo = payload.rg_name && payload.repo_name ? payload.rg_name + '/' + payload.repo_name : payload.url
-                if (!(baseRepo in context.rootGetters['common/apiRepos'])) {
-                    context.dispatch('common/addRepo',payload,{root:true}).then((data:any) =>{
-                        context.state.baseRepo = baseRepo
-                        resolve(data)
-                    })
-                    context.commit('mutate', {property: baseRepo, with: payload.url})
-                } else{
-                    context.state.baseRepo = baseRepo
-                    resolve({})
-                }
-            },2000)
+            console.log(payload)
+                setTimeout(()=> {
+                    if (payload == null || Object.keys(payload).length === 0) {
+                        context.state.baseRepo = ''
+                        resolve()
+                    } else {
+                        let baseRepo = payload.rg_name && payload.repo_name ? payload.rg_name + '/' + payload.repo_name : payload.url
+                        if (!(baseRepo in context.rootGetters['common/apiRepos'])) {
+                            context.dispatch('common/addRepo', payload, {root: true}).then((data: any) => {
+                              context.state.baseRepo = baseRepo
+                              resolve(data)
+                            })
+                            context.commit('mutate', {property: baseRepo, with: payload.url})
+                        } else {
+                            context.state.baseRepo = baseRepo
+                            resolve({})
+                        }
+                    }
+                })
         })
     },
 
     async setBaseGroup(context: any, payload:any) {
         return new Promise((resolve:any, reject:any)=>{
-            setTimeout(()=>{
-                if (!(payload.rg_name in context.rootGetters['common/apiGroups'])) {
-                    context.dispatch('common/addRepoGroup',payload,{root:true}).then((data:any) => {
-                        context.state.baseGroup = payload.rg_name
-                        resolve(data)
-                    })
+            setTimeout(()=> {
+                if (payload == null || Object.keys(payload).length === 0) {
+                    context.state.baseGroup = ''
+                    resolve()
                 } else {
-                    context.state.baseGroup = payload.rg_name
-                    resolve({})
+                    if (!(payload.rg_name in context.rootGetters['common/apiGroups'])) {
+                        context.dispatch('common/addRepoGroup', payload, {root: true}).then((data: any) => {
+                            context.state.baseGroup = payload.rg_name
+                            resolve(data)
+                        })
+                    } else {
+                        context.state.baseGroup = payload.rg_name
+                        resolve({})
+                    }
                 }
-            },2000)
+              })
         })
     },
 
@@ -86,16 +96,22 @@ export default {
                      resolve(values)
                   }
                 )
-            },2000)
+            })
         })
     },
 
     async setComparedGroup(context:any, payload:any) {
-        context.state.comparedRepoGroups = payload
-        payload.forEach((group:any) => {
-            if (!(group in context.rootGetters['common/apiGroups'])) {
-                context.dispatch('common/addRepoGroup',{rg_name: group},{root:true})
+        return new Promise((resolve, reject) => {
+            let promises:any[] = [];
+            for(let group of payload) {
+                if (!(group in context.rootGetters['common/apiGroups'])) {
+                    promises.push( context.dispatch('common/addRepoGroup',{rg_name: group},{root:true}))
+                }
             }
+            Promise.all(promises).then((values)=>{
+                context.state.comparedRepoGroups = payload
+                resolve(values)
+            })
         })
     }
 }

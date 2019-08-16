@@ -25,7 +25,7 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-  constructor(hostURL: string = 'http://localhost:5002', version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://localhost:5000', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
@@ -301,11 +301,11 @@ class Repo extends BaseRepo{
     this.rg_name = metadata.rg_name || undefined
     this.repo_name = metadata.repo_name || undefined
     this.url = this.gitURL || this.githubURL || undefined
-    this.initialMetric()
+    this.setup()
   }
 
-   initialMetric(){
-    this.getRepoNameAndID()
+   setup(){
+    this.retrieveID()
     this.initialDBMetric()
     this.initialLegacyMetric()
   }
@@ -318,7 +318,7 @@ class Repo extends BaseRepo{
     }
   }
 
-  getRepoNameAndID(): void {
+  retrieveID(): void {
 
     if (this.repo_id && this.repo_group_id) {
       return
@@ -478,7 +478,26 @@ class RepoGroup extends BaseRepo {
     
     this.repo_group_id = metadata.repo_group_id || undefined
     this.rg_name = metadata.rg_name || null
-    // this.initialMetric()
+    this.setup()
+  }
+
+
+  setup() {
+    if (this.repo_group_id == null && this.rg_name) {
+      this.retrieveGroupID()
+      this.initialMetric()
+    }
+  }
+
+  retrieveGroupID() {
+    $.ajax({
+      type: 'GET',
+      url: this.__endpointURL('rg-name/' + this.rg_name),
+      async: false,
+      success: (data:any) => {
+        this.repo_group_id = data[0].repo_group_id
+      }
+    })
   }
 
   toString(){

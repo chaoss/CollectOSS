@@ -151,7 +151,7 @@ def create_routes(server):
                         mimetype="application/json")
 
     """
-    @api {get} /rg-names/:rg_name/repo-name/:repo_name Get Repo
+    @api {get} /rg-name/:rg_name/repo-name/:repo_name Get Repo
     @apiName get-repo
     @apiGroup Utility
     @apiDescription Get the `repo_group_id` & `repo_id` of a particular repo.
@@ -171,6 +171,28 @@ def create_routes(server):
         return Response(response=gre,
                         status=200,
                         mimetype="application/json")
+
+    """
+    @api {get} /rg-names/:rg_name Get Repo
+    @apiName get-repo
+    @apiGroup Utility
+    @apiDescription Get the `repo_id` of a particular repo group.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_group_id": 20,
+                            "rg_name": 'Rails'
+                        },
+                    ]
+    """
+    @server.app.route('/{}/rg-name/<rg_name>'.format(server.api_version))
+    def get_group_by_name(rg_name):
+        arg = [rg_name]
+        res = server.transform(augur_db.get_group_by_name, args=arg)
+        return Response(response=res,
+                        status=200,
+                        mimetype="application/json")
+
 
     @server.app.route('/{}/dosocs/repos'.format(server.api_version))
     def get_repos_for_dosocs():
