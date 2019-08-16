@@ -8,16 +8,16 @@ python setup.py install;
 ## Front End 
 cd frontend/;
 yarn install;
-yarn build; 
 yarn global add apidoc brunch newman @vue/cli; 
+yarn run build;
 cd ../;
 
 ## Workers
 cd workers/;
 
 cd ./facade_worker;
-rm -rf build/*
-rm -rf dist/*
+rm -rf build/*;
+rm -rf dist/*;
 python setup.py install;
 pip install -e .; 
 
@@ -25,19 +25,19 @@ cd ../github_worker;
 rm -rf build/*;
 rm -rf dist/*;
 python setup.py install; 
-pip install -e .
+pip install -e a;.
 
 cd ../insight_worker; 
 rm -rf build/*;
 rm -rf dist/*;
 python setup.py install;
-pip install -e .
+pip install -e .;
 
 cd ../linux_badge_worker;
 rm -rf build/*;
 rm -rf dist/*; 
 python setup.py install;
-pip install -e .
+pip install -e .;
 
 cd ../pull_request_worker; 
 rm -rf build/*;
@@ -49,7 +49,7 @@ cd ../repo_info_worker;
 rm -rf build/*;
 rm -rf dist/*; 
 python setup.py install;
-pip install -e .
+pip install -e .;
 cd ../..;
 
 ## API Docs
