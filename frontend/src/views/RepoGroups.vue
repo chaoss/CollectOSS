@@ -82,7 +82,8 @@
                         container=".shards-demo--example--tooltip-01">
                         Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
                       </d-tooltip>
-                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0; border: none; background: none;" v-on:click="onRepoGroup(group)">
+                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0; border: none;
+                      background: none;" v-on:click="addComparedGroup(group)">
                         <i class="material-icons" style="color:#007bff;">library_add</i>
                         <div class="item-icon-wrapper"></div>
                       </button>
@@ -121,16 +122,15 @@
         'addRepoGroup',
       ]),
       ...mapMutations('common',[
-        'setComapreType',
+        'setCompareType',
       ]),
       ...mapActions('compare', [
         'addComparedGroup',
+        'setBaseGroup'
       ])
     },
     computed: {
       ...mapGetters('common',[
-        'repoRelationsInfo',
-        'groupsInfo',
         'sorted_repo_groups',
         'repo_groups',
         'loaded_groups',
@@ -151,14 +151,14 @@
     sortColumn: string ='rg_last_modified';
 
     // declare Vuex action and getter
-    repoRelationsInfo!: any;
-    groupsInfo!:any;
+
     getRepoRelations!: any;
     loadRepoGroups!:any;
     repo_groups!:any[];
     sorted_repo_groups!:any[];
     loaded_groups!:boolean;
     addRepoGroup!:any;
+    setBaseGroup!:any;
 
     // compare module store
     addComparedGroup!:any;
@@ -179,56 +179,10 @@
     }
 
     onRepoGroup(e:any) {
-      // this.addRepoGroup(e)
-      this.addComparedGroup(e)
-    }
-    
+      this.$router.push({
+        name: 'group_overview',
+        params:{group:e.rg_name, repo_group_id: e.repo_group_id}
+      })
+    } 
   }
-
-// export default {
-//   components: {
-//
-//   },
-//   computed: {
-//   },
-//   data() {
-//     return {
-//       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-//       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
-//       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-//       repos: [],
-//       repo_groups: [],
-//       repo_relations: {},
-//       themes: ['dark', 'info', 'royal-blue', 'warning'],
-//     }
-//   },
-//   methods: {
-//     getRepoGroups() {
-//       console.log("START")
-//       window.AugurAPI.getRepos().then((data) => {
-//         this.repos = data
-//         console.log("LOADED repos", this.repos)
-//         window.AugurAPI.getRepoGroups().then((data) => {
-//           $(this.$el).find('.spinner').removeClass('loader')
-//           $(this.$el).find('.spinner').removeClass('relative')
-//           this.repo_groups = data
-//           //move down between future relation endpoint
-//           this.repo_groups.forEach((group) => {
-//             this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
-//               return repo.rg_name == group.rg_name
-//             })
-//             group.repo_count = this.repo_relations[group.rg_name].length
-//           })
-//           console.log("LOADED repo groups", this.repo_relations)
-//         })
-//       })
-//     },
-//     btoa(s) {
-//       return window.btoa(s)
-//     }
-//   },
-//   created() {
-//     this.getRepoGroups()
-//   },
-// }
 </script>

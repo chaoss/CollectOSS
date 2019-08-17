@@ -179,102 +179,11 @@ export default class Repos extends Vue{
   }
 
   onGitRepo (e: any) {
-    console.log(e, {gitURL: e.url, repo_id: e.repo_id, repo_group_id: e.repo_group_id, rg_name:e.rg_name, repo_name:e.repo_name})
-    this.setBaseRepo({gitURL: e.url, repo_id: e.repo_id, repo_group_id: e.repo_group_id, rg_name:e.rg_name, repo_name:e.repo_name}).then((repo: any) => {
-      this.$router.push({
-        name: 'repo_overview',
-        params: {group:e.rg_name, repo:e.repo_name}
-      })
+    this.$router.push({
+      name: 'repo_overview',
+      params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id}
     })
-
-      
   }
 }
 
 </script>
-
-
-
-// ssdcript>
-// export default {
-//   components: {
-
-//   },
-//   computed: {
-//   },
-//   data() {
-//     return {
-//       colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-//       testEndpoints: ['codeCommits', 'closedIssues', 'openIssues'],
-//       testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-//       repos: [],
-//       repo_groups: [],
-//       repo_relations: {},
-//       themes: ['dark', 'info', 'royal-blue', 'warning'],
-//       loaded: false,
-//       ascending: false,
-//       sortColumn: '',
-//       group_id_name_map: {},
-//     }
-//   },
-//   methods: {
-//     sortTable(col) {
-//       if (this.sortColumn === col) {
-//         this.ascending = !this.ascending;
-//       } else {
-//         this.ascending = true;
-//         this.sortColumn = col;
-//       }
-
-//       var ascending = this.ascending;
-
-//       this.repos.sort(function(a, b) {
-//         if (a[col] > b[col]) {
-//           return ascending ? 1 : -1
-//         } else if (a[col] < b[col]) {
-//           return ascending ? -1 : 1
-//         }
-//         return 0;
-//       })
-//     },
-//     getRepoGroups() {
-//       console.log("START")
-//       window.AugurAPI.getRepos().then((data) => {
-//         this.repos = data
-//         console.log("LOADED repos", this.repos)
-//         window.AugurAPI.getRepoGroups().then((data) => {
-//           $(this.$el).find('.spinner').removeClass('loader')
-//           $(this.$el).find('.spinner').removeClass('relative')
-//           this.repo_groups = data
-//           //move down between future relation endpoint
-//           this.repo_groups.forEach((group) => {
-//             this.repo_relations[group.rg_name] = this.repos.filter(function(repo){
-//               return repo.rg_name == group.rg_name
-//             })
-//             group.repo_count = this.repo_relations[group.rg_name].length
-//           })
-//           this.sortTable('commits_all_time')
-//           console.log("LOADED repo groups", this.repo_relations)
-//           this.loading = false
-//         })
-//       })
-//     },
-//     onCompare (e) {
-//       var element = document.getElementById("invalid")
-//       this.compCount++
-//       let repo = window.AugurAPI.Repo({
-//         gitURL: e.target.value
-//       })
-//       this.$store.commit('addComparedRepo', {
-//         gitURL: e.target.value
-//       })
-//     }, 
-//     btoa(s) {
-//       return window.btoa(s)
-//     }
-//   },
-//   created() {
-//     this.getRepoGroups()
-//   },
-// }
-// /scripdft>

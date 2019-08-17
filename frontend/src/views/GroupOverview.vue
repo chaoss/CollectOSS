@@ -1,8 +1,7 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
-      <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
-      <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
+      <d-breadcrumb-item :active="true" :text="base.rg_name" href="#" />
     </d-breadcrumb>
     <!-- Page Header -->
     <!-- <div class="page-header row no-gutters py-4">
@@ -13,9 +12,7 @@
     <!-- Compare Control -->
     <compare-control></compare-control>
 
-    <div class="row">
-      <d-button><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
-    </div>
+
 
     <!-- Overview Section -->
     <!-- <div class="page-header row no-gutters py-4" >
@@ -105,10 +102,6 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
     ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
-    ]),
-    ...mapActions('compare',[
-      'addComparedRepo',
-      'setBaseGroup'
     ])
   },
   computed: {
@@ -133,7 +126,7 @@ export default class RepoOverview extends Vue {
   loaded_issues = false
   loaded_experimental = false
   loaded_activity = false
-  values:{[key:string]:any} = {'issuesClosed':[], 'changesByAuthor': []}
+  values: any = {'issuesClosed':[], 'changesByAuthor': []}
   loadedBars = false
 
   // deflare vuex action, getter, mutations
@@ -144,23 +137,17 @@ export default class RepoOverview extends Vue {
   base!: any;
   // actions
   endpoint!: any;
-  setBaseGroup!: any;
 
   created() {
+    console.log(this.base)
+    console.log(process.env.VUE_APP_PORT)
     this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
+      console.log(tuples)
       Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
         this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
       })
+      console.log(this.values)
       this.loadedBars = true
-    })
-  }
-
-  onRepoGroup(repo_group: any) {
-    this.setBaseGroup(repo_group).then((repo: any) => {
-      this.$router.push({
-        name: 'group_overview',
-        params: {group: repo_group.rg_name}
-      })
     })
   }
 
