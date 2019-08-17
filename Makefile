@@ -1,4 +1,4 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop 
+.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop
 .PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
 .PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
 
@@ -19,6 +19,7 @@ default:
 	@ echo "    clean                           Cleans the developer environment"
 	@ echo "    upgrade                         Pulls newest version, installs, performs migrations"
 	@ echo "    version                         Print the currently installed version"
+	@ echo "    config                          Creates a new augur.config.json"
 	@ echo
 	@ echo "Development Commands:"
 	@ echo "    dev                             Starts the full stack and monitors the logs"
@@ -41,14 +42,14 @@ default:
 	@ echo "Prototyping:"
 	@ echo "    jupyter                         Launches the jupyter"
 	@ echo "    create-jupyter-env              Creates a jupyter environment for Augur"
-	@ echo 
+	@ echo
 	@ echo "Upgrade/Migration Helpers:"
 	@ echo "    to-json                         Converts old augur.cfg to new augur.config.json"
 	@ echo "    to-env                          Converts augur.config.json to a script that exports those values as environment variables"
 
 
 
-# 
+#
 #  Installation
 #
 install:
@@ -71,9 +72,10 @@ upgrade: version download-upgrade install-dev
 	@ $(AUGUR_PYTHON) util/post-upgrade.py $(OLDVERSION)
 	@ echo "Upgraded from $(OLDVERSION) to $(shell $(AUGUR_PYTHON) util/print-version.py)."
 
+config:
+	@ bash -c '$(AUGUR_PYTHON) util/make-config.py'
 
-
-# 
+#
 #  Development
 #
 dev-start: dev-stop
@@ -164,7 +166,7 @@ vagrant:
 
 clean:
 	@ echo "Removes node_modules, logs, caches, and some other dumb stuff that can be annoying."
-	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
+	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
 	find . -name \*.pyc -delete
 	@ echo "Run sudo make install-dev again to reinstall the environment."
 
@@ -177,7 +179,7 @@ update:
 	git stash pop
 
 
-# 
+#
 #  Prototyping
 #
 jupyter:
@@ -188,7 +190,7 @@ create-jupyter-env:
 
 
 
-# 
+#
 #  Upgrade helpers
 #
 .PHONY: to-json
@@ -201,7 +203,7 @@ to-env:
 
 
 
-# 
+#
 #  System-specific
 #
 install-ubuntu-dependencies:
