@@ -1,18 +1,20 @@
 matrix:
   include:
   - name: Python Datasource Unit Tests
-    install: pip install .
-    language: python
-    python: '3.6'
-    script: python -m pytest augur/datasources/**/test_**_functions.py
-
-  - name: API Unit Tests
-    install: python setup.py install; pip install -e .
+    install: python setup.py install; pip install .
     language: python
     python: '3.6'
     script:
     - pip install zmq
-    - augur run > /dev/null 2>&1 &
+    - python -m pytest augur/datasources/**/test_**_functions.py
+
+  - name: API Unit Tests
+    install: python setup.py install; pip install .
+    language: python
+    python: '3.6'
+    script:
+    - pip install zmq
+    - augur run &
     - sleep 10
     - python -m pytest augur/datasources/**/test_**_routes.py
 
