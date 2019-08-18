@@ -10,6 +10,7 @@ EDITOR?="vi"
 PLUGIN=**
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
+AUGUR_PIP?='pip'
 
 default:
 	@ echo "Installation Commands:"
@@ -41,14 +42,14 @@ default:
 	@ echo "Prototyping:"
 	@ echo "    jupyter                         Launches the jupyter"
 	@ echo "    create-jupyter-env              Creates a jupyter environment for Augur"
-	@ echo 
+	@ echo
 	@ echo "Upgrade/Migration Helpers:"
 	@ echo "    to-json                         Converts old augur.cfg to new augur.config.json"
 	@ echo "    to-env                          Converts augur.config.json to a script that exports those values as environment variables"
 
 
 
-# 
+#
 #  Installation
 #
 install:
@@ -73,7 +74,7 @@ upgrade: version download-upgrade install-dev
 
 
 
-# 
+#
 #  Development
 #
 dev-start: dev-stop
@@ -164,7 +165,7 @@ vagrant:
 
 clean:
 	@ echo "Removes node_modules, logs, caches, and some other dumb stuff that can be annoying."
-	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
+	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
 	find . -name \*.pyc -delete
 	@ echo "Run sudo make install-dev again to reinstall the environment."
 
@@ -177,7 +178,7 @@ update:
 	git stash pop
 
 
-# 
+#
 #  Prototyping
 #
 jupyter:
@@ -188,7 +189,7 @@ create-jupyter-env:
 
 
 
-# 
+#
 #  Upgrade helpers
 #
 .PHONY: to-json
@@ -201,7 +202,7 @@ to-env:
 
 
 
-# 
+#
 #  System-specific
 #
 install-ubuntu-dependencies:

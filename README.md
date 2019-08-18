@@ -5,19 +5,21 @@ branch | status
 master | [![Build Status](https://travis-ci.org/chaoss/augur.svg?branch=master)](https://travis-ci.org/chaoss/augur)
    dev | [![Build Status](https://travis-ci.org/chaoss/augur.svg?branch=dev)](https://travis-ci.org/chaoss/augur)
 
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
+
 ## About Augur
 
-We welcome new developers!  We are prototyping a new installation on our `dev` branch now, so if something breaks or seems weird, we will respond quickly if you email us here: p9j0r6s0m4a0t8v5@augurlabs.slack.com ... Drops straight into our Slack channel for support! 
+We welcome new developers!  We are prototyping a new installation on our `dev` branch now, so if something breaks or seems weird, we will respond quickly if you email us here: p9j0r6s0m4a0t8v5@augurlabs.slack.com ... Drops straight into our Slack channel for support!
 
-Augur is focused on prototyping open source software metrics. 
+Augur is focused on prototyping open source software metrics.
 
-Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/chaoss/metrics). Technically, Augur is a [Flask web application](http://augurlabs.io), [Python library](http://augur.augurlabs.io/static/docs/) and [REST server](http://augur.augurlabs.io/static/api_docs/) that presents metrics on open source software development project health and sustainability. 
+Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/chaoss/metrics). Technically, Augur is a [Flask web application](http://augurlabs.io), [Python library](http://augur.augurlabs.io/static/docs/) and [REST server](http://augur.augurlabs.io/static/api_docs/) that presents metrics on open source software development project health and sustainability.
 
 
-## Getting Started 
+## Getting Started
 -------------------
 
-Windows installation instructions using Vagrant can be found [here](docs/python/source/windows-install.md). 
+Windows installation instructions using Vagrant can be found [here](docs/python/source/windows-install.md).
 
 Dependencies
 ------------
@@ -25,7 +27,7 @@ Dependencies
 -   [GitHub Access Token](https://github.com/settings/tokens) (no write access required)
 
 
-### Developer Setup 
+### Developer Setup
 1. [Install and configure Augur.](./docs/setup/installing-augur.md)
 2. You can follow instructions for collecting data about specific repositories of interest, **OR** use our sample dataset to get going faster.
     - Option 1: [Configure Augur to get Data for your repositories of interest.](./docs/setup/augur-get-commit-data.md) *or*
@@ -35,7 +37,9 @@ Dependencies
 
 
 ## Guidelines
-To contribute to Augur, please check out our [development guide](http://augur.augurlabs.io/static/docs/dev-guide/1-overview.html) and [notes on making contributions](CONTRIBUTING.md). Also, please note our [code of conduct](CODE_OF_CONDUCT.md). We want Augur to be a welcoming development community that is open to everyone. 
+To contribute to Augur, please check out our [development guide](http://augur.augurlabs.io/static/docs/dev-guide/1-overview.html) and [notes on making contributions](CONTRIBUTING.md). Also, please note our [code of conduct](CODE_OF_CONDUCT.md). We want Augur to be a welcoming development community that is open to everyone.
+
+Please note we require all commits to be signed off with a [Developer Certificate of Origin](https://developercertificate.org/) in accordance with the [CHAOSS Project Charter section 8.2.1](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy). This can be easily done by using the `-s` flag when using `git commit`. For example: `git commit -s -m "Update README.md"`.
 
 
 ## License and Copyright

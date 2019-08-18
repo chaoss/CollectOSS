@@ -8,7 +8,7 @@
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
-        <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>        
+        <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>
       </div> -->
       <div v-if="mount" :id="source"></div>
       <vega-lite v-if="!mount" :spec="spec" :data="values"></vega-lite>
@@ -47,7 +47,7 @@ import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats'
 
 export default {
-  
+
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
   data() {
 
@@ -63,7 +63,7 @@ export default {
       mount: true
     }
   },
-  
+
   watch: {
     compare: function() {
       this.spec;
@@ -203,7 +203,7 @@ export default {
                 }
 
               },
-              
+
             ]
           }
         ]
@@ -276,7 +276,7 @@ export default {
           }
       }
 
-      let getToolPoint = (key) => { 
+      let getToolPoint = (key) => {
         let selection = (!selectionAdded ? {
             "tooltip": {"type": "single", "on": "mouseover","nearest": false}
           } : null
@@ -429,7 +429,7 @@ export default {
         return {
           "transform": [{"filter": {"selection": "tooltip"}},brush],
           "mark": {"type": "text","align": "left","dx": 5,"dy": -5},
-          "encoding": {"text": {"type": "quantitative","field": key},"x": {"field": "date","type": "temporal","axis": {"format": "%b %Y", "title": " "}},"y": {"field": key,"type": "quantitative","axis": {"title": null}},"color": {"value": "green"}}              
+          "encoding": {"text": {"type": "quantitative","field": key},"x": {"field": "date","type": "temporal","axis": {"format": "%b %Y", "title": " "}},"y": {"field": key,"type": "quantitative","axis": {"title": null}},"color": {"value": "green"}}
         }
       }
 
@@ -502,12 +502,12 @@ export default {
         repos.forEach((repo) => {
           buildLines("valueRolling" + repo, colors[color])
 
-          if(this.rawWeekly) 
+          if(this.rawWeekly)
             config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
           // if user doesn't want detail, then set vconcat to og
-          if(this.showDetail) 
+          if(this.showDetail)
             config.vconcat[1] = getDetail("valueRolling" + this.repo)
-          else if (config.vconcat[1]) 
+          else if (config.vconcat[1])
             config.vconcat.pop()
           color++
         });
@@ -588,7 +588,7 @@ export default {
         //     }
         // }
       }
-      
+
       // if base repo fails and it is the only repo, or if base repo AND only compared repo fails
       // makes blank chart invisible to user
       if ((!this.status.base && !this.comparedTo) || (!this.status.compared && !this.status.base)) {
@@ -685,7 +685,7 @@ export default {
           // Build the lines we need
           let legend = [] //repo + field strings for vega legend
           let values = []
-          let colors = [] 
+          let colors = []
           let baselineVals = null
           let baseDate = null
           repos.forEach((repo) => {
@@ -693,7 +693,7 @@ export default {
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
-                
+
                 let rolling = null
                 if (repo == this.repo && d[0]) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
@@ -709,7 +709,7 @@ export default {
 
                     for (var i = 0; i < baselineVals.length; i++){
                     if (rolling[i] && baselineVals[i])
-                      rolling[i].valueRolling -= baselineVals[i].valueRolling                   
+                      rolling[i].valueRolling -= baselineVals[i].valueRolling
                     }
                   }
                 } else {
@@ -762,21 +762,21 @@ export default {
                 })
                 values.push.apply(values, temp)
               }
-            })  
+            })
 
             this.legendLabels = legend
             if(this.mount)
               config.data = {"values": values}
             this.values = values
 
-            
+
             this.renderChart()
           }
       }
       if (this.data && this.mount) {
         processData(this.data)
       } else {
-        
+
         window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
         }, () => {
@@ -787,7 +787,7 @@ export default {
         this.reloadImage(config)
 
       return config
-      
+
     }
 
   }, // end computed
@@ -839,7 +839,7 @@ export default {
         this.renderError()
         return
       }
-      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'}) 
+      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'})
     }
   },// end methods
   mounted() {
