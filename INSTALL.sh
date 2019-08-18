@@ -19,37 +19,31 @@ cd ./facade_worker;
 rm -rf build/*;
 rm -rf dist/*;
 python setup.py install;
-pip install -e .; 
 
 cd ../github_worker;
 rm -rf build/*;
 rm -rf dist/*;
 python setup.py install; 
-pip install -e a;.
 
 cd ../insight_worker; 
 rm -rf build/*;
 rm -rf dist/*;
 python setup.py install;
-pip install -e .;
 
 cd ../linux_badge_worker;
 rm -rf build/*;
 rm -rf dist/*; 
 python setup.py install;
-pip install -e .;
 
 cd ../pull_request_worker; 
 rm -rf build/*;
 rm -rf dist/*; 
 python setup.py install;
-pip install -e .; 
 
 cd ../repo_info_worker;
 rm -rf build/*;
 rm -rf dist/*; 
 python setup.py install;
-pip install -e .;
 cd ../..;
 
 ## API Docs
