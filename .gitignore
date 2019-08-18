@@ -64,6 +64,7 @@ _pycache_
 augur/bin
 .pytest_cache
 .ipynb_checkpoints
+venv/
 
 # Node #
 ########
@@ -86,3 +87,6 @@ docs/python/build/doctrees/augurcontext.doctree
 # build directories #
 #####################
 build/
+lib/
+dist/
+
