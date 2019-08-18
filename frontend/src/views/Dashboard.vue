@@ -221,26 +221,6 @@ export default class Dashboard extends Vue {
             }
           })
           this.loadedInsights = true
-            // tuples.topInsights.forEach((tuple:any) => {
-            //   // tuple.value = +tuple.value
-            //   if (this.insights[group.rg_name]){
-            //     if (this.insights[group.rg_name][tuple.repo_git]) {
-            //       if (this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric]) {
-            //         this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric].push(tuple)
-            //       } else {
-            //         this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-            //       } 
-            //     } else {
-            //       this.insights[group.rg_name][tuple.repo_git] = {}
-            //       this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-            //     }
-            //   } else {
-            //     this.insights[group.rg_name] = {}
-            //     this.insights[group.rg_name][tuple.repo_git] = {}
-            //     this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-            //   }
-            // })
-            
           this.loadedRelations = true
         })
       })  

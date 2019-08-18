@@ -2,7 +2,7 @@
   <div ref="holder">
 
     <div style="margin-bottom: 0 !important" class="tickchart ">
-      <h3 style="font-size: 0.8rem;width: 17rem;text-align: center;transform: translateY(-3px);">{{ title }}</h3>
+      <h3 style="font-size: 0.9rem;text-align: center;transform: translateY(-3px);">{{ title }}</h3>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <div :id="source" style="padding: 0"></div>
       <!-- <p> {{ chart }} </p> -->
@@ -105,8 +105,8 @@ export default {
             "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 12,
-            "labelFont": "Open Sans",
+            "labelFontSize": 17,
+            // "labelFont": "Open Sans",
             "labelOffset": 3,
             "titleFontSize": 14,
             "labelLimit": 260 
