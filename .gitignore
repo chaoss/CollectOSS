@@ -8,6 +8,7 @@
 *.so
 *.pyc
 *.egg-info
+*.egg
 .vscode
 
 # Packages #
