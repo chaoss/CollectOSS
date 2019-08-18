@@ -29,7 +29,7 @@ export default class AugurAPI {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
-    this._host = hostURL || 'http://localhost:5002'
+    this._host = hostURL || 'http://localhost:5000'
     this.__cache = {}
     this.__timeout = null
     this.__pending = {}

@@ -87,7 +87,7 @@ import Spinner from '../components/Spinner.vue'
 import CompareControl from '../components/common/CompareControl.vue'
 import router from "@/router";
 import BubbleChart from '../components/charts/BubbleChart.vue'
-import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart'
+import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
 
 @Component({
   components: {
