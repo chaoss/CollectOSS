@@ -14,9 +14,7 @@ matrix:
     python: '3.6'
     script:
     - pip install zmq
-    - augur run &
-    - sleep 10
-    - python -m pytest augur/datasources/**/test_**_routes.py
+    - augur run
 
 notifications:
   slack:
