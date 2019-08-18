@@ -142,7 +142,7 @@ build: frontend docs
 test:test-functions test-routes
 
 test-functions:
-	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(PLUGIN)/test_$(PLUGIN)_functions.py'
+	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest -ra augur/datasources/$(PLUGIN)/test_$(PLUGIN)_functions.py'
 
 test-routes:
 	@ python test/api/test_api.py $(PLUGIN)

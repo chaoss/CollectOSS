@@ -1208,12 +1208,3 @@ class GitHubWorker:
         logging.info("Page recieved has {} tuples, while filtering duplicates this" +
             "was reduced to {} tuples.\n".format(len(new_data), need_insertion_count))
         return new_data
-
-
-
-
-
-
-
-
-

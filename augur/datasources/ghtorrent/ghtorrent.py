@@ -22,6 +22,7 @@ class GHTorrent(object):
         self.DB_STR = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
         )
+        
         logger.debug('GHTorrent: Connecting to {}:{}/{} as {}'.format(host, port, dbname, user))
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool)
         try:

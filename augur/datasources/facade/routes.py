@@ -144,8 +144,6 @@ def create_routes(server):
 
     server.addGitMetric(facade.facade_project, 'facade_project')
 
-    server.addGitMetric(facade.facade_project, 'facade_project')
-
 
     @server.app.route('/{}/git/annual_lines_of_code_count_ranked_by_repo_in_repo_group'.format(server.api_version))
     def annual_lines_of_code_count_ranked_by_repo_in_repo_group():
