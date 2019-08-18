@@ -2,6 +2,7 @@
   <div ref="holder">
     <div class="normalbar">
       <!-- <h3>Lines of code added by the top 10 authors as Percentages - All Time</h3> -->
+      <h3 style="font-size: 0.8rem;width: 17rem;text-align: center;transform: translateY(0px);">{{ title }}</h3>
       <vega-lite :spec="spec" :data="data"></vega-lite>
       <p> {{ chart }} </p>
     </div>
@@ -76,6 +77,7 @@ export default {
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": 780,
+        "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
         // "height": 100,
         "config": {
           "tick": {
@@ -85,10 +87,6 @@ export default {
           "axis":{
             "grid": false
           }
-        },
-        "title": {
-          "text": this.title,
-          "offset": 40
         },
         "layer": [
           {

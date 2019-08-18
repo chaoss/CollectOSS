@@ -1,9 +1,10 @@
 <template>
 
   <div ref="holder">
-    <div class="spacing"></div>
+    
     <div style="color: black" class="error hidden"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
     <div class="spinner loader"></div>
+    <div class="spacing"></div>
     <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
@@ -12,7 +13,7 @@
       </div> -->
       <div v-if="mount" :id="source"></div>
       <vega-lite v-if="!mount" :spec="spec" :data="values"></vega-lite>
-      <p> {{ chart }} </p>
+      <p v-if="!mount"> {{ chart }} </p>
       <nav class="tabs">
         <ul>
           <li :class="{ active: (timeperiod == '1825'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="1825" :id="source + '5year'" v-model="timeperiod"><label :for="source + '5year'">5 Years</label></li>
@@ -91,37 +92,37 @@ export default {
   },
   computed: {
     repo () {
-      return this.$store.state.baseRepo
+      return this.$store.getters.base
     },
     gitRepos () {
-      return this.$store.state.gitRepo
+      return this.$store.getters.gitRepo
     },
     period () {
-      return this.$store.state.trailingAverage
+      return this.$store.getters.trailingAverage
     },
     earliest () {
-      return this.$store.state.startDate
+      return this.$store.state.compare.startDate
     },
     latest () {
-      return this.$store.state.endDate
+      return this.$store.state.compare.endDate
     },
     compare () {
-      return this.$store.state.compare
+      return this.$store.state.compare.compare
     },
     comparedRepos () {
-      return this.$store.state.comparedRepos
+      return this.$store.state.compare.comparedRepos
     },
     rawWeekly () {
-      return this.$store.state.rawWeekly
+      return this.$store.state.compare.rawWeekly
     },
     showArea () {
-      return this.$store.state.showArea
+      return this.$store.state.compare.showArea
     },
     showTooltip () {
-      return this.$store.state.showTooltip
+      return this.$store.getters.showTooltip
     },
     showDetail () {
-      return this.$store.state.showDetail
+      return this.$store.getters.showDetail
     },
     spec() {
 
@@ -130,19 +131,10 @@ export default {
       // Get the repos we need
       let repos = []
       if (this.repo) {
-        if (window.AugurRepos[this.repo])
-          repos.push(window.AugurRepos[this.repo])
-        else if (this.domain){
-          let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-          if (window.AugurRepos[temp.toString()])
-            temp = window.AugurRepos[temp.toString()]
-          else
-            window.AugurRepos[temp.toString()] = temp
-          repos.push(temp)
-        }
+        repos.push(temp)
       } // end if (this.$store.repo)
       this.comparedRepos.forEach(function(repo) {
-        repos.push(window.AugurRepos[repo])
+        repos.push(repo)
       });
 
       repos.forEach((repo) => {
@@ -593,11 +585,11 @@ export default {
       // makes blank chart invisible to user
       if ((!this.status.base && !this.comparedTo) || (!this.status.compared && !this.status.base)) {
         if(!this.showDetail){
-          window.$(this.$refs.holder).find('.hidefirst').removeClass('invisDet')
-          window.$(this.$refs.holder).find('.hidefirst').addClass('invis')
+          // window.$(this.$refs.holder).find('.hidefirst').removeClass('invisDet')
+          // window.$(this.$refs.holder).find('.hidefirst').addClass('invis')
         } else {
-          window.$(this.$refs.holder).find('.hidefirst').removeClass('invis')
-          window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet')
+          // window.$(this.$refs.holder).find('.hidefirst').removeClass('invis')
+          // window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet')
         }
       }
 
@@ -624,7 +616,6 @@ export default {
       })
 
       let processData = (data) => {
-
         // Make it so the user can save the data we are using
           this.__download_data = data
           this.__download_file = this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
@@ -649,6 +640,7 @@ export default {
           let normalized = []
           let aggregates = []
           let buildLines = (obj, onCreateData, repo) => {
+            console.log(obj, onCreateData, repo)
             if (!obj) {
               return
             }
@@ -659,7 +651,7 @@ export default {
             }
             let count = 0
             for (var key in obj) {
-
+              console.log(key)
               if (obj.hasOwnProperty(key)) {
                 if (fields[key]) {
                   fields[key].forEach((field) => {
@@ -689,11 +681,12 @@ export default {
           let baselineVals = null
           let baseDate = null
           repos.forEach((repo) => {
+            console.log(data,repo)
             // let relevant = this.data ? data
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
-                
+                console.log(d)
                 let rolling = null
                 if (repo == this.repo && d[0]) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
@@ -765,19 +758,19 @@ export default {
             })  
 
             this.legendLabels = legend
-            if(this.mount)
-              config.data = {"values": values}
+            config.data = {"values": values}
             this.values = values
 
             
             this.renderChart()
           }
       }
-      if (this.data && this.mount) {
+      if (this.data) {
+        console.log(this.data)
         processData(this.data)
       } else {
-        
-        window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+        console.log("did not detect data")
+        this.$store.state.common.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
         }, () => {
           this.renderError()
@@ -847,7 +840,7 @@ export default {
   },
   created () {
     var query_string = "chart_mapping=" + this.source
-    window.AugurAPI.getMetricsStatus(query_string).then((data) => {
+    this.$store.state.common.AugurAPI.getMetricsStatus(query_string).then((data) => {
       this.metricSource = data[0].data_source
     })
   }

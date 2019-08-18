@@ -151,7 +151,7 @@ const routes = [
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
-          content: RepoOverview,
+          content: SingleComparison,
         },
       },
       {
@@ -190,7 +190,7 @@ const routes = [
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
-          content: GroupOverview,
+          content: SingleComparison,
         },
       },
     ],

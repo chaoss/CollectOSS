@@ -11,7 +11,7 @@
 
         <d-row>
           <div v-if="!loadedInsights" class="col-md-8 col-lg-9">
-            <spinner style="top: 30%; padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+            <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
           </div>
           <d-col v-if="loadedInsights" v-for="(group, idx) in Object.keys(insights).slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             
@@ -30,7 +30,7 @@
                 <h5 class="card-title">
                   <a href="#" class="text-fiord-blue">{{ repo.substr(19) }}</a>
                 </h5>
-                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[group][repo][metric]) }} in Code Commits within the past month</p>
+                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[group][repo][metric]) }}</p>
                 <span class="text-muted" style="font-size: .75rem">1 month</span>
               </d-card-body>
             </d-card>
@@ -94,7 +94,8 @@ interface FlexObject<TValue> {
       'loadRepos',
       'loadRepoGroups',
       'createAPIObjects',
-      'endpoint'
+      'endpoint',
+      'addRepoGroup'
     ])
   },
   computed: {
@@ -156,14 +157,15 @@ export default class Dashboard extends Vue {
   loadRepos!:any;
   createAPIObjects!:any;
   endpoint!:any;
+  addRepoGroup!:any;
 
   // 'created' lifecycle hook
   // Gets ran on component initialization, data collection should be handled here
   created () {
 
     // Load the data we need
-    this.loadRepoGroups().then(() => {
-      this.loadRepos().then(() => {
+    this.loadRepoGroups().then((groups: any) => {
+    //   this.loadRepos().then(() => {
         // Creating AugurAPI objects for the entities we will query
         // for (let n = 0; n < 3; n++){
         //   let group = this.repoGroups[n]
@@ -178,38 +180,71 @@ export default class Dashboard extends Vue {
         //     sparkRepos.push(this.apiRepos[repo.url])
         //   })
         // }
-        this.endpoint({endpoints: ['topInsights']}).then((tuples:any) => {
-          console.log(Object.keys(tuples))
-          tuples.topInsights;
-          // sleep(5000)
-          // console.log(Object.keys(tuples))
-          if ('topInsights' in tuples){
-            tuples.topInsights.forEach((tuple:any) => {
-              // tuple.value = +tuple.value
-              if (this.insights[tuple.rg_name]){
-                if (this.insights[tuple.rg_name][tuple.repo_git]) {
-                  if (this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric]) {
-                    this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric].push(tuple)
-                  } else {
-                    this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-                  } 
-                } else {
-                  this.insights[tuple.rg_name][tuple.repo_git] = {}
-                  this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-                }
-              } else {
-                this.insights[tuple.rg_name] = {}
-                this.insights[tuple.rg_name][tuple.repo_git] = {}
-                this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-              }
-            })
-            this.loadedInsights = true
-          } else {
-            console.log("top insights did not load correctly")
-          }
-        })
-        this.loadedRelations = true
+      let relevantApiGroups: any[] = []
+      let addingGroupPromises: any[] = []
+      groups.forEach((group: any) => {
+        addingGroupPromises.push(this.addRepoGroup(group))
       })
+      Promise.all(addingGroupPromises).then((groups) => {
+        console.log(groups)
+        groups.forEach((group) => {
+          relevantApiGroups.push(this.apiGroups[group.rg_name])
+        })
+        
+      
+        this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples:any) => {
+          console.log(Object.keys(tuples))
+          groups.forEach((group) => {
+            if ('topInsights' in tuples[group.rg_name].groupEndpoints){
+              tuples[group.rg_name].groupEndpoints.topInsights.forEach((tuple:any) => {
+                // tuple.value = +tuple.value
+                if (this.insights[group.rg_name]){
+                  if (this.insights[group.rg_name][tuple.repo_git]) {
+                    if (this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric]) {
+                      this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric].push(tuple)
+                    } else {
+                      this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+                    } 
+                  } else {
+                    this.insights[group.rg_name][tuple.repo_git] = {}
+                    this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+                  }
+                } else {
+                  this.insights[group.rg_name] = {}
+                  this.insights[group.rg_name][tuple.repo_git] = {}
+                  this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+                }
+              })
+              
+            } else {
+              console.log("top insights did not load correctly")
+            }
+          })
+          this.loadedInsights = true
+            // tuples.topInsights.forEach((tuple:any) => {
+            //   // tuple.value = +tuple.value
+            //   if (this.insights[group.rg_name]){
+            //     if (this.insights[group.rg_name][tuple.repo_git]) {
+            //       if (this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric]) {
+            //         this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric].push(tuple)
+            //       } else {
+            //         this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+            //       } 
+            //     } else {
+            //       this.insights[group.rg_name][tuple.repo_git] = {}
+            //       this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+            //     }
+            //   } else {
+            //     this.insights[group.rg_name] = {}
+            //     this.insights[group.rg_name][tuple.repo_git] = {}
+            //     this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+            //   }
+            // })
+            
+          this.loadedRelations = true
+        })
+      })  
+    //   })
     })
   }
 
@@ -285,17 +320,26 @@ export default class Dashboard extends Vue {
       return 'arrow_downward'
   }
 
+  date_diff_indays (date1: any, date2: any) {
+    let dt1 = new Date(date1);
+    let dt2 = new Date(date2);
+    return Math.floor((Date.UTC(dt2.getFullYear(), dt2.getMonth(), dt2.getDate()) - Date.UTC(dt1.getFullYear(), dt1.getMonth(), dt1.getDate()) ) /(1000 * 60 * 60 * 24));
+  }
+
   getPhrase (values: any[]) {
     let i = 0
+    let date = Date.now()
+    console.log(date)
     for (i = 0; i < values.length; i++){
       if (values[i].discovered){
+        date = this.date_diff_indays(values[i].date, date)
         break
       }
     }
     if (values[i+1].value > values[i].value) 
-      return 'increase'
+      return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
     else
-      return 'decrease'
+      return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
   }
 
   setBaseRepo (e: any) {
