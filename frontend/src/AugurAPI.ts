@@ -104,7 +104,7 @@ export default class AugurAPI {
 
   batch(endpoints: Array<String>) {
     let str = '[{"method": "GET", "path": "' + endpoints.join('"},{"method": "GET", "path": "') + '"}]'
-    console.log(str)
+    // console.log(str)
     this.openRequests++
     let url = this.__endpointURL('batch')
     // Check cached
@@ -128,7 +128,7 @@ export default class AugurAPI {
         created_at: Date.now(),
         data: data
       }
-      console.log(data)
+      // console.log(data)
       return data
     })
   }
@@ -137,19 +137,19 @@ export default class AugurAPI {
     let endpoints: String[] | any[] = []
     let reverseMap: any = {}
     let processedData: any = {}
-    console.log(repos)
+    // console.log(repos)
     repos.forEach((repo:any) => {
       // Array.prototype.push.apply(endpoints, repo.batch(fields, true))
       // _.assign(reverseMap, repo.__reverseEndpointMap)
       processedData[repo.toString()] = {}
       fields.forEach((field:any) => {
-        console.log("endpoint_map: ", field, repo)
-        console.log(repo.__endpointMap[field])
+        // console.log("endpoint_map: ", field, repo)
+        // console.log(repo.__endpointMap[field])
         endpoints.push(repo.__endpointMap[field])
         reverseMap[repo.__endpointMap[field]] = repo.__reverseEndpointMap[repo.__endpointMap[field]]
       })
     })
-    console.log("before batch:", endpoints, reverseMap)
+    // console.log("before batch:", endpoints, reverseMap)
     return this.batch(endpoints).then((data: any) => {
 
       let newdat = new Promise((resolve, reject) => {
@@ -159,19 +159,19 @@ export default class AugurAPI {
               processedData[reverseMap[response.path].owner] = processedData[reverseMap[response.path].owner] || {}
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = []
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = JSON.parse(response.response)
-              console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
+              // console.log("pdata after response", processedData, typeof (reverseMap[response.path].owner), typeof (reverseMap[response.path].name), JSON.parse(response.response), response.response)
             } else if (reverseMap[response.path]) {
-              console.log('failed null')
+              // console.log('failed null')
               processedData[reverseMap[response.path].owner][reverseMap[response.path].name] = null
             }
           })
-          console.log(processedData)
+          // console.log(processedData)
           resolve(processedData)
         } else {
           reject(new Error('data-not-array'))
         }
       })
-      console.log(newdat, "newdata")
+      // console.log(newdat, "newdata")
       return newdat
     })
   }
@@ -271,10 +271,10 @@ abstract class BaseRepo {
           data.forEach(response => {
             if (response.status === 200) {
               mapped[this.__reverseEndpointMap[response.path].name] = JSON.parse(response.response)
-              console.log('mapped:', mapped)
+              // console.log('mapped:', mapped)
             } else {
               mapped[this.__reverseEndpointMap[response.path].name] = null
-              console.log('mapped null:', mapped, this.__reverseEndpointMap[response.path])
+              // console.log('mapped null:', mapped, this.__reverseEndpointMap[response.path])
             }
           })
           resolve(mapped)
@@ -293,7 +293,7 @@ class Repo extends BaseRepo{
   public url?:string
   constructor(parent: AugurAPI, metadata:{githubURL?: string, gitURL?: string, repo_id?: number, repo_group_id?: number, rg_name?:string, repo_name?:string}){
     super(parent)
-    console.log(metadata)
+    // console.log(metadata)
     this.gitURL = metadata.gitURL || undefined
     this.githubURL = metadata.githubURL || undefined
     this.repo_id = metadata.repo_id || undefined
@@ -467,6 +467,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('committers','committers')
     this.addRepoMetric('licenseDeclared','license-declared')
     this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
+    this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
   }
 }
 
@@ -485,8 +486,8 @@ class RepoGroup extends BaseRepo {
   setup() {
     if (this.repo_group_id == null && this.rg_name) {
       this.retrieveGroupID()
-      this.initialMetric()
     }
+    this.initialMetric()
   }
 
   retrieveGroupID() {
@@ -528,7 +529,8 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('languages','languages')
       this.addRepoGroupMetric('committers','committers')
       this.addRepoGroupMetric('licenseDeclared','license-declared')
-
+      this.addRepoGroupMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
+      this.addRepoGroupMetric('topInsights', 'top-insights')
     }
   }
 }

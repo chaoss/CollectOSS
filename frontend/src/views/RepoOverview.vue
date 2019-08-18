@@ -27,20 +27,20 @@
 
     <div class="row">
       
-      <div class="row col col-7" style="" >
-        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
+      <div class="row col col-7" :style="loaderPadding(loadedBars)" >
+        <spinner v-if="!loadedBars" ></spinner>
 <!-- look to add commit chart? -->
         <!--<div class="col col-12">
           <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
         </div> -->
         <div class="row col col-12" v-if="loadedBars">
-          <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+          <div class="col col-6" style="padding-right: 0px; transform: translateY(-0px) !important; max-height:0px">
             <normalized-stacked-bar-chart 
             title="Lines of code added by the top 10 authors as Percentages - By Time Period"
             source="changesByAuthor1" :data="values['changesByAuthor']">
             </normalized-stacked-bar-chart>
           </div>
-          <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important;max-height:0px">
             <div style="padding-top: 0px"></div>
             <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
             source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
@@ -55,7 +55,7 @@
           </div>
         </div>
       </div>
-      <div class="row col col-5">
+      <div class="row col col-5" :style="loaderPadding(loadedBars)">
         <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
         <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
       </div>
@@ -117,6 +117,7 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
     ...mapGetters('compare',[
       'base'
     ]),
+    
   },
 })
 
@@ -162,6 +163,13 @@ export default class RepoOverview extends Vue {
         params: {group: repo_group.rg_name}
       })
     })
+  }
+
+  loaderPadding (loaded: any) {
+    if (loaded) 
+      return "" 
+    else 
+      return "padding-top: 3rem"
   }
 
 }

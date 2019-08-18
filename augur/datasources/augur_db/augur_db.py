@@ -2081,7 +2081,7 @@ class Augur(object):
             results = pd.read_sql(linesChangedByAuthorSQL, self.db, params={"repo_group_id": repo_group_id})
             return results
 
-    @annotate(tag='closed-issues-count')
+    @annotate(tag='open-issues-count')
     def open_issues_count(self, repo_group_id, repo_id=None):
         """
         Returns number of lines changed per author per day
@@ -2967,7 +2967,7 @@ class Augur(object):
     ###       UTILITY       ###
     ###########################
     @annotate(tag='top-insights')
-    def top_insights(self):
+    def top_insights(self, repo_group_id, num_repos=6):
         """
         Timeseries of pull request acceptance rate (expressed as the ratio of pull requests merged on a date to the count of pull requests opened on a date)
 
@@ -2975,11 +2975,16 @@ class Augur(object):
         """
 
         topInsightsSQL = s.sql.text("""
-            SELECT repo_insights.repo_id, repo_git, ri_metric, ri_value as value, 
-                ri_date as date, cms_id as rating, ri_fresh as discovered
-            FROM repo_insights JOIN repo on repo.repo_id = repo_insights.repo_id
-            WHERE cms_id = 1
+            SELECT repo_insights.repo_id, repo_git, ri_metric, ri_value AS value, 
+                ri_date AS date, cms_id AS rating, ri_fresh AS discovered
+            FROM repo_insights JOIN repo ON repo.repo_id = repo_insights.repo_id
+            WHERE repo_insights.repo_id IN (
+                SELECT repo_id
+                FROM repo
+                WHERE repo_group_id = :repo_group_id
+                AND repo_id IN (SELECT repo_id FROM repo_insights GROUP BY repo_id HAVING 303 = count(repo_insights.repo_id) LIMIT :num_repos)
+            )
         """)
-        results = pd.read_sql(topInsightsSQL, self.db)
+        results = pd.read_sql(topInsightsSQL, self.db, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
         return results
 

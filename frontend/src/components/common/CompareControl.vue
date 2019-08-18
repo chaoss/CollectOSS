@@ -1,5 +1,5 @@
 <template>
-  <d-container>
+  <d-container style="max-width: 1240px;">
     <d-card>
       <d-card-header>
         <d-row class="align-items-center">
