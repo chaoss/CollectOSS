@@ -17,8 +17,6 @@ class LocalCSV(object):
     def __init__(self):
         return
 
-    name_gender = pd.read_csv(get_data_path('name_gender.csv'), index_col=0)
-    companies = pd.read_csv(get_data_path('companies.csv'), index_col=['website'])
 
     def classify_emails(self, email_series):
         """
@@ -26,6 +24,8 @@ class LocalCSV(object):
 
         :param email_series: series of given emails
         """
+        name_gender = pd.read_csv(get_data_path('name_gender.csv'), index_col=0)
+        companies = pd.read_csv(get_data_path('companies.csv'), index_col=['website'])
     
         def classifier(email):
             """

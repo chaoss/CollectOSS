@@ -1,11 +1,11 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an idea or enhancement for our project.
 
 ---
 
 **Is your feature request related to a problem? If so, please describe the problem:**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...] happens, and here's how I think we could fix it.
 
 **Describe the solution you'd like:**
 A clear and concise description of what you want to happen.
