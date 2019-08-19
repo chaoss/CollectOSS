@@ -25,19 +25,19 @@
     computed: {
       ...mapGetters('compare',[
         'comparedRepos',
-        'baseRepo'
+        'base',
       ]),
     },
   })
   export default class LineChart extends AppProps{
 
     // compare.getter
-    baseRepo!:any
+    base!:any
     comparedRepos!:any
 
     get values(){
-      console.log(this.data[this.baseRepo][this.source])
-      return this.data[this.baseRepo][this.source]
+      console.log(this.data[this.source])
+      return this.data[this.source]
     }
     get encoding() {
       return {
