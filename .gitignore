@@ -7,9 +7,11 @@ e Compiled source #
 *.o
 *.so
 *.pyc
-*.egg-info
+*.egg-info/
 *.egg
 .vscode
+*build/
+*dist/
 
 # Packages #
 ############
