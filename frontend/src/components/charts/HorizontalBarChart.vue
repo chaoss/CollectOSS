@@ -2,7 +2,7 @@
   <div ref="holder">
     <div class="normalbar">
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-      <h3 style="font-size: 0.9rem;width: 17rem;text-align: center;transform: translateY(0px) translateX(20px);">{{ title }}</h3>
+      <h3 style="font-size: 0.9rem;width: 17rem;text-align: center;transform: translateY(0px) translateX(1rem);">{{ title }}</h3>
       <div :id="source"></div>
       <p> {{ chart }} </p>
       <div style="position: relative; top: -0px !important; transform: translateY(-0.45rem)"class="form-item form-checkboxes tickradios">

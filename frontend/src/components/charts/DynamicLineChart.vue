@@ -755,10 +755,6 @@ export default {
             console.log(config.data)
             this.values = values
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 286b4ee8cf94bfd892451f8d7fdd813bb81c801c
             this.renderChart()
             this.loaded = true
           }

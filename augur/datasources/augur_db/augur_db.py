@@ -2982,7 +2982,7 @@ class Augur(object):
                 SELECT repo_id
                 FROM repo
                 WHERE repo_group_id = :repo_group_id
-                AND repo_id IN (SELECT repo_id FROM repo_insights GROUP BY repo_id HAVING 303 = count(repo_insights.repo_id) LIMIT :num_repos)
+                AND repo_id IN (SELECT repo_id FROM repo_insights GROUP BY repo_id HAVING 304 > count(repo_insights.repo_id) LIMIT :num_repos)
             )
         """)
         results = pd.read_sql(topInsightsSQL, self.db, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})

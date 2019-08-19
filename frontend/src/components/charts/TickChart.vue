@@ -6,7 +6,7 @@
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <p> {{ chart }} </p>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
-      <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
+      <!-- <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
 
 
           <div class="inputGroup" >
@@ -24,7 +24,7 @@
 
         
       </div>
-      
+       -->
     </div>
   </div>
 </template>
@@ -109,7 +109,7 @@ export default {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
 
         "width": 1000,
-        "height": 560,
+        "height": 360,
         "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},
         "config": {
           "tick": {
@@ -118,8 +118,12 @@ export default {
           },
           "axis":{
                 "grid": false,
-                "title": null
+                "title": null,
+                'labels': {
+                  'labelFontSize': 20
+                },
               },
+
               "legend": {
                // "offset": -505,
                 "titleFontSize": 10,
@@ -146,8 +150,8 @@ export default {
             "mark": type,
             
             "encoding": {
-              "x": {"field": "author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
-              "y": {"field": "author_email", "type": "nominal"},
+              "x": {"field": "cmt_author_date", "type": "temporal", "bin": bin, "axis": {"format": "%b %Y", "title": " "}},
+              "y": {"field": "cmt_author_email", "type": "nominal"},
               "color": {
                 "field": "Net lines added",
                 "type": "quantitative",
@@ -181,9 +185,9 @@ export default {
             "encoding": {
               "size": {"value": 8},
               "opacity": {"value": 1.051},
-              "x": {"field": "author_date", "type": "temporal"},
-              // "y": {"field": "author_email", "type": "nominal"},
-              "tooltip": [{"field": "author_email", "type": "nominal"},{
+              "x": {"field": "cmt_author_date", "type": "temporal"},
+              // "y": {"field": "cmt_author_email", "type": "nominal"},
+              "tooltip": [{"field": "cmt_author_email", "type": "nominal"},{
                 "field": "Total lines changed",
                 "type": "quantitative",
               },{
@@ -216,8 +220,8 @@ export default {
       }
       let group = (obj, name, change, filter) => {
         if (filter(change)) {
-          let year = (new Date(change.author_date)).getFullYear()
-          let month = (new Date(change.author_date)).getMonth()
+          let year = (new Date(change.cmt_author_date)).getFullYear()
+          let month = (new Date(change.cmt_author_date)).getMonth()
           obj[change[name]] = obj[change[name]] || { additions: 0, deletions: 0 }
           addChanges(obj[change[name]], change)
           obj[change[name]][year] = obj[change[name]][year] || { additions: 0, deletions: 0 }
@@ -238,27 +242,27 @@ export default {
             })
       }
       let filterDates = (change) => {
-        return (new Date(change.author_date)).getFullYear() > this.years[0]
+        return (new Date(change.cmt_author_date)).getFullYear() > this.years[0]
       }
       let processData = (data) => {
         data.forEach((change) => {
-          change.author_date = new Date(change.author_date)
+          change.cmt_author_date = new Date(change.cmt_author_date)
         })
         data.forEach((change) => {
           if (isFinite(change.additions) && isFinite(change.deletions)) {
-            group(contributors, 'author_email', change, filterDates)
+            group(contributors, 'cmt_author_email', change, filterDates)
             if (change.author_affiliation !== 'Unknown') {
               group(organizations, 'affiliation', change, filterDates)
             }
           }
         })
         
-        //this.values = flattenAndSort(contributors, 'author_email', 'additions')
+        //this.values = flattenAndSort(contributors, 'cmt_author_email', 'additions')
         //this.organizations = flattenAndSort(organizations, 'name', 'additions')
-        this.contributors = flattenAndSort(contributors, 'author_email', 'additions')
+        this.contributors = flattenAndSort(contributors, 'cmt_author_email', 'additions')
         var careabout = []
         this.contributors.slice(0,10).forEach((obj) => {
-          careabout.push(obj["author_email"])
+          careabout.push(obj["cmt_author_email"])
         })
         let findObjectByKey = (array, key, value) => {
             let ary = []
@@ -272,10 +276,10 @@ export default {
         var ary = []
         
         careabout.forEach((name) => {
-          findObjectByKey(data, "author_email", name).forEach((obj) => {
+          findObjectByKey(data, "cmt_author_email", name).forEach((obj) => {
             ary.push(obj)
           })
-          // changes.find(obj => obj.author_email == name))
+          // changes.find(obj => obj.cmt_author_email == name))
         })
       
         this.values = ary

@@ -9,7 +9,7 @@
       </div>
       <div class="col col-3" v-for="repo in comparedRepos">
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
-          <d-breadcrumb-item :active="true" :text="repo.split('/')[0]" href="#"/>
+          <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
           <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
         </d-breadcrumb>
       </div>

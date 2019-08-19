@@ -38,10 +38,11 @@
 
             <!-- Main insight -->
             <div v-if="!loadedInsights" style="padding: 3.5rem 0 0 3.7rem;" class="col-md-8 col-lg-9">
+
               <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-40%);"></spinner>
             </div>
             <main-insight v-if="loadedInsights"
-              :data="values" :url="getRepo" color="black" field="issues"
+              :data="values" :url="getRepo" color="black" source="main"
             ></main-insight>
 
           </d-card-body>
@@ -68,7 +69,7 @@
             <div class="p-0 card-body">
               <div class="list-group-small list-group list-group-flush">
                 <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                  <a href="#" @click="onGitRepo(repo)">
+                  <a href="#" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]])">
                     <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
                   </a>
                   <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
@@ -87,7 +88,7 @@
       <d-row class="col-12" style="transform: translateY(-28rem); padding: 0 !important;">
         <div class="col-12 page-header row no-gutters py-4">
           <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
-            <h3 class="page-title" style="font-size: 1rem">View other insights for this repo</h3>
+            <h3 class="page-title" style="font-size: 1rem">View other top insights</h3> <!-- insights for this repo -->
           </div>
         </div>
         <div v-if="!loadedInsights" class="col-md-4 col-lg-3">
@@ -109,7 +110,7 @@
             </div>
             <d-card-body v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
               <h5 class="card-title">
-                <a href="#" class="text-fiord-blue">{{ repo.substr(19) }}</a>
+                <a href="#" @click="onInspectInsight(insights[group][repo][metric])" class="text-fiord-blue">{{ repo.substr(19) }}</a>
               </h5>
               <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[group][repo][metric]) }}</p>
               <span class="text-muted" style="font-size: .75rem">1 month</span>
@@ -241,13 +242,15 @@ export default class InspectInsight extends Vue {
               tuples[group.rg_name].groupEndpoints.topInsights.forEach((tuple:any) => {
                 // tuple.value = +tuple.value
                 if (tuple.repo_git == this.getRepo && !this.addedRepo){
-
+                  this.addedRepo = true
                   this.addRepo(tuple).then((repo:any) => {
                     console.log("added main repo: ", repo)
                     repo[this.apiMetric]().then((values: any) => {
                       console.log("hit endpoint for repo", this.apiMetric, values)
                       this.values = values
-                    })
+                    }).catch(function () {
+                      console.log("Promise Rejected");
+                    });
                   })
                 }
                 if (this.insights[group.rg_name]){
@@ -291,6 +294,10 @@ export default class InspectInsight extends Vue {
   get apiMetric() {
     if (this.$route.params.ri_metric == 'New Issues (issues)'){
       return 'issueNew'
+    } else if (this.$route.params.ri_metric == 'Code Changes'){
+      return 'codeChanges'
+    } else if (this.$route.params.ri_metric == 'Code Changes Lines'){
+      return 'codeChangesLines'
     }
     return ''
   }
@@ -370,6 +377,14 @@ export default class InspectInsight extends Vue {
     this.$router.push({
       name: 'repo_overview',
       params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id}
+    })
+  }
+
+  onInspectInsight (e: any) {
+    console.log(e[0])
+    this.$router.push({
+      name: 'inspect_insight',
+      params: {'rg_name': e[0].rg_name, 'repo_git': e[0].repo_git, 'ri_metric': e[0].ri_metric}
     })
   }
 

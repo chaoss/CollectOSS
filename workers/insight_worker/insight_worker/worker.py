@@ -97,7 +97,7 @@ class InsightWorker:
                 SELECT repo_git, repo_id FROM repo ORDER BY repo_id DESC
             """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 0
+        pop_off = 450
         i = 0
         while i < pop_off:
             rs = rs[1:]
@@ -195,8 +195,8 @@ class InsightWorker:
             endpoints = [{'cm_info': "issues-new", 'cm_name': 'New Issues'}, {'cm_info': "code-changes", 
                 'cm_name': 'Commit Count'}, {'cm_info': "code-changes-lines", 'cm_name': 'Lines of Code Changed'}, 
                 {'cm_info': "reviews", 'cm_name': 'Pull Requests'}]
-            for endpoint in pd.read_sql(endpointSQL, self.db, params={}).to_records():
-                endpoints.append(endpoint)
+            # for endpoint in pd.read_sql(endpointSQL, self.db, params={}).to_records():
+            #     endpoints.append(endpoint)
 
             if 'repo_group_id' in entry_info:
                 base_url = 'http://localhost:{}/api/unstable/repo-groups/{}'.format(
@@ -288,23 +288,21 @@ class InsightWorker:
 
 
                         date_filtered_raw_values = []
-                        date_filtered_raw_values = raw_values[key][date_found_index:]
+                        date_filtered_raw_values = date_filtered_data[date_found_index:]
                         
-                        for value in date_filtered_raw_values:
-                            if value > upper and value - upper > max_difference and i != 0:
-                                logging.info("Upper band breached. Marking discovery.")
-                                max_difference = value - upper
+                        for dict in date_filtered_raw_values:
+                            if dict[key] > upper and dict[key] - upper > max_difference:
+                                logging.info("Upper band breached at {}. Marking discovery. {}, {}".format(i, dict, key))
+                                max_difference = dict[key] - upper
                                 score = (max_difference - mean) / mean * 100
                                 insight = True
                                 discovery_index = i
-                                break
-                            if value < lower and lower - value > max_difference and i != 0:
-                                logging.info("Lower band breached. Marking discovery.")
-                                max_difference = lower - value
+                            if dict[key] < lower and lower - dict[key] > max_difference:
+                                logging.info("Lower band breached at {}. Marking discovery.".format(i))
+                                max_difference = lower - dict[key]
                                 score = (max_difference - mean) / mean * 100
                                 insight = True
                                 discovery_index = i
-                                break
                             i += 1
                         if insight and 'date' in data[0]:
                             self.clear_insight(entry_info['repo_id'], cms_id)
@@ -313,13 +311,13 @@ class InsightWorker:
                             # upper_index = discovery_index + 50 if discovery_index >= 50 else 99
                             logging.info("Starting j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
                             # while j <= upper_index:
-                            for tuple in date_filtered_data:
+                            for tuple in date_filtered_raw_values:
                                 try:
                                     data_point = {
                                         'repo_id': int(entry_info['repo_id']),
                                         'ri_metric': endpoint['cm_name'] + ' ({})'.format(key),
-                                        'ri_value': tuple[key],#date_filtered_data[j][key],
-                                        'ri_date': tuple['date'],#date_filtered_data[j]['date'],
+                                        'ri_value': tuple[key],#date_filtered_raw_values[j][key],
+                                        'ri_date': tuple['date'],#date_filtered_raw_values[j]['date'],
                                         'cms_id': cms_id,
                                         'ri_fresh': 0 if j < discovery_index else 1,
                                         'ri_score': score,
@@ -383,7 +381,7 @@ class InsightWorker:
             # requests.post('http://localhost:{}/api/completed_task'.format(
                 # self.config['broker_port']), json=entry_info['repo_git'])
         else:
-            logging.info("there are 303 or more tuples for repo: {}, skipping this task".format(entry_info))
+            logging.info("there are 3 or more insights for repo: {}, skipping this task".format(entry_info))
 
     def clear_insight(self, repo_id, cms_id):
         logging.info("Checking if insight slot filled...")

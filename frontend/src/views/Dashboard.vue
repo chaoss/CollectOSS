@@ -207,7 +207,7 @@ export default class Dashboard extends Vue {
                 let i = 0
 
                 this.highest.forEach((record:any) => {
-                  if ((tuple.score > record.score && tuple.rg_name == record.rg_name)){
+                  if ((tuple.date > record.date && tuple.rg_name == record.rg_name)){
                     console.log('hihihi')
                     this.highest[i] = tuple
                   }
