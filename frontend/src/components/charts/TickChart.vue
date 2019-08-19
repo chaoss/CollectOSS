@@ -109,7 +109,7 @@ export default {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
 
         "width": 1000,
-        "height": 360,
+        "height": 560,
         "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},
         "config": {
           "tick": {
@@ -201,17 +201,6 @@ export default {
         
       }
       let repo = null
-      if (this.repo) {
-        if (window.AugurRepos[this.repo]) {
-          repo = window.AugurRepos[this.repo]
-        } else {
-          let repo = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-          window.AugurRepos[repo.toString] = repo
-        }
-      } else {
-        repo =  window.AugurAPI.Repo({ gitURL: this.gitRepo })
-        window.AugurRepos[repo.toString()] = repo
-      }
 
       let contributors = {}
       let organizations = {}
@@ -298,12 +287,9 @@ export default {
           processData(changes)
         })
       }
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-      $(this.$el).find('.stackedbarchart').removeClass('loader')
       // Get the repos we need
       let repos = []
       if (this.repo) {
-        repos.push(window.AugurRepos[this.repo])
       }
       this.reloadImage(config)
       return config

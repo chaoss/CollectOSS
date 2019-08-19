@@ -2,10 +2,10 @@
 
   <div ref="holder">
     
-    <div style="color: black" class="error hidden"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
-    <div class="spinner loader"></div>
+    <div style="color: black" class="error" :class="{hidden: error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
+    <div v-if="!loaded" class="spinner loader"></div>
     <div class="spacing"></div>
-    <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
+    <div v-if="loaded" class="linechart"> <!-- v-bind:class="{ invis: !detail, invisDet: detail }"> -->
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
@@ -14,38 +14,35 @@
       <div v-if="mount" :id="source"></div>
       <vega-lite v-if="!mount" :spec="spec" :data="values"></vega-lite>
       <p v-if="!mount"> {{ chart }} </p>
-      <nav class="tabs">
+<!--       <nav class="tabs">
         <ul>
           <li :class="{ active: (timeperiod == '1825'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="1825" :id="source + '5year'" v-model="timeperiod"><label :for="source + '5year'">5 Years</label></li>
           <li :class="{ active: (timeperiod == '730'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="730" :id="source + '2year'" v-model="timeperiod"><label :for="source + '2year'">2 Years</label></li>
           <li :class="{ active: (timeperiod == '365'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="365" :id="source + 'year'" v-model="timeperiod"><label :for="source + 'year'">Year</label></li>
-          <!-- <li :class="{ active: (timeperiod == '30'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="30" :id="source + 'month'" v-model="timeperiod"><label :for="source + 'month'">Month</label></li> -->
           <li :class="{ active: (timeperiod == 'all'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="all" :id="source + 'all'" v-model="timeperiod"><label :for="source + 'all'">All</label></li>
         </ul>
-      </nav>
+      </nav> -->
     </div>
-
+<!-- 
     <div class="row below-chart" style="top: -28px !important">
       <div class="col col-1"></div>
       <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
         <span style="font-size: 12px">Data source: {{ metricSource }}</span>
       </div>
       <div class="col col-2" style="width:154px !important;height: 38px !important; position: relative; top: -12px !important;">
-        <!-- <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite> -->
         <cite class="metric"><a style="width:100px !important;height: 38px !important; position: absolute;" v-bind:href="citeUrl" target="_blank"><img style="width:100px;position: relative;" src="https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png" alt="Chaoss-Definition-Logo" border="0"></a></cite>
       </div>
       <div class="col col-4" style="position: relative; top: -8px !important;">
-        <!-- <button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button>
-        <button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button> -->
         <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
-
+ -->
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats'
+import { mapActions, mapGetters } from "vuex";
 
 export default {
   
@@ -61,7 +58,9 @@ export default {
       metricSource: null,
       timeperiod: 'all',
       forceRecomputeCounter: 0,
-      mount: true
+      mount: true,
+      loaded: false,
+      error: false
     }
   },
   
@@ -79,20 +78,11 @@ export default {
       let allFalse = true
       for(var key in this.status)
         if(this.status[key]) allFalse = false
-      if(allFalse) {
-        $(this.$el).find('.spinner').addClass('loader')
-        $(this.$el).find('.error').addClass('hidden')
-      }
-      $(this.$el).find('.hidefirst').addClass('invis')
-      $(this.$el).find('.hidefirst').addClass('invisDet')
-      $(this.$el).find('.spinner').addClass('loader')
-      $(this.$el).find('.spacing').removeClass('hidden')
-
     },
   },
   computed: {
     repo () {
-      return this.$store.getters.base
+      return this.$store.state.compare.base
     },
     gitRepos () {
       return this.$store.getters.gitRepo
@@ -130,16 +120,19 @@ export default {
       const vegaEmbed = window.vegaEmbed;
       // Get the repos we need
       let repos = []
-      if (this.repo) {
-        repos.push(temp)
-      } // end if (this.$store.repo)
+      for (key in Object.keys(this.data)) {
+        if (!repos.includes(key))
+          repos.push(key)
+      }
+      
       this.comparedRepos.forEach(function(repo) {
-        repos.push(repo)
+        repos.push(repo.split('/')[1])
       });
 
       repos.forEach((repo) => {
         this.status[repo] = true
       })
+      console.log(repos)
 
       //COLORS TO PICK FOR EACH REPO
       var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
@@ -712,7 +705,7 @@ export default {
                 normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
                 aggregates.push(AugurStats.convertKey(d, 'value', 'value' + repo))
                 legend.push(repo + " " + field)
-                colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
+                // colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
               }, repo)
 
           });
@@ -759,15 +752,16 @@ export default {
 
             this.legendLabels = legend
             config.data = {"values": values}
+            console.log(config.data)
             this.values = values
 
-            
             this.renderChart()
+            this.loaded = true
           }
       }
       if (this.data) {
-        console.log(this.data)
         processData(this.data)
+        repos = Object.keys(this.data)
       } else {
         console.log("did not detect data")
         this.$store.state.common.AugurAPI.batchMapped(repos, endpoints).then((data) => {
@@ -778,7 +772,7 @@ export default {
       }
       if (this.mount)
         this.reloadImage(config)
-
+      
       return config
       
     }
@@ -799,27 +793,13 @@ export default {
       svgsaver.asPng(svg, this.__download_file + '.png')
     },
     renderChart () {
-      // this.$refs.chart.className = 'linechart intro'
-      // window.$(this.$refs.holder).find('.hideme').removeClass('invis')
-      // window.$(this.$refs.holder).find('.showme').removeClass('invis')
-      // window.$(this.$refs.holder).find('.hideme').removeClass('invisDet')
-      // window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
-      // window.$(this.$refs.holder).find('.deleteme').remove()
-      //window. each of these?
       let allFalse = true
       for(var key in this.status)
         if(this.status[key]) allFalse = false
-      if(!allFalse) $(this.$el).find('.error').addClass('hidden')
-      $(this.$el).find('.hidefirst').removeClass('invis')
-      $(this.$el).find('.hidefirst').removeClass('invisDet')
-      $(this.$el).find('.spinner').removeClass('loader')
-      $(this.$el).find('.spacing').addClass('hidden')
-      $(this.$el).find('.hidefirst').removeClass('invisDet')
-      // this.$refs.chartholder.innerHTML = ''
     },
     renderError () {
-        $(this.$el).find('.spinner').removeClass('loader')
-        $(this.$el).find('.error').removeClass('hidden')
+      console.log("ERROR ERROR")
+      this.error = true
     },
     thisShouldTriggerRecompute() {
       this.forceRecomputeCounter++;

@@ -2975,9 +2975,9 @@ class Augur(object):
         """
 
         topInsightsSQL = s.sql.text("""
-            SELECT repo_insights.repo_id, repo_git, ri_metric, ri_value AS value, 
+            SELECT rg_name, repo.repo_group_id, repo_insights.repo_id, repo_git, ri_metric, ri_value AS value, 
                 ri_date AS date, cms_id AS rating, ri_fresh AS discovered
-            FROM repo_insights JOIN repo ON repo.repo_id = repo_insights.repo_id
+            FROM repo_insights JOIN repo ON repo.repo_id = repo_insights.repo_id JOIN repo_groups ON repo.repo_group_id = repo_groups.repo_group_id
             WHERE repo_insights.repo_id IN (
                 SELECT repo_id
                 FROM repo

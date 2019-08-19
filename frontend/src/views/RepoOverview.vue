@@ -54,6 +54,7 @@
       </div>
       <div class="col col-5" :style="loaderPadding(loadedBars)">
         <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
+        <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
         <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
       </div>
 

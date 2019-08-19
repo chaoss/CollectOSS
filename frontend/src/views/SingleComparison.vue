@@ -44,10 +44,9 @@
       </div> -->
       <div class="col col-6" style="padding-top:3rem">
         <spinner v-if="!loaded"></spinner>
-      </div>
 
-      <div class="col col-6" v-if="loaded">
-        <dynamic-line-chart source="openIssuesCount"
+        <dynamic-line-chart v-if="loaded"
+                    source="openIssuesCount"
                     title="Open Issues / Week"
                     cite-url=""
                     cite-text="Open Issues"
@@ -58,10 +57,9 @@
 
       <div class="col col-6" style="padding-top:3rem">
         <spinner v-if="!loaded"></spinner>
-      </div>
 
-      <div class="col col-6" v-if="loaded">
-        <dynamic-line-chart source="closedIssuesCount"
+        <dynamic-line-chart v-if="loaded"
+                    source="closedIssuesCount"
                     title="Closed Issues / Week"
                     cite-url=""
                     cite-text="Closed Issues"
@@ -69,9 +67,9 @@
         </dynamic-line-chart>
       </div>
 
-
-      <div class="col col-6" v-if="loaded">
-        <dynamic-line-chart source="pullRequestAcceptanceRate"
+      <div class="col col-6" style="padding-top:3rem">
+        <dynamic-line-chart v-if="loaded"
+                    source="pullRequestAcceptanceRate"
                     title="Pull Request Acceptance Rate"
                     cite-url=""
                     cite-text="Pull Request Acceptance Rate"
@@ -167,7 +165,7 @@ export default class SingleComparison extends Vue {
   themes = ['dark', 'info', 'royal-blue', 'warning']
   project = null
   loaded: boolean = false
-  values: any = {'issuesClosed':[], 'changesByAuthor': [], 'pullRequestAcceptanceRate': []}
+  values: any = {'issuesClosed':{}, 'changesByAuthor': {}, 'pullRequestAcceptanceRate': {}}
   loadedBars = false
 
   // deflare vuex action, getter, mutations
@@ -190,10 +188,11 @@ export default class SingleComparison extends Vue {
     this.endpoint({endpoints:this.endpoints,repos: apiRepos}).then((tuples:any) => {
       console.log(tuples)
       Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
+        this.values[endpoint] = {}
         apiRepos.forEach((repo) => {
-          this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
+          this.values[endpoint][repo.repo_name] = {}
+          this.values[endpoint][repo.repo_name][endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
         })
-        
       })
       this.loaded = true
     })
