@@ -3092,3 +3092,60 @@ class Augur(object):
             results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
                                   params={'repo_id': repo_id})
             return results
+
+    @annotate(tag='issue-comments-mean-std')
+    def issue_comments_mean_std(self, repo_group_id, repo_id=None, group_by='week'):
+        if not repo_id:
+            issue_comments_mean_std_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    DATE_TRUNC(:group_by, daily) AS date,
+                    avg(total) AS average,
+                    stddev(total) AS standard_deviation
+                FROM
+                    (SELECT
+                        i.repo_id,
+                        DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                        COUNT(*) AS total
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, daily
+                    ORDER BY i.repo_id) a
+                GROUP BY repo_id, date
+                ORDER BY repo_id, date
+            """)
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id,
+                                          'group_by': group_by})
+            return results
+
+        else:
+            issue_comments_mean_std_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    DATE_TRUNC(:group_by, daily) AS date,
+                    avg(total) AS average,
+                    stddev(total) AS standard_deviation
+                FROM
+                    (SELECT
+                        i.repo_id,
+                        DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                        COUNT(*) AS total
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id = :repo_id
+                    GROUP BY i.repo_id, daily
+                    ORDER BY i.repo_id) a
+                GROUP BY repo_id, date
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_id': repo_id, 'group_by': group_by})
+            return results

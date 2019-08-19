@@ -2807,3 +2807,56 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.issue_comments_mean, 'issue-comments-mean')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/issue-comments-mean-std Issue Comments Mean Std (Repo Group)
+    @apiName issue-comments-mean-std-repo-group
+    @apiGroup Experimental
+    @apiDescription Mean(Average) and Standard Deviation of issue comments per day.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} [group_by="week"] Allows for results to be grouped by day, week, month, or year. E.g. values: `year`, `day`, `month`
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21326,
+                            "date": "2018-01-01T00:00:00.000Z",
+                            "mean":0.6191780822
+                        },
+                        {
+                            "repo_id": 21326,
+                            "date": "2019-01-01T00:00:00.000Z",
+                            "mean": 0.7671232877
+                        },
+                        {
+                            "repo_id": 21327,
+                            "date": "2015-01-01T00:00:00.000Z",
+                            "mean": 0.0602739726
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.issue_comments_mean_std, 'issue-comments-mean-std')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/issue-comments-mean-std Issue Comments Mean Std (Repo)
+    @apiName issue-comments-mean-repo
+    @apiGroup Experimental
+    @apiDescription Mean(Average) and Standard Deviation of issue comments per day.
+    @apiParam {string} repo_group_id Repository Group ID.
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_id": 21000,
+                            "date": "2011-01-01T00:00:00.000Z",
+                            "average": 2.5,
+                            "standard_deviation":1.7159383568
+                        },
+                        {
+                            "repo_id": 21000,
+                            "date": "2012-01-01T00:00:00.000Z",
+                            "average": 1.9666666667,
+                            "standard_deviation": 1.3767361036
+                        }
+                    ]
+    """
+    server.addRepoMetric(augur_db.issue_comments_mean_std, 'issue-comments-mean-std')
