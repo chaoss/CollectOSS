@@ -43,17 +43,16 @@ sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt-get update -y
 sudo apt-get install python3.7 -y
 
-echo "Installing IPython..."
-sudo apt-get -y install ipython ipython-notebook
+# echo "Installing IPython..."
+# sudo apt-get -y install ipython ipython-notebook
 
 cd /vagrant/augur
 
 echo AUGUR_PYTHON=python3.7 >> /etc/environment
-echo AUGUR_PIP=pip3 >> /etc/environment
-echo "alias pip=pip3" >> /root/.bashrc
+echo AUGUR_PIP=python3.7 -m pip >> /etc/environment
 source /root/.bashrc
 
-sudo $AUGUR_PIP install -e .
+sudo $AUGUR_PIP install .
 
 echo "Installing Augur..."
 sudo make install-dev

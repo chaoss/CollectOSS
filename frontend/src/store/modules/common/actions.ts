@@ -32,7 +32,9 @@ export default {
     },
     async endpoint(context: any, payload: any) {
         try {
+            console.log(payload)
             return new Promise((resolve, reject) => {
+                console.log(payload)
                 let tempCache = context.state.cache || {};
                 if ('endpoints' in payload) {
                     if ('repos' in payload) {
@@ -43,6 +45,7 @@ export default {
                                 tempCache[repo.rg_name][repo.url][endpoint] = tempCache[repo.rg_name][repo.url][endpoint] || []
                                 repo[endpoint]().then((data: any) => {
                                     tempCache[repo.rg_name][repo.url][endpoint] = data// || []
+                                    console.log(data)
                                     resolve(tempCache)
                                 })
                             })
@@ -60,16 +63,32 @@ export default {
                         //     });
                     }
                     if ('repoGroups' in payload) {
-                        context.state.AugurAPI.batchMapped(payload.repoGroups, payload.endpoints).then(
-                            (data: object[]) => {
-                                tempCache = {...tempCache, ...data};
-                                payload.repoGroups.forEach((group: any) => {
-                                    tempCache[group.rg_name] = {...tempCache[group.rg_name],
-                                        ...data[group.rg_name]};
-                                });
-                                console.log(tempCache)
-                                resolve(tempCache)
-                            });
+                        payload.repoGroups.forEach((group: any) => {
+                            console.log(group)
+                            tempCache[group.rg_name] = tempCache[group.rg_name] || {}
+                            tempCache[group.rg_name]['groupEndpoints'] = tempCache[group.rg_name]['groupEndpoints'] || {}
+                            payload.endpoints.forEach((endpoint: string) => {
+                                
+                                tempCache[group.rg_name]['groupEndpoints'][endpoint] = tempCache[group.rg_name]['groupEndpoints'][endpoint] || []
+                                console.log(endpoint)
+                                group[endpoint]().then((data: any) => {
+                                    tempCache[group.rg_name]['groupEndpoints'][endpoint] = data// || []
+                                    console.log(data)
+                                    resolve(tempCache)
+                                })
+                            })
+                        })
+                        // resolve(tempCache)
+                        // context.state.AugurAPI.batchMapped(payload.repoGroups, payload.endpoints).then(
+                        //     (data: object[]) => {
+                        //         tempCache = {...tempCache, ...data};
+                        //         payload.repoGroups.forEach((group: any) => {
+                        //             tempCache[group.rg_name] = {...tempCache[group.rg_name],
+                        //                 ...data[group.rg_name]};
+                        //         });
+                        //         console.log(tempCache)
+                        //         resolve(tempCache)
+                        //     });
                     }
                     if (!('repos' in payload) && !('repoGroups' in payload)) {
                         payload.endpoints.forEach((endpoint: string) => {
@@ -97,6 +116,7 @@ export default {
     async loadRepos(context:any, payload:any){
         try {
             return context.state.AugurAPI.getRepos().then((repos: object[]) => {
+                console.log("Loaded repos: ", repos)
                 context.commit('mutateCache', {
                     property: 'getRepos',
                     with: repos,
@@ -110,6 +130,7 @@ export default {
     async loadRepoGroups(context:any, payload:any){
         try {
             return context.state.AugurAPI.getRepoGroups().then((rgs: object[]) => {
+                console.log("Loaded repo groups: ", rgs)
                 context.commit('mutateCache', {
                     property: 'getRepoGroups',
                     with: rgs,
@@ -204,6 +225,7 @@ export default {
                     rg_name: rg_name
                 })
                 context.commit('mutateAPIGroup', {group: group, rg_name: rg_name})
+                console.log("added api group to the state: ", group)
                 resolve(group)
             })
         })

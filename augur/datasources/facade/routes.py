@@ -142,7 +142,6 @@ def create_routes(server):
 
     server.addGitMetric(facade.commits_by_week, 'commits_by_week')
 
-
     server.addGitMetric(facade.facade_project, 'facade_project')
 
 

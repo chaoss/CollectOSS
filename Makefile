@@ -10,6 +10,7 @@ EDITOR?="vi"
 PLUGIN=**
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
+AUGUR_PIP?='pip'
 
 default:
 	@ echo "Installation Commands:"
@@ -74,6 +75,7 @@ upgrade: version download-upgrade install-dev
 
 config:
 	@ bash -c '$(AUGUR_PYTHON) util/make-config.py'
+
 
 #
 #  Development
@@ -143,7 +145,7 @@ build: frontend docs
 test:test-functions test-routes
 
 test-functions:
-	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest augur/datasources/$(PLUGIN)/test_$(PLUGIN)_functions.py'
+	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest -ra augur/datasources/$(PLUGIN)/test_$(PLUGIN)_functions.py'
 
 test-routes:
 	@ python test/api/test_api.py $(PLUGIN)

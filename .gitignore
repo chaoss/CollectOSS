@@ -1,4 +1,4 @@
-# Compiled source #
+e Compiled source #
 ###################
 *.com
 *.class
@@ -7,8 +7,11 @@
 *.o
 *.so
 *.pyc
-*.egg-info
+*.egg-info/
+*.egg
 .vscode
+*build/
+*dist/
 
 # Packages #
 ############
@@ -64,6 +67,8 @@ _pycache_
 augur/bin
 .pytest_cache
 .ipynb_checkpoints
+venv/
+dist/
 
 # Node #
 ########
@@ -86,3 +91,6 @@ docs/python/build/doctrees/augurcontext.doctree
 # build directories #
 #####################
 build/
+lib/
+dist/
+

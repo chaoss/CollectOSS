@@ -1,53 +1,51 @@
 <template>
 
   <div ref="holder">
+    
+    <div style="color: black" class="error" :class="{hidden: error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
+    <div v-if="!loaded" class="spinner loader"></div>
     <div class="spacing"></div>
-    <div style="color: black" class="error hidden"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
-    <div class="spinner loader"></div>
-    <div class="hidefirst linechart" v-bind:class="{ invis: !detail, invisDet: detail }">
+    <div v-if="loaded" class="linechart"> <!-- v-bind:class="{ invis: !detail, invisDet: detail }"> -->
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
-        <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>        
+        <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>
       </div> -->
       <div v-if="mount" :id="source"></div>
       <vega-lite v-if="!mount" :spec="spec" :data="values"></vega-lite>
-      <p> {{ chart }} </p>
-      <nav class="tabs">
+      <p v-if="!mount"> {{ chart }} </p>
+<!--       <nav class="tabs">
         <ul>
           <li :class="{ active: (timeperiod == '1825'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="1825" :id="source + '5year'" v-model="timeperiod"><label :for="source + '5year'">5 Years</label></li>
           <li :class="{ active: (timeperiod == '730'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="730" :id="source + '2year'" v-model="timeperiod"><label :for="source + '2year'">2 Years</label></li>
           <li :class="{ active: (timeperiod == '365'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="365" :id="source + 'year'" v-model="timeperiod"><label :for="source + 'year'">Year</label></li>
-          <!-- <li :class="{ active: (timeperiod == '30'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="30" :id="source + 'month'" v-model="timeperiod"><label :for="source + 'month'">Month</label></li> -->
           <li :class="{ active: (timeperiod == 'all'), hidden: !repo }"><input @change="respec" type="radio" :name="source" value="all" :id="source + 'all'" v-model="timeperiod"><label :for="source + 'all'">All</label></li>
         </ul>
-      </nav>
+      </nav> -->
     </div>
-
+<!-- 
     <div class="row below-chart" style="top: -28px !important">
       <div class="col col-1"></div>
       <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
         <span style="font-size: 12px">Data source: {{ metricSource }}</span>
       </div>
       <div class="col col-2" style="width:154px !important;height: 38px !important; position: relative; top: -12px !important;">
-        <!-- <cite class="metric">Metric: <a v-bind:href="citeUrl" target="_blank">{{ citeText }}</a></cite> -->
         <cite class="metric"><a style="width:100px !important;height: 38px !important; position: absolute;" v-bind:href="citeUrl" target="_blank"><img style="width:100px;position: relative;" src="https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png" alt="Chaoss-Definition-Logo" border="0"></a></cite>
       </div>
       <div class="col col-4" style="position: relative; top: -8px !important;">
-        <!-- <button class="button download graph-download" v-on:click="downloadSVG">&#11015; SVG</button>
-        <button class="button graph-download download" v-on:click="downloadPNG">&#11015; PNG</button> -->
         <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
-
+ -->
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats'
+import { mapActions, mapGetters } from "vuex";
 
 export default {
-  
+
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
   data() {
 
@@ -60,10 +58,12 @@ export default {
       metricSource: null,
       timeperiod: 'all',
       forceRecomputeCounter: 0,
-      mount: true
+      mount: true,
+      loaded: false,
+      error: false
     }
   },
-  
+
   watch: {
     compare: function() {
       this.spec;
@@ -78,50 +78,41 @@ export default {
       let allFalse = true
       for(var key in this.status)
         if(this.status[key]) allFalse = false
-      if(allFalse) {
-        $(this.$el).find('.spinner').addClass('loader')
-        $(this.$el).find('.error').addClass('hidden')
-      }
-      $(this.$el).find('.hidefirst').addClass('invis')
-      $(this.$el).find('.hidefirst').addClass('invisDet')
-      $(this.$el).find('.spinner').addClass('loader')
-      $(this.$el).find('.spacing').removeClass('hidden')
-
     },
   },
   computed: {
     repo () {
-      return this.$store.state.baseRepo
+      return this.$store.state.compare.base
     },
     gitRepos () {
-      return this.$store.state.gitRepo
+      return this.$store.getters.gitRepo
     },
     period () {
-      return this.$store.state.trailingAverage
+      return this.$store.getters.trailingAverage
     },
     earliest () {
-      return this.$store.state.startDate
+      return this.$store.state.compare.startDate
     },
     latest () {
-      return this.$store.state.endDate
+      return this.$store.state.compare.endDate
     },
     compare () {
-      return this.$store.state.compare
+      return this.$store.state.compare.compare
     },
     comparedRepos () {
-      return this.$store.state.comparedRepos
+      return this.$store.state.compare.comparedRepos
     },
     rawWeekly () {
-      return this.$store.state.rawWeekly
+      return this.$store.state.compare.rawWeekly
     },
     showArea () {
-      return this.$store.state.showArea
+      return this.$store.state.compare.showArea
     },
     showTooltip () {
-      return this.$store.state.showTooltip
+      return this.$store.getters.showTooltip
     },
     showDetail () {
-      return this.$store.state.showDetail
+      return this.$store.getters.showDetail
     },
     spec() {
 
@@ -129,25 +120,19 @@ export default {
       const vegaEmbed = window.vegaEmbed;
       // Get the repos we need
       let repos = []
-      if (this.repo) {
-        if (window.AugurRepos[this.repo])
-          repos.push(window.AugurRepos[this.repo])
-        else if (this.domain){
-          let temp = window.AugurAPI.Repo({"gitURL": this.gitRepo})
-          if (window.AugurRepos[temp.toString()])
-            temp = window.AugurRepos[temp.toString()]
-          else
-            window.AugurRepos[temp.toString()] = temp
-          repos.push(temp)
-        }
-      } // end if (this.$store.repo)
+      for (key in Object.keys(this.data)) {
+        if (!repos.includes(key))
+          repos.push(key)
+      }
+      
       this.comparedRepos.forEach(function(repo) {
-        repos.push(window.AugurRepos[repo])
+        repos.push(repo.split('/')[1])
       });
 
       repos.forEach((repo) => {
         this.status[repo] = true
       })
+      console.log(repos)
 
       //COLORS TO PICK FOR EACH REPO
       var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
@@ -203,7 +188,7 @@ export default {
                 }
 
               },
-              
+
             ]
           }
         ]
@@ -276,7 +261,7 @@ export default {
           }
       }
 
-      let getToolPoint = (key) => { 
+      let getToolPoint = (key) => {
         let selection = (!selectionAdded ? {
             "tooltip": {"type": "single", "on": "mouseover","nearest": false}
           } : null
@@ -429,7 +414,7 @@ export default {
         return {
           "transform": [{"filter": {"selection": "tooltip"}},brush],
           "mark": {"type": "text","align": "left","dx": 5,"dy": -5},
-          "encoding": {"text": {"type": "quantitative","field": key},"x": {"field": "date","type": "temporal","axis": {"format": "%b %Y", "title": " "}},"y": {"field": key,"type": "quantitative","axis": {"title": null}},"color": {"value": "green"}}              
+          "encoding": {"text": {"type": "quantitative","field": key},"x": {"field": "date","type": "temporal","axis": {"format": "%b %Y", "title": " "}},"y": {"field": key,"type": "quantitative","axis": {"title": null}},"color": {"value": "green"}}
         }
       }
 
@@ -502,12 +487,12 @@ export default {
         repos.forEach((repo) => {
           buildLines("valueRolling" + repo, colors[color])
 
-          if(this.rawWeekly) 
+          if(this.rawWeekly)
             config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
           // if user doesn't want detail, then set vconcat to og
-          if(this.showDetail) 
+          if(this.showDetail)
             config.vconcat[1] = getDetail("valueRolling" + this.repo)
-          else if (config.vconcat[1]) 
+          else if (config.vconcat[1])
             config.vconcat.pop()
           color++
         });
@@ -588,16 +573,16 @@ export default {
         //     }
         // }
       }
-      
+
       // if base repo fails and it is the only repo, or if base repo AND only compared repo fails
       // makes blank chart invisible to user
       if ((!this.status.base && !this.comparedTo) || (!this.status.compared && !this.status.base)) {
         if(!this.showDetail){
-          window.$(this.$refs.holder).find('.hidefirst').removeClass('invisDet')
-          window.$(this.$refs.holder).find('.hidefirst').addClass('invis')
+          // window.$(this.$refs.holder).find('.hidefirst').removeClass('invisDet')
+          // window.$(this.$refs.holder).find('.hidefirst').addClass('invis')
         } else {
-          window.$(this.$refs.holder).find('.hidefirst').removeClass('invis')
-          window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet')
+          // window.$(this.$refs.holder).find('.hidefirst').removeClass('invis')
+          // window.$(this.$refs.holder).find('.hidefirst').addClass('invisDet')
         }
       }
 
@@ -624,7 +609,6 @@ export default {
       })
 
       let processData = (data) => {
-
         // Make it so the user can save the data we are using
           this.__download_data = data
           this.__download_file = this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
@@ -649,6 +633,7 @@ export default {
           let normalized = []
           let aggregates = []
           let buildLines = (obj, onCreateData, repo) => {
+            console.log(obj, onCreateData, repo)
             if (!obj) {
               return
             }
@@ -659,7 +644,7 @@ export default {
             }
             let count = 0
             for (var key in obj) {
-
+              console.log(key)
               if (obj.hasOwnProperty(key)) {
                 if (fields[key]) {
                   fields[key].forEach((field) => {
@@ -685,15 +670,16 @@ export default {
           // Build the lines we need
           let legend = [] //repo + field strings for vega legend
           let values = []
-          let colors = [] 
+          let colors = []
           let baselineVals = null
           let baseDate = null
           repos.forEach((repo) => {
+            console.log(data,repo)
             // let relevant = this.data ? data
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
-                
+                console.log(d)
                 let rolling = null
                 if (repo == this.repo && d[0]) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
@@ -709,7 +695,7 @@ export default {
 
                     for (var i = 0; i < baselineVals.length; i++){
                     if (rolling[i] && baselineVals[i])
-                      rolling[i].valueRolling -= baselineVals[i].valueRolling                   
+                      rolling[i].valueRolling -= baselineVals[i].valueRolling
                     }
                   }
                 } else {
@@ -719,7 +705,7 @@ export default {
                 normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
                 aggregates.push(AugurStats.convertKey(d, 'value', 'value' + repo))
                 legend.push(repo + " " + field)
-                colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
+                // colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
               }, repo)
 
           });
@@ -762,22 +748,22 @@ export default {
                 })
                 values.push.apply(values, temp)
               }
-            })  
+            })
 
             this.legendLabels = legend
-            if(this.mount)
-              config.data = {"values": values}
+            config.data = {"values": values}
+            console.log(config.data)
             this.values = values
-
-            
             this.renderChart()
+            this.loaded = true
           }
       }
-      if (this.data && this.mount) {
+      if (this.data) {
         processData(this.data)
+        repos = Object.keys(this.data)
       } else {
-        
-        window.AugurAPI.batchMapped(repos, endpoints).then((data) => {
+        console.log("did not detect data")
+        this.$store.state.common.AugurAPI.batchMapped(repos, endpoints).then((data) => {
           processData(data)
         }, () => {
           this.renderError()
@@ -785,9 +771,9 @@ export default {
       }
       if (this.mount)
         this.reloadImage(config)
-
-      return config
       
+      return config
+
     }
 
   }, // end computed
@@ -806,27 +792,13 @@ export default {
       svgsaver.asPng(svg, this.__download_file + '.png')
     },
     renderChart () {
-      // this.$refs.chart.className = 'linechart intro'
-      // window.$(this.$refs.holder).find('.hideme').removeClass('invis')
-      // window.$(this.$refs.holder).find('.showme').removeClass('invis')
-      // window.$(this.$refs.holder).find('.hideme').removeClass('invisDet')
-      // window.$(this.$refs.holder).find('.showme').removeClass('invisDet')
-      // window.$(this.$refs.holder).find('.deleteme').remove()
-      //window. each of these?
       let allFalse = true
       for(var key in this.status)
         if(this.status[key]) allFalse = false
-      if(!allFalse) $(this.$el).find('.error').addClass('hidden')
-      $(this.$el).find('.hidefirst').removeClass('invis')
-      $(this.$el).find('.hidefirst').removeClass('invisDet')
-      $(this.$el).find('.spinner').removeClass('loader')
-      $(this.$el).find('.spacing').addClass('hidden')
-      $(this.$el).find('.hidefirst').removeClass('invisDet')
-      // this.$refs.chartholder.innerHTML = ''
     },
     renderError () {
-        $(this.$el).find('.spinner').removeClass('loader')
-        $(this.$el).find('.error').removeClass('hidden')
+      console.log("ERROR ERROR")
+      this.error = true
     },
     thisShouldTriggerRecompute() {
       this.forceRecomputeCounter++;
@@ -839,7 +811,7 @@ export default {
         this.renderError()
         return
       }
-      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'}) 
+      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'})
     }
   },// end methods
   mounted() {
@@ -847,7 +819,7 @@ export default {
   },
   created () {
     var query_string = "chart_mapping=" + this.source
-    window.AugurAPI.getMetricsStatus(query_string).then((data) => {
+    this.$store.state.common.AugurAPI.getMetricsStatus(query_string).then((data) => {
       this.metricSource = data[0].data_source
     })
   }
