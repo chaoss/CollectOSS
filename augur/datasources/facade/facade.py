@@ -73,8 +73,8 @@ class Facade(object):
         """)
         results = pd.read_sql(downloadedReposSQL, self.db)
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
-        # if self.projects:
-        #     results = results[results.project_name.isin(self.projects)]
+        if self.projects:
+            results = results[results.project_name.isin(self.projects)]
 
         if self.projects:
               results = results[results.project_name.isin(self.projects)]
@@ -89,7 +89,7 @@ class Facade(object):
     @annotate(tag='lines-changed-by-author')
     def lines_changed_by_author(self, repo_url):
         """
-        Returns number of lines changed per author per day 
+        Returns number of lines changed per author per day
 
         :param repo_url: the repository's URL
         """
@@ -106,7 +106,7 @@ class Facade(object):
     @annotate(tag='lines-changed-by-week')
     def lines_changed_by_week(self, repo_url):
         """
-        Returns lines changed of a sent repository per week 
+        Returns lines changed of a sent repository per week
 
         :param repo_url: the repository's URL
         """
@@ -114,7 +114,7 @@ class Facade(object):
             SELECT date(author_date) as date, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace
             FROM analysis_data
             WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
-            GROUP BY YEARWEEK(author_date) 
+            GROUP BY YEARWEEK(author_date)
             ORDER BY YEARWEEK(author_date) ASC
         """)
         results = pd.read_sql(linesChangedByWeekSQL, self.db, params={"repourl": '%{}%'.format(repo_url)})
@@ -123,12 +123,12 @@ class Facade(object):
     @annotate(tag='lines-changed-by-month')
     def lines_changed_by_month(self, repo_url):
         """
-        Returns lines changed of a sent repository per month 
+        Returns lines changed of a sent repository per month
 
         :param repo_url: the repository's URL
         """
         linesChangedByMonthSQL = s.sql.text("""
-            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace FROM repo_monthly_cache 
+            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace FROM repo_monthly_cache
             WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
             GROUP BY email, month, year
             ORDER BY year, month, email ASC
@@ -144,7 +144,7 @@ class Facade(object):
         :param repo_url: the repository's URL
         """
         commitsByMonthSQL = s.sql.text("""
-            SELECT email AS author_email, affiliation, WEEK AS `week`, YEAR AS `year`, patches FROM repo_weekly_cache 
+            SELECT email AS author_email, affiliation, WEEK AS `week`, YEAR AS `year`, patches FROM repo_weekly_cache
             WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
             GROUP BY email, WEEK, YEAR
             ORDER BY YEAR, WEEK, email ASC
@@ -180,10 +180,10 @@ class Facade(object):
     @annotate(tag='annual-commit-count-ranked-by-new-repo-in-repo-group')
     def annual_commit_count_ranked_by_new_repo_in_repo_group(self, repo_url, calendar_year=None, repo_group=None):
         """
-        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
-        calendar year (a new repo in that year), 
-        show all commits for that year (total for year by repo). 
-        Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized
+        calendar year (a new repo in that year),
+        show all commits for that year (total for year by repo).
+        Result ranked from highest number of commits to lowest by default.
         :param repo_url: the repository's URL
         :param calendar_year: the calendar year a repo is created in to be considered "new"
         :param repo_group: the group of repositories to analyze
@@ -196,7 +196,7 @@ class Facade(object):
 
         cdRgNewrepRankedCommitsSQL = None
 
-        if repo_group == 'facade_project':   
+        if repo_group == 'facade_project':
             cdRgNewrepRankedCommitsSQL = s.sql.text("""
                SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, repos.name
                FROM repo_annual_cache, projects, repos
@@ -229,13 +229,13 @@ class Facade(object):
     @annotate(tag='annual-lines-of-code-count-ranked-by-new-repo-in-repo-group')
     def annual_lines_of_code_count_ranked_by_new_repo_in_repo_group(self, repo_url, calendar_year=None, repo_group=None):
         """
-        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized 
-        calendar year (a new repo in that year), 
-        show all lines of code for that year (total for year by repo). Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized
+        calendar year (a new repo in that year),
+        show all lines of code for that year (total for year by repo). Result ranked from highest number of commits to lowest by default.
         :param repo_url: the repository's URL
         :param calendar_year: the calendar year a repo is created in to be considered "new"
         :param repo_group: the group of repositories to analyze
-        """       
+        """
 
         if calendar_year == None:
             calendar_year = 2018
@@ -279,12 +279,12 @@ class Facade(object):
     @annotate(tag='annual-commit-count-ranked-by-repo-in-repo-group')
     def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_url, timeframe=None, repo_group=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of commits to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of commits to lowest by default.
         :param repo_url: the repository's URL
         :param timeframe: All, year, month, or week. Contribution data from the timeframe that the current date is within will be considered
         :param repo_group: the group of repositories to analyze
-        """       
+        """
         if repo_group == None:
             repo_group = 'facade_project'
 
@@ -382,8 +382,8 @@ class Facade(object):
     @annotate(tag='annual-lines-of-code-count-ranked-by-repo-in-repo-group')
     def annual_lines_of_code_count_ranked_by_repo_in_repo_group(self, repo_url, timeframe=None, repo_group=None):
         """
-        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month, 
-        Year or Week. Result ranked from highest number of LOC to lowest by default. 
+        For each repository in a collection of repositories being managed, each REPO's total commits during the current Month,
+        Year or Week. Result ranked from highest number of LOC to lowest by default.
         :param repo_url: the repository's URL
         :param timeframe: All, year, month, or week. Contribution data from the timeframe that the current date is within will be considered
         :param repo_group: the group of repositories to analyze
@@ -487,7 +487,7 @@ class Facade(object):
     def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None):
         """
         For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval (week or month)
-        
+
         :param repo_url: the repository's URL
         :param calendar_year: the calendar year a repo is created in to be considered "new"
         :param interval: Month or week. The periodocity of which to examine data within the given calendar_year
@@ -503,31 +503,31 @@ class Facade(object):
 
         if interval == "month":
             cdRepTpIntervalLocCommitsSQL = s.sql.text("""
-                SELECT sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, 
-                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace, 
+                SELECT sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,
+                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,
                 IFNULL(patches, 0) as commits, a.month, IFNULL(year, :calendar_year) as year
-                FROM (select month from repo_monthly_cache group by month) a 
-                LEFT JOIN (SELECT name, repo_monthly_cache.added, removed, whitespace, patches, month, IFNULL(year, :calendar_year) as year      
+                FROM (select month from repo_monthly_cache group by month) a
+                LEFT JOIN (SELECT name, repo_monthly_cache.added, removed, whitespace, patches, month, IFNULL(year, :calendar_year) as year
                 FROM repo_monthly_cache, repos
                 WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
                 AND year = :calendar_year
-                AND repos.id = repos_id     
-                GROUP BY month) b 
+                AND repos.id = repos_id
+                GROUP BY month) b
                 ON a.month = b.month
                 GROUP BY month
             """)
         elif interval == "week":
             cdRepTpIntervalLocCommitsSQL = s.sql.text("""
-                SELECT  sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, 
-                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace, 
+                SELECT  sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,
+                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,
                 IFNULL(patches, 0) as commits, a.week, IFNULL(year, :calendar_year) as year
-                FROM (select week from repo_weekly_cache group by week) a 
-                LEFT JOIN (SELECT name, repo_weekly_cache.added, removed, whitespace, patches, week, IFNULL(year, :calendar_year) as year      
+                FROM (select week from repo_weekly_cache group by week) a
+                LEFT JOIN (SELECT name, repo_weekly_cache.added, removed, whitespace, patches, week, IFNULL(year, :calendar_year) as year
                 FROM repo_weekly_cache, repos
                 WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
                 AND year = :calendar_year
-                AND repos.id = repos_id     
-                GROUP BY week) b 
+                AND repos.id = repos_id
+                GROUP BY week) b
                 ON a.week = b.week
                 GROUP BY week
             """)
@@ -538,10 +538,10 @@ class Facade(object):
     @annotate(tag='unaffiliated-contributors-lines-of-code-commit-counts-by-calendar-year-grouped')
     def unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None, repo_group=None):
         """
-        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval 
-        (week or month) and by the affiliation of individuals and domains that are not mapped as "inside" within the repositories gitdm file. 
+        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval
+        (week or month) and by the affiliation of individuals and domains that are not mapped as "inside" within the repositories gitdm file.
         "Unknown" is, in this case, interpreted as "outside"
-        
+
         :param repo_url: the repository's URL
         :param calendar_year: the calendar year a repo is created in to be considered "new"
         :param interval: Month or week. The periodocity of which to examine data within the given calendar_year
@@ -562,15 +562,15 @@ class Facade(object):
         if repo_group == 'facade_project':
             if interval == "month":
                 cdRepTpIntervalLocCommitsUaSQL = s.sql.text("""
-                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month, affiliation 
-                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a 
+                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month, affiliation
+                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a
                     LEFT JOIN
                     (
                         SELECT SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches, repo_monthly_cache.`affiliation` as affiliation
                         FROM repo_monthly_cache, repos, projects
                         WHERE repo_monthly_cache.repos_id = repos.id
-                        AND repos.projects_id = (SELECT projects.id FROM repos, projects 
-                        WHERE git LIKE :repourl 
+                        AND repos.projects_id = (SELECT projects.id FROM repos, projects
+                        WHERE git LIKE :repourl
                         and repos.projects_id = projects.id
                         LIMIT 1)
                         AND projects.id = repos.projects_id
@@ -582,15 +582,15 @@ class Facade(object):
                 """)
             elif interval == "week":
                 cdRepTpIntervalLocCommitsUaSQL = s.sql.text("""
-                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week, affiliation 
-                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a 
+                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week, affiliation
+                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a
                     LEFT JOIN
                     (
                         SELECT SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches, repo_weekly_cache.`affiliation` as affiliation
                         FROM repo_weekly_cache, repos, projects
                         WHERE repo_weekly_cache.repos_id = repos.id
-                        AND repos.projects_id = (SELECT projects.id FROM repos, projects 
-                        WHERE git LIKE :repourl 
+                        AND repos.projects_id = (SELECT projects.id FROM repos, projects
+                        WHERE git LIKE :repourl
                         and repos.projects_id = projects.id
                         LIMIT 1)
                         AND projects.id = repos.projects_id
@@ -603,8 +603,8 @@ class Facade(object):
         else:
             if interval == "month":
                 cdRepTpIntervalLocCommitsUaSQL = s.sql.text("""
-                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month, affiliation 
-                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a 
+                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month, affiliation
+                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a
                     LEFT JOIN
                     (
                         SELECT SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches, repo_monthly_cache.`affiliation` as affiliation
@@ -620,8 +620,8 @@ class Facade(object):
                 """)
             elif interval == "week":
                 cdRepTpIntervalLocCommitsUaSQL = s.sql.text("""
-                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week, affiliation 
-                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a 
+                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week, affiliation
+                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a
                     LEFT JOIN
                     (
                         SELECT SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches, repo_weekly_cache.`affiliation` as affiliation
@@ -641,9 +641,9 @@ class Facade(object):
     @annotate(tag='repo-group-lines-of-code-commit-counts-calendar-year-grouped')
     def repo_group_lines_of_code_commit_counts_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None, repo_group=None):
         """
-        For each repository in a collection of repositories, all the commits and lines of code occuring for the specified year, 
-        grouped by repository and the specified interval (week or month). Results ordered by repo. 
-        
+        For each repository in a collection of repositories, all the commits and lines of code occuring for the specified year,
+        grouped by repository and the specified interval (week or month). Results ordered by repo.
+
         :param repo_url: the repository's URL
         :param calendar_year: the calendar year a repo is created in to be considered "new"
         :param interval: Month or week. The periodocity of which to examine data within the given calendar_year
@@ -665,13 +665,13 @@ class Facade(object):
             if interval == "month":
                 cdRgTpIntervalLocCommitsSQL = s.sql.text("""
                     SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month
-                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a 
+                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a
                     LEFT JOIN
                     (
                         SELECT repos.name, SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches
                         FROM repo_monthly_cache, repos, projects
                         WHERE repo_monthly_cache.repos_id = repos.id
-                        AND repos.projects_id = (SELECT projects.id FROM repos, projects 
+                        AND repos.projects_id = (SELECT projects.id FROM repos, projects
                             WHERE git LIKE :repourl
                             and repos.projects_id = projects.id
                             LIMIT 1)
@@ -685,13 +685,13 @@ class Facade(object):
             elif interval == "week":
                 cdRgTpIntervalLocCommitsSQL = s.sql.text("""
                     SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week
-                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a 
+                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a
                     LEFT JOIN
                     (
                         SELECT repos.name, SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches
                         FROM repo_weekly_cache, repos, projects
                         WHERE repo_weekly_cache.repos_id = repos.id
-                        AND repos.projects_id = (SELECT projects.id FROM repos, projects 
+                        AND repos.projects_id = (SELECT projects.id FROM repos, projects
                             WHERE git LIKE :repourl
                             and repos.projects_id = projects.id
                             LIMIT 1)
@@ -706,7 +706,7 @@ class Facade(object):
             if interval == "month":
                 cdRgTpIntervalLocCommitsSQL = s.sql.text("""
                     SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month
-                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a 
+                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a
                     LEFT JOIN
                     (
                         SELECT repos.name, SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches
@@ -723,7 +723,7 @@ class Facade(object):
             elif interval == "week":
                 cdRgTpIntervalLocCommitsSQL = s.sql.text("""
                     SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week
-                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a 
+                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a
                     LEFT JOIN
                     (
                         SELECT repos.name, SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches
@@ -740,14 +740,14 @@ class Facade(object):
         results = pd.read_sql(cdRgTpIntervalLocCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), "calendar_year": calendar_year, "repo_group": repo_group})
         return results
 
-      
+
     def cli_add_repo(self, new_project_id, new_git_repo):
         return self.db.execute("""
                         INSERT INTO repos (projects_id, git, status)
                         VALUES (%s, %s, %s);
                         """, (new_project_id, new_git_repo, 'New'))
-  
-  
+
+
     def cli_delete_repo(self, git_repo):
         status = self.db.execute("""
             SELECT status FROM repos WHERE id = %s
@@ -760,12 +760,12 @@ class Facade(object):
         else:
         # Something may have been cloned, let facade-worker.py clean it
             return self.db.execute("UPDATE repos SET status = 'Delete' WHERE id = %s", (git_repo))
-    
+
     def cli_add_project(self, new_name, new_description, new_website):
         return self.db.execute("""
-                INSERT INTO projects (name,description,website) 
+                INSERT INTO projects (name,description,website)
                 VALUES (%s, %s, %s);
-               """, (new_name, new_description, new_website)) 
+               """, (new_name, new_description, new_website))
 
 
     def cli_delete_project(self, project_id):
@@ -781,15 +781,15 @@ class Facade(object):
             """, (project_id))
         # facade-worker.py will clean up the rest
         return self.db.execute("""
-                          UPDATE projects SET name = '(Queued for removal)' 
+                          UPDATE projects SET name = '(Queued for removal)'
                           WHERE id = %s
                           """, (project_id))
 
- 
+
     def cli_add_alias(self, new_alias, new_canonical):
         return self.db.execute("""
-                     INSERT INTO aliases (alias,canonical) 
-                     VALUES (%s, %s) 
+                     INSERT INTO aliases (alias,canonical)
+                     VALUES (%s, %s)
                      ON DUPLICATE KEY UPDATE active = TRUE
                      """, (new_alias, new_canonical))
 
@@ -801,18 +801,18 @@ class Facade(object):
     def cli_add_affiliation(self, Ndomain, Naffiliation, Nstart_date=''):
         if Nstart_date:
             return self.db.execute("""
-                INSERT INTO affiliations (domain, affiliation, start_date) 
+                INSERT INTO affiliations (domain, affiliation, start_date)
                 VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE active = TRUE
                 """, (Ndomain, Naffiliation, Nstart_date))
         else:
             return self.db.execute("""
-                INSERT INTO affiliations (domain, affiliation) 
-                VALUES (%s, %s) 
+                INSERT INTO affiliations (domain, affiliation)
+                VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE active = TRUE
                 """, (Ndomain, Naffiliation))
-    
+
     def cli_delete_affiliation(self, affiliation_id):
         return self.db.execute("""
-            UPDATE affiliations SET active = FALSE 
-            WHERE id = %s 
+            UPDATE affiliations SET active = FALSE
+            WHERE id = %s
             """, (affiliation_id))

@@ -5,7 +5,7 @@
           <li :class="{ active: (currentTab == 'overview'), hidden: !gitRepo }"><a href="#" @click="changeTab" data-value="overview">Overview</a></li>
           <li :class="{ active: (currentTab == 'gmd') }"><a href="#" @click="changeTab" data-value="gmd">Evolution</a></li>
           <li :class="{ active: (currentTab == 'activity') }"><a href="#" @click="changeTab" data-value="activity">Activity</a></li>
-          <li :class="{ active: (currentTab == 'experimental') }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li> 
+          <li :class="{ active: (currentTab == 'experimental') }"><a href="#" @click="changeTab" data-value="experimental">Experimental</a></li>
           <li :class="{ active: (currentTab == 'issues') }"><a href="#" @click="changeTab" data-value="issues">Issues</a></li>
         </ul>
       </nav>
@@ -43,7 +43,7 @@ export default {
         this.$router.push({
           name,
           params: {owner, repo, comparedowner, comparedrepo}
-        })        
+        })
       } else if (this.$store.state.comparedRepos.length > 1) {
         let groupid = (this.gitRepo ? String(this.gitRepo) + '+' : String(state.baseRepo) + "+")
             this.comparedRepos.forEach((repo) => {
@@ -62,7 +62,7 @@ export default {
           params: {owner, repo}
         })
       }
-      
+
     },
   }
 };
