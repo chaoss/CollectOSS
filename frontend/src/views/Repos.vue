@@ -164,6 +164,7 @@ export default class Repos extends Vue{
   created() {
     
     if (!this.loaded_repos) {
+      console.log("bout to load")
       this.loadRepos()
     }
 

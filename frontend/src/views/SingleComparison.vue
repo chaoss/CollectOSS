@@ -1,10 +1,11 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <div class="row">
-      <div class="col col-3">
+      <div class="col col-4">
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
           <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
+          <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
         </d-breadcrumb>
       </div>
       <div class="col col-3" v-for="repo in comparedRepos">
@@ -24,10 +25,6 @@
     </div> -->
     <!-- Compare Control -->
     <compare-control></compare-control>
-
-    <div class="row">
-      <d-button><d-link :to="{name: 'risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
-    </div>
 
     <!-- Overview Section -->
     <!-- <div class="page-header row no-gutters py-4" >
@@ -50,12 +47,13 @@
                     title="Open Issues / Week"
                     cite-url=""
                     cite-text="Open Issues"
-                    :data="values['openIssuesCount']">
+                    :repos="repos">
+                    <!-- :data="values['openIssuesCount']"> -->
         </dynamic-line-chart>
       </div>
 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <!-- <div class="col col-6" style="padding-top:3rem">
         <spinner v-if="!loaded"></spinner>
 
         <dynamic-line-chart v-if="loaded"
@@ -75,7 +73,7 @@
                     cite-text="Pull Request Acceptance Rate"
                     :data="values['pullRequestAcceptanceRate']">
         </dynamic-line-chart>
-      </div>
+      </div> -->
 <!-- 
       <div class="col col-12">
         <stacked-bar-chart source="issueActivity"
@@ -160,7 +158,7 @@ export default class SingleComparison extends Vue {
   colors = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
   endpoints = ['openIssuesCount', 'closedIssuesCount', 'pullRequestAcceptanceRate']
   testTimeframes = ['past 1 month', 'past 3 months', 'past 2 weeks']
-  repos = {}
+  repos:any = []
   projects = []
   themes = ['dark', 'info', 'royal-blue', 'warning']
   project = null
@@ -181,21 +179,24 @@ export default class SingleComparison extends Vue {
   apiRepos!: any;
 
   created() {
-    let apiRepos: any[] = [this.base]
-    this.comparedRepos.forEach((repo: any) => {
-      apiRepos.push(this.apiRepos[repo])
-    })
-    this.endpoint({endpoints:this.endpoints,repos: apiRepos}).then((tuples:any) => {
-      console.log(tuples)
-      Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = {}
-        apiRepos.forEach((repo) => {
-          this.values[endpoint][repo.repo_name] = {}
-          this.values[endpoint][repo.repo_name][endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
-        })
-      })
+    let promises = []
+    promises.push(this.repos.push(this.base))
+    promises.push(this.comparedRepos.forEach((repo: any) => {
+      this.repos.push(this.apiRepos[repo])
+    }))
+    Promise.all(promises)
+    // this.endpoint({endpoints:this.endpoints,repos: apiRepos}).then((tuples:any) => {
+    //   console.log(tuples)
+    //   Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
+    //     this.values[endpoint] = {}
+    //     apiRepos.forEach((repo) => {
+    //       console.log(endpoint, repo, this.values)
+    //       this.values[endpoint][repo.repo_name] = {}
+    //       this.values[endpoint][repo.repo_name][endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
+    //     })
+    //   })
       this.loaded = true
-    })
+    // })
   }
 
   onRepoGroup(repo_group: any) {

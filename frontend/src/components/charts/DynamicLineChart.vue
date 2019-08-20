@@ -2,17 +2,18 @@
 
   <div ref="holder">
     
-    <div style="color: black" class="error" :class="{hidden: error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important">{{ source }}</p></div>
-    <div v-if="!loaded" class="spinner loader"></div>
+    <div style="color: black" class="error" :class="{hidden: !error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important"> {{ source }}</p></div>
+    <div v-if="!loaded" :class="{hidden: !error}" class="spinner loader"></div>
     <div class="spacing"></div>
+    <div v-if="mount" :id="source"></div>
     <div v-if="loaded" class="linechart"> <!-- v-bind:class="{ invis: !detail, invisDet: detail }"> -->
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="all" v-model="timeperiod">All</div>
       </div> -->
-      <div v-if="mount" :id="source"></div>
-      <vega-lite v-if="!mount" :spec="spec" :data="values"></vega-lite>
+      
+      <vega-lite v-if="!mount" :spec="spec(values)" :data="values"></vega-lite>
       <p v-if="!mount"> {{ chart }} </p>
 <!--       <nav class="tabs">
         <ul>
@@ -46,7 +47,7 @@ import { mapActions, mapGetters } from "vuex";
 
 export default {
 
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data', 'repos', 'endpoints'],
   data() {
 
     return {
@@ -88,7 +89,7 @@ export default {
       return this.$store.getters.gitRepo
     },
     period () {
-      return this.$store.getters.trailingAverage
+      return this.$store.state.common.trailingAverage
     },
     earliest () {
       return this.$store.state.compare.startDate
@@ -102,6 +103,9 @@ export default {
     comparedRepos () {
       return this.$store.state.compare.comparedRepos
     },
+    comparedAPIRepos () {
+      return this.$store.state.compare.comparedAPIRepos
+    },
     rawWeekly () {
       return this.$store.state.compare.rawWeekly
     },
@@ -109,30 +113,106 @@ export default {
       return this.$store.state.compare.showArea
     },
     showTooltip () {
-      return this.$store.getters.showTooltip
+      return this.$store.state.common.showTooltip
     },
     showDetail () {
-      return this.$store.getters.showDetail
+      return this.$store.state.common.showDetail
     },
-    spec() {
+    ...mapGetters('common',[
+      'repoRelations'
+    ]),
+    
+
+  }, // end computed
+  methods: {
+    ...mapActions('common',[
+      'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+                  // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+    ]),
+    thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
+    },
+    downloadSVG (e) {
+      var svgsaver = new window.SvgSaver()
+      var svg = window.$(this.$refs.holder).find('svg')[0]
+      svgsaver.asSvg(svg, this.__download_file + '.svg')
+    },
+    downloadPNG (e) {
+      var svgsaver = new window.SvgSaver()
+      var svg = window.$(this.$refs.holder).find('svg')[0]
+      svgsaver.asPng(svg, this.__download_file + '.png')
+    },
+    renderChart () {
+      let allFalse = true
+      for(var key in this.status)
+        if(this.status[key]) allFalse = false
+    },
+    renderError () {
+      console.log("ERROR ERROR")
+      this.error = true
+    },
+    thisShouldTriggerRecompute() {
+      this.forceRecomputeCounter++;
+    },
+    respec(){this.spec;},
+    reloadImage (config) {
+      console.log(config, this.source)
+      if (config.data.values.length == 0){
+        console.log("yo")
+        // this.spec;
+        this.renderError()
+        return
+      }
+      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'})
+    },
+    convertKey(ary) {
+      ary.forEach((el) => {
+        
+        let keys = Object.keys(el)
+        let field = null
+        keys.forEach((key) => {
+          if (el[key] != null && key != 'date' && key != 'repo_name' && key != 'repo_id'){
+            field = key
+          }
+        })
+        el['value'] = el[field]
+        el['field'] = field 
+      })
+      return ary
+    },
+    spec(data) {
 
       // declare constant for vegaEmbed module since we use its cdn in index.html rather than add it to package.json
       const vegaEmbed = window.vegaEmbed;
       // Get the repos we need
       let repos = []
-      for (key in Object.keys(this.data)) {
-        if (!repos.includes(key))
-          repos.push(key)
+
+      if (this.repo) {
+        console.log(this.repo)
+        repos = [this.repo.url]
+      }
+      else {
+        repos.push(this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].url)
+      }
+      if (this.data) repos = Object.keys(this.data)
+      // Object.keys(this.data).forEach((key) => {
+
+      // }) 
+      
+      if (this.comparedAPIRepos){
+        this.comparedAPIRepos.forEach(function(repo) {
+          repos.push(repo.url)//.split('/')[1])
+        });
+      } else {
+        let compares = this.$router.currentRoute.params.compares
+        repos.push(this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].url)
       }
       
-      this.comparedRepos.forEach(function(repo) {
-        repos.push(repo.split('/')[1])
-      });
+
 
       repos.forEach((repo) => {
         this.status[repo] = true
       })
-      console.log(repos)
 
       //COLORS TO PICK FOR EACH REPO
       var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
@@ -161,33 +241,33 @@ export default {
             "width": 520,
             "height": 250,
             "layer": [
-              {
-                "transform": [
-                  brush
-                ],
-                "mark": "rule",
-                "encoding":{
-                  "x": {
-                    "field": "date",
-                    "type": "temporal",
-                    "axis": {
-                      "labels": this.showDetail,
-                      "format": "%ba %Y",
-                      "title": " "
-                    }
-                  },
-                  "color": {
-                    "field": "name",
-                    "type": "nominal",
-                    "scale": { "range": colors},
-                    "sort": false
-                  },
-                  "opacity":{
-                    "value": 0
-                  }
-                }
+              // {
+              //   "transform": [
+              //     brush
+              //   ],
+              //   "mark": "rule",
+              //   "encoding":{
+              //     "x": {
+              //       "field": "date",
+              //       "type": "temporal",
+              //       "axis": {
+              //         "labels": this.showDetail,
+              //         "format": "%ba %Y",
+              //         "title": " "
+              //       }
+              //     },
+              //     "color": {
+              //       "field": "name",
+              //       "type": "nominal",
+              //       "scale": { "range": colors},
+              //       "sort": false
+              //     },
+              //     "opacity":{
+              //       "value": 0
+              //     }
+              //   }
 
-              },
+              // },
 
             ]
           }
@@ -201,9 +281,9 @@ export default {
         // key = key.split('/').join('');
         let raw = (key.substring(key.length - 7) == "Rolling" ? false : true)
         return {
-            "transform": [
-              brush
-          ],
+            // "transform": [
+            //   brush
+            // ],
             "encoding": {
               "x": {
                 "field": "date",
@@ -465,11 +545,27 @@ export default {
 
       //DONE WITH SPEC PORTION
 
+      let buildMetric = () => {
+        var color = 0;
+        repos.forEach((repo) => {
+          buildLines("valueRolling" + repo.replace(/\//g,'').replace(/\./g,''), colors[color])
+
+          // if(this.rawWeekly)
+          //   config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
+          // // if user doesn't want detail, then set vconcat to og
+          // if(this.showDetail)
+          //   config.vconcat[1] = getDetail("valueRolling" + this.repo)
+          // else if (config.vconcat[1])
+          //   config.vconcat.pop()
+          color++
+        });
+      }
+
       //push the area to general spec
       //can change repo to whatever
       if(this.showArea && repos.length < 3) {
         repos.forEach((repo) => {
-          config.vconcat[0].layer.push(getArea(repo))
+          // config.vconcat[0].layer.push(getArea(repo))
         })
       } else {
         repos.forEach((repo) => {
@@ -480,22 +576,6 @@ export default {
             }
           }
         })
-      }
-
-      let buildMetric = () => {
-        var color = 0;
-        repos.forEach((repo) => {
-          buildLines("valueRolling" + repo, colors[color])
-
-          if(this.rawWeekly)
-            config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
-          // if user doesn't want detail, then set vconcat to og
-          if(this.showDetail)
-            config.vconcat[1] = getDetail("valueRolling" + this.repo)
-          else if (config.vconcat[1])
-            config.vconcat.pop()
-          color++
-        });
       }
 
       let buildLines = function (key, color) {
@@ -522,11 +602,10 @@ export default {
       //push the tooltip to general spec
       //can change this.repo to whatever repo user wants tooltip on
       if(this.showTooltip) {
-        //let temp = [this.repo]
-        repos.forEach((repo) => {
-          let key = (this.rawWeekly ? "value" + repo : "valueRolling" + repo)
-          buildTooltip(key)
-        })
+        // repos.forEach((repo) => {
+        //   let key = (this.rawWeekly ? "value" + repo : "valueRolling" + repo)
+        //   buildTooltip(key)
+        // })
       } else {
         //if user doesn't want tooltip mark, then iterate through all marks and pop the tooltip marks
         // for(var x = 0; x < config.vconcat[0].layer.length; x++) {
@@ -622,8 +701,9 @@ export default {
             if (typeof(field) == "string") {
               field = [field]
             }
-
-            d = AugurStats.convertKey(obj[key], field)
+            console.log("default process prior to convertKey:",obj, key, field)
+            d = this.convertKey(obj[key], field)
+            console.log("default process prior to convertDates:",d, this.earliest, this.latest, 'date')
             d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
             return d
           }
@@ -643,6 +723,10 @@ export default {
               }
             }
             let count = 0
+            // console.log("type", Object.getOwnPropertyNames(Object.getPrototypeOf(obj)))//Object.getOwnPropertyNames(Object.getPrototypeOf(err))
+            // obj = JSON.stringify(obj)
+            console.log(JSON.stringify(obj),obj['openIssuesCount'])
+            // if (Object.keys(obj).length < 1) obj['openIssuesCount'] = 
             for (var key in obj) {
               console.log(key)
               if (obj.hasOwnProperty(key)) {
@@ -652,14 +736,21 @@ export default {
                     count++
                   })
                 } else {
+                  console.log("hehrere",Array.isArray(obj[key]),obj, key)
                   if (Array.isArray(obj[key]) && obj[key].length > 0) {
                     let field = Object.keys(obj[key][0]).splice(1)
                     onCreateData(obj, key, field, count)
                     count++
                   } else {
                     this.status[repo] = false
-                    this.renderError()
-
+                    let noRepoWithData = true
+                    Object.keys(this.status).forEach((repo) => {
+                      if (this.status[repo]) noRepoWithData = false
+                    })
+                    if (noRepoWithData){
+                      console.log("logging no data for any repo error")
+                      this.renderError()
+                    }
                     //return
                   }
                 }
@@ -674,8 +765,7 @@ export default {
           let baselineVals = null
           let baseDate = null
           repos.forEach((repo) => {
-            console.log(data,repo)
-            // let relevant = this.data ? data
+            console.log(repo, JSON.stringify(data))
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
@@ -699,7 +789,11 @@ export default {
                     }
                   }
                 } else {
+                  console.log(d, this.period, repo)
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                  while (rolling[0].valueRolling == 0)
+                    rolling.shift()
+                  console.log(rolling)
                 }
 
                 normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
@@ -759,64 +853,41 @@ export default {
             this.loaded = true
           }
       }
-      if (this.data) {
-        processData(this.data)
-        repos = Object.keys(this.data)
-      } else {
-        console.log("did not detect data")
-        this.$store.state.common.AugurAPI.batchMapped(repos, endpoints).then((data) => {
-          processData(data)
-        }, () => {
-          this.renderError()
-        }) // end batch request
-      }
+
+      processData(data)
+      
       if (this.mount)
         this.reloadImage(config)
       
       return config
 
     }
-
-  }, // end computed
-  methods: {
-    thisShouldTriggerRecompute() {
-      this.forceRecomputeCounter++;
-    },
-    downloadSVG (e) {
-      var svgsaver = new window.SvgSaver()
-      var svg = window.$(this.$refs.holder).find('svg')[0]
-      svgsaver.asSvg(svg, this.__download_file + '.svg')
-    },
-    downloadPNG (e) {
-      var svgsaver = new window.SvgSaver()
-      var svg = window.$(this.$refs.holder).find('svg')[0]
-      svgsaver.asPng(svg, this.__download_file + '.png')
-    },
-    renderChart () {
-      let allFalse = true
-      for(var key in this.status)
-        if(this.status[key]) allFalse = false
-    },
-    renderError () {
-      console.log("ERROR ERROR")
-      this.error = true
-    },
-    thisShouldTriggerRecompute() {
-      this.forceRecomputeCounter++;
-    },
-    respec(){this.spec;},
-    reloadImage (config) {
-      console.log(config.data, this.source)
-      if (config.data.length == 0){
-        this.spec;
-        this.renderError()
-        return
-      }
-      vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite'})
-    }
   },// end methods
   mounted() {
-    this.spec;
+    if (this.data) {
+      let dataFilled = true
+      Object.keys(this.data).forEach((key) => {
+        console.log(key, this.data[key])
+        if (this.data[key].length < 1) dataFilled = false
+      })
+      if (dataFilled){
+        this.spec(this.data)
+        repos = Object.keys(this.data)
+      }
+      
+    } else {
+      console.log("did not detect data")
+      this.endpoint({repos:this.repos, endpoints:[this.source]}).then((data) => {
+        console.log("YAA",JSON.stringify(data))
+        console.log(Object.keys(data).length)
+        if (Object.keys(data).length > 1)
+          this.spec(data)
+        // processData(data)
+      }).catch((error) => {
+        console.log(error)
+        this.renderError()
+      }) // end batch request
+    }
   },
   created () {
     var query_string = "chart_mapping=" + this.source

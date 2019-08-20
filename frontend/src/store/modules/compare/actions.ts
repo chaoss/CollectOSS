@@ -38,7 +38,7 @@ export default {
 
     async setBaseRepo(context: any, payload: any) {
         return new Promise((resolve:any, reject:any)=>{
-            console.log(payload)
+            // console.log(payload)
                 setTimeout(()=> {
                     if (payload == null || Object.keys(payload).length === 0) {
                         context.state.baseRepo = ''

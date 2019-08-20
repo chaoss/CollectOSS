@@ -25,10 +25,7 @@
     <p></p>
 
     <div class="row">
-      <div class="col-12">
-        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
-        <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
-      </div>
+      
       <div class="row col col-7" :style="loaderPadding(loadedBars)" >
         
 <!-- look to add commit chart? -->
@@ -59,6 +56,11 @@
         <!-- <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner> -->
         
         <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
+      </div>
+
+      <div class="col-12">
+        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
+        <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
       </div>
 
       <div class="col col-5">
@@ -123,6 +125,7 @@ import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
   },
   computed: {
     ...mapGetters('common',[
+      'repoRelations'
     ]),
     ...mapGetters('compare',[
       'base'
@@ -158,9 +161,13 @@ export default class RepoOverview extends Vue {
   setBaseGroup!: any;
 
   created() {
+    // let repo = null
+    // if (this.base) 
+      // repo = this.base
+    // else repo = this.rout
     this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
-      Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
+      Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+        this.values[endpoint] = tuples[this.base.url][endpoint]
       })
       this.loadedBars = true
     })

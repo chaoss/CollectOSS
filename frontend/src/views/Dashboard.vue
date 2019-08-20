@@ -66,7 +66,7 @@
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <a href="#" @click="onGitRepo(repo)">
+                      <a href="#" @click="onGitRepo(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
                       </a>
                       <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
@@ -197,10 +197,9 @@ export default class Dashboard extends Vue {
         groups.forEach((group) => {
           relevantApiGroups.push(this.apiGroups[group.rg_name])
         })
-        
-      
         this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples:any) => {
           groups.forEach((group) => {
+            console.log("Group tuples: ", tuples[group.rg_name].groupEndpoints.topInsights)
             if ('topInsights' in tuples[group.rg_name].groupEndpoints){
               tuples[group.rg_name].groupEndpoints.topInsights.forEach((tuple:any) => {
                 // tuple.value = +tuple.value
@@ -216,7 +215,6 @@ export default class Dashboard extends Vue {
                 if (this.highest.length < 3 && (this.highest.length == 0 || this.highest[this.highest.length-1].rg_name != tuple.rg_name)) {
                   this.highest.push(tuple)
                 }
-                
                 if (this.insights[group.rg_name]){
                   if (this.insights[group.rg_name][tuple.repo_git]) {
                     if (this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric]) {
@@ -225,6 +223,7 @@ export default class Dashboard extends Vue {
                       this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
                     } 
                   } else {
+                    console.log(tuple.repo_git)
                     this.insights[group.rg_name][tuple.repo_git] = {}
                     this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
                   }
@@ -234,15 +233,17 @@ export default class Dashboard extends Vue {
                   this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
                 }
               })
+
               
             } else {
               console.log("top insights did not load correctly")
             }
           })
+          console.log("check:",this.insights)
           this.loadedInsights = true
           this.loadedRelations = true
         })
-      })  
+      })
     //   })
     })
   }
@@ -313,10 +314,15 @@ export default class Dashboard extends Vue {
         break
       }
     }
-    if (values[i+1].value > values[i].value) 
-      return 'arrow_upward'
-    else
-      return 'arrow_downward'
+    if (values[i+1]){
+      if (values[i+1].value > values[i].value) 
+        return 'arrow_upward'
+      else
+        return 'arrow_downward'
+    } else {
+      return '-'
+    }
+      
   }
 
   date_diff_indays (date1: any, date2: any) {
@@ -336,16 +342,22 @@ export default class Dashboard extends Vue {
       }
     }
     this.timeframes[values[0].repo_git] = date + ' days'
-    if (values[i+1].value > values[i].value) 
-      return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
-    else
-      return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    if (values[i+1]){
+      if (values[i+1].value > values[i].value) 
+        return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+      else
+        return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    }
+    else {
+      return 'insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    }
   }
 
   onGitRepo (e: any) {
+    console.log(e)
     this.$router.push({
       name: 'repo_overview',
-      params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id}
+      params: {group:e.rg_name, repo:e.repo_git, repo_group_id: e.repo_group_id, repo_id: e.repo_id}
     })
   }
 

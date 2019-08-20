@@ -94,10 +94,10 @@ class InsightWorker:
 
         # Query all repos and last repo id
         repoUrlSQL = s.sql.text("""
-                SELECT repo_git, repo_id FROM repo ORDER BY repo_id DESC
+                SELECT repo_git, repo_id FROM repo where repo_group_id = 22
             """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 450
+        pop_off = 0
         i = 0
         while i < pop_off:
             rs = rs[1:]

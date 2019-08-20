@@ -9,7 +9,7 @@
 
     <div class="row" style="transform: translateX(1rem)">
       <div class="row col col-9">
-        <d-card class="card-small h-100" style="height:45% !important; margin-bottom:1rem">
+        <d-card class="card-small h-100" style="height:11% !important; margin-bottom:1rem">
 
           <!-- Card Header -->
           <d-card-header class="border-bottom">
@@ -17,7 +17,7 @@
             <div class="block-handle"></div>
           </d-card-header>
 
-          <d-card-body class="pt-0">
+          <d-card-body class="pt-0" style="margin-bottom: 21rem" :style="{loadedInsights: 'margin-bottom: 0rem !important'}">
             <!-- <d-row class="border-bottom py-2 bg-light">
 
               <d-col col sm="6" class="d-flex mb-2 mb-sm-0">
@@ -37,12 +37,13 @@
             </d-row> -->
 
             <!-- Main insight -->
+            <div v-if="!loadedInsights" style=""></div>
             <div v-if="!loadedInsights" style="padding: 3.5rem 0 0 3.7rem;" class="col-md-8 col-lg-9">
 
               <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-40%);"></spinner>
             </div>
             <main-insight v-if="loadedInsights"
-              :data="values" :url="getRepo" color="black" source="main"
+              :data="values" :url="getRepo" color="black" source="main" :insight="insights[getGroup][getRepo][getMetric]"
             ></main-insight>
 
           </d-card-body>
@@ -69,8 +70,8 @@
             <div class="p-0 card-body">
               <div class="list-group-small list-group list-group-flush">
                 <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                  <a href="#" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]])">
-                    <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
+                  <a href="#" style="max-width:5.74rem" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]])">
+                    <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0; ">{{ repo }}</span>
                   </a>
                   <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
                     <spark-chart :color="colors[idx]" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; transform:translateX(-1rem)"/>
@@ -85,7 +86,7 @@
       </div>
       <!-- Others for this repo -->
         
-      <d-row class="col-12" style="transform: translateY(-28rem); padding: 0 !important;">
+      <d-row class="col-12" style="transform: translateY(-233rem); padding: 0 !important; ">
         <div class="col-12 page-header row no-gutters py-4">
           <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
             <h3 class="page-title" style="font-size: 1rem">View other top insights</h3> <!-- insights for this repo -->
@@ -113,7 +114,7 @@
                 <a href="#" @click="onInspectInsight(insights[group][repo][metric])" class="text-fiord-blue">{{ repo.substr(19) }}</a>
               </h5>
               <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[group][repo][metric]) }}</p>
-              <span class="text-muted" style="font-size: .75rem">1 month</span>
+              <span class="text-muted" style="font-size: .75rem">{{ timeframes[repo] }}</span>
             </d-card-body>
           </d-card>
         </d-col>
@@ -178,6 +179,7 @@ export default class InspectInsight extends Vue {
   loadedInsights: boolean = false
   desiredReposPerGroup: number = 5
   insights: any = {}
+  timeframes: any = {}
   values: any = []
   test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/Comcast/Hygieia.git','https://github.com/apache/jclouds-site.git',
     'https://github.com/apache/karaf-jclouds.git', 'https://github.com/openssl/openssl', 'https://github.com/rails/ruby-coffee-script.git']
@@ -345,10 +347,14 @@ export default class InspectInsight extends Vue {
         break
       }
     }
-    if (values[i+1].value > values[i].value) 
-      return 'arrow_upward'
-    else
-      return 'arrow_downward'
+    if (values[i+1]){
+      if (values[i+1].value > values[i].value) 
+        return 'arrow_upward'
+      else
+        return 'arrow_downward'
+    } else {
+      return '-'
+    }
   }
 
   date_diff_indays (date1: any, date2: any) {
@@ -367,10 +373,15 @@ export default class InspectInsight extends Vue {
         break
       }
     }
-    if (values[i+1].value > values[i].value) 
-      return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
-    else
-      return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    this.timeframes[values[0].repo_git] = date + ' days'
+    if (values[i+1]){
+      if (values[i+1].value > values[i].value) 
+        return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+      else
+        return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    } else {
+      return 'insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    }
   }
 
   onGitRepo (e: any) {

@@ -63,6 +63,7 @@ export default function Augur() {
         next()
       })
     } else if (to.params.group && to.params.repo) {
+      console.log("bout to")
       NProgress.set(0.6);
       store.dispatch('compare/setBaseRepo', {
         rg_name: to.params.group,
