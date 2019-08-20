@@ -60,7 +60,7 @@ export default {
                             })
                             Promise.all(promises).then((data: any) => {
                                 console.log(data)
-                                tempCache[repo.url][payload.endpoints[0]] = data// || []
+                                tempCache[repo.url][payload.endpoints[0]] = data[0]// || []
                             }).finally(() => {
                                 let allDone = true
                                 payload.repos.forEach((repo: any) => {
