@@ -109,14 +109,14 @@
     created() {
       console.log('####', this.base)
       this.endpoint({endpoints:this.risk_endpoints_1,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
+        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+        this.values[endpoint] = tuples[this.base.url][endpoint]
         })
         this.loaded_rsik_1 = true
       })
       this.endpoint({endpoints:this.risk_endpoints_2,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
+        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+        this.values[endpoint] = tuples[this.base.url][endpoint]
         })
         this.loaded_rsik_2 = true
       })

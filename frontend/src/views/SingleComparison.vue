@@ -67,15 +67,39 @@
       </div>
 
       <div class="col col-6" style="padding-top:3rem">
+        <spinner v-if="!loaded"></spinner>
+
+        <dynamic-line-chart v-if="loaded"
+                    source="issuesNew"
+                    title="New Issues / Week"
+                    cite-url=""
+                    cite-text="New Issues"
+                    :repos="repos">
+                    <!-- :data="values['closedIssuesCount']"> -->
+        </dynamic-line-chart>
+      </div>
+
+<!--       <div class="col col-6" style="padding-top:3rem">
+        <spinner v-if="!loaded"></spinner>
+
+        <dynamic-line-chart v-if="loaded"
+                    source="reviews"
+                    title="Pull Requests Opened / Week"
+                    cite-url=""
+                    cite-text="Pull Requests Opened"
+                    :repos="repos">
+        </dynamic-line-chart>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
         <dynamic-line-chart v-if="loaded"
                     source="pullRequestAcceptanceRate"
                     title="Pull Request Acceptance Rate"
                     cite-url=""
                     cite-text="Pull Request Acceptance Rate"
                     :repos="repos">
-                    <!-- :data="values['pullRequestAcceptanceRate']"> -->
         </dynamic-line-chart>
-      </div>
+      </div> -->
 <!-- 
       <div class="col col-12">
         <stacked-bar-chart source="issueActivity"
