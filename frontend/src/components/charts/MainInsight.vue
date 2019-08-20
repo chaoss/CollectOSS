@@ -1,12 +1,7 @@
 <template>
   <div ref="holder" style="position: relative;">
     <spinner v-if="!loaded" style="transform:translateY(3rem)"></spinner>
-    <div v-if="loaded" class="chart hidefirst ">
-      <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-      <div :id="source"></div>
-      <!-- <p> {{ chart }} </p> -->
-
-    </div>
+    <div :id="source"></div>
 
   </div>
 </template>
