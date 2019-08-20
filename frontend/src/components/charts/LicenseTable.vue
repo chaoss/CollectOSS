@@ -33,19 +33,19 @@
     computed: {
       ...mapGetters('compare',[
         'comparedRepos',
-        'baseRepo'
+        'base'
       ]),
     },
   })
   export default class CountBlock extends AppProps{
 
     // compare.getter
-    baseRepo!:any
+    base!:any
     comparedRepos!:any
 
 
     get values(){
-      return this.data[this.baseRepo][this.source]
+      return this.data[this.source]
     }
 
   }

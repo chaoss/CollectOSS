@@ -69,7 +69,8 @@ export default function Augur() {
         rg_name: to.params.group,
         repo_name: to.params.repo,
         repo_group_id: to.params.repo_group_id,
-        repo_id: to.params.repo_id
+        repo_id: to.params.repo_id,
+        gitURL: to.params.url
       }).then(() => {
         NProgress.set(0.8);
         if(to.params.compares) {

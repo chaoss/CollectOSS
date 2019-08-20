@@ -46,5 +46,11 @@ rm -rf dist/*;
 python setup.py install;
 cd ../..;
 
+cd ../metric_status_worker; 
+rm -rf build/*; 
+rm -rf dist/*; 
+python setup.py install; 
+cd ../..;
+
 ## API Docs
 cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs;
