@@ -1,7 +1,7 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <div class="row">
-      <div class="col col-4">
+      <div class="col col-5">
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
           <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
@@ -53,7 +53,7 @@
       </div>
 
 
-      <!-- <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6" style="padding-top:3rem">
         <spinner v-if="!loaded"></spinner>
 
         <dynamic-line-chart v-if="loaded"
@@ -61,7 +61,8 @@
                     title="Closed Issues / Week"
                     cite-url=""
                     cite-text="Closed Issues"
-                    :data="values['closedIssuesCount']">
+                    :repos="repos">
+                    <!-- :data="values['closedIssuesCount']"> -->
         </dynamic-line-chart>
       </div>
 
@@ -71,9 +72,10 @@
                     title="Pull Request Acceptance Rate"
                     cite-url=""
                     cite-text="Pull Request Acceptance Rate"
-                    :data="values['pullRequestAcceptanceRate']">
+                    :repos="repos">
+                    <!-- :data="values['pullRequestAcceptanceRate']"> -->
         </dynamic-line-chart>
-      </div> -->
+      </div>
 <!-- 
       <div class="col col-12">
         <stacked-bar-chart source="issueActivity"

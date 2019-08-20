@@ -67,7 +67,7 @@ export default {
                                     // console.log(tempCache)
                                     if (tempCache[repo.url]){
                                         // console.log(JSON.stringify(tempCache[group.rg_name]))
-                                        if (tempCache[repo.url].length < 1) {
+                                        if (tempCache[repo.url][payload.endpoints[0]].length < 1) {
                                             allDone = false
                                         }
                                     } else 
@@ -75,7 +75,7 @@ export default {
                                     
                                 })
                                 if (allDone) {
-                                    console.log("yo", tempCache)
+                                    console.log("yo", JSON.stringify(tempCache))
                                     resolve(tempCache)
                                 }
                             })

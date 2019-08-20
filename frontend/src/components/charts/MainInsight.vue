@@ -27,19 +27,45 @@ export default {
       values: [],
       user: null,
       loaded: true,
-      computedField: 'commit_count',
-
+      computedField: 'value',
+      first_discovered: null
     }
   },
   computed: {
     
   },
+  watch: {
+    data: function() {
+      if (this.data) {
+        let dataFilled = true
+        console.log(this.data)
+        console.log(JSON.stringify(this.data))
+        if (this.data.length > 0){
+          this.spec(this.data)
+        }
+        
+      } else {
+        console.log("did not detect data")
+        // this.endpoint({repos:this.repos, endpoints:[this.source]}).then((data) => {
+        //   console.log("YAA",JSON.stringify(data))
+        //   console.log(Object.keys(data).length)
+        //   if (Object.keys(data).length > 1)
+        //     this.spec(data)
+        //   // processData(data)
+        // }).catch((error) => {
+        //   console.log(error)
+        //   this.renderError()
+        // }) // end batch request
+      }
+    }
+  },
   mounted() {
+    this.loaded = false
     if (this.data) {
       let dataFilled = true
       console.log(this.data)
       console.log(JSON.stringify(this.data))
-      if (dataFilled){
+      if (this.data.length > 0){
         this.spec(this.data)
       }
       
@@ -58,9 +84,9 @@ export default {
     }
   },
   methods: {
-    spec() {
+    spec(data) {
       // repo[this.source]().then((data) => {
-      this.values = this.data//this.convertKey(this.data)
+      this.values = this.convertKey(data)//this.convertKey(this.data)
       this.insertInsightLocation(this.values, this.insight)
       // })
       console.log(this.data, this.values)
@@ -90,8 +116,9 @@ export default {
           // },
           {
             "mark": {
-              "type":"line",
-              "interpolate": "basis"
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
             },
             "encoding": {
               "x": {
@@ -99,6 +126,9 @@ export default {
                 "axis": {
                   // "labels": false,
                   "title": ""
+                },
+                "scale": {
+                  "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
                 }
               },
               "detail": {"field": "repo_name", "type": "nominal"},
@@ -109,13 +139,15 @@ export default {
                   "title": ""
                 }
               },
+              "opacity": {"value": 0.8},
               "color": {"value": "red"}
             }
           },
           {
             "mark": {
-              "type":"line",
-              "interpolate": "basis"
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
             },
             "encoding": {
               "x": {
@@ -123,9 +155,13 @@ export default {
                 "axis": {
                   // "labels": false,
                   "title": ""
+                },
+                "scale": {
+                  "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
                 }
               },
               "detail": {"field": "repo_name", "type": "nominal"},
+              "opacity": {"value": 0.8},
               "y": {
                 "aggregate": "ci0","field": this.computedField,"type": "quantitative",
                 "axis": {
@@ -138,8 +174,9 @@ export default {
           },
           {
             "mark": {
-              "type":"line",
-              "interpolate": "basis"
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
             },
             "encoding": {
               "x": {
@@ -147,9 +184,13 @@ export default {
                 "axis": {
                   // "labels": false,
                   "title": ""
+                },
+                "scale": {
+                  "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
                 }
               },
               "detail": {"field": "repo_name", "type": "nominal"},
+              "opacity": {"value": 0.8},
               "y": {
                 "aggregate": "ci1","field": this.computedField,"type": "quantitative",
                 "axis": {
@@ -162,7 +203,9 @@ export default {
           },
           {
             "mark": {
-              "type":"line"
+              "type": "line",
+              "interpolate": "basis",
+              "clip": true
             },
             "encoding": {
               "x": {
@@ -170,6 +213,9 @@ export default {
                 "axis": {
                   "labels": true,
                   "title": "date"
+                },
+                "scale": {
+                  "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
                 }
               },
               "y": {
@@ -183,12 +229,25 @@ export default {
               "color": {"value": this.color}
             }
           },
-          {
-            "mark": "rule",
-            "encoding": {
-              "x": {"field": "first_discovered", "type":"temporal"}
-            }
-          }
+          // {
+          //   // "transform": [
+          //   //   {"filter": "datum.date = " + this.first_discovered}
+          //   // ],
+          //   "mark": "point",
+
+          //   "encoding": {
+          //     "x": {"field": "date", "type":"temporal"},
+          //     "y": {
+          //       // "aggregate": "sum", 
+          //       "field": this.computedField,"type": "quantitative",
+          //       "axis": {
+          //         "labels": true,
+          //         "title": this.computedField
+          //       }
+          //     },
+          //     "color": {"value": this.color}
+          //   }
+          // }
           // {
           //   "mark": {
           //     "type":"point"
@@ -222,7 +281,6 @@ export default {
         
       }
       //show the chart again
-      this.loaded = true
       this.reloadImage(config)
       return config
 
@@ -238,12 +296,13 @@ export default {
       vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -100, offsetX: 40}, mode: 'vega-lite',}) 
     },
     convertKey(ary) {
+      console.log("converting", ary)
       ary.forEach((el) => {
         
         let keys = Object.keys(el)
         let field = null
         keys.forEach((key) => {
-          if (el[key] != null && key != 'date' && key != 'repo_name'){
+          if (el[key] != null && key != 'date' && key != 'repo_name' && key != 'field' && key != 'value'){
             field = key
           }
         })
@@ -265,15 +324,22 @@ export default {
         if (tuple.date == date_found) {
           console.log("date found in data:", tuple)
           tuple.first_discovered = date_found
+          this.first_discovered = date_found
         }
       })
       console.log(data)
-      if (data.length > 0){
-        data[data.length-1].last_point = data[data.length-1].date
+      try{
+        if (data.length > 0){
+          data[data.length-1].last_point = data[data.length-1].date
+        }
+        else {
+          data[0].last_point = data[data.length-1].date
+        }
       }
-      else {
-        data[0].last_point = data[data.length-1].date
+      catch(e){
+        console.log(e, "data issue", data)
       }
+      
 
     }
   }

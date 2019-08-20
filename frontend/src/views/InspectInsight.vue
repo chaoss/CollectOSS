@@ -9,7 +9,7 @@
 
     <div class="row" style="transform: translateX(1rem)">
       <div class="row col col-9">
-        <d-card class="card-small h-100" style="height:11% !important; margin-bottom:1rem">
+        <d-card class="card-small h-100" style="height:10% !important; margin-bottom:1rem">
 
           <!-- Card Header -->
           <d-card-header class="border-bottom">
@@ -86,7 +86,7 @@
       </div>
       <!-- Others for this repo -->
         
-      <d-row class="col-12" style="transform: translateY(-233rem); padding: 0 !important; ">
+      <d-row class="col-12" style="transform: translateY(-228rem); padding: 0 !important; ">
         <div class="col-12 page-header row no-gutters py-4">
           <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
             <h3 class="page-title" style="font-size: 1rem">View other top insights</h3> <!-- insights for this repo -->
@@ -296,11 +296,11 @@ export default class InspectInsight extends Vue {
   get apiMetric() {
     if (this.$route.params.ri_metric == 'New Issues (issues)'){
       return 'issueNew'
-    } else if (this.$route.params.ri_metric == 'Code Changes'){
+    } else if (this.$route.params.ri_metric == 'Code Changes' || this.$route.params.ri_metric == 'Commit Count (commit_count)'){
       return 'codeChanges'
     } else if (this.$route.params.ri_metric == 'Code Changes Lines'){
       return 'codeChangesLines'
-    }
+    } 
     return ''
   }
 

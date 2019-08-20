@@ -232,6 +232,7 @@ export default {
                 "titlePadding": 10
               },
             },
+        // "resolve": {"scale": {"x": "independent"}},
         "vconcat": [
           {
             "title": {
@@ -241,33 +242,33 @@ export default {
             "width": 520,
             "height": 250,
             "layer": [
-              // {
-              //   "transform": [
-              //     brush
-              //   ],
-              //   "mark": "rule",
-              //   "encoding":{
-              //     "x": {
-              //       "field": "date",
-              //       "type": "temporal",
-              //       "axis": {
-              //         "labels": this.showDetail,
-              //         "format": "%ba %Y",
-              //         "title": " "
-              //       }
-              //     },
-              //     "color": {
-              //       "field": "name",
-              //       "type": "nominal",
-              //       "scale": { "range": colors},
-              //       "sort": false
-              //     },
-              //     "opacity":{
-              //       "value": 0
-              //     }
-              //   }
+              {
+                "transform": [
+                  brush
+                ],
+                "mark": "rule",
+                "encoding":{
+                  "x": {
+                    "field": "date",
+                    "type": "temporal",
+                    "axis": {
+                      "labels": true,
+                      "format": "%b %Y",
+                      "title": " "
+                    }
+                  },
+                  "color": {
+                    "field": "name",
+                    "type": "nominal",
+                    "scale": { "range": colors},
+                    "sort": false
+                  },
+                  "opacity":{
+                    "value": 0
+                  }
+                }
 
-              // },
+              },
 
             ]
           }
@@ -550,13 +551,13 @@ export default {
         repos.forEach((repo) => {
           buildLines("valueRolling" + repo.replace(/\//g,'').replace(/\./g,''), colors[color])
 
-          // if(this.rawWeekly)
-          //   config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
-          // // if user doesn't want detail, then set vconcat to og
-          // if(this.showDetail)
-          //   config.vconcat[1] = getDetail("valueRolling" + this.repo)
-          // else if (config.vconcat[1])
-          //   config.vconcat.pop()
+          if(this.rawWeekly)
+            config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
+          // if user doesn't want detail, then set vconcat to og
+          if(this.showDetail)
+            config.vconcat[1] = getDetail("valueRolling" + this.repo)
+          else if (config.vconcat[1])
+            config.vconcat.pop()
           color++
         });
       }
@@ -565,7 +566,7 @@ export default {
       //can change repo to whatever
       if(this.showArea && repos.length < 3) {
         repos.forEach((repo) => {
-          // config.vconcat[0].layer.push(getArea(repo))
+          config.vconcat[0].layer.push(getArea(repo))
         })
       } else {
         repos.forEach((repo) => {
@@ -590,8 +591,8 @@ export default {
             config.vconcat[0].layer.push(getStandardPoint(key, colors[col]))
             col++
           });
-          // config.vconcat[0].layer.push(getValueText(key))
-          // config.vconcat[0].layer.push(getDateText(key))
+          config.vconcat[0].layer.push(getValueText(key))
+          config.vconcat[0].layer.push(getDateText(key))
           //push parts of layer that use "valueCompared" key if there is a comparedRepo
           if(repos.length > 1){
             config.vconcat[0].layer.push(rule)
@@ -764,6 +765,7 @@ export default {
           let colors = []
           let baselineVals = null
           let baseDate = null
+          let x = 0
           repos.forEach((repo) => {
             console.log(repo, JSON.stringify(data))
               buildLines(data[repo], (obj, key, field, count) => {
@@ -793,6 +795,9 @@ export default {
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                   while (rolling[0].valueRolling == 0)
                     rolling.shift()
+                  rolling.forEach((tuple) => {
+                    tuple.date.setDate(tuple.date.getDate() + x);
+                  })
                   console.log(rolling)
                 }
 
@@ -801,7 +806,7 @@ export default {
                 legend.push(repo + " " + field)
                 // colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
               }, repo)
-
+            x++
           });
 
           if (normalized.length == 0) {
