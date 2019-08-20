@@ -66,7 +66,7 @@
         </dynamic-line-chart>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <!--<div class="col col-6" style="padding-top:3rem">
         <spinner v-if="!loaded"></spinner>
 
         <dynamic-line-chart v-if="loaded"
@@ -75,9 +75,8 @@
                     cite-url=""
                     cite-text="New Issues"
                     :repos="repos">
-                    <!-- :data="values['closedIssuesCount']"> -->
         </dynamic-line-chart>
-      </div>
+      </div> -->
 
 <!--       <div class="col col-6" style="padding-top:3rem">
         <spinner v-if="!loaded"></spinner>
