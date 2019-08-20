@@ -66,7 +66,7 @@
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <a href="#" @click="onGitRepo(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
+                      <a href="#" style="max-width:10rem" @click="onGitRepo(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
                       </a>
                       <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">

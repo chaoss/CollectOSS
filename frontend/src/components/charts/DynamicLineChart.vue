@@ -278,7 +278,7 @@ export default {
       //cannot have duplicate selection, so keep track if it has already been added
       var selectionAdded = false
 
-      let getStandardLine = (key, color) => {
+      let getStandardLine = (key, color, extension) => {
         // key = key.split('/').join('');
         let raw = (key.substring(key.length - 7) == "Rolling" ? false : true)
         return {
@@ -287,7 +287,7 @@ export default {
             // ],
             "encoding": {
               "x": {
-                "field": "date",
+                "field": "date" + extension,
                 "type": "temporal",
                 "axis": {
                       "labels": !this.showDetail,
@@ -442,7 +442,7 @@ export default {
         },
         "encoding": {
                   "x": {
-                    "field": "date",
+                    "field": "date" + extension,
                     "type": "temporal",
                     "axis": {"format": "%b %Y", "title": " "}
                   },
@@ -546,10 +546,16 @@ export default {
 
       //DONE WITH SPEC PORTION
 
+      let buildLines = function (key, color, extension) {
+        config.vconcat[0].layer.push(getStandardLine(key, color, extension))
+
+      }
+
+
       let buildMetric = () => {
         var color = 0;
         repos.forEach((repo) => {
-          buildLines("valueRolling" + repo.replace(/\//g,'').replace(/\./g,''), colors[color])
+          buildLines("valueRolling" + repo.replace(/\//g,'').replace(/\./g,''), colors[color], repo.replace(/\//g,'').replace(/\./g,''))
 
           if(this.rawWeekly)
             config.vconcat[0].layer.push(getRawLine("value" + repo, colors[color]))
@@ -567,21 +573,17 @@ export default {
       //can change repo to whatever
       if(this.showArea && repos.length < 3) {
         repos.forEach((repo) => {
-          config.vconcat[0].layer.push(getArea(repo))
+          config.vconcat[0].layer.push(getArea(repo.replace(/\//g,'').replace(/\./g,'')))
         })
       } else {
         repos.forEach((repo) => {
           for(var x = 0; x < config.vconcat[0].layer.length; x++) {
-            if(config.vconcat[0].layer[x] == getArea(repo)) {
+            if(config.vconcat[0].layer[x] == getArea(repo.replace(/\//g,'').replace(/\./g,''))) {
               config.vconcat[0].layer[x] = {}
               buildMetric()
             }
           }
         })
-      }
-
-      let buildLines = function (key, color) {
-        config.vconcat[0].layer.push(getStandardLine(key, color))
       }
 
       let buildTooltip = function (key) {
@@ -637,15 +639,15 @@ export default {
         return new Date(d.setDate(d.getDate()-Number(this.timeperiod))).getDate()
       })() : this.earliest.getDate()
       for(var i = 0; i < config.vconcat[0].layer.length; i++){
-        config.vconcat[0].layer[i].encoding.x["scale"] =
-          {
-            "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
-          }
+        // config.vconcat[0].layer[i].encoding.x["scale"] =
+        //   {
+        //     "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+        //   }
       }
       if(this.showDetail) {
-        config.vconcat[1].encoding.x["scale"] = {
-            "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
-          }
+        // config.vconcat[1].encoding.x["scale"] = {
+        //     "domain": [{"year": startyear, "month": startmonth, "date": startdate},{"year": this.latest.getFullYear(), "month": this.latest.getMonth(), "date": this.latest.getDate()}]
+        //   }
       } else {
       //OLD ELSE KEEP for now
         // for(var i = 0; i < config.vconcat[0].layer.length; i++){

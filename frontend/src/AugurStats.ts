@@ -105,6 +105,7 @@ export default class AugurStats {
           newObj.date = new Date(e.date)
           newObj[key + extension] = e[key]
         }
+        newObj['date' + addon] = newObj.date
         newObj['upper' + extension] = e[key] + Math.sqrt(AugurStats.averageArray(distances))
         newObj['lower' + extension] = e[key] - Math.sqrt(AugurStats.averageArray(distances))
         return newObj
