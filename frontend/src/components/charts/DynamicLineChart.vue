@@ -560,6 +560,7 @@ export default {
             config.vconcat.pop()
           color++
         });
+
       }
 
       //push the area to general spec
@@ -618,7 +619,8 @@ export default {
       }
 
       buildMetric()
-
+      console.log(repos[0], "YOYOY")
+      buildLines("valueRolling" + repos[0].replace(/\//g,'').replace(/\./g,''), colors[0])
 
       //set dates from main control options
       let today = new Date()

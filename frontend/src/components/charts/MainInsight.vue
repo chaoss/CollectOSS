@@ -114,93 +114,93 @@ export default {
           //     "opacity": {"value": 0.1}
           //   }
           // },
-          {
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-              "clip": true
-            },
-            "encoding": {
-              "x": {
-                "field": "date", "type": "temporal", "timeUnit": "yearquarter", 
-                "axis": {
-                  // "labels": false,
-                  "title": ""
-                },
-                "scale": {
-                  "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
-                }
-              },
-              "detail": {"field": "repo_name", "type": "nominal"},
-              "y": {
-                "aggregate": "mean","field": this.computedField,"type": "quantitative",
-                "axis": {
-                  // "labels": false,
-                  "title": ""
-                }
-              },
-              "opacity": {"value": 0.8},
-              "color": {"value": "red"}
-            }
-          },
-          {
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-              "clip": true
-            },
-            "encoding": {
-              "x": {
-                "field": "date", "type": "temporal", "timeUnit": "yearquarter", 
-                "axis": {
-                  // "labels": false,
-                  "title": ""
-                },
-                "scale": {
-                  "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
-                }
-              },
-              "detail": {"field": "repo_name", "type": "nominal"},
-              "opacity": {"value": 0.8},
-              "y": {
-                "aggregate": "ci0","field": this.computedField,"type": "quantitative",
-                "axis": {
-                  // "labels": false,
-                  "title": ""
-                }
-              },
-              "color": {"value": "red"}
-            }
-          },
-          {
-            "mark": {
-              "type": "line",
-              "interpolate": "basis",
-              "clip": true
-            },
-            "encoding": {
-              "x": {
-                "field": "date", "type": "temporal", "timeUnit": "yearquarter", 
-                "axis": {
-                  // "labels": false,
-                  "title": ""
-                },
-                "scale": {
-                  "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
-                }
-              },
-              "detail": {"field": "repo_name", "type": "nominal"},
-              "opacity": {"value": 0.8},
-              "y": {
-                "aggregate": "ci1","field": this.computedField,"type": "quantitative",
-                "axis": {
-                  // "labels": false,
-                  "title": ""
-                }
-              },
-              "color": {"value": "red"}
-            }
-          },
+          // {
+          //   "mark": {
+          //     "type": "line",
+          //     "interpolate": "basis",
+          //     "clip": true
+          //   },
+          //   "encoding": {
+          //     "x": {
+          //       "field": "date", "type": "temporal", "timeUnit": "yearquarter", 
+          //       "axis": {
+          //         // "labels": false,
+          //         "title": ""
+          //       },
+          //       "scale": {
+          //         "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
+          //       }
+          //     },
+          //     "detail": {"field": "repo_name", "type": "nominal"},
+          //     "y": {
+          //       "aggregate": "mean","field": this.computedField,"type": "quantitative",
+          //       "axis": {
+          //         // "labels": false,
+          //         "title": ""
+          //       }
+          //     },
+          //     "opacity": {"value": 0.8},
+          //     "color": {"value": "red"}
+          //   }
+          // },
+          // {
+          //   "mark": {
+          //     "type": "line",
+          //     "interpolate": "basis",
+          //     "clip": true
+          //   },
+          //   "encoding": {
+          //     "x": {
+          //       "field": "date", "type": "temporal", "timeUnit": "yearquarter", 
+          //       "axis": {
+          //         // "labels": false,
+          //         "title": ""
+          //       },
+          //       "scale": {
+          //         "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
+          //       }
+          //     },
+          //     "detail": {"field": "repo_name", "type": "nominal"},
+          //     "opacity": {"value": 0.8},
+          //     "y": {
+          //       "aggregate": "ci0","field": this.computedField,"type": "quantitative",
+          //       "axis": {
+          //         // "labels": false,
+          //         "title": ""
+          //       }
+          //     },
+          //     "color": {"value": "red"}
+          //   }
+          // },
+          // {
+          //   "mark": {
+          //     "type": "line",
+          //     "interpolate": "basis",
+          //     "clip": true
+          //   },
+          //   "encoding": {
+          //     "x": {
+          //       "field": "date", "type": "temporal", "timeUnit": "yearquarter", 
+          //       "axis": {
+          //         // "labels": false,
+          //         "title": ""
+          //       },
+          //       "scale": {
+          //         "domain": [{"year": 2018, "month": new Date().getMonth(), "date": new Date().getDate()},{"year": new Date().getFullYear(), "month": new Date().getMonth(), "date": new Date().getDate()}]
+          //       }
+          //     },
+          //     "detail": {"field": "repo_name", "type": "nominal"},
+          //     "opacity": {"value": 0.8},
+          //     "y": {
+          //       "aggregate": "ci1","field": this.computedField,"type": "quantitative",
+          //       "axis": {
+          //         // "labels": false,
+          //         "title": ""
+          //       }
+          //     },
+          //     "color": {"value": "red"}
+          //   }
+          // },
           {
             "mark": {
               "type": "line",
