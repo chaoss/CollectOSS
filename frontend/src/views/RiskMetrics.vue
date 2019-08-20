@@ -89,7 +89,7 @@
     loaded_rsik_1:boolean = false;
     loaded_rsik_2:boolean = false;
 
-    values = {}
+    values:any = {}
 
     // deflare vuex action, getter, mutations
     groupsInfo!: any;
