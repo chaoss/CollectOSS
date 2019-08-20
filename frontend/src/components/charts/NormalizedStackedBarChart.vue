@@ -103,7 +103,7 @@ export default {
             "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 17,
+            "labelFontSize": 13,
             // "labelFont": "Open Sans",
             "labelOffset": 3,
             "titleFontSize": 14,
