@@ -3,7 +3,7 @@
     <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 5.9rem 0px auto;"></spinner>
     <div v-if="loaded" class="chart hidefirst ">
       <vega-lite :spec="spec" :data="values"></vega-lite>
-      <p> {{ chart }} </p>
+      <!-- <p> {{ chart }} </p> -->
 
     </div>
 

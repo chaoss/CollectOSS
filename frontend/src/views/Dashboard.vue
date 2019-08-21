@@ -11,27 +11,34 @@
 
         <d-row>
           <div v-if="!loadedInsights" class="col-md-8 col-lg-9">
-            <spinner style="top: 30%; padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+            <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
           </div>
-          <d-col v-if="loadedInsights" v-for="(group, idx) in Object.keys(insights).slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
+          <d-col v-else v-for="(record, idx) in highest" :key="idx" lg="3" md="4" sm="8" class="mb-4">
             
-            <d-card v-if="idx < 4" v-for="repo in Object.keys(insights[group]).slice(0,1)" class="card-small card-post card-post--1">
-              <div class="card-post__image" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
-                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
-                <insight-chart style="transform: translateX(-3.35rem)" :data="insights[group][repo][metric]" :url="repo" :color="colors[idx]"></insight-chart>
+            <d-card v-if="idx < 4" class="card-small card-post card-post--1">
+              <div class="card-post__image">
+                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ record.rg_name }}</d-badge>
+                <insight-chart style="transform: translateX(-3.35rem)" :data="insights[record.rg_name][record.repo_git][record.ri_metric]" :url="record.repo_git" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
                   <a href="#" :style="colors[idx]" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
-                    <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%)">{{ getDirection(insights[group][repo][metric]) }}</i>
+                    <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%)">{{ getDirection(insights[record.rg_name][record.repo_git][record.ri_metric]) }}</i>
                   </a>
                 </div>
               </div>
-              <d-card-body v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
+              <d-card-body>
                 <h5 class="card-title">
-                  <a href="#" class="text-fiord-blue">{{ repo.substr(19) }}</a>
+                  <a href="#" @click="onGitRepo(record)" class="text-fiord-blue">{{ record.repo_git.substr(19) }}</a>
                 </h5>
-                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[group][repo][metric]) }} in Code Commits within the past month</p>
-                <span class="text-muted" style="font-size: .75rem">1 month</span>
+                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[record.rg_name][record.repo_git][record.ri_metric]) }}</p>
+                <div class="row">
+                  <div class="col col-5"><span class="text-muted" style="font-size: .75rem">{{ timeframes[record.repo_git] }}</span></div>
+                  <!-- View Full Report -->
+                  <d-col col sm="7" style="transform: translateX(-1rem) !important;">
+                    <d-button size="sm" @click="onInspectInsight(insights[record.rg_name][record.repo_git][record.ri_metric])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
+                  </d-col>
+<!--                   <div class="col col-7"><span class="text-muted" style="font-size: .75rem"><a href="#" class="text-fiord-blue" @click="onInspectInsight(insights[record.rg_name][record.repo_git][record.ri_metric])">See more here...</a></span></div>
+ -->                </div>
               </d-card-body>
             </d-card>
           </d-col>
@@ -59,9 +66,9 @@
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <d-link :to="{name: 'repo_overview', params: {repo: repo}}" @click="setBaseRepo(repo)">
+                      <a href="#" style="max-width:10rem" @click="onGitRepo(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
                         <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
-                      </d-link>
+                      </a>
                       <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
                         <spark-chart :color="colors[idx]" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
                       </div>
@@ -94,7 +101,8 @@ interface FlexObject<TValue> {
       'loadRepos',
       'loadRepoGroups',
       'createAPIObjects',
-      'endpoint'
+      'endpoint',
+      'addRepoGroup'
     ])
   },
   computed: {
@@ -139,9 +147,10 @@ export default class Dashboard extends Vue {
   loadedInsights: boolean = false
   desiredReposPerGroup: number = 5
   insights: any = {}
+  timeframes: any = {}
   test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/Comcast/Hygieia.git','https://github.com/apache/jclouds-site.git',
     'https://github.com/apache/karaf-jclouds.git', 'https://github.com/openssl/openssl', 'https://github.com/rails/ruby-coffee-script.git']
-  testGroups: any[] = ['Rails', 'Comcast', 'Risk Working Group', 'Apache']
+  highest: any = []
 
   // Allow access to vuex getters
   repoRelations!: any;
@@ -156,14 +165,15 @@ export default class Dashboard extends Vue {
   loadRepos!:any;
   createAPIObjects!:any;
   endpoint!:any;
+  addRepoGroup!:any;
 
   // 'created' lifecycle hook
   // Gets ran on component initialization, data collection should be handled here
   created () {
 
     // Load the data we need
-    this.loadRepoGroups().then(() => {
-      this.loadRepos().then(() => {
+    this.loadRepoGroups().then((groups: any) => {
+    //   this.loadRepos().then(() => {
         // Creating AugurAPI objects for the entities we will query
         // for (let n = 0; n < 3; n++){
         //   let group = this.repoGroups[n]
@@ -178,38 +188,63 @@ export default class Dashboard extends Vue {
         //     sparkRepos.push(this.apiRepos[repo.url])
         //   })
         // }
-        this.endpoint({endpoints: ['topInsights']}).then((tuples:any) => {
-          console.log(Object.keys(tuples))
-          tuples.topInsights;
-          // sleep(5000)
-          // console.log(Object.keys(tuples))
-          if ('topInsights' in tuples){
-            tuples.topInsights.forEach((tuple:any) => {
-              // tuple.value = +tuple.value
-              if (this.insights[tuple.rg_name]){
-                if (this.insights[tuple.rg_name][tuple.repo_git]) {
-                  if (this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric]) {
-                    this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric].push(tuple)
-                  } else {
-                    this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-                  } 
-                } else {
-                  this.insights[tuple.rg_name][tuple.repo_git] = {}
-                  this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-                }
-              } else {
-                this.insights[tuple.rg_name] = {}
-                this.insights[tuple.rg_name][tuple.repo_git] = {}
-                this.insights[tuple.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
-              }
-            })
-            this.loadedInsights = true
-          } else {
-            console.log("top insights did not load correctly")
-          }
-        })
-        this.loadedRelations = true
+      let relevantApiGroups: any[] = []
+      let addingGroupPromises: any[] = []
+      groups.forEach((group: any) => {
+        addingGroupPromises.push(this.addRepoGroup(group))
       })
+      Promise.all(addingGroupPromises).then((groups) => {
+        groups.forEach((group) => {
+          relevantApiGroups.push(this.apiGroups[group.rg_name])
+        })
+        this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples:any) => {
+          groups.forEach((group) => {
+            console.log("Group tuples: ", tuples[group.rg_name].groupEndpoints.topInsights)
+            if ('topInsights' in tuples[group.rg_name].groupEndpoints){
+              tuples[group.rg_name].groupEndpoints.topInsights.forEach((tuple:any) => {
+                // tuple.value = +tuple.value
+                let i = 0
+
+                this.highest.forEach((record:any) => {
+                  if ((tuple.date > record.date && tuple.rg_name == record.rg_name)){
+                    console.log('hihihi')
+                    this.highest[i] = tuple
+                  }
+                  i++
+                })
+                if (this.highest.length < 3 && (this.highest.length == 0 || this.highest[this.highest.length-1].rg_name != tuple.rg_name)) {
+                  this.highest.push(tuple)
+                }
+                if (this.insights[group.rg_name]){
+                  if (this.insights[group.rg_name][tuple.repo_git]) {
+                    if (this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric]) {
+                      this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric].push(tuple)
+                    } else {
+                      this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+                    } 
+                  } else {
+                    console.log(tuple.repo_git)
+                    this.insights[group.rg_name][tuple.repo_git] = {}
+                    this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+                  }
+                } else {
+                  this.insights[group.rg_name] = {}
+                  this.insights[group.rg_name][tuple.repo_git] = {}
+                  this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
+                }
+              })
+
+              
+            } else {
+              console.log("top insights did not load correctly")
+            }
+          })
+          console.log("check:",this.insights)
+          this.loadedInsights = true
+          this.loadedRelations = true
+        })
+      })
+    //   })
     })
   }
 
@@ -279,27 +314,59 @@ export default class Dashboard extends Vue {
         break
       }
     }
-    if (values[i+1].value > values[i].value) 
-      return 'arrow_upward'
-    else
-      return 'arrow_downward'
+    if (values[i+1]){
+      if (values[i+1].value > values[i].value) 
+        return 'arrow_upward'
+      else
+        return 'arrow_downward'
+    } else {
+      return '-'
+    }
+      
+  }
+
+  date_diff_indays (date1: any, date2: any) {
+    let dt1 = new Date(date1);
+    let dt2 = new Date(date2);
+    return Math.floor((Date.UTC(dt2.getFullYear(), dt2.getMonth(), dt2.getDate()) - Date.UTC(dt1.getFullYear(), dt1.getMonth(), dt1.getDate()) ) /(1000 * 60 * 60 * 24));
   }
 
   getPhrase (values: any[]) {
     let i = 0
+    let date = Date.now()
+    console.log(date)
     for (i = 0; i < values.length; i++){
       if (values[i].discovered){
+        date = this.date_diff_indays(values[i].date, date)
         break
       }
     }
-    if (values[i+1].value > values[i].value) 
-      return 'increase'
-    else
-      return 'decrease'
+    this.timeframes[values[0].repo_git] = date + ' days'
+    if (values[i+1]){
+      if (values[i+1].value > values[i].value) 
+        return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+      else
+        return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    }
+    else {
+      return 'insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+    }
   }
 
-  setBaseRepo (e: any) {
-    // this.$store.commit('setBaseRepo', store.AugurAPI.Repo({ gitURL: e.url}))
+  onGitRepo (e: any) {
+    console.log(e)
+    this.$router.push({
+      name: 'repo_overview',
+      params: {group:e.rg_name, repo:e.repo_git, repo_group_id: e.repo_group_id, repo_id: e.repo_id}
+    })
+  }
+
+  onInspectInsight (e: any) {
+    console.log(e[0])
+    this.$router.push({
+      name: 'inspect_insight',
+      params: {'rg_name': e[0].rg_name, 'repo_git': e[0].repo_git, 'ri_metric': e[0].ri_metric}
+    })
   }
 
 

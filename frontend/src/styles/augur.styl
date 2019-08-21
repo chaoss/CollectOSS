@@ -391,7 +391,7 @@ cite.metric a
   display: none !important
 
 .spacing
-  height: 90px
+  height: 11rem
 
 .invis, .invis > *, .invis > small
   z-index: -1;
@@ -713,7 +713,7 @@ div.checkbox_select .select_input
   position: relative;
   border-bottom: 2px solid rgba(255,255,255,0.24);
   margin-bottom: 30px;
-  padding: 0 0px 0 38px;
+  padding: 0 0px 0 0px;
 }
 
 .limiter .input {
@@ -1066,13 +1066,12 @@ div.checkbox_select .select_input
 .inputGroup {
     top:30%
     display: inline;
-    margin: 10px 20px 0px 0px;
     position: relative;
 width: 300px;
       height: 100%;
 
     label {
-      padding: 18px 80px 18px 18px;
+      padding: 0 2.6rem 0 0;
 
       width: 100%px;
       height: 100%;
@@ -1088,11 +1087,11 @@ width: 300px;
     
 
     label:after {
-      width: 32px;
-      height: 32px;
+      width: 22px;
+      height: 22px;
       content: '';
       border: 2px solid #D1D7DC;
-      background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.414 11L4 12.414l5.414 5.414L20.828 6.414 19.414 5l-10 10z' fill='%23fff' fill-rule='nonzero'/%3E%3C/svg%3E ");
+      background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 22 22' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.414 11L4 12.414l5.414 5.414L20.828 6.414 19.414 5l-10 10z' fill='%23fff' fill-rule='nonzero'/%3E%3C/svg%3E ");
       background-repeat: no-repeat;
       background-position: 2px 3px;
       border-radius: 50%;
@@ -1157,6 +1156,7 @@ code {
   text-align: center
   height: 60px
   margin-bottom: 0
+  font-size: 0.7rem
 }
 
 .multiselect__content-wrapper {
@@ -1269,13 +1269,15 @@ code {
 
 details summary
   text-align: center !important;
-  max-width: 113px
+  max-width: 53px
   float: left
+  transform: translateX(1.3rem) translateY(-0.4rem)
 
 details summary::after {
   display: inline-block;
     position: relative;
   content: " Download Links "
+  font-size: 0.5rem;
 }
 
 details summary svg
@@ -1401,4 +1403,8 @@ details summary svg
     padding-left: 0
     padding-right: 5
   }
+}
+
+.text-semibold:hover {
+  color: black !important
 }

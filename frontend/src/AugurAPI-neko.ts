@@ -25,11 +25,11 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-  constructor(hostURL: string = 'http://localhost:5000', version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://augur.osshealth.io:5000', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
-    this._host = hostURL || 'http://localhost:5000'
+    this._host = hostURL || 'http://augur.osshealth.io:5000'
     this.__cache = {}
     this.__timeout = null
     this.__pending = {}
@@ -201,7 +201,7 @@ abstract class BaseRepo {
   [k: string]: any
   
   constructor(parent: AugurAPI){
-    this._host = parent._host || 'http://localhost:5002'
+    this._host = parent._host || 'http://augur.osshealth.io:5000'
     this._version = parent._version
     this.__URLFunctionFactory = parent.__URLFunctionFactory
     this.parent = parent

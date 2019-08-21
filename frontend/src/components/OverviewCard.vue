@@ -54,14 +54,15 @@
 </template>
 
 <script>
-import AugurHeader from "./AugurHeader";
-import TickChart from "./charts/TickChart";
-import LinesOfCodeChart from "./charts/LinesOfCodeChart";
-import NormalizedStackedBarChart from "./charts/NormalizedStackedBarChart";
-import OneDimensionalStackedBarChart from "./charts/OneDimensionalStackedBarChart";
-import HorizontalBarChart from "./charts/HorizontalBarChart";
-import GroupedBarChart from "./charts/GroupedBarChart";
-import StackedBarChart from "./charts/StackedBarChart";
+import AugurHeader from "./AugurHeader"
+import TickChart from "./charts/TickChart"
+import LinesOfCodeChart from "./charts/LinesOfCodeChart"
+import NormalizedStackedBarChart from "./charts/NormalizedStackedBarChart"
+import OneDimensionalStackedBarChart from "./charts/OneDimensionalStackedBarChart"
+import HorizontalBarChart from "./charts/HorizontalBarChart"
+import GroupedBarChart from "./charts/GroupedBarChart"
+import StackedBarChart from "./charts/StackedBarChart"
+import TimeIntervalBarChart from './charts/TimeIntervalBarChart'
 export default {
   data() {
     return {
@@ -88,7 +89,8 @@ export default {
     OneDimensionalStackedBarChart,
     HorizontalBarChart,
     GroupedBarChart,
-    StackedBarChart
+    StackedBarChart,
+    TimeIntervalBarChart
   },
   computed: {
     repo() {

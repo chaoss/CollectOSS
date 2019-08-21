@@ -239,13 +239,13 @@ def create_routes(server):
                         }
                     ]
     """
-    @server.app.route('/{}/top-insights'.format(server.api_version))
-    def top_insights(): #TODO: make this name automatic - wrapper?
-        tis = server.transform(augur_db.top_insights)
-        return Response(response=tis,
-                        status=200,
-                        mimetype="application/json")
-    server.updateMetricMetadata(function=augur_db.top_insights, endpoint='/{}/top-insights'.format(server.api_version), metric_type='git')
+    # @server.app.route('/{}/top-insights'.format(server.api_version))
+    # def top_insights(): #TODO: make this name automatic - wrapper?
+    #     tis = server.transform(augur_db.top_insights)
+    #     return Response(response=tis,
+    #                     status=200,
+    #                     mimetype="application/json")
+    # server.updateMetricMetadata(function=augur_db.top_insights, endpoint='/{}/top-insights'.format(server.api_version), metric_type='git')
     
     #####################################
     ###           EVOLUTION           ###
@@ -2756,3 +2756,40 @@ def create_routes(server):
                     ]
     """
     server.addRepoMetric(augur_db.pull_request_acceptance_rate, 'pull-request-acceptance-rate')
+
+    """
+    @api {get} /top-insights Top Insights
+    @apiName top-insights
+    @apiGroup Utility
+    @apiDescription Get all the downloaded repo groups.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "repo_group_id": 20,
+                            "rg_name": "Rails",
+                            "rg_description": "Rails Ecosystem.",
+                            "rg_website": "",
+                            "rg_recache": 0,
+                            "rg_last_modified": "2019-06-03T15:55:20.000Z",
+                            "rg_type": "GitHub Organization",
+                            "tool_source": "load",
+                            "tool_version": "one",
+                            "data_source": "git",
+                            "data_collection_date": "2019-06-05T13:36:25.000Z"
+                        },
+                        {
+                            "repo_group_id": 23,
+                            "rg_name": "Netflix",
+                            "rg_description": "Netflix Ecosystem.",
+                            "rg_website": "",
+                            "rg_recache": 0,
+                            "rg_last_modified": "2019-06-03T15:55:20.000Z",
+                            "rg_type": "GitHub Organization",
+                            "tool_source": "load",
+                            "tool_version": "one",
+                            "data_source": "git",
+                            "data_collection_date": "2019-06-05T13:36:36.000Z"
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(augur_db.top_insights, 'top-insights')

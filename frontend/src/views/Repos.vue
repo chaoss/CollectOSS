@@ -164,6 +164,7 @@ export default class Repos extends Vue{
   created() {
     
     if (!this.loaded_repos) {
+      console.log("bout to load")
       this.loadRepos()
     }
 
@@ -181,7 +182,7 @@ export default class Repos extends Vue{
   onGitRepo (e: any) {
     this.$router.push({
       name: 'repo_overview',
-      params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id}
+      params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
     })
   }
 }

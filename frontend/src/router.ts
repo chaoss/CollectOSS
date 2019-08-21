@@ -38,6 +38,7 @@ import GroupOverview from './views/GroupOverview.vue';
 import RepoGroups from './views/RepoGroups.vue';
 import Repos from './views/Repos.vue';
 import SingleComparison from './views/SingleComparison.vue';
+import InspectInsight from './views/InspectInsight.vue';
 import RiskMetrics from "@/views/RiskMetrics.vue";
 import NProgress from "nprogress";
 
@@ -118,6 +119,21 @@ const routes = [
     ],
   },
   {
+    path: '/inspect_insight/:rg_name/:repo_git/:ri_metric',
+    component: Default,
+    children: [
+      {
+        path: '',
+        name: 'inspect_insight',
+        components: {
+          sidebar: MainSidebar,
+          navbar: MainNavbar,
+          content: InspectInsight,
+        },
+      }
+    ],
+  },
+  {
     path: '/repo/:group/:repo',
     component: Default,
     children: [
@@ -146,12 +162,12 @@ const routes = [
     component: Default,
     children: [
       {
-        path: 'overview',
+        path: '',
         name: 'repo_overview_compare',
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
-          content: RepoOverview,
+          content: SingleComparison,
         },
       },
       {
@@ -190,7 +206,7 @@ const routes = [
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
-          content: GroupOverview,
+          content: SingleComparison,
         },
       },
     ],

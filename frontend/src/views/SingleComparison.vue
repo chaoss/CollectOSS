@@ -1,16 +1,17 @@
 <template>
   <d-container fluid class="main-content-container px-4">
     <div class="row">
-      <div class="col col-3">
+      <div class="col col-5">
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
           <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
+          <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
         </d-breadcrumb>
       </div>
-      <div class="col col-3">
+      <div class="col col-3" v-for="repo in comparedRepos">
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
-          <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
-          <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
+          <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
+          <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
         </d-breadcrumb>
       </div>
       <!-- <div class="col col-6"></div> -->
@@ -25,10 +26,6 @@
     <!-- Compare Control -->
     <compare-control></compare-control>
 
-    <div class="row">
-      <d-button><d-link :to="{name: 'risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
-    </div>
-
     <!-- Overview Section -->
     <!-- <div class="page-header row no-gutters py-4" >
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0"> -->
@@ -42,90 +39,83 @@
       <!-- <div class="col col-12">
         <dual-axis-contributions></dual-axis-contributions>
       </div> -->
+      <div class="col col-6" style="padding-top:3rem">
+        <spinner v-if="!loaded"></spinner>
 
-      <div class="col col-6">
-        <dynamic-line-chart source="commitComments"
-                    title="Commit Comments / Week "
+        <dynamic-line-chart v-if="loaded"
+                    source="openIssuesCount"
+                    title="Open Issues / Week"
                     cite-url=""
-                    cite-text="Commit Comments"
-                    :data="values['commitComments']">
-        </dynamic-line-chart>
-      </div>
-
-      <div class="col col-6">
-        <dynamic-line-chart source="totalCommitters"
-                    title="Committers"
-                    cite-url=""
-                    cite-text="Total Commiters"
-                    disable-rolling-average=1
-                    :data="values['totalCommitters']">
-        </dynamic-line-chart>
-      </div>
-
-      <div class="col col-6">
-        <dynamic-line-chart source="contributionAcceptance"
-                    title="Contribution Acceptance Rate"
-                    cite-url=""
-                    cite-text="Contribution Acceptance"
-                    :data="values['contributionAcceptance']">
-        </dynamic-line-chart>
-      </div>
-
-      <div class="col col-6">
-        <dynamic-line-chart source="communityEngagement:issues_open"
-                    title="Community Engagement: Open Issues"
-                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/open-issues.md"
                     cite-text="Open Issues"
-                    disable-rolling-average=1
-                    :data="values['communityEngagement:issues_open']">
+                    :repos="repos">
+                    <!-- :data="values['openIssuesCount']"> -->
         </dynamic-line-chart>
       </div>
 
-      <div class="col col-6">
-        <dynamic-line-chart source="communityEngagement:issues_closed_total"
-                    title="Community Engagement: Closed Issues"
-                    cite-url="https://github.com/augurlabs/wg-gmd/blob/master/activity-metrics/closed-issues.md"
+
+      <div class="col col-6" style="padding-top:3rem">
+        <spinner v-if="!loaded"></spinner>
+
+        <dynamic-line-chart v-if="loaded"
+                    source="closedIssuesCount"
+                    title="Closed Issues / Week"
+                    cite-url=""
                     cite-text="Closed Issues"
-                    disable-rolling-average=1
-                    :data="values['communityEngagement:issues_closed_total']">
+                    :repos="repos">
+                    <!-- :data="values['closedIssuesCount']"> -->
         </dynamic-line-chart>
       </div>
 
-      <div class="col col-6">
-        <dynamic-line-chart source="fakes"
-                    title="Fakes"
+      <!--<div class="col col-6" style="padding-top:3rem">
+        <spinner v-if="!loaded"></spinner>
+
+        <dynamic-line-chart v-if="loaded"
+                    source="issuesNew"
+                    title="New Issues / Week"
                     cite-url=""
-                    cite-text="Fakes"
-                    disable-rolling-average=1
-                    :data="values['fakes']">
+                    cite-text="New Issues"
+                    :repos="repos">
         </dynamic-line-chart>
-      </div>
+      </div> -->
 
-      <div class="col col-6">
-        <dynamic-line-chart source="newWatchers"
-                    title="New Watchers / Week"
+<!--       <div class="col col-6" style="padding-top:3rem">
+        <spinner v-if="!loaded"></spinner>
+
+        <dynamic-line-chart v-if="loaded"
+                    source="reviews"
+                    title="Pull Requests Opened / Week"
                     cite-url=""
-                    cite-text="New Watchers"
-                    :data="values['newWatchers']">
+                    cite-text="Pull Requests Opened"
+                    :repos="repos">
         </dynamic-line-chart>
       </div>
 
+      <div class="col col-6" style="padding-top:3rem">
+        <dynamic-line-chart v-if="loaded"
+                    source="pullRequestAcceptanceRate"
+                    title="Pull Request Acceptance Rate"
+                    cite-url=""
+                    cite-text="Pull Request Acceptance Rate"
+                    :repos="repos">
+        </dynamic-line-chart>
+      </div> -->
+<!-- 
       <div class="col col-12">
         <stacked-bar-chart source="issueActivity"
                     title="Issue Activity"
                     cite-url=""
                     cite-text="Issue Activity">
         </stacked-bar-chart>
-      </div>
+      </div> -->
 
-      <div class="col col-12">
+     <!--  <div class="col col-12">
         <bubble-chart source="contributors"
                       title="Contributor Overview"
                       size="total"
                       cite-url=""
                       cite-text="Contributors">
         </bubble-chart>
-      </div>
+      </div> -->
 
     </div>
 
@@ -180,27 +170,25 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
   },
   computed: {
     ...mapGetters('common',[
+      'apiRepos'
     ]),
     ...mapGetters('compare',[
-      'base'
+      'base',
+      'comparedRepos'
     ]),
   },
 })
 
 export default class SingleComparison extends Vue {
   colors = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF", "#3cb44b", "#ffe119", "#f58231", "#911eb4", "#42d4f4", "#f032e6"]
-  barEndpoints = ['changesByAuthor']
+  endpoints = ['openIssuesCount', 'closedIssuesCount', 'pullRequestAcceptanceRate']
   testTimeframes = ['past 1 month', 'past 3 months', 'past 2 weeks']
-  repos = {}
+  repos:any = []
   projects = []
   themes = ['dark', 'info', 'royal-blue', 'warning']
   project = null
-  loaded_overview = false
-  loaded_evolution = false
-  loaded_issues = false
-  loaded_experimental = false
-  loaded_activity = false
-  values: any = {'issuesClosed':[], 'changesByAuthor': []}
+  loaded: boolean = false
+  values: any = {'issuesClosed':{}, 'changesByAuthor': {}, 'pullRequestAcceptanceRate': {}}
   loadedBars = false
 
   // deflare vuex action, getter, mutations
@@ -212,14 +200,28 @@ export default class SingleComparison extends Vue {
   // actions
   endpoint!: any;
   setBaseGroup!: any;
+  comparedRepos!: any;
+  apiRepos!: any;
 
   created() {
-    this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
-      Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
-      })
-      this.loadedBars = true
-    })
+    let promises = []
+    promises.push(this.repos.push(this.base))
+    promises.push(this.comparedRepos.forEach((repo: any) => {
+      this.repos.push(this.apiRepos[repo])
+    }))
+    Promise.all(promises)
+    // this.endpoint({endpoints:this.endpoints,repos: apiRepos}).then((tuples:any) => {
+    //   console.log(tuples)
+    //   Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
+    //     this.values[endpoint] = {}
+    //     apiRepos.forEach((repo) => {
+    //       console.log(endpoint, repo, this.values)
+    //       this.values[endpoint][repo.repo_name] = {}
+    //       this.values[endpoint][repo.repo_name][endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
+    //     })
+    //   })
+      this.loaded = true
+    // })
   }
 
   onRepoGroup(repo_group: any) {

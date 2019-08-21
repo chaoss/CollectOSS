@@ -3,6 +3,7 @@
     <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
       <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
       <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
+      <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
     </d-breadcrumb>
     <!-- Page Header -->
     <!-- <div class="page-header row no-gutters py-4">
@@ -13,9 +14,6 @@
     <!-- Compare Control -->
     <compare-control></compare-control>
 
-    <div class="row">
-      <d-button><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
-    </div>
 
     <!-- Overview Section -->
     <!-- <div class="page-header row no-gutters py-4" >
@@ -24,41 +22,53 @@
         <!-- <h3 class="page-title" style="font-size: 1rem">Overview</h3>
       </div>
     </div> -->
+    <p></p>
 
     <div class="row">
       
-      <div class="row col col-7" style="" >
-        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
+      <div class="row col col-7" :style="loaderPadding(loadedBars)" >
+        
 <!-- look to add commit chart? -->
         <!--<div class="col col-12">
           <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
         </div> -->
-        <div class="row col col-12" v-if="loadedBars">
-          <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
+        <div class="row col col-12" v-if="loadedBars" >
+          <div class="col col-12" style="padding-top: 1rem; transform: translateY(-0px) !important; max-height:0px">
             <normalized-stacked-bar-chart 
             title="Lines of code added by the top 10 authors as Percentages - By Time Period"
             source="changesByAuthor1" :data="values['changesByAuthor']">
             </normalized-stacked-bar-chart>
           </div>
-          <div class="col col-6" style="padding-left: 0px; transform: translateY(-0px) !important">
+          <div class="col col-6" style="padding-left: 0px; transform: translateY(3rem) !important;max-height:0px">
             <div style="padding-top: 0px"></div>
             <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
             source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
           </div>
 
-          <div class="col col-6">
+          <div class="col col-6" style="padding-left: 0px; transform: translateY(3rem) !important;max-height:0px">
             <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
+            <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
           </div>
-          <div class="col col-6">
-            <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time"
-            :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
-          </div>
+
         </div>
       </div>
-      <div class="row col col-5">
-        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
+      <div class="col col-5" :style="loaderPadding(loadedBars)" style="transform: translateX(3rem)">
+        <!-- <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner> -->
+        
         <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
       </div>
+
+      <div class="col-12" style="padding-top: 4rem;">
+        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
+        <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+      </div>
+
+      <div class="col col-5">
+      </div>
+
+      <div class="col col-7">
+      </div>
+
 
     </div>
 
@@ -83,6 +93,7 @@ import Spinner from '../components/Spinner.vue'
 import CompareControl from '../components/common/CompareControl.vue'
 import router from "@/router";
 import BubbleChart from '../components/charts/BubbleChart.vue'
+import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
 
 @Component({
   components: {
@@ -100,6 +111,7 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
     Spinner,
     CompareControl,
     BubbleChart,
+    TimeIntervalBarChart,
   },
   methods: {
     ...mapActions('common',[
@@ -113,10 +125,12 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
   },
   computed: {
     ...mapGetters('common',[
+      'repoRelations'
     ]),
     ...mapGetters('compare',[
       'base'
     ]),
+    
   },
 })
 
@@ -147,9 +161,15 @@ export default class RepoOverview extends Vue {
   setBaseGroup!: any;
 
   created() {
+    // let repo = null
+    // if (this.base) 
+    //   repo = this.base
+    // else repo = this.rout
     this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
-      Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
+      console.log("tuples:",tuples)
+      Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+        console.log(endpoint)
+        this.values[endpoint] = tuples[this.base.url][endpoint]
       })
       this.loadedBars = true
     })
@@ -162,6 +182,13 @@ export default class RepoOverview extends Vue {
         params: {group: repo_group.rg_name}
       })
     })
+  }
+
+  loaderPadding (loaded: any) {
+    if (loaded) 
+      return "" 
+    else 
+      return "padding-top: 3rem"
   }
 
 }

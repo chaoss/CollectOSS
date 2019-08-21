@@ -2,10 +2,9 @@
   <div ref="holder">
 
     <div style="margin-bottom: 0 !important" class="tickchart ">
-      <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-      <div :id="source"></div>
-      <p> {{ chart }} </p>
-      <div style="position: relative; top: -0px !important"class="form-item form-checkboxes tickradios">
+      <h3 style="font-size: 0.9rem;text-align: center;transform: translateY(-3px);">{{ title }}</h3>
+      <div :id="source" style="padding: 0"></div>
+      <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
           <div class="inputGroup "  style="padding-top: 5px;">
             <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
             <label id="front" for="yearradio" >Year</label>
@@ -18,7 +17,7 @@
             <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
             <label id="front" for="contradio">Continuous</label>
           </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -92,13 +91,9 @@ export default {
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 250,
-        "height": 150,
-        "padding": {"left": 10, "top": 35, "right": 500, "bottom": 0},
-        "title": {
-          "text": this.title,
-          "offset": 15
-        },
+        "width": 450,
+        "height": 250,
+        "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
         "config": {
           "axis":{
                 "grid": false
@@ -108,7 +103,9 @@ export default {
             "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 12,
+            "labelFontSize": 13,
+            // "labelFont": "Open Sans",
+            "labelOffset": 3,
             "titleFontSize": 14,
             "labelLimit": 260 
           },
@@ -349,9 +346,6 @@ export default {
       
       // Get the repos we need
       let repos = []
-      if (this.repo) {
-        repos.push(window.AugurRepos[this.repo])
-      }
 
       this.reloadImage(config)
       return config

@@ -2,9 +2,10 @@
   <div ref="holder">
     <div class="normalbar">
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
+      <h3 style="font-size: 0.9rem;width: 17rem;text-align: center;transform: translateY(0px) translateX(0rem);">{{ title }}</h3>
       <div :id="source"></div>
       <p> {{ chart }} </p>
-      <div style="position: relative; top: -0px !important"class="form-item form-checkboxes tickradios">
+      <div style="position: relative; top: -0px !important; transform: translateY(-0.45rem)"class="form-item form-checkboxes tickradios">
           <div class="inputGroup ">
             <input id="totalradio" name="lines" value="1" type="radio" v-model="type">
             <label id="front" for="totalradio">Total</label>
@@ -87,7 +88,7 @@ export default {
         $schema: 'https://vega.github.io/schema/vega-lite/v2.json',
         width: 250,
         height: 150,
-        padding: {left: 10, top: 35, right: 5, bottom: 0},
+        padding: {left: 0, top: 0, right: 0, bottom: 0},
         config: {
           tick: {
             thickness: 8,
@@ -96,11 +97,6 @@ export default {
           axis: {
             grid: false,
           },
-        },
-        title: {
-          text: this.title,
-          offset: 15,
-
         },
         layer: [
           {

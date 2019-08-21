@@ -16,24 +16,24 @@
 
     <div class="row mb-5" v-if="loaded_rsik_1">
       <div class="col-3">
-        <count-block title="Forks" :data="values1" source="forkCount" field="forks"></count-block>
+        <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
       </div>
     </div>
 
     <div class="row mb-5" v-if="loaded_rsik_2">
       <div class="col-6">
-        <line-chart title="Forks Count by Week" :data="values2" source="getForks" filedTime="date" fieldCount="forks">
+        <line-chart title="Forks Count by Week" :data="values" source="getForks" filedTime="date" fieldCount="forks">
         </line-chart>
       </div>
       <div class="col-6">
-        <line-chart title="Committers by week" :data="values2" source="committers" filedTime="date"
+        <line-chart title="Committers by week" :data="values" source="committers" filedTime="date"
                     fieldCount="count"></line-chart>
       </div>
     </div>
 
     <div class="row mb-5" v-if="loaded_rsik_1">
       <div class="col-6">
-        <license-table :data="values1" source="licenseDeclared"  :headers="['Short Name','Note']"
+        <license-table :data="values" source="licenseDeclared"  :headers="['Short Name','Note']"
                        :fields="['short_name','note']"  title="License Declared"></license-table>
       </div>
     </div>
@@ -89,8 +89,7 @@
     loaded_rsik_1:boolean = false;
     loaded_rsik_2:boolean = false;
 
-    values1 = {}
-    values2 = {}
+    values:any = {}
 
     // deflare vuex action, getter, mutations
     groupsInfo!: any;
@@ -108,12 +107,17 @@
     risk_endpoints_2 = ['getForks', 'committers']
 
     created() {
+      console.log('####', this.base)
       this.endpoint({endpoints:this.risk_endpoints_1,repos:[this.base]}).then((tuples:any) => {
-        this.values1 = tuples;
+        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+        this.values[endpoint] = tuples[this.base.url][endpoint]
+        })
         this.loaded_rsik_1 = true
       })
       this.endpoint({endpoints:this.risk_endpoints_2,repos:[this.base]}).then((tuples:any) => {
-        this.values2 = tuples;
+        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+        this.values[endpoint] = tuples[this.base.url][endpoint]
+        })
         this.loaded_rsik_2 = true
       })
 

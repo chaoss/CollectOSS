@@ -37,7 +37,7 @@
       <a class="nav-link dropdown-toggle text-nowrap px-3" v-d-toggle.user-actions style="position: relative; top: 50%; transform: translateY(-50%);font-size: 0.8125rem !important">
         <!-- <img class="user-avatar rounded-circle mr-2" src="@/assets/images/avatars/0.jpg" alt="User Avatar">  -->
         <i class="material-icons">person</i>
-        <span class="d-none d-md-inline-block">Gabe Gabe</span>
+        <span class="d-none d-md-inline-block">User</span>
       </a>
       <d-collapse id="user-actions" class="dropdown-menu dropdown-menu-small">
         <d-dropdown-item><i class="material-icons">&#xE7FD;</i> Profile</d-dropdown-item>
