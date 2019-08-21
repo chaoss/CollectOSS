@@ -1,2 +1,6 @@
 run_facade/*
 run_facade
+
+build/
+lib/
+dist/
