@@ -56,28 +56,36 @@ export default {
                             // })
                             payload.endpoints.forEach((endpoint: string) => {
                                 tempCache[repo.url][endpoint] = tempCache[repo.url][endpoint] || []
+                                console.log(repo, endpoint)
                                 promises.push(repo[endpoint]())
                             })
                             Promise.all(promises).then((data: any) => {
                                 console.log(data)
-                                tempCache[repo.url][payload.endpoints[0]] = data[0]// || []
+                                let i = 0
+                                payload.endpoints.forEach((endpoint: string) => {
+                                    tempCache[repo.url][payload.endpoints[i]] = data[i]// || []
+                                    i++
+                                })
                             }).finally(() => {
                                 let allDone = true
                                 payload.repos.forEach((repo: any) => {
-                                    // console.log(tempCache)
-                                    if (tempCache[repo.url]){
-                                        // console.log(JSON.stringify(tempCache[group.rg_name]))
-                                        if (tempCache[repo.url][payload.endpoints[0]].length < 1) {
-                                            allDone = false
-                                        }
-                                    } else 
-                                        allDone = false
                                     
+                                    payload.endpoints.forEach((endpoint: string) => {
+                                        if (tempCache[repo.url]){
+                                            // console.log(JSON.stringify(tempCache[group.rg_name]))
+                                            if (tempCache[repo.url][endpoint].length < 1) {
+                                                allDone = false
+                                            }
+                                        } else 
+                                            allDone = false
+                                    })
                                 })
                                 if (allDone) {
                                     console.log("yo", JSON.stringify(tempCache))
                                     resolve(tempCache)
                                 }
+                            }).catch((error) => {
+                                console.log(error)
                             })
                             // })
                             // Promise.all(promises).then((data: any) => {
