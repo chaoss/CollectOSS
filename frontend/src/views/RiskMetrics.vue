@@ -6,6 +6,8 @@
     </d-breadcrumb>
     <compare-control></compare-control>
 
+
+
     <!-- Overview Section -->
     <div class="page-header row no-gutters py-4" >
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
@@ -14,13 +16,20 @@
       </div>
     </div>
 
-    <div class="row mb-5" v-if="loaded_rsik_1">
+    <div class="row">
+      <div v-if="!loaded_risk" class="col-md-12 col-lg-12">
+        <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+      </div>
+    </div>
+    
+
+    <div class="row mb-5" v-if="loaded_risk">
       <div class="col-3">
         <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
       </div>
     </div>
 
-    <div class="row mb-5" v-if="loaded_rsik_2">
+    <div class="row mb-5" v-if="loaded_risk">
       <div class="col-6">
         <line-chart title="Forks Count by Week" :data="values" source="getForks" filedTime="date" fieldCount="forks">
         </line-chart>
@@ -31,7 +40,7 @@
       </div>
     </div>
 
-    <div class="row mb-5" v-if="loaded_rsik_1">
+    <div class="row mb-5" v-if="loaded_risk">
       <div class="col-6">
         <license-table :data="values" source="licenseDeclared"  :headers="['Short Name','Note']"
                        :fields="['short_name','note']"  title="License Declared"></license-table>
@@ -88,6 +97,7 @@
 
     loaded_rsik_1:boolean = false;
     loaded_rsik_2:boolean = false;
+    loaded_risk:boolean = false
 
     values:any = {}
 
@@ -102,23 +112,16 @@
 
 
     // endpoints
-    risk_endpoints_1 = ['forkCount','licenseDeclared']
-
-    risk_endpoints_2 = ['getForks', 'committers']
+    risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers']
 
     created() {
       console.log('####', this.base)
-      this.endpoint({endpoints:this.risk_endpoints_1,repos:[this.base]}).then((tuples:any) => {
+
+      this.endpoint({endpoints:this.risk_endpoints,repos:[this.base]}).then((tuples:any) => {
         Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.url][endpoint]
+          this.values[endpoint] = tuples[this.base.url][endpoint]
         })
-        this.loaded_rsik_1 = true
-      })
-      this.endpoint({endpoints:this.risk_endpoints_2,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.url][endpoint]
-        })
-        this.loaded_rsik_2 = true
+        this.loaded_risk = true
       })
 
     }

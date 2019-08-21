@@ -280,6 +280,7 @@ class InsightWorker:
                         confidence = 0.95
                         mean, lower, upper = self.confidence_interval(raw_values[key], confidence=confidence)
                         logging.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
+                        logging.info(raw_values)
                         i = 0
                         discovery_index = None
                         insight = False
@@ -350,6 +351,7 @@ class InsightWorker:
                     logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
                         num_insights_per_repo, entry_info['repo_id']))
                     break
+                logging.info("*** No significant insights found for {}. ***".format(entry_info['repo_id']))
 
         # HIGHEST PERCENTAGE STUFF, WILL MOVE TO NEW METHOD
             # greatest_week_name = greatest_month_name = insights[0]['cm_name']
