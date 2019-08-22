@@ -201,7 +201,7 @@ abstract class BaseRepo {
   [k: string]: any
   
   constructor(parent: AugurAPI){
-    this._host = parent._host || 'http://localhost:5002'
+    this._host = parent._host || 'http://localhost:5000'
     this._version = parent._version
     this.__URLFunctionFactory = parent.__URLFunctionFactory
     this.parent = parent
