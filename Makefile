@@ -168,7 +168,7 @@ vagrant:
 
 clean:
 	@ echo "Removes node_modules, logs, caches, and some other dumb stuff that can be annoying."
-	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs
+	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs workers/**/build/** workers/**/dist**
 	find . -name \*.pyc -delete
 	@ echo "Run sudo make install-dev again to reinstall the environment."
 

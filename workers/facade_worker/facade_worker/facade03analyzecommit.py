@@ -137,10 +137,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		# Check if email already exists in db
 		email_check = ("""SELECT cntrb_email 
 			FROM contributors WHERE cntrb_email = %s OR cntrb_email = %s""")
-		cursor_local.execute(email_check,(author_email,committer_email,))
-		db_local.commit()
+		try:
+			cursor_local.execute(email_check,(author_email,committer_email,))
+			db_local.commit()
+		except Exception as e:
+			cfg.log_activity('Info','Setting emails to empty array, '
+				'Executing select statement did not work:'
+				' {}, {} with params {} and {}'.format(e, email_check, author_email,committer_email))
 
-		emails = list(cursor_local)
+		emails = list(cursor_local) | []
 		emails_to_add = emails
 		emails_to_update = []
 

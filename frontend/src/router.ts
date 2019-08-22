@@ -162,7 +162,7 @@ const routes = [
     component: Default,
     children: [
       {
-        path: 'overview',
+        path: '',
         name: 'repo_overview_compare',
         components: {
           sidebar: MainSidebar,

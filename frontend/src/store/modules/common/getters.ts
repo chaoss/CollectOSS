@@ -7,7 +7,7 @@ export default {
       repos.filter((repo: any) => {
         return repo.rg_name === group.rg_name;
       }).forEach((repo: any) => {
-        repoRelations[group.rg_name][repo.url] = repo
+        repoRelations[group.rg_name][repo.repo_name] = repo
       });
     });
     return repoRelations;
@@ -67,4 +67,13 @@ export default {
   loaded_groups: (state:any) => {
       return state.cache.getRepoGroups != null;
   },
+  trailingAverage: (state:any) => {
+    return state.trailingAverage
+  },
+  showDetail: (state:any) => {
+    return state.showDetail
+  },
+  showTooltip: (state:any) => {
+    return state.showTooltip
+  }
 };

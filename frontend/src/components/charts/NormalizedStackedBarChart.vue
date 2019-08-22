@@ -3,10 +3,8 @@
 
     <div style="margin-bottom: 0 !important" class="tickchart ">
       <h3 style="font-size: 0.9rem;text-align: center;transform: translateY(-3px);">{{ title }}</h3>
-      <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <div :id="source" style="padding: 0"></div>
-      <!-- <p> {{ chart }} </p> -->
-      <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
+      <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
           <div class="inputGroup "  style="padding-top: 5px;">
             <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
             <label id="front" for="yearradio" >Year</label>
@@ -19,7 +17,7 @@
             <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
             <label id="front" for="contradio">Continuous</label>
           </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -105,7 +103,7 @@ export default {
             "orient": "right",
             "titlePadding": 10,
             "padding": 40,
-            "labelFontSize": 17,
+            "labelFontSize": 13,
             // "labelFont": "Open Sans",
             "labelOffset": 3,
             "titleFontSize": 14,
@@ -348,9 +346,6 @@ export default {
       
       // Get the repos we need
       let repos = []
-      if (this.repo) {
-        repos.push(window.AugurRepos[this.repo])
-      }
 
       this.reloadImage(config)
       return config
