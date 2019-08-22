@@ -23,3 +23,7 @@ Thumbs.db
 node_modules/
 
 docs/python/build/doctrees/AugurContext.doctree
+
+# Removing package-lock.json
+# frontend/package0-lock.json
+#
