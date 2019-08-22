@@ -69,6 +69,7 @@ augur/bin
 .ipynb_checkpoints
 venv/
 dist/
+augur_venv/
 
 # Node #
 ########
