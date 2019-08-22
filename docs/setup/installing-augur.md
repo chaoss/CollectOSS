@@ -65,9 +65,25 @@
 4. `gunzip augur.psql.bak.gz`
 4. `psql augur < augur.psql.bak` ; provide the password when prompted
 4. Configure
-    - Edit the `pg_hba.conf` file to have all local connections use MD5 authentication. 
-    - The fastest way is `psql -U augur -d augur -f augur/persistence_schema/new-augur.0.0.77.6-release.sql -h localhost` from the command line at the root of the Augur repository. 
-    - There is also a small amount of "seed data" that our data collection "workers" need populated, which is inserted at the end of the schema file above. 
+    - Edit the `pg_hba.conf` file to have all local connections use MD5 authentication. Go to the very bottom of the file, and make sure it looks like this. On most Linux distros it is located in `/etc/postgresql/11/main/pg_hba.conf`
+```
+            # Database administrative login by Unix domain socket
+            local   all             postgres                                peer
+
+            # TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+            # "local" is for Unix domain socket connections only
+            local   all             all                                     md5 
+            # IPv4 local connections:
+            host    all             all             0.0.0.0/0               md5
+            # IPv6 local connections:
+            host    all             all             ::1/128                 md5
+            # Allow replication connections from localhost, by a user with the
+            # replication privilege.
+            local   replication     all                                     peer
+            host    replication     all             127.0.0.1/32            md5
+            host    replication     all             ::1/128                 md5
+```
 
 ## Build Your Augur Backend Environment
 From the root directory inside of your augur clone (assuming an activated Python virtualenv from the beginning steps: `source newaugur/bin/activate`)
