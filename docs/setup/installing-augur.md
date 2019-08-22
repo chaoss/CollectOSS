@@ -97,45 +97,8 @@ From the root directory inside of your augur clone (assuming an activated Python
 6. `python setup.py install`
 
 ## Augur Back End
-1. Create a file in the root of your augur project called `augur.config.json`. [Here is a sample augur.config.json file](./augur-sample-cnfg.json). There are a number of places where you need to provide
-    - Augur database credentials
-        ```
-            "Database": {
-                "connection_string": "sqlite:///:memory:",
-                "database": "augur",
-                "name": "your database name here",
-                "host": "your hostname, probably localhost for development",
-                "password": "your password",
-                "port": "your postgres port, probably 5432",
-                "schema": "augur_data",
-                "user": "augur",
-                "key": "your github API key",
-                "zombie_id": "22"
-            },
-        ```
-    - Request credentials for GHTorrent Public Instance
-```
-            "GHTorrent": {
-                "host": " request public GHTorrent Access by commenting here: https://github.com/chaoss/augur/issues/302",
-                "name": "ghtorrent_restore",
-                "pass": "xxxx!",
-                "port": "xxxxx",
-                "user": "xxxx"
-            },
-            "GHTorrentPlus": {
-                "host": "augurlabs.io",
-                "name": "xxx",
-                "pass": "xxxx",
-                "port": "xxx",
-                "user": "xxx"
-            },
-```
-    - Login to GitHub.com, then create [A GitHub API Key](https://github.com/settings/tokens)  
-```
-            "GitHub": {
-                "apikey": "Your GitHub API Key"
-            },
-```
+1. Create a file in the root of your augur project called `augur.config.json`.
+    - from the root of the augur directory, run `util/make-config.py`
 2. Once this is complete, you can start Augur `augur run`
 3. If there are no error messages continuously streaming, you can stop the process with 'ctrl+c', or leave it running and open a new terminal window for the backend. If you want to run it in the background: 
     - To start: `nohup augur run >> augur.log 2 >> augur.err &`
