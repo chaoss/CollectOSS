@@ -1,8 +1,6 @@
 #!/bin/bash
 ## Back End
 
-cd ../..
-
 if [[ -z $VIRTUAL_ENV ]]; then
   echo "*** We noticed you're not using a virutal environment. It is STRONGLY recommended to install Augur in its own virutal environment. ***"
   echo "*** Would you like to create a virtual environment using virtualenv? ***"
