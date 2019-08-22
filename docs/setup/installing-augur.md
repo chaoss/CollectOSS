@@ -61,8 +61,9 @@
 
 ## Create the database schema
 
-3. Download a startup copy of the database with some sample data: nekocase.augurlabs.io/augur.psql.bak.gz 
-4. `psql augur < augur.psql.bak`
+3. Download a startup copy of the database with some sample data: [nekocase.augurlabs.io/augur.psql.bak.gz](nekocase.augurlabs.io/augur.psql.bak.gz)
+4. `gunzip augur.psql.bak.gz`
+4. `psql augur < augur.psql.bak` ; provide the password when prompted
 4. Configure
     - Edit the `pg_hba.conf` file to have all local connections use MD5 authentication. 
     - The fastest way is `psql -U augur -d augur -f augur/persistence_schema/new-augur.0.0.77.6-release.sql -h localhost` from the command line at the root of the Augur repository. 
