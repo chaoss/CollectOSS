@@ -108,9 +108,10 @@ From the root directory inside of your augur clone (assuming an activated Python
 ### Start Front End for Development
 1. From the root of the augur .git repository: `cd frontend`
 2. `npm install`
-3. To start a development Server: `npm run serve`. This will let you see the emerging front end on local host. (Note, as of right now its "empty", however you can see an example of our old front end running on http://dev.augurlabs.io/)  
+3. `npm run build`
+3. To start a development Server: `npm run serve`. This will let you see the emerging front end on local host, usually on port 80. (Note, as of right now its "empty", however you can see an example of our old front end running on http://dev.augurlabs.io/)  
 
-### Start Front End for Deployment on a Server
+### Start Front End for Deployment on a Server using NGINX
 1. The Dev branch is actively being developed, and these instructions are evolving 
 2. [This is the most current version of our server deployment instruction for the front end](./augur-deployment.md)
 
