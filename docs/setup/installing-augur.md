@@ -61,12 +61,29 @@
 
 ## Create the database schema
 
-3. Execute the file named [`new-augur.0.0.77.6-release.sql`](../../augur/persistence_schema/new-augur.0.0.77.5-release.sql) as any user with schema creation privileges.   
-    - All schemas, the tables, and sequences they contain, are owned by the `augur` user.
-    - If you are running the script from the command line, from the root of the Augur repository it is located at: `augur/persistence_schema/new-augur.0.0.77.6-release.sql`. 
-    - Edit the `pg_hba.conf` file to have all local connections use MD5 authentication. 
-    - The fastest way is `psql -U augur -d augur -f augur/persistence_schema/new-augur.0.0.77.6-release.sql -h localhost` from the command line at the root of the Augur repository. 
-    - There is also a small amount of "seed data" that our data collection "workers" need populated, which is inserted at the end of the schema file above. 
+3. Download a startup copy of the database with some sample data: [nekocase.augurlabs.io/augur.psql.bak.gz](nekocase.augurlabs.io/augur.psql.bak.gz)
+4. `gunzip augur.psql.bak.gz`
+4. `psql augur < augur.psql.bak` ; provide the password when prompted
+4. Configure
+    - Edit the `pg_hba.conf` file to have all local connections use MD5 authentication. Go to the very bottom of the file, and make sure it looks like this. On most Linux distros it is located in `/etc/postgresql/11/main/pg_hba.conf`
+```
+            # Database administrative login by Unix domain socket
+            local   all             postgres                                peer
+
+            # TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+            # "local" is for Unix domain socket connections only
+            local   all             all                                     md5 
+            # IPv4 local connections:
+            host    all             all             0.0.0.0/0               md5
+            # IPv6 local connections:
+            host    all             all             ::1/128                 md5
+            # Allow replication connections from localhost, by a user with the
+            # replication privilege.
+            local   replication     all                                     peer
+            host    replication     all             127.0.0.1/32            md5
+            host    replication     all             ::1/128                 md5
+```
 
 ## Build Your Augur Backend Environment
 From the root directory inside of your augur clone (assuming an activated Python virtualenv from the beginning steps: `source newaugur/bin/activate`)
@@ -80,45 +97,8 @@ From the root directory inside of your augur clone (assuming an activated Python
 6. `python setup.py install`
 
 ## Augur Back End
-1. Create a file in the root of your augur project called `augur.config.json`. [Here is a sample augur.config.json file](./augur-sample-cnfg.json). There are a number of places where you need to provide
-    - Augur database credentials
-        ```
-            "Database": {
-                "connection_string": "sqlite:///:memory:",
-                "database": "augur",
-                "name": "your database name here",
-                "host": "your hostname, probably localhost for development",
-                "password": "your password",
-                "port": "your postgres port, probably 5432",
-                "schema": "augur_data",
-                "user": "augur",
-                "key": "your github API key",
-                "zombie_id": "22"
-            },
-        ```
-    - Request credentials for GHTorrent Public Instance
-```
-            "GHTorrent": {
-                "host": " request public GHTorrent Access by commenting here: https://github.com/chaoss/augur/issues/302",
-                "name": "ghtorrent_restore",
-                "pass": "xxxx!",
-                "port": "xxxxx",
-                "user": "xxxx"
-            },
-            "GHTorrentPlus": {
-                "host": "augurlabs.io",
-                "name": "xxx",
-                "pass": "xxxx",
-                "port": "xxx",
-                "user": "xxx"
-            },
-```
-    - Login to GitHub.com, then create [A GitHub API Key](https://github.com/settings/tokens)  
-```
-            "GitHub": {
-                "apikey": "Your GitHub API Key"
-            },
-```
+1. Create a file in the root of your augur project called `augur.config.json`.
+    - from the root of the augur directory, run `util/make-config.py`
 2. Once this is complete, you can start Augur `augur run`
 3. If there are no error messages continuously streaming, you can stop the process with 'ctrl+c', or leave it running and open a new terminal window for the backend. If you want to run it in the background: 
     - To start: `nohup augur run >> augur.log 2 >> augur.err &`
@@ -128,9 +108,10 @@ From the root directory inside of your augur clone (assuming an activated Python
 ### Start Front End for Development
 1. From the root of the augur .git repository: `cd frontend`
 2. `npm install`
-3. To start a development Server: `npm run serve`. This will let you see the emerging front end on local host. (Note, as of right now its "empty", however you can see an example of our old front end running on http://dev.augurlabs.io/)  
+3. `npm run build`
+3. To start a development Server: `npm run serve`. This will let you see the emerging front end on local host, usually on port 80. (Note, as of right now its "empty", however you can see an example of our old front end running on http://dev.augurlabs.io/)  
 
-### Start Front End for Deployment on a Server
+### Start Front End for Deployment on a Server using NGINX
 1. The Dev branch is actively being developed, and these instructions are evolving 
 2. [This is the most current version of our server deployment instruction for the front end](./augur-deployment.md)
 

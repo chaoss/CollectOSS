@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 if [[ -z $VIRTUAL_ENV ]]; then
   echo "*** We noticed you're not using a virutal environment. It is STRONGLY recommended to run Augur in its own virutal environment. ***"
@@ -29,8 +29,9 @@ if [[ $is_augur_running > 2 ]]; then
   exit 1
 else
   echo "Starting augur..."
-  $(nohup augur run >>augur.log 2>>augur.err &);
-  $(nohup systemctl stop ngninx);
-  $(nohup systemctl start ngninx);
+  nohup augur run 1>>augur.log 2>>augur.err &
+  nohup launchctl stop ngninx
+  nohup launchctl start ngninx
 fi
+
 

@@ -24,7 +24,7 @@ class Augur(object):
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
         )
-        
+
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
@@ -2751,7 +2751,7 @@ class Augur(object):
         if not repo_id:
             summarySQL = s.sql.text("""
                 SELECT
-                (   
+                (
                     SELECT watchers_count AS watcher_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
@@ -2801,7 +2801,7 @@ class Augur(object):
                         WHERE action = 'merged'
                         AND repo_group_id = :repo_group_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
-                    ) a 
+                    ) a
                 ) AS merged_count,
                 committer_count, commit_count FROM (
                     SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
@@ -2869,7 +2869,7 @@ class Augur(object):
                         WHERE action = 'merged'
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
-                    ) a 
+                    ) a
                 ) AS merged_count,
                 committer_count, commit_count FROM (
                     SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
@@ -2905,9 +2905,9 @@ class Augur(object):
                 SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
                 FROM
                     (
-                        SELECT count(issue_events.issue_id) AS num_approved, 
+                        SELECT count(issue_events.issue_id) AS num_approved,
                             date_trunc(:group_by,issue_events.created_at) AS accepted_on
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                             JOIN repo ON issues.repo_id = repo.repo_id
                         WHERE action = 'merged'
                         AND repo_group_id = :repo_group_id
@@ -2917,9 +2917,9 @@ class Augur(object):
                     ) accepted
                 JOIN
                     (
-                        SELECT count(issue_events.issue_id) AS num_open, 
+                        SELECT count(issue_events.issue_id) AS num_open,
                             date_trunc(:group_by,issue_events.created_at) AS date_created
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                             JOIN repo ON issues.repo_id = repo.repo_id
                         WHERE action = 'ready_for_review'
                         AND repo_group_id = :repo_group_id
@@ -2937,9 +2937,9 @@ class Augur(object):
                 SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
                 FROM
                     (
-                        SELECT count(issue_events.issue_id) AS num_approved, 
+                        SELECT count(issue_events.issue_id) AS num_approved,
                             date_trunc(:group_by,issue_events.created_at) AS accepted_on
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                         WHERE action = 'merged'
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
@@ -2948,9 +2948,9 @@ class Augur(object):
                     ) accepted
                 JOIN
                     (
-                        SELECT count(issue_events.issue_id) AS num_open, 
+                        SELECT count(issue_events.issue_id) AS num_open,
                             date_trunc(:group_by,issue_events.created_at) AS date_created
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                         WHERE action = 'ready_for_review'
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
@@ -2975,7 +2975,7 @@ class Augur(object):
         """
 
         topInsightsSQL = s.sql.text("""
-            SELECT rg_name, repo.repo_group_id, repo_insights.repo_id, repo_git, ri_metric, ri_value AS value, 
+            SELECT rg_name, repo.repo_group_id, repo_insights.repo_id, repo_git, ri_metric, ri_value AS value,
                 ri_date AS date, cms_id AS rating, ri_fresh AS discovered
             FROM repo_insights JOIN repo ON repo.repo_id = repo_insights.repo_id JOIN repo_groups ON repo.repo_group_id = repo_groups.repo_group_id
             WHERE repo_insights.repo_id IN (
@@ -2989,3 +2989,169 @@ class Augur(object):
         results = pd.read_sql(topInsightsSQL, self.db, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
         return results
 
+    @annotate(tag='issue-comments-mean')
+    def issue_comments_mean(self, repo_group_id, repo_id=None, group_by='week'):
+        group_by = group_by.lower()
+
+        if not repo_id:
+            if group_by == 'week':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 7.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'month':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 30.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'year':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 365.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            else:
+                raise ValueError("Incorrect value for 'group_by'")
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            if group_by == 'week':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 7.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.repo_id = :repo_id
+                    AND im.msg_id = m.msg_id
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'month':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 30.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.repo_id = :repo_id
+                    AND im.msg_id = m.msg_id
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'year':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 365.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.repo_id = :repo_id
+                    AND im.msg_id = m.msg_id
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            else:
+                raise ValueError("Incorrect value for 'group_by'")
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_id': repo_id})
+            return results
+
+    @annotate(tag='issue-comments-mean-std')
+    def issue_comments_mean_std(self, repo_group_id, repo_id=None, group_by='week'):
+        if not repo_id:
+            issue_comments_mean_std_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    DATE_TRUNC(:group_by, daily) AS date,
+                    avg(total) AS average,
+                    stddev(total) AS standard_deviation
+                FROM
+                    (SELECT
+                        i.repo_id,
+                        DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                        COUNT(*) AS total
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, daily
+                    ORDER BY i.repo_id) a
+                GROUP BY repo_id, date
+                ORDER BY repo_id, date
+            """)
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id,
+                                          'group_by': group_by})
+            return results
+
+        else:
+            issue_comments_mean_std_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    DATE_TRUNC(:group_by, daily) AS date,
+                    avg(total) AS average,
+                    stddev(total) AS standard_deviation
+                FROM
+                    (SELECT
+                        i.repo_id,
+                        DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                        COUNT(*) AS total
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id = :repo_id
+                    GROUP BY i.repo_id, daily
+                    ORDER BY i.repo_id) a
+                GROUP BY repo_id, date
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_id': repo_id, 'group_by': group_by})
+            return results
