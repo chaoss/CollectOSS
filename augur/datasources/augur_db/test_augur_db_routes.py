@@ -473,7 +473,7 @@ def test_aggregate_summary_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/aggregate-summary')
     data = response.json()
     assert response.status_code == 200
-    assert len(data) >= 1    
+    assert len(data) >= 1
 
 def test_license_coverage_by_group(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/license-coverage')
@@ -495,6 +495,30 @@ def test_license_count_by_group(augur_db_routes):
 
 def test_license_count_by_repo(augur_db_routes):
     response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/repos/21116/license-count')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+
+def test_issue_comments_mean_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/issue-comments-mean')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+
+def test_issue_comments_mean_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/repos/21104/issue-comments-mean')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+
+def test_issue_comments_mean_std_by_group(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/issue-comments-mean-std')
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data) >= 1
+
+def test_issue_comments_mean_std_by_repo(augur_db_routes):
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/21/repos/21104/issue-comments-mean-std')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1

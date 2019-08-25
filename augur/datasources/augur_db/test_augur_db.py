@@ -306,3 +306,15 @@ def test_license_count(augur_db):
 def test_license_coverage(augur_db):
     assert augur_db.license_coverage(21).iloc[0]['total_files'] >= 1
     assert augur_db.license_coverage(21, 21116).iloc[0]['total_files'] >= 1
+
+def test_issue_comments_mean(augur_db):
+    assert augur_db.issue_comments_mean(23).any().any()
+    assert augur_db.issue_comments_mean(23, 21353).any().any()
+    assert augur_db.issue_comments_mean(23, group_by='year').any().any()
+    assert augur_db.issue_comments_mean(23, 21353, group_by='year').any().any()
+
+def test_issue_comments_mean_std(augur_db):
+    assert augur_db.issue_comments_mean_std(23).any().any()
+    assert augur_db.issue_comments_mean_std(23, 21353).any().any()
+    assert augur_db.issue_comments_mean_std(23, group_by='year').any().any()
+    assert augur_db.issue_comments_mean_std(23, 21353, group_by='year').any().any()
