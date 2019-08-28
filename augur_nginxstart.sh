@@ -30,8 +30,8 @@ if [[ $is_augur_running > 2 ]]; then
 else
   echo "Starting augur..."
   nohup augur run 1>>augur.log 2>>augur.err &
-  nohup launchctl stop ngninx
-  nohup launchctl start ngninx
+  nohup systemctl stop ngninx
+  nohup systemctl start ngninx
 fi
 
 
