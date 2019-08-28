@@ -114,8 +114,8 @@ export default {
                             tempCache[group.rg_name]['groupEndpoints'] = tempCache[group.rg_name]['groupEndpoints'] || {}
                             let promises: any[] = []
                             payload.endpoints.forEach((endpoint: string) => {
-                                
-                                tempCache[group.rg_name]['groupEndpoints'][endpoint] = tempCache[group.rg_name]['groupEndpoints'][endpoint] || []
+                                tempCache[group.rg_name]['groupEndpoints'][endpoint] = null
+                                // tempCache[group.rg_name]['groupEndpoints'][endpoint] || null
                                 promises.push(group[endpoint]())
                             })
                             Promise.all(promises).then((data: any) => {
@@ -124,18 +124,13 @@ export default {
                             }).finally(() => {
                                 let allDone = true
                                 payload.repoGroups.forEach((group: any) => {
-                                    // console.log(tempCache)
-                                    if (tempCache[group.rg_name]){
-                                        // console.log(JSON.stringify(tempCache[group.rg_name]))
-                                        if (tempCache[group.rg_name]['groupEndpoints']['topInsights'].length < 1) {
+                                    payload.endpoints.forEach((endpoint: string) => {
+                                        if (!tempCache[group.rg_name]['groupEndpoints'][endpoint])
                                             allDone = false
-                                        }
-                                    } else 
-                                        allDone = false
-                                    
+                                    })
                                 })
-                                if (allDone) {
-                                    console.log("yo", tempCache)
+                                if (allDone){
+                                    console.log("All repo group endpoints loaded, tempCache is as follows: ", tempCache)
                                     resolve(tempCache)
                                 }
                             })
@@ -192,12 +187,16 @@ export default {
     },
     async loadRepoGroups(context:any, payload:any){
         try {
+            console.log("Attempting to load repo groups...")
+            console.log(context.state)
             return context.state.AugurAPI.getRepoGroups().then((rgs: object[]) => {
                 console.log("Loaded repo groups: ", rgs)
-                context.commit('mutateCache', {
-                    property: 'getRepoGroups',
-                    with: rgs,
-                });
+                // context.commit('mutateCache', {
+                //     property: 'getRepoGroups',
+                //     with: rgs,
+                // }).catch((e: any) => {
+                //     console.log("Error occurred loading repo groups on action level: ",e)
+                // })
                 return rgs
             });
         } catch(error) {

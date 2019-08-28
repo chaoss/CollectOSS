@@ -2,8 +2,12 @@ import axios from 'axios';
 import actions from './actions';
 import mutations from './mutations';
 import getters from './getters';
+
+var config = require('../../../../../augur.config.json')
+console.log(config)
+
 const AugurAPIModule = require('@/AugurAPI').default;
-const AugurAPI = new AugurAPIModule();
+const AugurAPI = new AugurAPIModule()//{'hostURL': 'http://localhost:' + config['Server']['port']});
 
 const state = {
   // hasState: false,

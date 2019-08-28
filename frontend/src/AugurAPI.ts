@@ -30,6 +30,7 @@ export default class AugurAPI {
 
     this._version = version || '/api/unstable'
     this._host = hostURL || 'http://localhost:5000'
+    console.log(this._host)
     this.__cache = {}
     this.__timeout = null
     this.__pending = {}
@@ -99,6 +100,7 @@ export default class AugurAPI {
   }
 
   __EndpointFactory(endpoint: string) {
+    console.log(this.__endpointURL(endpoint))
     return this.__URLFunctionFactory(this.__endpointURL(endpoint))
   }
 
