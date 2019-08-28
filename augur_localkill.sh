@@ -8,7 +8,6 @@ else
     echo "Backend server was not running."
 fi
 
-
 # account for grep process itself here
 # TODO: make this use pgrep/something more robust
 if [[ $(ps ax | grep 'vue-cli-service serve' | awk '{print $1}' | wc -l) -eq 2 ]]; then

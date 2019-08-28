@@ -3,17 +3,75 @@
 
 PS3="Your choice: "
 
+function check_python_version() {
+  major_python_version=$($1 -c 'import sys; print(sys.version_info.major)')
+  minor_python_version=$($1 -c 'import sys; print(sys.version_info.minor)')
+
+  if [[ $major_python_version -lt 3 ]]; then
+    echo "Outdated major version of Python detected."
+    return 1
+  elif [[ $minor_python_version -lt 6 ]]; then
+    echo "Outdated minor version of Python detected."
+    return 1
+  fi
+}
+
+augur_python_command=""
+
+check_python_version "python"
+if [[ $? -eq 1 ]]; then
+  echo "Insufficient Python version installed to `which python`."
+  echo "Checking `which python3`..."
+  check_python_version "python3"
+  if [[ $? -eq 1 ]]; then
+    echo "Insufficient Python version installed to `which python3`."
+    echo "Please install Python 3.6 or higher to either python or python3."
+    echo "Python 3.6 and higher can be found here: https://www.python.org/downloads/"
+    exit 1
+  else
+    echo "Sufficient version of Python found under `which python3`. Resuming installation..."
+    augur_python_command="python3"
+  fi
+else
+  echo "Sufficient version of Python found under `which python`. Resuming installation..."
+  augur_python_command="python"
+fi
+
+if [[ ! $(command -v pip) ]]; then
+  echo "pip not found searching. Searching for pip3..."
+  if [[ ! $(command -v pip3) ]]; then
+    echo "Neither pip nor pip3 has been detected. Please make sure one of these two commands is installed and available in your PATH."
+    echo "Installation instructions can be found here: https://pip.pypa.io/en/stable/installing/"
+    exit 1
+  fi
+echo "Some form of pip detected. Resuming installation..."
+fi
+
 if [[ -z $VIRTUAL_ENV ]]; then
   echo "*** We noticed you're not using a virutal environment. It is STRONGLY recommended to install Augur in its own virutal environment. ***"
-  echo "*** Would you like to create a virtual environment using virtualenv? ***"
+  echo "*** Would you like to create a virtual environment? ***"
   select choice in "Yes" "No"
   do
     case $choice in
       Yes )
-          virtualenv -p python3.6 augur_venv
-          echo "*** Your environment was installed as \`augur_venv\`. Please activate and restart the installation using your shell's appropriate command. ***"
-          echo "*** For example, if you're using bash run 'source augur_venv/bin/activate'. ***"
-          exit 0
+          echo "Would you like to generate the environment automatically, or configure it yourself?"
+          echo "If you choose to create it automatically, virtualenv will be installed if it isn't already."
+          select choice in "Yes" "No"
+          do
+            case $choice in
+              "Yes" )
+                  pip install virtualenv
+                  virtualenv -p $augur_python_command augur_venv
+                  echo "*** Your environment was installed as \`augur_venv\`. Please activate and restart the installation using your shell's appropriate command. ***"
+                  echo "*** For example, if you're using bash run 'source augur_venv/bin/activate'. ***"
+                  exit 0
+                ;;
+              "No" )
+                  echo "Please create the virtual environment and return to the installation when you're finished."
+                  exit 0
+                ;;
+            esac
+          done
         ;;
       No )
           echo "Resuming installation..."
@@ -44,17 +102,18 @@ do
 done
 
 echo "Setting up the database configuration."
+echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
 
-installpostgreslocally="Use a pre-existing Postgres 10 or 11 installation to which you can install the Augur schema?"
-installpostgresremotely="Use a pre-existing Postgres 10 or 11 installation to which someone else can install the Augur schema?"
-postgresalreadyinstalled="Use a pre-existing Postgres 10 or 11 installation with the Augur schema already installed? "
-QUIT="Quit"
+installpostgreslocally="Would you like to use a pre-existing Postgres 10 or 11 installation to which you can install the Augur schema?"
+installpostgresremotely="Would you like to use a pre-existing Postgres 10 or 11 installation to which someone else can install the Augur schema?"
+postgresalreadyinstalled="Would you like to use a pre-existing Postgres 10 or 11 installation with the Augur schema already installed? "
+SKIP="Skip this section"
 
-select haveinstalledpostgres in "$installpostgreslocally" "$installpostgresremotely" "$postgresalreadyinstalled" "$QUIT"
+select haveinstalledpostgres in "$installpostgreslocally" "$installpostgresremotely" "$postgresalreadyinstalled" "$SKIP"
 do
   case $haveinstalledpostgres in
-      $QUIT )
-      echo "Quitting..."
+      $SKIP )
+      echo "Skipping database configuration..."
       break
     ;;
     $installpostgreslocally )
@@ -95,7 +154,6 @@ do
       ;;
   esac
 done
-echo
 
 config="
 {
@@ -109,7 +167,6 @@ config="
   \"key\": \"$key\",
   \"zombie_id\": \"$zombie_id\"
 }"
-
 
 rm temp.config.json
 echo $config > temp.config.json
@@ -125,14 +182,19 @@ do
       echo "Installing frontend dependencies..."
       cd frontend/;
       yarn install;
-      yarn global add apidoc brunch newman @vue/cli; 
+      yarn global add apidoc brunch @vue/cli; 
       yarn run build;
       cd ../;
+      break
       ;;
     No )
       echo "Skipping frontend dependencies..."
+      break
       ;;
   esac
 echo "Setting up API documentation..."
 cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs;
 done
+
+
+echo "*** INSTALLATION COMPLETE ***"
