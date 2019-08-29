@@ -59,6 +59,7 @@ Thumbs.db
 #######
 *.orig
 *.un~
+.merge_file_*
 
 # Python junk #
 ###############
