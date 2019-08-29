@@ -181,9 +181,9 @@ do
     Yes )
       echo "Installing frontend dependencies..."
       cd frontend/;
-      yarn install;
-      yarn global add apidoc brunch @vue/cli; 
-      yarn run build;
+      npm install;
+      npm add apidoc brunch @vue/cli; 
+      npm run build;
       cd ../;
       break
       ;;
