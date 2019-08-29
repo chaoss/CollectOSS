@@ -83,9 +83,10 @@ done
 fi
 
 echo "Installing backend dependencies..."
-rm -rf build/*; rm $VIRTUAL_ENV/bin/*worker*; 
+rm -rf build/*; rm $VIRTUAL_ENV/bin/*worker*;
 pip install pipreqs sphinx; 
 pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
+npm install apidoc brunch @vue/cli;
 python setup.py install;
 
 echo "Installing workers and their dependencies..."
@@ -181,8 +182,8 @@ do
     Yes )
       echo "Installing frontend dependencies..."
       cd frontend/;
-      npm install;
-      npm add apidoc brunch @vue/cli; 
+      npm install apidoc brunch @vue/cli;
+      npm install; 
       npm run build;
       cd ../;
       break
