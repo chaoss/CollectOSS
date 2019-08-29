@@ -83,7 +83,7 @@ done
 fi
 
 echo "Installing backend dependencies..."
-rm -rf build/*; rm $VIRTUAL_ENV/bin/*worker*;
+rm -rf build/*; rm -rf dist/*; rm $VIRTUAL_ENV/bin/*worker*;
 pip install pipreqs sphinx; 
 pip install -e .; pip install ipykernel; pip install xlsxwriter; python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
 npm install apidoc brunch @vue/cli;
