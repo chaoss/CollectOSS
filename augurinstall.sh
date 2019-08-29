@@ -182,7 +182,7 @@ do
     Yes )
       echo "Installing frontend dependencies..."
       cd frontend/;
-      npm install apidoc brunch @vue/cli;
+      npm install apidoc brunch canvas vega @vue/cli;
       npm install; 
       npm run build;
       cd ../;
@@ -192,10 +192,10 @@ do
       echo "Skipping frontend dependencies..."
       break
       ;;
-  esac
-echo "Setting up API documentation..."
-cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs;
+   esac
 done
 
+   echo "Setting up API documentation..."
+   cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs;
 
 echo "*** INSTALLATION COMPLETE ***"
