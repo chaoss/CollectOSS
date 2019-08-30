@@ -1,0 +1,377 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>3. Backend &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="4. Frontend" href="4-frontend.html" />
+    <link rel="prev" title="2. Installation" href="2-install.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="backend">
+<h1>3. Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="structure-of-the-backend">
+<h2>3.1. Structure of the Backend<a class="headerlink" href="#structure-of-the-backend" title="Permalink to this headline">¶</a></h2>
+<p>Augur utilizes a plugin architecture. Plugins can be found in two
+directories: <code class="docutils literal notranslate"><span class="pre">plugins/</span></code> and <code class="docutils literal notranslate"><span class="pre">datasources/</span></code>. <code class="docutils literal notranslate"><span class="pre">plugins/</span></code> is for
+generic plugins, while <code class="docutils literal notranslate"><span class="pre">datasources/</span></code> is specifically for plugins that
+provide a new data source, like <code class="docutils literal notranslate"><span class="pre">ghtorrent</span></code> or <code class="docutils literal notranslate"><span class="pre">facade</span></code>.</p>
+<p>Inside each plugin directory are 5 required files: <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">plugin_name.py</span></code>, <code class="docutils literal notranslate"><span class="pre">routes.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_plugin_name_functions.py</span></code>, and <code class="docutils literal notranslate"><span class="pre">test_plugin_name_routes.py</span></code>.</p>
+<p>We will go over these more in-depth in the following sections.</p>
+</div>
+<div class="section" id="setting-up-your-environment">
+<h2>3.2. Setting up your environment<a class="headerlink" href="#setting-up-your-environment" title="Permalink to this headline">¶</a></h2>
+<p>Before you begin, make sure to activate the augur Anaconda environment
+by running <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">augur</span></code> if you’re using one. If this environment doesn’t exist,
+try running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install-dev</span></code> again and watch out for any errors.</p>
+</div>
+<div class="section" id="writing-a-plugin">
+<h2>3.3. Writing a Plugin<a class="headerlink" href="#writing-a-plugin" title="Permalink to this headline">¶</a></h2>
+<p>In this section, we’ll walk through the process of creating a sample
+data source plugin called <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code> from beginning to end.</p>
+<div class="section" id="setting-up-a-plugin">
+<h3>3.3.1. Setting up a plugin<a class="headerlink" href="#setting-up-a-plugin" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> contains the plugin class, any code that is needed to
+initialize the datasource, as well as the plugin metadata and boilerplate needed to
+register the plugin. <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> must also contain a
+<code class="docutils literal notranslate"><span class="pre">create_routes</span></code> function that takes in a <code class="docutils literal notranslate"><span class="pre">flask_app</span></code>, which is
+responsible for adding the plugin’s data source routes to the API.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ChaossPlugin</span></code> class will implement the <code class="docutils literal notranslate"><span class="pre">AugurPlugin</span></code> class. Be
+sure to include any imports your plugin might need for initialization,
+as well as your plugin’s license. Your class definiton should look
+something like this:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="kn">from</span> <span class="nn">augur.application</span> <span class="k">import</span> <span class="n">Application</span>
+<span class="kn">from</span> <span class="nn">augur.augurplugin</span> <span class="k">import</span> <span class="n">AugurPlugin</span>
+<span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+
+<span class="k">class</span> <span class="nc">ChaossPlugin</span><span class="p">(</span><span class="n">AugurPlugin</span><span class="p">):</span>
+    <span class="c1"># plugin goes here</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">__init__</span></code> function will look like this:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">augur</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># _augur will be set by the super init</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">augur</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Code needed for initialization should be in the <code class="docutils literal notranslate"><span class="pre">__call__</span></code> function
+like so:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.chaoss</span> <span class="k">import</span> <span class="n">Chaoss</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Initializing Chaoss&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span> <span class="o">=</span> <span class="n">Chaoss</span><span class="p">(</span>
+            <span class="n">config_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">read_config</span><span class="p">(</span><span class="s1">&#39;config_section&#39;</span><span class="p">,</span> <span class="s1">&#39;config_key&#39;</span><span class="p">,</span> <span class="s1">&#39;environment_value&#39;</span><span class="p">,</span> <span class="s1">&#39;default_value&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__chaoss</span>
+</pre></div>
+</div>
+<p>To create a plugin’s routes:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flask_app</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.routes</span> <span class="k">import</span> <span class="n">create_routes</span>
+    <span class="n">create_routes</span><span class="p">(</span><span class="n">flask_app</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To set a plugin’s metadata:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chaoss</span><span class="o">.</span><span class="n">augur_plugin_meta</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;chaoss&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;datasource&#39;</span><span class="p">:</span> <span class="kc">True</span> <span class="c1"># include this line if it&#39;s a data source</span>
+    <span class="c1"># include any other metadata you wish to, i.e. the author or a short description</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>And to register the plugin:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Application</span><span class="o">.</span><span class="n">register_plugin</span><span class="p">(</span><span class="n">chaoss</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For a good example, see the <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file of the <code class="docutils literal notranslate"><span class="pre">ghtorrent</span></code>
+plugin
+<a class="reference external" href="https://github.com/chaoss/augur/blob/dev/augur/datasources/ghtorrent/__init__.py">here</a>:</p>
+</div>
+<hr class="docutils" />
+<div class="section" id="defining-a-plugin-s-functionality">
+<h3>3.3.2. Defining a plugin’s functionality<a class="headerlink" href="#defining-a-plugin-s-functionality" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">chaoss.py</span></code> contains the plugin’s functionality, i.e. the plugin’s
+metrics, if it’s a data source.</p>
+<p>This file should contain the <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code> class, which will define your
+plugin’s functionality (however it needs to do so).</p>
+<p>For our sample plugin, we’ll define a trivial metric. Each metric
+function should return a pandas DataFrame, which will later be
+serialized into JSON.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="k">class</span> <span class="nc">Chaoss</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="c1"># sample &quot;metric&quot;</span>
+    <span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;hello&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">owner</span><span class="p">],</span> <span class="s2">&quot;world&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">repo</span><span class="p">]}</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Annotation</p>
+<p>If a function is a new metric that will have an endpoint, it needs to be
+annotated so that its metadata is updated. Right above the function
+definition, call the <code class="docutils literal notranslate"><span class="pre">&#64;annotate</span></code> decorator as follows:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;hello-world&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>It is currently standard practice to pass in the <code class="docutils literal notranslate"><span class="pre">tag</span></code>, which should
+the same as the function name with dashes filling the whitespace between
+words.</p>
+<p>Later on, when you add the endpoint to <code class="docutils literal notranslate"><span class="pre">routes.py</span></code>, more metadata will
+be automatically generated for you. For metrics, Augur automatically
+generates: - <code class="docutils literal notranslate"><span class="pre">ID</span></code>, which is a concatentation of the metric’s <code class="docutils literal notranslate"><span class="pre">tag</span></code>
+and it’s <code class="docutils literal notranslate"><span class="pre">source</span></code> - <code class="docutils literal notranslate"><span class="pre">display_name</span></code>, which is the name used when
+displaying the metric - <code class="docutils literal notranslate"><span class="pre">group</span></code>, which CHAOSS metrics category it
+belongs to - <code class="docutils literal notranslate"><span class="pre">endpoint</span></code>, which is the endpoint URL - <code class="docutils literal notranslate"><span class="pre">data_source</span></code>,
+which is the name of the metric’s data source - <code class="docutils literal notranslate"><span class="pre">metric_type</span></code>,
+indicating what classification of metric it is (<code class="docutils literal notranslate"><span class="pre">metric</span></code>,
+<code class="docutils literal notranslate"><span class="pre">timeseries</span></code>, or <code class="docutils literal notranslate"><span class="pre">git</span></code>) - <code class="docutils literal notranslate"><span class="pre">documentation_url</span></code>, which is a link to
+a CHAOSS-defined metric’s documentation page (if it exists) -
+<code class="docutils literal notranslate"><span class="pre">backend_status</span></code>, indicating backend implementation status -
+<code class="docutils literal notranslate"><span class="pre">frontend_status</span></code>, indicating frontend implementation status</p>
+<p>Documentation</p>
+<p>When writing a new Python function, include a docstring as the first
+thing after the function definition. The docstring should look something
+like this:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Subgroup: &lt;the metric&#39;s subgroup, if it has one&gt;</span>
+
+<span class="sd">&lt;generic description of what the function does; usually, a general idea of the metric&#39;s definition&gt;</span>
+
+<span class="sd">:param &lt;parameter_name&gt;:&lt;parameter_description&gt;</span>
+<span class="sd">:return: &lt;description of the function&#39;s return value&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>Adding dependencies</p>
+<p>If you need to add a dependency to Augur for your function, simply add
+the import statment to the file as usual, then in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> add the
+dependency to the <code class="docutils literal notranslate"><span class="pre">install_requires</span></code> list. For example, if my new
+function uses a package called <code class="docutils literal notranslate"><span class="pre">mizzou</span></code>, I would find the
+<code class="docutils literal notranslate"><span class="pre">install_requires</span></code> list:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">install_requires</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;beautifulsoup4&#39;</span><span class="p">,</span> <span class="s1">&#39;flask&#39;</span><span class="p">,</span> <span class="s1">&#39;flask-cors&#39;</span><span class="p">,</span> <span class="s1">&#39;PyMySQL&#39;</span><span class="p">,</span> <span class="s1">&#39;requests&#39;</span><span class="p">,</span> <span class="s1">&#39;python-dateutil&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlalchemy&#39;</span><span class="p">,</span> <span class="s1">&#39;pandas&#39;</span><span class="p">,</span> <span class="s1">&#39;pytest&#39;</span><span class="p">,</span> <span class="s1">&#39;PyGithub&#39;</span><span class="p">,</span> <span class="s1">&#39;pyevent&#39;</span><span class="p">,</span> <span class="s1">&#39;gunicorn&#39;</span><span class="p">],</span>
+</pre></div>
+</div>
+<p>and add <code class="docutils literal notranslate"><span class="pre">mizzou</span></code> as such:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">install_requires</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;beautifulsoup4&#39;</span><span class="p">,</span> <span class="s1">&#39;flask&#39;</span><span class="p">,</span> <span class="s1">&#39;flask-cors&#39;</span><span class="p">,</span> <span class="s1">&#39;PyMySQL&#39;</span><span class="p">,</span> <span class="s1">&#39;requests&#39;</span><span class="p">,</span> <span class="s1">&#39;python-dateutil&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlalchemy&#39;</span><span class="p">,</span> <span class="s1">&#39;pandas&#39;</span><span class="p">,</span> <span class="s1">&#39;pytest&#39;</span><span class="p">,</span> <span class="s1">&#39;PyGithub&#39;</span><span class="p">,</span> <span class="s1">&#39;pyevent&#39;</span><span class="p">,</span> <span class="s1">&#39;gunicorn&#39;</span><span class="p">,</span> <span class="s1">&#39;mizzou&#39;</span><span class="p">],</span>
+</pre></div>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="adding-api-routes">
+<h3>3.3.3. Adding API routes<a class="headerlink" href="#adding-api-routes" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">routes.py</span></code> contains one function, <code class="docutils literal notranslate"><span class="pre">create_routes</span></code>, which takes a
+<code class="docutils literal notranslate"><span class="pre">server</span></code>. In this function, define the plugin’s API routes, if it
+provides any.</p>
+<p>Route creation for metrics and timeseries can be easily done like so:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">server</span><span class="o">.</span><span class="n">addTimeseries</span><span class="p">(</span><span class="n">file_name</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span> <span class="s1">&#39;endpoint&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the metric is not a timeseries metric, replace <code class="docutils literal notranslate"><span class="pre">AddTimeseries()</span></code>
+with <code class="docutils literal notranslate"><span class="pre">AddMetric()</span></code> (a timeseries is a series of numeric data points of
+some particular metric over time, e.g. # of commits / week). Later, once
+you have finalized the metric, <strong>go back and add documentation.</strong> Follow
+the format already outlined to build your documentation.</p>
+<p>So for our sample plugin:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">request</span><span class="p">,</span> <span class="n">Response</span>
+
+<span class="k">def</span> <span class="nf">create_routes</span><span class="p">(</span><span class="n">server</span><span class="p">):</span>
+
+    <span class="c1"># this calls the already instatiated version of chaoss that we can use for adding our endpoints</span>
+    <span class="n">chaoss</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">_augur</span><span class="p">[</span><span class="s1">&#39;chaoss&#39;</span><span class="p">]()</span>
+
+    <span class="c1"># to add our sample metric:</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">AddMetric</span><span class="p">(</span><span class="n">chaoss</span><span class="o">.</span><span class="n">hello_world</span><span class="p">,</span> <span class="s1">&#39;chaoss&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="writing-tests">
+<h3>3.3.4. Writing tests<a class="headerlink" href="#writing-tests" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="metrics">
+<h4>3.3.4.1. Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h4>
+<p>Augur uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> for its data source unit tests. The tests for our sample <code class="docutils literal notranslate"><span class="pre">Chaoss</span></code>
+class are contained in the <code class="docutils literal notranslate"><span class="pre">test_chaoss_functions.py</span></code> file inside the plugin’s
+directory. You can use pytest fixtures and environment variables to pass
+data to tests.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span> <span class="nf">chaoss</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">augur</span>
+    <span class="n">chaoss</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;PLUGIN_TEST_URL&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">chaoss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">chaoss</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">8</span>
+    <span class="k">return</span> <span class="n">augur</span><span class="o">.</span><span class="n">Chaoss</span><span class="p">(</span><span class="n">chaoss</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now any test that tests functions in the Chaoss class will be able to
+access an instance of the class.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_data_source</span><span class="p">(</span><span class="n">chaoss</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">chaoss</span><span class="o">.</span><span class="n">data_source</span><span class="p">(</span><span class="s1">&#39;argument&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;expected_value&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">any</span>
+</pre></div>
+</div>
+<p>Make sure every function you write has a test.</p>
+</div>
+<div class="section" id="endpoints">
+<h4>3.3.4.2. Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">¶</a></h4>
+<p>As with our unit tests, we write our API tests in Python using the <code class="docutils literal notranslate"><span class="pre">pytest</span></code> framework.</p>
+<p>API tests for a plugin live in the <code class="docutils literal notranslate"><span class="pre">test_&lt;plugin_name&gt;_routes.py</span></code> folder in the <code class="docutils literal notranslate"><span class="pre">&lt;plugin_name&gt;/</span></code> directory.
+In this file, you’ll need the following boilerplate:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span>import pytest
+import requests
+
+@pytest.fixture(scope=&quot;module&quot;)
+def &lt;plugin_name&gt;_routes():
+    pass
+</pre></div>
+</div>
+<p>So for our CHAOSS example, the following code would go in <code class="docutils literal notranslate"><span class="pre">test_chaoss_routes.py</span></code>:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pytest</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">scope</span><span class="o">=</span><span class="s2">&quot;module&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">chaoss_routes</span><span class="p">():</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The web server will be automatically spun up and down when running your tests.</p>
+<p>For the actual tests, for the most part not much logic is needed. Each endpoint should already have a unit test asserting that the
+metric is being calculate correctly: in most cases the endpoint tests exist primarily to make sure they’re reachable and that the routes
+we’ve documented are correct. These unit tests should not be strictly re-implemented, but each test needs to make sure that the output of the
+corresponding metric is correct: since most endpoints are nothing more than a wrapper this usually means the test will just mirror the test cases of the corresponding unit test.</p>
+<p>In some cases, endpoints will provide additional functionality beyond just the metric they’re mapped to
+(e.g.) aggregation and filtering), and in these scenarios test cases are needed to cover these capabilities.</p>
+<p>Let’s look at a sample test:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_api_status</span><span class="p">(</span><span class="n">metrics_status</span><span class="p">):</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:5000/api/unstable&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span>
+    <span class="k">assert</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+</pre></div>
+</div>
+<p>This is just making sure that the API is up and running by parsing the response from the <code class="docutils literal notranslate"><span class="pre">/api/unstable</span></code>
+health check endpoint. In this case simply checking the status code and that the response is not empty/has some data in it
+is all that’s really needed. If this were a metric endpoint, an appropriate assertion might be something like
+<code class="docutils literal notranslate"><span class="pre">assert</span> <span class="pre">response[0]['commits']</span> <span class="pre">=</span> <span class="pre">20</span></code>.</p>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="using-the-python-debugger">
+<h3>3.3.5. Using the Python Debugger<a class="headerlink" href="#using-the-python-debugger" title="Permalink to this headline">¶</a></h3>
+<p>If you want to use an iPython shell to test your functions during
+development, in the root directory, first execute <code class="docutils literal notranslate"><span class="pre">augur</span> <span class="pre">util</span> <span class="pre">shell</span></code>, which
+will drop you into an iPython shell and automatically give you an Augur
+application called <code class="docutils literal notranslate"><span class="pre">app</span></code>.</p>
+<p>You can then test your function by first creating a new instance of that
+class, and then running your function. For example:
+<code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">=</span> <span class="pre">app.ghtorrent();</span> <span class="pre">gh.closed_issues('rails',</span> <span class="pre">'rails')</span></code> will let
+you test the <code class="docutils literal notranslate"><span class="pre">closed_issues</span></code> function without actually having to run
+the server.</p>
+<p>However, it is recommended that you test your function in a Jupyter
+notebook, which takes care of that setup for you. Accessing
+preconfigured Jupyter notebooks is done by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">jupyter</span></code> in
+the root directory of the project (make sure to create a jupyter
+enviroment by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">create-jupyter-env</span></code> first).</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../windows-install.html">Windows Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../dev-guide-toc.html">Development Guide</a><ul>
+      <li>Previous: <a href="2-install.html" title="previous chapter">2. Installation</a></li>
+      <li>Next: <a href="4-frontend.html" title="next chapter">4. Frontend</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dev-guide/3-backend.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/dev-guide/3-backend.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

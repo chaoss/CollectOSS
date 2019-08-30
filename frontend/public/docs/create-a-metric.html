@@ -1,0 +1,692 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Create Your First Metric &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Development Guide" href="dev-guide-toc.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="create-your-first-metric">
+<h1>Create Your First Metric<a class="headerlink" href="#create-your-first-metric" title="Permalink to this headline">¶</a></h1>
+<p>Building a new metric in Augur involves four main steps. Two steps are in the “back end” and two are in the “front end”.</p>
+<ol class="arabic simple">
+<li><dl class="first docutils">
+<dt>Backend:</dt>
+<dd><ul class="first last">
+<li>Pull the result set you need out of the Augur Unified Schema.</li>
+<li>Define the API Route for the endpoint.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Frontend</dt>
+<dd><ul class="first last">
+<li>Map the route to the front end in <cite>augurAPI.js</cite></li>
+<li>Reference the endpoint from <cite>augurAPI.js</cite> as a datasource in a .VUE card.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<img alt="_images/new-metric.png" src="_images/new-metric.png" />
+<p><em>The data served by Augur comes from a variety of sources, including .git repositories, issue trackers, mailing lists, Linux Foundation Badging programs, code coverage analysis tools and others.  All of the data is persisted by Augur’s workers in a unified data model. Once the data is persisted, its ready to be served as API endpoints; which can be presented in Augur’s front end or by any other presentation environment chosen.  There are four basic steps, two in the front end, and two in the backend.  In the backend, there’s a &lt;datasource&gt;.py file in the `augur/datasources/&lt;data-source&gt;/` directory. Several are included, like `ghtorrent`, `facade`, `augurDB` and others. Look in the `datasources` directory for specific existing implementations. API Endpoints are served by the `routes.py` file in each `&lt;data-source&gt;` directory. Once the API “exists”, the endpoint can be mapped in Augur’s frontend through the `augurAPI.js` file in `augur/frontend/app/`. VUE cards present that data graphically in `&lt;card&gt;.vue` files.</em></p>
+<div class="section" id="follow-the-steps">
+<h2>Follow the Steps<a class="headerlink" href="#follow-the-steps" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><strong>Metric Implementation</strong></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>Metrics based on the Augur Unified Database are implemented in  <code class="docutils literal notranslate"><span class="pre">augur/datasources/augur_db/augur_db.py</span></code></li>
+<li>Any new metric you want to implement must be implemented in <code class="docutils literal notranslate"><span class="pre">augur/datasources/augur_db/augur_db.py</span></code> as a function of the <code class="docutils literal notranslate"><span class="pre">Augur</span></code> class.</li>
+<li>The metric implementation must accept <code class="docutils literal notranslate"><span class="pre">repo_group_id</span></code> and <code class="docutils literal notranslate"><span class="pre">repo_id</span></code> arguments.</li>
+<li>Consider the following metric implementation as an example:</li>
+</ul>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;code-changes&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">code_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_group_id</span><span class="p">,</span> <span class="n">repo_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="n">begin_date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a timeseries of the count of code commits.</span>
+
+<span class="sd">    :param repo_group_id: The repository&#39;s repo_group_id</span>
+<span class="sd">    :param repo_id: The repository&#39;s repo_id, defaults to None</span>
+<span class="sd">    :param period: To set the periodicity to &#39;day&#39;, &#39;week&#39;, &#39;month&#39; or &#39;year&#39;, defaults to &#39;day&#39;</span>
+<span class="sd">    :param begin_date: Specifies the begin date, defaults to &#39;1970-1-1 00:00:00&#39;</span>
+<span class="sd">    :param end_date: Specifies the end date, defaults to datetime.now()</span>
+<span class="sd">    :return: DataFrame of commits/period</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">begin_date</span><span class="p">:</span>
+        <span class="n">begin_date</span> <span class="o">=</span> <span class="s1">&#39;1970-1-1 00:00:00:00&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">end_date</span><span class="p">:</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+
+    <span class="n">code_changes_SQL</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">repo_id</span><span class="p">:</span>
+        <span class="n">code_changes_SQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                date_trunc(:period, cmt_committer_date::DATE) as commit_date,</span>
+<span class="s2">                repo_id,</span>
+<span class="s2">                COUNT(cmt_commit_hash) as commit_count</span>
+<span class="s2">            FROM commits</span>
+<span class="s2">            WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)</span>
+<span class="s2">            AND cmt_committer_date BETWEEN :begin_date AND :end_date</span>
+<span class="s2">            GROUP BY commit_date, repo_id</span>
+<span class="s2">            ORDER BY repo_id, commit_date</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">code_changes_SQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;repo_group_id&#39;</span><span class="p">:</span> <span class="n">repo_group_id</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">:</span> <span class="n">period</span><span class="p">,</span>
+                                                                 <span class="s1">&#39;begin_date&#39;</span><span class="p">:</span> <span class="n">begin_date</span><span class="p">,</span> <span class="s1">&#39;end_date&#39;</span><span class="p">:</span> <span class="n">end_date</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">code_changes_SQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                date_trunc(:period, cmt_committer_date::DATE) as commit_date,</span>
+<span class="s2">                COUNT(cmt_commit_hash) as commit_count</span>
+<span class="s2">            FROM commits</span>
+<span class="s2">            WHERE repo_id = :repo_id</span>
+<span class="s2">            AND cmt_committer_date BETWEEN :begin_date AND :end_date</span>
+<span class="s2">            GROUP BY commit_date</span>
+<span class="s2">            ORDER BY commit_date</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">code_changes_SQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;repo_id&#39;</span><span class="p">:</span> <span class="n">repo_id</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">:</span> <span class="n">period</span><span class="p">,</span>
+                                                                 <span class="s1">&#39;begin_date&#39;</span><span class="p">:</span> <span class="n">begin_date</span><span class="p">,</span> <span class="s1">&#39;end_date&#39;</span><span class="p">:</span> <span class="n">end_date</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li>Let’s breakdown this example:<ul>
+<li>The metric being implemented here is the ‘Code Changes’ metric.</li>
+<li>It is placed in the <em>Evolution</em> section because it is an Evolution Metric. Other such groups of metrics that exists are Value, Risk and Diversity &amp; Inclusion. If the metric you want to implement is not a part of any of these metric groups, it must be placed in the <em>Experimental</em> section.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&#64;annotate(tag='code-changes')</span></code> makes the function visible in the metrics-status.</li>
+<li><code class="docutils literal notranslate"><span class="pre">def</span>&#160; <span class="pre">code_changes(self,</span> <span class="pre">repo_group_id,</span> <span class="pre">repo_id=None,</span> <span class="pre">period='day',</span> <span class="pre">begin_date=None,</span> <span class="pre">end_date=None)</span></code> defines the function <code class="docutils literal notranslate"><span class="pre">code_changes</span></code> that implements the metric ‘Code Changes.’<ul>
+<li>All metric implementation functions must be able to work on single repositories and repository groups. Therefore they must accept <code class="docutils literal notranslate"><span class="pre">repo_group_id</span></code> and <code class="docutils literal notranslate"><span class="pre">repo_id</span></code> arguments.</li>
+<li>Additional arguments can also be accepted by the function. In the example above, <code class="docutils literal notranslate"><span class="pre">code_changes</span></code> function takes in additional arguments such as <code class="docutils literal notranslate"><span class="pre">period</span></code>, <code class="docutils literal notranslate"><span class="pre">begin_date</span></code> and <code class="docutils literal notranslate"><span class="pre">end_date</span></code>.</li>
+</ul>
+</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">code_changes</span></code> function has two SQL queries that query the Unified Augur Database. One query handles Repository Groups while the other handles Repositories.</li>
+<li>The function returns a pandas DataFrame.</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><strong>Adding Routes</strong></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>After implementing the metric, you must add a Route or API endpoint to access the metric. Routes for the metrics are added in the <code class="docutils literal notranslate"><span class="pre">routes.py</span></code> file in the <code class="docutils literal notranslate"><span class="pre">augur/datasources/augur_db</span></code> directory.</li>
+<li>In the <code class="docutils literal notranslate"><span class="pre">create_routes</span></code> function in <code class="docutils literal notranslate"><span class="pre">routes.py</span></code> file you can add routes using the following two methods:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">server.addRepoGroupMetric(augur_db.&lt;metric&gt;,</span> <span class="pre">'&lt;endpoint&gt;')</span></code> to add the endpoint <code class="docutils literal notranslate"><span class="pre">/repo-groups/:repo_group_id/&lt;endpoint&gt;</span></code> corresponding to the metric implementation function <code class="docutils literal notranslate"><span class="pre">&lt;metric&gt;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">server.addRepoMetric(augur_db.&lt;metric&gt;,</span> <span class="pre">'&lt;endpoint&gt;')</span></code> to add the endpoint <code class="docutils literal notranslate"><span class="pre">/repo-groups/:repo_group_id/repos/:repo_id/&lt;endpoint&gt;</span></code> corresponding to the metric implementation function <code class="docutils literal notranslate"><span class="pre">&lt;metric&gt;</span></code></li>
+</ul>
+</li>
+<li>Consider the following example:</li>
+</ul>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  @api {get} /repo-groups/:repo_group_id/code-changes</span>
+<span class="sd">  @apiName Code Changes</span>
+<span class="sd">  @apiGroup Evolution</span>
+<span class="sd">  @apiDescription &lt;a href=&quot;https://github.com/chaoss/wg-evolution/blob/master/metrics/Code_Changes.md&quot;&gt;CHAOSS Metric Definition&lt;/a&gt;</span>
+<span class="sd">  @apiParam {String} repo_group_id Repository Group ID</span>
+<span class="sd">  @apiParam {string} period Periodicity specification. Possible values: &#39;day&#39;, &#39;week&#39;, &#39;month&#39;, &#39;year&#39;. Defaults to &#39;day&#39;</span>
+<span class="sd">  @apiParam {string} begin_date Beginning date specification. Possible values: &#39;2018&#39;, &#39;2018-05&#39;, &#39;2019-05-01&#39;, ..., &#39; 2017-03-02 05:34:19&#39;. Defaults to &#39;1970-1-1 0:0:0&#39;</span>
+<span class="sd">  @apiParam {string} end_date Ending date specification. Possible values: &#39;2018&#39;, &#39;2018-05&#39;, &#39;2019-05-01&#39;, ..., &#39; 2017-03-02 05:34:19&#39;. Defaults to current date &amp; time.</span>
+<span class="sd">  @apiSuccessExample {json} Success-Response:</span>
+<span class="sd">                  [</span>
+<span class="sd">                      {</span>
+<span class="sd">                          &quot;commit_date&quot;: &quot;2018-01-01T00:00:00.000Z&quot;,</span>
+<span class="sd">                          &quot;repo_id&quot;: 1,</span>
+<span class="sd">                          &quot;commit_count&quot;: 5140</span>
+<span class="sd">                      },</span>
+<span class="sd">                      {</span>
+<span class="sd">                          &quot;commit_date&quot;: &quot;2019-01-01T00:00:00.000Z&quot;,</span>
+<span class="sd">                          &quot;repo_id&quot;: 1,</span>
+<span class="sd">                          &quot;commit_count&quot;: 711</span>
+<span class="sd">                      },</span>
+<span class="sd">                      {</span>
+<span class="sd">                          &quot;commit_date&quot;: &quot;2015-01-01T00:00:00.000Z&quot;,</span>
+<span class="sd">                          &quot;repo_id&quot;: 25001,</span>
+<span class="sd">                          &quot;commit_count&quot;: 1071</span>
+<span class="sd">                      }</span>
+<span class="sd">                  ]</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">server</span><span class="o">.</span><span class="n">addRepoGroupMetric</span><span class="p">(</span><span class="n">augur_db</span><span class="o">.</span><span class="n">code_changes</span><span class="p">,</span> <span class="s1">&#39;code-changes&#39;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li>The last line <code class="docutils literal notranslate"><span class="pre">server.addRepoGroupMetric(augur_db.code_changes,</span> <span class="pre">'code-changes')</span></code> is what actually creates the <code class="docutils literal notranslate"><span class="pre">/repo-groups/:repo_group_id/code-changes</span></code> endpoint and links it to <code class="docutils literal notranslate"><span class="pre">code_changes</span></code> metric implementation function.</li>
+<li>The rest is just annotation used to create documentation.</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple">
+<li>augur/augur/datasources/<span class="raw-html-m2r"><directory for data source></span><ol class="arabic">
+<li>example: ghtorrent</li>
+<li>example file 1: ghtorrent.py<ul>
+<li>create a new function that has the sql query to the database, or API call to GitHub or whatever. But if you’re in <code class="docutils literal notranslate"><span class="pre">ghtorrent.py</span></code> (or <code class="docutils literal notranslate"><span class="pre">facade.py</span></code>), its a sql query. Here’s an example breakdown:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">&#64;annotate(tag='code-review-iteration')</span> <span class="pre">makes</span> <span class="pre">the</span> <span class="pre">function</span> <span class="pre">visible</span> <span class="pre">in</span> <span class="pre">metrics-status</span></code><ul>
+<li><code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">code_review_iteration..</span></code> is the name of the function called in <code class="docutils literal notranslate"><span class="pre">routes.py</span></code> <strong>in the same data source folder</strong> (which is <code class="docutils literal notranslate"><span class="pre">augur/augur/datasources/ghtorrent</span></code> in our example</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;code-review-iteration&#39;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">code_review_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Timeseries of the count of iterations (being closed and reopened) that a merge request (code review) goes through until it is finally merged</span>
+
+<span class="sd">        :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.</span>
+<span class="sd">        :param repo: The name of the repo. Unneeded if repository id was passed as owner.</span>
+<span class="sd">        :return: DataFrame with iterations/issue for each issue that week</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">repoid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repoid</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+
+        <span class="n">codeReviewIterationSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            DATE(issues.created_at) AS &quot;created_at&quot;,</span>
+<span class="s2">            DATE(pull_request_history.created_at) AS &quot;merged_at&quot;,</span>
+<span class="s2">            issues.issue_id AS &quot;issue_id&quot;,</span>
+<span class="s2">            pull_request_history.pull_request_id AS &quot;pull_request_id&quot;,</span>
+<span class="s2">            pull_request_history.action AS &quot;action&quot;,</span>
+<span class="s2">            COUNT(CASE WHEN action = &quot;closed&quot; THEN 1 ELSE NULL END) AS &quot;iterations&quot;</span>
+<span class="s2">        FROM issues, pull_request_history</span>
+<span class="s2">        WHERE find_in_set(pull_request_history.action, &quot;closed,merged&quot;)&gt;0</span>
+<span class="s2">        AND pull_request_history.pull_request_id IN(</span>
+<span class="s2">            SELECT pull_request_id</span>
+<span class="s2">            FROM pull_request_history</span>
+<span class="s2">            WHERE pull_request_history.action = &quot;closed&quot;)   #go by reopened or closed??? (min: completed 1 iteration and has started another OR min: completed 1 iteration)</span>
+<span class="s2">        AND pull_request_history.pull_request_id = issues.issue_id</span>
+<span class="s2">        AND issues.pull_request = 1</span>
+<span class="s2">        AND issues.repo_id = :repoid</span>
+<span class="s2">        GROUP BY YEARWEEK(issues.created_at) #YEARWEEK to get (iterations (all PRs in repo) / week) instead of (iterations / PR)?</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">codeReviewIterationSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repoid&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">repoid</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;created_at&#39;</span><span class="p">],</span> <span class="s1">&#39;iterations&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]})</span>
+
+     <span class="o">*</span> <span class="n">Need</span> <span class="n">the</span> <span class="n">New</span> <span class="n">API</span> <span class="n">Documentation</span> <span class="n">Here</span><span class="o">.</span>
+</pre></div>
+</td></tr></table></div>
+<p><cite>server.py</cite></p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">addRepoGroupMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simplifies adding routes that accept repo_group_id&quot;&quot;&quot;</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;/{self.api_version}/repo-groups/&lt;repo_group_id&gt;/{endpoint}&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">routify</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="s1">&#39;repo_group&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateMetricMetadata</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">addRepoMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simplifies adding routes that accept repo_group_id and repo_id&quot;&quot;&quot;</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;/{self.api_version}/repo-groups/&lt;repo_group_id&gt;/repos/&lt;repo_id&gt;/{endpoint}&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">routify</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="s1">&#39;repo&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateMetricMetadata</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ol class="arabic simple" start="2">
+<li>example file 2: <code class="docutils literal notranslate"><span class="pre">routes.py</span></code> in the same directory, <code class="docutils literal notranslate"><span class="pre">augur/augur/datasources/ghtorrent/</span></code><ul>
+<li><code class="docutils literal notranslate"><span class="pre">server.addTimeseries</span></code> (most of the below is annotation. The very last line is what makes it actually work.);;;;</li>
+</ul>
+</li>
+</ol>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22</pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    @api {get} /:owner/:repo/timeseries/code_review_iteration Code Review Iteration</span>
+<span class="sd">    @apiName code-review-iteration</span>
+<span class="sd">    @apiGroup Growth-Maturity-Decline</span>
+<span class="sd">    @apiDescription &lt;a href=&quot;com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md&quot;&gt;CHAOSS Metric Definition&lt;/a&gt;. Source: &lt;a href=&quot;http://ghtorrent.org/&quot;&gt;GHTorrent&lt;/a&gt;</span>
+
+<span class="sd">    @apiParam {String} owner Username of the owner of the GitHub repository</span>
+<span class="sd">    @apiParam {String} repo Name of the GitHub repository</span>
+
+<span class="sd">    @apiSuccessExample {json} Success-Response:</span>
+<span class="sd">                        [</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;date&quot;: &quot;2012-05-16T00:00:00.000Z&quot;,</span>
+<span class="sd">                                &quot;iterations&quot;: 2</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;date&quot;: &quot;2012-05-16T00:00:00.000Z&quot;,</span>
+<span class="sd">                                &quot;iterations&quot;: 1</span>
+<span class="sd">                            }</span>
+<span class="sd">                        ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">addTimeseries</span><span class="p">(</span><span class="n">ghtorrent</span><span class="o">.</span><span class="n">code_review_iteration</span><span class="p">,</span> <span class="s1">&#39;code_review_iteration&#39;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<ol class="arabic simple" start="3">
+<li>example file 3: ‘augurAPI.js’ in the <code class="docutils literal notranslate"><span class="pre">augur/frontend/app/</span></code> directory needs to have the the metric from <code class="docutils literal notranslate"><span class="pre">routes.py</span></code> mapped to an API endpoint that the frontend will then access.</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>Metrics from the facade.py that take a git url should go under the //GIT section in this file</li>
+<li>Most of your metrics are going to belong in the //GROWTH, MATURITY AND DECLINE section.</li>
+</ul>
+</div></blockquote>
+<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="c1">// IN THIS SECTION of augurAPI.js DEVELOPER NOTE</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">repo</span><span class="p">.</span><span class="nx">owner</span> <span class="o">&amp;&amp;</span> <span class="nx">repo</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+   <span class="c1">// DIVERSITY AND INCLUSION</span>
+   <span class="c1">// GROWTH, MATURITY, AND DECLINE</span>
+
+   <span class="c1">// FIND THE RIGHT SECTION, like &quot;GROWTH, MATURITY AND DECLINE&quot; and ADD YOUR code</span>
+   <span class="nx">Timeseries</span><span class="p">(</span><span class="nx">repo</span><span class="p">,</span> <span class="s1">&#39;closedIssues&#39;</span><span class="p">,</span> <span class="s1">&#39;issues/closed&#39;</span><span class="p">)</span>
+   <span class="nx">Timeseries</span><span class="p">(</span><span class="nx">repo</span><span class="p">,</span> <span class="s1">&#39;closedIssueResolutionDuration&#39;</span><span class="p">,</span> <span class="s1">&#39;issues/time_to_close&#39;</span><span class="p">)</span>
+   <span class="nx">Timeseries</span><span class="p">(</span><span class="nx">repo</span><span class="p">,</span> <span class="s1">&#39;codeCommits&#39;</span><span class="p">,</span> <span class="s1">&#39;commits&#39;</span><span class="p">)</span>
+   <span class="c1">// Timeseries(repo, &#39;codeReviews&#39;, &#39;code_reviews&#39;)</span>
+
+   <span class="c1">// THIS IS THE NEW METRIC IN OUR EXAMPLE</span>
+   <span class="nx">Timeseries</span><span class="p">(</span><span class="nx">repo</span><span class="p">,</span> <span class="s1">&#39;codeReviewIteration&#39;</span><span class="p">,</span> <span class="s1">&#39;code_review_iteration&#39;</span><span class="p">)</span>
+  <span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ol class="arabic" start="4">
+<li><p class="first">Example file 4: <cite>ExperimentalCard.vue</cite> in the <cite>augur/frontend/app/components/</cite> directory. We will need to import and insert a chart component that we will be creating next or a chart component that already exists in the <a href="#id1"><span class="problematic" id="id2">`</span></a>augur/frontend/app/components/charts/ ` directory.</p>
+<blockquote>
+<div><p>In the <cite>&lt;script&gt;</cite> section of <cite>ExperimentalCard.vue</cite>, we must import the chart file and add it to the <cite>components</cite> section under <cite>module.exports</cite> like this:</p>
+</div></blockquote>
+</li>
+</ol>
+<p><strong>TODO</strong> Can we keep the example from above in place?</p>
+<ol class="arabic simple" start="5">
+<li>Example file 5: <strong>TODO</strong> &lt;<span class="raw-html-m2r"><FILL IN FILE NAME and PATH></span>&gt; We insert the <code class="docutils literal notranslate"><span class="pre">ExampleChart</span></code> component with our endpoint name (<code class="docutils literal notranslate"><span class="pre">closedIssues</span></code>) defined as the <code class="docutils literal notranslate"><span class="pre">source</span></code> property (prop) of the component (Vue converts a string name like ‘ExampleChart’ to ‘example-chart’ to be used as an html tag):</li>
+</ol>
+<div class="highlight-html notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="highlight"><pre><span></span>   <span class="p">&lt;</span><span class="nt">example-chart</span> <span class="na">source</span><span class="o">=</span><span class="s">&quot;closedIssues&quot;</span>
+                       <span class="na">title</span><span class="o">=</span><span class="s">&quot;Closed Issues / Week &quot;</span>
+                       <span class="na">cite-url</span><span class="o">=</span><span class="s">&quot;&quot;</span>
+                       <span class="na">cite-text</span><span class="o">=</span><span class="s">&quot;Closed Issues&quot;</span><span class="p">&gt;</span>
+   <span class="p">&lt;/</span><span class="nt">example-chart</span><span class="p">&gt;</span>
+</pre></div>
+</td></tr></table></div>
+<ol class="arabic simple" start="6">
+<li>You will need to create a chart file. <strong>TODO</strong> &lt;&lt; Where? What will it be called? What example are we using? &gt;&gt; Here is an example of a chart file that calls the endpoint that is passed as the <code class="docutils literal notranslate"><span class="pre">source</span></code> property. The template section holds the vega-lite tag that renders the chart. The Vega-lite <code class="docutils literal notranslate"><span class="pre">spec</span></code> is being bound to what is being returned by the <code class="docutils literal notranslate"><span class="pre">spec()</span></code> method inside the <code class="docutils literal notranslate"><span class="pre">computed</span></code> properties (<code class="docutils literal notranslate"><span class="pre">:spec=&quot;spec&quot;</span></code>), and the <code class="docutils literal notranslate"><span class="pre">data</span></code> being used for the chart is bound to the <code class="docutils literal notranslate"><span class="pre">values</span></code> array being returned by the <code class="docutils literal notranslate"><span class="pre">data()</span></code> method (<code class="docutils literal notranslate"><span class="pre">:data=&quot;values&quot;</span></code>):</li>
+</ol>
+<p><strong>TODO</strong> Where it goes in this file. Same file?</p>
+<div class="highlight-html notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span>   <span class="p">&lt;</span><span class="nt">template</span><span class="p">&gt;</span>
+     <span class="p">&lt;</span><span class="nt">div</span> <span class="na">ref</span><span class="o">=</span><span class="s">&quot;holder&quot;</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;position: relative; z-index: 5&quot;</span><span class="p">&gt;</span>
+       <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;chart&quot;</span><span class="p">&gt;</span>
+         <span class="p">&lt;</span><span class="nt">h3</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;text-align: center&quot;</span><span class="p">&gt;</span>{{ title }}<span class="p">&lt;/</span><span class="nt">h3</span><span class="p">&gt;</span>
+         <span class="p">&lt;</span><span class="nt">vega-lite</span> <span class="na">:spec</span><span class="o">=</span><span class="s">&quot;spec&quot;</span> <span class="na">:data</span><span class="o">=</span><span class="s">&quot;values&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">vega-lite</span><span class="p">&gt;</span>
+         <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span> {{ chart }} <span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+       <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+     <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+   <span class="p">&lt;/</span><span class="nt">template</span><span class="p">&gt;</span>
+</pre></div>
+</td></tr></table></div>
+<p><strong>TODO</strong> Where it goes in this file. Same file?</p>
+<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51</pre></div></td><td class="code"><div class="highlight"><pre><span></span>   <span class="kr">import</span> <span class="p">{</span> <span class="nx">mapState</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;vuex&#39;</span>
+   <span class="kr">import</span> <span class="nx">AugurStats</span> <span class="nx">from</span> <span class="s1">&#39;AugurStats&#39;</span>
+
+   <span class="kr">export</span> <span class="k">default</span> <span class="p">{</span>
+     <span class="nx">props</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;citeUrl&#39;</span><span class="p">,</span> <span class="s1">&#39;citeText&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;disableRollingAverage&#39;</span><span class="p">,</span> <span class="s1">&#39;alwaysByDate&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">],</span>
+     <span class="nx">data</span><span class="p">()</span> <span class="p">{</span>
+       <span class="k">return</span> <span class="p">{</span>
+         <span class="nx">values</span><span class="o">:</span> <span class="p">[],</span>
+       <span class="p">}</span>
+     <span class="p">},</span>
+     <span class="nx">computed</span><span class="o">:</span> <span class="p">{</span>
+       <span class="nx">repo</span><span class="p">()</span> <span class="p">{</span>
+         <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">$store</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">baseRepo</span>
+       <span class="p">},</span>
+       <span class="nx">spec</span><span class="p">()</span> <span class="p">{</span>
+           <span class="c1">// IF YOU WANT TO CALL YOUR ENDPOINT IN THE CHART FILE, THIS IS WHERE/HOW YOU SHOULD DO IT:</span>
+         <span class="kd">let</span> <span class="nx">repo</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">AugurAPI</span><span class="p">.</span><span class="nx">Repo</span><span class="p">({</span> <span class="nx">githubURL</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">repo</span> <span class="p">})</span>
+         <span class="nx">repo</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">source</span><span class="p">]().</span><span class="nx">then</span><span class="p">((</span><span class="nx">data</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
+            <span class="c1">// you can print your data in a console.log() to make                   // sure the endpoint is returning what it needs to</span>
+           <span class="c1">// console.log(&quot;HERE&quot;, data)</span>
+           <span class="k">this</span><span class="p">.</span><span class="nx">values</span> <span class="o">=</span> <span class="nx">data</span>
+         <span class="p">})</span>
+         <span class="c1">//FINISH CALLING ENDPOINT</span>
+
+         <span class="c1">// THIS IS A SAMPLE &#39;spec&#39;, SPECS ARE WHAT CREATE THE VEGA-LITE FILE,</span>
+         <span class="c1">// YOU CAN PLAY WITH SAMPLE SPEC OF A LINE CHART AT:</span>
+         <span class="c1">// https://vega.github.io/editor/#/examples/vega-lite/line</span>
+         <span class="c1">// AND SEE THE DATA THAT THEY ARE USING AT:</span>
+         <span class="c1">// https://vega.github.io/vega-lite/data/stocks.csv</span>
+         <span class="kd">let</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+           <span class="s2">&quot;$schema&quot;</span><span class="o">:</span> <span class="s2">&quot;https://vega.github.io/schema/vega-lite/v2.json&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;width&quot;</span><span class="o">:</span> <span class="mi">950</span><span class="p">,</span>
+           <span class="s2">&quot;height&quot;</span><span class="o">:</span> <span class="mi">300</span><span class="p">,</span>
+           <span class="s2">&quot;mark&quot;</span><span class="o">:</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;encoding&quot;</span><span class="o">:</span> <span class="p">{</span>
+             <span class="s2">&quot;x&quot;</span><span class="o">:</span> <span class="p">{</span>
+               <span class="s2">&quot;field&quot;</span><span class="o">:</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;temporal&quot;</span><span class="p">,</span>
+             <span class="p">},</span>
+             <span class="s2">&quot;y&quot;</span><span class="o">:</span> <span class="p">{</span>
+               <span class="s2">&quot;field&quot;</span><span class="o">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;quantitative&quot;</span><span class="p">,</span>
+             <span class="p">},</span>
+           <span class="p">}</span>
+         <span class="p">}</span>
+         <span class="k">return</span> <span class="nx">config</span>
+       <span class="p">}</span>
+     <span class="p">},</span>
+     <span class="nx">methods</span><span class="o">:</span> <span class="p">{</span>
+       <span class="c1">//define any methods you may need here</span>
+       <span class="c1">//you can call them anywhere with: this.methodName()</span>
+     <span class="p">}</span>
+   <span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windows-install.html">Windows Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use-cases-toc.html">Use Cases</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="dev-guide-toc.html" title="next chapter">Development Guide</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/create-a-metric.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/create-a-metric.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
