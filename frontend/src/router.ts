@@ -7,8 +7,10 @@ import store from '@/store/store';
 Vue.use(Router);
 import _ from 'lodash';
 
-var AugurAPIModule = require('@/AugurAPI').default;
-var AugurAPI = new AugurAPIModule();
+var config = require('../../augur.config.json')
+const AugurAPIModule = require('@/AugurAPI').default;
+var port = config['Server']['port'] ? ':' + config['Server']['port'] : ''
+const AugurAPI = new AugurAPIModule('http://' + config['Server']['host'] + port);
 
 import Errors from './views/Errors.vue';
 import Tables from './views/Tables.vue';

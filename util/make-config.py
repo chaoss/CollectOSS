@@ -13,12 +13,11 @@ def configure_database(config, credentials):
     print("==Setting up Augur Database==")
     config['Database'] = {}
     config['Database']['database'] = credentials['database'] or "augur"
-    config['Database']['name'] = credentials['name']
     config['Database']['host'] = credentials['host'] or "localhost"
     config['Database']['port'] = credentials['port'] or "5432"
     config['Database']['user'] = credentials['user'] or "augur"
     config['Database']['password'] = credentials['password'] or "YOUR PASSWORD"
-    config['Database']['schema'] = credentials['schema'] or "augur_data"
+    config['Database']['schema'] = "augur_data"
     config['Database']['key'] = credentials['key'] or "YOUR KEY"
     config['Database']['zombie_id'] = credentials['zombie_id'] or "22"
 
@@ -71,12 +70,20 @@ def configure_defaults(config):
 
     if not 'Facade' in config:
         config["Facade"] = {
-            "host": "localhost",
-            "name": "facade",
-            "pass": "password",
-            "port": "3306",
-            "projects": [],
-            "user": "augur"
+            "check_updates": 0,
+            "clone_repos": 1,
+            "create_xlsx_summary_files": 0,
+            "delete_marked_repos": 0,
+            "fix_affiliations": 1,
+            "force_analysis": 0,
+            "force_invalidate_caches": 0,
+            "force_updates": 0,
+            "limited_run": 0,
+            "multithreaded": 1,
+            "nuke_stored_affiliations": 0,
+            "pull_repos": 0,
+            "rebuild_caches": 0,
+            "run_analysis": 0
         }
         print("Set default values for Facade...")
 
@@ -89,24 +96,6 @@ def configure_defaults(config):
             "user": "augur"
         }
         print("Set default values for GHTorrent...")
-
-    if not 'GHTorrentPlus' in config:
-        config['GHTorrentPlus'] = {
-            "host": "localhost",
-            "name": "ghtorrentplus",
-            "pass": "password",
-            "port": "3306",
-            "user": "ghdata"
-        }
-        print("Set default values for GHTorrentPlus...")
-
-    if not 'Controller' in config:
-        config["Controller"] = {
-            "broker": 1,
-            "housekeeper": 1,
-            "github_worker": 0
-        }
-        print("Set default values for Controller...")
 
     if not 'Development' in config:
         config["Development"] = {
@@ -121,12 +110,62 @@ def configure_defaults(config):
 
     if not 'Housekeeper' in config:
         config['Housekeeper'] = {
-            "jobs": []
+            "jobs": [
+                {
+                    "delay": 150000,
+                    "given": [
+                        "git_url"
+                    ],
+                    "model": "issues",
+                    "repo_group_id": 0,
+                    "repos": [
+                        {
+                            "repo_git": "https://boringssl.googlesource.com/boringssl",
+                            "repo_id": 25154
+                        },
+                        {
+                            "repo_git": "https://github.com/libressl-portable/portable",
+                            "repo_id": 25156
+                        },
+                        {
+                            "repo_git": "https://github.com/rails/rails.git",
+                            "repo_id": 21000
+                        }
+                    ]
+                }
+            ]
         }
         print("Set default values for Housekeeper...")
 
     if not 'Workers' in config:
-        config['Workers'] = {}
+        config['Workers'] = {
+            "facade_worker": {
+            "port": 51246,
+            "repo_directory": "$HOME/facade_clones",
+            "switch": 0,
+            "workers": 0
+            },
+            "github_worker": {
+                "port": 51238,
+                "switch": 0,
+                "workers": 1
+            },
+            "insight_worker": {
+                "port": 51244,
+                "switch": 0,
+                "workers": 1
+            },
+            "pull_request_worker": {
+                "port": 51252,
+                "switch": 0,
+                "workers": 1
+            },
+            "repo_info_worker": {
+                "port": 51242,
+                "switch": 0,
+                "workers": 1
+            }
+        }
         print("Set default values for Workers")
 
     print()

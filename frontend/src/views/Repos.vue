@@ -9,9 +9,9 @@
     </div>
 
     <!-- Default Light Table -->
-    <spinner v-if="!loaded_repos"></spinner>
+    <spinner v-if="!loadedRepos"></spinner>
 
-    <div v-if="loaded_repos"  class="row">
+    <div v-if="loadedRepos"  class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
@@ -67,7 +67,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(repo,index) in sorted_repos(sortColumn,ascending)" v-bind:item="repo">
+                <tr v-for="(repo,index) in sortedRepos(sortColumn,ascending)" v-bind:item="repo">
                   <td>
                     <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                   </td>
@@ -133,8 +133,7 @@ import Spinner from '../components/Spinner.vue'
   },
   computed: {
     ...mapGetters('common', [
-      'sorted_repos',
-      'loaded_repos'
+      'sortedRepos'
     ]),
   },
 })
@@ -149,13 +148,15 @@ export default class Repos extends Vue{
   themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
   loadedGroups: boolean = false;
   loadedSparks: boolean = false;
-  // loadedRepos: boolean = false;
+
+  loadedRepos: boolean = false;
+
   ascending:boolean = false;
   sortColumn: string ='commits_all_time';
   getRepoRelations!: any
-  sorted_repos!:any
+  sortedRepos!:any
   loadRepos!:any;
-  loaded_repos!:boolean;
+  
   addRepo!:any;
   setBaseRepo!:any;
   addComparedRepo!:any;
@@ -163,9 +164,11 @@ export default class Repos extends Vue{
 
   created() {
     
-    if (!this.loaded_repos) {
+    if (!this.loadedRepos) {
       console.log("bout to load")
-      this.loadRepos()
+      this.loadRepos().then(() => {
+        this.loadedRepos = true
+      })
     }
 
   }

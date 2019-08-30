@@ -114,8 +114,7 @@ export default {
                             tempCache[group.rg_name]['groupEndpoints'] = tempCache[group.rg_name]['groupEndpoints'] || {}
                             let promises: any[] = []
                             payload.endpoints.forEach((endpoint: string) => {
-                                tempCache[group.rg_name]['groupEndpoints'][endpoint] = null
-                                // tempCache[group.rg_name]['groupEndpoints'][endpoint] || null
+                                tempCache[group.rg_name]['groupEndpoints'][endpoint] = tempCache[group.rg_name]['groupEndpoints'][endpoint] || null
                                 promises.push(group[endpoint]())
                             })
                             Promise.all(promises).then((data: any) => {

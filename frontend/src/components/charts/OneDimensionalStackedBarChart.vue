@@ -4,7 +4,6 @@
       <!-- <h3>Lines of code added by the top 10 authors as Percentages - All Time</h3> -->
       <h3 style="font-size: 0.9rem;width: 17rem;text-align: center;transform: translateX(1rem);">{{ title }}</h3>
       <vega-lite :spec="spec" :data="data"></vega-lite>
-      <p> {{ chart }} </p>
     </div>
   </div>
 </template>
