@@ -46,8 +46,8 @@
                        :fields="['short_name','note']"  title="License Declared"></license-table>
       </div>
       <div class="col-6">
-        <cii-table :data="values" source="ciiBP"  :headers="['Short Name','Note']"
-                       :fields="['short_name','note']"  title="CII Best Practices"></cii-table>
+        <cii-table :data="values" source="ciiBP"  :headers="['Passing Status','Badge Level', 'Date']"
+                       :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
       </div>
     </div>
 

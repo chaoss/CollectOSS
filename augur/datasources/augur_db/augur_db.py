@@ -1430,11 +1430,12 @@ class Augur(object):
         if repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
                 SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
-                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                    achieve_silver_status, tiered_percentage, repo_url, id, repo_badging.updated_at as date
                 FROM repo_badging, repo, repo_groups
                 WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
                 AND repo_badging.repo_id = :repo_id
                 ORDER BY date DESC
+                LIMIT 1
             """)
 
             logger.debug(cii_best_practices_badge_SQL)
@@ -1443,15 +1444,16 @@ class Augur(object):
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
                 SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
-                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                    achieve_silver_status, tiered_percentage, repo_url, id, repo_badging.updated_at as date
                 FROM repo_badging, repo, repo_groups
                 WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
                 AND repo.repo_group_id = :repo_group_id
                 ORDER BY date DESC
+                LIMIT 1
             """)
 
             logger.debug(cii_best_practices_badge_SQL)
-            params = {'repo_group_id': repo_group_id}
+            params = {'repo_group_id': repo_group_id, 'repo_id': repo_id, 'repo_url': repo_url, 'id': id}
 
         return pd.read_sql(cii_best_practices_badge_SQL, self.db, params=params)
 

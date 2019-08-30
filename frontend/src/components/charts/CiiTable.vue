@@ -1,16 +1,15 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-      <table style="width: 100%">
-        <thead class="bg-light">
-          <th v-for="header in headers">{{header}}</th>
-        </thead>
-        <tbody>
-          <tr v-for="el in values">
-            <td v-for="field in fields">{{el[field]}}</td>
-          </tr>
-        </tbody>
-      </table>
+      <p v-for="el in values">
+      <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + el.id + '/badge'" width = 40%>
+      <br><br>
+      The badge status of <strong>{{el.repo_name}}</strong> is <strong>{{el.badge_level}}</strong>
+      <br> This information was last updated on <strong>{{el.date.split("T")[0]}}</strong>
+      <br> The CII ID is <strong>{{el.id}}</strong>
+      <br> More CII data for this project can be found at CII's <a :href="'https://bestpractices.coreinfrastructure.org/projects/' + el.id">best practices badging website.</a>
+
+      </p>
     </d-card-body>
   </d-card>
 </template>
