@@ -21,7 +21,7 @@
         <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
       </div>
     </div>
-    
+
 
     <div class="row mb-5" v-if="loaded_risk">
       <div class="col-3">
@@ -45,6 +45,10 @@
         <license-table :data="values" source="licenseDeclared"  :headers="['Short Name','Note']"
                        :fields="['short_name','note']"  title="License Declared"></license-table>
       </div>
+      <div class="col-6">
+        <cii-table :data="values" source="ciiBP"  :headers="['Short Name','Note']"
+                       :fields="['short_name','note']"  title="CII Best Practices"></cii-table>
+      </div>
     </div>
 
   </d-container>
@@ -60,6 +64,7 @@
   import CountBlock from "@/components/charts/CountBlock.vue";
   import LineChart from "@/components/charts/LineChart.vue";
   import LicenseTable from "@/components/charts/LicenseTable.vue";
+  import CiiTable from "@/components/charts/CiiTable.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
   import router from "@/router";
 
@@ -71,6 +76,7 @@
       CountBlock,
       LineChart,
       LicenseTable,
+      CiiTable
       // PieChart,
     },
     methods: {
@@ -112,7 +118,7 @@
 
 
     // endpoints
-    risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers']
+    risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers', 'ciiBP']
 
     created() {
       console.log('####', this.base)
@@ -128,4 +134,3 @@
 
   }
 </script>
-
