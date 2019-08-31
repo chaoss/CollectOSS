@@ -1,4 +1,4 @@
-where api docs are build to and deployed during installation. 
+Where api docs are build to and deployed during installation. We needed a file for the directory to get created, and chose to share the music of the Replacements. 
 
 # Bastards of the Young
 
