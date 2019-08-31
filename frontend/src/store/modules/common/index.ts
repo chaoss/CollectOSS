@@ -4,10 +4,9 @@ import mutations from './mutations';
 import getters from './getters';
 
 var config = require('../../../../../augur.config.json')
-console.log(config)
-
 const AugurAPIModule = require('@/AugurAPI').default;
-const AugurAPI = new AugurAPIModule()//{'hostURL': 'http://localhost:' + config['Server']['port']});
+var port = config['Server']['port'] ? ':' + config['Server']['port'] : ''
+const AugurAPI = new AugurAPIModule('http://' + config['Server']['host'] + port);
 
 const state = {
   // hasState: false,

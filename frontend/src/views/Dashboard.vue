@@ -163,18 +163,14 @@ export default class Dashboard extends Vue {
 
       let relevantApiGroups: any[] = []
       let addingGroupPromises: any[] = []
-      console.log("test")
       groups.forEach((group: any) => {
         addingGroupPromises.push(this.addRepoGroup(group))
       })
-      console.log("test")
       Promise.all(addingGroupPromises).then((groups: any) => {
         groups.forEach((group: any) => {
           relevantApiGroups.push(this.apiGroups[group.rg_name])
         })
-        console.log("test")
         this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples: any) => {
-          console.log("test")
           groups.forEach((group: any) => {
             console.log("Group tuples: ", tuples[group.rg_name].groupEndpoints.topInsights)
             if ('topInsights' in tuples[group.rg_name].groupEndpoints){

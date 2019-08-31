@@ -13,7 +13,7 @@ export default {
     return repoRelations;
   },
   repoGroups: (state:any) => {
-    return state.cache.getRepoGroups || [];
+    return state.cache.getRepoGroups || []
   },
   repos: (state: any) => {
     return state.cache.getRepos || []
@@ -36,7 +36,7 @@ export default {
   repo_groups: (state: any) => {
     return state.cache.getRepoGroups
   },
-  sorted_repos: (state:any) => (col: string, ascending: boolean) => {
+  sortedRepos: (state:any) => (col: string, ascending: boolean) => {
       if (state.cache.getRepos == undefined) {
           return []
       }
@@ -50,7 +50,7 @@ export default {
     })
     return items
   },
-  sorted_repo_groups: (state:any) => (col:string, ascending: boolean) => {
+  sortedRepoGroups: (state:any) => (col:string, ascending: boolean) => {
     const items = [...state.cache.getRepoGroups].sort((a,b) => {
       if (a[col] > b[col]) {
         return ascending ? 1 : -1
