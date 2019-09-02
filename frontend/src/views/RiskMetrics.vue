@@ -40,8 +40,8 @@
       </div>
       <div class="col-6">
         <cii-table :data="values" source="ciiBP"  :headers="['Passing Status','Badge Level', 'Date']"
-                       :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
-        <br><br>
+                       :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices" v-if="loaded_cii"></cii-table>
+        <br v-if="loaded_cii"> <br v-if="loaded_cii">
         <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
                              </div>
 
@@ -98,8 +98,7 @@
     themes = ['dark', 'info', 'royal-blue', 'warning']
     project = null
 
-    loaded_rsik_1:boolean = false;
-    loaded_rsik_2:boolean = false;
+    loaded_cii:boolean = false
     loaded_risk:boolean = false
 
     values:any = {}
@@ -115,11 +114,18 @@
 
 
     // endpoints
-    risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers', 'ciiBP']
+    risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers']
+    cii_endpoint = ['ciiBP']
 
     created() {
       console.log('####', this.base)
 
+      this.endpoint({endpoints:this.cii_endpoint,repos:[this.base]}).then((tuples:any) => {
+        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+          this.values[endpoint] = tuples[this.base.url][endpoint]
+        })
+        this.loaded_cii = true
+      }),
       this.endpoint({endpoints:this.risk_endpoints,repos:[this.base]}).then((tuples:any) => {
         Object.keys(tuples[this.base.url]).forEach((endpoint) => {
           this.values[endpoint] = tuples[this.base.url][endpoint]

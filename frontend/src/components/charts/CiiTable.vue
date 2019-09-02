@@ -1,6 +1,7 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
+      <p v-if="values === undefined">There is no CII Best Practices data for this repository</p>
       <p v-for="el in values">
       <img :src="'https://bestpractices.coreinfrastructure.org/projects/' + el.id + '/badge'" width = 40%>
       <br><br>
