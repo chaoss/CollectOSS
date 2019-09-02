@@ -42,7 +42,7 @@ class InsightWorker:
         self.data_source = 'Augur API'
 
         logging.info("Worker initializing...")
-        
+
         specs = {
             "id": "com.augurlabs.core.insight_worker",
             "location": self.config['location'],
@@ -60,7 +60,7 @@ class InsightWorker:
 
         """
         Connect to GHTorrent
-        
+
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
         """
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -71,7 +71,7 @@ class InsightWorker:
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
-        
+
         # produce our own MetaData object
         metadata = MetaData()
 
@@ -124,7 +124,7 @@ class InsightWorker:
         """ Property that is returned when the worker's current task is referenced
         """
         return self._task
-    
+
     @task.setter
     def task(self, value):
         """ entry point for the broker to add a task to the queue
@@ -138,11 +138,11 @@ class InsightWorker:
             """.format(repo_git))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"repo_git": repo_git, 
+            self._queue.put(CollectorTask(message_type='TASK', entry_info={"repo_git": repo_git,
                 "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]}))
         except:
             print("that repo is not in our database")
-        if self._queue.empty(): 
+        if self._queue.empty():
             if 'github.com' in repo_git:
                 self._task = value
                 self.run()
@@ -191,13 +191,13 @@ class InsightWorker:
         # for score in scores_ary:
         #     scores[i] = score.ri_score
         #     i += 1
-    
+
         # """ Query all endpoints """
         endpointSQL = s.sql.text("""
             SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
             """)
-        endpoints = [{'cm_info': "issues-new", 'cm_name': 'New Issues'}, {'cm_info': "code-changes", 
-            'cm_name': 'Commit Count'}, {'cm_info': "code-changes-lines", 'cm_name': 'Lines of Code Changed'}, 
+        endpoints = [{'cm_info': "issues-new", 'cm_name': 'New Issues'}, {'cm_info': "code-changes",
+            'cm_name': 'Commit Count'}, {'cm_info': "code-changes-lines", 'cm_name': 'Lines of Code Changed'},
             {'cm_info': "reviews", 'cm_name': 'Pull Requests'}]
 
         """ For when we want all endpoints """
@@ -335,6 +335,7 @@ class InsightWorker:
                                     "data_source": self.data_source
                                 }
                                 result = self.db.execute(self.repo_insights_table.insert().values(data_point))
+                                self.db.commit()
                                 logging.info("Primary key inserted into the repo_insights table: " + str(result.inserted_primary_key))
                                 self.insight_results_counter += 1
 
@@ -385,7 +386,7 @@ class InsightWorker:
         # for obj in data:
         #     metrics.append(obj['tag'])
 
-        
+
         # self.db.execute(self.table.insert().values(data[0]))
         # requests.post('http://localhost:{}/api/completed_task'.format(
             # self.config['broker_port']), json=entry_info['repo_git'])
@@ -420,7 +421,7 @@ class InsightWorker:
         for insight in to_delete:
             logging.info("insight found with a greater score than current slots filled for repo {} new score {}, old score {}".format(repo_id, new_score, insight['ri_score']))
             deleteSQL = """
-                DELETE 
+                DELETE
                     FROM
                         repo_insights I
                     WHERE
@@ -452,7 +453,7 @@ class InsightWorker:
 
 
     def update_metrics(self):
-        logging.info("Preparing to update metrics ...\n\n" + 
+        logging.info("Preparing to update metrics ...\n\n" +
             "Hitting endpoint: http://localhost:{}/api/unstable/metrics/status ...\n".format(
             self.config['broker_port']))
         r = requests.get(url='http://localhost:{}/api/unstable/metrics/status'.format(
@@ -508,7 +509,7 @@ class InsightWorker:
                     logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
                 elif obj not in need_insertion:
                     need_insertion.append(obj)
-        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) + 
+        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) +
             " to " + str(len(need_insertion)) + "\n")
         return need_insertion
 
@@ -538,4 +539,3 @@ class InsightWorker:
         }
 
         return new_insight
-

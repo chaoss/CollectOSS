@@ -22,13 +22,6 @@
       </div>
     </div>
 
-
-    <div class="row mb-5" v-if="loaded_risk">
-      <div class="col-3">
-        <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
-      </div>
-    </div>
-
     <div class="row mb-5" v-if="loaded_risk">
       <div class="col-6">
         <line-chart title="Forks Count by Week" :data="values" source="getForks" filedTime="date" fieldCount="forks">
@@ -48,6 +41,10 @@
       <div class="col-6">
         <cii-table :data="values" source="ciiBP"  :headers="['Passing Status','Badge Level', 'Date']"
                        :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
+        <br><br>
+        <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
+                             </div>
+
       </div>
     </div>
 
