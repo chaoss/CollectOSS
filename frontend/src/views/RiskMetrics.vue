@@ -40,8 +40,8 @@
       </div>
       <div class="col-6">
         <cii-table :data="values" source="ciiBP"  :headers="['Passing Status','Badge Level', 'Date']"
-                       :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices" v-if="loaded_cii"></cii-table>
-        <br v-if="loaded_cii"> <br v-if="loaded_cii">
+                       :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
+        <br> <br>
         <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
                              </div>
 
