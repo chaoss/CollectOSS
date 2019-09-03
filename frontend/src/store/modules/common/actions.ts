@@ -132,6 +132,8 @@ export default {
                                     console.log("All repo group endpoints loaded, tempCache is as follows: ", tempCache)
                                     resolve(tempCache)
                                 }
+                            }).catch((e) => {
+                                console.log("Endpoint for rg failed, error: ",e)
                             })
                             
                         })
@@ -165,6 +167,8 @@ export default {
                 //     with: tempCache,
                 // });
                 // resolve(tempCache)
+            }).catch((e) => {
+                console.log(e)
             });
         } catch (error) {
             throw error;
