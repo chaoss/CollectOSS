@@ -53,8 +53,10 @@ default:
 #
 #  Installation
 #
+# install:
+# 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install --upgrade .'
 install:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install --upgrade .'
+	@ ./util/scripts/install/augurinstall.sh
 
 install-dev:
 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
