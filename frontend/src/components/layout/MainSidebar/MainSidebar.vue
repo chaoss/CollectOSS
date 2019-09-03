@@ -163,6 +163,14 @@
         htmlBefore: '<i class="material-icons">trending_up</i>',
         htmlAfter: '',
       },
+      {
+        title: 'Edit Configuration',
+        to: {
+          name: 'config',
+        },
+        htmlBefore: '<i class="material-icons">trending_up</i>',
+        htmlAfter: '',
+      },
     ];
 
     // state declared computed

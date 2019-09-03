@@ -75,8 +75,72 @@ class FishConfigTCPServer(SocketServer.TCPServer):
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
-    def write_to_wfile(self, txt):
-        self.wfile.write(txt.encode('utf-8'))
+    def do_GET(self):
+        p = self.path
+
+        authpath = '/' + authkey
+        if self.secure_startswith(p, authpath):
+            p = p[len(authpath):]
+        else:
+            return self.send_error(403)
+        self.path = p
+
+        return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+
+        # Return valid output
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+
+        # Output JSON
+        self.write_to_wfile(json.dumps(output))
+
+    def do_POST(self):
+        p = self.path
+
+        authpath = '/' + authkey
+        if self.secure_startswith(p, authpath):
+            p = p[len(authpath):]
+        else:
+            return self.send_error(403)
+        self.path = p
+
+        ctype, pdict = cgi.parse_header(self.headers['content-type'])
+
+        length = int(self.headers['content-length'])
+        url_str = self.rfile.read(length).decode('utf-8')
+        postvars = {}
+        for key, value in parse_qs(url_str, keep_blank_values=1).items():
+            postvars[key] = value[0]
+
+        with open('temp.config.json', 'w') as temp_config_file:
+            temp_config_file.write(json.dumps(postvars, indent=4))
+
+        # Return valid output
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+
+    def secure_startswith(self, haystack, needle):
+        if len(haystack) < len(needle):
+            return False
+        bits = 0
+        for x, y in zip(haystack, needle):
+            bits |= ord(x) ^ ord(y)
+        return bits == 0
+
+    def log_request(self, code='-', size='-'):
+        """ Disable request logging """
+        pass
+
+    def log_error(self, format, *args):
+        if format == 'code %d, message %s':
+            # This appears to be a send_error() message
+            # We want to include the path
+            (code, msg) = args
+            format = 'code %d, message %s, path %s'
+            args = (code, msg, self.path)
+        SimpleHTTPServer.SimpleHTTPRequestHandler.log_error(self, format, *args)
 
 redirect_template_html = """
 <!DOCTYPE html>
@@ -93,11 +157,6 @@ redirect_template_html = """
 # We want to show the demo prompts in the directory from which this was invoked,
 # so get the current working directory
 initial_wd = os.getcwd()
-
-# Make sure that the working directory is the one that contains the script
-# server file, because the document root is the working directory.
-# where = os.path.dirname(sys.argv[0])
-# os.chdir(where)
 
 # Generate a 16-byte random key as a hexadecimal string
 authkey = binascii.b2a_hex(os.urandom(16)).decode('ascii')

@@ -36,6 +36,7 @@ GHTorrentPlugin.augur_plugin_meta = {
     'name': 'ghtorrent',
     'datasource': True
 }
+
 Application.register_plugin(GHTorrentPlugin)
 
 __all__ = ['GHTorrentPlugin']

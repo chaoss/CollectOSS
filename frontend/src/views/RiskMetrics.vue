@@ -105,7 +105,7 @@
     groupsInfo!: any;
     getRepoGroups!: any;
     repo_groups!: any[];
-    sorted_repo_groups!: any[];
+    sortedRepoGroups!: any[];
     base!: any;
     // actions
     endpoint!: any;

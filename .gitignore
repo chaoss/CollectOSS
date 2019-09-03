@@ -59,6 +59,7 @@ Thumbs.db
 #######
 *.orig
 *.un~
+.merge_file_*
 
 # Python junk #
 ###############
@@ -88,6 +89,7 @@ augur/plugins/
 frontend/public/*.map
 docs/python/build/doctrees/AugurContext.doctree
 docs/python/build/doctrees/augurcontext.doctree
+logs/
 
 # build directories #
 #####################

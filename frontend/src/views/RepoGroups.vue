@@ -62,7 +62,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(group, index) in sorted_repo_groups(sortColumn, ascending)">
+                <tr v-for="(group, index) in sortedRepoGroups(sortColumn, ascending)">
                   <td>
                     <a href="#" @click="onRepoGroup(group)">{{ group.rg_name }}</a>
                   </td>
@@ -131,7 +131,7 @@
     },
     computed: {
       ...mapGetters('common',[
-        'sorted_repo_groups',
+        'sortedRepoGroups',
         'repo_groups',
         'loaded_groups',
       ])
@@ -155,7 +155,7 @@
     getRepoRelations!: any;
     loadRepoGroups!:any;
     repo_groups!:any[];
-    sorted_repo_groups!:any[];
+    sortedRepoGroups!:any[];
     loaded_groups!:boolean;
     addRepoGroup!:any;
     setBaseGroup!:any;

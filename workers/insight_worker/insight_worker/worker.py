@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, and_
 import statistics
 import logging
 import json
@@ -94,8 +94,8 @@ class InsightWorker:
 
         # Query all repos and last repo id
         repoUrlSQL = s.sql.text("""
-                SELECT repo_git, repo_id FROM repo where repo_group_id = 25150
-            """)
+            SELECT repo_git, repo_id FROM repo order by repo_id asc
+        """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
         pop_off = 0
         i = 0
@@ -181,228 +181,262 @@ class InsightWorker:
         # self.update_metrics()
         logging.info("Discovering insights for task with entry info: {}".format(entry_info))
 
-        lengthSQL = s.sql.text("""
-            SELECT DISTINCT(cms_id) FROM repo_insights WHERE repo_id = {}
-        """.format(entry_info['repo_id']))
-        ins = pd.read_sql(lengthSQL, self.db, params={})
-        logging.info(len(ins.index))
-        if len(ins.index) < 3:
+        # scoreSQL = s.sql.text("""
+        #     SELECT DISTINCT(ri_metric), ri_score FROM repo_insights WHERE repo_id = {} ORDER BY ri_score desc
+        # """.format(entry_info['repo_id']))
+        # scores_ary = pd.read_sql(lengthSQL, self.db, params={}).to_json(orient='records')
+
+        # scores = {}
+        # i = 0
+        # for score in scores_ary:
+        #     scores[i] = score.ri_score
+        #     i += 1
     
-            # """ Query all endpoints """
-            endpointSQL = s.sql.text("""
-                SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
-                """)
-            endpoints = [{'cm_info': "issues-new", 'cm_name': 'New Issues'}, {'cm_info': "code-changes", 
-                'cm_name': 'Commit Count'}, {'cm_info': "code-changes-lines", 'cm_name': 'Lines of Code Changed'}, 
-                {'cm_info': "reviews", 'cm_name': 'Pull Requests'}]
-            # for endpoint in pd.read_sql(endpointSQL, self.db, params={}).to_records():
-            #     endpoints.append(endpoint)
+        # """ Query all endpoints """
+        endpointSQL = s.sql.text("""
+            SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
+            """)
+        endpoints = [{'cm_info': "issues-new", 'cm_name': 'New Issues'}, {'cm_info': "code-changes", 
+            'cm_name': 'Commit Count'}, {'cm_info': "code-changes-lines", 'cm_name': 'Lines of Code Changed'}, 
+            {'cm_info': "reviews", 'cm_name': 'Pull Requests'}]
 
-            if 'repo_group_id' in entry_info:
-                base_url = 'http://localhost:{}/api/unstable/repo-groups/{}'.format(
-                    self.config['broker_port'], entry_info['repo_group_id'])
+        """ For when we want all endpoints """
+        # for endpoint in pd.read_sql(endpointSQL, self.db, params={}).to_records():
+        #     endpoints.append(endpoint)
+
+        if 'repo_group_id' in entry_info:
+            base_url = 'http://localhost:{}/api/unstable/repo-groups/{}'.format(
+                self.config['broker_port'], entry_info['repo_group_id'])
+        else:
+            base_url = 'http://localhost:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
+                self.config['broker_port'], entry_info['repo_id'])
+
+        """ Possibly delete extra logged insights? need separate function prob """
+        # num_insights_per_repo = 3
+        # count = 0
+
+        for endpoint in endpoints:
+            url = base_url + endpoint['cm_info']
+            logging.info("Hitting endpoint: " + url + "\n")
+            r = requests.get(url=url)
+            data = r.json()
+
+            def is_unique_key(key):
+                return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and key != 'repo_name' and key != 'rg_name'
+            raw_values = {}
+
+            if len(data) > 0:
+                try:
+                    unique_keys = list(filter(is_unique_key, data[0].keys()))
+                except:
+                    logging.info("Length bigger than 0 but cannot get 0th element? : {}".format(data))
             else:
-                base_url = 'http://localhost:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
-                    self.config['broker_port'], entry_info['repo_id'])
+                logging.info("Endpoint with url: {} returned an empty response. Moving on to next endpoint.\n".format(url))
+                continue
 
-            num_insights_per_repo = 3
-            cms_id = len(ins.index) + 1
-            for endpoint in endpoints:
-                url = base_url + endpoint['cm_info']
-                logging.info("Hitting endpoint: " + url + "\n")
-                r = requests.get(url=url)
-                data = r.json()
-
-                def is_unique_key(key):
-                    return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and key != 'repo_name' and key != 'rg_name'
-                raw_values = {}
-
-                if len(data) > 0:
-                    try:
-                        unique_keys = list(filter(is_unique_key, data[0].keys()))
-                    except:
-                        logging.info("Length bigger than 0 but cannot get 0th element? : {}".format(data))
-                else:
-                    logging.info("Endpoint with url: {} returned an empty response. Moving on to next endpoint.\n".format(url))
-                    continue
-
-                # ci after past year insights after 90 days
-                # num issues, issue comments, num commits, num pr, comments pr
-                logging.info("Found the following unique keys for this endpoint: {}".format(unique_keys))
-                date_filtered_data = []
-                i = 0
-                not_timeseries = False
-                for dict in data:
-                    begin_date = datetime.datetime.now()
-                    # Subtract 1 year and leap year check
-                    try:
-                        begin_date = begin_date.replace(year=begin_date.year-1)
-                    except ValueError:
-                        begin_date = begin_date.replace(year=begin_date.year-1, day=begin_date.day-1)
-                    begin_date = begin_date.strftime('%Y-%m-%d')
-                    try:
-                        if dict['date'] > begin_date:
-                            date_filtered_data = data[i:]
-                            logging.info("data 365 days ago date found: {}, {}".format(dict['date'], begin_date))
-                            break
-                    except:
-                        logging.info("Endpoint {} is not a timeseries, moving to next".format(endpoint))
-                        not_timeseries = True
+            # ci after past year insights after 90 days
+            # num issues, issue comments, num commits, num pr, comments pr
+            logging.info("Found the following unique keys for this endpoint: {}".format(unique_keys))
+            date_filtered_data = []
+            i = 0
+            not_timeseries = False
+            for dict in data:
+                begin_date = datetime.datetime.now()
+                # Subtract 1 year and leap year check
+                try:
+                    begin_date = begin_date.replace(year=begin_date.year-1)
+                except ValueError:
+                    begin_date = begin_date.replace(year=begin_date.year-1, day=begin_date.day-1)
+                begin_date = begin_date.strftime('%Y-%m-%d')
+                try:
+                    if dict['date'] > begin_date:
+                        date_filtered_data = data[i:]
+                        logging.info("data 365 days ago date found: {}, {}".format(dict['date'], begin_date))
                         break
-                    i += 1
-                if not_timeseries:
-                    continue
+                except:
+                    logging.info("Endpoint {} is not a timeseries, moving to next".format(endpoint))
+                    not_timeseries = True
+                    break
+                i += 1
+            if not_timeseries:
+                continue
 
-                date_found_index = None
-                date_found = False
-                x = 0
-                begin_date = datetime.datetime.now() - datetime.timedelta(days=90)
-                for dict in date_filtered_data:
-                    dict_date = datetime.datetime.strptime(dict['date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
-                    if dict_date > begin_date and not date_found:
-                        date_found = True
-                        date_found_index = x
-                        logging.info("raw values 90 days ago date found: {}, {}".format(dict['date'], begin_date))
-                    x += 1
-                    for key in unique_keys:
+            date_found_index = None
+            date_found = False
+            x = 0
+            begin_date = datetime.datetime.now() - datetime.timedelta(days=90)
+            for dict in date_filtered_data:
+                dict_date = datetime.datetime.strptime(dict['date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
+                if dict_date > begin_date and not date_found:
+                    date_found = True
+                    date_found_index = x
+                    logging.info("raw values 90 days ago date found: {}, {}".format(dict['date'], begin_date))
+                x += 1
+                for key in unique_keys:
+                    try:
+                        trash = int(dict[key]) * 2 + 1
+                        raw_values[key].append(int(dict[key]))
+                    except:
                         try:
                             trash = int(dict[key]) * 2 + 1
-                            raw_values[key].append(int(dict[key]))
+                            raw_values[key] = [int(dict[key])]
                         except:
-                            try:
-                                trash = int(dict[key]) * 2 + 1
-                                raw_values[key] = [int(dict[key])]
-                            except:
-                                logging.info("Key: {} is non-numerical, moving to next key.".format(key))
+                            logging.info("Key: {} is non-numerical, moving to next key.".format(key))
 
-                for key in raw_values.keys():
-                    if len(raw_values[key]) > 0:
-                        confidence = 0.95
-                        mean, lower, upper = self.confidence_interval(raw_values[key], confidence=confidence)
-                        logging.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
-                        logging.info(raw_values)
-                        i = 0
-                        discovery_index = None
-                        insight = False
-                        max_difference = 0
-                        score = 0.0
+            for key in raw_values.keys():
+                if len(raw_values[key]) > 0:
+                    confidence = 0.95
+                    mean, lower, upper = self.confidence_interval(raw_values[key], confidence=confidence)
+                    logging.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
+                    i = 0
+                    discovery_index = None
+                    insight = False
+                    max_difference = 0
+                    score = 0
 
 
-                        date_filtered_raw_values = []
-                        date_filtered_raw_values = date_filtered_data[date_found_index:]
-                        
-                        for dict in date_filtered_raw_values:
-                            if dict[key] > upper and dict[key] - upper > max_difference:
-                                logging.info("Upper band breached at {}. Marking discovery. {}, {}".format(i, dict, key))
-                                max_difference = dict[key] - upper
-                                score = (max_difference - mean) / mean * 100
-                                insight = True
-                                discovery_index = i
-                            if dict[key] < lower and lower - dict[key] > max_difference:
-                                logging.info("Lower band breached at {}. Marking discovery.".format(i))
-                                max_difference = lower - dict[key]
-                                score = (max_difference - mean) / mean * 100
-                                insight = True
-                                discovery_index = i
-                            i += 1
-                        if insight and 'date' in data[0]:
-                            self.clear_insight(entry_info['repo_id'], cms_id)
-                            # j = discovery_index - 50 if discovery_index >= 50 else 0
-                            j = 0
-                            # upper_index = discovery_index + 50 if discovery_index >= 50 else 99
-                            logging.info("Starting j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
-                            # while j <= upper_index:
-                            for tuple in date_filtered_raw_values:
-                                try:
-                                    data_point = {
-                                        'repo_id': int(entry_info['repo_id']),
-                                        'ri_metric': endpoint['cm_name'] + ' ({})'.format(key),
-                                        'ri_value': tuple[key],#date_filtered_raw_values[j][key],
-                                        'ri_date': tuple['date'],#date_filtered_raw_values[j]['date'],
-                                        'cms_id': cms_id,
-                                        'ri_fresh': 0 if j < discovery_index else 1,
-                                        'ri_score': score,
-                                        "tool_source": self.tool_source,
-                                        "tool_version": self.tool_version,
-                                        "data_source": self.data_source
-                                    }
-                                    result = self.db.execute(self.repo_insights_table.insert().values(data_point))
-                                    logging.info("Primary key inserted into the repo_insights table: " + str(result.inserted_primary_key))
-                                    self.insight_results_counter += 1
-
-                                    logging.info("Inserted data point for endpoint: {}\n".format(endpoint['cm_name']))
-                                    j += 1
-                                    logging.info("incremented j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
-                                except Exception as e:
-                                    logging.info("error occurred while storing datapoint: {}".format(repr(e)))
-                                    break
-                            cms_id += 1
-                            if cms_id > num_insights_per_repo:
-                                logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
-                                    num_insights_per_repo, entry_info['repo_id']))
-                                break
-                    else:
-                        logging.info("Key: {} has empty raw_values, should not have key here".format(key))
-                        if cms_id > num_insights_per_repo:
-                            logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
-                                num_insights_per_repo, entry_info['repo_id']))
+                    date_filtered_raw_values = []
+                    date_filtered_raw_values = date_filtered_data[date_found_index:]
+                    # overwritten_score = None
+                    logging.info("Raw values: {}".format(date_filtered_raw_values))
+                    for dict in date_filtered_raw_values:
+                        if dict[key] > upper and dict[key] - upper > max_difference:
+                            logging.info("Upper band breached at {}. Marking discovery. {}, {}".format(i, dict, key))
+                            max_difference = dict[key] - upper
+                            score = (max_difference - mean) / mean * 100
+                            insight = True
+                            discovery_index = i
+                        if dict[key] < lower and lower - dict[key] > max_difference:
+                            logging.info("Lower band breached at {}. Marking discovery. {}, {}".format(i, dict, key))
+                            max_difference = lower - dict[key]
+                            score = (max_difference - mean) / mean * 100
+                            insight = True
+                            discovery_index = i
+                        i += 1
+                    if insight and 'date' in data[0]:
+                        contin = self.clear_insight(entry_info['repo_id'], score, endpoint['cm_name'] + ' ({})'.format(key))
+                        if not contin:
                             break
-                if cms_id > num_insights_per_repo:
-                    logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
-                        num_insights_per_repo, entry_info['repo_id']))
-                    break
-                logging.info("*** No significant insights found for {}. ***".format(entry_info['repo_id']))
+                        j = 0
+                        # upper_index = discovery_index + 50 if discovery_index >= 50 else 99
+                        logging.info("Starting j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
+                        # while j <= upper_index:
+                        for tuple in date_filtered_raw_values:
+                            try:
+                                data_point = {
+                                    'repo_id': int(entry_info['repo_id']),
+                                    'ri_metric': endpoint['cm_name'] + ' ({})'.format(key),
+                                    'ri_value': tuple[key],#date_filtered_raw_values[j][key],
+                                    'ri_date': tuple['date'],#date_filtered_raw_values[j]['date'],
+                                    'ri_fresh': 0 if j < discovery_index else 1,
+                                    'ri_score': score,
+                                    "tool_source": self.tool_source,
+                                    "tool_version": self.tool_version,
+                                    "data_source": self.data_source
+                                }
+                                result = self.db.execute(self.repo_insights_table.insert().values(data_point))
+                                logging.info("Primary key inserted into the repo_insights table: " + str(result.inserted_primary_key))
+                                self.insight_results_counter += 1
 
-        # HIGHEST PERCENTAGE STUFF, WILL MOVE TO NEW METHOD
-            # greatest_week_name = greatest_month_name = insights[0]['cm_name']
-            # greatest_week_val = abs(insights[0]['change_week'])
-            # greatest_month_val = abs(insights[0]['change_month'])
+                                logging.info("Inserted data point for endpoint: {}\n".format(endpoint['cm_name']))
+                                j += 1
+                                logging.info("incremented j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
+                            except Exception as e:
+                                logging.info("error occurred while storing datapoint: {}".format(repr(e)))
+                                break
+                        # count += 1
+                        # if count > num_insights_per_repo:
+                        #     logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
+                        #         num_insights_per_repo, entry_info['repo_id']))
+                        #     break
+                else:
+                    logging.info("Key: {} has empty raw_values, should not have key here".format(key))
+            #         if count > num_insights_per_repo:
+            #             logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
+            #                 num_insights_per_repo, entry_info['repo_id']))
+            #             break
+            # if count > num_insights_per_repo:
+            #     logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
+            #         num_insights_per_repo, entry_info['repo_id']))
+            #     break
 
-            # for insight in insights:
-            #     if abs(insight['change_week']) > greatest_week:
-            #         greatest_week_name = insight['cm_name']
-            #         greatest_week_val = insight['change_week']
+    # HIGHEST PERCENTAGE STUFF, WILL MOVE TO NEW METHOD
+        # greatest_week_name = greatest_month_name = insights[0]['cm_name']
+        # greatest_week_val = abs(insights[0]['change_week'])
+        # greatest_month_val = abs(insights[0]['change_month'])
 
-            #     if abs(insight['change_month']) > greatest_month:
-            #         greatest_month_name = insight['cm_name']
-            #         greatest_month_val = insight['change_month']
+        # for insight in insights:
+        #     if abs(insight['change_week']) > greatest_week:
+        #         greatest_week_name = insight['cm_name']
+        #         greatest_week_val = insight['change_week']
 
-            # logging.info("The endpoint with the greatest percent change in the last week was {} with {}%%".format(greatest_week_name, greatest_week_val))
-            # logging.info("The endpoint with the greatest percent change in the last month was {} with {}%%".format(greatest_month_name, greatest_month_val))
+        #     if abs(insight['change_month']) > greatest_month:
+        #         greatest_month_name = insight['cm_name']
+        #         greatest_month_val = insight['change_month']
+
+        # logging.info("The endpoint with the greatest percent change in the last week was {} with {}%%".format(greatest_week_name, greatest_week_val))
+        # logging.info("The endpoint with the greatest percent change in the last month was {} with {}%%".format(greatest_month_name, greatest_month_val))
 
 
 
 
-            # data[0]['repo_id'] = entry_info['repo_id']
-            # metrics = []
-            # for obj in data:
-            #     metrics.append(obj['tag'])
+        # data[0]['repo_id'] = entry_info['repo_id']
+        # metrics = []
+        # for obj in data:
+        #     metrics.append(obj['tag'])
 
-            
-            # self.db.execute(self.table.insert().values(data[0]))
-            # requests.post('http://localhost:{}/api/completed_task'.format(
-                # self.config['broker_port']), json=entry_info['repo_git'])
-        else:
-            logging.info("there are 3 or more insights for repo: {}, skipping this task".format(entry_info))
+        
+        # self.db.execute(self.table.insert().values(data[0]))
+        # requests.post('http://localhost:{}/api/completed_task'.format(
+            # self.config['broker_port']), json=entry_info['repo_git'])
 
-    def clear_insight(self, repo_id, cms_id):
+        # else:
+        #     logging.info("there are 3 or more insights for repo: {}, skipping this task".format(entry_info))
+
+    def clear_insight(self, repo_id, new_score, new_metric):
         logging.info("Checking if insight slot filled...")
+        num_insights_per_repo = 3
         insightSQL = s.sql.text("""
-            SELECT *
+            SELECT distinct(ri_metric),repo_id, ri_score
             FROM repo_insights
-            WHERE repo_id = {} AND cms_id = {}
-        """.format(repo_id, cms_id))
-        ins = pd.read_sql(insightSQL, self.db, params={})
-        if len(ins.index) > 0:
-            logging.info("insight slot filled for repo {} slot {}".format(repo_id, cms_id))
-            try:
-                result = self.repo_insights_table.delete().where(self.repo_insights_table.c.repo_id==repo_id and self.repo_insights_table.c.cms_id==cms_id)
-                result.execute()
-                logging.info(str(result))
-                logging.info(str(result.fetchall()))
-            except:
-                self.repo_insights_table.delete().where(self.repo_insights_table.c.repo_id==repo_id and self.repo_insights_table.c.cms_id==cms_id)
+            WHERE repo_id = 21000
+            ORDER BY ri_score ASC
+        """.format(repo_id, new_score))
+        ins = json.loads(pd.read_sql(insightSQL, self.db, params={}).to_json(orient='records'))
+        num_insights = len(ins)
+        to_delete = []
+        logging.info("This repos insights: {}".format(ins))
+        for insight in ins:
+            logging.info("{}, {}".format(insight['ri_metric'], new_metric))
+            if (insight['ri_score'] < new_score and num_insights >= num_insights_per_repo) or num_insights > num_insights_per_repo or insight['ri_metric'] == new_metric:
+                num_insights -= 1
+                to_delete.append(insight)
+                logging.info("condition met, new len: {}, insight score: {}, new_score: {}".format(num_insights,
+                    insight['ri_score'], new_score))
 
+        if len(to_delete) == 0 and num_insights == num_insights_per_repo:
+            return False
+
+        for insight in to_delete:
+            logging.info("insight found with a greater score than current slots filled for repo {} new score {}, old score {}".format(repo_id, new_score, insight['ri_score']))
+            deleteSQL = """
+                DELETE 
+                    FROM
+                        repo_insights I
+                    WHERE
+                        repo_id = {}
+                        AND ri_metric = '{}'
+            """.format(insight['repo_id'], insight['ri_metric'])
+            try:
+                result = self.db.execute(deleteSQL)
+                # result = self.repo_insights_table.delete().where(and_(self.repo_insights_table.c.repo_id==repo_id, self.repo_insights_table.c.cms_id==cms_id))
+                # result.execute()
+                logging.info(str(result))
+                # logging.info(str(result.fetchall()))
+            except Exception as e:
+                logging.info("Error occured deleting insight slot: {}".format(e))
+                # self.repo_insights_table.delete().where(and_(self.repo_insights_table.c.repo_id==repo_id, self.repo_insights_table.c.cms_id==cms_id))
+        return True
 
 
     def confidence_interval(self, data, timeperiod='week', confidence=.8):

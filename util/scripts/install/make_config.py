@@ -12,18 +12,16 @@ def configure_cache(config):
 def configure_database(config, credentials):
     print("==Setting up Augur Database==")
     config['Database'] = {}
-    config['Database']['database'] = credentials['database'] or "augur"
-    config['Database']['name'] = credentials['name']
-    config['Database']['host'] = credentials['host'] or "localhost"
-    config['Database']['port'] = credentials['port'] or "5432"
-    config['Database']['user'] = credentials['user'] or "augur"
-    config['Database']['password'] = credentials['password'] or "YOUR PASSWORD"
-    config['Database']['schema'] = credentials['schema'] or "augur_data"
-    config['Database']['key'] = credentials['key'] or "YOUR KEY"
-    config['Database']['zombie_id'] = credentials['zombie_id'] or "22"
+    config['Database']['database'] = credentials['database']
+    config['Database']['host'] = credentials['host']
+    config['Database']['port'] = credentials['port']
+    config['Database']['user'] = credentials['user']
+    config['Database']['password'] = credentials['password']
+    config['Database']['schema'] = "augur_data"
+    config['Database']['key'] = credentials['key']
+    config['Database']['zombie_id'] = credentials['zombie_id']
 
-    github_api_key = input("Please enter your GitHub API key: ")
-    config['GitHub'] = {'apikey': github_api_key}
+    config['GitHub'] = {'apikey': "GITHUB_API_KEY"}
     print()
 
 def configure_server(config):
@@ -71,12 +69,20 @@ def configure_defaults(config):
 
     if not 'Facade' in config:
         config["Facade"] = {
-            "host": "localhost",
-            "name": "facade",
-            "pass": "password",
-            "port": "3306",
-            "projects": [],
-            "user": "augur"
+            "check_updates": 1,
+            "clone_repos": 1,
+            "create_xlsx_summary_files": 1,
+            "delete_marked_repos": 0,
+            "fix_affiliations": 1,
+            "force_analysis": 1,
+            "force_invalidate_caches": 0,
+            "force_updates": 1,
+            "limited_run": 0,
+            "multithreaded": 0,
+            "nuke_stored_affiliations": 0,
+            "pull_repos": 1,
+            "rebuild_caches": 1,
+            "run_analysis": 1
         }
         print("Set default values for Facade...")
 
@@ -89,24 +95,6 @@ def configure_defaults(config):
             "user": "augur"
         }
         print("Set default values for GHTorrent...")
-
-    if not 'GHTorrentPlus' in config:
-        config['GHTorrentPlus'] = {
-            "host": "localhost",
-            "name": "ghtorrentplus",
-            "pass": "password",
-            "port": "3306",
-            "user": "ghdata"
-        }
-        print("Set default values for GHTorrentPlus...")
-
-    if not 'Controller' in config:
-        config["Controller"] = {
-            "broker": 1,
-            "housekeeper": 1,
-            "github_worker": 0
-        }
-        print("Set default values for Controller...")
 
     if not 'Development' in config:
         config["Development"] = {
@@ -121,18 +109,64 @@ def configure_defaults(config):
 
     if not 'Housekeeper' in config:
         config['Housekeeper'] = {
-            "jobs": []
+            "jobs": [
+                {
+                    "delay": 150000,
+                    "given": ["git_url"],
+                    "model": "issues",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": ["git_url"],
+                    "model": "repo_info",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": ["git_url"],
+                    "model": "pull_requests",
+                    "repo_group_id": 0
+                }
+            ]
         }
         print("Set default values for Housekeeper...")
 
     if not 'Workers' in config:
-        config['Workers'] = {}
+        config['Workers'] = {
+            "facade_worker": {
+                "port": 51246,
+                "switch": 0,
+                "workers": 1,
+                "repo_directory": "$HOME/augur_repos"
+            },
+            "pull_request_worker": {
+                "port": 51252,
+                "switch": 0,
+                "workers": 1
+            },
+            "github_worker": {
+                "port": 51238,
+                "switch": 0,
+                "workers": 1
+            },
+            "insight_worker": {
+                "port": 51244,
+                "switch": 0,
+                "workers": 1
+            },
+            "repo_info_worker": {
+                "port": 51242,
+                "switch": 0,
+                "workers": 1
+            }
+        }
         print("Set default values for Workers")
 
     print()
 
 def main():
-    if os.path.isfile("augur.config.json"):
+    if os.path.isfile("../../../augur.config.json"):
         print("augur.config.json already exists!")
         inp = input("Do you want to rewrite it? (Y/N): ")
         if inp.lower() != 'y':
@@ -163,7 +197,7 @@ def main():
     configure_defaults(config)
 
     try:
-        with open('augur.config.json', 'w') as f:
+        with open('../../../augur.config.json', 'w') as f:
             f.write(json.dumps(config, indent=4))
             print('augur.config.json successfully created')
     except Exception as e:

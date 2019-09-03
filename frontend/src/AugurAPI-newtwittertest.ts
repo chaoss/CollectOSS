@@ -25,11 +25,12 @@ export default class AugurAPI {
     [key: string]: any// Add index signature
   };
 
-  constructor(hostURL: string = 'http://localhost:5000', version: string = '/api/unstable', autobatch: any = null) {
+  constructor(hostURL: string = 'http://newtwittertest:5002', version: string = '/api/unstable', autobatch: any = null) {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
-    this._host = hostURL || 'http://localhost:5000'
+    this._host = hostURL || 'http://newtwittertest:5002'
+    console.log(this._host)
     this.__cache = {}
     this.__timeout = null
     this.__pending = {}
@@ -99,6 +100,7 @@ export default class AugurAPI {
   }
 
   __EndpointFactory(endpoint: string) {
+    console.log(this.__endpointURL(endpoint))
     return this.__URLFunctionFactory(this.__endpointURL(endpoint))
   }
 
@@ -201,7 +203,7 @@ abstract class BaseRepo {
   [k: string]: any
   
   constructor(parent: AugurAPI){
-    this._host = parent._host || 'http://localhost:5002'
+    this._host = parent._host || 'http://newtwittertest:5002'
     this._version = parent._version
     this.__URLFunctionFactory = parent.__URLFunctionFactory
     this.parent = parent

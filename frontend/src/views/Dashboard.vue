@@ -113,20 +113,7 @@ interface FlexObject<TValue> {
       'apiRepos',
       'apiGroups',
       'cache'
-      // 'repoRelations'
     ]),
-    // repoRelations() {
-    //   return this.$store.getters['common/repoRelations']
-    // },
-    // repoGroups() {
-    //   return this.$store.getters['common/repoGroups']
-    // },
-    // repos() {
-    //   return this.$store.getters['common/repos']
-    // },
-    // apiRepos() {
-    //   return this.$store.getters['common/apiRepos']
-    // }
   },
   components: {
     SparkChart,
@@ -173,32 +160,18 @@ export default class Dashboard extends Vue {
 
     // Load the data we need
     this.loadRepoGroups().then((groups: any) => {
-    //   this.loadRepos().then(() => {
-        // Creating AugurAPI objects for the entities we will query
-        // for (let n = 0; n < 3; n++){
-        //   let group = this.repoGroups[n]
-        //   let relatedRepos:any[] = []
-        //   for (let i = 0; i < this.desiredReposPerGroup && Object.keys(this.repoRelations[group.rg_name]).length > i; i++) {
-        //     relatedRepos.push(this.repoRelations[group.rg_name][Object.keys(this.repoRelations[group.rg_name])[i]])
-        //   }
-        //   this.createAPIObjects({groups: [group], repos: relatedRepos})
-        //   // Spark data
-        //   let sparkRepos:any[] = []
-        //   relatedRepos.forEach((repo:any) => {
-        //     sparkRepos.push(this.apiRepos[repo.url])
-        //   })
-        // }
+
       let relevantApiGroups: any[] = []
       let addingGroupPromises: any[] = []
       groups.forEach((group: any) => {
         addingGroupPromises.push(this.addRepoGroup(group))
       })
-      Promise.all(addingGroupPromises).then((groups) => {
-        groups.forEach((group) => {
+      Promise.all(addingGroupPromises).then((groups: any) => {
+        groups.forEach((group: any) => {
           relevantApiGroups.push(this.apiGroups[group.rg_name])
         })
-        this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples:any) => {
-          groups.forEach((group) => {
+        this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples: any) => {
+          groups.forEach((group: any) => {
             console.log("Group tuples: ", tuples[group.rg_name].groupEndpoints.topInsights)
             if ('topInsights' in tuples[group.rg_name].groupEndpoints){
               tuples[group.rg_name].groupEndpoints.topInsights.forEach((tuple:any) => {
@@ -242,9 +215,14 @@ export default class Dashboard extends Vue {
           console.log("check:",this.insights)
           this.loadedInsights = true
           this.loadedRelations = true
+        }).catch((e: any) => {
+          console.log("Error occurred top insights for all repo groups: ",e)
         })
+      }).catch((e: any) => {
+        console.log("Error occurred adding repo groups: ",e)
       })
-    //   })
+    }).catch((e: any) => {
+      console.log("Error occurred loading repo groups on Dashboard level: ",e)
     })
   }
 
