@@ -21,8 +21,8 @@ def configure_database(config, credentials):
     config['Database']['key'] = credentials['key'] or "YOUR KEY"
     config['Database']['zombie_id'] = credentials['zombie_id'] or "22"
 
-    github_api_key = input("Please enter your GitHub API key: ")
-    config['GitHub'] = {'apikey': github_api_key}
+    # github_api_key = input("Please enter your GitHub API key: ")
+    config['GitHub'] = {'apikey': "GITHUB_API_KEY"}
     print()
 
 def configure_server(config):
@@ -70,20 +70,20 @@ def configure_defaults(config):
 
     if not 'Facade' in config:
         config["Facade"] = {
-            "check_updates": 0,
+            "check_updates": 1,
             "clone_repos": 1,
-            "create_xlsx_summary_files": 0,
+            "create_xlsx_summary_files": 1,
             "delete_marked_repos": 0,
             "fix_affiliations": 1,
-            "force_analysis": 0,
+            "force_analysis": 1,
             "force_invalidate_caches": 0,
-            "force_updates": 0,
+            "force_updates": 1,
             "limited_run": 0,
-            "multithreaded": 1,
+            "multithreaded": 0,
             "nuke_stored_affiliations": 0,
-            "pull_repos": 0,
-            "rebuild_caches": 0,
-            "run_analysis": 0
+            "pull_repos": 1,
+            "rebuild_caches": 1,
+            "run_analysis": 1
         }
         print("Set default values for Facade...")
 
@@ -113,25 +113,21 @@ def configure_defaults(config):
             "jobs": [
                 {
                     "delay": 150000,
-                    "given": [
-                        "git_url"
-                    ],
+                    "given": ["git_url"],
                     "model": "issues",
-                    "repo_group_id": 0,
-                    "repos": [
-                        {
-                            "repo_git": "https://boringssl.googlesource.com/boringssl",
-                            "repo_id": 25154
-                        },
-                        {
-                            "repo_git": "https://github.com/libressl-portable/portable",
-                            "repo_id": 25156
-                        },
-                        {
-                            "repo_git": "https://github.com/rails/rails.git",
-                            "repo_id": 21000
-                        }
-                    ]
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": ["git_url"],
+                    "model": "repo_info",
+                    "repo_group_id": 0
+                },
+                {
+                    "delay": 150000,
+                    "given": ["git_url"],
+                    "model": "pull_requests",
+                    "repo_group_id": 0
                 }
             ]
         }
@@ -140,10 +136,15 @@ def configure_defaults(config):
     if not 'Workers' in config:
         config['Workers'] = {
             "facade_worker": {
-            "port": 51246,
-            "repo_directory": "$HOME/facade_clones",
-            "switch": 0,
-            "workers": 0
+                "port": 51246,
+                "switch": 0,
+                "workers": 1,
+                "repo_directory": "$HOME/augur_repos"
+            },
+            "pull_request_worker": {
+                "port": 51252,
+                "switch": 0,
+                "workers": 1
             },
             "github_worker": {
                 "port": 51238,
@@ -152,11 +153,6 @@ def configure_defaults(config):
             },
             "insight_worker": {
                 "port": 51244,
-                "switch": 0,
-                "workers": 1
-            },
-            "pull_request_worker": {
-                "port": 51252,
                 "switch": 0,
                 "workers": 1
             },
