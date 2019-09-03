@@ -3,7 +3,8 @@
 
     <div style="margin-bottom: 0 !important" class="tickchart ">
       <h3 style="font-size: 0.9rem;text-align: center;transform: translateY(-3px);">{{ title }}</h3>
-      <div :id="source" style="padding: 0"></div>
+      <!-- <div :id="source" style="padding: 0"></div> -->
+      <vega-lite :spec="spec" :data="values"></vega-lite>
       <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
           <div class="inputGroup "  style="padding-top: 5px;">
             <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
@@ -26,6 +27,7 @@
 <script>
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
+import vegaEmbed from 'vega-embed'
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],

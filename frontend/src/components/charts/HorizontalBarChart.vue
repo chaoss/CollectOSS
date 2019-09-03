@@ -25,8 +25,9 @@
 
 
 <script>
-import { mapState } from 'vuex';
-import AugurStats from '@/AugurStats.ts';
+import { mapState } from 'vuex'
+import AugurStats from '@/AugurStats.ts'
+import vegaEmbed from 'vega-embed'
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'measure'],

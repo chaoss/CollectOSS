@@ -32,6 +32,8 @@
 <script>
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
+import vegaEmbed from 'vega-embed'
+
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
   data() {
@@ -86,8 +88,8 @@ export default {
       }
       if (this.tick == 1) {
         type = "tick"
-            bin = false
-            size = {}
+        bin = false
+        size = {}
         opacity = {
                 "field": "Total lines changed",
                 "type": "quantitative",
@@ -96,8 +98,8 @@ export default {
       }
       if (this.tick == 2) {
         type = "rect"
-            bin = {"maxbins": 40}
-            size = {}
+        bin = {"maxbins": 40}
+        size = {}
         opacity = {
                 "field": "Total lines changed",
                 "type": "quantitative",
@@ -105,8 +107,6 @@ export default {
               }
       }
       let config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-
         "width": 1000,
         "height": 360,
         "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},
@@ -116,18 +116,18 @@ export default {
             "bandSize": 23
           },
           "axis":{
-                "grid": false,
-                "title": null,
-                'labels': {
-                  'labelFontSize': 20
-                },
-              },
-
-              "legend": {
-               // "offset": -505,
-                "titleFontSize": 10,
-                "titlePadding": 10
-              },"scale": {"minSize": 100, "maxSize": 500}
+            "grid": false,
+            "title": null,
+            'labels': {
+              'labelFontSize': 20
+            },
+          },
+          "legend": {
+           // "offset": -505,
+            "titleFontSize": 10,
+            "titlePadding": 10
+          },
+          "scale": {"minSize": 100, "maxSize": 500}
         },
         "layer": [
           {
@@ -184,18 +184,19 @@ export default {
             "encoding": {
               "size": {"value": 8},
               "opacity": {"value": 1.051},
-              "x": {"field": "cmt_author_date", "type": "temporal"},
-              // "y": {"field": "cmt_author_email", "type": "nominal"},
+              "x": {"field": "cmt_author_date", "type": "temporal"},              
               "tooltip": [{"field": "cmt_author_email", "type": "nominal"},{
                 "field": "Total lines changed",
                 "type": "quantitative",
-              },{
+              },
+              {
                 "field": "Net lines added",
                 "type": "quantitative",
               }],
               "color": {
                 "condition":{
-                  "selection": {"not": "tooltip"}, "value": "transparent"
+                  "selection": {"not": "tooltip"}, 
+                  "value": "transparent"
                 }
               }
             }
