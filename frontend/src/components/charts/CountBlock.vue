@@ -1,7 +1,6 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-    <p v-if="!count">There is no fork count data for this repository</p>
       <span style="font-size:1.3em">{{count}}</span>
     </d-card-body>
     </d-card>
