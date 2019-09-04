@@ -1453,7 +1453,7 @@ class Augur(object):
             """)
 
             logger.debug(cii_best_practices_badge_SQL)
-            params = {'repo_group_id': repo_group_id, 'repo_id': repo_id, 'repo_url': repo_url, 'id': id}
+            params = {'repo_group_id': repo_group_id, 'repo_id': repo_id}
 
         return pd.read_sql(cii_best_practices_badge_SQL, self.db, params=params)
 
