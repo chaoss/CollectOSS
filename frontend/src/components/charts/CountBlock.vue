@@ -1,6 +1,7 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
+    <p v-if="!count">There is no fork count data for this repository</p>
       <span style="font-size:1.3em">{{count}}</span>
     </d-card-body>
     </d-card>
@@ -36,6 +37,8 @@
 
     get count(){
       console.log(this.data)
+      console.log("****************************************")
+      console.log(this.source)
       return this.data[this.source][0][this.field]
     }
 

@@ -21,13 +21,6 @@
         <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
       </div>
     </div>
-    
-
-    <div class="row mb-5" v-if="loaded_risk">
-      <div class="col-3">
-        <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
-      </div>
-    </div>
 
     <div class="row mb-5" v-if="loaded_risk">
       <div class="col-6">
@@ -45,6 +38,14 @@
         <license-table :data="values" source="licenseDeclared"  :headers="['Short Name','Note']"
                        :fields="['short_name','note']"  title="License Declared"></license-table>
       </div>
+      <div class="col-6">
+        <cii-table :data="values" source="ciiBP"  :headers="['Passing Status','Badge Level', 'Date']"
+                       :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
+        <br> <br>
+        <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
+                             </div>
+
+      </div>
     </div>
 
   </d-container>
@@ -60,6 +61,7 @@
   import CountBlock from "@/components/charts/CountBlock.vue";
   import LineChart from "@/components/charts/LineChart.vue";
   import LicenseTable from "@/components/charts/LicenseTable.vue";
+  import CiiTable from "@/components/charts/CiiTable.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
   import router from "@/router";
 
@@ -71,6 +73,7 @@
       CountBlock,
       LineChart,
       LicenseTable,
+      CiiTable
       // PieChart,
     },
     methods: {
@@ -95,8 +98,7 @@
     themes = ['dark', 'info', 'royal-blue', 'warning']
     project = null
 
-    loaded_rsik_1:boolean = false;
-    loaded_rsik_2:boolean = false;
+    loaded_cii:boolean = false
     loaded_risk:boolean = false
 
     values:any = {}
@@ -113,10 +115,17 @@
 
     // endpoints
     risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers']
+    cii_endpoint = ['ciiBP']
 
     created() {
       console.log('####', this.base)
 
+      this.endpoint({endpoints:this.cii_endpoint,repos:[this.base]}).then((tuples:any) => {
+        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+          this.values[endpoint] = tuples[this.base.url][endpoint]
+        })
+        this.loaded_cii = true
+      }),
       this.endpoint({endpoints:this.risk_endpoints,repos:[this.base]}).then((tuples:any) => {
         Object.keys(tuples[this.base.url]).forEach((endpoint) => {
           this.values[endpoint] = tuples[this.base.url][endpoint]
@@ -128,4 +137,3 @@
 
   }
 </script>
-

@@ -10,7 +10,7 @@ def create_server(app, gw):
     Can retrieve current status of the worker
     Can retrieve the workers config object
     """
-    
+
     @app.route("/AUGWOP/task", methods=['POST', 'GET'])
     def augwop_task():
         """ AUGWOP endpoint that gets hit to add a task to the workers queue or is used to get the heartbeat/status of worker
@@ -46,7 +46,7 @@ def main(augur_url, host, port):
     #load credentials
     credentials = read_config("Database")
 
-    config = { 
+    config = {
             "id": "com.augurlabs.core.badge_worker",
             "host": credentials["host"],
             "password": credentials["password"],
@@ -54,16 +54,16 @@ def main(augur_url, host, port):
             "user": credentials["user"],
             "database": credentials["database"],
             "table": "repo_badging",
-            "endpoint": "https://bestpractices.coreinfrastructure.org/projects.json",
+            "endpoint": "https://bestpractices.coreinfrastructure.org",
             "display_name": "",
             "description": "",
             "required": 1,
             "type": "string"
         }
-    
+
     #create instance of the worker
     app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
-    
+
     create_server(app, None)
     app.run(debug=app.debug, host=host, port=port)
 
@@ -94,9 +94,9 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
 
             # Options to export the loaded configuration as environment variables for Docker
-           
+
             if __export_env:
-                
+
                 export_filename = os.getenv('AUGUR_ENV_EXPORT_FILE', 'augur.cfg.sh')
                 __export_file = open(export_filename, 'w+')
                 # logger.info('Exporting {} to environment variable export statements in {}'.format(config_file, export_filename))
@@ -118,4 +118,3 @@ def read_config(section, name=None, environment_variable=None, default=None, con
 
                 __config = __default_config
                 return(__config[section][name])
-

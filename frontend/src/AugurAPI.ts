@@ -201,7 +201,7 @@ abstract class BaseRepo {
   public repo_id?:number
   __URLFunctionFactory: (url:string) => any
   [k: string]: any
-  
+
   constructor(parent: AugurAPI){
     this._host = parent._host || 'http://localhost:5000'
     this._version = parent._version
@@ -468,6 +468,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('languages','languages')
     this.addRepoMetric('committers','committers')
     this.addRepoMetric('licenseDeclared','license-declared')
+    this.addRepoMetric('ciiBP','cii-best-practices-badge')
     this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
   }
@@ -478,7 +479,7 @@ class RepoGroup extends BaseRepo {
   public rg_name?: string
   constructor(parent: AugurAPI, metadata:{rg_name?:any, repo_group_id?:number}){
     super(parent)
-    
+
     this.repo_group_id = metadata.repo_group_id || undefined
     this.rg_name = metadata.rg_name || null
     this.setup()
