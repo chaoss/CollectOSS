@@ -21,7 +21,7 @@ def configure_database(config, credentials):
     config['Database']['key'] = credentials['key']
     config['Database']['zombie_id'] = credentials['zombie_id']
 
-    config['GitHub'] = {'apikey': "GITHUB_API_KEY"}
+    config['GitHub'] = {'apikey': credentials['github_api_key']}
     print()
 
 def configure_server(config):
