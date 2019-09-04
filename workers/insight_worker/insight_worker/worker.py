@@ -38,8 +38,9 @@ class InsightWorker:
         self.config = config
         self.db = None
         self.tool_source = 'Insight Worker'
-        self.tool_version = '0.0.1' # See __init__.py
+        self.tool_version = '0.0.2' # See __init__.py
         self.data_source = 'Augur API'
+        self.refresh = True
 
         logging.info("Worker initializing...")
 
@@ -77,7 +78,7 @@ class InsightWorker:
 
         # we can reflect it ourselves from a database, using options
         # such as 'only' to limit what tables we look at...
-        metadata.reflect(self.db, only=['chaoss_metric_status', 'repo_insights'])
+        metadata.reflect(self.db, only=['chaoss_metric_status', 'repo_insights', 'repo_insights_records'])
 
         # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
@@ -88,6 +89,7 @@ class InsightWorker:
         # mapped classes are ready
         self.chaoss_metric_status_table = Base.classes['chaoss_metric_status'].__table__
         self.repo_insights_table = Base.classes['repo_insights'].__table__
+        self.repo_insights_records_table = Base.classes['repo_insights_records'].__table__
 
         requests.post('http://localhost:{}/api/unstable/workers'.format(
             self.config['broker_port']), json=specs) #hello message
@@ -177,14 +179,13 @@ class InsightWorker:
         """ Data collection function
         Query the github api for contributors and issues (not yet implemented)
         """
+
         # Update table of endpoints before we query them all
-        # self.update_metrics()
         logging.info("Discovering insights for task with entry info: {}".format(entry_info))
 
-        # scoreSQL = s.sql.text("""
-        #     SELECT DISTINCT(ri_metric), ri_score FROM repo_insights WHERE repo_id = {} ORDER BY ri_score desc
-        # """.format(entry_info['repo_id']))
-        # scores_ary = pd.read_sql(lengthSQL, self.db, params={}).to_json(orient='records')
+        # Set the endpoints we want to discover insights for
+        endpoints = [{'cm_info': "issues-new"}, {'cm_info': "code-changes"}, {'cm_info': "code-changes-lines"},
+            {'cm_info': 'reviews'}]
 
         # scores = {}
         # i = 0
@@ -201,9 +202,17 @@ class InsightWorker:
             {'cm_info': "reviews", 'cm_name': 'Pull Requests'}]
 
         """ For when we want all endpoints """
+
+        # """ Query all endpoints """
+        # endpointSQL = s.sql.text("""
+        #     SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
+        #     """)
         # for endpoint in pd.read_sql(endpointSQL, self.db, params={}).to_records():
         #     endpoints.append(endpoint)
 
+        """"""
+
+        # If we are discovering insights for a group vs repo, the base url will change
         if 'repo_group_id' in entry_info:
             base_url = 'http://localhost:{}/api/unstable/repo-groups/{}'.format(
                 self.config['broker_port'], entry_info['repo_group_id'])
@@ -211,25 +220,26 @@ class InsightWorker:
             base_url = 'http://localhost:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
                 self.config['broker_port'], entry_info['repo_id'])
 
-        """ Possibly delete extra logged insights? need separate function prob """
-        # num_insights_per_repo = 3
-        # count = 0
-
+        # Hit and discover insights for every endpoint we care about
         for endpoint in endpoints:
+
+            # Hit endpoint
             url = base_url + endpoint['cm_info']
             logging.info("Hitting endpoint: " + url + "\n")
             r = requests.get(url=url)
             data = r.json()
 
             def is_unique_key(key):
+                """ Helper method used to find which keys we want to analyze in each data point """
                 return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and key != 'repo_name' and key != 'rg_name'
-            raw_values = {}
 
+            # Filter out keys that we do not want to analyze (e.g. repo_id)
+            raw_values = {}
             if len(data) > 0:
                 try:
                     unique_keys = list(filter(is_unique_key, data[0].keys()))
-                except:
-                    logging.info("Length bigger than 0 but cannot get 0th element? : {}".format(data))
+                except Exception as e:
+                    logging.info("Length bigger than 0 but cannot get 0th element? : {}, {}".format(data, e))
             else:
                 logging.info("Endpoint with url: {} returned an empty response. Moving on to next endpoint.\n".format(url))
                 continue
@@ -294,130 +304,146 @@ class InsightWorker:
                     max_difference = 0
                     score = 0
 
-
                     date_filtered_raw_values = []
                     date_filtered_raw_values = date_filtered_data[date_found_index:]
-                    # overwritten_score = None
                     logging.info("Raw values: {}".format(date_filtered_raw_values))
                     for dict in date_filtered_raw_values:
-                        if dict[key] > upper and dict[key] - upper > max_difference:
-                            logging.info("Upper band breached at {}. Marking discovery. {}, {}".format(i, dict, key))
-                            max_difference = dict[key] - upper
-                            score = (max_difference - mean) / mean * 100
-                            insight = True
-                            discovery_index = i
-                        if dict[key] < lower and lower - dict[key] > max_difference:
-                            logging.info("Lower band breached at {}. Marking discovery. {}, {}".format(i, dict, key))
-                            max_difference = lower - dict[key]
-                            score = (max_difference - mean) / mean * 100
+                        if (dict[key] > upper and dict[key] - upper > max_difference) or (dict[key] < lower and lower - dict[key] > max_difference):
+                            logging.info("Band breached at {}. Marking discovery. dict: {}, key: {}, mean: {}".format(i, dict, key, mean))
+                            max_difference = max(dict[key] - upper,lower - dict[key])
+                            score = abs(dict[key] - mean) / mean * 100
                             insight = True
                             discovery_index = i
                         i += 1
                     if insight and 'date' in data[0]:
-                        contin = self.clear_insight(entry_info['repo_id'], score, endpoint['cm_name'] + ' ({})'.format(key))
-                        if not contin:
-                            break
-                        j = 0
-                        # upper_index = discovery_index + 50 if discovery_index >= 50 else 99
-                        logging.info("Starting j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
-                        # while j <= upper_index:
-                        for tuple in date_filtered_raw_values:
-                            try:
-                                data_point = {
-                                    'repo_id': int(entry_info['repo_id']),
-                                    'ri_metric': endpoint['cm_name'] + ' ({})'.format(key),
-                                    'ri_value': tuple[key],#date_filtered_raw_values[j][key],
-                                    'ri_date': tuple['date'],#date_filtered_raw_values[j]['date'],
-                                    'ri_fresh': 0 if j < discovery_index else 1,
-                                    'ri_score': score,
-                                    "tool_source": self.tool_source,
-                                    "tool_version": self.tool_version,
-                                    "data_source": self.data_source
-                                }
-                                result = self.db.execute(self.repo_insights_table.insert().values(data_point))
-                                self.db.commit()
-                                logging.info("Primary key inserted into the repo_insights table: " + str(result.inserted_primary_key))
-                                self.insight_results_counter += 1
 
-                                logging.info("Inserted data point for endpoint: {}\n".format(endpoint['cm_name']))
-                                j += 1
-                                logging.info("incremented j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
-                            except Exception as e:
-                                logging.info("error occurred while storing datapoint: {}".format(repr(e)))
-                                break
-                        # count += 1
-                        # if count > num_insights_per_repo:
-                        #     logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
-                        #         num_insights_per_repo, entry_info['repo_id']))
-                        #     break
+                        # Check if new insight has a better score than other insights in its place, use result
+                        #   to determine if we continue in the insertion process (0 for no insertion, 1 for record
+                        #   insertion, 2 for record and insight data points insertion)
+                        instructions = self.clear_insight(entry_info['repo_id'], score, endpoint['cm_info'], key)
+                        # self.clear_insight(entry_info['repo_id'], score, endpoint['cm_info'] + ' ({})'.format(key))
+
+                        # Use result from clearing function to determine if we need to insert the record
+                        if instructions['record']:
+
+                            # Insert record in records table and send record to slack bot
+                            record = {
+                                'repo_id': int(entry_info['repo_id']),
+                                'ri_metric': endpoint['cm_info'],
+                                'ri_field': key,
+                                'ri_value': date_filtered_raw_values[discovery_index][key],#date_filtered_raw_values[j][key],
+                                'ri_date': date_filtered_raw_values[discovery_index]['date'],#date_filtered_raw_values[j]['date'],
+                                'ri_score': score,
+                                'ri_detection_method': '95% confidence interval',
+                                "tool_source": self.tool_source,
+                                "tool_version": self.tool_version,
+                                "data_source": self.data_source
+                            }
+                            result = self.db.execute(self.repo_insights_records_table.insert().values(record))
+                            logging.info("Primary key inserted into the repo_insights_records table: {}".format(result.inserted_primary_key))
+
+                        # Use result from clearing function to determine if we still need to insert the insight
+                        if instructions['insight']:
+
+                            j = 0
+                            logging.info("Starting j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
+                            for tuple in date_filtered_raw_values:
+                                try:
+                                    data_point = {
+                                        'repo_id': int(entry_info['repo_id']),
+                                        'ri_metric': endpoint['cm_info'],
+                                        'ri_field': key,
+                                        'ri_value': tuple[key],#date_filtered_raw_values[j][key],
+                                        'ri_date': tuple['date'],#date_filtered_raw_values[j]['date'],
+                                        'ri_fresh': 0 if j < discovery_index else 1,
+                                        'ri_score': score,
+                                        'ri_detection_method': '95% confidence interval',
+                                        "tool_source": self.tool_source,
+                                        "tool_version": self.tool_version,
+                                        "data_source": self.data_source
+                                    }
+                                    result = self.db.execute(self.repo_insights_table.insert().values(data_point))
+                                    logging.info("Primary key inserted into the repo_insights table: " + str(result.inserted_primary_key))
+
+                                    logging.info("Inserted data point for endpoint: {}\n".format(endpoint['cm_info']))
+                                    j += 1
+                                    logging.info("incremented j: {}, discovery_index: {}, data: {}".format(j, discovery_index, date_filtered_data[j]))
+                                except Exception as e:
+                                    logging.info("error occurred while storing datapoint: {}".format(repr(e)))
+                                    break
                 else:
                     logging.info("Key: {} has empty raw_values, should not have key here".format(key))
-            #         if count > num_insights_per_repo:
-            #             logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
-            #                 num_insights_per_repo, entry_info['repo_id']))
-            #             break
-            # if count > num_insights_per_repo:
-            #     logging.info("Have successfully stored {} insights for repo: {}, breaking from discovery loop".format(
-            #         num_insights_per_repo, entry_info['repo_id']))
-            #     break
-
-    # HIGHEST PERCENTAGE STUFF, WILL MOVE TO NEW METHOD
-        # greatest_week_name = greatest_month_name = insights[0]['cm_name']
-        # greatest_week_val = abs(insights[0]['change_week'])
-        # greatest_month_val = abs(insights[0]['change_month'])
-
-        # for insight in insights:
-        #     if abs(insight['change_week']) > greatest_week:
-        #         greatest_week_name = insight['cm_name']
-        #         greatest_week_val = insight['change_week']
-
-        #     if abs(insight['change_month']) > greatest_month:
-        #         greatest_month_name = insight['cm_name']
-        #         greatest_month_val = insight['change_month']
-
-        # logging.info("The endpoint with the greatest percent change in the last week was {} with {}%%".format(greatest_week_name, greatest_week_val))
-        # logging.info("The endpoint with the greatest percent change in the last month was {} with {}%%".format(greatest_month_name, greatest_month_val))
 
 
+    def clear_insight(self, repo_id, new_score, new_metric, new_field):
+        logging.info("Checking if insight slots filled...")
 
+        # Dict that will be returned that instructs the rest of the worker where the insight insertion is
+        #   needed (determined by if this new insights score is higher than already stored ones)
+        insertion_directions = {'record': False, 'insight': False}
 
-        # data[0]['repo_id'] = entry_info['repo_id']
-        # metrics = []
-        # for obj in data:
-        #     metrics.append(obj['tag'])
+        # Query current record for this
+        recordSQL = s.sql.text("""
+            SELECT ri_metric, repo_id, ri_score, ri_field
+            FROM repo_insights_records
+            WHERE repo_id = {}
+            AND ri_metric = '{}'
+            AND ri_field = '{}'
+            ORDER BY ri_score DESC
+        """.format(repo_id, new_metric, new_field))
+        rec = json.loads(pd.read_sql(recordSQL, self.db, params={}).to_json(orient='records'))
+        logging.info("recordsql: {}, \n{}".format(recordSQL, rec))
+        # If new score is higher, continue with deletion
+        if len(rec) > 0:
+            if new_score > rec[0]['ri_score'] or self.refresh:
+                insertion_directions['record'] = True
+                for record in rec:
+                    logging.info("Refresh is on or Insight record found with a greater score than current slot filled for "
+                        "repo {} metric {} new score {}, old score {}".format(repo_id, record['ri_metric'], new_score, record['ri_score']))
+                    deleteSQL = """
+                        DELETE
+                            FROM
+                                repo_insights_records I
+                            WHERE
+                                repo_id = {}
+                                AND ri_metric = '{}'
+                                AND ri_field = '{}'
+                    """.format(record['repo_id'], record['ri_metric'], record['ri_field'])
+                    try:
+                        result = self.db.execute(deleteSQL)
+                    except Exception as e:
+                        logging.info("Error occured deleting insight slot: {}".format(e))
+        else:
+            insertion_directions['record'] = True
 
-
-        # self.db.execute(self.table.insert().values(data[0]))
-        # requests.post('http://localhost:{}/api/completed_task'.format(
-            # self.config['broker_port']), json=entry_info['repo_git'])
-
-        # else:
-        #     logging.info("there are 3 or more insights for repo: {}, skipping this task".format(entry_info))
-
-    def clear_insight(self, repo_id, new_score, new_metric):
-        logging.info("Checking if insight slot filled...")
+        # Query current insights and rank by score
         num_insights_per_repo = 3
         insightSQL = s.sql.text("""
             SELECT distinct(ri_metric),repo_id, ri_score
             FROM repo_insights
-            WHERE repo_id = 21000
+            WHERE repo_id = {}
             ORDER BY ri_score ASC
-        """.format(repo_id, new_score))
+        """.format(repo_id))
         ins = json.loads(pd.read_sql(insightSQL, self.db, params={}).to_json(orient='records'))
+        logging.info("This repos insights: {}".format(ins))
+
+        # Determine if inisghts need to be deleted based on if there are more insights than we want stored,
+        #   or if the current insights have a lower score
         num_insights = len(ins)
         to_delete = []
-        logging.info("This repos insights: {}".format(ins))
         for insight in ins:
             logging.info("{}, {}".format(insight['ri_metric'], new_metric))
-            if (insight['ri_score'] < new_score and num_insights >= num_insights_per_repo) or num_insights > num_insights_per_repo or insight['ri_metric'] == new_metric:
+            if (insight['ri_score'] < new_score and num_insights >= num_insights_per_repo) or num_insights > num_insights_per_repo or (insight['ri_metric'] == new_metric and self.refresh):
                 num_insights -= 1
                 to_delete.append(insight)
                 logging.info("condition met, new len: {}, insight score: {}, new_score: {}".format(num_insights,
                     insight['ri_score'], new_score))
 
-        if len(to_delete) == 0 and num_insights == num_insights_per_repo:
-            return False
+        # After psuedo-deletion, determine if insertion of the new insight is needed
+        if num_insights < num_insights_per_repo:
+            insertion_directions['insight'] = True
 
+        # Delete all insights marked for deletion
         for insight in to_delete:
             logging.info("insight found with a greater score than current slots filled for repo {} new score {}, old score {}".format(repo_id, new_score, insight['ri_score']))
             deleteSQL = """
@@ -430,14 +456,10 @@ class InsightWorker:
             """.format(insight['repo_id'], insight['ri_metric'])
             try:
                 result = self.db.execute(deleteSQL)
-                # result = self.repo_insights_table.delete().where(and_(self.repo_insights_table.c.repo_id==repo_id, self.repo_insights_table.c.cms_id==cms_id))
-                # result.execute()
-                logging.info(str(result))
-                # logging.info(str(result.fetchall()))
             except Exception as e:
                 logging.info("Error occured deleting insight slot: {}".format(e))
-                # self.repo_insights_table.delete().where(and_(self.repo_insights_table.c.repo_id==repo_id, self.repo_insights_table.c.cms_id==cms_id))
-        return True
+
+        return insertion_directions
 
 
     def confidence_interval(self, data, timeperiod='week', confidence=.8):
@@ -477,7 +499,7 @@ class InsightWorker:
                 "cm_defined": True if metric['is_defined'] == 'true' else False,
                 "cm_api_endpoint_repo": metric['endpoint'],
                 "cm_api_endpoint_rg": None,
-                "cm_name": metric['display_name'],
+                "cm_info": metric['display_name'],
                 "cm_working_group": metric['group'],
                 "cm_info": metric['tag'],
                 "tool_source": self.tool_source,
@@ -533,7 +555,7 @@ class InsightWorker:
         # change_month = (data_now[] - data_month[])/data_now[]
 
         new_insight = {
-            "cm_name": data['cm_name'],
+            "cm_info": data['cm_info'],
             "change_week": change_week,
             "change_month": change_month,
         }

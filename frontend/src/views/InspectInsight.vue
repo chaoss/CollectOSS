@@ -181,8 +181,7 @@ export default class InspectInsight extends Vue {
   insights: any = {}
   timeframes: any = {}
   values: any = []
-  test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/Comcast/Hygieia.git','https://github.com/apache/jclouds-site.git',
-    'https://github.com/apache/karaf-jclouds.git', 'https://github.com/openssl/openssl', 'https://github.com/rails/ruby-coffee-script.git']
+
   dateRange: any = {
     from: null,
     to: null,
