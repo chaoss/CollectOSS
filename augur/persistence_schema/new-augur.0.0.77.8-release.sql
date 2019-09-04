@@ -5,22 +5,21 @@ CREATE SCHEMA spdx;
 -- create the schemas
 -- -----------------------
 
-
 /*
  Navicat Premium Data Transfer
 
  Source Server         : mudcats augur
  Source Server Type    : PostgreSQL
- Source Server Version : 110004
+ Source Server Version : 110005
  Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_twitter_test
+ Source Catalog        : twitter_prod
  Source Schema         : augur_data
 
  Target Server Type    : PostgreSQL
- Target Server Version : 110004
+ Target Server Version : 110005
  File Encoding         : 65001
 
- Date: 23/07/2019 09:22:18
+ Date: 04/09/2019 12:29:57
 */
 
 
@@ -409,6 +408,18 @@ CACHE 1;
 ALTER SEQUENCE "augur_data"."repo_info_repo_info_id_seq" OWNER TO "augur";
 
 -- ----------------------------
+-- Sequence structure for repo_insights_records_ri_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "augur_data"."repo_insights_records_ri_id_seq";
+CREATE SEQUENCE "augur_data"."repo_insights_records_ri_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "augur_data"."repo_insights_records_ri_id_seq" OWNER TO "augur";
+
+-- ----------------------------
 -- Sequence structure for repo_insights_ri_id_seq
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "augur_data"."repo_insights_ri_id_seq";
@@ -611,7 +622,7 @@ CREATE TABLE "augur_data"."commits" (
   "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0),
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
   "cmt_author_timestamp" timestamp(0),
   "cmt_committer_timestamp" timestamp(0)
 )
@@ -1817,7 +1828,14 @@ CREATE TABLE "augur_data"."repo_info" (
   "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0)
+  "data_collection_date" timestamp(0),
+  "commit_count" int8,
+  "issues_count" int8,
+  "issues_closed" int8,
+  "pull_request_count" int8,
+  "pull_requests_open" int8,
+  "pull_requests_closed" int8,
+  "pull_requests_merged" int8
 )
 ;
 ALTER TABLE "augur_data"."repo_info" OWNER TO "augur";
@@ -1832,12 +1850,14 @@ CREATE TABLE "augur_data"."repo_insights" (
   "ri_metric" varchar COLLATE "pg_catalog"."default",
   "ri_value" varchar(255) COLLATE "pg_catalog"."default",
   "ri_date" timestamp(0),
-  "cms_id" int8,
   "ri_fresh" bool,
   "tool_source" varchar COLLATE "pg_catalog"."default",
   "tool_version" varchar COLLATE "pg_catalog"."default",
   "data_source" varchar COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "ri_score" numeric,
+  "ri_field" varchar(255) COLLATE "pg_catalog"."default",
+  "ri_detection_method" varchar(255) COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_data"."repo_insights" OWNER TO "augur";
@@ -1845,6 +1865,27 @@ COMMENT ON COLUMN "augur_data"."repo_insights"."ri_fresh" IS 'false if the date 
 COMMENT ON TABLE "augur_data"."repo_insights" IS 'This table is output from an analytical worker inside of Augur. It runs through the different metrics on a repository and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. 
 
 Worker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ';
+
+-- ----------------------------
+-- Table structure for repo_insights_records
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_data"."repo_insights_records";
+CREATE TABLE "augur_data"."repo_insights_records" (
+  "ri_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_insights_records_ri_id_seq'::regclass),
+  "repo_id" int8,
+  "ri_metric" varchar COLLATE "pg_catalog"."default",
+  "ri_field" varchar COLLATE "pg_catalog"."default",
+  "ri_value" varchar COLLATE "pg_catalog"."default",
+  "ri_date" timestamp(6),
+  "ri_score" float8,
+  "ri_detection_method" varchar COLLATE "pg_catalog"."default",
+  "tool_source" varchar COLLATE "pg_catalog"."default",
+  "tool_version" varchar COLLATE "pg_catalog"."default",
+  "data_source" varchar COLLATE "pg_catalog"."default",
+  "data_collection_date" timestamp(6)
+)
+;
+ALTER TABLE "augur_data"."repo_insights_records" OWNER TO "augur";
 
 -- ----------------------------
 -- Table structure for repo_labor
@@ -2009,59 +2050,62 @@ OWNED BY "augur_data"."chaoss_metric_status"."cms_id";
 SELECT setval('"augur_data"."chaoss_metric_status_cms_id_seq"', 85, true);
 SELECT setval('"augur_data"."commit_comment_ref_cmt_comment_id_seq"', 25155, false);
 SELECT setval('"augur_data"."commit_parents_parent_id_seq"', 25155, false);
-SELECT setval('"augur_data"."commits_cmt_id_seq"', 29335594, true);
+SELECT setval('"augur_data"."commits_cmt_id_seq"', 29339742, true);
 SELECT setval('"augur_data"."contributor_affiliations_ca_id_seq"', 25155, false);
 SELECT setval('"augur_data"."contributors_aliases_cntrb_a_id_seq"', 25155, false);
-SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 74902, true);
+SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 75187, true);
 ALTER SEQUENCE "augur_data"."contributors_history_cntrb_history_id_seq"
 OWNED BY "augur_data"."contributors_history"."cntrb_history_id";
 SELECT setval('"augur_data"."contributors_history_cntrb_history_id_seq"', 3, false);
 ALTER SEQUENCE "augur_data"."issue_assignees_issue_assignee_id_seq"
 OWNED BY "augur_data"."issue_assignees"."issue_assignee_id";
-SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 10092, true);
-SELECT setval('"augur_data"."issue_events_event_id_seq"', 693290, true);
-SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 76334, true);
-SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 341074, true);
-SELECT setval('"augur_data"."issue_seq"', 143804, true);
+SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 10127, true);
+SELECT setval('"augur_data"."issue_events_event_id_seq"', 697771, true);
+SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 77099, true);
+SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 343271, true);
+SELECT setval('"augur_data"."issue_seq"', 144441, true);
 SELECT setval('"augur_data"."libraries_library_id_seq"', 25155, false);
 SELECT setval('"augur_data"."library_dependencies_lib_dependency_id_seq"', 25155, false);
 SELECT setval('"augur_data"."library_version_library_version_id_seq"', 25155, false);
-SELECT setval('"augur_data"."message_msg_id_seq"', 341076, true);
+SELECT setval('"augur_data"."message_msg_id_seq"', 376338, true);
 SELECT setval('"augur_data"."platform_pltfrm_id_seq"', 25155, true);
 ALTER SEQUENCE "augur_data"."pull_request_assignees_pr_assignee_map_id_seq"
 OWNED BY "augur_data"."pull_request_assignees"."pr_assignee_map_id";
 SELECT setval('"augur_data"."pull_request_assignees_pr_assignee_map_id_seq"', 3, false);
 ALTER SEQUENCE "augur_data"."pull_request_events_pr_event_id_seq"
 OWNED BY "augur_data"."pull_request_events"."pr_event_id";
-SELECT setval('"augur_data"."pull_request_events_pr_event_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_events_pr_event_id_seq"', 83602, true);
 ALTER SEQUENCE "augur_data"."pull_request_labels_pr_label_id_seq"
 OWNED BY "augur_data"."pull_request_labels"."pr_label_id";
-SELECT setval('"augur_data"."pull_request_labels_pr_label_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_labels_pr_label_id_seq"', 100, true);
 ALTER SEQUENCE "augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"
 OWNED BY "augur_data"."pull_request_message_ref"."pr_msg_ref_id";
-SELECT setval('"augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"', 33067, true);
 ALTER SEQUENCE "augur_data"."pull_request_meta_pr_repo_meta_id_seq"
 OWNED BY "augur_data"."pull_request_meta"."pr_repo_meta_id";
-SELECT setval('"augur_data"."pull_request_meta_pr_repo_meta_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_meta_pr_repo_meta_id_seq"', 25641, true);
 ALTER SEQUENCE "augur_data"."pull_request_repo_pr_repo_id_seq"
 OWNED BY "augur_data"."pull_request_repo"."pr_repo_id";
 SELECT setval('"augur_data"."pull_request_repo_pr_repo_id_seq"', 3, false);
 ALTER SEQUENCE "augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"
 OWNED BY "augur_data"."pull_request_reviewers"."pr_reviewer_map_id";
-SELECT setval('"augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"', 2161, true);
 ALTER SEQUENCE "augur_data"."pull_request_teams_pr_team_id_seq"
 OWNED BY "augur_data"."pull_request_teams"."pr_team_id";
 SELECT setval('"augur_data"."pull_request_teams_pr_team_id_seq"', 3, false);
 ALTER SEQUENCE "augur_data"."pull_requests_pull_request_id_seq"
 OWNED BY "augur_data"."pull_requests"."pull_request_id";
-SELECT setval('"augur_data"."pull_requests_pull_request_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_requests_pull_request_id_seq"', 15905, true);
 SELECT setval('"augur_data"."repo_badging_badge_collection_id_seq"', 25023, true);
 ALTER SEQUENCE "augur_data"."repo_group_insights_rgi_id_seq"
 OWNED BY "augur_data"."repo_group_insights"."rgi_id";
 SELECT setval('"augur_data"."repo_group_insights_rgi_id_seq"', 6, false);
 SELECT setval('"augur_data"."repo_groups_list_serve_rgls_id_seq"', 25155, false);
 SELECT setval('"augur_data"."repo_groups_repo_group_id_seq"', 25158, true);
-SELECT setval('"augur_data"."repo_info_repo_info_id_seq"', 25155, false);
+SELECT setval('"augur_data"."repo_info_repo_info_id_seq"', 493406, true);
+ALTER SEQUENCE "augur_data"."repo_insights_records_ri_id_seq"
+OWNED BY "augur_data"."repo_insights_records"."ri_id";
+SELECT setval('"augur_data"."repo_insights_records_ri_id_seq"', 2, false);
 ALTER SEQUENCE "augur_data"."repo_insights_ri_id_seq"
 OWNED BY "augur_data"."repo_insights"."ri_id";
 SELECT setval('"augur_data"."repo_insights_ri_id_seq"', 2, false);
@@ -2075,7 +2119,7 @@ SELECT setval('"augur_data"."repo_test_coverage_repo_id_seq"', 5, false);
 SELECT setval('"augur_data"."utility_log_id_seq"', 6, false);
 ALTER SEQUENCE "augur_data"."utility_log_id_seq1"
 OWNED BY "augur_data"."utility_log"."id";
-SELECT setval('"augur_data"."utility_log_id_seq1"', 36464, true);
+SELECT setval('"augur_data"."utility_log_id_seq1"', 45962, true);
 
 -- ----------------------------
 -- Indexes structure for table analysis_log
@@ -2571,6 +2615,11 @@ ALTER TABLE "augur_data"."repo_info" ADD CONSTRAINT "repo_info_pkey" PRIMARY KEY
 ALTER TABLE "augur_data"."repo_insights" ADD CONSTRAINT "repo_insights_pkey" PRIMARY KEY ("ri_id");
 
 -- ----------------------------
+-- Primary Key structure for table repo_insights_records
+-- ----------------------------
+ALTER TABLE "augur_data"."repo_insights_records" ADD CONSTRAINT "repo_insights_records_pkey" PRIMARY KEY ("ri_id");
+
+-- ----------------------------
 -- Primary Key structure for table repo_labor
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_labor" ADD CONSTRAINT "repo_labor_pkey" PRIMARY KEY ("repo_labor_id");
@@ -2786,6 +2835,11 @@ ALTER TABLE "augur_data"."repo_info" ADD CONSTRAINT "fk_repo_info_repo_1" FOREIG
 ALTER TABLE "augur_data"."repo_insights" ADD CONSTRAINT "fk_repo_insights_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
+-- Foreign Keys structure for table repo_insights_records
+-- ----------------------------
+ALTER TABLE "augur_data"."repo_insights_records" ADD CONSTRAINT "repo_id_ref" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- ----------------------------
 -- Foreign Keys structure for table repo_labor
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_labor" ADD CONSTRAINT "fk_repo_labor_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -2811,16 +2865,16 @@ ALTER TABLE "augur_data"."repo_test_coverage" ADD CONSTRAINT "fk_repo_test_cover
 
  Source Server         : mudcats augur
  Source Server Type    : PostgreSQL
- Source Server Version : 110004
+ Source Server Version : 110005
  Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_twitter_test
+ Source Catalog        : twitter_prod
  Source Schema         : augur_operations
 
  Target Server Type    : PostgreSQL
- Target Server Version : 110004
+ Target Server Version : 110005
  File Encoding         : 65001
 
- Date: 23/07/2019 09:30:53
+ Date: 04/09/2019 12:30:07
 */
 
 
@@ -2881,36 +2935,18 @@ CREATE TABLE "augur_operations"."gh_worker_oauth" (
   "consumer_key" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "consumer_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "access_token" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "access_token_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
+  "access_token_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "repo_directory" varchar COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_operations"."gh_worker_oauth" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for repos_import
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."repos_import";
-CREATE TABLE "augur_operations"."repos_import" (
-  "repos_id" int8,
-  "projects_id" int8,
-  "repo_url" varchar COLLATE "pg_catalog"."default",
-  "path" varchar COLLATE "pg_catalog"."default",
-  "facade_name" varchar COLLATE "pg_catalog"."default",
-  "added" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
-  "status" varchar(255) COLLATE "pg_catalog"."default",
-  "name" varchar COLLATE "pg_catalog"."default",
-  "description" varchar COLLATE "pg_catalog"."default",
-  "project_url" varchar COLLATE "pg_catalog"."default"
-)
-;
-ALTER TABLE "augur_operations"."repos_import" OWNER TO "augur";
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "augur_operations"."gh_worker_history_history_id_seq"
 OWNED BY "augur_operations"."gh_worker_history"."history_id";
-SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 7102, true);
+SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 7795, true);
 
 -- ----------------------------
 -- Primary Key structure for table gh_worker_history
@@ -2922,22 +2958,21 @@ ALTER TABLE "augur_operations"."gh_worker_history" ADD CONSTRAINT "history_pkey"
 -- ----------------------------
 ALTER TABLE "augur_operations"."gh_worker_job" ADD CONSTRAINT "job_pkey" PRIMARY KEY ("job_model");
 
-
 /*
  Navicat Premium Data Transfer
 
  Source Server         : mudcats augur
  Source Server Type    : PostgreSQL
- Source Server Version : 110004
+ Source Server Version : 110005
  Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_twitter_test
+ Source Catalog        : twitter_prod
  Source Schema         : spdx
 
  Target Server Type    : PostgreSQL
- Target Server Version : 110004
+ Target Server Version : 110005
  File Encoding         : 65001
 
- Date: 23/07/2019 09:31:29
+ Date: 04/09/2019 12:30:18
 */
 
 
@@ -3724,8 +3759,8 @@ ALTER TABLE "spdx"."files_scans" ADD CONSTRAINT "files_scans_pkey" PRIMARY KEY (
 -- ----------------------------
 ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_document_namespace_id" UNIQUE ("document_namespace_id", "id_string");
 ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_namespace_document_id" UNIQUE ("document_namespace_id", "document_id");
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_namespace_package_id" UNIQUE ("document_namespace_id", "package_id");
 ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_namespace_package_file_id" UNIQUE ("document_namespace_id", "package_file_id");
+ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_namespace_package_id" UNIQUE ("document_namespace_id", "package_id");
 
 -- ----------------------------
 -- Checks structure for table identifiers
@@ -3750,8 +3785,8 @@ ALTER TABLE "spdx"."licenses" ADD CONSTRAINT "licenses_pkey" PRIMARY KEY ("licen
 -- ----------------------------
 -- Uniques structure for table packages
 -- ----------------------------
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "uc_package_sha256" UNIQUE ("sha256");
 ALTER TABLE "spdx"."packages" ADD CONSTRAINT "uc_dir_code_ver_code" UNIQUE ("verification_code", "dosocs2_dir_code");
+ALTER TABLE "spdx"."packages" ADD CONSTRAINT "uc_package_sha256" UNIQUE ("sha256");
 
 -- ----------------------------
 -- Checks structure for table packages
@@ -3909,6 +3944,8 @@ ALTER TABLE "spdx"."packages_scans" ADD CONSTRAINT "packages_scans_scanner_id_fk
 ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_left_identifier_id_fkey" FOREIGN KEY ("left_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_relationship_type_id_fkey" FOREIGN KEY ("relationship_type_id") REFERENCES "spdx"."relationship_types" ("relationship_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_right_identifier_id_fkey" FOREIGN KEY ("right_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+
 
 
 -- You need to fill in your own values for the consumer_key, consumer_secret, access_token, and access_token_secret 
