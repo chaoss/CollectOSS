@@ -17,7 +17,7 @@ Financial Considerations | How do financial considerations impact the projects? 
 Organizational Ownership Distribution | How is code ownership distributed across organizational and non-organizational contributors? | Yes | Yes |
 
 
-## Georgraphy
+## Geography
 
 Goal: Understand where open source contributors are distributed around the world.
 
