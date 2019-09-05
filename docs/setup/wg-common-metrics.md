@@ -1,3 +1,7 @@
+# Overview of Augur Implementations / Data / API's to Support Common Metrics
+
+In general, the metrics below will require some kind of organizational metadata about people in order to be of full value. Some value is derived without the curated metadata. 
+
 ## Organizational Affiliation
 
 Goal: Understand organizational engagement with open source projects.
