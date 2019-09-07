@@ -373,7 +373,7 @@ class GHRepoInfoWorker:
                 else:
                     url = r.links['next']['url']
         except Exception:
-            logger.exceptioin('An error occured while querying contributor count')
+            logger.exception('An error occured while querying contributor count')
 
         return committers
 
