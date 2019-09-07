@@ -1,7 +1,7 @@
 <template>
   <div ref="holder">
     <div class="tickchart ">
-      <h3>Lines of code added by the top 10 authors visualized</h3>
+      <h3 class="chart-title">Lines of code added by the top 10 authors visualized</h3>
       <div :id="source"></div>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
