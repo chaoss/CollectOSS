@@ -138,7 +138,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		email_check = ("""SELECT cntrb_email 
 			FROM contributors WHERE cntrb_email = %s OR cntrb_email = %s""")
 		try:
-			cursor_local.execute(email_check,(author_email,committer_email,))
+			cursor_local.execute(email_check,(author_email,committer_email))
 			db_local.commit()
 		except Exception as e:
 			cfg.log_activity('Info','Setting emails to empty array, '
