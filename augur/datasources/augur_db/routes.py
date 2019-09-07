@@ -251,6 +251,8 @@ def create_routes(server):
     ###           EVOLUTION           ###
     #####################################
 
+    server.addRepoMetric(augur_db.sbom_download, 'sbom-download')
+
     """
     @api {get} /repo-groups/:repo_group_id/code-changes Code Changes (Repo Group)
     @apiName code-changes-repo-group
@@ -1735,6 +1737,7 @@ def create_routes(server):
                         }
                     ]
     """
+
     server.addRepoGroupMetric(augur_db.cii_best_practices_badge, 'cii-best-practices-badge')
 
     """

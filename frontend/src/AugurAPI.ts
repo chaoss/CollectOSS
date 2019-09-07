@@ -468,6 +468,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('languages','languages')
     this.addRepoMetric('committers','committers')
     this.addRepoMetric('licenseDeclared','license-declared')
+    this.addRepoMetric('sbom','sbom-download')
     this.addRepoMetric('ciiBP','cii-best-practices-badge')
     this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
