@@ -414,7 +414,7 @@ class GHRepoInfoWorker:
         logger.info(f"[Rate Limit]: Updated rate limit, you have: {self.rate_limit} requests remaining")
         if self.rate_limit <= 0:
             reset_time = response.headers['X-RateLimit-Reset']
-            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
+            time_diff = datetime.fromtimestamp(int(reset_time)) - datetime.now()
             logger.info(f"[Rate Limit]: Rate limit exceeded, waiting {time_diff.total_seconds()} seconds")
             time.sleep(time_diff.total_seconds())
             self.rate_limit = int(response.headers['X-RateLimit-Limit'])
