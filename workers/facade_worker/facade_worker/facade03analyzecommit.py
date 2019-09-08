@@ -135,7 +135,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
 
 		# Check if email already exists in db
-		email_check = ("""SELECT cntrb_email 
+		email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
 			FROM contributors WHERE cntrb_email = %s OR cntrb_email = %s""")
 		try:
 			cursor_local.execute(email_check,(author_email,committer_email))
@@ -172,16 +172,19 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		if len(emails_to_update) > 0:
 			for email in emails_to_update:
 				email_update = ("UPDATE contributors "
-					"SET cntrb_canonical=%s, cntrb_full_name=%s "
+					"SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source='%s, %s'"
+					"tool_version='%s, %s', data_source='%s, %s'"
 					"WHERE cntrb_email=%s")
 				if email[0] == author_email:
 					cursor_local.execute(email_update, (discover_alias(author_email),
-						str(author_name), email[0]))
+						str(author_name), email[1], cfg.tool_source, email[2], 
+						cfg.tool_version, email[3], cfg.data_source, email[0]))
 					db_local.commit()
 					cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
 				elif email[0] == committer_email:
 					cursor_local.execute(email_update, (discover_alias(committer_email),
-						str(committer_name), email[0]))
+						str(committer_name), email[1], cfg.tool_source, email[2], 
+						cfg.tool_version, email[3], cfg.data_source, email[0]))
 					db_local.commit()
 					cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
 				
