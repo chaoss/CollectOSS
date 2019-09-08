@@ -20,15 +20,11 @@ export default {
     for (let i = 9; i >= 0; i--) {
       years.push((new Date()).getFullYear() - i)
     }
-    let monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    let monthDecimals = [1,2,3,4,5,6,7,8,9,10,11,12];
     return {
       values: [],
       contributors: [],
       organizations: [],
       view: 'year',
-      monthNames: monthNames,
-      monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
       tick: 0

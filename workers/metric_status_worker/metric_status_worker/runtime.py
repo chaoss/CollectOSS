@@ -56,7 +56,8 @@ def main(augur_url, host, port):
 
     config = { 
             "id": "com.augurlabs.core.metric_status_worker",
-            "location": "http://localhost:{}".format(worker_port),
+            "location": "http://{}:{}".format(server['host'],worker_port),
+            "broker_host": server['host'],
             "broker_port": server['port'],
             "host": credentials["host"],
             "key": credentials["key"],
@@ -65,7 +66,7 @@ def main(augur_url, host, port):
             "user": credentials["user"],
             "database": credentials["database"],
             "table": "chaoss_metric_status",
-            "endpoint": "http://localhost:{}/api/unstable/metrics/status".format(server['port']),
+            "endpoint": "http://{}:{}/api/unstable/metrics/status".format(server['host'],server['port']),
             "type": "string"
         }
 
@@ -78,7 +79,7 @@ def main(augur_url, host, port):
     if app.metric_status_worker._child is not None:
         app.metric_status_worker._child.terminate()
     try:
-        requests.post('http://localhost:{}/api/unstable/workers/remove'.format(server['port']), json={"id": config['id']})
+        requests.post('http://{}:{}/api/unstable/workers/remove'.format(server['host'],server['port']), json={"id": config['id']})
     except:
         pass
     logging.info("Killing Flask App: " + str(os.getpid()))

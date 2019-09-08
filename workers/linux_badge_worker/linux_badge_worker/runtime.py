@@ -43,11 +43,16 @@ def main(augur_url, host, port):
     """
     app = Flask(__name__)
 
-    #load credentials
-    credentials = read_config("Database")
+    credentials = read_config("Database", use_main_config=1)
+    server = read_config("Server", use_main_config=1)
+    worker_info = read_config("Workers", use_main_config=1)['metric_status_worker']
+    worker_port = worker_info['port'] if 'port' in worker_info else port
 
     config = {
             "id": "com.augurlabs.core.badge_worker",
+            "location": "http://{}:{}".format(server['host'],worker_port),
+            "broker_host": server['host'],
+            "broker_port": server['port'],
             "host": credentials["host"],
             "password": credentials["password"],
             "port": credentials["port"],

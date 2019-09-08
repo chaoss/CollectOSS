@@ -307,7 +307,7 @@ class GitHubWorker:
         """ Method to update config and set a default
         """
         self.config = {
-            'database_connection_string': 'psql://localhost:5433/augur',
+            'database_connection_string': 'psql://{}:5433/augur'.format(self.config['broker_host']),
             "display_name": "",
             "description": "",
             "required": 1,
@@ -400,8 +400,8 @@ class GitHubWorker:
                     logging.info("Error encountered: " + repr(e) + "\n")
                     logging.info("Notifying broker and logging task failure in database...\n")
                     message.entry_info['task']['worker_id'] = self.config['id']
-                    requests.post("http://localhost:{}/api/unstable/task_error".format(
-                        self.config['broker_port']), json=message.entry_info['task'])
+                    requests.post("http://{}:{}/api/unstable/task_error".format(
+                        self.config['broker_host'],self.config['broker_port']), json=message.entry_info['task'])
                     # Add to history table
                     task_history = {
                         "repo_id": message.entry_info['repo_id'],
@@ -1146,8 +1146,8 @@ class GitHubWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        requests.post('http://localhost:{}/api/unstable/completed_task'.format(
-            self.config['broker_port']), json=task_completed)
+        requests.post('http://{}:{}/api/unstable/completed_task'.format(
+            self.config['broker_host'],self.config['broker_port']), json=task_completed)
 
         # Reset results counter for next task
         self.results_counter = 0

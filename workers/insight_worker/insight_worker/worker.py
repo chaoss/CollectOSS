@@ -41,9 +41,10 @@ class InsightWorker:
         self.tool_version = '0.0.2' # See __init__.py
         self.data_source = 'Augur API'
         self.refresh = True
+        self.send_insights = False
 
         logging.info("Worker initializing...")
-
+        
         specs = {
             "id": "com.augurlabs.core.insight_worker",
             "location": self.config['location'],
@@ -61,7 +62,7 @@ class InsightWorker:
 
         """
         Connect to GHTorrent
-
+        
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
         """
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -72,7 +73,7 @@ class InsightWorker:
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
-
+        
         # produce our own MetaData object
         metadata = MetaData()
 
@@ -91,15 +92,15 @@ class InsightWorker:
         self.repo_insights_table = Base.classes['repo_insights'].__table__
         self.repo_insights_records_table = Base.classes['repo_insights_records'].__table__
 
-        requests.post('http://localhost:{}/api/unstable/workers'.format(
-            self.config['broker_port']), json=specs) #hello message
+        requests.post('http://{}:{}/api/unstable/workers'.format(
+            self.config['broker_host'],self.config['broker_port']), json=specs) #hello message
 
         # Query all repos and last repo id
         repoUrlSQL = s.sql.text("""
             SELECT repo_git, repo_id FROM repo order by repo_id asc
         """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 0
+        pop_off = 500
         i = 0
         while i < pop_off:
             rs = rs[1:]
@@ -113,7 +114,7 @@ class InsightWorker:
         """ Method to update config and set a default
         """
         self.config = {
-            'database_connection_string': 'psql://localhost:5432/augur',
+            'database_connection_string': 'psql://{}:5432/augur'.format(self.config['broker_host']),
             "display_name": "",
             "description": "",
             "required": 1,
@@ -126,7 +127,7 @@ class InsightWorker:
         """ Property that is returned when the worker's current task is referenced
         """
         return self._task
-
+    
     @task.setter
     def task(self, value):
         """ entry point for the broker to add a task to the queue
@@ -140,11 +141,11 @@ class InsightWorker:
             """.format(repo_git))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"repo_git": repo_git,
+            self._queue.put(CollectorTask(message_type='TASK', entry_info={"repo_git": repo_git, 
                 "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]}))
         except:
             print("that repo is not in our database")
-        if self._queue.empty():
+        if self._queue.empty(): 
             if 'github.com' in repo_git:
                 self._task = value
                 self.run()
@@ -184,22 +185,10 @@ class InsightWorker:
         logging.info("Discovering insights for task with entry info: {}".format(entry_info))
 
         # Set the endpoints we want to discover insights for
-        endpoints = [{'cm_info': "issues-new"}, {'cm_info': "code-changes"}, {'cm_info': "code-changes-lines"},
+        endpoints = [{'cm_info': "issues-new"}, {'cm_info': "code-changes"}, {'cm_info': "code-changes-lines"}, 
             {'cm_info': 'reviews'}]
 
-        # scores = {}
-        # i = 0
-        # for score in scores_ary:
-        #     scores[i] = score.ri_score
-        #     i += 1
-
-        # """ Query all endpoints """
-        endpointSQL = s.sql.text("""
-            SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
-            """)
-        endpoints = [{'cm_info': "issues-new", 'cm_name': 'New Issues'}, {'cm_info': "code-changes",
-            'cm_name': 'Commit Count'}, {'cm_info': "code-changes-lines", 'cm_name': 'Lines of Code Changed'},
-            {'cm_info': "reviews", 'cm_name': 'Pull Requests'}]
+        """"""
 
         """ For when we want all endpoints """
 
@@ -214,11 +203,11 @@ class InsightWorker:
 
         # If we are discovering insights for a group vs repo, the base url will change
         if 'repo_group_id' in entry_info:
-            base_url = 'http://localhost:{}/api/unstable/repo-groups/{}'.format(
-                self.config['broker_port'], entry_info['repo_group_id'])
+            base_url = 'http://{}:{}/api/unstable/repo-groups/{}'.format(
+                self.config['broker_host'],self.config['broker_port'], entry_info['repo_group_id'])
         else:
-            base_url = 'http://localhost:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
-                self.config['broker_port'], entry_info['repo_id'])
+            base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
+                self.config['broker_host'],self.config['broker_port'], entry_info['repo_id'])
 
         # Hit and discover insights for every endpoint we care about
         for endpoint in endpoints:
@@ -232,7 +221,7 @@ class InsightWorker:
             def is_unique_key(key):
                 """ Helper method used to find which keys we want to analyze in each data point """
                 return 'date' not in key and key != 'repo_group_id' and key != 'repo_id' and key != 'repo_name' and key != 'rg_name'
-
+            
             # Filter out keys that we do not want to analyze (e.g. repo_id)
             raw_values = {}
             if len(data) > 0:
@@ -317,6 +306,8 @@ class InsightWorker:
                         i += 1
                     if insight and 'date' in data[0]:
 
+                        ### INSIGHT DISCOVERED ###
+
                         # Check if new insight has a better score than other insights in its place, use result
                         #   to determine if we continue in the insertion process (0 for no insertion, 1 for record
                         #   insertion, 2 for record and insight data points insertion)
@@ -341,6 +332,9 @@ class InsightWorker:
                             }
                             result = self.db.execute(self.repo_insights_records_table.insert().values(record))
                             logging.info("Primary key inserted into the repo_insights_records table: {}".format(result.inserted_primary_key))
+
+                            # Send insight to Jonah for slack bot
+                            self.send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean))
 
                         # Use result from clearing function to determine if we still need to insert the insight
                         if instructions['insight']:
@@ -374,11 +368,29 @@ class InsightWorker:
                 else:
                     logging.info("Key: {} has empty raw_values, should not have key here".format(key))
 
+    def send_insight(self, insight, units_from_mean):
+        
+        begin_date = datetime.datetime.now() - datetime.timedelta(days=7)
+        dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
+        if dict_date > begin_date and self.send_insights:
+            logging.info("Insight less than 7 days ago date found: {}\n\nSending to Jonah...".format(insight))
+            to_send = {
+                'insight': True,
+                'rg_name': insight['rg_name'],
+                'repo_git': insight['repo_git'],
+                'value': insight['ri_value'],
+                'field': insight['ri_field'],
+                'metric': insight['ri_metric'],
+                'units_from_mean': units_from_mean,
+                'detection_method': insight['ri_detection_method']
+            }
+            requests.post('https://7oksmwzsy7.execute-api.us-east-2.amazonaws.com/dev-1/insight-event', json=to_send)
+
 
     def clear_insight(self, repo_id, new_score, new_metric, new_field):
         logging.info("Checking if insight slots filled...")
 
-        # Dict that will be returned that instructs the rest of the worker where the insight insertion is
+        # Dict that will be returned that instructs the rest of the worker where the insight insertion is 
         #   needed (determined by if this new insights score is higher than already stored ones)
         insertion_directions = {'record': False, 'insight': False}
 
@@ -401,7 +413,7 @@ class InsightWorker:
                     logging.info("Refresh is on or Insight record found with a greater score than current slot filled for "
                         "repo {} metric {} new score {}, old score {}".format(repo_id, record['ri_metric'], new_score, record['ri_score']))
                     deleteSQL = """
-                        DELETE
+                        DELETE 
                             FROM
                                 repo_insights_records I
                             WHERE
@@ -432,7 +444,8 @@ class InsightWorker:
         num_insights = len(ins)
         to_delete = []
         for insight in ins:
-            logging.info("{}, {}".format(insight['ri_metric'], new_metric))
+            insight['ri_score'] = insight['ri_score'] if insight['ri_score'] else 0.0
+            logging.info("{}, {}, {}, {}".format(insight['ri_metric'], new_metric, insight['ri_score'], num_insights_per_repo))
             if (insight['ri_score'] < new_score and num_insights >= num_insights_per_repo) or num_insights > num_insights_per_repo or (insight['ri_metric'] == new_metric and self.refresh):
                 num_insights -= 1
                 to_delete.append(insight)
@@ -447,7 +460,7 @@ class InsightWorker:
         for insight in to_delete:
             logging.info("insight found with a greater score than current slots filled for repo {} new score {}, old score {}".format(repo_id, new_score, insight['ri_score']))
             deleteSQL = """
-                DELETE
+                DELETE 
                     FROM
                         repo_insights I
                     WHERE
@@ -458,11 +471,11 @@ class InsightWorker:
                 result = self.db.execute(deleteSQL)
             except Exception as e:
                 logging.info("Error occured deleting insight slot: {}".format(e))
-
+        
         return insertion_directions
 
 
-    def confidence_interval(self, data, timeperiod='week', confidence=.8):
+    def confidence_interval(self, data, timeperiod='week', confidence=.95):
         """ Method to find high activity issues in the past specified timeperiod """
         a = 1.0 * np.array(data)
         logging.info("np array: {}".format(a))
@@ -475,11 +488,11 @@ class InsightWorker:
 
 
     def update_metrics(self):
-        logging.info("Preparing to update metrics ...\n\n" +
-            "Hitting endpoint: http://localhost:{}/api/unstable/metrics/status ...\n".format(
-            self.config['broker_port']))
-        r = requests.get(url='http://localhost:{}/api/unstable/metrics/status'.format(
-            self.config['broker_port']))
+        logging.info("Preparing to update metrics ...\n\n" + 
+            "Hitting endpoint: http://{}:{}/api/unstable/metrics/status ...\n".format(
+            self.config['broker_host'],self.config['broker_port']))
+        r = requests.get(url='http://{}:{}/api/unstable/metrics/status'.format(
+            self.config['broker_host'],self.config['broker_port']))
         data = r.json()
 
         active_metrics = [metric for metric in data if metric['backend_status'] == 'implemented']
@@ -531,33 +544,7 @@ class InsightWorker:
                     logging.info("value of tuple exists: " + str(obj[cols[col]]) + "\n")
                 elif obj not in need_insertion:
                     need_insertion.append(obj)
-        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) +
+        logging.info("While filtering duplicates, we reduced the data size from " + str(len(og_data)) + 
             " to " + str(len(need_insertion)) + "\n")
         return need_insertion
 
-    def greatest_percentage(self):
-
-        querySQL = s.sql.text("""
-            SELECT cm_info FROM chaoss_metric_status WHERE data_collection_date = now() - interval '? days'
-            """)
-
-        data_now = pd.read_sql(querySQL, self.db, params={0})
-        data_week = pd.read_sql(querySQL, self.db, params={7})
-        data_month = pd.read_sql(querySQL, self.db, params={30})
-
-        """ Testing query functionality """
-        # print("\n\nNOW\n\n", data_now)
-        # print("\n\nWEEK\n\n", data_week)
-        # print("\n\nMONTH\n\n", data_month)
-
-        """ Determine these subscripts """
-        # change_week = (data_now[] - data_week[])/data_now[]
-        # change_month = (data_now[] - data_month[])/data_now[]
-
-        new_insight = {
-            "cm_info": data['cm_info'],
-            "change_week": change_week,
-            "change_month": change_month,
-        }
-
-        return new_insight

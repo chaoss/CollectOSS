@@ -19,7 +19,6 @@ def configure_database(config, credentials):
     config['Database']['password'] = credentials['password']
     config['Database']['schema'] = "augur_data"
     config['Database']['key'] = credentials['key']
-    config['Database']['zombie_id'] = credentials['zombie_id']
 
     config['GitHub'] = {'apikey': credentials['github_api_key']}
     print()

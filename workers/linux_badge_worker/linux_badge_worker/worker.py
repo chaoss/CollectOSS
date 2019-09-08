@@ -45,7 +45,7 @@ class BadgeWorker:
 
         specs = {
             "id": "com.augurlabs.core.badge_worker",
-            "location": "http://localhost:51235",
+            "location": self.config['location'],
             "qualifications":  [
                 {
                     "given": [["git_url"]],
@@ -99,14 +99,13 @@ class BadgeWorker:
 
         self.run()
 
-        requests.post('http://localhost:5000/api/workers', json=specs) #hello message
+        requests.post('http://{}:{}/api/workers'.format(self.config['broker_host'],self.config['broker_port'], json=specs) #hello message
 
 
     def update_config(self, config):
         """ Method to update config and set a default
         """
         self.config = {
-            'database_connection_string': 'psql://localhost:5432/augur',
             "key": "",
             "display_name": "",
             "description": "",

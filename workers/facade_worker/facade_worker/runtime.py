@@ -55,8 +55,8 @@ def main(augur_url, host, port):
     config = {
             "id": "com.augurlabs.core.facade_worker.{}".format(worker_port),
             "broker_port": server['port'],
-            "location": "http://localhost:{}".format(worker_port),
-            "zombie_id": credentials["zombie_id"],
+            "location": "http://{}:{}".format(server['broker_host'], worker_port),
+            "zombie_id": 22,
             "host": credentials["host"],
             "key": credentials["key"],
             "password": credentials["password"],
@@ -76,7 +76,7 @@ def main(augur_url, host, port):
 
     app.run(debug=app.debug, host=host, port=worker_port)
     try:
-        requests.post('http://localhost:{}/api/unstable/workers/remove'.format(server['port']), json={"id": config['id']})
+        requests.post('http://{}:{}/api/unstable/workers/remove'.format(server['host'],server['port']), json={"id": config['id']})
     except:
         pass
     logging.info("Killing Flask App: " + str(os.getpid()))

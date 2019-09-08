@@ -55,12 +55,13 @@ def main(augur_url, host, port):
     config = {
             "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
             "broker_port": server["port"],
+            "broker_host": server["host"],
             "host": credentials["host"],
-            "location": "http://localhost:{}".format(worker_port),
+            "location": "http://{}:{}".format(server["host"],worker_port),
             "password": credentials["password"],
             "port": credentials["port"],
             "user": credentials["user"],
-            "endpoint": "http://localhost:{}/api/unstable/metrics/status".format(server['port']),
+            "endpoint": "http://{}:{}/api/unstable/metrics/status".format(server["host"],server['port']),
             "database": credentials["database"],
             "type": "string"
         }

@@ -157,15 +157,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		if len(emails_to_add) > 0:
 			for email in emails_to_add:
 				cntrb = ("INSERT INTO contributors "
-					"(cntrb_email,cntrb_canonical,cntrb_full_name) "
-					"VALUES (%s,%s,%s)")
+					"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
+					"VALUES (%s,%s,%s,%s,%s,%s)")
 				if email[0] == author_email:
-					cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name)))
+					cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name),cfg.tool_source,cfg.tool_version,cfg.data_source))
 					db_local.commit()
 					cfg.log_activity('Debug','Stored contributor with email: %s' % author_email)
 
 				elif email[0] == committer_email:
-					cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)))
+					cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)cfg.tool_source,cfg.tool_version,cfg.data_source))
 					db_local.commit()
 					cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
 
