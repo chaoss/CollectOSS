@@ -534,6 +534,7 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('licenseDeclared','license-declared')
       this.addRepoGroupMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
       this.addRepoGroupMetric('topInsights', 'top-insights')
+      this.addRepoGroupMetric('changesByAuthor', 'lines-changed-by-author')
     }
   }
 }

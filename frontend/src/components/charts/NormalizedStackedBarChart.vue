@@ -47,7 +47,9 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      group: 1
+      group: 1,
+      x: 0,
+      y: 0
     }
   },
   computed: {
@@ -64,7 +66,7 @@ export default {
       return this.$store.state.endDate
     },
     spec() {
-      
+      console.log("HEY")
       let type = null, bin = null, size = null, timeUnit = null, format = null;
 
       if(this.group == 0) {
@@ -93,8 +95,8 @@ export default {
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 450,
-        "height": 250,
+        "width": this.x / 4,
+        "height": this.y / 4,
         "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
         "config": {
           "axis":{
@@ -355,7 +357,17 @@ export default {
     }
   },
   mounted() {
+    var win = window,
+    doc = document,
+    docElem = doc.documentElement,
+    body = doc.getElementsByTagName('body')[0],
+    x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+    y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    console.log(x, 'yo')
+    this.x = x
+    this.y = y
     this.spec;
+
   },
   methods: {
     reloadImage (config) {

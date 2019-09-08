@@ -9,9 +9,9 @@
     </div>
 
 
-    <spinner v-if="!loaded_groups"></spinner>
+    <spinner v-if="!loadedGroups"></spinner>
     <!-- Default Light Table -->
-    <div v-if="loaded_groups" class="row">
+    <div v-if="loadedGroups" class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
@@ -132,8 +132,7 @@
     computed: {
       ...mapGetters('common',[
         'sortedRepoGroups',
-        'repo_groups',
-        'loaded_groups',
+        'repoGroups'
       ])
     },
   })
@@ -156,7 +155,6 @@
     loadRepoGroups!:any;
     repo_groups!:any[];
     sortedRepoGroups!:any[];
-    loaded_groups!:boolean;
     addRepoGroup!:any;
     setBaseGroup!:any;
 
@@ -164,8 +162,10 @@
     addComparedGroup!:any;
 
     created() {
-      if(!this.loaded_groups){
-        this.loadRepoGroups()
+      if(!this.loadedGroups){
+        this.loadRepoGroups().then(() => {
+          this.loadedGroups = true
+        })
       }
     }
 

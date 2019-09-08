@@ -2053,7 +2053,7 @@ class Augur(object):
     #####################################
 
     @annotate(tag='lines-changed-by-author')
-    def lines_changed_by_author(self, repo_group_id, repo_id = None):
+    def lines_changed_by_author(self, repo_group_id, repo_id=None):
         """
         Returns number of lines changed per author per day
 
