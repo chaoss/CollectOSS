@@ -78,8 +78,8 @@ class Housekeeper:
                                 if "focused_task" in repo:
                                     task["focused_task"] = repo['focused_task']
                                 try:
-                                    requests.post('http://localhost:{}/api/unstable/task'.format(
-                                        broker_port), json=task, timeout=10)
+                                    requests.post('http://{}:{}/api/unstable/task'.format(
+                                        broker_host,broker_port), json=task, timeout=10)
                                 except Exception as e:
                                     logging.info("Error encountered: {}".format(e))
 
