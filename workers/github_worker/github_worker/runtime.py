@@ -65,8 +65,9 @@ def main(augur_url, host, port):
     config = { 
             "id": "com.augurlabs.core.github_worker.{}".format(worker_port),
             "broker_port": server['port'],
-            "location": "http://localhost:{}".format(worker_port),
-            "zombie_id": credentials["zombie_id"],
+            "broker_host": server['host'],
+            "location": "http://{}:{}".format(server['host'],worker_port),
+            "zombie_id": 22,
             "host": credentials["host"],
             "key": credentials["key"],
             "password": credentials["password"],
@@ -90,7 +91,7 @@ def main(augur_url, host, port):
     if app.gh_worker._child is not None:
         app.gh_worker._child.terminate()
     try:
-        requests.post('http://localhost:{}/api/unstable/workers/remove'.format(server['port']), json={"id": config['id']})
+        requests.post('http://{}:{}/api/unstable/workers/remove'.format(server['host'],server['port']), json={"id": config['id']})
     except:
         pass
     

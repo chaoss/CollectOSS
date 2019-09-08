@@ -140,8 +140,8 @@ class GitHubWorker:
         self.msg_id_inc = (msg_start + 1)
 
         try:
-            requests.post('http://localhost:{}/api/unstable/workers'.format(
-                self.config['broker_port']), json=specs) #hello message
+            requests.post('http://{}:{}/api/unstable/workers'.format(
+                self.config['broker_host'], self.config['broker_port']), json=specs) #hello message
         except:
             logging.info("Broker's port is busy, worker will not be able to accept tasks, "
                 "please restart Augur if you want this worker to attempt connection again.")
@@ -1205,6 +1205,6 @@ class GitHubWorker:
                 else:
                     obj['flag'] = 'need_insertion'
                     need_insertion_count += 1
-        logging.info("Page recieved has {} tuples, while filtering duplicates this" +
-            "was reduced to {} tuples.\n".format(len(new_data), need_insertion_count))
+        logging.info("Page recieved has {} tuples, while filtering duplicates this".format(len(new_data)) +
+            "was reduced to {} tuples.\n".format(need_insertion_count))
         return new_data
