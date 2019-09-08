@@ -67,6 +67,10 @@ def git_repo_initialize(cfg, repo_group_id=None):
         new_repos = list(cfg.cursor)
 
     for row in new_repos:
+
+        cfg.log_activity('Info','Fetching repos with repo group id: {}'.format(repo_group_id))
+        cfg.log_activity('Info','Fetching repos with repo group id: {}'.format(repo_group_id))
+
         update_repo_log(cfg, row[0],'Cloning')
 
         git = html.unescape(row[2])
@@ -74,17 +78,27 @@ def git_repo_initialize(cfg, repo_group_id=None):
         # Strip protocol from remote URL, set a unique path on the filesystem
         if git.find('://',0) > 0:
             repo_relative_path = git[git.find('://',0)+3:][:git[git.find('://',0)+3:].rfind('/',0)+1]
+            cfg.log_activity('Info','Repo Relative Path from facade05, from for row in new_repos, line 79: {}'.format(repo_relative_path))
+            cfg.log_activity('Info','The git path used : {}'.format(git))
+
+
         else:
             repo_relative_path = git[:git.rfind('/',0)+1]
+            cfg.log_activity('Info','Repo Relative Path from facade05, line 80, reset at 86: {}'.format(repo_relative_path))
+
 
         # Get the full path to the directory where we'll clone the repo
         repo_path = ('%s%s/%s' %
             (cfg.repo_base_directory,row[1],repo_relative_path))
+            cfg.log_activity('Info','Repo Path from facade05, line 86: {}'.format(repo_path))
+
 
         # Get the name of repo
         repo_name = git[git.rfind('/',0)+1:]
         if repo_name.find('.git',0) > -1:
             repo_name = repo_name[:repo_name.find('.git',0)]
+            cfg.log_activity('Info','Repo Name from facade05, line 93: {}'.format(repo_name))
+
 
         # Check if there will be a storage path collision
         query = ("SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = %s")
@@ -110,6 +124,9 @@ def git_repo_initialize(cfg, repo_group_id=None):
 
         # Create the prerequisite directories
         return_code = subprocess.Popen(['mkdir -p %s' %repo_path],shell=True).wait()
+#        cfg.log_activity('Info','Return code value when making directors from facade05, line 120: {:d}'.format(return_code))
+
+
 
         # Make sure it's ok to proceed
         if return_code != 0:
@@ -126,7 +143,7 @@ def git_repo_initialize(cfg, repo_group_id=None):
         update_repo_log(cfg, row[0],'New (cloning)')
 
         query = ("UPDATE repo SET repo_status='New (Initializing)', repo_path=%s, "
-            "repo_name=%s WHERE repo_id=%s")
+            "repo_name=%s WHERE repo_id=%s and repo_status != 'Empty'")
 
         cfg.cursor.execute(query, (repo_relative_path,repo_name,row[0]))
         cfg.db.commit()
@@ -160,7 +177,7 @@ def git_repo_initialize(cfg, repo_group_id=None):
             # If cloning failed, log it and set the status back to new
             update_repo_log(cfg, row[0],'Failed (%s)' % return_code)
 
-            query = ("UPDATE repo SET repo_status='New (failed)' WHERE repo_id=%s")
+            query = ("UPDATE repo SET repo_status='New (failed)' WHERE repo_id=%s and repo_status !='Empty'")
 
             cfg.cursor.execute(query, (row[0], ))
             cfg.db.commit()
@@ -315,7 +332,7 @@ def git_repo_updates(cfg):
 
         if return_code == 0:
 
-            set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s"
+            set_to_analyze = "UPDATE repo SET repo_status='Analyze' WHERE repo_id=%s and repo_status != 'Empty'"
             cfg.cursor.execute(set_to_analyze, (row[0], ))
             cfg.db.commit()
 
