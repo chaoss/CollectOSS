@@ -551,7 +551,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         SPLIT_PART(a.cmt_author_email,'@',2), 
         SUM(a.cmt_added),
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -573,7 +573,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         SPLIT_PART(a.cmt_committer_email,'@',2), 
         SUM(a.cmt_added),
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -600,7 +600,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         COUNT(DISTINCT a.cmt_filename) AS files, 
         COUNT(DISTINCT a.cmt_commit_hash) AS patches,
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -639,7 +639,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         COUNT(DISTINCT a.cmt_filename) AS files, 
         COUNT(DISTINCT a.cmt_commit_hash) AS patches,
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -677,7 +677,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         COUNT(DISTINCT a.cmt_filename) AS files, 
         COUNT(DISTINCT a.cmt_commit_hash) AS patches,
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -718,7 +718,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         COUNT(DISTINCT a.cmt_filename) AS files, 
         COUNT(DISTINCT a.cmt_commit_hash) AS patches,
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -757,7 +757,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         COUNT(DISTINCT a.cmt_filename) AS files, 
         COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -795,7 +795,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         COUNT(DISTINCT a.cmt_filename) AS files, 
         COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES('%s','%s','%s')) info(a,b,c), 
+        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
