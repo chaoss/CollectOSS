@@ -45,6 +45,7 @@ def cli(app):
     housekeeper = Housekeeper(
             jobs,
             broker,
+            broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
             broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
             user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
             password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
