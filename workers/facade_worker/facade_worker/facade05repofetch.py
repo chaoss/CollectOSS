@@ -90,7 +90,7 @@ def git_repo_initialize(cfg, repo_group_id=None):
         # Get the full path to the directory where we'll clone the repo
         repo_path = ('%s%s/%s' %
             (cfg.repo_base_directory,row[1],repo_relative_path))
-            cfg.log_activity('Info','Repo Path from facade05, line 86: {}'.format(repo_path))
+        cfg.log_activity('Info','Repo Path from facade05, line 86: {}'.format(repo_path))
 
 
         # Get the name of repo
