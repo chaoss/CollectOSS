@@ -160,12 +160,14 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 					"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
 					"VALUES (%s,%s,%s,%s,%s,%s)")
 				if email[0] == author_email:
-					cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name),cfg.tool_source,cfg.tool_version,cfg.data_source))
+					cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name),
+						cfg.tool_source,cfg.tool_version,cfg.data_source))
 					db_local.commit()
 					cfg.log_activity('Debug','Stored contributor with email: %s' % author_email)
 
 				elif email[0] == committer_email:
-					cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)cfg.tool_source,cfg.tool_version,cfg.data_source))
+					cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name), 
+						cfg.tool_source,cfg.tool_version,cfg.data_source))
 					db_local.commit()
 					cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
 
