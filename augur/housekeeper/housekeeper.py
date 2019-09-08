@@ -10,8 +10,9 @@ logging.basicConfig(filename='housekeeper.log')
 
 class Housekeeper:
 
-    def __init__(self, jobs, broker, broker_port, user, password, host, port, dbname):
+    def __init__(self, jobs, broker, broker_host, broker_port, user, password, host, port, dbname):
 
+        self.broker_host = broker_host
         self.broker_port = broker_port
         self.broker = broker
         DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -41,7 +42,7 @@ class Housekeeper:
         self.__updater()
 
     @staticmethod
-    def updater_process(broker_port, broker, model, given, delay, repos, repo_group_id):
+    def updater_process(broker_host,broker_port, broker, model, given, delay, repos, repo_group_id):
         """
         Controls a given plugin's update process
         :param name: name of object to be updated 
@@ -77,8 +78,8 @@ class Housekeeper:
                                 if "focused_task" in repo:
                                     task["focused_task"] = repo['focused_task']
                                 try:
-                                    requests.post('http://localhost:{}/api/unstable/task'.format(
-                                        broker_port), json=task, timeout=10)
+                                    requests.post('http://{}:{}/api/unstable/task'.format(
+                                        broker_host,broker_port), json=task, timeout=10)
                                 except Exception as e:
                                     logging.info("Error encountered: {}".format(e))
 
@@ -93,8 +94,8 @@ class Housekeeper:
                                     }
                                 }
                             try:
-                                requests.post('http://localhost:{}/api/unstable/task'.format(
-                                    broker_port), json=task, timeout=10)
+                                requests.post('http://{}:{}/api/unstable/task'.format(
+                                    broker_host,broker_port), json=task, timeout=10)
                             except Exception as e:
                                 logging.info("Error encountered: {}".format(e))
 
@@ -117,7 +118,7 @@ class Housekeeper:
         if updates is None:
             updates = self.__updatable
         for update in updates:
-            up = Process(target=self.updater_process, args=(self.broker_port, self.broker, update['model'], 
+            up = Process(target=self.updater_process, args=(self.broker_host,self.broker_port, self.broker, update['model'], 
                 update['given'], update['delay'], update['repos'], update['repo_group_id']), daemon=True)
             up.start()
             self.__processes.append(up)

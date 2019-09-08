@@ -61,10 +61,10 @@ export default {
     })
     return items
   },
-  loaded_repos: (state:any) => {
+  loadedRepos: (state:any) => {
       return state.cache.getRepos != null;
   },
-  loaded_groups: (state:any) => {
+  loadedGroups: (state:any) => {
       return state.cache.getRepoGroups != null;
   },
   trailingAverage: (state:any) => {

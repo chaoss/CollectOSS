@@ -197,8 +197,8 @@ class FacadeWorker:
                     logging.info("Error encountered: " + repr(e) + "\n")
                     logging.info("Notifying broker and logging task failure in database...\n")
                     message.entry_info['task']['worker_id'] = self.config['id']
-                    requests.post("http://localhost:{}/api/unstable/task_error".format(
-                        self.config['broker_port']), json=message.entry_info['task'])
+                    requests.post("http://{}:{}/api/unstable/task_error".format(
+                        self.config['broker_host'],self.config['broker_port']), json=message.entry_info['task'])
                     # Add to history table
                     task_history = {
                         "repo_id": message.entry_info['repo_id'],

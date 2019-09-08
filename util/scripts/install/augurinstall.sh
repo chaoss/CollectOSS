@@ -193,7 +193,6 @@ function enter_db_credentials() {
   read -p "user: " user
   read -p "password: " password
   read -p "key: " key
-  read -p "zombie ID: " zombie_id
 
   config="
   {
@@ -202,8 +201,7 @@ function enter_db_credentials() {
     \"port\": \"$port\",
     \"user\": \"$user\",
     \"password\": \"$password\",
-    \"key\": \"$key\",
-    \"zombie_id\": \"$zombie_id\"
+    \"key\": \"$key\"
   }"
 
   rm temp.config.json

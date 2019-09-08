@@ -69,7 +69,6 @@
       <div class="col col-7">
       </div>
 
-
     </div>
 
   </d-container>
@@ -97,7 +96,7 @@ import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
 
 @Component({
   components: {
-    SparkChart,
+    SparkChart, // <spark-chart></spark-chart>
     InsightChart,
     TickChart,
     LinesOfCodeChart,

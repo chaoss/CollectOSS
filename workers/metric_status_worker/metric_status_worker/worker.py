@@ -96,27 +96,11 @@ class MetricStatusWorker:
 
         Base.prepare()
 
-        self.chaoss_metric_status_table =Base.classes['chaoss_metric_status'].__table__
+        self.chaoss_metric_status_table = Base.classes['chaoss_metric_status'].__table__
 
-        # logging.info('Getting max repo_info_id...')
-        # max_repo_info_id_sql = s.sql.text("""
-        #     SELECT MAX(repo_info_id) AS repo_info_id
-        #     FROM repo_info
-        # """)
-        # rs = pd.read_sql(max_repo_info_id_sql, self.db)
-
-        # repo_info_start_id = int(
-        #     rs.iloc[0]['repo_info_id']) if rs.iloc[0]['repo_info_id'] is not None else 1
-
-        # if repo_info_start_id == 1:
-        #     self.info_id_inc = repo_info_start_id
-        # else:
-        #     self.info_id_inc = repo_info_start_id + 1
-
-        # requests.post('http://localhost:5000/api/unstable/workers', json=specs)
         try:
-            requests.post('http://localhost:{}/api/unstable/workers'.format(
-                self.config['broker_port']), json=specs)
+            requests.post('http://{}:{}/api/unstable/workers'.format(
+                self.config['broker_host'],self.config['broker_port']), json=specs)
         except requests.exceptions.ConnectionError:
             logging.error('Cannot connect to the broker')
             sys.exit('Cannot connect to the broker! Quitting...')
@@ -152,8 +136,8 @@ class MetricStatusWorker:
         if self._child is None:
             self._child = Process(target=self.collect, args=())
             self._child.start()
-            requests.post("http://localhost:{}/api/unstable/add_pids".format(
-                self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
+            requests.post("http://{}:{}/api/unstable/add_pids".format(
+                self.config['broker_host'],self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self):
         while True:
@@ -279,8 +263,8 @@ class MetricStatusWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" +
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        requests.post('http://localhost:{}/api/unstable/completed_task'.format(
-            self.config['broker_port']), json=task_completed)
+        requests.post('http://{}:{}/api/unstable/completed_task'.format(
+            self.config['broker_host'],self.config['broker_port']), json=task_completed)
         self.results_counter = 0
 
 
@@ -493,7 +477,8 @@ class MetricsStatus(object):
         frontend_status_extractor = FrontendStatusExtractor()
 
         r = requests.get(
-            url='http://localhost:5000/api/unstable/batch/metadata')
+            url='http://{}:{}/api/unstable/batch/metadata'.format(
+                self.config['broker_host'],self.config['broker_port']))
         data = json.loads(r.text)
 
         for metric in data:

@@ -15,14 +15,14 @@ def read(filename):
 
 setup(
     name="insight_worker",
-    version="0.1.0",
+    version="0.0.2",
     url="https://github.com/chaoss/augur",
     license='MIT',
 
     author="Augur Team",
     author_email="s@goggins.com",
 
-    description="Augur Worker that collects GitHub data",
+    description="Augur Worker that discovers and stores data anomalies",
     long_description=read("README.rst"),
 
     packages=find_packages(exclude=('tests',)),

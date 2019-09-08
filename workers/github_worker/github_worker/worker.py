@@ -140,8 +140,8 @@ class GitHubWorker:
         self.msg_id_inc = (msg_start + 1)
 
         try:
-            requests.post('http://localhost:{}/api/unstable/workers'.format(
-                self.config['broker_port']), json=specs) #hello message
+            requests.post('http://{}:{}/api/unstable/workers'.format(
+                self.config['broker_host'], self.config['broker_port']), json=specs) #hello message
         except:
             logging.info("Broker's port is busy, worker will not be able to accept tasks, "
                 "please restart Augur if you want this worker to attempt connection again.")
@@ -307,7 +307,7 @@ class GitHubWorker:
         """ Method to update config and set a default
         """
         self.config = {
-            'database_connection_string': 'psql://localhost:5433/augur',
+            'database_connection_string': 'psql://{}:5433/augur'.format(self.config['broker_host']),
             "display_name": "",
             "description": "",
             "required": 1,
@@ -400,8 +400,8 @@ class GitHubWorker:
                     logging.info("Error encountered: " + repr(e) + "\n")
                     logging.info("Notifying broker and logging task failure in database...\n")
                     message.entry_info['task']['worker_id'] = self.config['id']
-                    requests.post("http://localhost:{}/api/unstable/task_error".format(
-                        self.config['broker_port']), json=message.entry_info['task'])
+                    requests.post("http://{}:{}/api/unstable/task_error".format(
+                        self.config['broker_host'],self.config['broker_port']), json=message.entry_info['task'])
                     # Add to history table
                     task_history = {
                         "repo_id": message.entry_info['repo_id'],
@@ -1146,8 +1146,8 @@ class GitHubWorker:
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
-        requests.post('http://localhost:{}/api/unstable/completed_task'.format(
-            self.config['broker_port']), json=task_completed)
+        requests.post('http://{}:{}/api/unstable/completed_task'.format(
+            self.config['broker_host'],self.config['broker_port']), json=task_completed)
 
         # Reset results counter for next task
         self.results_counter = 0
@@ -1205,6 +1205,6 @@ class GitHubWorker:
                 else:
                     obj['flag'] = 'need_insertion'
                     need_insertion_count += 1
-        logging.info("Page recieved has {} tuples, while filtering duplicates this" +
-            "was reduced to {} tuples.\n".format(len(new_data), need_insertion_count))
+        logging.info("Page recieved has {} tuples, while filtering duplicates this".format(len(new_data)) +
+            "was reduced to {} tuples.\n".format(need_insertion_count))
         return new_data

@@ -13,7 +13,6 @@ import augur
 from augur.util import annotate, metric_metadata, logger
 from augur.routes import create_routes
 import os
-from augur.broker.broker import Broker
 from augur.housekeeper.housekeeper import Housekeeper
 import logging
 

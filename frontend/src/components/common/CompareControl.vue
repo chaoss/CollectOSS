@@ -182,8 +182,8 @@
       ...mapGetters('common', [
         'repos',
         'repoGroups',
-        'loaded_repos',
-        'loaded_groups',
+        'loadedRepos',
+        'loadedGroups',
         'repoRelations'
       ]),
       ...mapGetters('compare', [
@@ -227,9 +227,11 @@
   })
 
   export default class CompareControl extends Vue {
-    selectedGroups: any = [];
-    selectedRepos: any = [];
-    isCollpase: boolean = true;
+    selectedGroups: any = []
+    selectedRepos: any = []
+    GroupOptions: string[] = []
+
+    isCollpase: boolean = true
     options: string[] = ['list', 'of', 'options']
     disabledDates: any = {
       // Disable all the dates up to specific date.
@@ -252,8 +254,8 @@
     startDate!: Date;
     endDate!: Date;
     isGroup!: boolean;
-    loaded_repos!: boolean;
-    loaded_groups!: boolean;
+    loadedRepos!: boolean;
+    loadedGroups!: boolean;
     comparedRepoGroups!:any;
     comparedRepos!:any;
     comparisionSize!:any;
@@ -280,11 +282,18 @@
 
     mounted() {
       // if not cached, load repo groups and repos
-      if (!this.loaded_groups) {
-        this.loadRepoGroups()
+      if (!this.loadedGroups) {
+        this.loadRepoGroups().then(() => {
+          let rg_names:string[] = []
+          this.repoGroups.forEach((rg:any) => {
+            console.log("GROUP")
+            rg_names.push(rg.rg_name)
+          })
+          this.GroupOptions = rg_names
+        })
       }
       // when comparision is group type, we don't need to load repos
-      if (!this.isGroup && !this.loaded_repos) {
+      if (!this.isGroup && !this.loadedRepos) {
         this.loadRepos()
       }
 
@@ -300,13 +309,14 @@
       return this.selectedRepos
     }
 
-    get GroupOptions() {
-      let rg_names:string[] = []
-      this.repoGroups.forEach((rg:any)=>{
-        rg_names.push(rg.rg_name)
-      })
-      return rg_names
-    }
+    // get GroupOptions() {
+    //   let rg_names:string[] = []
+    //   this.repoGroups.forEach((rg:any) => {
+    //     console.log("GROUP")
+    //     rg_names.push(rg.rg_name)
+    //   })
+    //   return rg_names
+    // }
 
     get RepoOptions() {
       let repos =  Object.values(this.repoRelations[this.selectedGroups] || [])
