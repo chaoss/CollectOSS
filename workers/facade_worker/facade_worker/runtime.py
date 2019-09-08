@@ -55,6 +55,7 @@ def main(augur_url, host, port):
     config = {
             "id": "com.augurlabs.core.facade_worker.{}".format(worker_port),
             "broker_port": server['port'],
+            "broker_host": server['host'],
             "location": "http://{}:{}".format(server['broker_host'], worker_port),
             "zombie_id": 22,
             "host": credentials["host"],
