@@ -1422,111 +1422,20 @@ class Augur(object):
 
     @annotate(tag='sbom-download')
     def sbom_download(self, repo_group_id, repo_id=None):
-        """REQUIRES augur-sbom TO BE INSTALLED
-
-        :param repo_group_id: The repository's repo_group_id
+        """REQUIRES SBOMS TO BE PRESENT IN THE DATABASE
+        
         :param repo_id: The repository's repo_id, defaults to None
-        :return: CII best parctices badge level
+        :return: dosocs sbom
         """
-        dosocs_id_sql = s.sql.text("""set search_path to spdx;
-        select dosocs_pkg_id from augur_repo_map
-        where repo_id = :repo_id
-        LIMIT 1
+        dosocs_SQL = s.sql.text("""
+            select * from augur_data.repo_sbom_scans
+            where repo_id = :repo_id;
         """)
-        logger.debug(dosocs_id_sql)
+
+        logger.debug(dosocs_SQL)
         params = {'repo_id': repo_id}
-        dsid_raw = pd.read_sql(dosocs_id_sql, self.db, params=params)
-        dsid = dsid_raw['dosocs_pkg_id']
-        proc = subprocess.call(['dosocs2', 'generate', str(dsid)], shell=False, stdout=PIPE, stderr=PIPE)
-        varerr = str(str(proc.stderr.read()).split(" ")[3])
-        charvarerr = varerr.split("\\")[0]
-        """
-        f = open("./" + repo_id + "-sbom.txt","w")
-        pope = subprocess.Popen("dosocs2 print " + str(charvarerr) + " -T 2.0.tag.short.nofiles", shell=True, stdout=PIPE, stderr=PIPE)
-        out, err = pope.communicate()
-        package_sx_1 = re.findall(r'(SPDXVersion): (.*)\n(DataLicense): (.*)\n(DocumentNamespace): (.*)\n(DocumentName): (.*)\n(SPDXID): (.*)\n(DocumentComment): (.*)\n', out.decode('UTF-8'))
-        package_sr_1 = re.findall(r'(PackageName): (.*)\n(SPDXID): (.*)\n(PackageVersion|)? ?(.*|)\n?(PackageFileName): (.*)\n(PackageSupplier): (.*)\n(PackageOriginator): (.*)\n(PackageDownloadLocation): (.*)\n(PackageVerificationCode):? ?(.*|)\n?(PackageHomePage): (.*)\n(PackageLicenseConcluded):', out.decode('UTF-8'))
-        package_sr_2 = re.findall(r'(PackageLicenseInfoFromFiles): (.*)\n?', out.decode('UTF-8'))
-        package_sr_3 = re.findall(r'(PackageLicenseDeclared): (.*)\n(PackageLicenseComments): (.*)\n(PackageCopyrightText): (.*)\n(PackageSummary): (.*)\n(PackageDescription): (.*)\n(PackageComment): (.*|)', out.decode('UTF-8'))
-        package_cr_1 = re.findall(r'(Creator): (.*)\n(Created): (.*)\n(CreatorComment): (.*)\n(LicenseListVersion): (.*)\n', out.decode('UTF-8'))
-        package_li_1 = re.findall(r'(LicenseID): (.*)\n(LicenseName): (.*)\n(ExtractedText): (.*)\n(LicenseCrossReference): (.*)\n(LicenseComment): (.*)\n', out.decode('UTF-8'))
-        package_ff_1 = re.findall(r'(FileName): (.*)\n(SPDXID): (.*)\n(FileType): (.*)\n(FileChecksum): (.*)\n(LicenseConcluded): (.*)\n(LicenseInfoInFile): (.*)\n(LicenseComments): (.*)\n(FileCopyrightText): (.*)\n(FileComment): (.*)\n(FileNotice): (.*)\n', out.decode('UTF-8'))
-        package_lc_1 = re.findall(r'(TotalFiles): (.*)\n(DeclaredLicenseFiles): (.*)\n(PercentTotalLicenseCoverage): (.*)\n', out.decode('UTF-8'))
-        license_information = {}
 
-        temp_1 = {}
-        for i in range(0, int(len(package_lc_1[0])/2)):
-            j = i*2
-            temp_1[package_lc_1[0][j]] = package_lc_1[0][j+1]
-
-        coverage_temp = {**temp_1}
-
-        temp_1 = {}
-        for i in range(0, int(len(package_sx_1[0])/2)):
-            j = i*2
-            temp_1[package_sx_1[0][j]] = package_sx_1[0][j+1]
-
-        spdx_temp = {**temp_1}
-
-        temp_1 = {}
-        for i in range(0, int(len(package_sr_1[0])/2)):
-            j = i*2
-            if package_sr_1[0][j] != '':
-                temp_1[package_sr_1[0][j]] = package_sr_1[0][j+1]
-        temp_2 = {}
-        i = 0
-        #print(package_sr_2)
-        #print(package_sr_2[0])
-        if len(package_sr_2) > 1:
-            for i in range(0, len(package_sr_2[0])):
-                temp_2["License " + str(i)] = package_sr_2[i][1]
-                i += 1
-        else:
-            print(package_sr_2[0][1])
-            temp_2["License 0"] = package_sr_2[0][1]
-        temp_3 = {}
-        for i in range(0, int(len(package_sr_3[0])/2)):
-            j = i*2
-            temp_3[package_sr_3[0][j]] = package_sr_3[0][j+1]
-
-        package_temp = {**temp_1, **temp_2, **temp_3}
-
-        temp_1 = {}
-        for i in range(0, int(len(package_cr_1[0])/2)):
-            j = i*2
-            temp_1[package_cr_1[0][j]] = package_cr_1[0][j+1]
-
-        creation_temp = {**temp_1}
-
-        #print(package_li_1)
-        temp_2 = {}
-        for g in range(0, int(len(package_li_1))):
-            temp_1 = {}
-            for i in range(0, int(len(package_li_1[g])/2)):
-                j = i*2
-                temp_1[package_li_1[g][j]] = package_li_1[g][j+1]
-            temp_2["License Data " + str(g)] = temp_1
-
-        license_temp = {**temp_2}
-
-        temp_2 = {}
-        for g in range(0, int(len(package_ff_1))):
-            temp_1 = {}
-            for i in range(0, int(len(package_ff_1[g])/2)):
-                j = i*2
-                temp_1[package_ff_1[g][j]] = package_ff_1[g][j+1]
-            temp_2["File Data " + str(g)] = temp_1
-
-        fileby_temp = {**temp_2}
-
-        license_information['Coverage'] = coverage_temp
-        license_information['SPDX Data'] = spdx_temp
-        license_information['Package'] = package_temp
-        license_information['Creation'] = creation_temp
-        license_information['Licenses'] = license_temp
-        license_information['File-by-File'] = fileby_temp
-        """
-        return ['working']
+        return pd.read_sql(dosocs_SQL, self.db, params=params)
         #return [json.dumps(license_information)]
 
     @annotate(tag='cii-best-practices-badge')
