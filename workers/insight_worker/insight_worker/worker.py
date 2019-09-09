@@ -43,7 +43,7 @@ class InsightWorker:
         self.refresh = True
         self.send_insights = False
 
-        logging.info("Worker initializing...")
+        logging.info("Worker initial???izing...")
         
         specs = {
             "id": "com.augurlabs.core.insight_worker",
@@ -100,12 +100,15 @@ class InsightWorker:
             SELECT repo_git, repo_id FROM repo order by repo_id asc
         """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 500
+        pop_off = 0
         i = 0
+        logging.info("HI")
+        logging.info("{}".format(rs))
         while i < pop_off:
             rs = rs[1:]
             i += 1
         for row in rs:
+            logging.info(row);
             self._queue.put({'repo_id': row['repo_id'], 'repo_git': row['repo_git']})
         self.run()
         # self.discover_insights({'repo_id': 21000, 'repo_git': 'https://github.com/rails/rails.git'})
