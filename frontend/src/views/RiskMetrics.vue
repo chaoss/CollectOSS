@@ -45,6 +45,8 @@
                        :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
         <br> <br>
         <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
+        <br><br>
+        <coverage-card title="License Coverage" :data="values" source="sbom"></coverage-card>
                              </div>
 
       </div>
@@ -65,6 +67,7 @@
   import LicenseTable from "@/components/charts/LicenseTable.vue";
   import CiiTable from "@/components/charts/CiiTable.vue";
   import DownloadCard from "@/components/charts/DownloadCard.vue";
+  import CoverageCard from "@/components/charts/CoverageCard.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
   import router from "@/router";
 
@@ -77,7 +80,8 @@
       LineChart,
       LicenseTable,
       CiiTable,
-      DownloadCard
+      DownloadCard,
+      CoverageCard
       // PieChart,
     },
     methods: {
