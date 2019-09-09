@@ -1,7 +1,7 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-      <p v-if="values === undefined">There is no SBOM Download available for this repository.</p>
+      <p v-if="values === undefined">There are no license coverage metrics available for this repository.</p>
       <div style="float:left;text-align:right;width:49%;">
         <p> Total Files
         <br> Files with Declared Licenses

@@ -1,9 +1,9 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-      <p v-if="values === undefined">There is no SBOM Download available for this repository.</p>
+      <p v-if="values === undefined">There is no SBOM download available for this repository.</p>
       <button v-if="values" @click="download" style="border-radius:6px;">
-        <strong>Download SBOM</strong>
+        <strong>Download SBOM (.json)</strong>
       </button>
     </d-card-body>
   </d-card>
