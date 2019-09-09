@@ -11,6 +11,8 @@ import datetime
 from augur import logger
 from augur.util import annotate
 import base64
+import subprocess
+from subprocess import PIPE
 
 class Augur(object):
     """Uses the Augur database to return dataframes with interesting GitHub indicators"""
@@ -1417,6 +1419,24 @@ class Augur(object):
     #####################################
     ###              RISK             ###
     #####################################
+
+    @annotate(tag='sbom-download')
+    def sbom_download(self, repo_group_id, repo_id=None):
+        """REQUIRES SBOMS TO BE PRESENT IN THE DATABASE
+        
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: dosocs sbom
+        """
+        dosocs_SQL = s.sql.text("""
+            select * from augur_data.repo_sbom_scans
+            where repo_id = :repo_id;
+        """)
+
+        logger.debug(dosocs_SQL)
+        params = {'repo_id': repo_id}
+
+        return pd.read_sql(dosocs_SQL, self.db, params=params)
+        #return [json.dumps(license_information)]
 
     @annotate(tag='cii-best-practices-badge')
     def cii_best_practices_badge(self, repo_group_id, repo_id=None):
