@@ -14,22 +14,106 @@
 
 
 
-    <!-- Overview Section -->
-    <!-- <div class="page-header row no-gutters py-4" >
-      <div class="col-12 col-sm-4 text-center text-sm-left mb-0"> -->
-        <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-        <!-- <h3 class="page-title" style="font-size: 1rem">Overview</h3>
-      </div>
-    </div> -->
+    <spinner style="padding-top: 2rem" v-if="!loadedRepos"></spinner>
 
-    <div class="row">
+    <div style="padding-top: 2rem" v-if="loadedRepos"  class="row">
+      <div class="col">
+        <div class="card card-small mb-4">
+          <div class="card-header border-bottom">
+            <h6 class="m-0">Currently Stored Repos</h6>
+          </div>
+          <div class="card-body p-0 pb-3 text-center">
+            <table style="table-layout:fixed;" class="table mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('url')"> 
+                    <div class="row">
+                      <div class="col col-9">URL</div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
+                    <div class="row">
+                      <div class="col col-9">Repo Group Name</div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
+                    <div class="row">
+                      <div class="col col-9">Repo Description</div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'description' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
+                    <div class="row">
+                      <div class="col col-9">Group's Repo Count</div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('commits_all_time')">
+                    <div class="row">
+                      <div class="col col-9">Total Commit Count</div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'commits_all_time' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('issues_all_time')">
+                    <div class="row">
+                      <div class="col col-0">Total Issue Count</div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'issues_all_time' == sortColumn"></div>
+                    </div>
+                  </th>
+                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_status')">
+                    <div class="row">
+                      <div class="col col-9">Status</div>
+                      <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_status' == sortColumn"></div>
+                    </div>
+                  </th> -->
+                  <th scope="col" class="border-0">Options</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(repo,index) in sortedReposInGroup(base,sortColumn,ascending)" v-bind:item="repo">
+                  <td>
+                    <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
+                  </td>
+                  <td>{{ repo.rg_name }}</td>
+                  <td>{{ repo.description }}</td>
+                  <td>{{ repo.repo_count }}</td>
+                  <td>{{ repo.commits_all_time }}</td>
+                  <td>{{ repo.issues_all_time }}</td>
+                  <!-- <td>{{ repo.repo_status }}</td> -->
+                  <td>
+                    <div class="row">
+                      <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0;border: none; background: none;">
+                        <i class="material-icons" style="color:#007bff;">star_rate</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#favorite'+index"
+                                 container=".shards-demo--example--tooltip-01">
+                        Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
+                      </d-tooltip>
+                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0;border: none; background: none;" @click="addComparedRepo(repo)">
+                        <i class="material-icons" style="color:#007bff;">library_add</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#add_compare'+index"
+                                 :triggers="['hover']"
+                                 container=".shards-demo--example--tooltip-01">
+                        Add this repo group to your current compared repos
+                      </d-tooltip>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- <div class="row">
       
       <div class="row col col-7" style="" >
         <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
-<!-- look to add commit chart? -->
-        <!--<div class="col col-12">
-          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
-        </div> -->
         <div class="row col col-12" v-if="loadedBars">
           <div class="col col-6" style="padding-right: 35px; transform: translateY(-0px) !important">
             <normalized-stacked-bar-chart 
@@ -57,7 +141,7 @@
         <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
       </div>
 
-    </div>
+    </div> -->
 
   </d-container>
 </template>
@@ -102,10 +186,12 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
     ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+      'loadRepos',
     ])
   },
   computed: {
     ...mapGetters('common',[
+      'sortedReposInGroup'
     ]),
     ...mapGetters('compare',[
       'base'
@@ -126,28 +212,51 @@ export default class RepoOverview extends Vue {
   loaded_issues = false
   loaded_experimental = false
   loaded_activity = false
-  values: any = {'issuesClosed':[], 'changesByAuthor': []}
+  values: any = {'repos':[], 'changesByAuthor': []}
   loadedBars = false
+  loadedRepos = false
+  ascending:boolean = false;
+  sortColumn: string ='commits_all_time';
 
   // deflare vuex action, getter, mutations
   groupsInfo!: any;
   getRepoGroups!: any;
   repo_groups!: any[];
-  sortedRepoGroups!: any[];
+  sortedReposInGroup!: any[];
   base!: any;
   // actions
   endpoint!: any;
+  loadRepos!: any;
 
   created() {
-    console.log(this.base)
-    console.log(process.env.VUE_APP_PORT)
-    this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
-      console.log(tuples)
-      Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
-      })
-      console.log(this.values)
-      this.loadedBars = true
+    // this.endpoint({endpoints:this.barEndpoints,repoGroups:[this.base]}).then((tuples:any) => {
+    //   console.log(tuples)
+    //   Object.keys(tuples[this.base.rg_name]['groupEndpoints']).forEach((endpoint) => {
+    //     this.values[endpoint] = tuples[this.base.rg_name]['groupEndpoints'][endpoint]
+    //   })
+    //   console.log(this.values)
+    //   this.loadedBars = true
+    //   console.log("done")
+    // })
+    this.loadRepos().then((repos:any) => {
+      this.loadedRepos = true
+    })
+
+  }
+
+  sortTable(col: string) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+  }
+
+  onGitRepo (e: any) {
+    this.$router.push({
+      name: 'repo_overview',
+      params: {group:e.rg_name, repo:e.repo_name, repo_group_id: e.repo_group_id, repo_id: e.repo_id, url:e.url}
     })
   }
 

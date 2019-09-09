@@ -8,7 +8,6 @@
       </div>
     </div>
 
-    <!-- Default Light Table -->
     <spinner v-if="!loadedRepos"></spinner>
 
     <div v-if="loadedRepos"  class="row">
@@ -164,12 +163,9 @@ export default class Repos extends Vue{
 
   created() {
     
-    if (!this.loadedRepos) {
-      console.log("bout to load")
-      this.loadRepos().then(() => {
-        this.loadedRepos = true
-      })
-    }
+    this.loadRepos().then(() => {
+      this.loadedRepos = true
+    })
 
   }
   
