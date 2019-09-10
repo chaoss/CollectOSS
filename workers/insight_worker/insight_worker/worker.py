@@ -100,7 +100,7 @@ class InsightWorker:
             SELECT repo_git, repo_id FROM repo order by repo_id asc
         """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 500
+        pop_off = 1000
         i = 0
         while i < pop_off:
             rs = rs[1:]
@@ -161,9 +161,8 @@ class InsightWorker:
         Gets run whenever a new task is added
         """
         logging.info("Running...\n")
-        if not self._child:
-            self._child = Process(target=self.collect, args=())
-            self._child.start()
+        self._child = Process(target=self.collect, args=())
+        self._child.start()
 
     def collect(self):
         """ Function to process each entry in the worker's task queue

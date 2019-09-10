@@ -128,9 +128,9 @@ export default {
                             let i = 0
                             payload.repoGroups.forEach((group: any) => {
                                 payload.endpoints.forEach((endpoint: string) => {
-                                    tempCache[group.rg_name]['groupEndpoints'][payload.endpoints[i]] = data[i]// || []
-                                    i++
+                                    tempCache[group.rg_name]['groupEndpoints'][endpoint] = data[i]// || []
                                 })
+                                i++
                             })
                             console.log(tempCache)
                         }).finally(() => {

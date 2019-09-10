@@ -70,7 +70,7 @@ def main(augur_url, host, port):
     app.gh_worker = BadgeWorker(config) # declares the worker that will be running on this server with specified config
 
     create_server(app, None)
-    app.run(debug=app.debug, host=host, port=port)
+    app.run(debug=app.debug, host=server['host'], port=worker_port)
 
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0):

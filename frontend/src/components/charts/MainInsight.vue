@@ -11,6 +11,7 @@
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
 import Spinner from '../Spinner.vue'
+import vegaEmbed from 'vega-embed'
 
 export default {
   props: ['url', 'source', 'title', 'color', 'data', 'field', 'insight'],

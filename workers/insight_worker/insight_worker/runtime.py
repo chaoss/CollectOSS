@@ -71,7 +71,7 @@ def main(augur_url, host, port):
     
     create_server(app, None)
     print("Starting Flask App with pid: " + str(os.getpid()) + "...")
-    app.run(debug=app.debug, host=host, port=port)
+    app.run(debug=app.debug, host=server['host'], port=worker_port)
     print("Killing Flask App: " + str(os.getpid()))
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
