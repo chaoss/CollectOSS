@@ -100,7 +100,7 @@ class InsightWorker:
             SELECT repo_git, repo_id FROM repo order by repo_id asc
         """)
         rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 0
+        pop_off = 1500
         i = 0
         while i < pop_off:
             rs = rs[1:]
