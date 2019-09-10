@@ -6,8 +6,8 @@ if [[ $(ps x -o pid= -p $(cat logs/augur_backend_pid.txt) | wc -l) -ge 1 ]]; the
     echo "Backend server already running."
 else
     echo "Starting backend server."
-    nohup augur run > logs/augur_backend.log 2>&1 &
-    echo $! > logs/augur_backend_pid.txt
+    nohup augur run >logs/augur_backend.log 2>logs/augur_backend.err &
+    echo $! >logs/augur_backend_pid.txt
 fi
 
 # account for grep process itself here
@@ -17,8 +17,8 @@ if [[ $(ps ax | grep 'vue-cli-service serve' | wc -l) -ge 2 ]]; then
 else
     echo "Starting frontend server."
     cd frontend/
-    nohup npm run serve > ../logs/augur_frontend.log 2>&1 &
-    echo $! > ../logs/augur_frontend_pid.txt
+    nohup npm run serve >../logs/augur_frontend.log 2>logs/augur_frontend.err &
+    echo $! >../logs/augur_frontend_pid.txt
 fi
 
 
