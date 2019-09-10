@@ -36,13 +36,17 @@
     <div class="row mb-5" v-if="loaded_risk">
       <div class="col-6">
         <license-table :data="values" source="licenseDeclared"  :headers="['Short Name','Note']"
-                       :fields="['short_name','note']"  title="License Declared"></license-table>
+                      :fields="['short_name','note']"  title="License Declared"></license-table>
+                      <br><br>
+        <download-card title="Software Bill of Materials" :data="values" source="sbom"></download-card>
       </div>
       <div class="col-6">
         <cii-table :data="values" source="ciiBP"  :headers="['Passing Status','Badge Level', 'Date']"
                        :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
         <br> <br>
         <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
+        <br><br>
+        <coverage-card title="License Coverage" :data="values" source="sbom"></coverage-card>
                              </div>
 
       </div>
@@ -62,6 +66,8 @@
   import LineChart from "@/components/charts/LineChart.vue";
   import LicenseTable from "@/components/charts/LicenseTable.vue";
   import CiiTable from "@/components/charts/CiiTable.vue";
+  import DownloadCard from "@/components/charts/DownloadCard.vue";
+  import CoverageCard from "@/components/charts/CoverageCard.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
   import router from "@/router";
 
@@ -73,7 +79,9 @@
       CountBlock,
       LineChart,
       LicenseTable,
-      CiiTable
+      CiiTable,
+      DownloadCard,
+      CoverageCard
       // PieChart,
     },
     methods: {
@@ -100,6 +108,7 @@
 
     loaded_cii:boolean = false
     loaded_risk:boolean = false
+    loaded_sbom:boolean = false
 
     values:any = {}
 
@@ -116,10 +125,17 @@
     // endpoints
     risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers']
     cii_endpoint = ['ciiBP']
+    sbom_endpoint = ['sbom']
 
     created() {
       console.log('####', this.base)
 
+      this.endpoint({endpoints:this.sbom_endpoint,repos:[this.base]}).then((tuples:any) => {
+        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+          this.values[endpoint] = tuples[this.base.url][endpoint]
+        })
+        this.loaded_sbom = true
+      }),
       this.endpoint({endpoints:this.cii_endpoint,repos:[this.base]}).then((tuples:any) => {
         Object.keys(tuples[this.base.url]).forEach((endpoint) => {
           this.values[endpoint] = tuples[this.base.url][endpoint]

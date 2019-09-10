@@ -70,7 +70,8 @@ def main(augur_url, host, port):
     app.gh_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
-    print("Starting Flask App with pid: " + str(os.getpid()) + "...")
+    host = server['host']
+    print("Starting Flask App on host {} with port {} with pid: ".format(server['host'], worker_port) + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=server['host'], port=worker_port)
     print("Killing Flask App: " + str(os.getpid()))
 
