@@ -2,7 +2,7 @@
   <d-card>
     <d-card-body :title="title" class="text-center">
       <p v-if="values === undefined">There is no SBOM download available for this repository.</p>
-      <button v-if="values" @click="download" style="border-radius:6px;">
+      <button v-if="values" @click="download" style="border-radius:6px;" :msg=values>
         <strong>Download SBOM (.json)</strong>
       </button>
     </d-card-body>
@@ -33,10 +33,10 @@
     },
     methods: {
       download(e) {
-      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.values[0]));
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.$data.msg[0]));
       let link = document.createElement('a')
       link.setAttribute("href",     dataStr     );
-      link.setAttribute("download", "sbom_" + this.values[0]['sbom_scan']["SPDX Data"]['DocumentName'] + ".json");
+      link.setAttribute("download", "sbom_" + this.$data.msg[0]['sbom_scan']["SPDX Data"]['DocumentName'] + ".json");
       link.click();
       }
     }
