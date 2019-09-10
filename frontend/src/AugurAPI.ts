@@ -448,7 +448,7 @@ class Repo extends BaseRepo{
   initialDBMetric(){
     this.addRepoMetric('codeChanges', 'code-changes')
     this.addRepoMetric('codeChangesLines', 'code-changes-lines')
-    this.addRepoMetric('issueNew', 'issues-new')
+    this.addRepoMetric('issuesNew', 'issues-new')
     this.addRepoMetric('issuesClosed', 'issues-closed')
     this.addRepoMetric('issueBacklog', 'issue-backlog')
     this.addRepoMetric('pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
@@ -513,7 +513,7 @@ class RepoGroup extends BaseRepo {
     if (this.repo_group_id) {
       this.addRepoGroupMetric('codeChanges', 'code-changes')
       this.addRepoGroupMetric('codeChangesLines', 'code-changes-lines')
-      this.addRepoGroupMetric('issueNew', 'issues-new')
+      this.addRepoGroupMetric('issuesNew', 'issues-new')
       this.addRepoGroupMetric('issuesClosed', 'issues-closed')
       this.addRepoGroupMetric('issueBacklog', 'issue-backlog')
       this.addRepoGroupMetric('pullRequestsMergeContributorNew','pull-requests-merge-contributor-new')
