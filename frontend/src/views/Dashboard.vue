@@ -51,7 +51,11 @@
               <h3 class="page-title" style="font-size: 1rem">Most Frequent Repo Groups</h3>
             </div>
           </div>
+
           <!-- Second Row of Posts -->
+          <div v-if="!loadedInsights" class="col-md-8 col-lg-9">
+            <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+          </div>
           <d-row>
             <div style="padding-top: 3rem" v-if="apiGroups == {}" class="col-md-8 col-lg-9">
               <spinner></spinner>
@@ -180,7 +184,6 @@ export default class Dashboard extends Vue {
 
                 this.highest.forEach((record:any) => {
                   if ((tuple.date > record.date && tuple.rg_name == record.rg_name)){
-                    console.log('hihihi')
                     this.highest[i] = tuple
                   }
                   i++
@@ -196,7 +199,6 @@ export default class Dashboard extends Vue {
                       this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
                     } 
                   } else {
-                    console.log(tuple.repo_git)
                     this.insights[group.rg_name][tuple.repo_git] = {}
                     this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
                   }

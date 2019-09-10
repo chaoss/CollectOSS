@@ -448,7 +448,7 @@ class Repo extends BaseRepo{
   initialDBMetric(){
     this.addRepoMetric('codeChanges', 'code-changes')
     this.addRepoMetric('codeChangesLines', 'code-changes-lines')
-    this.addRepoMetric('issueNew', 'issues-new')
+    this.addRepoMetric('issuesNew', 'issues-new')
     this.addRepoMetric('issuesClosed', 'issues-closed')
     this.addRepoMetric('issueBacklog', 'issue-backlog')
     this.addRepoMetric('pullRequestsMergeContributorNew', 'pull-requests-merge-contributor-new')
@@ -513,7 +513,7 @@ class RepoGroup extends BaseRepo {
     if (this.repo_group_id) {
       this.addRepoGroupMetric('codeChanges', 'code-changes')
       this.addRepoGroupMetric('codeChangesLines', 'code-changes-lines')
-      this.addRepoGroupMetric('issueNew', 'issues-new')
+      this.addRepoGroupMetric('issuesNew', 'issues-new')
       this.addRepoGroupMetric('issuesClosed', 'issues-closed')
       this.addRepoGroupMetric('issueBacklog', 'issue-backlog')
       this.addRepoGroupMetric('pullRequestsMergeContributorNew','pull-requests-merge-contributor-new')
@@ -536,6 +536,10 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
       this.addRepoGroupMetric('topInsights', 'top-insights')
       this.addRepoGroupMetric('changesByAuthor', 'lines-changed-by-author')
+      this.addRepoGroupMetric('annualCommitCountRankedByNewRepoInRepoGroup', 'annual-commit-count-ranked-by-new-repo-in-repo-group')
+      this.addRepoGroupMetric('annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual-lines-of-code-count-ranked-by-repo-in-repo-group')
+      this.addRepoGroupMetric('annualCommitCountRankedByNewRepoInRepoGroup', 'annual-commit-count-ranked-by-new-repo-in-repo-group')
+      this.addRepoGroupMetric('annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual-lines-of-code-count-ranked-by-new-repo-in-repo-group')
     }
   }
 }

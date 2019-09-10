@@ -1,10 +1,9 @@
 <template>
   <div ref="holder">
-    <!-- <spinner :v-show="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 3.9rem 0px auto;"></spinner> -->
+    <spinner :v-show="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 3.9rem 0px auto;"></spinner>
     <div class="groupedbarchart">
       <div v-if="mount" :id="source"></div>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-      <p> {{ chart }} </p>
       <div style="padding: 0 50px 0 50px; font-size: 12px">
         <p>*The black "baseline" represents the averages of both LoC and commits across all repositories within the selected repository's overlying Facade organization during the calendar year shown. Wherever this bar stretches to shows how far above or below the raw value of the statistic is from the regular average.</p>
       </div>
@@ -14,9 +13,10 @@
 
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 import AugurStats from '../../AugurStats.ts'
 import Spinner from '../Spinner.vue'
+import vegaEmbed from 'vega-embed'
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'field'],
@@ -30,6 +30,17 @@ export default {
     Spinner
   },
   computed: {
+    ...mapGetters('common', [
+      'repoRelations',
+      'repoGroups',
+      'repos',
+      'apiRepos',
+      'apiGroups',
+      'cache'
+    ]),
+    ...mapGetters('compare', [
+      'base'
+    ]),
     repo () {
       return this.$store.state.baseRepo
     },
@@ -297,20 +308,7 @@ export default {
           fields[split[0]] = split[1].split('+')
         }
       })
-      if (this.data) {
-        processGitData(this.data)
-      } else {
-        let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
-        repo[this.source]().then((data) => {
-          console.log("batch data", data)
-          processData(data)
-        }, () => {
-          //this.renderError()
-        }) // end batch request
-      }
-
-      $(this.$el).find('.showme, .hidefirst').removeClass('invis')
-      $(this.$el).find('.stackedbarchart').removeClass('loader')
+      
       let processGitData = (data) => {
         let repo = window.AugurAPI.Repo({ gitURL: this.repo })
         let dat = []
@@ -374,14 +372,19 @@ export default {
           config.layer[4].encoding.y.scale.domain = [sum_loc / data.length - dif_loc, sum_loc / data.length + dif_loc]
 
 
-        repos.forEach((repo) => {
-          // let d = defaultProcess(data[repo], Object.keys(data[this.repo])[0])
-          // d[0].repo = repo.gitURL ? repo.gitURL : repo.githubURL
-          // this.values.push(d[0])
-          // console.log("repo data", data)
-          this.values = data
-          config.data = {"values": this.values}
-        })
+        this.values = data
+        config.data = {"values": this.values}
+      }
+
+      if (this.data) {
+        processGitData(this.data)
+      } else {
+        this.base[this.source]().then((data) => {
+          console.log("data", data)
+          processData(data)
+        }, () => {
+          //this.renderError()
+        }) // end batch request
       }
       this.loaded = true
       this.reloadImage(config)

@@ -1,5 +1,5 @@
 <template>
-  <d-container style="max-width: 1240px;">
+  <d-container style="max-width: 1240px; padding-bottom:1rem">
     <d-card>
       <d-card-header>
         <d-row class="align-items-center">
@@ -290,6 +290,7 @@
             rg_names.push(rg.rg_name)
           })
           this.GroupOptions = rg_names
+          console.log
         })
       }
       // when comparision is group type, we don't need to load repos

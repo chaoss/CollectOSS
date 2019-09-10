@@ -9,7 +9,7 @@
 
     <div class="row" style="transform: translateX(1rem)">
       <div class="row col col-9">
-        <d-card class="card-small h-100" style="height:10% !important; margin-bottom:1rem">
+        <d-card class="card-small h-100" style="height:11% !important; margin-bottom:1rem">
 
           <!-- Card Header -->
           <d-card-header class="border-bottom">
@@ -37,13 +37,12 @@
             </d-row> -->
 
             <!-- Main insight -->
-            <div v-if="!loadedInsights" style=""></div>
-            <div v-if="!loadedInsights" style="padding: 3.5rem 0 0 3.7rem;" class="col-md-8 col-lg-9">
+            <div v-if="!loadedInsights" style="margin-top: 3rem auto" class="col-md-8 col-lg-9">
 
               <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-40%);"></spinner>
             </div>
             <main-insight v-if="loadedInsights"
-              :data="values" :url="getRepo" color="black" source="main" :insight="insights[getGroup][getRepo][getMetric]"
+              :data="values" :url="getRepo" color="black" source="main" :insight="insights[getGroup][getRepo][getApiMetric]"
             ></main-insight>
 
           </d-card-body>
@@ -86,7 +85,7 @@
       </div>
       <!-- Others for this repo -->
         
-      <d-row class="col-12" style="transform: translateY(-228rem); padding: 0 !important; ">
+      <d-row class="col-12" style="transform: translateY(-195rem); padding: 0 !important; ">
         <div class="col-12 page-header row no-gutters py-4">
           <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
             <h3 class="page-title" style="font-size: 1rem">View other top insights</h3> <!-- insights for this repo -->
@@ -113,7 +112,7 @@
               <h5 class="card-title">
                 <a href="#" @click="onInspectInsight(insights[group][repo][metric])" class="text-fiord-blue">{{ repo.substr(19) }}</a>
               </h5>
-              <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[group][repo][metric]) }}</p>
+              <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had {{ getPhrase(insights[group][repo][metric]) }}</p>
               <span class="text-muted" style="font-size: .75rem">{{ timeframes[repo] }}</span>
             </d-card-body>
           </d-card>
@@ -246,8 +245,8 @@ export default class InspectInsight extends Vue {
                   this.addedRepo = true
                   this.addRepo(tuple).then((repo:any) => {
                     console.log("added main repo: ", repo)
-                    repo[this.apiMetric]().then((values: any) => {
-                      console.log("hit endpoint for repo", this.apiMetric, values)
+                    repo[this.getMetric]().then((values: any) => {
+                      console.log("hit endpoint for repo", this.getMetric, values)
                       this.values = values
                     }).catch(function () {
                       console.log("Promise Rejected");
@@ -284,23 +283,26 @@ export default class InspectInsight extends Vue {
     })
   }
 
-  get getRepo() {
+  get getApiMetric () {
+    return this.$route.params.ri_metric
+  }
+
+  get getRepo () {
     return this.$route.params.repo_git
   }
 
   get getMetric() {
-    return this.$route.params.ri_metric
-  }
-
-  get apiMetric() {
-    if (this.$route.params.ri_metric == 'New Issues (issues)'){
-      return 'issueNew'
-    } else if (this.$route.params.ri_metric == 'Code Changes' || this.$route.params.ri_metric == 'Commit Count (commit_count)'){
-      return 'codeChanges'
-    } else if (this.$route.params.ri_metric == 'Code Changes Lines'){
-      return 'codeChangesLines'
-    } 
-    return ''
+    let words = this.$route.params.ri_metric.split('-')
+    let fWord = words.shift()
+    while (words.length > 0) {
+      let word = words.shift()
+      if (!word) break
+      word = word.charAt(0).toUpperCase() + word.slice(1)
+      fWord += word
+    }
+    if (!fWord) fWord = "code-changes";
+    console.log("API met: ", fWord)
+    return fWord
   }
 
   get getGroup() {
@@ -375,11 +377,11 @@ export default class InspectInsight extends Vue {
     this.timeframes[values[0].repo_git] = date + ' days'
     if (values[i+1]){
       if (values[i+1].value > values[i].value) 
-        return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+        return 'a sharp increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
       else
-        return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+        return 'a sharp decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
     } else {
-      return 'insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+      return 'an insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
     }
   }
 

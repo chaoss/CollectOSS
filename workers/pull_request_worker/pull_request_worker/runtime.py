@@ -96,7 +96,7 @@ def main(augur_url, host, port):
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
 
 
-    app.run(debug=app.debug, host=host, port=worker_port)
+    app.run(debug=app.debug, host=server['host'], port=worker_port)
     if app.gh_pr_worker._child is not None:
         app.gh_pr_worker._child.terminate()
     try:
