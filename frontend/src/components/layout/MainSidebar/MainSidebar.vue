@@ -168,7 +168,7 @@
         to: {
           name: 'config',
         },
-        htmlBefore: '<i class="material-icons">trending_up</i>',
+        htmlBefore: '<i class="material-icons">assignment</i>',
         htmlAfter: '',
       },
     ];
