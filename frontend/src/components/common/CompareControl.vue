@@ -287,7 +287,6 @@
         this.loadRepoGroups().then(() => {
           let rg_names:string[] = []
           this.repoGroups.forEach((rg:any) => {
-            console.log("GROUP", rg)
             rg_names.push(rg.rg_name)
           })
           this.GroupOptions = rg_names
