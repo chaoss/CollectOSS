@@ -183,7 +183,6 @@
         'repos',
         'repoGroups',
         'loadedRepos',
-        'loadedGroups',
         'repoRelations'
       ]),
       ...mapGetters('compare', [
@@ -230,6 +229,8 @@
     selectedGroups: any = []
     selectedRepos: any = []
     GroupOptions: string[] = []
+    loadedGroups: boolean = false;
+    loadedRepos: boolean = false;
 
     isCollpase: boolean = true
     options: string[] = ['list', 'of', 'options']
@@ -254,8 +255,8 @@
     startDate!: Date;
     endDate!: Date;
     isGroup!: boolean;
-    loadedRepos!: boolean;
-    loadedGroups!: boolean;
+    
+    
     comparedRepoGroups!:any;
     comparedRepos!:any;
     comparisionSize!:any;
@@ -280,22 +281,24 @@
     repoGroups!: any;
 
 
-    mounted() {
+    created() {
       // if not cached, load repo groups and repos
       if (!this.loadedGroups) {
         this.loadRepoGroups().then(() => {
           let rg_names:string[] = []
           this.repoGroups.forEach((rg:any) => {
-            console.log("GROUP")
+            console.log("GROUP", rg)
             rg_names.push(rg.rg_name)
           })
           this.GroupOptions = rg_names
-          console.log
+          this.loadedGroups = true
         })
       }
       // when comparision is group type, we don't need to load repos
       if (!this.isGroup && !this.loadedRepos) {
-        this.loadRepos()
+        this.loadRepos().then(() => {
+          this.loadedRepos = true
+        })
       }
 
       this.selectedRepos = this.comparedRepos
