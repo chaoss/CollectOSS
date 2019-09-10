@@ -12,7 +12,7 @@
     <!-- Compare Control -->
     <compare-control></compare-control>
 
-    <div class="row" style="transform: translateY(-50px) !important" v-if="loaded">
+<!--     <div class="row" style="transform: translateY(-0px) !important">
       <div class="col col-6" style="padding-right: 35px">
         <grouped-bar-chart
           source="annualCommitCountRankedByRepoInRepoGroup"
@@ -41,7 +41,7 @@
           field="loc"
         ></grouped-bar-chart>
       </div>
-    </div>
+    </div> -->
 
     <!-- <div class="row">
       

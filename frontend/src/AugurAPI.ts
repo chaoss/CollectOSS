@@ -536,6 +536,10 @@ class RepoGroup extends BaseRepo {
       this.addRepoGroupMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
       this.addRepoGroupMetric('topInsights', 'top-insights')
       this.addRepoGroupMetric('changesByAuthor', 'lines-changed-by-author')
+      this.addRepoGroupMetric('annualCommitCountRankedByNewRepoInRepoGroup', 'annual-commit-count-ranked-by-new-repo-in-repo-group')
+      this.addRepoGroupMetric('annualLinesOfCodeCountRankedByRepoInRepoGroup', 'annual-lines-of-code-count-ranked-by-repo-in-repo-group')
+      this.addRepoGroupMetric('annualCommitCountRankedByNewRepoInRepoGroup', 'annual-commit-count-ranked-by-new-repo-in-repo-group')
+      this.addRepoGroupMetric('annualLinesOfCodeCountRankedByNewRepoInRepoGroup', 'annual-lines-of-code-count-ranked-by-new-repo-in-repo-group')
     }
   }
 }

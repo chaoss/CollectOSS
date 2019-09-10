@@ -55,8 +55,8 @@ export default {
         return []
     }
     let careAbout:any[] = []
-    let i:number = -
-    console.log(group.rg_name, state.cache.getRepos, state.cache.getRepos[0].rg_name, state.cache.getRepos[0].rg_name == group.rg_name)
+    let i:number = 0
+    console.log(group, state.cache.getRepos, state.cache.getRepos[0].rg_name, state.cache.getRepos[0].rg_name == group.rg_name)
     for (i = 0; i < state.cache.getRepos.length; i++) {
       if (state.cache.getRepos[i].rg_name == group.rg_name)
         careAbout.push(state.cache.getRepos[i])
