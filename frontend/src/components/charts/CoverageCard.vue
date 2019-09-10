@@ -39,15 +39,6 @@
         'comparedRepos',
         'base'
       ]),
-    },
-    methods: {
-      download(e) {
-      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.values[0]));
-      let link = document.createElement('a')
-      link.setAttribute("href",     dataStr     );
-      link.setAttribute("download", "sbom_" + this.values[0]['sbom_scan']["SPDX Data"]['DocumentName'] + ".json");
-      link.click();
-      }
     }
   })
   export default class CountBlock extends AppProps{
@@ -59,6 +50,14 @@
 
     get values(){
       return this.data[this.source]
+    }
+
+    download (e: any) {
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.values[0]));
+      let link = document.createElement('a')
+      link.setAttribute("href",     dataStr     );
+      link.setAttribute("download", "sbom_" + this.values[0]['sbom_scan']["SPDX Data"]['DocumentName'] + ".json");
+      link.click();
     }
 
   }
