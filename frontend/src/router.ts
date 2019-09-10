@@ -25,6 +25,7 @@ import RepoGroups from './views/RepoGroups.vue';
 import Repos from './views/Repos.vue';
 import SingleComparison from './views/SingleComparison.vue';
 import Workers from './views/Workers.vue';
+import ExploreInsights from './views/ExploreInsights.vue';
 import InspectInsight from './views/InspectInsight.vue';
 import RiskMetrics from "@/views/RiskMetrics.vue";
 import NProgress from "nprogress";
@@ -100,7 +101,7 @@ const routes = [
         components: {
           sidebar: MainSidebar,
           navbar: MainNavbar,
-          content: Tables,
+          content: ExploreInsights,
         },
       },
     ],
