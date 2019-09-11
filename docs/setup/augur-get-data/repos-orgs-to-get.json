@@ -8,13 +8,13 @@
   },
     {
     "projectName": "Molly Project",
-    "projectDescription": "Camel empowers you to define routing and mediation rules in a variety of domain-specific languages",
+    "projectDescription": "A framework for building information portals for mobile devices.",
     "projectRepository": "https://github.com/mollyproject",
     "projectWebsite": "https://github.com/mollyproject/mollyproject",
     "category": "Development"
   },
   {
-    "projectName": "Apache DeltaSpike",
+    "projectName": "Samvera",
     "projectDescription": "A grass-roots, open source community creating best in class digital asset management solutions for Libraries, Archives, Museums and others.",
     "projectRepository": "https://github.com/samvera",
     "projectWebsite": "https://samvera.org/",
