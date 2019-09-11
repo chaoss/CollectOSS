@@ -1,266 +1,163 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-    <!--           <d-col lg="3" md="4" sm="8" class="mb-4" style="font-size: .7rem">
-            <d-card class="card-small card">
-              <div class="border-bottom card-header">
-                <h6 class="m-0" style="font-size: .7rem">Worker Status</h6>
-                <span class="ml-auto text-right text-semibold text-reagent-gray">Tasks Completed</span>
-                <div class="block-handle"></div>
-              </div>
-              <div class="p-0 card-body">
-                <div class="list-group-small list-group list-group-flush">
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue" style="font-size: .85rem">GitHub Shallow</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray" style="font-size: .85rem">19,291 / 21,512</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue" style="font-size: .85rem">BugZilla</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray" style="font-size: .85rem">11,201 / 14,213</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue" style="font-size: .85rem">Facade</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray" style="font-size: .85rem">9,291 / 10,634</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue" style="font-size: .85rem">Github API</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray" style="font-size: .85rem">8,281 / 15,351</span>
-                  </div>
-                  <div class="d-flex px-3 list-group-item">
-                    <span class="text-semibold text-fiord-blue" style="font-size: .85rem">GitHub Deep</span>
-                    <span class="ml-auto text-right text-semibold text-reagent-gray" style="font-size: .85rem">7,128 / 18,432</span>
-                  </div>
-                </div>
-              </div>
-              <d-card-footer class="border-top">
-                <d-row>
 
-                  <d-col class="col-5">
-                    <d-select size="sm" value="last-week" style="max-width: 130px;">
-                      <option value="last-week">Sort</option>
-                      <option value="today">?</option>
-                      <option value="last-month">?</option>
-                      <option value="last-year">?</option>
-                    </d-select>
-                  </d-col>
+    <div class="page-header row no-gutters py-4">
+      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+        <span class="text-uppercase page-subtitle">Viewing all</span>
+        <h3 class="page-title">Workers</h3>
+      </div>
+    </div>
 
-                  <d-col class="text-right view-report col-7" style="font-size: .6rem">
-                    <a href="#">Overview of all workers &rarr;</a>
-                  </d-col>
 
-                </d-row>
-              </d-card-footer>
-            </d-card>
-          </d-col> -->
+    <div class="row">
+      <div class="col">
+        <div class="card card-small mb-4">
+          <div class="card-header border-bottom">
+            <h6 class="m-0">Currently Implemented Data Collection Workers</h6>
+          </div>
+          <div class="card-body p-0 pb-3 text-center">
+            <table style="table-layout:fixed;" class="table mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th scope="col" class="border-0" v-on:click="sortTable('url')"> 
+                    Worker Name/Type
+                    
+                  </th>
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
+                    Status
+                   
+                  </th>
+                  <!-- <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
+                    <div class="row">
+                      <div class="col col-9">Repo Description</div>
+                      <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'description' == sortColumn"></div>
+                    </div>
+                  </th> -->
+                  <!-- <th scope="col" class="border-0">Options</th> -->
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(worker,index) in workers" v-bind:item="worker">
+                  <td>
+                    <a href="#">{{ worker.name }}</a>
+                  </td>
+                  <td>{{ worker.status }}</td>
+                  <!-- <td>{{ repo.description }}</td> -->
+                  <!-- <td>
+                    <div class="row">
+                      <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0;border: none; background: none;">
+                        <i class="material-icons" style="color:#007bff;">star_rate</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#favorite'+index"
+                                 container=".shards-demo--example--tooltip-01">
+                        Consider this repo group as a "favorite" and our workers will regulaly update its metrics' data before others
+                      </d-tooltip>
+                      <button :id="'add_compare'+index" class="nav-link col col-2" style="padding: 0;border: none; background: none;">
+                        <i class="material-icons" style="color:#007bff;">library_add</i>
+                        <div class="item-icon-wrapper"></div>
+                      </button>
+                      <d-tooltip :target="'#add_compare'+index"
+                                 :triggers="['hover']"
+                                 container=".shards-demo--example--tooltip-01">
+                        Add this worker to your current compared repos
+                      </d-tooltip>
+                    </div>
+                  </td> -->
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </d-container>
 </template>
 
-<script>
-import SparkChart from '../components/charts/SparkChart.vue';
-import InsightChart from '../components/charts/InsightChart.vue';
-import TickChart from '../components/charts/TickChart'
-import LinesOfCodeChart from '../components/charts/LinesOfCodeChart'
-import NormalizedStackedBarChart from '../components/charts/NormalizedStackedBarChart'
-import OneDimensionalStackedBarChart from '../components/charts/OneDimensionalStackedBarChart'
-import HorizontalBarChart from '../components/charts/HorizontalBarChart'
-import GroupedBarChart from '../components/charts/GroupedBarChart'
-import StackedBarChart from '../components/charts/StackedBarChart'
-import DynamicLineChart from '../components/charts/DynamicLineChart'
-import DualLineChart from '../components/charts/DualLineChart'
-import Spinner from '../components/Spinner'
-
-export default {
+<script lang="ts">
+import Component from 'vue-class-component';
+import Vue from 'vue';
+import {mapActions, mapGetters, mapMutations} from "vuex";
+import Spinner from '../components/Spinner.vue'
+@Component({
   components: {
-    SparkChart,
-    InsightChart,
-    TickChart,
-    LinesOfCodeChart,
-    NormalizedStackedBarChart,
-    OneDimensionalStackedBarChart,
-    HorizontalBarChart,
-    GroupedBarChart,
-    DynamicLineChart,
-    StackedBarChart,
-    DualLineChart,
-    Spinner
-  },
-  computed: {
-    repo () {
-      return this.$store.state.baseRepo
-    },
-    gitRepo () {
-      return this.$store.state.gitRepo
-    },
-    values () {
-      console.log("getting values")
-      let values = {}
-      let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
-      repo.issuesClosed().then((data) => {
-        values['issuesClosed'] = data
-        this.loaded_overview = true
-      })
-      return values
-    }
-  },
-  data() {
-    return {
-      colors: ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"],
-      testEndpoints: ['closedIssues', 'openIssues', 'codeCommits'],
-      testTimeframes: ['past 1 month', 'past 3 months', 'past 2 weeks'],
-      repos: {},
-      projects: [],
-      themes: ['dark', 'info', 'royal-blue', 'warning'],
-      project: null,
-      loaded_overview: false,
-      loaded_evolution: false,
-      loaded_issues: false,
-      loaded_experimental: false,
-      loaded_activity: false
-    };
+    Spinner,
   },
   methods: {
-    getOwner(url) {
-      let first = url.indexOf(".")
-      let last = url.lastIndexOf(".")
-      let domain = null
-      let owner = null
-      let repo = null
-      let extension = false
+    ...mapActions('common',[
+      'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+                  // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+      'getRepoRelations',
+      'loadRepos',
+      'addRepo'
+    ]),
 
-      if (first == last){ //normal github
-        domain = url.substring(0, first)
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        console.log(owner+ "/" + repo)
-        return owner
-      } else if (url.slice(last) == '.git'){ //github with extension
-        domain = url.substring(0, first)
-        extension = true
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4)
-        return owner
-      } else { //gluster
-        domain = url.substring(first + 1, last)
-        owner = null //url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        return domain
-      }
-    },
-    getRepo(url){
-      let first = url.indexOf(".")
-      let last = url.lastIndexOf(".")
-      let domain = null
-      let owner = null
-      let repo = null
-      let extension = false
-
-      if (first == last){ //normal github
-        domain = url.substring(0, first)
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        return repo
-      } else if (url.slice(last) == '.git'){ //github with extension
-        domain = url.substring(0, first)
-        extension = true
-        owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4)
-        return repo
-      } else { //gluster
-        domain = url.substring(first + 1, last)
-        owner = null //url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
-        repo = url.slice(url.lastIndexOf('/') + 1)
-        return repo
-      }
-    },
-    getColor (idx) {
-      if (idx % 2 == 0)
-        return 'color: green'
-      else
-        return 'color: red'
-    },
-    getDirection (idx) {
-      if (idx % 2 == 0)
-        return 'arrow_upward'
-      else
-        return 'arrow_downward'
-    },
-    getPhrase (idx) {
-      if (idx % 2 == 0)
-        return 'increased'
-      else
-        return 'declined'
-    },
-    onRepo (e) {
-      this.$store.commit('setRepo', {
-        githubURL: e.target.value
-      })
-    },
-    onGitRepo (e) {
-      let first = e.url.indexOf(".")
-      let last = e.url.lastIndexOf(".")
-      let domain = null
-      let owner = null
-      let repo = null
-      let extension = false
-
-      if (first == last){ //normal github
-        domain = e.url.substring(0, first)
-        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
-        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
-      } else if (e.url.slice(last) == '.git'){ //github with extension
-        domain = e.url.substring(0, first)
-        extension = true
-        owner = e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
-        repo = e.url.substring(e.url.lastIndexOf('/') + 1, e.url.length - 4)
-      } else { //gluster
-        domain = e.url.substring(first + 1, last)
-        owner = null //e.url.substring(e.url.indexOf('/') + 1, e.url.lastIndexOf('/'))
-        repo = e.url.slice(e.url.lastIndexOf('/') + 1)
-      }
-      this.$store.commit('setRepo', {
-        gitURL: e.url
-      })
-
-      this.$store.commit('setTab', {
-        tab: 'git'
-      })
-
-      this.$router.push({
-        name: 'git',
-        params: {repo: e.url}
-      })
-    },
-    getDownloadedRepos() {
-      this.downloadedRepos = []
-      window.AugurAPI.getDownloadedGitRepos().then((data) => {
-        $(this.$el).find('.spinner').removeClass('loader')
-        $(this.$el).find('.spinner').removeClass('relative')
-        this.repos = window._.groupBy(data, 'project_name')
-        this.projects = Object.keys(this.repos)
-        let impRepos = []
-        for (let i = 0; i < this.projects.length; i++) {
-          impRepos.push(this.repos[this.projects[i]][0])
-        }
-        console.log("LOADED")
-        this.loaded = true
-        // window.AugurAPI.batchMapped(impRepos, ['codeCommits']).then((data) => {
-        //   console.log("DATA", data)
-        // }, () => {
-        //   //this.renderError()
-        // }) // end batch request
-      })
-    },
-    btoa(s) {
-      return window.btoa(s)
-    }
+    ...mapActions('compare',[
+      'addComparedRepo',
+      'setBaseRepo'
+    ])
   },
+  computed: {
+    ...mapGetters('common', [
+      'sortedRepos'
+    ]),
+  },
+})
+
+export default class Workers extends Vue{
+  colors: string[] = ["#343A40", "#24a2b7", "#159dfb", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
+  // repos: any[] = [];
+  repo_groups:any[] = [];
+  repo_relations:any[] =  [];
+  themes: string[] = ['dark', 'info', 'royal-blue', 'warning'];
+  loadedGroups: boolean = false;
+  loadedSparks: boolean = false;
+  loadedRepos: boolean = false;
+
+  ascending:boolean = false;
+  sortColumn: string ='name';
+
+  workers:any[] = [
+    {'name':'Issue Collection', 'status':'operational'},
+    {'name':'Commit Analysis', 'status':'operational'},
+    {'name':'Pull Request Analysis', 'status':'operational'},
+    {'name':'Repository Insights', 'status':'operational'},
+    {'name':'Linux Foundation Core Infrastructure Badging', 'status':'operational'},
+    {'name':'Repository Metadata', 'status':'operational'},
+    {'name':'CHAOSS Metrics Release Information', 'status':'operational'}
+  ]
+
+  getRepoRelations!: any
+  sortedRepos!:any
+  loadRepos!:any;
+  
+  addRepo!:any;
+  setBaseRepo!:any;
+  addComparedRepo!:any;
+
+
   created() {
-    // this.getDownloadedRepos()
-    let repo = window.AugurAPI.Repo({ gitURL: this.gitRepo })
-    this.project = repo.rg_name
-    // repo.facadeProject().then((data) => {
-      // this.loaded=true
-    // })
-  },
+    this.workers = [
+      {'name':'Issue Collection', 'status':'operational'},
+      {'name':'Commit Analysis', 'status':'operational'},
+      {'name':'Pull Request Analysis', 'status':'operational'},
+      {'name':'Repository Insights', 'status':'operational'},
+      {'name':'Linux Foundation Core Infrastructure Badging', 'status':'operational'},
+      {'name':'Repository Metadata', 'status':'operational'},
+      {'name':'CHAOSS Metrics Release Information', 'status':'operational'}
+    ]
+  }
+  
+  sortTable(col: string) {
+      if (this.sortColumn === col) {
+        this.ascending = !this.ascending;
+      } else {
+        this.ascending = true;
+        this.sortColumn = col;
+      }
+  }
+
 }
+
 </script>
 

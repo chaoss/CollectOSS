@@ -44,6 +44,7 @@
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats'
 import { mapActions, mapGetters } from "vuex";
+import vegaEmbed from 'vega-embed'
 
 export default {
 
@@ -181,6 +182,7 @@ export default {
       return ary
     },
     spec(data) {
+      console.log("DATAAAA", data)
 
       // declare constant for vegaEmbed module since we use its cdn in index.html rather than add it to package.json
       const vegaEmbed = window.vegaEmbed;

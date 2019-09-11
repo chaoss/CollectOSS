@@ -99,7 +99,7 @@ class BadgeWorker:
 
         self.run()
 
-        requests.post('http://{}:{}/api/workers'.format(self.config['broker_host'],self.config['broker_port'], json=specs) #hello message
+        requests.post('http://{}:{}/api/workers'.format(self.config['broker_host'],self.config['broker_port'], json=specs)) #hello message
 
 
     def update_config(self, config):
