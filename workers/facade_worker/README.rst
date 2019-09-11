@@ -30,36 +30,38 @@ Installation
 The Facade Worker is installed automatically with the regular Augur installation. Below is a sample augur.config.json file that configures the Facade Worker's parameters. These defaults will be populated during installation. 
 
 .. code-block:: JavaScript
+   :linenos:
 
-"Facade": {
-    "check_updates": 1,
-    "clone_repos": 1,
-    "create_xlsx_summary_files": 1,
-    "delete_marked_repos": 0,
-    "fix_affiliations": 1,
-    "force_analysis": 1,
-    "force_invalidate_caches": 0,
-    "force_updates": 1,
-    "limited_run": 0,
-    "multithreaded": 0,
-    "nuke_stored_affiliations": 0,
-    "pull_repos": 1,
-    "rebuild_caches": 1,
-    "run_analysis": 1
-},
+    "Facade": {
+        "check_updates": 1,
+        "clone_repos": 1,
+        "create_xlsx_summary_files": 1,
+        "delete_marked_repos": 0,
+        "fix_affiliations": 1,
+        "force_analysis": 1,
+        "force_invalidate_caches": 0,
+        "force_updates": 1,
+        "limited_run": 0,
+        "multithreaded": 0,
+        "nuke_stored_affiliations": 0,
+        "pull_repos": 1,
+        "rebuild_caches": 1,
+        "run_analysis": 1
+    },
 
 
 A Facade Worker entry will also be generated during the installation, and these are the defaults: 
 
 .. code-block:: JavaScript
-
-"Workers": {
-        "facade_worker": {
-                "port": 51246,
-                "switch": 0,
-                "workers": 1,
-                "repo_directory": "/your-repo-path/"
-        },
+   :linenos:
+   
+    "Workers": {
+            "facade_worker": {
+                    "port": 51246,
+                    "switch": 0,
+                    "workers": 1,
+                    "repo_directory": "/your-repo-path/"
+            },
 
 
 Requirements
