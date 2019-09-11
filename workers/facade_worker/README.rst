@@ -17,7 +17,7 @@ Usage
 There are two ways to start the facade worker. 
 
 1. The first involves setting your facade worker block in your augur.config.json file with the "switch" set to "1". Which starts it automatically. 
-2. You can start it yourself, after you start Augur, in one of two ways: 
+2. You can start it yourself, after you start Augur, in one of two ways, and the compiled version is stored in your python virtualenv path, so you can execute these commands anywhere. We do recommend starting the Facade Worker in its home directory, which is where it is installed by default: 
 
     >facade_worker_start 
     
@@ -27,8 +27,38 @@ There are two ways to start the facade worker.
 Installation
 ------------
 
-The Facade Worker is installed automatically with the regular Augur installation. 
+The Facade Worker is installed automatically with the regular Augur installation. Below is a sample augur.config.json file that configures the Facade Worker's parameters. These defaults will be populated during installation. 
 
+```json
+    "Facade": {
+        "check_updates": 1,
+        "clone_repos": 1,
+        "create_xlsx_summary_files": 1,
+        "delete_marked_repos": 0,
+        "fix_affiliations": 1,
+        "force_analysis": 1,
+        "force_invalidate_caches": 0,
+        "force_updates": 1,
+        "limited_run": 0,
+        "multithreaded": 0,
+        "nuke_stored_affiliations": 0,
+        "pull_repos": 1,
+        "rebuild_caches": 1,
+        "run_analysis": 1
+    },
+```
+
+A Facade Worker entry will also be generated during the installation, and these are the defaults: 
+
+```json
+    "Workers": {
+            "facade_worker": {
+                    "port": 51246,
+                    "switch": 0,
+                    "workers": 1,
+                    "repo_directory": "/your-repo-path/"
+            },
+```
 
 Requirements
 ^^^^^^^^^^^^
