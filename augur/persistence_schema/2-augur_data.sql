@@ -1,10 +1,3 @@
--- ----------------------------
-CREATE SCHEMA augur_data;
-CREATE SCHEMA augur_operations;
-CREATE SCHEMA spdx;
--- create the schemas
--- -----------------------
-
 /*
  Navicat Premium Data Transfer
 
@@ -12,16 +5,28 @@ CREATE SCHEMA spdx;
  Source Server Type    : PostgreSQL
  Source Server Version : 110005
  Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : twitter_prod
+ Source Catalog        : augur_science
  Source Schema         : augur_data
 
  Target Server Type    : PostgreSQL
  Target Server Version : 110005
  File Encoding         : 65001
 
- Date: 04/09/2019 12:29:57
+ Date: 11/09/2019 06:00:28
 */
 
+
+-- ----------------------------
+-- Sequence structure for augur_data.repo_insights_ri_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "augur_data"."augur_data.repo_insights_ri_id_seq";
+CREATE SEQUENCE "augur_data"."augur_data.repo_insights_ri_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 25150
+CACHE 1;
+ALTER SEQUENCE "augur_data"."augur_data.repo_insights_ri_id_seq" OWNER TO "augur";
 
 -- ----------------------------
 -- Sequence structure for chaoss_metric_status_cms_id_seq
@@ -31,7 +36,7 @@ CREATE SEQUENCE "augur_data"."chaoss_metric_status_cms_id_seq"
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
-START 25150
+START 1
 CACHE 1;
 ALTER SEQUENCE "augur_data"."chaoss_metric_status_cms_id_seq" OWNER TO "augur";
 
@@ -127,7 +132,7 @@ CREATE SEQUENCE "augur_data"."issue_assignees_issue_assignee_id_seq"
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
-START 25150
+START 1
 CACHE 1;
 ALTER SEQUENCE "augur_data"."issue_assignees_issue_assignee_id_seq" OWNER TO "augur";
 
@@ -468,6 +473,18 @@ CACHE 1;
 ALTER SEQUENCE "augur_data"."repo_repo_id_seq" OWNER TO "augur";
 
 -- ----------------------------
+-- Sequence structure for repo_sbom_scans_rsb_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "augur_data"."repo_sbom_scans_rsb_id_seq";
+CREATE SEQUENCE "augur_data"."repo_sbom_scans_rsb_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 25150
+CACHE 1;
+ALTER SEQUENCE "augur_data"."repo_sbom_scans_rsb_id_seq" OWNER TO "augur";
+
+-- ----------------------------
 -- Sequence structure for repo_stats_rstat_id_seq
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "augur_data"."repo_stats_rstat_id_seq";
@@ -487,7 +504,7 @@ CREATE SEQUENCE "augur_data"."repo_test_coverage_repo_id_seq"
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
-START 25150
+START 1
 CACHE 1;
 ALTER SEQUENCE "augur_data"."repo_test_coverage_repo_id_seq" OWNER TO "augur";
 
@@ -499,7 +516,7 @@ CREATE SEQUENCE "augur_data"."utility_log_id_seq"
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
-START 25150
+START 1
 CACHE 1;
 ALTER SEQUENCE "augur_data"."utility_log_id_seq" OWNER TO "augur";
 
@@ -511,7 +528,7 @@ CREATE SEQUENCE "augur_data"."utility_log_id_seq1"
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
-START 25150
+START 1
 CACHE 1;
 ALTER SEQUENCE "augur_data"."utility_log_id_seq1" OWNER TO "augur";
 
@@ -543,12 +560,12 @@ CREATE TABLE "augur_data"."chaoss_metric_status" (
   "cm_api_endpoint_rg" varchar COLLATE "pg_catalog"."default",
   "cm_name" varchar COLLATE "pg_catalog"."default",
   "cm_working_group" varchar COLLATE "pg_catalog"."default",
-  "cm_working_group_focus_area" varchar COLLATE "pg_catalog"."default",
   "cm_info" json,
   "tool_source" varchar COLLATE "pg_catalog"."default",
   "tool_version" varchar COLLATE "pg_catalog"."default",
   "data_source" varchar COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "cm_working_group_focus_area" varchar COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_data"."chaoss_metric_status" OWNER TO "augur";
@@ -658,13 +675,13 @@ ALTER TABLE "augur_data"."contributor_affiliations" OWNER TO "augur";
 DROP TABLE IF EXISTS "augur_data"."contributors";
 CREATE TABLE "augur_data"."contributors" (
   "cntrb_id" int8 NOT NULL DEFAULT nextval('"augur_data".contributors_cntrb_id_seq'::regclass),
-  "cntrb_login" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "cntrb_login" varchar(255) COLLATE "pg_catalog"."default",
   "cntrb_email" varchar(255) COLLATE "pg_catalog"."default",
   "cntrb_company" varchar(255) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-  "cntrb_created_at" timestamp(0) NOT NULL,
+  "cntrb_created_at" timestamp(0),
   "cntrb_type" varchar(255) COLLATE "pg_catalog"."default",
-  "cntrb_fake" int2 NOT NULL DEFAULT 0,
-  "cntrb_deleted" int2 NOT NULL DEFAULT 0,
+  "cntrb_fake" int2 DEFAULT 0,
+  "cntrb_deleted" int2 DEFAULT 0,
   "cntrb_long" numeric(11,8) DEFAULT NULL::numeric,
   "cntrb_lat" numeric(10,8) DEFAULT NULL::numeric,
   "cntrb_country_code" char(3) COLLATE "pg_catalog"."default" DEFAULT NULL::bpchar,
@@ -941,12 +958,12 @@ CREATE TABLE "augur_data"."issue_assignees" (
   "issue_assignee_id" int8 NOT NULL DEFAULT nextval('"augur_data".issue_assignees_issue_assignee_id_seq'::regclass),
   "issue_id" int8,
   "cntrb_id" int8,
-  "issue_assignee_src_id" int8,
-  "issue_assignee_src_node" varchar COLLATE "pg_catalog"."default",
   "tool_source" varchar COLLATE "pg_catalog"."default",
   "tool_version" varchar COLLATE "pg_catalog"."default",
   "data_source" varchar COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "issue_assignee_src_id" int8,
+  "issue_assignee_src_node" varchar COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_data"."issue_assignees" OWNER TO "augur";
@@ -964,18 +981,18 @@ CREATE TABLE "augur_data"."issue_events" (
   "action" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "action_commit_hash" varchar COLLATE "pg_catalog"."default",
   "created_at" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "issue_event_src_id" int8,
   "node_id" varchar COLLATE "pg_catalog"."default",
   "node_url" varchar COLLATE "pg_catalog"."default",
   "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "issue_event_src_id" int8
 )
 ;
 ALTER TABLE "augur_data"."issue_events" OWNER TO "augur";
-COMMENT ON COLUMN "augur_data"."issue_events"."issue_event_src_id" IS 'This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API';
 COMMENT ON COLUMN "augur_data"."issue_events"."node_id" IS 'This should be renamed to issue_event_src_node_id, as its the varchar identifier in GitHub and likely common in other sources as well. However, since it was created before we came to this naming standard and workers are built around it, we have it simply named as node_id. Anywhere you see node_id in the schema, it comes from GitHubs terminology.';
+COMMENT ON COLUMN "augur_data"."issue_events"."issue_event_src_id" IS 'This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API';
 
 -- ----------------------------
 -- Table structure for issue_labels
@@ -987,12 +1004,12 @@ CREATE TABLE "augur_data"."issue_labels" (
   "label_text" varchar COLLATE "pg_catalog"."default",
   "label_description" varchar COLLATE "pg_catalog"."default",
   "label_color" varchar COLLATE "pg_catalog"."default",
-  "label_src_id" int8,
-  "label_src_node_id" varchar COLLATE "pg_catalog"."default",
   "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "label_src_id" int8,
+  "label_src_node_id" varchar COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_data"."issue_labels" OWNER TO "augur";
@@ -1006,12 +1023,12 @@ CREATE TABLE "augur_data"."issue_message_ref" (
   "issue_msg_ref_id" int8 NOT NULL DEFAULT nextval('"augur_data".issue_message_ref_issue_msg_ref_id_seq'::regclass),
   "issue_id" int8,
   "msg_id" int8,
-  "issue_msg_ref_src_comment_id" int8,
-  "issue_msg_ref_src_node_id" varchar COLLATE "pg_catalog"."default",
   "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "issue_msg_ref_src_comment_id" int8,
+  "issue_msg_ref_src_node_id" varchar COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "augur_data"."issue_message_ref" OWNER TO "augur";
@@ -1046,11 +1063,11 @@ CREATE TABLE "augur_data"."issues" (
   "issue_node_id" varchar COLLATE "pg_catalog"."default",
   "gh_issue_id" int8,
   "gh_user_id" int8,
-  "gh_issue_number" int8,
   "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP
+  "data_collection_date" timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+  "gh_issue_number" int8
 )
 ;
 ALTER TABLE "augur_data"."issues" OWNER TO "augur";
@@ -1882,10 +1899,22 @@ CREATE TABLE "augur_data"."repo_insights_records" (
   "tool_source" varchar COLLATE "pg_catalog"."default",
   "tool_version" varchar COLLATE "pg_catalog"."default",
   "data_source" varchar COLLATE "pg_catalog"."default",
-  "data_collection_date" timestamp(6)
+  "data_collection_date" timestamp(6) DEFAULT CURRENT_TIMESTAMP
 )
 ;
 ALTER TABLE "augur_data"."repo_insights_records" OWNER TO "augur";
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."ri_id" IS 'Primary key. ';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."repo_id" IS 'Refers to repo table primary key. Will have a foreign key';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."ri_metric" IS 'The metric endpoint';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."ri_field" IS 'The field in the metric endpoint';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."ri_value" IS 'The value of the endpoint in ri_field';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."ri_date" IS 'The date the insight is for; in other words, some anomaly occurred on this date. ';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."ri_score" IS 'A Score, derived from the algorithm used. ';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."ri_detection_method" IS 'A confidence interval or other expression of the type of threshold and the value of a threshold met in order for it to be "an insight". Example. "95% confidence interval". ';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."tool_source" IS 'Standard Augur Metadata';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."tool_version" IS 'Standard Augur Metadata';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."data_source" IS 'Standard Augur Metadata';
+COMMENT ON COLUMN "augur_data"."repo_insights_records"."data_collection_date" IS 'Standard Augur Metadata';
 
 -- ----------------------------
 -- Table structure for repo_labor
@@ -1932,6 +1961,18 @@ CREATE TABLE "augur_data"."repo_meta" (
 ;
 ALTER TABLE "augur_data"."repo_meta" OWNER TO "augur";
 COMMENT ON TABLE "augur_data"."repo_meta" IS 'Project Languages';
+
+-- ----------------------------
+-- Table structure for repo_sbom_scans
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_data"."repo_sbom_scans";
+CREATE TABLE "augur_data"."repo_sbom_scans" (
+  "rsb_id" int8 NOT NULL DEFAULT nextval('"augur_data".repo_sbom_scans_rsb_id_seq'::regclass),
+  "repo_id" int4,
+  "sbom_scan" json
+)
+;
+ALTER TABLE "augur_data"."repo_sbom_scans" OWNER TO "augur";
 
 -- ----------------------------
 -- Table structure for repo_stats
@@ -2045,81 +2086,83 @@ ALTER TABLE "augur_data"."working_commits" OWNER TO "augur";
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
+SELECT setval('"augur_data"."augur_data.repo_insights_ri_id_seq"', 25152, false);
 ALTER SEQUENCE "augur_data"."chaoss_metric_status_cms_id_seq"
 OWNED BY "augur_data"."chaoss_metric_status"."cms_id";
-SELECT setval('"augur_data"."chaoss_metric_status_cms_id_seq"', 85, true);
-SELECT setval('"augur_data"."commit_comment_ref_cmt_comment_id_seq"', 25155, false);
-SELECT setval('"augur_data"."commit_parents_parent_id_seq"', 25155, false);
-SELECT setval('"augur_data"."commits_cmt_id_seq"', 29339742, true);
-SELECT setval('"augur_data"."contributor_affiliations_ca_id_seq"', 25155, false);
-SELECT setval('"augur_data"."contributors_aliases_cntrb_a_id_seq"', 25155, false);
-SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 75187, true);
+SELECT setval('"augur_data"."chaoss_metric_status_cms_id_seq"', 42, true);
+SELECT setval('"augur_data"."commit_comment_ref_cmt_comment_id_seq"', 25152, false);
+SELECT setval('"augur_data"."commit_parents_parent_id_seq"', 25152, false);
+SELECT setval('"augur_data"."commits_cmt_id_seq"', 30718307, true);
+SELECT setval('"augur_data"."contributor_affiliations_ca_id_seq"', 25152, false);
+SELECT setval('"augur_data"."contributors_aliases_cntrb_a_id_seq"', 25152, false);
+SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 86530, true);
 ALTER SEQUENCE "augur_data"."contributors_history_cntrb_history_id_seq"
 OWNED BY "augur_data"."contributors_history"."cntrb_history_id";
-SELECT setval('"augur_data"."contributors_history_cntrb_history_id_seq"', 3, false);
+SELECT setval('"augur_data"."contributors_history_cntrb_history_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."issue_assignees_issue_assignee_id_seq"
 OWNED BY "augur_data"."issue_assignees"."issue_assignee_id";
-SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 10127, true);
-SELECT setval('"augur_data"."issue_events_event_id_seq"', 697771, true);
-SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 77099, true);
-SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 343271, true);
-SELECT setval('"augur_data"."issue_seq"', 144441, true);
-SELECT setval('"augur_data"."libraries_library_id_seq"', 25155, false);
-SELECT setval('"augur_data"."library_dependencies_lib_dependency_id_seq"', 25155, false);
-SELECT setval('"augur_data"."library_version_library_version_id_seq"', 25155, false);
-SELECT setval('"augur_data"."message_msg_id_seq"', 376338, true);
-SELECT setval('"augur_data"."platform_pltfrm_id_seq"', 25155, true);
+SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 10213, true);
+SELECT setval('"augur_data"."issue_events_event_id_seq"', 647620, true);
+SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 62764, true);
+SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 298690, true);
+SELECT setval('"augur_data"."issue_seq"', 128940, true);
+SELECT setval('"augur_data"."libraries_library_id_seq"', 25152, false);
+SELECT setval('"augur_data"."library_dependencies_lib_dependency_id_seq"', 25152, false);
+SELECT setval('"augur_data"."library_version_library_version_id_seq"', 25152, false);
+SELECT setval('"augur_data"."message_msg_id_seq"', 744920, true);
+SELECT setval('"augur_data"."platform_pltfrm_id_seq"', 25152, true);
 ALTER SEQUENCE "augur_data"."pull_request_assignees_pr_assignee_map_id_seq"
 OWNED BY "augur_data"."pull_request_assignees"."pr_assignee_map_id";
-SELECT setval('"augur_data"."pull_request_assignees_pr_assignee_map_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_assignees_pr_assignee_map_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."pull_request_events_pr_event_id_seq"
 OWNED BY "augur_data"."pull_request_events"."pr_event_id";
-SELECT setval('"augur_data"."pull_request_events_pr_event_id_seq"', 83602, true);
+SELECT setval('"augur_data"."pull_request_events_pr_event_id_seq"', 1319857, true);
 ALTER SEQUENCE "augur_data"."pull_request_labels_pr_label_id_seq"
 OWNED BY "augur_data"."pull_request_labels"."pr_label_id";
-SELECT setval('"augur_data"."pull_request_labels_pr_label_id_seq"', 100, true);
+SELECT setval('"augur_data"."pull_request_labels_pr_label_id_seq"', 1517, true);
 ALTER SEQUENCE "augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"
 OWNED BY "augur_data"."pull_request_message_ref"."pr_msg_ref_id";
-SELECT setval('"augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"', 33067, true);
+SELECT setval('"augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"', 445240, true);
 ALTER SEQUENCE "augur_data"."pull_request_meta_pr_repo_meta_id_seq"
 OWNED BY "augur_data"."pull_request_meta"."pr_repo_meta_id";
-SELECT setval('"augur_data"."pull_request_meta_pr_repo_meta_id_seq"', 25641, true);
+SELECT setval('"augur_data"."pull_request_meta_pr_repo_meta_id_seq"', 299249, true);
 ALTER SEQUENCE "augur_data"."pull_request_repo_pr_repo_id_seq"
 OWNED BY "augur_data"."pull_request_repo"."pr_repo_id";
-SELECT setval('"augur_data"."pull_request_repo_pr_repo_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_repo_pr_repo_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"
 OWNED BY "augur_data"."pull_request_reviewers"."pr_reviewer_map_id";
-SELECT setval('"augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"', 2161, true);
+SELECT setval('"augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"', 20059, true);
 ALTER SEQUENCE "augur_data"."pull_request_teams_pr_team_id_seq"
 OWNED BY "augur_data"."pull_request_teams"."pr_team_id";
-SELECT setval('"augur_data"."pull_request_teams_pr_team_id_seq"', 3, false);
+SELECT setval('"augur_data"."pull_request_teams_pr_team_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."pull_requests_pull_request_id_seq"
 OWNED BY "augur_data"."pull_requests"."pull_request_id";
-SELECT setval('"augur_data"."pull_requests_pull_request_id_seq"', 15905, true);
-SELECT setval('"augur_data"."repo_badging_badge_collection_id_seq"', 25023, true);
+SELECT setval('"augur_data"."pull_requests_pull_request_id_seq"', 213364, true);
+SELECT setval('"augur_data"."repo_badging_badge_collection_id_seq"', 27645, true);
 ALTER SEQUENCE "augur_data"."repo_group_insights_rgi_id_seq"
 OWNED BY "augur_data"."repo_group_insights"."rgi_id";
-SELECT setval('"augur_data"."repo_group_insights_rgi_id_seq"', 6, false);
-SELECT setval('"augur_data"."repo_groups_list_serve_rgls_id_seq"', 25155, false);
-SELECT setval('"augur_data"."repo_groups_repo_group_id_seq"', 25158, true);
-SELECT setval('"augur_data"."repo_info_repo_info_id_seq"', 493406, true);
+SELECT setval('"augur_data"."repo_group_insights_rgi_id_seq"', 7, false);
+SELECT setval('"augur_data"."repo_groups_list_serve_rgls_id_seq"', 25152, false);
+SELECT setval('"augur_data"."repo_groups_repo_group_id_seq"', 25154, true);
+SELECT setval('"augur_data"."repo_info_repo_info_id_seq"', 25152, false);
 ALTER SEQUENCE "augur_data"."repo_insights_records_ri_id_seq"
 OWNED BY "augur_data"."repo_insights_records"."ri_id";
-SELECT setval('"augur_data"."repo_insights_records_ri_id_seq"', 2, false);
+SELECT setval('"augur_data"."repo_insights_records_ri_id_seq"', 2627, true);
 ALTER SEQUENCE "augur_data"."repo_insights_ri_id_seq"
 OWNED BY "augur_data"."repo_insights"."ri_id";
-SELECT setval('"augur_data"."repo_insights_ri_id_seq"', 2, false);
-SELECT setval('"augur_data"."repo_labor_repo_labor_id_seq"', 25155, false);
-SELECT setval('"augur_data"."repo_meta_rmeta_id_seq"', 25155, false);
-SELECT setval('"augur_data"."repo_repo_id_seq"', 26212, true);
-SELECT setval('"augur_data"."repo_stats_rstat_id_seq"', 25155, false);
+SELECT setval('"augur_data"."repo_insights_ri_id_seq"', 540351, true);
+SELECT setval('"augur_data"."repo_labor_repo_labor_id_seq"', 25152, false);
+SELECT setval('"augur_data"."repo_meta_rmeta_id_seq"', 25152, false);
+SELECT setval('"augur_data"."repo_repo_id_seq"', 25236, true);
+SELECT setval('"augur_data"."repo_sbom_scans_rsb_id_seq"', 27134, true);
+SELECT setval('"augur_data"."repo_stats_rstat_id_seq"', 25152, false);
 ALTER SEQUENCE "augur_data"."repo_test_coverage_repo_id_seq"
 OWNED BY "augur_data"."repo_test_coverage"."repo_id";
-SELECT setval('"augur_data"."repo_test_coverage_repo_id_seq"', 5, false);
-SELECT setval('"augur_data"."utility_log_id_seq"', 6, false);
+SELECT setval('"augur_data"."repo_test_coverage_repo_id_seq"', 3, false);
+SELECT setval('"augur_data"."utility_log_id_seq"', 3, false);
 ALTER SEQUENCE "augur_data"."utility_log_id_seq1"
 OWNED BY "augur_data"."utility_log"."id";
-SELECT setval('"augur_data"."utility_log_id_seq1"', 45962, true);
+SELECT setval('"augur_data"."utility_log_id_seq1"', 298756, true);
 
 -- ----------------------------
 -- Indexes structure for table analysis_log
@@ -2615,6 +2658,13 @@ ALTER TABLE "augur_data"."repo_info" ADD CONSTRAINT "repo_info_pkey" PRIMARY KEY
 ALTER TABLE "augur_data"."repo_insights" ADD CONSTRAINT "repo_insights_pkey" PRIMARY KEY ("ri_id");
 
 -- ----------------------------
+-- Indexes structure for table repo_insights_records
+-- ----------------------------
+CREATE INDEX "dater" ON "augur_data"."repo_insights_records" USING btree (
+  "ri_date" "pg_catalog"."timestamp_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
 -- Primary Key structure for table repo_insights_records
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_insights_records" ADD CONSTRAINT "repo_insights_records_pkey" PRIMARY KEY ("ri_id");
@@ -2628,6 +2678,11 @@ ALTER TABLE "augur_data"."repo_labor" ADD CONSTRAINT "repo_labor_pkey" PRIMARY K
 -- Primary Key structure for table repo_meta
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_meta" ADD CONSTRAINT "repo_meta_pkey" PRIMARY KEY ("rmeta_id", "repo_id");
+
+-- ----------------------------
+-- Primary Key structure for table repo_sbom_scans
+-- ----------------------------
+ALTER TABLE "augur_data"."repo_sbom_scans" ADD CONSTRAINT "repo_sbom_scans_pkey" PRIMARY KEY ("rsb_id");
 
 -- ----------------------------
 -- Primary Key structure for table repo_stats
@@ -2850,6 +2905,11 @@ ALTER TABLE "augur_data"."repo_labor" ADD CONSTRAINT "fk_repo_labor_repo_1" FORE
 ALTER TABLE "augur_data"."repo_meta" ADD CONSTRAINT "fk_repo_meta_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
+-- Foreign Keys structure for table repo_sbom_scans
+-- ----------------------------
+ALTER TABLE "augur_data"."repo_sbom_scans" ADD CONSTRAINT "repo_linker_sbom" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- ----------------------------
 -- Foreign Keys structure for table repo_stats
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_stats" ADD CONSTRAINT "fk_repo_stats_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -2858,1117 +2918,3 @@ ALTER TABLE "augur_data"."repo_stats" ADD CONSTRAINT "fk_repo_stats_repo_1" FORE
 -- Foreign Keys structure for table repo_test_coverage
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_test_coverage" ADD CONSTRAINT "fk_repo_test_coverage_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
-
-/*
- Navicat Premium Data Transfer
-
- Source Server         : mudcats augur
- Source Server Type    : PostgreSQL
- Source Server Version : 110005
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : twitter_prod
- Source Schema         : augur_operations
-
- Target Server Type    : PostgreSQL
- Target Server Version : 110005
- File Encoding         : 65001
-
- Date: 04/09/2019 12:30:07
-*/
-
-
--- ----------------------------
--- Sequence structure for gh_worker_history_history_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "augur_operations"."gh_worker_history_history_id_seq";
-CREATE SEQUENCE "augur_operations"."gh_worker_history_history_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 9223372036854775807
-START 1
-CACHE 1;
-ALTER SEQUENCE "augur_operations"."gh_worker_history_history_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for gh_worker_history
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."gh_worker_history";
-CREATE TABLE "augur_operations"."gh_worker_history" (
-  "history_id" int8 NOT NULL DEFAULT nextval('"augur_operations".gh_worker_history_history_id_seq'::regclass),
-  "repo_id" int8,
-  "worker" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "job_model" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "oauth_id" int4 NOT NULL,
-  "timestamp" timestamp(0) NOT NULL,
-  "status" varchar(7) COLLATE "pg_catalog"."default" NOT NULL,
-  "total_results" int4
-)
-;
-ALTER TABLE "augur_operations"."gh_worker_history" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for gh_worker_job
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."gh_worker_job";
-CREATE TABLE "augur_operations"."gh_worker_job" (
-  "job_model" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "state" int4 NOT NULL DEFAULT 0,
-  "zombie_head" int4,
-  "since_id_str" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT '0'::character varying,
-  "description" varchar(255) COLLATE "pg_catalog"."default" DEFAULT 'I am a lazy piece of shit and I did not enter a description'::character varying,
-  "last_count" int4,
-  "last_run" timestamp(0) DEFAULT NULL::timestamp without time zone,
-  "analysis_state" int4 DEFAULT 0,
-  "oauth_id" int4 NOT NULL
-)
-;
-ALTER TABLE "augur_operations"."gh_worker_job" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for gh_worker_oauth
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."gh_worker_oauth";
-CREATE TABLE "augur_operations"."gh_worker_oauth" (
-  "oauth_id" int4 NOT NULL,
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "consumer_key" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "consumer_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "access_token" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "access_token_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "repo_directory" varchar COLLATE "pg_catalog"."default"
-)
-;
-ALTER TABLE "augur_operations"."gh_worker_oauth" OWNER TO "augur";
-
--- ----------------------------
--- Alter sequences owned by
--- ----------------------------
-ALTER SEQUENCE "augur_operations"."gh_worker_history_history_id_seq"
-OWNED BY "augur_operations"."gh_worker_history"."history_id";
-SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 7795, true);
-
--- ----------------------------
--- Primary Key structure for table gh_worker_history
--- ----------------------------
-ALTER TABLE "augur_operations"."gh_worker_history" ADD CONSTRAINT "history_pkey" PRIMARY KEY ("history_id");
-
--- ----------------------------
--- Primary Key structure for table gh_worker_job
--- ----------------------------
-ALTER TABLE "augur_operations"."gh_worker_job" ADD CONSTRAINT "job_pkey" PRIMARY KEY ("job_model");
-
-/*
- Navicat Premium Data Transfer
-
- Source Server         : mudcats augur
- Source Server Type    : PostgreSQL
- Source Server Version : 110005
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : twitter_prod
- Source Schema         : spdx
-
- Target Server Type    : PostgreSQL
- Target Server Version : 110005
- File Encoding         : 65001
-
- Date: 04/09/2019 12:30:18
-*/
-
-
--- ----------------------------
--- Sequence structure for annotation_types_annotation_type_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."annotation_types_annotation_type_id_seq";
-CREATE SEQUENCE "spdx"."annotation_types_annotation_type_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."annotation_types_annotation_type_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for annotations_annotation_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."annotations_annotation_id_seq";
-CREATE SEQUENCE "spdx"."annotations_annotation_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."annotations_annotation_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for augur_repo_map_map_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."augur_repo_map_map_id_seq";
-CREATE SEQUENCE "spdx"."augur_repo_map_map_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 9223372036854775807
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."augur_repo_map_map_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for creator_types_creator_type_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."creator_types_creator_type_id_seq";
-CREATE SEQUENCE "spdx"."creator_types_creator_type_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."creator_types_creator_type_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for creators_creator_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."creators_creator_id_seq";
-CREATE SEQUENCE "spdx"."creators_creator_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."creators_creator_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for document_namespaces_document_namespace_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."document_namespaces_document_namespace_id_seq";
-CREATE SEQUENCE "spdx"."document_namespaces_document_namespace_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."document_namespaces_document_namespace_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for documents_creators_document_creator_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."documents_creators_document_creator_id_seq";
-CREATE SEQUENCE "spdx"."documents_creators_document_creator_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."documents_creators_document_creator_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for documents_document_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."documents_document_id_seq";
-CREATE SEQUENCE "spdx"."documents_document_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."documents_document_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for external_refs_external_ref_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."external_refs_external_ref_id_seq";
-CREATE SEQUENCE "spdx"."external_refs_external_ref_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."external_refs_external_ref_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for file_contributors_file_contributor_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."file_contributors_file_contributor_id_seq";
-CREATE SEQUENCE "spdx"."file_contributors_file_contributor_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."file_contributors_file_contributor_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for file_types_file_type_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."file_types_file_type_id_seq";
-CREATE SEQUENCE "spdx"."file_types_file_type_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."file_types_file_type_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for files_file_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."files_file_id_seq";
-CREATE SEQUENCE "spdx"."files_file_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."files_file_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for files_licenses_file_license_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."files_licenses_file_license_id_seq";
-CREATE SEQUENCE "spdx"."files_licenses_file_license_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."files_licenses_file_license_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for files_scans_file_scan_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."files_scans_file_scan_id_seq";
-CREATE SEQUENCE "spdx"."files_scans_file_scan_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."files_scans_file_scan_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for identifiers_identifier_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."identifiers_identifier_id_seq";
-CREATE SEQUENCE "spdx"."identifiers_identifier_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."identifiers_identifier_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for licenses_license_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."licenses_license_id_seq";
-CREATE SEQUENCE "spdx"."licenses_license_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."licenses_license_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for packages_files_package_file_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."packages_files_package_file_id_seq";
-CREATE SEQUENCE "spdx"."packages_files_package_file_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."packages_files_package_file_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for packages_package_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."packages_package_id_seq";
-CREATE SEQUENCE "spdx"."packages_package_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."packages_package_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for packages_scans_package_scan_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."packages_scans_package_scan_id_seq";
-CREATE SEQUENCE "spdx"."packages_scans_package_scan_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."packages_scans_package_scan_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for projects_project_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."projects_project_id_seq";
-CREATE SEQUENCE "spdx"."projects_project_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."projects_project_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for relationship_types_relationship_type_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."relationship_types_relationship_type_id_seq";
-CREATE SEQUENCE "spdx"."relationship_types_relationship_type_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."relationship_types_relationship_type_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for relationships_relationship_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."relationships_relationship_id_seq";
-CREATE SEQUENCE "spdx"."relationships_relationship_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."relationships_relationship_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Sequence structure for scanners_scanner_id_seq
--- ----------------------------
-DROP SEQUENCE IF EXISTS "spdx"."scanners_scanner_id_seq";
-CREATE SEQUENCE "spdx"."scanners_scanner_id_seq" 
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
-ALTER SEQUENCE "spdx"."scanners_scanner_id_seq" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for annotation_types
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."annotation_types";
-CREATE TABLE "spdx"."annotation_types" (
-  "annotation_type_id" int4 NOT NULL DEFAULT nextval('"spdx".annotation_types_annotation_type_id_seq'::regclass),
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."annotation_types" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for annotations
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."annotations";
-CREATE TABLE "spdx"."annotations" (
-  "annotation_id" int4 NOT NULL DEFAULT nextval('"spdx".annotations_annotation_id_seq'::regclass),
-  "document_id" int4 NOT NULL,
-  "annotation_type_id" int4 NOT NULL,
-  "identifier_id" int4 NOT NULL,
-  "creator_id" int4 NOT NULL,
-  "created_ts" timestamptz(6),
-  "comment" text COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."annotations" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for augur_repo_map
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."augur_repo_map";
-CREATE TABLE "spdx"."augur_repo_map" (
-  "map_id" int8 NOT NULL DEFAULT nextval('"spdx".augur_repo_map_map_id_seq'::regclass),
-  "dosocs_pkg_name" int4,
-  "repo_id" int4,
-  "repo_path" text COLLATE "pg_catalog"."default"
-)
-;
-ALTER TABLE "spdx"."augur_repo_map" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for creator_types
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."creator_types";
-CREATE TABLE "spdx"."creator_types" (
-  "creator_type_id" int4 NOT NULL DEFAULT nextval('"spdx".creator_types_creator_type_id_seq'::regclass),
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."creator_types" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for creators
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."creators";
-CREATE TABLE "spdx"."creators" (
-  "creator_id" int4 NOT NULL DEFAULT nextval('"spdx".creators_creator_id_seq'::regclass),
-  "creator_type_id" int4 NOT NULL,
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "email" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."creators" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for document_namespaces
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."document_namespaces";
-CREATE TABLE "spdx"."document_namespaces" (
-  "document_namespace_id" int4 NOT NULL DEFAULT nextval('"spdx".document_namespaces_document_namespace_id_seq'::regclass),
-  "uri" varchar(500) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."document_namespaces" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for documents
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."documents";
-CREATE TABLE "spdx"."documents" (
-  "document_id" int4 NOT NULL DEFAULT nextval('"spdx".documents_document_id_seq'::regclass),
-  "document_namespace_id" int4 NOT NULL,
-  "data_license_id" int4 NOT NULL,
-  "spdx_version" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "license_list_version" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "created_ts" timestamptz(6) NOT NULL,
-  "creator_comment" text COLLATE "pg_catalog"."default" NOT NULL,
-  "document_comment" text COLLATE "pg_catalog"."default" NOT NULL,
-  "package_id" int4 NOT NULL
-)
-;
-ALTER TABLE "spdx"."documents" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for documents_creators
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."documents_creators";
-CREATE TABLE "spdx"."documents_creators" (
-  "document_creator_id" int4 NOT NULL DEFAULT nextval('"spdx".documents_creators_document_creator_id_seq'::regclass),
-  "document_id" int4 NOT NULL,
-  "creator_id" int4 NOT NULL
-)
-;
-ALTER TABLE "spdx"."documents_creators" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for external_refs
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."external_refs";
-CREATE TABLE "spdx"."external_refs" (
-  "external_ref_id" int4 NOT NULL DEFAULT nextval('"spdx".external_refs_external_ref_id_seq'::regclass),
-  "document_id" int4 NOT NULL,
-  "document_namespace_id" int4 NOT NULL,
-  "id_string" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "sha256" varchar(64) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."external_refs" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for file_contributors
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."file_contributors";
-CREATE TABLE "spdx"."file_contributors" (
-  "file_contributor_id" int4 NOT NULL DEFAULT nextval('"spdx".file_contributors_file_contributor_id_seq'::regclass),
-  "file_id" int4 NOT NULL,
-  "contributor" text COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."file_contributors" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for file_types
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."file_types";
-CREATE TABLE "spdx"."file_types" (
-  "file_type_id" int4 NOT NULL DEFAULT nextval('"spdx".file_types_file_type_id_seq'::regclass),
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."file_types" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for files
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."files";
-CREATE TABLE "spdx"."files" (
-  "file_id" int4 NOT NULL DEFAULT nextval('"spdx".files_file_id_seq'::regclass),
-  "file_type_id" int4 NOT NULL,
-  "sha256" varchar(64) COLLATE "pg_catalog"."default" NOT NULL,
-  "copyright_text" text COLLATE "pg_catalog"."default",
-  "project_id" int4,
-  "comment" text COLLATE "pg_catalog"."default" NOT NULL,
-  "notice" text COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."files" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for files_licenses
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."files_licenses";
-CREATE TABLE "spdx"."files_licenses" (
-  "file_license_id" int4 NOT NULL DEFAULT nextval('"spdx".files_licenses_file_license_id_seq'::regclass),
-  "file_id" int4 NOT NULL,
-  "license_id" int4 NOT NULL,
-  "extracted_text" text COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."files_licenses" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for files_scans
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."files_scans";
-CREATE TABLE "spdx"."files_scans" (
-  "file_scan_id" int4 NOT NULL DEFAULT nextval('"spdx".files_scans_file_scan_id_seq'::regclass),
-  "file_id" int4 NOT NULL,
-  "scanner_id" int4 NOT NULL
-)
-;
-ALTER TABLE "spdx"."files_scans" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for identifiers
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."identifiers";
-CREATE TABLE "spdx"."identifiers" (
-  "identifier_id" int4 NOT NULL DEFAULT nextval('"spdx".identifiers_identifier_id_seq'::regclass),
-  "document_namespace_id" int4 NOT NULL,
-  "id_string" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "document_id" int4,
-  "package_id" int4,
-  "package_file_id" int4
-)
-;
-ALTER TABLE "spdx"."identifiers" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for licenses
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."licenses";
-CREATE TABLE "spdx"."licenses" (
-  "license_id" int4 NOT NULL DEFAULT nextval('"spdx".licenses_license_id_seq'::regclass),
-  "name" varchar(255) COLLATE "pg_catalog"."default",
-  "short_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "cross_reference" text COLLATE "pg_catalog"."default" NOT NULL,
-  "comment" text COLLATE "pg_catalog"."default" NOT NULL,
-  "is_spdx_official" bool NOT NULL
-)
-;
-ALTER TABLE "spdx"."licenses" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for packages
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."packages";
-CREATE TABLE "spdx"."packages" (
-  "package_id" int4 NOT NULL DEFAULT nextval('"spdx".packages_package_id_seq'::regclass),
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "version" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "file_name" text COLLATE "pg_catalog"."default" NOT NULL,
-  "supplier_id" int4,
-  "originator_id" int4,
-  "download_location" text COLLATE "pg_catalog"."default",
-  "verification_code" varchar(64) COLLATE "pg_catalog"."default" NOT NULL,
-  "ver_code_excluded_file_id" int4,
-  "sha256" varchar(64) COLLATE "pg_catalog"."default",
-  "home_page" text COLLATE "pg_catalog"."default",
-  "source_info" text COLLATE "pg_catalog"."default" NOT NULL,
-  "concluded_license_id" int4,
-  "declared_license_id" int4,
-  "license_comment" text COLLATE "pg_catalog"."default" NOT NULL,
-  "copyright_text" text COLLATE "pg_catalog"."default",
-  "summary" text COLLATE "pg_catalog"."default" NOT NULL,
-  "description" text COLLATE "pg_catalog"."default" NOT NULL,
-  "comment" text COLLATE "pg_catalog"."default" NOT NULL,
-  "dosocs2_dir_code" varchar(64) COLLATE "pg_catalog"."default"
-)
-;
-ALTER TABLE "spdx"."packages" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for packages_files
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."packages_files";
-CREATE TABLE "spdx"."packages_files" (
-  "package_file_id" int4 NOT NULL DEFAULT nextval('"spdx".packages_files_package_file_id_seq'::regclass),
-  "package_id" int4 NOT NULL,
-  "file_id" int4 NOT NULL,
-  "concluded_license_id" int4,
-  "license_comment" text COLLATE "pg_catalog"."default" NOT NULL,
-  "file_name" text COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."packages_files" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for packages_scans
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."packages_scans";
-CREATE TABLE "spdx"."packages_scans" (
-  "package_scan_id" int4 NOT NULL DEFAULT nextval('"spdx".packages_scans_package_scan_id_seq'::regclass),
-  "package_id" int4 NOT NULL,
-  "scanner_id" int4 NOT NULL
-)
-;
-ALTER TABLE "spdx"."packages_scans" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for projects
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."projects";
-CREATE TABLE "spdx"."projects" (
-  "project_id" int4 NOT NULL DEFAULT nextval('"spdx".projects_project_id_seq'::regclass),
-  "name" text COLLATE "pg_catalog"."default" NOT NULL,
-  "homepage" text COLLATE "pg_catalog"."default" NOT NULL,
-  "uri" text COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."projects" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for relationship_types
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."relationship_types";
-CREATE TABLE "spdx"."relationship_types" (
-  "relationship_type_id" int4 NOT NULL DEFAULT nextval('"spdx".relationship_types_relationship_type_id_seq'::regclass),
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."relationship_types" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for relationships
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."relationships";
-CREATE TABLE "spdx"."relationships" (
-  "relationship_id" int4 NOT NULL DEFAULT nextval('"spdx".relationships_relationship_id_seq'::regclass),
-  "left_identifier_id" int4 NOT NULL,
-  "right_identifier_id" int4 NOT NULL,
-  "relationship_type_id" int4 NOT NULL,
-  "relationship_comment" text COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."relationships" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for scanners
--- ----------------------------
-DROP TABLE IF EXISTS "spdx"."scanners";
-CREATE TABLE "spdx"."scanners" (
-  "scanner_id" int4 NOT NULL DEFAULT nextval('"spdx".scanners_scanner_id_seq'::regclass),
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "spdx"."scanners" OWNER TO "augur";
-
--- ----------------------------
--- Alter sequences owned by
--- ----------------------------
-ALTER SEQUENCE "spdx"."annotation_types_annotation_type_id_seq"
-OWNED BY "spdx"."annotation_types"."annotation_type_id";
-SELECT setval('"spdx"."annotation_types_annotation_type_id_seq"', 4, true);
-ALTER SEQUENCE "spdx"."annotations_annotation_id_seq"
-OWNED BY "spdx"."annotations"."annotation_id";
-SELECT setval('"spdx"."annotations_annotation_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."augur_repo_map_map_id_seq"
-OWNED BY "spdx"."augur_repo_map"."map_id";
-SELECT setval('"spdx"."augur_repo_map_map_id_seq"', 2, false);
-ALTER SEQUENCE "spdx"."creator_types_creator_type_id_seq"
-OWNED BY "spdx"."creator_types"."creator_type_id";
-SELECT setval('"spdx"."creator_types_creator_type_id_seq"', 5, true);
-ALTER SEQUENCE "spdx"."creators_creator_id_seq"
-OWNED BY "spdx"."creators"."creator_id";
-SELECT setval('"spdx"."creators_creator_id_seq"', 3, true);
-ALTER SEQUENCE "spdx"."document_namespaces_document_namespace_id_seq"
-OWNED BY "spdx"."document_namespaces"."document_namespace_id";
-SELECT setval('"spdx"."document_namespaces_document_namespace_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."documents_creators_document_creator_id_seq"
-OWNED BY "spdx"."documents_creators"."document_creator_id";
-SELECT setval('"spdx"."documents_creators_document_creator_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."documents_document_id_seq"
-OWNED BY "spdx"."documents"."document_id";
-SELECT setval('"spdx"."documents_document_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."external_refs_external_ref_id_seq"
-OWNED BY "spdx"."external_refs"."external_ref_id";
-SELECT setval('"spdx"."external_refs_external_ref_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."file_contributors_file_contributor_id_seq"
-OWNED BY "spdx"."file_contributors"."file_contributor_id";
-SELECT setval('"spdx"."file_contributors_file_contributor_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."file_types_file_type_id_seq"
-OWNED BY "spdx"."file_types"."file_type_id";
-SELECT setval('"spdx"."file_types_file_type_id_seq"', 13, true);
-ALTER SEQUENCE "spdx"."files_file_id_seq"
-OWNED BY "spdx"."files"."file_id";
-SELECT setval('"spdx"."files_file_id_seq"', 49926, true);
-ALTER SEQUENCE "spdx"."files_licenses_file_license_id_seq"
-OWNED BY "spdx"."files_licenses"."file_license_id";
-SELECT setval('"spdx"."files_licenses_file_license_id_seq"', 18413, true);
-ALTER SEQUENCE "spdx"."files_scans_file_scan_id_seq"
-OWNED BY "spdx"."files_scans"."file_scan_id";
-SELECT setval('"spdx"."files_scans_file_scan_id_seq"', 49926, true);
-ALTER SEQUENCE "spdx"."identifiers_identifier_id_seq"
-OWNED BY "spdx"."identifiers"."identifier_id";
-SELECT setval('"spdx"."identifiers_identifier_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."licenses_license_id_seq"
-OWNED BY "spdx"."licenses"."license_id";
-SELECT setval('"spdx"."licenses_license_id_seq"', 354, true);
-ALTER SEQUENCE "spdx"."packages_files_package_file_id_seq"
-OWNED BY "spdx"."packages_files"."package_file_id";
-SELECT setval('"spdx"."packages_files_package_file_id_seq"', 165316, true);
-ALTER SEQUENCE "spdx"."packages_package_id_seq"
-OWNED BY "spdx"."packages"."package_id";
-SELECT setval('"spdx"."packages_package_id_seq"', 114, true);
-ALTER SEQUENCE "spdx"."packages_scans_package_scan_id_seq"
-OWNED BY "spdx"."packages_scans"."package_scan_id";
-SELECT setval('"spdx"."packages_scans_package_scan_id_seq"', 114, true);
-ALTER SEQUENCE "spdx"."projects_project_id_seq"
-OWNED BY "spdx"."projects"."project_id";
-SELECT setval('"spdx"."projects_project_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."relationship_types_relationship_type_id_seq"
-OWNED BY "spdx"."relationship_types"."relationship_type_id";
-SELECT setval('"spdx"."relationship_types_relationship_type_id_seq"', 32, true);
-ALTER SEQUENCE "spdx"."relationships_relationship_id_seq"
-OWNED BY "spdx"."relationships"."relationship_id";
-SELECT setval('"spdx"."relationships_relationship_id_seq"', 3, false);
-ALTER SEQUENCE "spdx"."scanners_scanner_id_seq"
-OWNED BY "spdx"."scanners"."scanner_id";
-SELECT setval('"spdx"."scanners_scanner_id_seq"', 4, true);
-
--- ----------------------------
--- Uniques structure for table annotation_types
--- ----------------------------
-ALTER TABLE "spdx"."annotation_types" ADD CONSTRAINT "uc_annotation_type_name" UNIQUE ("name");
-
--- ----------------------------
--- Primary Key structure for table annotation_types
--- ----------------------------
-ALTER TABLE "spdx"."annotation_types" ADD CONSTRAINT "annotation_types_pkey" PRIMARY KEY ("annotation_type_id");
-
--- ----------------------------
--- Primary Key structure for table annotations
--- ----------------------------
-ALTER TABLE "spdx"."annotations" ADD CONSTRAINT "annotations_pkey" PRIMARY KEY ("annotation_id");
-
--- ----------------------------
--- Primary Key structure for table augur_repo_map
--- ----------------------------
-ALTER TABLE "spdx"."augur_repo_map" ADD CONSTRAINT "augur_repo_map_pkey" PRIMARY KEY ("map_id");
-
--- ----------------------------
--- Primary Key structure for table creator_types
--- ----------------------------
-ALTER TABLE "spdx"."creator_types" ADD CONSTRAINT "creator_types_pkey" PRIMARY KEY ("creator_type_id");
-
--- ----------------------------
--- Primary Key structure for table creators
--- ----------------------------
-ALTER TABLE "spdx"."creators" ADD CONSTRAINT "creators_pkey" PRIMARY KEY ("creator_id");
-
--- ----------------------------
--- Uniques structure for table document_namespaces
--- ----------------------------
-ALTER TABLE "spdx"."document_namespaces" ADD CONSTRAINT "uc_document_namespace_uri" UNIQUE ("uri");
-
--- ----------------------------
--- Primary Key structure for table document_namespaces
--- ----------------------------
-ALTER TABLE "spdx"."document_namespaces" ADD CONSTRAINT "document_namespaces_pkey" PRIMARY KEY ("document_namespace_id");
-
--- ----------------------------
--- Uniques structure for table documents
--- ----------------------------
-ALTER TABLE "spdx"."documents" ADD CONSTRAINT "uc_document_document_namespace_id" UNIQUE ("document_namespace_id");
-
--- ----------------------------
--- Primary Key structure for table documents
--- ----------------------------
-ALTER TABLE "spdx"."documents" ADD CONSTRAINT "documents_pkey" PRIMARY KEY ("document_id");
-
--- ----------------------------
--- Primary Key structure for table documents_creators
--- ----------------------------
-ALTER TABLE "spdx"."documents_creators" ADD CONSTRAINT "documents_creators_pkey" PRIMARY KEY ("document_creator_id");
-
--- ----------------------------
--- Uniques structure for table external_refs
--- ----------------------------
-ALTER TABLE "spdx"."external_refs" ADD CONSTRAINT "uc_external_ref_document_id_string" UNIQUE ("document_id", "id_string");
-
--- ----------------------------
--- Primary Key structure for table external_refs
--- ----------------------------
-ALTER TABLE "spdx"."external_refs" ADD CONSTRAINT "external_refs_pkey" PRIMARY KEY ("external_ref_id");
-
--- ----------------------------
--- Primary Key structure for table file_contributors
--- ----------------------------
-ALTER TABLE "spdx"."file_contributors" ADD CONSTRAINT "file_contributors_pkey" PRIMARY KEY ("file_contributor_id");
-
--- ----------------------------
--- Uniques structure for table file_types
--- ----------------------------
-ALTER TABLE "spdx"."file_types" ADD CONSTRAINT "uc_file_type_name" UNIQUE ("name");
-
--- ----------------------------
--- Primary Key structure for table file_types
--- ----------------------------
-ALTER TABLE "spdx"."file_types" ADD CONSTRAINT "file_types_pkey" PRIMARY KEY ("file_type_id");
-
--- ----------------------------
--- Uniques structure for table files
--- ----------------------------
-ALTER TABLE "spdx"."files" ADD CONSTRAINT "uc_file_sha256" UNIQUE ("sha256");
-
--- ----------------------------
--- Primary Key structure for table files
--- ----------------------------
-ALTER TABLE "spdx"."files" ADD CONSTRAINT "files_pkey" PRIMARY KEY ("file_id");
-
--- ----------------------------
--- Uniques structure for table files_licenses
--- ----------------------------
-ALTER TABLE "spdx"."files_licenses" ADD CONSTRAINT "uc_file_license" UNIQUE ("file_id", "license_id");
-
--- ----------------------------
--- Primary Key structure for table files_licenses
--- ----------------------------
-ALTER TABLE "spdx"."files_licenses" ADD CONSTRAINT "files_licenses_pkey" PRIMARY KEY ("file_license_id");
-
--- ----------------------------
--- Uniques structure for table files_scans
--- ----------------------------
-ALTER TABLE "spdx"."files_scans" ADD CONSTRAINT "uc_file_scanner_id" UNIQUE ("file_id", "scanner_id");
-
--- ----------------------------
--- Primary Key structure for table files_scans
--- ----------------------------
-ALTER TABLE "spdx"."files_scans" ADD CONSTRAINT "files_scans_pkey" PRIMARY KEY ("file_scan_id");
-
--- ----------------------------
--- Uniques structure for table identifiers
--- ----------------------------
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_document_namespace_id" UNIQUE ("document_namespace_id", "id_string");
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_namespace_document_id" UNIQUE ("document_namespace_id", "document_id");
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_namespace_package_file_id" UNIQUE ("document_namespace_id", "package_file_id");
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "uc_identifier_namespace_package_id" UNIQUE ("document_namespace_id", "package_id");
-
--- ----------------------------
--- Checks structure for table identifiers
--- ----------------------------
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "ck_identifier_exactly_one" CHECK ((((((document_id IS NOT NULL))::integer + ((package_id IS NOT NULL))::integer) + ((package_file_id IS NOT NULL))::integer) = 1));
-
--- ----------------------------
--- Primary Key structure for table identifiers
--- ----------------------------
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "identifiers_pkey" PRIMARY KEY ("identifier_id");
-
--- ----------------------------
--- Uniques structure for table licenses
--- ----------------------------
-ALTER TABLE "spdx"."licenses" ADD CONSTRAINT "uc_license_short_name" UNIQUE ("short_name");
-
--- ----------------------------
--- Primary Key structure for table licenses
--- ----------------------------
-ALTER TABLE "spdx"."licenses" ADD CONSTRAINT "licenses_pkey" PRIMARY KEY ("license_id");
-
--- ----------------------------
--- Uniques structure for table packages
--- ----------------------------
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "uc_dir_code_ver_code" UNIQUE ("verification_code", "dosocs2_dir_code");
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "uc_package_sha256" UNIQUE ("sha256");
-
--- ----------------------------
--- Checks structure for table packages
--- ----------------------------
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "uc_sha256_ds2_dir_code_exactly_one" CHECK (((((sha256 IS NOT NULL))::integer + ((dosocs2_dir_code IS NOT NULL))::integer) = 1));
-
--- ----------------------------
--- Primary Key structure for table packages
--- ----------------------------
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "packages_pkey" PRIMARY KEY ("package_id");
-
--- ----------------------------
--- Uniques structure for table packages_files
--- ----------------------------
-ALTER TABLE "spdx"."packages_files" ADD CONSTRAINT "uc_package_id_file_name" UNIQUE ("package_id", "file_name");
-
--- ----------------------------
--- Primary Key structure for table packages_files
--- ----------------------------
-ALTER TABLE "spdx"."packages_files" ADD CONSTRAINT "packages_files_pkey" PRIMARY KEY ("package_file_id");
-
--- ----------------------------
--- Uniques structure for table packages_scans
--- ----------------------------
-ALTER TABLE "spdx"."packages_scans" ADD CONSTRAINT "uc_package_scanner_id" UNIQUE ("package_id", "scanner_id");
-
--- ----------------------------
--- Primary Key structure for table packages_scans
--- ----------------------------
-ALTER TABLE "spdx"."packages_scans" ADD CONSTRAINT "packages_scans_pkey" PRIMARY KEY ("package_scan_id");
-
--- ----------------------------
--- Primary Key structure for table projects
--- ----------------------------
-ALTER TABLE "spdx"."projects" ADD CONSTRAINT "projects_pkey" PRIMARY KEY ("project_id");
-
--- ----------------------------
--- Uniques structure for table relationship_types
--- ----------------------------
-ALTER TABLE "spdx"."relationship_types" ADD CONSTRAINT "uc_relationship_type_name" UNIQUE ("name");
-
--- ----------------------------
--- Primary Key structure for table relationship_types
--- ----------------------------
-ALTER TABLE "spdx"."relationship_types" ADD CONSTRAINT "relationship_types_pkey" PRIMARY KEY ("relationship_type_id");
-
--- ----------------------------
--- Uniques structure for table relationships
--- ----------------------------
-ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "uc_left_right_relationship_type" UNIQUE ("left_identifier_id", "right_identifier_id", "relationship_type_id");
-
--- ----------------------------
--- Primary Key structure for table relationships
--- ----------------------------
-ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_pkey" PRIMARY KEY ("relationship_id");
-
--- ----------------------------
--- Uniques structure for table scanners
--- ----------------------------
-ALTER TABLE "spdx"."scanners" ADD CONSTRAINT "uc_scanner_name" UNIQUE ("name");
-
--- ----------------------------
--- Primary Key structure for table scanners
--- ----------------------------
-ALTER TABLE "spdx"."scanners" ADD CONSTRAINT "scanners_pkey" PRIMARY KEY ("scanner_id");
-
--- ----------------------------
--- Foreign Keys structure for table annotations
--- ----------------------------
-ALTER TABLE "spdx"."annotations" ADD CONSTRAINT "annotations_annotation_type_id_fkey" FOREIGN KEY ("annotation_type_id") REFERENCES "spdx"."annotation_types" ("annotation_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."annotations" ADD CONSTRAINT "annotations_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "spdx"."creators" ("creator_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."annotations" ADD CONSTRAINT "annotations_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "spdx"."documents" ("document_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."annotations" ADD CONSTRAINT "annotations_identifier_id_fkey" FOREIGN KEY ("identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table creators
--- ----------------------------
-ALTER TABLE "spdx"."creators" ADD CONSTRAINT "creators_creator_type_id_fkey" FOREIGN KEY ("creator_type_id") REFERENCES "spdx"."creator_types" ("creator_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table documents
--- ----------------------------
-ALTER TABLE "spdx"."documents" ADD CONSTRAINT "documents_data_license_id_fkey" FOREIGN KEY ("data_license_id") REFERENCES "spdx"."licenses" ("license_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."documents" ADD CONSTRAINT "documents_document_namespace_id_fkey" FOREIGN KEY ("document_namespace_id") REFERENCES "spdx"."document_namespaces" ("document_namespace_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."documents" ADD CONSTRAINT "documents_package_id_fkey" FOREIGN KEY ("package_id") REFERENCES "spdx"."packages" ("package_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table documents_creators
--- ----------------------------
-ALTER TABLE "spdx"."documents_creators" ADD CONSTRAINT "documents_creators_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "spdx"."creators" ("creator_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."documents_creators" ADD CONSTRAINT "documents_creators_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "spdx"."documents" ("document_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table external_refs
--- ----------------------------
-ALTER TABLE "spdx"."external_refs" ADD CONSTRAINT "external_refs_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "spdx"."documents" ("document_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."external_refs" ADD CONSTRAINT "external_refs_document_namespace_id_fkey" FOREIGN KEY ("document_namespace_id") REFERENCES "spdx"."document_namespaces" ("document_namespace_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table file_contributors
--- ----------------------------
-ALTER TABLE "spdx"."file_contributors" ADD CONSTRAINT "file_contributors_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "spdx"."files" ("file_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table files
--- ----------------------------
-ALTER TABLE "spdx"."files" ADD CONSTRAINT "files_file_type_id_fkey" FOREIGN KEY ("file_type_id") REFERENCES "spdx"."file_types" ("file_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."files" ADD CONSTRAINT "files_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "spdx"."projects" ("project_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table files_licenses
--- ----------------------------
-ALTER TABLE "spdx"."files_licenses" ADD CONSTRAINT "files_licenses_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "spdx"."files" ("file_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."files_licenses" ADD CONSTRAINT "files_licenses_license_id_fkey" FOREIGN KEY ("license_id") REFERENCES "spdx"."licenses" ("license_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table files_scans
--- ----------------------------
-ALTER TABLE "spdx"."files_scans" ADD CONSTRAINT "files_scans_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "spdx"."files" ("file_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."files_scans" ADD CONSTRAINT "files_scans_scanner_id_fkey" FOREIGN KEY ("scanner_id") REFERENCES "spdx"."scanners" ("scanner_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table identifiers
--- ----------------------------
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "identifiers_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "spdx"."documents" ("document_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "identifiers_document_namespace_id_fkey" FOREIGN KEY ("document_namespace_id") REFERENCES "spdx"."document_namespaces" ("document_namespace_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "identifiers_package_file_id_fkey" FOREIGN KEY ("package_file_id") REFERENCES "spdx"."packages_files" ("package_file_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."identifiers" ADD CONSTRAINT "identifiers_package_id_fkey" FOREIGN KEY ("package_id") REFERENCES "spdx"."packages" ("package_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table packages
--- ----------------------------
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "fk_package_packages_files" FOREIGN KEY ("ver_code_excluded_file_id") REFERENCES "spdx"."packages_files" ("package_file_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "packages_concluded_license_id_fkey" FOREIGN KEY ("concluded_license_id") REFERENCES "spdx"."licenses" ("license_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "packages_declared_license_id_fkey" FOREIGN KEY ("declared_license_id") REFERENCES "spdx"."licenses" ("license_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "packages_originator_id_fkey" FOREIGN KEY ("originator_id") REFERENCES "spdx"."creators" ("creator_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."packages" ADD CONSTRAINT "packages_supplier_id_fkey" FOREIGN KEY ("supplier_id") REFERENCES "spdx"."creators" ("creator_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table packages_files
--- ----------------------------
-ALTER TABLE "spdx"."packages_files" ADD CONSTRAINT "fk_package_files_packages" FOREIGN KEY ("package_id") REFERENCES "spdx"."packages" ("package_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."packages_files" ADD CONSTRAINT "packages_files_concluded_license_id_fkey" FOREIGN KEY ("concluded_license_id") REFERENCES "spdx"."licenses" ("license_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."packages_files" ADD CONSTRAINT "packages_files_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "spdx"."files" ("file_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table packages_scans
--- ----------------------------
-ALTER TABLE "spdx"."packages_scans" ADD CONSTRAINT "packages_scans_package_id_fkey" FOREIGN KEY ("package_id") REFERENCES "spdx"."packages" ("package_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."packages_scans" ADD CONSTRAINT "packages_scans_scanner_id_fkey" FOREIGN KEY ("scanner_id") REFERENCES "spdx"."scanners" ("scanner_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ----------------------------
--- Foreign Keys structure for table relationships
--- ----------------------------
-ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_left_identifier_id_fkey" FOREIGN KEY ("left_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_relationship_type_id_fkey" FOREIGN KEY ("relationship_type_id") REFERENCES "spdx"."relationship_types" ("relationship_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "spdx"."relationships" ADD CONSTRAINT "relationships_right_identifier_id_fkey" FOREIGN KEY ("right_identifier_id") REFERENCES "spdx"."identifiers" ("identifier_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
-
-
-
--- You need to fill in your own values for the consumer_key, consumer_secret, access_token, and access_token_secret 
-INSERT INTO "augur_operations"."gh_worker_job" VALUES ('issues', 5, 0, '0', 'The issues model consists of contributors, issues, issue events, issue labels, and issue comments.', 0, '2019-06-17 06:51:53', 1, 22);
-INSERT INTO "augur_data"."platform"("pltfrm_id", "pltfrm_name", "pltfrm_version", "pltfrm_release_date", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (25150, 'GitHub', '3', '2019-06-05', 'Manual Entry', 'Sean Goggins', 'GitHub', '2019-06-05 17:23:42');
-INSERT INTO "augur_operations"."gh_worker_oauth"("oauth_id", "name", "consumer_key", "consumer_secret", "access_token", "access_token_secret") VALUES (22, 'signalcaller', 'your consumer_key', 'your consumer_secret', 'your access_token', 'your access_token_secret');
-INSERT INTO "augur_data"."contributors"("cntrb_id", "cntrb_login", "cntrb_email", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'not-provided', NULL, NULL, '2019-06-13 11:33:39', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'nobody', 'http://fake.me', 'http://fake.me', 'x', 'http://fake.me', NULL, 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', NULL, NULL, NULL, NULL, NULL, NULL, '2019-06-13 16:35:25');
-INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (20, 'Rails', 'Rails Ecosystem.', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
-INSERT INTO "augur_data"."repo"("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (21000, 20, 'https://github.com/rails/rails.git', 'github.com/rails/', 'rails', '2019-05-31 14:28:44', 'Complete', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'data load', 'one', 'git', '2019-06-05 18:41:14');
-
-
-BEGIN;
-INSERT INTO "augur_data"."settings" VALUES (5, 'report_date', 'committer', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (6, 'report_attribution', 'author', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (10, 'google_analytics', 'disabled', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (11, 'update_frequency', '24', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (12, 'database_version', '7', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (13, 'results_visibility', 'show', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (1, 'start_date', '2001-01-01', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (4, 'log_level', 'Debug', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (2, 'repo_directory', '/mnt/md0/repos/twitter-new-test/', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (8, '1900-01-22 20:36:27', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (9, '1900-01-22 20:36:27', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (7, 'working_author', 'done', CURRENT_TIMESTAMP);
-INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', CURRENT_TIMESTAMP);
-COMMIT;
