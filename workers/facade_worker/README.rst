@@ -19,7 +19,8 @@ There are two ways to start the facade worker.
 1. The first involves setting your facade worker block in your augur.config.json file with the "switch" set to "1". Which starts it automatically. 
 2. You can start it yourself, after you start Augur, in one of two ways: 
 
-    >facade_worker_start    
+    >facade_worker_start 
+    
     >nohup facade_worker_start >facade.log 2>facade.err & 
 
 
