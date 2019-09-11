@@ -1,30 +1,38 @@
 [
   {
-    "projectName": "Rails",
-    "projectDescription": "Rails Ecosystem.",
-    "projectRepository": "https://github.com/rails",
-    "projectWebsite": "http://www.rails.org",
+    "projectName": "Senaite",
+    "projectDescription": "Senaite Laboratory information management system project",
+    "projectRepository": "https://github.com/senaite",
+    "projectWebsite": "https://www.senaite.com",
     "category": "Development"
   },
     {
-    "projectName": "Apache Camel",
-    "projectDescription": "Camel empowers you to define routing and mediation rules in a variety of domain-specific languages",
-    "projectRepository": "https://github.com/apache/camel",
-    "projectWebsite": "https://camel.apache.org",
+    "projectName": "Molly Project",
+    "projectDescription": "A framework for building information portals for mobile devices.",
+    "projectRepository": "https://github.com/mollyproject",
+    "projectWebsite": "https://github.com/mollyproject/mollyproject",
     "category": "Development"
   },
   {
-    "projectName": "Apache DeltaSpike",
-    "projectDescription": "Consists of a number of portable CDI extensions that provide useful features for Java application developers",
-    "projectRepository": "https://github.com/apache/deltaspike",
-    "projectWebsite": "https://deltaspike.apache.org",
+    "projectName": "Samvera",
+    "projectDescription": "A grass-roots, open source community creating best in class digital asset management solutions for Libraries, Archives, Museums and others.",
+    "projectRepository": "https://github.com/samvera",
+    "projectWebsite": "https://samvera.org/",
     "category": "Development"
   },
   {
-    "projectName": "GraphQL",
-    "projectDescription": "GraphQL Ecosystem.",
-    "projectRepository": "https://github.com/graphql",
-    "projectWebsite": "http://www.graphql.org",
+    "projectName": "Zotero",
+    "projectDescription": "Tool to help you collect, organize, cite, and share research",
+    "projectRepository": "https://github.com/zotero",
+    "projectWebsite": "https://www.zotero.org",
+    "category": "Development"
+  },
+  {
+    "projectName": "DSpace",
+    "projectDescription": "DSpace is the software of choice for academic, non-profit, and commercial organizations building open digital repositories. DSpace preserves and enables easy and open access to all types of digital content including text, images, moving images, mpegs and data sets.",
+    "projectRepository": "https://github.com/DSpace",
+    "projectWebsite": "https://duraspace.org/dspace/",
     "category": "Development"
   }
 ]
+
