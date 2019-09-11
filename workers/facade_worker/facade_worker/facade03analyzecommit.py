@@ -145,7 +145,10 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 				'Executing select statement did not work:'
 				' {}, {} with params {} and {}'.format(e, email_check, author_email,committer_email))
 
-		emails = list(cursor_local) if cursor_local else []
+		try:
+			emails = list(cursor_local) if cursor_local else []
+		except:
+			emails = []
 		emails_to_add = [committer_email, author_email]
 		emails_to_update = []
 
