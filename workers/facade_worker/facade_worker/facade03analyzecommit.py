@@ -151,41 +151,40 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 		for email in emails:
 			if email[0] == committer_email or email[0] == author_email:
-				emails_to_add.remove(email[0])
+				if email[0] in emails_to_add:
+					emails_to_add.remove(email[0])
 				emails_to_update.append(email)
 
 		for email in emails_to_add:
 			cntrb = ("INSERT INTO contributors "
 				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
-				"VALUES (%s,%s,%s,%s,%s,%s)")
+				"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
 			if email == author_email:
-				cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name),
-					cfg.tool_source,cfg.tool_version,cfg.data_source))
+				cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name)))
 				db_local.commit()
 				cfg.log_activity('Debug','Stored contributor with email: %s' % author_email)
 
 			elif email == committer_email:
-				cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name), 
-					cfg.tool_source,cfg.tool_version,cfg.data_source))
+				cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)))
 				db_local.commit()
 				cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
 
 		for email in emails_to_update:
 			email_update = ("UPDATE contributors "
-				"SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source='%s, %s'"
-				"tool_version='%s, %s', data_source='%s, %s'"
+				"SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source='%s, FacadeAugur'"
+				"tool_version='%s, 0.0.1', data_source='%s, git_repository'"
 				"WHERE cntrb_email=%s")
 			if email[0] == author_email:
-				# cursor_local.execute(email_update, (discover_alias(author_email),
-				# 	str(author_name), email[1], "FacadeAugur", email[2], 
-				# 	"0.0.1", email[3], "git_repository", email[0]))
-				# db_local.commit()
+				cursor_local.execute(email_update, (discover_alias(author_email),
+					str(author_name), email[1], email[2], 
+					email[3], email[0]))
+				db_local.commit()
 				cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
 			elif email[0] == committer_email:
-				# cursor_local.execute(email_update, (discover_alias(committer_email),
-				# 	str(committer_name), email[1], "FacadeAugur", email[2], 
-				# 	"0.0.1", email[3], "git_repository", email[0]))
-				# db_local.commit()
+				cursor_local.execute(email_update, (discover_alias(committer_email),
+					str(committer_name), email[1], email[2], 
+					email[3], email[0]))
+				db_local.commit()
 				cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
 				
 
