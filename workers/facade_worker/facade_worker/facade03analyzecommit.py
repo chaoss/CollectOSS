@@ -175,16 +175,16 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 				"tool_version='%s, 0.0.1', data_source='%s, git_repository'"
 				"WHERE cntrb_email=%s")
 			if email[0] == author_email:
-				cursor_local.execute(email_update, (discover_alias(author_email),
-					str(author_name), email[1], email[2], 
-					email[3], email[0]))
-				db_local.commit()
+				# cursor_local.execute(email_update, (discover_alias(author_email),
+				# 	str(author_name), email[1], email[2], 
+				# 	email[3], email[0]))
+				# db_local.commit()
 				cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
 			elif email[0] == committer_email:
-				cursor_local.execute(email_update, (discover_alias(committer_email),
-					str(committer_name), email[1], email[2], 
-					email[3], email[0]))
-				db_local.commit()
+				# cursor_local.execute(email_update, (discover_alias(committer_email),
+				# 	str(committer_name), email[1], email[2], 
+				# 	email[3], email[0]))
+				# db_local.commit()
 				cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
 				
 

@@ -17,7 +17,7 @@
             
             <d-card v-if="idx < 4" class="card-small card-post card-post--1">
               <div class="card-post__image">
-                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ record.rg_name }}</d-badge>
+                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ record.ri_metric }} ({{ record.ri_field }})</d-badge>
                 <insight-chart style="transform: translateX(-3.35rem)" :data="insights[record.rg_name][record.repo_git][record.ri_metric]" :url="record.repo_git" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
