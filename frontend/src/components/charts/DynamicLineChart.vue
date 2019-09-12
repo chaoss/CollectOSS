@@ -1,11 +1,13 @@
 <template>
 
-  <div ref="holder">
+  <d-card-body>
     
     <div style="color: black" class="error" :class="{hidden: !error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important"> {{ source }}</p></div>
-    <div v-if="!loaded" :class="{hidden: !error}" class="spinner loader"></div>
-    <div class="spacing"></div>
+    <!-- <div v-if="!loaded" :class="{hidden: !error}" class="spinner loader"></div> -->
     <div v-if="mount" :id="source"></div>
+    <div v-if="!loaded">
+      <spinner></spinner>
+    </div>
     <div v-if="loaded" class="linechart"> <!-- v-bind:class="{ invis: !detail, invisDet: detail }"> -->
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
@@ -37,7 +39,7 @@
         <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
  -->
-  </div>
+  </d-card-body>
 </template>
 
 <script>
@@ -45,10 +47,14 @@ import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats'
 import { mapActions, mapGetters } from "vuex";
 import vegaEmbed from 'vega-embed'
+import Spinner from '../../components/Spinner.vue'
 
 export default {
 
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data', 'repos', 'endpoints'],
+  components: {
+    Spinner
+  },
   data() {
 
     return {
@@ -62,7 +68,9 @@ export default {
       forceRecomputeCounter: 0,
       mount: true,
       loaded: false,
-      error: false
+      error: false,
+      x:0,
+      y:0
     }
   },
 
@@ -224,12 +232,13 @@ export default {
         "data": {
           "values": []//this.data
         },
+        // "padding": {'left': 0, 'top': 0, 'right': this.x / 2, 'bottom': 0},
         "config":{
               "axis":{
                 "grid": false
               },
               "legend": {
-                "offset": -505,
+                "offset": -(this.x / 3.15),
                 "titleFontSize": 0,
                 "titlePadding": 10
               },
@@ -241,8 +250,9 @@ export default {
             "text": this.title,
             "offset": 15
             },
-            "width": 520,
-            "height": 250,
+            "width": this.x / 3,
+            "height": this.y / 1.8,
+            
             "layer": [
               {
                 "transform": [
@@ -875,6 +885,14 @@ export default {
     }
   },// end methods
   mounted() {
+    var win = window,
+    doc = document,
+    docElem = doc.documentElement,
+    body = doc.getElementsByTagName('body')[0],
+    x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+    y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
     if (this.data) {
       let dataFilled = true
       Object.keys(this.data).forEach((key) => {

@@ -40,30 +40,34 @@
         <dual-axis-contributions></dual-axis-contributions>
       </div> -->
       <div class="col col-6" style="padding-top:3rem">
-        <spinner v-if="!loaded"></spinner>
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
 
-        <dynamic-line-chart v-if="loaded"
-                    source="openIssuesCount"
-                    title="Open Issues / Week"
-                    cite-url=""
-                    cite-text="Open Issues"
-                    :repos="repos">
-                    <!-- :data="values['openIssuesCount']"> -->
-        </dynamic-line-chart>
+          <dynamic-line-chart v-if="loaded"
+                      source="openIssuesCount"
+                      title="Open Issues / Week"
+                      cite-url=""
+                      cite-text="Open Issues"
+                      :repos="repos">
+                      <!-- :data="values['openIssuesCount']"> -->
+          </dynamic-line-chart>
+        </d-card>
       </div>
 
 
       <div class="col col-6" style="padding-top:3rem">
-        <spinner v-if="!loaded"></spinner>
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
 
-        <dynamic-line-chart v-if="loaded"
-                    source="closedIssuesCount"
-                    title="Closed Issues / Week"
-                    cite-url=""
-                    cite-text="Closed Issues"
-                    :repos="repos">
-                    <!-- :data="values['closedIssuesCount']"> -->
-        </dynamic-line-chart>
+          <dynamic-line-chart v-if="loaded"
+                      source="closedIssuesCount"
+                      title="Closed Issues / Week"
+                      cite-url=""
+                      cite-text="Closed Issues"
+                      :repos="repos">
+                      <!-- :data="values['closedIssuesCount']"> -->
+          </dynamic-line-chart>
+        </d-card>
       </div>
 
       <!--<div class="col col-6" style="padding-top:3rem">
@@ -187,7 +191,7 @@ export default class SingleComparison extends Vue {
   projects = []
   themes = ['dark', 'info', 'royal-blue', 'warning']
   project = null
-  loaded: boolean = false
+  loaded: boolean = true
   values: any = {'issuesClosed':{}, 'changesByAuthor': {}, 'pullRequestAcceptanceRate': {}}
   loadedBars = false
 
