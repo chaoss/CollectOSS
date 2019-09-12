@@ -48,7 +48,7 @@ export default {
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": this.x / 15,
-        "height": this.y / 15,
+        "height": this.y / 19,
         "padding": 0,
         "mark": {
           "type":"line",
