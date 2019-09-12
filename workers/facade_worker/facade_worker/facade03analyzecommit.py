@@ -140,16 +140,16 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		try:
 			cursor_local.execute(email_check,(author_email,committer_email))
 			db_local.commit()
+			emails = list(cursor_local) if cursor_local else []
+			emails_to_add = [committer_email, author_email]
 		except Exception as e:
+			db_local.rollback()
+			emails = []
+			emails_to_add = []
 			cfg.log_activity('Info','Setting emails to empty array, '
 				'Executing select statement did not work:'
 				' {}, {} with params {} and {}'.format(e, email_check, author_email,committer_email))
-
-		try:
-			emails = list(cursor_local) if cursor_local else []
-		except:
-			emails = []
-		emails_to_add = [committer_email, author_email]
+		
 		emails_to_update = []
 
 		for email in emails:
