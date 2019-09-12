@@ -115,7 +115,7 @@ export default {
       }
       let config = {
         "width": this.x / 1.9,
-        "height": this.y / 1.4,
+        "height": this.y / 2,
         "padding": {"left": -10, "top": 0, "right": 5, "bottom": -10},
         "config": {
           "tick": {
