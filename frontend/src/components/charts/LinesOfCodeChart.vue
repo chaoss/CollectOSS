@@ -1,50 +1,49 @@
 <template>
-  <div ref="holder">
-      <h3>Lines of code added by the top 10 authors</h3>
-      <table class="lines-of-code-table">
-        <thead>
-          <tr>
-            <th>Author</th>
-            <th v-if="!setYear" v-for="year in years" v-on:click="setYear = year" class="clickable-header">{{ year }}</th>
-            <th v-if="setYear" v-for="month in monthNames">{{ month }}</th>
-            <th v-if="!setYear">Total all time</th>
-            <th v-if="setYear" v-on:click="setYear = 0">{{ setYear }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="contributor in contributors.slice(0, 10)">
-            <td>{{ contributor.cmt_author_email }}</td>
-            <td v-if="!setYear" v-for="year in years">{{ (contributor[year]) ? contributor[year].additions || 0 : 0}}</td>
-            <td v-if="setYear" v-for="month in monthDecimals">{{ (contributor[setYear + '-' + month]) ? contributor[setYear + '-' + month].additions || 0 : 0 }}</td>
-            <td v-if="!setYear">{{ contributor.additions }}</td>
-            <td v-if="setYear">{{ (contributor[setYear]) ? contributor[setYear].additions || 0 : 0}}</td>
-          </tr>
-        </tbody>
-      </table>
-      <br>
-      <h3>Lines of code added by the top 5 organizations</h3>
-      <table class="lines-of-code-table">
-        <thead>
-          <tr>
-            <th>Author</th>
-            <th v-if="!setYear" v-for="year in years" v-on:click="setYear = year" class="clickable-header">{{ year }}</th>
-            <th v-if="setYear" v-for="month in monthNames">{{ month }}</th>
-            <th v-if="!setYear">Total all time</th>
-            <th v-if="setYear" v-on:click="setYear = year" class="clickable-header">{{ setYear }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="organization in organizations.slice(0, 10)">
-            <td>{{ organization.name }}</td>
-            <td v-if="!setYear" v-for="year in years">{{ (organization[year]) ? organization[year].additions || 0 : 0}}</td>
-            <td v-if="setYear"  v-for="month in monthDecimals">{{ (organization[setYear + '-' + month]) ? organization[setYear + '-' + month].additions || 0 : 0}}</td>
-            <td v-if="!setYear" >{{ organization.additions }}</td>
-            <td v-if="setYear">{{ (organization[setYear]) ? organization[setYear].additions || 0 : 0}}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p> {{ chart }} </p>
-  </div>
+  <d-card-body style="padding-top: 1rem" title="Lines of code added by the top 10 authors">
+    <table class="lines-of-code-table">
+      <thead>
+        <tr>
+          <th>Author</th>
+          <th v-if="!setYear" v-for="year in years" v-on:click="setYear = year" class="clickable-header">{{ year }}</th>
+          <th v-if="setYear" v-for="month in monthNames">{{ month }}</th>
+          <th v-if="!setYear">Total all time</th>
+          <th v-if="setYear" v-on:click="setYear = 0">{{ setYear }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="contributor in contributors.slice(0, 10)">
+          <td>{{ contributor.cmt_author_email }}</td>
+          <td v-if="!setYear" v-for="year in years">{{ (contributor[year]) ? contributor[year].additions || 0 : 0}}</td>
+          <td v-if="setYear" v-for="month in monthDecimals">{{ (contributor[setYear + '-' + month]) ? contributor[setYear + '-' + month].additions || 0 : 0 }}</td>
+          <td v-if="!setYear">{{ contributor.additions }}</td>
+          <td v-if="setYear">{{ (contributor[setYear]) ? contributor[setYear].additions || 0 : 0}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h3>Lines of code added by the top 5 organizations</h3>
+    <table class="lines-of-code-table">
+      <thead>
+        <tr>
+          <th>Author</th>
+          <th v-if="!setYear" v-for="year in years" v-on:click="setYear = year" class="clickable-header">{{ year }}</th>
+          <th v-if="setYear" v-for="month in monthNames">{{ month }}</th>
+          <th v-if="!setYear">Total all time</th>
+          <th v-if="setYear" v-on:click="setYear = year" class="clickable-header">{{ setYear }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="organization in organizations.slice(0, 10)">
+          <td>{{ organization.name }}</td>
+          <td v-if="!setYear" v-for="year in years">{{ (organization[year]) ? organization[year].additions || 0 : 0}}</td>
+          <td v-if="setYear"  v-for="month in monthDecimals">{{ (organization[setYear + '-' + month]) ? organization[setYear + '-' + month].additions || 0 : 0}}</td>
+          <td v-if="!setYear" >{{ organization.additions }}</td>
+          <td v-if="setYear">{{ (organization[setYear]) ? organization[setYear].additions || 0 : 0}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p> {{ chart }} </p>
+  </d-card-body>
 </template>
 
 
@@ -53,7 +52,7 @@ export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'data'],
   data() {
     let years = []
-    for (let i = 3; i >= 0; i--) {
+    for (let i = 2; i >= 0; i--) {
       years.push((new Date()).getFullYear() - i)
     }
     let monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

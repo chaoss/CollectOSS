@@ -1,11 +1,9 @@
 <template>
-  <div ref="holder">
-    <div class="normalbar">
-      <!-- <h3>Lines of code added by the top 10 authors as Percentages - All Time</h3> -->
-      <h3 style="font-size: 0.9rem;width: 17rem;text-align: center;transform: translateX(1rem);">{{ title }}</h3>
-      <vega-lite :spec="spec" :data="data"></vega-lite>
-    </div>
-  </div>
+  <d-card-body :title="title" class="text-center">
+    <!-- <h3>Lines of code added by the top 10 authors as Percentages - All Time</h3> -->
+    <vega-lite :spec="spec" :data="data"></vega-lite>
+  </d-card-body>
+
 </template>
 
 
@@ -27,8 +25,20 @@ export default {
       view: 'year',
       years: years,
       setYear: 0,
-      tick: 0
+      tick: 0,
+      x:0,
+      y:0
     }
+  },
+  mounted () {
+    var win = window,
+    doc = document,
+    docElem = doc.documentElement,
+    body = doc.getElementsByTagName('body')[0],
+    x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+    y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
   },
   computed: {
     repo() {
@@ -71,8 +81,8 @@ export default {
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 780,
-        // "height": 200,
+        "width": this.x / 5,
+        "height": this.y / 4,
         "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
         // "height": 100,
         "config": {

@@ -182,7 +182,6 @@
       ...mapGetters('common', [
         'repos',
         'repoGroups',
-        'loadedRepos',
         'repoRelations'
       ]),
       ...mapGetters('compare', [
