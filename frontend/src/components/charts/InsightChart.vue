@@ -1,5 +1,5 @@
 <template>
-  <div ref="holder" style="position: relative; z-index: 5; transform: translateY(-40%); ">
+  <div ref="holder" style="position: relative; z-index: 5; transform: translateY(-40%); transform: translateX(-2rem);">
     <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-40%); margin: 3.5rem 5.9rem 0px auto;"></spinner>
     <div v-if="loaded" class="">
       <vega-lite :spec="spec" :data="values"></vega-lite>
@@ -52,7 +52,7 @@ export default {
         "padding": {'left': 0, 'top': 0, 'right': 0, 'bottom': 0},
         "mark": {
           "type":"line",
-          // "interpolate": "basis"
+          "interpolate": "basis"
         },
         "encoding": {
           "x": {

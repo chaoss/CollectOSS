@@ -21,7 +21,7 @@
 
               <div class="card-post__image" v-if="loadedInsights">
                 <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ highest[idx].ri_metric }} ({{ highest[idx].ri_field }})</d-badge>
-                <insight-chart style="transform: translateX(-2rem)" :data="insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]" :url="highest[idx].repo_git" :color="colors[idx]"></insight-chart>
+                <insight-chart style="" :data="insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]" :url="highest[idx].repo_git" :color="colors[idx]"></insight-chart>
 
                 <div class="card-post__author d-flex">
                   <a href="#" :style="colors[idx]" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
@@ -32,17 +32,17 @@
 
               <d-card-body v-if="loadedInsights">
                 <h5 class="card-title">
-                  <a href="#" @click="onGitRepo(highest[idx])" class="text-fiord-blue">{{ highest[idx].repo_git.substr(19) }}</a>
+                  <a href="#" @click="onGitRepo(highest[idx])" class="text-fiord-blue underline">{{ highest[idx].repo_git.substr(19) }}</a>
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</p>
-                <div class="row">
-                  <div class="col col-5"><span class="text-muted" style="font-size: .75rem">{{ timeframes[highest[idx].repo_git] }}</span></div>
+                <d-row>
+                  <d-col cols="12" sm="5"><span class="text-muted" style="font-size: .75rem">{{ timeframes[highest[idx].repo_git] }}</span></d-col>
                   <!-- View Full Report -->
-                  <d-col col sm="7" style="transform: translateX(-1rem) !important;">
+                  <d-col cols="12" sm="7" style="transform: translateX(-1rem) !important;">
                     <d-button size="sm" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
                   </d-col>
 <!--                   <div class="col col-7"><span class="text-muted" style="font-size: .75rem"><a href="#" class="text-fiord-blue" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric])">See more here...</a></span></div>
- -->                </div>
+ -->            </d-row>
               </d-card-body>
             </d-card>
           </d-col>
@@ -70,14 +70,29 @@
             <d-col v-else v-for="(group, idx) in Object.keys(insights).slice(0,6)" :key="idx" lg="4" sm="12" class="mb-4">
               <d-card class="card-small card">
                 <div class="border-bottom card-header">
-                  <h6 class="m-0">{{ group }}</h6>
-                  <div class="block-handle"></div>
+                  
+                  <div v-for="repo in Object.keys(insights[group]).slice(0,1)">
+                    <div v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
+                      <!-- <a href="#" @click="onRepoGroup(insights[group][repo][metric][0])"> -->
+                        <h6 class="m-0" style="color: black">{{ group }}</h6>
+                      <!-- </a> -->
+                    </div>
+                  </div>
+
+                  <div class="block-handle">
+                    <div v-for="repo in Object.keys(insights[group]).slice(0,1)">
+                      <div v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
+                        <d-button size="sm" @click="onRepoGroup(insights[group][repo][metric][0])" style="color: white !important;margin-left: 0 !important;margin-top: 0.3rem !important;" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">See all repos in this group &rarr;</d-button>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
                       <a href="#" style="max-width:10rem" @click="onGitRepo(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
-                        <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0">{{ repo }}</span>
+                        <span class="text-semibold text-fiord-blue underline" style="font-size: 1rem; padding: 0">{{ getRepo(repo) }}</span>
                       </a>
                       <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
                         <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
@@ -347,7 +362,7 @@ export default class Dashboard extends Vue {
     console.log(e)
     this.$router.push({
       name: 'repo_overview',
-      params: {group:e.rg_name, repo:e.repo_git, repo_group_id: e.repo_group_id, repo_id: e.repo_id}
+      params: {'group':e.rg_name, 'repo':e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id}
     })
   }
 
@@ -356,6 +371,14 @@ export default class Dashboard extends Vue {
     this.$router.push({
       name: 'inspect_insight',
       params: {'rg_name': e[0].rg_name, 'repo_git': e[0].repo_git, 'ri_metric': e[0].ri_metric}
+    })
+  }
+
+  onRepoGroup (e: any) {
+    console.log(e)
+    this.$router.push({
+      name: 'group_overview',
+      params: {'group':e.rg_name, 'repo':e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id}
     })
   }
 

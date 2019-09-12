@@ -24,7 +24,9 @@ export default {
       user: null,
       loaded: true,
       computedField: 'value',
-      first_discovered: null
+      first_discovered: null,
+      x: 0,
+      y: 0
     }
   },
   computed: {
@@ -56,6 +58,14 @@ export default {
     }
   },
   mounted() {
+    var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName('body')[0],
+      x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+      y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
     this.loaded = false
     if (this.data) {
       let dataFilled = true
@@ -89,8 +99,8 @@ export default {
 
       let config = {
         // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 780,
-        "height": 280,
+        "width": this.x / 2.1,
+        "height": this.y / 2,
         "padding": {'left': 0, 'top': 0, 'right': 0, 'bottom': 0},
         "selection": {
           "grid": {

@@ -61,8 +61,8 @@ export default {
       body = doc.getElementsByTagName('body')[0],
       x = win.innerWidth || docElem.clientWidth || body.clientWidth,
       y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
-      this.x = x
-      this.y = y
+    this.x = x
+    this.y = y
     this.spec;
   },
   computed: {
