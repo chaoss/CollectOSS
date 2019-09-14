@@ -2730,6 +2730,7 @@ class Augur(object):
                     issue_events
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issues.issue_id = issue_events.issue_id
+                AND pull_request is NULL
                 GROUP BY issues.issue_id
                 ORDER by OPEN_DAY DESC
             """)
