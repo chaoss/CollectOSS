@@ -185,6 +185,7 @@ class Augur(object):
                         issues JOIN repo ON issues.repo_id = repo.repo_id
                     WHERE
                         issues.repo_id = :repo_id
+                        AND issues.pull_request IS NULL
                         AND issues.created_at BETWEEN :begin_date AND :end_date
                     GROUP BY gh_user_id, repo_name
                 ) as abc
@@ -208,7 +209,8 @@ class Augur(object):
                     FROM
                         issues
                     WHERE
-                        repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                        issues.pull_request IS NULL 
+                        AND repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                         AND created_at BETWEEN :begin_date AND :end_date
                     GROUP BY gh_user_id, repo_id
                 ) as abc, repo
@@ -252,6 +254,7 @@ class Augur(object):
                         WHERE repo.repo_id = :repo_id
                         AND action = 'closed'
                         AND repo.repo_id = issues.repo_id
+                        AND issues.pull_request IS NULL 
                         AND issues.issue_id = issue_events.issue_id
                         And issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY issue_events.cntrb_id, repo_name
@@ -271,6 +274,7 @@ class Augur(object):
                             repo,
                             issues
                         WHERE repo.repo_group_id = :repo_group_id
+                        AND issues.pull_request IS NULL 
                         AND action = 'closed'
                         AND repo.repo_id = issues.repo_id
                         AND issues.issue_id = issue_events.issue_id
@@ -377,6 +381,7 @@ class Augur(object):
                         WHERE repo_id = :repo_id
                             AND created_at BETWEEN :begin_date AND :end_date
                             AND gh_user_id IS NOT NULL
+                            AND pull_request IS NULL
                         GROUP BY gh_user_id, repo_id)
                         UNION ALL
                         (SELECT cmt_ght_author_id AS id,
@@ -426,6 +431,7 @@ class Augur(object):
                             AND gh_user_id IS NOT NULL
                             AND issues.issue_id = issue_message_ref.issue_id
                             AND issue_message_ref.msg_id = message.msg_id
+                            AND issues.pull_request IS NULL
                             AND created_at BETWEEN :begin_date AND :end_date
                             GROUP BY id, repo_id
                         )
@@ -461,6 +467,7 @@ class Augur(object):
                         WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                             AND created_at BETWEEN :begin_date AND :end_date
                             AND gh_user_id IS NOT NULL
+                            AND pull_request IS NULL
                         GROUP BY gh_user_id, repo_id)
                         UNION ALL
                         (SELECT cmt_ght_author_id AS id,
@@ -510,6 +517,7 @@ class Augur(object):
                             AND gh_user_id IS NOT NULL
                             AND issues.issue_id = issue_message_ref.issue_id
                             AND issue_message_ref.msg_id = message.msg_id
+                            AND issues.pull_request IS NULL
                             AND created_at BETWEEN :begin_date AND :end_date
                             GROUP BY id, repo_id
                         )
@@ -553,6 +561,7 @@ class Augur(object):
                                 WHERE repo_id = :repo_id
                                     AND created_at BETWEEN :begin_date AND :end_date
                                     AND gh_user_id IS NOT NULL
+                                    AND pull_request IS NULL
                                 GROUP BY gh_user_id, repo_id)
                                 UNION ALL
                                 (SELECT cmt_ght_author_id                                AS id,
@@ -577,6 +586,7 @@ class Augur(object):
                                 FROM issue_events, issues
                                 WHERE issues.repo_id = :repo_id
                                     AND issues.issue_id = issue_events.issue_id
+                                    AND issues.pull_request IS NULL
                                     AND issue_events.created_at BETWEEN :begin_date AND :end_date
                                     AND issue_events.cntrb_id IS NOT NULL
                                     AND action = 'closed'
@@ -600,6 +610,7 @@ class Augur(object):
                                 WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                                     AND created_at BETWEEN :begin_date AND :end_date
                                     AND gh_user_id IS NOT NULL
+                                    AND pull_request IS NULL
                                 GROUP BY gh_user_id, repo_id)
                                 UNION ALL
                                 (SELECT cmt_ght_author_id                                AS id,
@@ -624,6 +635,7 @@ class Augur(object):
                                 FROM issue_events, issues
                                 WHERE issues.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                                     AND issues.issue_id = issue_events.issue_id
+                                    AND issues.pull_request IS NULL
                                     AND issue_events.created_at BETWEEN :begin_date AND :end_date
                                     AND issue_events.cntrb_id IS NOT NULL
                                     AND action = 'closed'
@@ -898,6 +910,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issues.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY issues.repo_id, date, repo_name
                 ORDER BY issues.repo_id, date
             """)
@@ -916,6 +929,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
                 AND issues.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY date, repo_name
                 ORDER BY date;
             """)
@@ -952,6 +966,7 @@ class Augur(object):
                 AND issues.repo_id = repo.repo_id
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                and issues.pull_request IS NULL
                 GROUP BY issues.repo_id, date, repo_name
                 ORDER BY issues.repo_id, date
             """)
@@ -971,6 +986,7 @@ class Augur(object):
                 AND issues.repo_id = repo.repo_id
                 AND issues.repo_id = :repo_id
                 AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY date, repo_name
                 ORDER BY date
             """)
@@ -1006,6 +1022,7 @@ class Augur(object):
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY issues.repo_id, date, repo_name
                 ORDER BY issues.repo_id, date
             """)
@@ -1025,6 +1042,7 @@ class Augur(object):
                 WHERE issues.repo_id = :repo_id
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY date, repo_name
                 ORDER BY date;
             """)
@@ -1124,6 +1142,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
+                AND issues.pull_request IS NULL
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
                     AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
@@ -1146,6 +1165,7 @@ class Augur(object):
                     (closed_at - issues.created_at) AS duration
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL
                 AND closed_at IS NOT NULL
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
@@ -1183,18 +1203,19 @@ class Augur(object):
                     issues.created_at,
                     COUNT(DISTINCT derived.cntrb_id) AS participants
                 FROM (
-                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL AND issues.pull_request IS NULL)
                     UNION
                     (SELECT issue_id, cntrb_id FROM issue_message_ref, message
                     WHERE issue_message_ref.msg_id = message.msg_id)
                 ) AS derived, issues, repo
                 WHERE derived.issue_id = issues.issue_id
                 AND issues.repo_id = repo.repo_id
+                AND issues.pull_request IS NULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
                     AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY issues.repo_id, repo_name, derived.issue_id, issues.created_at
+                GROUP BY issues.repo_id, repo.repo_name, derived.issue_id, issues.created_at
                 ORDER BY issues.repo_id, issues.created_at
             """)
 
@@ -1210,13 +1231,14 @@ class Augur(object):
                     issues.created_at,
                     COUNT(DISTINCT derived.cntrb_id) AS participants
                 FROM (
-                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL AND issues.pull_request IS NULL)
                     UNION
                     (SELECT issue_id, cntrb_id FROM issue_message_ref, message
                     WHERE issue_message_ref.msg_id = message.msg_id)
                 ) AS derived, issues, repo
                 WHERE derived.issue_id = issues.issue_id
                 AND issues.repo_id = repo.repo_id
+                AND issues.pull_request IS NULL
                 AND issues.repo_id = :repo_id
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
@@ -1244,6 +1266,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND issue_state = 'open'
+                AND issues.pull_request IS NULL
                 GROUP BY issues.repo_id, repo_name
                 ORDER BY issues.repo_id
             """)
@@ -1255,6 +1278,7 @@ class Augur(object):
                 SELECT repo_name, COUNT(issue_id) as issue_backlog
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL
                 AND issue_state='open'
                 GROUP BY repo_name
             """)
@@ -1275,12 +1299,12 @@ class Augur(object):
                 SELECT table1.repo_id, repo.repo_name, (tot1 / tot2) AS throughput
                 FROM
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot1
-                    FROM issues WHERE issue_state='closed'
+                    FROM issues WHERE issue_state='closed' AND issues.pull_request IS NULL
                     AND repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                     GROUP BY repo_id) AS table1,
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot2
                     FROM issues
-                    WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                    WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id AND issues.pull_request IS NULL)
                     GROUP BY repo_id) AS table2,
                     repo
                 WHERE table1.repo_id = table2.repo_id
@@ -1295,10 +1319,10 @@ class Augur(object):
                 SELECT repo.repo_name, (tot1 / tot2) AS throughput
                 FROM
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot1 FROM issues
-                    WHERE issue_state='closed' AND repo_id=:repo_id
+                    WHERE issue_state='closed' AND repo_id=:repo_id AND issues.pull_request IS NULL
                     GROUP BY repo_id) AS table1,
                     (SELECT COUNT(issue_id)::REAL AS tot2 FROM issues
-                    WHERE repo_id=:repo_id) AS table2,
+                    WHERE repo_id=:repo_id AND issues.pull_request IS NULL) AS table2,
                     repo
                 WHERE table1.repo_id = repo.repo_id
             """)
@@ -1330,6 +1354,7 @@ class Augur(object):
                     repo,
                     repo_groups
                 WHERE issue_state = 'open'
+                AND issues.pull_request IS NULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
@@ -1344,6 +1369,7 @@ class Augur(object):
                     repo_groups
                 WHERE issue_state = 'open'
                 AND issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
                 GROUP BY repo.repo_id,issue_id, date, open_date
@@ -1382,7 +1408,8 @@ class Augur(object):
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
-                WHERE issues.closed_at NOTNULL
+                WHERE issues.closed_at NOT NULL
+                AND issues.pull_request IS NULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
@@ -1400,7 +1427,8 @@ class Augur(object):
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
-                WHERE issues.closed_at NOTNULL
+                WHERE issues.closed_at NOT NULL
+                AND issues.pull_request IS NULL
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
@@ -1496,6 +1524,7 @@ class Augur(object):
                 WHERE issues.repo_id IN
                     (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
+                AND pull_request IS NULL 
                 GROUP BY issues.repo_id, repo.repo_name
                 ORDER BY issues.repo_id
             """)
@@ -1512,6 +1541,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
                 AND closed_at IS NOT NULL
+                AND pull_request IS NULL 
                 GROUP BY repo.repo_name
             """)
 
@@ -1821,6 +1851,7 @@ class Augur(object):
                                     message
                                 where repo.repo_id = :repo_id
                                     and repo.repo_id = issues.repo_id
+                                    AND issues.pull_request IS NULL
                                     and issues.issue_id = issue_message_ref.issue_id
                                     and issue_message_ref.msg_id = message.msg_id
                                     and issues.created_at between :begin_date and :end_date
@@ -1850,6 +1881,7 @@ class Augur(object):
                                     message
                                 where repo.repo_id IN (SELECT repo.repo_id from repo where repo_group_id = :repo_group_id)
                                     and repo.repo_id = issues.repo_id
+                                    AND issues.pull_request IS NULL
                                     and issues.issue_id = issue_message_ref.issue_id
                                     and issue_message_ref.msg_id = message.msg_id
                                     and issues.created_at between :begin_date and :end_date
@@ -2118,6 +2150,7 @@ class Augur(object):
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo_groups.rg_name
                 ORDER BY date
             """)
@@ -2131,6 +2164,7 @@ class Augur(object):
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo.repo_id
                 ORDER BY date
             """)
@@ -2153,6 +2187,7 @@ class Augur(object):
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo_groups.rg_name
                 ORDER BY date
             """)
@@ -2166,6 +2201,7 @@ class Augur(object):
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo.repo_id
                 ORDER BY date
             """)
@@ -2636,7 +2672,7 @@ class Augur(object):
                 (select repo_id, COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
                 repo.repo_id = a.repo_id
                 left outer join
-                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b
+                (select repo_id, count ( issues.issue_id) as issues_all_time from issues where issues.pull_request IS NULL group by repo_id) b
                 on
                 repo.repo_id = b.repo_id
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
@@ -2730,7 +2766,7 @@ class Augur(object):
                     issue_events
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issues.issue_id = issue_events.issue_id
-                AND pull_request is NULL
+                AND issues.pull_request is NULL
                 GROUP BY issues.issue_id
                 ORDER by OPEN_DAY DESC
             """)
@@ -2750,6 +2786,7 @@ class Augur(object):
                     repo_name
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id, issue_events
                 WHERE issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL 
                 AND issues.issue_id = issue_events.issue_id
                 GROUP BY issues.issue_id, repo_name
                 ORDER by OPEN_DAY DESC
@@ -2933,6 +2970,7 @@ class Augur(object):
                         FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                             JOIN repo ON issues.repo_id = repo.repo_id
                         WHERE action = 'merged'
+                        AND issues.pull_request IS NOT NULL 
                         AND repo_group_id = :repo_group_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY accepted_on
@@ -2945,6 +2983,7 @@ class Augur(object):
                         FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                             JOIN repo ON issues.repo_id = repo.repo_id
                         WHERE action = 'ready_for_review'
+                        AND issues.pull_request IS NOT NULL 
                         AND repo_group_id = :repo_group_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY date_created
@@ -2964,6 +3003,7 @@ class Augur(object):
                             date_trunc(:group_by,issue_events.created_at) AS accepted_on
                         FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                         WHERE action = 'merged'
+                        AND issues.pull_request IS NOT NULL
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY accepted_on
@@ -2975,6 +3015,7 @@ class Augur(object):
                             date_trunc(:group_by,issue_events.created_at) AS date_created
                         FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                         WHERE action = 'ready_for_review'
+                        AND issues.pull_request IS NOT NULL 
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY date_created
@@ -3025,6 +3066,7 @@ class Augur(object):
                         COUNT(*) / 7.0 AS mean
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
                     AND im.msg_id = m.msg_id
                     AND i.repo_id IN
                         (SELECT repo_id FROM repo
@@ -3041,6 +3083,7 @@ class Augur(object):
                         COUNT(*) / 30.0 AS mean
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
                     AND im.msg_id = m.msg_id
                     AND i.repo_id IN
                         (SELECT repo_id FROM repo
@@ -3058,6 +3101,7 @@ class Augur(object):
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
                     AND im.msg_id = m.msg_id
+                    AND i.pull_request IS NULL 
                     AND i.repo_id IN
                         (SELECT repo_id FROM repo
                          WHERE  repo_group_id = :repo_group_id)
@@ -3081,6 +3125,7 @@ class Augur(object):
                         COUNT(*) / 7.0 AS mean
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
                     AND i.repo_id = :repo_id
                     AND im.msg_id = m.msg_id
                     GROUP BY i.repo_id, date
@@ -3095,6 +3140,7 @@ class Augur(object):
                         COUNT(*) / 30.0 AS mean
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
                     AND i.repo_id = :repo_id
                     AND im.msg_id = m.msg_id
                     GROUP BY i.repo_id, date
@@ -3109,6 +3155,7 @@ class Augur(object):
                         COUNT(*) / 365.0 AS mean
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
                     AND i.repo_id = :repo_id
                     AND im.msg_id = m.msg_id
                     GROUP BY i.repo_id, date
@@ -3138,6 +3185,7 @@ class Augur(object):
                         COUNT(*) AS total
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
                     AND im.msg_id = m.msg_id
                     AND i.repo_id IN
                         (SELECT repo_id FROM repo
@@ -3167,6 +3215,7 @@ class Augur(object):
                         COUNT(*) AS total
                     FROM issues i, issue_message_ref im, message m
                     WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
                     AND im.msg_id = m.msg_id
                     AND i.repo_id = :repo_id
                     GROUP BY i.repo_id, daily
