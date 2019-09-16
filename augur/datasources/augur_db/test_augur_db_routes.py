@@ -120,7 +120,7 @@ def test_issue_duration_by_group(augur_db_routes):
     assert len(data) >= 1
 
 def test_issue_duration_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21009/issue-duration')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/20/repos/21030/issue-duration')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
@@ -189,7 +189,7 @@ def test_issues_first_time_opened_by_group(augur_db_routes):
     assert data[0]["count"] > 0
 
 def test_issues_first_time_opened_by_repo(augur_db_routes):
-    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/repos/22054/issues-first-time-opened')
+    response = requests.get('http://localhost:5000/api/unstable/repo-groups/24/repos/21222/issues-first-time-opened')
     data = response.json()
     assert response.status_code == 200
     assert len(data) >= 1
