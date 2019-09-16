@@ -106,7 +106,7 @@ def test_issue_participants(augur_db):
 
 def test_issue_throughput(augur_db):
     # repo
-    assert augur_db.issue_throughput(20, 21009).iloc[0]['throughput'] >= 0
+    assert augur_db.issue_throughput(20, 21030).iloc[0]['throughput'] >= 0
 
     # repo_group
     assert augur_db.issue_throughput(24).iloc[0]['throughput'] >= 0
@@ -122,7 +122,7 @@ def test_issue_backlog(augur_db):
 def test_issues_first_time_closed(augur_db):
 
     # repo id
-    assert augur_db.issues_first_time_closed(24, repo_id=21524, period='year').isin(
+    assert augur_db.issues_first_time_closed(21, repo_id=21222, period='year').isin(
         [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
     # repo_group_id
@@ -133,7 +133,7 @@ def test_issues_first_time_closed(augur_db):
     assert augur_db.issues_first_time_closed(24, period='year', begin_date='2019-1-1 00:00:00',
                                              end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
-    assert augur_db.issues_first_time_closed(24, repo_id=21524, period='year', begin_date='2019-1-1 00:00:00',
+    assert augur_db.issues_first_time_closed(21, repo_id=21222, period='year', begin_date='2019-1-1 00:00:00',
                                              end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
 def test_sub_projects(augur_db):
@@ -148,7 +148,7 @@ def test_sub_projects(augur_db):
 
 def test_pull_requests_merge_contributor_new(augur_db):
     # repo id
-    assert augur_db.pull_requests_merge_contributor_new(24, repo_id=21524, period='year').isin(
+    assert augur_db.pull_requests_merge_contributor_new(21, repo_id=21222, period='year').isin(
         [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
     # repo_group_id
@@ -177,7 +177,7 @@ def test_contributors(augur_db):
 
 
 def test_contributors_new(augur_db):
-    assert augur_db.contributors_new(24, repo_id=21524, period='year').isin(
+    assert augur_db.contributors_new(21, repo_id=21222, period='year').isin(
         [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
     # repo_group_id
@@ -188,7 +188,7 @@ def test_contributors_new(augur_db):
     assert augur_db.contributors_new(24, period='year', begin_date='2019-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
-    assert augur_db.contributors_new(24, repo_id=21524, period='year', begin_date='2019-1-1 00:00:00',
+    assert augur_db.contributors_new(21, repo_id=21222, period='year', begin_date='2019-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
 def test_open_issues_count(augur_db):
