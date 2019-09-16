@@ -35,8 +35,8 @@
 
     <div class="row mb-5" v-if="loaded_risk">
       <div class="col-6">
-        <license-table :data="values" source="licenseDeclared"  :headers="['Short Name','Note']"
-                      :fields="['short_name','note']"  title="License Declared"></license-table>
+        <license-table :data="values" source="licenseDeclared"  :headers="['Short Name']"
+                      :ldata="licenses" :fields="['short_name']"  title="License Declared"></license-table>
                       <br><br>
         <download-card title="Software Bill of Materials" :data="values" source="sbom"></download-card>
       </div>
@@ -69,6 +69,7 @@
   import DownloadCard from "@/components/charts/DownloadCard.vue";
   import CoverageCard from "@/components/charts/CoverageCard.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
+  import Licenses from "@/components/Licenses.json";
   import router from "@/router";
 
   @Component({
@@ -105,6 +106,7 @@
     projects = []
     themes = ['dark', 'info', 'royal-blue', 'warning']
     project = null
+    licenses = Licenses
 
     loaded_cii:boolean = false
     loaded_risk:boolean = false
