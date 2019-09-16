@@ -116,7 +116,7 @@ class GitHubWorker:
         self.job_table = HelperBase.classes.gh_worker_job.__table__
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
-        logging.info("Querying starting ids info...")
+        logging.info("Querying starting ids info...\n")
         maxIssueCntrbSQL = s.sql.text("""
             SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
             FROM issues, contributors
@@ -140,6 +140,7 @@ class GitHubWorker:
         self.msg_id_inc = (msg_start + 1)
 
         try:
+            logging.info("Sending hello message to broker...\n")
             requests.post('http://{}:{}/api/unstable/workers'.format(
                 self.config['broker_host'], self.config['broker_port']), json=specs) #hello message
         except:
@@ -672,7 +673,7 @@ class GitHubWorker:
             i = i + 1 if self.finishing_task else i - 1
 
             # Since we already wouldve checked the first page... break
-            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+            if i == 1 and multiple_pages or i < 1 or (len(j) == 0 and not self.finishing_task):
                 logging.info("No more pages to check, breaking from pagination.\n")
                 break
 
@@ -996,9 +997,6 @@ class GitHubWorker:
         #Register this task as completed
         self.register_task_completion(entry_info, "issues")
 
-        if self.finishing_task:
-            self.finishing_task = False
-            
             
     def get_table_values(self, cols, tables):
         table_str = tables[0]
