@@ -1,8 +1,8 @@
 <template>
-  <div ref="holder">
+
+  <d-card-body :title="title" class="text-center">
 
     <div style="margin-bottom: 0 !important" class="tickchart ">
-      <h3 style="font-size: 0.9rem;text-align: center;transform: translateY(-3px);">{{ title }}</h3>
       <!-- <div :id="source" style="padding: 0"></div> -->
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
@@ -20,7 +20,8 @@
           </div>
       </div> -->
     </div>
-  </div>
+  </d-card-body>
+
 </template>
 
 
@@ -95,23 +96,23 @@ export default {
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": this.x / 4,
-        "height": this.y / 4,
-        "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
+        "width": this.x / 2.5,
+        "height": this.y / 2.4,
+        "padding": {"left": 0, "top": 0, "right": 0, "bottom": -70},
         "config": {
           "axis":{
                 "grid": false
               },
           "legend": {
-            "offset": -20,
-            "orient": "right",
+            "offset": -0,
+            "orient": "bottom",
             "titlePadding": 10,
-            "padding": 40,
-            "labelFontSize": 13,
+            "padding": 20,
+            "labelFontSize": 16,
             // "labelFont": "Open Sans",
             "labelOffset": 3,
-            "titleFontSize": 14,
-            "labelLimit": 260 
+            "titleFontSize": 18,
+            "labelLimit": 460 
           },
           // "scale": {"minSize": 100, "maxSize": 500},
           "bar": {
@@ -363,7 +364,6 @@ export default {
     body = doc.getElementsByTagName('body')[0],
     x = win.innerWidth || docElem.clientWidth || body.clientWidth,
     y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
-    console.log(x, 'yo')
     this.x = x
     this.y = y
     this.spec;

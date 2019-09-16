@@ -1,5 +1,6 @@
 <template>
   <div ref="holder" style="position: relative; z-index: 5">
+    <h3 style="font-size:0.6rem;text-align: center; padding: 0 0 0.3rem 0">{{ title }}</h3>
     <!-- <spinner :size="30" style="top: 5%; position: relative; transform: translateY(-50%);"></spinner> -->
     <div class="chart">
       <!-- <div id="hi"></div> -->
@@ -26,17 +27,28 @@ export default {
       values: [],
       user: null,
       loaded: false,
-      chart: null
+      chart: null,
+      x:0,
+      y:0
     }
   },
   computed: {
     spec() {
+      var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName('body')[0],
+      x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+      y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+      this.x = x
+      this.y = y
+
       this.values = this.data//this.convertKey(this.data)
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 80,
-        "height": 50,
+        "width": this.x / 15,
+        "height": this.y / 17,
         "padding": 0,
         "mark": {
           "type":"line",
@@ -44,7 +56,7 @@ export default {
         },
         "encoding": {
           "x": {
-            "timeUnit": "yearmonth", "field": "date", "type": "temporal",
+            "timeUnit": "yearmonthdate", "field": "date", "type": "temporal",
             "axis": {"labels": false, "grid": false, "title": false, "ticks": false}
           },
           "y": {

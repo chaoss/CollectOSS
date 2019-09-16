@@ -52,12 +52,12 @@
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_type' == sortColumn"></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
+                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
                     <div class="row">
                       <div class="col col-9">Repo Count</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
-                  </th>
+                  </th> -->
                   <th scope="col" class="border-0">Options</th>
                 </tr>
               </thead>
@@ -70,7 +70,7 @@
                   <td>{{ group.rg_website }}</td>
                   <td>{{ group.rg_last_modified }}</td>
                   <td>{{ group.rg_type }}</td>
-                  <td>{{ group.repo_count }}</td>
+                  <!-- <td>{{ group.repo_count }}</td> -->
                   <td>
                     <div class="row">
                       <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0; border: none; background: none;">

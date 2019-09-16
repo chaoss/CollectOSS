@@ -1,7 +1,5 @@
 <template>
-  <div ref="holder">
-    <div class="tickchart ">
-      <h3 class="chart-title">Lines of code added by the top 10 authors visualized</h3>
+  <d-card-body title="Lines of code added by the top 10 authors visualized">
       <div :id="source"></div>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
@@ -24,8 +22,7 @@
         
       </div>
        -->
-    </div>
-  </div>
+  </d-card-body>
 </template>
 
 
@@ -52,10 +49,20 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      tick: 0
+      tick: 0,
+      x:0,
+      y:0
     }
   },
   mounted() {
+    var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName('body')[0],
+      x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+      y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
     this.spec;
   },
   computed: {
@@ -107,9 +114,9 @@ export default {
               }
       }
       let config = {
-        "width": 1000,
-        "height": 360,
-        "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},
+        "width": this.x / 1.9,
+        "height": this.y / 2,
+        "padding": {"left": -10, "top": 0, "right": 5, "bottom": -10},
         "config": {
           "tick": {
             "thickness": 8,

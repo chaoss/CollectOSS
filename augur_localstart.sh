@@ -17,7 +17,7 @@ if [[ $(ps ax | grep 'vue-cli-service serve' | wc -l) -ge 2 ]]; then
 else
     echo "Starting frontend server."
     cd frontend/
-    nohup npm run serve >../logs/augur_frontend.log 2>logs/augur_frontend.err &
+    nohup npm run serve >../logs/augur_frontend.log 2>../logs/augur_frontend.err &
     echo $! >../logs/augur_frontend_pid.txt
 fi
 

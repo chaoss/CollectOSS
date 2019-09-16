@@ -24,52 +24,76 @@
     </div> -->
     <p></p>
 
-    <div class="row">
+    <d-row>
       
-      <div class="row col col-7" :style="loaderPadding(loadedBars)" >
-        
-<!-- look to add commit chart? -->
-        <!--<div class="col col-12">
-          <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
-        </div> -->
-        <div class="row col col-12" v-if="loadedBars" >
-          <div class="col col-12" style="padding-top: 1rem; transform: translateY(-0px) !important; max-height:0px">
-            <normalized-stacked-bar-chart 
-            title="Lines of code added by the top 10 authors as Percentages - By Time Period"
-            source="changesByAuthor1" :data="values['changesByAuthor']">
-            </normalized-stacked-bar-chart>
-          </div>
-          <div class="col col-6" style="padding-left: 0px; transform: translateY(3rem) !important;max-height:0px">
-            <div style="padding-top: 0px"></div>
-            <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
-            source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
-          </div>
+      <d-col cols="12" md="6" lg="6" sm="12">
+        <d-card> <!-- :style="loaderPadding(loadedBars)" > -->
+          
+          <!-- look to add commit chart? -->
+          <!--<div class="col col-12">
+            <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
+          </div> -->
 
-          <div class="col col-6" style="padding-left: 0px; transform: translateY(3rem) !important;max-height:0px">
-            <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
-            <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
-          </div>
+          <d-row v-if="!loadedBars">
+            <d-col>
+              <spinner></spinner>
+            </d-col>
+          </d-row>
 
-        </div>
-      </div>
-      <div class="col col-5" :style="loaderPadding(loadedBars)" style="transform: translateX(3rem)">
-        <!-- <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner> -->
-        
-        <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
-      </div>
+          <d-container>
+            <d-row>
+              <d-col v-if="loadedBars" style="">
+                <normalized-stacked-bar-chart 
+                title="Lines of code added by the top 10 authors as Percentages - By Time Period"
+                source="changesByAuthor1" :data="values['changesByAuthor']">
+                </normalized-stacked-bar-chart>
+              </d-col>
+            </d-row>
 
-      <div class="col-12" style="padding-top: 4rem;">
-        <spinner v-if="!loadedBars" style="padding-top: 2rem"></spinner>
-        <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
-      </div>
+            <d-row>
+              <d-col v-if="loadedBars" style="">
+                <div style="padding-top: 0px"></div>
+                <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
+                source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+              </d-col>
+            </d-row>
 
-      <div class="col col-5">
-      </div>
+            <!-- <d-row>
+              <d-col v-if="loadedBars" style="">
+                <one-dimensional-stacked-bar-chart type="lines" title="Lines of Code Added by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
+              </d-col>
+            </d-row>
 
-      <div class="col col-7">
-      </div>
+            <d-row>
+              <d-col v-if="loadedBars" style="">
+                <one-dimensional-stacked-bar-chart type="commit" title="Commits by the top 10 Authors as Percentages - All Time" :data="values['changesByAuthor']"></one-dimensional-stacked-bar-chart>
+              </d-col>
+            </d-row> -->
 
-    </div>
+          </d-container>
+
+        </d-card>
+      </d-col>
+      <d-col cols="12" md="6" lg="6" sm="12">
+        <d-card>
+          <spinner v-if="!loadedBars"></spinner>
+          
+          <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
+        </d-card>
+      </d-col>
+
+    </d-row>
+
+    <d-row style="padding-top: 2rem">
+
+      <d-col>
+        <d-card>
+          <spinner v-if="!loadedBars"></spinner>
+          <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+        </d-card>
+      </d-col>
+
+    </d-row>
 
   </d-container>
 </template>
