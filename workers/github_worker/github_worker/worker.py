@@ -513,7 +513,7 @@ class GitHubWorker:
 
             i = i + 1 if self.finishing_task else i - 1
 
-            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+            if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                 logging.info("No more pages to check, breaking from pagination.\n")
                 break
             
@@ -685,7 +685,7 @@ class GitHubWorker:
             i = i + 1 if self.finishing_task else i - 1
 
             # Since we already wouldve checked the first page... break
-            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+            if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                 logging.info("No more pages to check, breaking from pagination.\n")
                 break
 
@@ -761,7 +761,7 @@ class GitHubWorker:
                 i = i + 1 if self.finishing_task else i - 1
 
                 # Since we already wouldve checked the first page... break
-                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                     logging.info("No more pages to check, breaking from pagination.\n")
                     break
 
@@ -925,7 +925,7 @@ class GitHubWorker:
                 i = i + 1 if self.finishing_task else i - 1
 
                 # Since we already wouldve checked the first page... break
-                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                     logging.info("No more pages to check, breaking from pagination.\n")
                     break
 
