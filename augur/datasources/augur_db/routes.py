@@ -1500,7 +1500,7 @@ def create_routes(server):
     server.addRepoMetric(augur_db.open_issues_count, 'open-issues-count')
 
     """
-    @api {get} /repo-groups/:repo_group_id/closed-issues-count Closed Issues Count (Repo Group)
+    @api {get} /repo-groups/:repo_group_id/repos/:repo_id/closed-issues-count Closed Issues Count (Repo Group)
     @apiName closed-issues-count-repo-group
     @apiGroup Evolution
     @apiDescription Count of closed issues.
