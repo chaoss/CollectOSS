@@ -1408,7 +1408,7 @@ class Augur(object):
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
-                WHERE issues.closed_at NOT NULL
+                WHERE issues.closed_at IS NOT NULL
                 AND issues.pull_request IS NULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
@@ -1427,7 +1427,7 @@ class Augur(object):
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
-                WHERE issues.closed_at NOT NULL
+                WHERE issues.closed_at IS NOT NULL
                 AND issues.pull_request IS NULL
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
