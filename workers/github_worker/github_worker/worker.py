@@ -468,7 +468,6 @@ class GitHubWorker:
         #   covers all of them
         i = 1
         multiple_pages = False
-        first_page = False
         while True:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
@@ -498,12 +497,6 @@ class GitHubWorker:
 
             if r.status_code == 204:
                 j = []
-
-            if i == 1:
-                first_page = j
-            elif j == first_page:
-                logging.info("No more pages to check, breaking from pagination.\n")
-                break
             
             # Checking contents of requests with what we already have in the db
             # new_contributors = self.check_duplicates(j, cntrb_table_values, pseudo_key_gh)
@@ -520,7 +513,7 @@ class GitHubWorker:
 
             i = i + 1 if self.finishing_task else i - 1
 
-            if i == 1 and multiple_pages or i < 1 or (len(j) == 0 and not self.finishing_task):
+            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
                 logging.info("No more pages to check, breaking from pagination.\n")
                 break
             
@@ -659,7 +652,6 @@ class GitHubWorker:
         #   to determine if there are multiple pages and if the 1st page covers all
         i = 1
         multiple_pages = False
-        first_page = None
         while True:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
@@ -678,12 +670,6 @@ class GitHubWorker:
             
             j = r.json()
 
-            if i == 1:
-                first_page = j
-            elif j == first_page:
-                logging.info("No more pages to check, breaking from pagination.\n")
-                break
-
             # Checking contents of requests with what we already have in the db
             j = self.assign_tuple_action(j, issue_table_values, 
                 {'comment_count': 'comments','issue_state': 'state'}, 
@@ -699,7 +685,7 @@ class GitHubWorker:
             i = i + 1 if self.finishing_task else i - 1
 
             # Since we already wouldve checked the first page... break
-            if i == 1 and multiple_pages or i < 1 or (len(j) == 0 and not self.finishing_task):
+            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
                 logging.info("No more pages to check, breaking from pagination.\n")
                 break
 
@@ -743,7 +729,7 @@ class GitHubWorker:
             #   to determine if there are multiple pages and if the 1st page covers all
             i = 1
             multiple_pages = False
-            first_page = None
+
             while True:
                 logging.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
                 r = requests.get(url=events_url.format(i), headers=self.headers)
@@ -762,12 +748,6 @@ class GitHubWorker:
 
                 j = r.json()
 
-                if i == 1:
-                    first_page = j
-                elif j == first_page:
-                    logging.info("No more pages to check, breaking from pagination.\n")
-                    break
-
                 # Checking contents of requests with what we already have in the db
                 new_events = self.check_duplicates(j, event_table_values, pseudo_key_gh)
                 if len(new_events) == 0 and multiple_pages and 'last' in r.links:
@@ -781,7 +761,7 @@ class GitHubWorker:
                 i = i + 1 if self.finishing_task else i - 1
 
                 # Since we already wouldve checked the first page... break
-                if i == 1 and multiple_pages or i < 1 or (len(j) == 0 and not self.finishing_task):
+                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
                     logging.info("No more pages to check, breaking from pagination.\n")
                     break
 
@@ -913,7 +893,7 @@ class GitHubWorker:
             #   to determine if there are multiple pages and if the 1st page covers all
             i = 1
             multiple_pages = False
-            first_page = None
+
             while True:
                 logging.info("Hitting endpoint: " + comments_url.format(i) + " ...\n")
                 r = requests.get(url=comments_url.format(i), headers=self.headers)
@@ -932,12 +912,6 @@ class GitHubWorker:
 
                 j = r.json()
 
-                if i == 1:
-                    first_page = j
-                elif j == first_page:
-                    logging.info("No more pages to check, breaking from pagination.\n")
-                    break
-
                 # Checking contents of requests with what we already have in the db
                 new_comments = self.check_duplicates(j, event_table_values, pseudo_key_gh)
                 if len(new_comments) == 0 and multiple_pages and 'last' in r.links:
@@ -951,7 +925,7 @@ class GitHubWorker:
                 i = i + 1 if self.finishing_task else i - 1
 
                 # Since we already wouldve checked the first page... break
-                if i == 1 and multiple_pages or i < 1 or (len(j) == 0 and not self.finishing_task):
+                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
                     logging.info("No more pages to check, breaking from pagination.\n")
                     break
 
