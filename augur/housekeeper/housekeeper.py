@@ -173,7 +173,7 @@ class Housekeeper:
                 last_id = job['starting_repo_id']
             else:
                 repoIdSQL = s.sql.text("""
-                        SELECT since_id_str FROM gh_worker_job
+                        SELECT since_id_str FROM worker_job
                         WHERE job_model = '{}'
                     """.format(job['model']))
 
@@ -187,7 +187,7 @@ class Housekeeper:
                     last_id = 0
 
             jobHistorySQL = s.sql.text("""
-                    SELECT max(history_id) AS history_id, status FROM gh_worker_history
+                    SELECT max(history_id) AS history_id, status FROM worker_history
                     GROUP BY status
                     LIMIT 1
                 """)
