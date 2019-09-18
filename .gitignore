@@ -99,7 +99,6 @@ logs/
 build/
 lib/
 dist/
-*.py[cod]
 
 # C extensions
 *.so
