@@ -95,7 +95,7 @@ class GitHubWorker:
         metadata.reflect(self.db, only=['contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events',
             'issue_assignees','contributors_aliases'])
-        helper_metadata.reflect(self.helper_db, only=['gh_worker_history', 'gh_worker_job'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -112,8 +112,8 @@ class GitHubWorker:
         self.issue_assignees_table = Base.classes.issue_assignees.__table__
         self.contributors_aliases_table = Base.classes.contributors_aliases.__table__
 
-        self.history_table = HelperBase.classes.gh_worker_history.__table__
-        self.job_table = HelperBase.classes.gh_worker_job.__table__
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
         logging.info("Querying starting ids info...\n")
