@@ -5,7 +5,7 @@ import time
 import sqlalchemy as s
 import pandas as pd
 import os
-import zmq
+import json
 logging.basicConfig(filename='housekeeper.log')
 
 class Housekeeper:
@@ -42,14 +42,18 @@ class Housekeeper:
         self.__updater()
 
     @staticmethod
-    def updater_process(broker_host,broker_port, broker, model, given, delay, repos, repo_group_id):
+    def updater_process(broker_host, broker_port, broker, model, given, delay, repos, repo_group_id=None):
         """
         Controls a given plugin's update process
         :param name: name of object to be updated 
         :param delay: time needed to update
         :param shared: shared object that is to also be updated
         """
-        logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, repo_group_id, os.getpid()))
+        if repo_group_id:
+            logging.info('Housekeeper spawned {} model updater process for subsection {} with PID {}'.format(model, repo_group_id, os.getpid()))
+        else:
+            logging.info('Housekeeper spawned {} model updater process for repo {} with PID {}'.format(model, repos[0]['repo_id'], os.getpid()))
+
         try:
             compatible_worker_found = False
             # Waiting for compatible worker
@@ -62,8 +66,8 @@ class Housekeeper:
                         "can handle the {} model... beginning to distribute maintained tasks".format(model))
                     time.sleep(4)
                     while True:
-                        logging.info('Housekeeper updating {} model for subsection: {} with given {}...'.format(
-                            model, repo_group_id, given[0]))
+                        logging.info('Housekeeper updating {} model with given {}...'.format(
+                            model, given[0]))
                         
                         if given[0] == 'git_url':
                             for repo in repos:
@@ -155,67 +159,85 @@ class Housekeeper:
     def prep_jobs(self, jobs):
 
         for job in jobs:
-            if job['repo_group_id'] != 0:
-                # Query all repos and last repo id
-                repoUrlSQL = s.sql.text("""
-                        SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
-                    """.format(job['repo_group_id']))
-            else:
-                repoUrlSQL = s.sql.text("""
-                        SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
-                    """.format(job['repo_group_id']))
-            rs = pd.read_sql(repoUrlSQL, self.db, params={})
-            if len(rs) == 0:
-                logging.info("Trying to send tasks for repo group with id: {}, but the repo group does not contain any repos".format(job['repo_group_id']))
-                continue
+            if 'repo_group_id' in job:
+                if job['repo_group_id'] != 0:
+                    # Query all repos and last repo id
+                    repoUrlSQL = s.sql.text("""
+                            SELECT repo_git, repo_id FROM repo WHERE repo_group_id = {} ORDER BY repo_id ASC
+                        """.format(job['repo_group_id']))
+                else:
+                    repoUrlSQL = s.sql.text("""
+                            SELECT repo_git, repo_id FROM repo ORDER BY repo_id ASC
+                        """.format(job['repo_group_id']))
+                rs = pd.read_sql(repoUrlSQL, self.db, params={})
+                if len(rs) == 0:
+                    logging.info("Trying to send tasks for repo group with id: {}, but the repo group does not contain any repos".format(job['repo_group_id']))
+                    continue
 
-            if 'starting_repo_id' in job:
-                last_id = job['starting_repo_id']
-            else:
-                repoIdSQL = s.sql.text("""
-                        SELECT since_id_str FROM worker_job
-                        WHERE job_model = '{}'
-                    """.format(job['model']))
+                if 'starting_repo_id' in job:
+                    last_id = job['starting_repo_id']
+                else:
+                    repoIdSQL = s.sql.text("""
+                            SELECT since_id_str FROM worker_job
+                            WHERE job_model = '{}'
+                        """.format(job['model']))
 
-                job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
+                    job_df = pd.read_sql(repoIdSQL, self.helper_db, params={})
 
-                # If a last id is not recorded, start from beginning of repos 
-                #   (first id is not necessarily 0)
-                try:
-                    last_id = int(job_df.iloc[0]['since_id_str'])
-                except:
-                    last_id = 0
+                    # If a last id is not recorded, start from beginning of repos 
+                    #   (first id is not necessarily 0)
+                    try:
+                        last_id = int(job_df.iloc[0]['since_id_str'])
+                    except:
+                        last_id = 0
 
-            jobHistorySQL = s.sql.text("""
-                    SELECT max(history_id) AS history_id, status FROM worker_history
-                    GROUP BY status
-                    LIMIT 1
-                """)
+                jobHistorySQL = s.sql.text("""
+                        SELECT max(history_id) AS history_id, status FROM worker_history
+                        GROUP BY status
+                        LIMIT 1
+                    """)
 
-            history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
+                history_df = pd.read_sql(jobHistorySQL, self.helper_db, params={})
 
-            finishing_task = False
-            if len(history_df.index) != 0:
-                if history_df.iloc[0]['status'] == 'Stopped':
-                    self.history_id = int(history_df.iloc[0]['history_id'])
-                    finishing_task = True
-                    # last_id += 1 #update to match history tuple val rather than just increment
+                finishing_task = False
+                if len(history_df.index) != 0:
+                    if history_df.iloc[0]['status'] == 'Stopped':
+                        self.history_id = int(history_df.iloc[0]['history_id'])
+                        finishing_task = True
+                        # last_id += 1 #update to match history tuple val rather than just increment
 
 
-            # Rearrange repos so the one after the last one that 
-            #   was completed will be ran first
-            before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
-            after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
+                # Rearrange repos so the one after the last one that 
+                #   was completed will be ran first
+                before_repos = rs.loc[rs['repo_id'].astype(int) < last_id]
+                after_repos = rs.loc[rs['repo_id'].astype(int) >= last_id]
 
-            reorganized_repos = after_repos.append(before_repos)
+                reorganized_repos = after_repos.append(before_repos)
 
-            if 'all_focused' in job:
-                reorganized_repos['focused_task'] = job['all_focused']
+                if 'all_focused' in job:
+                    reorganized_repos['focused_task'] = job['all_focused']
 
-            reorganized_repos = reorganized_repos.to_dict('records')
+                reorganized_repos = reorganized_repos.to_dict('records')
             
-            if finishing_task:
-                reorganized_repos[0]['focused_task'] = 1
-            job['repos'] = reorganized_repos
+                if finishing_task:
+                    reorganized_repos[0]['focused_task'] = 1
+                
+                job['repos'] = reorganized_repos
+
+            elif 'repo_id' in job:
+                job['repo_group_id'] = None
+                repoUrlSQL = s.sql.text("""
+                    SELECT repo_git, repo_id FROM repo WHERE repo_id = {}
+                """.format(job['repo_id']))
+
+                rs = pd.read_sql(repoUrlSQL, self.db, params={})
+
+                if 'all_focused' in job:
+                    rs['focused_task'] = job['all_focused']
+
+                rs = rs.to_dict('records')
+
+                job['repos'] = rs
+
         return jobs
 

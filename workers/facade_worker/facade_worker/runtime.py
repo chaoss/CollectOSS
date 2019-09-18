@@ -29,6 +29,13 @@ def create_server(app, gw):
                         status=200,
                         mimetype="application/json")
 
+    @app.route("/AUGWOP/heartbeat", methods=['GET'])
+    def heartbeat():
+        if request.method == 'GET':
+            return jsonify({
+                "status": "alive"
+            })
+            
     @app.route("/AUGWOP/config")
     def augwop_config():
         """ Retrieve worker's config

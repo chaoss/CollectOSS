@@ -30,7 +30,7 @@ def create_server(app, gw):
                         mimetype="application/json")
 
     @app.route("/AUGWOP/heartbeat", methods=['GET'])
-    def augwop_task():
+    def heartbeat():
         if request.method == 'GET':
             return jsonify({
                 "status": "alive"
