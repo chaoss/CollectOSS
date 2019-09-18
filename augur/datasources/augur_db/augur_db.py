@@ -2630,7 +2630,7 @@ class Augur(object):
                 (select repo_id,    COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
                 repo.repo_id = a.repo_id
                 left outer join
-                (select repo_id, count ( issues.issue_id) as issues_all_time from issues where issues.pull_request IS NULL  group by repo_id) b
+                (select repo_id, count ( * ) as issues_all_time from issues where issues.pull_request IS NULL  group by repo_id) b
                 on
                 repo.repo_id = b.repo_id
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
