@@ -29,7 +29,7 @@ export default class AugurAPI {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
-    this._host = hostURL// || 'http://localhost:5000'
+    this._host = 'http://augur.osshealth.io:5001'//hostURL// || 'http://localhost:5000'
     console.log(this._host)
     this.__cache = {}
     this.__timeout = null
@@ -403,6 +403,8 @@ class Repo extends BaseRepo{
       this.Timeseries('pullRequestComments', 'pulls/comments')
       this.Timeseries('pullRequestsOpen', 'pulls')
 
+      this.Timeseries('linesOfCodeCommitCountsByCalendarYearGrouped','lines-of-code-commit-counts-by-calendar-year-grouped')
+
       // RISK
 
       // VALUE
@@ -472,6 +474,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('ciiBP','cii-best-practices-badge')
     this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
+    this.addRepoMetric('topCommitters', 'top-committers')
   }
 }
 

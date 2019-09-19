@@ -14,6 +14,9 @@
     <!-- Compare Control -->
     <compare-control></compare-control>
 
+    <pie-chart
+      source="topCommitters"
+    ></pie-chart>
 
     <!-- Overview Section -->
     <!-- <div class="page-header row no-gutters py-4" >
@@ -95,7 +98,7 @@
 
     </d-row>
 
-  </d-container>
+  </d-container> 
 </template>
 
 <script lang="ts">
@@ -117,10 +120,10 @@ import CompareControl from '../components/common/CompareControl.vue'
 import router from "@/router";
 import BubbleChart from '../components/charts/BubbleChart.vue'
 import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
+import PieChart from '../components/charts/PieChart.vue'
 
 @Component({
   components: {
-    SparkChart, // <spark-chart></spark-chart>
     InsightChart,
     TickChart,
     LinesOfCodeChart,
@@ -135,6 +138,7 @@ import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
     CompareControl,
     BubbleChart,
     TimeIntervalBarChart,
+    PieChart,
   },
   methods: {
     ...mapActions('common',[
