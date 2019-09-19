@@ -1,7 +1,7 @@
 <template>
 
   <div ref="holder">
-    <div id="vis"></div>
+    <div id="chart"></div>
   </div>
 </template>
 
@@ -31,8 +31,6 @@ import {mapActions, mapGetters, mapMutations} from "vuex";
   },
 })
 export default class PieChart extends Vue {
-
-  values:any[] = []
 
   // getters
   base!:any
@@ -83,18 +81,18 @@ export default class PieChart extends Vue {
       "data": [
         {
           "name": "table",
-          "values": [
-            {"id": 1, "field": 4},
-            {"id": 2, "field": 6},
-            {"id": 3, "field": 10},
-            {"id": 4, "field": 3},
-            {"id": 5, "field": 7},
-            {"id": 6, "field": 8}
-          ],
+          // "values": [
+          //   {"id": 1, "field": 4},
+          //   {"id": 2, "field": 6},
+          //   {"id": 3, "field": 10},
+          //   {"id": 4, "field": 3},
+          //   {"id": 5, "field": 7},
+          //   {"id": 6, "field": 8}
+          // ],
           "transform": [
             {
               "type": "pie",
-              "field": "field",
+              "field": "commits",
               "startAngle": {"signal": "startAngle"},
               "endAngle": {"signal": "endAngle"},
               "sort": {"signal": "sort"}
@@ -107,7 +105,7 @@ export default class PieChart extends Vue {
         {
           "name": "color",
           "type": "ordinal",
-          "domain": {"data": "table", "field": "id"},
+          "domain": {"data": "table", "field": "email"},
           "range": {"scheme": "category20"}
         }
       ],
@@ -118,7 +116,7 @@ export default class PieChart extends Vue {
           "from": {"data": "table"},
           "encode": {
             "enter": {
-              "fill": {"scale": "color", "field": "id"},
+              "fill": {"scale": "color", "field": "email"},
               "x": {"signal": "width / 2"},
               "y": {"signal": "height / 2"}
             },
@@ -135,28 +133,23 @@ export default class PieChart extends Vue {
       ]
     }
 
-
-
-    let processData = (data: any) => {
+    // hitting endpoint
+    this.base[this.source]().then((data: any) => {
+      //data handler (what gets returned)
+      
+      console.log(data)
 
       //data reorganizing
+      config.data[0].values = data
 
-      config.data = {"values": data}
-      this.values = data
+      this.reloadImage(config)
 
-    }
-
-
-    console.log("HEYEYYY", this.base, this.source[])
-    this.base[this.source].then((data: any) => {
-      console.log(data)
-      processData(data)
     }, () => {
       //this.renderError()
     }) // end batch request
 
     
-    this.reloadImage(config)
+    
 
     return config
     
@@ -164,20 +157,11 @@ export default class PieChart extends Vue {
 
   reloadImage (config:any) {
     //,tooltip: {theme: 'dark'}
-    vegaEmbed('#' + this.source, config, {actions: false}) 
+    vegaEmbed('#chart', config, {actions: false}) 
   }
+
   mounted () {
     this.spec;
-  }
-  created () {
-      // this.endpoint({endpoints:[this.source],repos:[this.base]}).then((data:any) => {
-      //   this.values = data
-      //   console.log(data)
-      // })
-      // console.log("YOYOYO", this.base, this.source)
-      // this.base[this.source]().then((data:any) => {
-      //   console.log("hello",data)
-      // })
   }
 }
 </script>
