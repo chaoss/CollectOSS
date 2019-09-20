@@ -76,39 +76,32 @@ class InsightWorker:
         
         # produce our own MetaData object
         metadata = MetaData()
+        helper_metadata = MetaData()
 
         # we can reflect it ourselves from a database, using options
         # such as 'only' to limit what tables we look at...
         metadata.reflect(self.db, only=['chaoss_metric_status', 'repo_insights', 'repo_insights_records'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
 
         # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
+        HelperBase = automap_base(metadata=helper_metadata)
 
         # calling prepare() just sets up mapped classes and relationships.
         Base.prepare()
+        HelperBase.prepare()
 
         # mapped classes are ready
         self.chaoss_metric_status_table = Base.classes['chaoss_metric_status'].__table__
         self.repo_insights_table = Base.classes['repo_insights'].__table__
         self.repo_insights_records_table = Base.classes['repo_insights_records'].__table__
 
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
+
         requests.post('http://{}:{}/api/unstable/workers'.format(
             self.config['broker_host'],self.config['broker_port']), json=specs) #hello message
 
-        # Query all repos and last repo id
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo order by repo_id asc
-        """)
-        rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 0
-        i = 0
-        while i < pop_off:
-            rs = rs[1:]
-            i += 1
-        for row in rs:
-            self._queue.put({'repo_id': row['repo_id'], 'repo_git': row['repo_git']})
-        self.run()
-        # self.discover_insights({'repo_id': 21000, 'repo_git': 'https://github.com/rails/rails.git'})
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -428,7 +421,7 @@ class InsightWorker:
             insertion_directions['record'] = True
 
         # Query current insights and rank by score
-        num_insights_per_repo = 3
+        num_insights_per_repo = 2
         insightSQL = s.sql.text("""
             SELECT distinct(ri_metric),repo_id, ri_score
             FROM repo_insights

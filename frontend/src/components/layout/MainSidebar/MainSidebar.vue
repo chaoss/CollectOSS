@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="comp_info">
-                  {{  base.repo_name? base.rg_name+'/'+base.repo_name : base.rg_name || 'No base repo/group selected'}}
+                  {{  base.repo_name ? base.rg_name+'/'+base.repo_name : base.rg_name || 'No base repo/group selected'}}
                 </div>
 
                 <div class="comp_info">
@@ -139,14 +139,14 @@
         htmlBefore: '<i class="material-icons">table_chart</i>',
         htmlAfter: '',
       },
-      {
-        title: 'Workers',
-        to: {
-          name: 'workers',
-        },
-        htmlBefore: '<i class="material-icons">assignment</i>',
-        htmlAfter: '',
-      },
+      // {
+      //   title: 'Workers',
+      //   to: {
+      //     name: 'workers',
+      //   },
+      //   htmlBefore: '<i class="material-icons">assignment</i>',
+      //   htmlAfter: '',
+      // },
       {
         title: 'Repo Groups',
         to: {
@@ -155,22 +155,22 @@
         htmlBefore: '<i class="material-icons">group_work</i>',
         htmlAfter: '',
       },
-      {
-        title: 'Explore Insights',
-        to: {
-          name: 'insights',
-        },
-        htmlBefore: '<i class="material-icons">trending_up</i>',
-        htmlAfter: '',
-      },
-      {
-        title: 'Edit Configuration',
-        to: {
-          name: 'config',
-        },
-        htmlBefore: '<i class="material-icons">assignment</i>',
-        htmlAfter: '',
-      },
+      // {
+      //   title: 'Explore Insights',
+      //   to: {
+      //     name: 'insights',
+      //   },
+      //   htmlBefore: '<i class="material-icons">trending_up</i>',
+      //   htmlAfter: '',
+      // },
+      // {
+      //   title: 'Edit Configuration',
+      //   to: {
+      //     name: 'config',
+      //   },
+      //   htmlBefore: '<i class="material-icons">assignment</i>',
+      //   htmlAfter: '',
+      // },
     ];
 
     // state declared computed

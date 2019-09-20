@@ -39,7 +39,7 @@
                   <d-col cols="12" sm="5"><span class="text-muted" style="font-size: .75rem">{{ timeframes[highest[idx].repo_git] }}</span></d-col>
                   <!-- View Full Report -->
                   <d-col cols="12" sm="7" style="transform: translateX(-1rem) !important;">
-                    <d-button size="sm" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
+                    <d-button size="sm" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
                   </d-col>
 <!--                   <div class="col col-7"><span class="text-muted" style="font-size: .75rem"><a href="#" class="text-fiord-blue" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric])">See more here...</a></span></div>
  -->            </d-row>
@@ -91,13 +91,14 @@
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <a href="#" style="max-width:10rem" @click="onGitRepo(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
-                        <span class="text-semibold text-fiord-blue underline" style="font-size: 1rem; padding: 0">{{ getRepo(repo) }}</span>
+                      <a href="#" class="underline text-semibold text-fiord-blue" style="width:100%" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
+                        <div style="max-width:10rem">
+                          <span class="" style="font-size: 1rem; padding: 0;">{{ getRepo(repo) }}</span>
+                        </div>
+                        <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
+                          <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
+                        </div>
                       </a>
-                      <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
-                        <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
-                      </div>
-                      
                     </div>
                   </div>
                 </div>
@@ -109,7 +110,7 @@
 </template>
 
 <script lang="ts">
-import {mapActions, mapGetters, mapMutations} from "vuex";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import SparkChart from '../components/charts/SparkChart.vue';
@@ -206,14 +207,13 @@ export default class Dashboard extends Vue {
 
 
                 this.highest.forEach((record:any) => {
-                  console.log(this.highest[i], Object.keys(this.highest[i]).length == 0)
                   if ((tuple.date > record.date && tuple.rg_name == record.rg_name)){
                     console.log("Update hightest condition met: ", tuple)
                     this.highest[i] = tuple
                   }
                   i++
                 })
-                if (this.highest.length < 3 && (this.highest.length == 0 || this.highest[this.highest.length-1].rg_name != tuple.rg_name) && tuple.repo_git) {
+                if (this.highest.length < 3 && (this.highest.length == 0 || this.highest[this.highest.length-1].rg_name != tuple.rg_name)) {
                   console.log("Set hightest condition met: ", tuple)
                   this.highest.push(tuple)
                 }
@@ -234,6 +234,7 @@ export default class Dashboard extends Vue {
                   this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
                 }
               })
+              this.highest_frame = this.highest
 
               
             } else {
@@ -346,20 +347,20 @@ export default class Dashboard extends Vue {
         break
       }
     }
-    this.timeframes[values[0].repo_git] = date + ' days'
+    this.timeframes[values[0].repo_git] = date + ' days ago'
     if (values[i+1]){
       if (values[i+1].value > values[i].value) 
-        return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+        return 'increase in ' + values[0].ri_metric + ' ' + date + ' days ago'
       else
-        return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+        return 'decrease in ' + values[0].ri_metric + ' ' + date + ' days ago'
     }
     else {
-      return 'insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+      return 'insight in ' + values[0].ri_metric + ' ' + date + ' days ago'
     }
   }
 
   onGitRepo (e: any) {
-    console.log(e)
+    console.log("onGitRepo: ",e)
     this.$router.push({
       name: 'repo_overview',
       params: {'group':e.rg_name, 'repo':e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id}
@@ -367,15 +368,15 @@ export default class Dashboard extends Vue {
   }
 
   onInspectInsight (e: any) {
-    console.log(e[0])
+    console.log("onInspectInsight: ",e)
     this.$router.push({
       name: 'inspect_insight',
-      params: {'rg_name': e[0].rg_name, 'repo_git': e[0].repo_git, 'ri_metric': e[0].ri_metric}
+      params: {'group': e.rg_name, 'repo': e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id, 'metric': e.ri_metric}
     })
   }
 
   onRepoGroup (e: any) {
-    console.log(e)
+    console.log("onRepoGroup: ",e)
     this.$router.push({
       name: 'group_overview',
       params: {'group':e.rg_name, 'repo':e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id}

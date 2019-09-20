@@ -231,8 +231,6 @@ class GitHubWorker:
                             if email != cmt_cntrb['email']:
                                 alias = True
 
-
-
                         # aliasSQL = s.sql.text("""
                         #     SELECT canonical_email
                         #     FROM contributors_aliases
@@ -352,6 +350,12 @@ class GitHubWorker:
                 if value['focused_task'] == 1:
                     logging.info("focused task is ON\n")
                     self.finishing_task = True
+                else:
+                    self.finishing_task = False
+                    logging.info("focused task is OFF\n")
+            else:
+                self.finishing_task = False
+                logging.info("focused task is OFF\n")
 
         except Exception as e:
             logging.info("error: {}, or that repo is not in our database: {}".format(str(e), str(value)))

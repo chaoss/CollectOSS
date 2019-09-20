@@ -122,7 +122,7 @@ const routes = [
     ],
   },
   {
-    path: '/inspect_insight/:rg_name/:repo_git/:ri_metric',
+    path: '/inspect_insight/:group/:repo/:metric',
     component: Default,
     children: [
       {
