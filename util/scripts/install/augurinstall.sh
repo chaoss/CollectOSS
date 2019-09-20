@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PS3="Press the number corresponding to your selection.
+PS3="
+Please type the number corresponding to your selection and then press the Enter/Return key.
 Your choice: "
 
 echo
@@ -68,7 +69,7 @@ echo "Checking for virtual environment..."
 echo "**********************************"
 echo
 if [[ -z $VIRTUAL_ENV ]]; then
-  echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virutal environment. ***"
+  echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virtual environment. ***"
   echo "*** Would you like to create a virtual environment? ***"
   select choice in "Yes" "No"
   do
@@ -107,115 +108,71 @@ else
   echo "Virtual environment detected under `echo $VIRTUAL_ENV`. Resuming installation..."
 fi
 
-echo
-echo "**********************************"
-echo "Installing backend dependencies..."
-echo "**********************************"
-echo
+# echo
+# echo "**********************************"
+# echo "Installing backend dependencies..."
+# echo "**********************************"
+# echo
 
-rm -rf build/*; rm -rf dist/*; rm $VIRTUAL_ENV/bin/*worker*;
-pip install pipreqs sphinx xlsxwriter; 
-pip install -e .; 
-pip install xlsxwriter; 
-pip install ipykernel; 
-python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
-npm install apidoc;
-python setup.py install;
+# rm -rf build/*; rm -rf dist/*; rm $VIRTUAL_ENV/bin/*worker*;
+# pip install pipreqs sphinx xlsxwriter; 
+# pip install -e .; 
+# pip install xlsxwriter; 
+# pip install ipykernel; 
+# python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
+# npm install apidoc;
+# python setup.py install;
 
-echo
-echo "**********************************"
-echo "Installing workers and their dependencies..."
-echo "**********************************"
-echo
-for OUTPUT in $(ls -d workers/*/)
-do
-    if [[ $OUTPUT == *"_worker"* ]]; then
-        cd $OUTPUT
-        echo "Running setup for $(basename $(pwd))"
-        rm -rf build/*;
-        rm -rf dist/*;
-        python setup.py install;
-        pip install -e .
-        cd ../..
-    fi
-done
+# echo
+# echo "**********************************"
+# echo "Installing workers and their dependencies..."
+# echo "**********************************"
+# echo
+# for OUTPUT in $(ls -d workers/*/)
+# do
+#     if [[ $OUTPUT == *"_worker"* ]]; then
+#         cd $OUTPUT
+#         echo "Running setup for $(basename $(pwd))"
+#         rm -rf build/*;
+#         rm -rf dist/*;
+#         python setup.py install;
+#         pip install -e .
+#         cd ../..
+#     fi
+# done
 
-echo "Would you like to install Augur's frontend dependencies?"
-select choice in "Yes" "No"
-do
-  case $choice in
-    "Yes" )
-      echo
-      echo "**********************************"
-      echo "Installing frontend dependencies..."
-      echo "**********************************"
-      echo
-      cd frontend/;
-      npm install brunch canvas vega @vue/cli;
-      npm install; 
-      npm run build;
-      cd ../;
-      break
-      ;;
-    "No" )
-      echo "Skipping frontend dependencies..."
-      break
-      ;;
-   esac
-done
+# echo "Would you like to install Augur's frontend dependencies?"
+# select choice in "Yes" "No"
+# do
+#   case $choice in
+#     "Yes" )
+#       echo
+#       echo "**********************************"
+#       echo "Installing frontend dependencies..."
+#       echo "**********************************"
+#       echo
+#       cd frontend/;
+#       npm install brunch canvas vega @vue/cli;
+#       npm install; 
+#       npm run build;
+#       cd ../;
+#       break
+#       ;;
+#     "No" )
+#       echo "Skipping frontend dependencies..."
+#       break
+#       ;;
+#    esac
+# done
 
-echo
-echo "**********************************"
-echo "Setting up API documentation..."
-echo "**********************************"
-echo
+# echo
+# echo "**********************************"
+# echo "Setting up API documentation..."
+# echo "**********************************"
+# echo
 
-cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
+# cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
 
-echo
-echo "**********************************"
-echo "Setting up the database configuration..."
-echo "**********************************"
-echo
-
-function generate_config_file() {
-  echo
-  echo "**********************************"
-  echo "Generating configuration file..."
-  echo "**********************************"
-  echo
-  python make_config.py
-  rm temp.config.json
-}
-
-function enter_db_credentials() {
-
-  cd util/scripts/install
-
-  read -p "database: " database
-  read -p "host: " host
-  read -p "port: " port
-  read -p "user: " user
-  read -p "password: " password
-  read -p "key: " key
-
-  config="
-  {
-    \"database\": \"$database\",
-    \"host\": \"$host\",
-    \"port\": \"$port\",
-    \"user\": \"$user\",
-    \"password\": \"$password\",
-    \"key\": \"$key\"
-  }"
-
-  rm temp.config.json
-  touch temp.config.json
-  echo $config > temp.config.json
-
-  python make_config.py
-  rm temp.config.json
-}
 
 on_command_line=false
 echo
