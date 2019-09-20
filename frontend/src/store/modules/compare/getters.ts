@@ -65,7 +65,7 @@ export default {
     },
 
     isGroup: (state:any, getters:any, rootState:any, rootGetters:any) => {
-        if (state.baseGroup != ''){
+        if (state.baseGroup != '' && state.baseRepo == ''){
             return true
         } else {
             return false
@@ -111,10 +111,10 @@ export default {
         return state.showBelowAverage
     },
     comparedRepoGroups: (state:any) => {
-        return  state.comparedRepoGroups
+        return  state.comparedRepoGroups || []
     },
     comparedRepos: (state:any) => {
-        return state.comparedRepos
+        return state.comparedRepos || []
     },
     baseRepo: (state:any) => {
         return state.baseRepo

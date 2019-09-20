@@ -9,15 +9,19 @@
     </div>
 
 
-    <spinner v-if="!loadedGroups"></spinner>
     <!-- Default Light Table -->
-    <div v-if="loadedGroups" class="row">
+    <div class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
             <h6 class="m-0">Currently Stored Groups</h6>
           </div>
-          <div class="card-body p-0 pb-3 text-center">
+
+          <d-card-body v-if="!loadedGroups">
+            <spinner></spinner>
+          </d-card-body>
+
+          <div v-if="loadedGroups" class="card-body p-0 pb-3 text-center">
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
