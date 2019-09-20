@@ -1,6 +1,7 @@
 # Augur
 augur.config.json
 node_modules/
+logs/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *$py.class

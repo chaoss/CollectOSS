@@ -109,7 +109,7 @@ class GHPullRequestWorker:
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
             'pull_request_reviewers', 'pull_request_teams', 'message'])
 
-        helper_metadata.reflect(self.helper_db, only=['gh_worker_history', 'gh_worker_job'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -129,8 +129,8 @@ class GHPullRequestWorker:
         self.pull_request_teams_table = Base.classes.pull_request_teams.__table__
         self.message_table = Base.classes.message.__table__
 
-        self.history_table = HelperBase.classes.gh_worker_history.__table__
-        self.job_table = HelperBase.classes.gh_worker_job.__table__
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
 
         logger.info("Querying starting ids info...")
 

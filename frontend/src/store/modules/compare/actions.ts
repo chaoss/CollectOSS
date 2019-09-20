@@ -24,7 +24,7 @@ export default {
         if (context.state.baseRepo != '') {
             return
         }
-        context.state.compare = 'zcore';
+        context.state.compare = 'zscore';
         if (context.state.baseGroup == ''){
             context.state.baseGroup = payload.rg_name
         }
@@ -38,19 +38,19 @@ export default {
 
     async setBaseRepo(context: any, payload: any) {
         return new Promise((resolve:any, reject:any)=>{
-            // console.log(payload)
+            console.log("setting base repo w payload: ",payload)
                 setTimeout(()=> {
                     if (payload == null || Object.keys(payload).length === 0) {
                         context.state.baseRepo = ''
                         resolve()
                     } else {
-                        let baseRepo = payload.rg_name && payload.repo_name ? payload.rg_name + '/' + payload.repo_name : payload.url
+                        let baseRepo = payload.rg_name && payload.repo ? payload.rg_name + '/' + payload.repo : payload.repo
                         if (!(baseRepo in context.rootGetters['common/apiRepos'])) {
                             context.dispatch('common/addRepo', payload, {root: true}).then((data: any) => {
                               context.state.baseRepo = baseRepo
                               resolve(data)
                             })
-                            context.commit('mutate', {property: baseRepo, with: payload.url})
+                            context.commit('mutate', {property: baseRepo, with: payload.repo})
                         } else {
                             context.state.baseRepo = baseRepo
                             resolve({})
@@ -85,11 +85,13 @@ export default {
         return new Promise((resolve:any, reject:any)=>{
             setTimeout(()=>{
                 let promises:any[] = [];
-                for(let repo of payload) {
+                let i = 0
+                for(let repo of payload.names) {
                     if (!(repo in context.rootGetters['common/apiGroups'])) {
                         let split:string[]= repo.split('/');
-                        promises.push(context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0]},{root:true}))
+                        promises.push(context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0],repo_id:payload.ids[i]},{root:true}))
                     }
+                    i++
                 }
                  Promise.all(promises).then( (values:any) => {
                      context.state.comparedRepos = payload
