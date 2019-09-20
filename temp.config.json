@@ -1,1 +1,0 @@
-{ "database": "augur", "name": "augur", "host": "nekocase.augurlabs.io", "port": "5433", "user": "augur", "password": "mcguire18", "schema": "augur_data", "key": "9d3a0a440f589e6c4b4f92e1231e39f92fb4fff3", "zombie_id": "22" }

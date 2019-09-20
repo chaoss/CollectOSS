@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PS3="Your choice: "
+PS3="Press the number corresponding to your selection.
+Your choice: "
 
 echo
 echo "**********************************"
@@ -35,11 +36,11 @@ if [[ $? -eq 1 ]]; then
     echo "Python 3.6 and higher can be found here: https://www.python.org/downloads/"
     exit 1
   else
-    echo "Sufficient version of Python found under `which python3`. Resuming installation..."
+    echo "Sufficient version of Python found at `which python3`. Resuming installation..."
     augur_python_command="python3"
   fi
 else
-  echo "Sufficient version of Python found under `which python`. Resuming installation..."
+  echo "Sufficient version of Python found at `which python`. Resuming installation..."
   augur_python_command="python"
 fi
 
@@ -55,10 +56,10 @@ if [[ ! $(command -v pip) ]]; then
     echo "Installation instructions can be found here: https://pip.pypa.io/en/stable/installing/"
     exit 1
   else
-    echo "Sufficient form of pip detected under `which pip3`. Resuming installation..."
+    echo "Sufficient form of pip detected at `which pip3`. Resuming installation..."
   fi
 else
-  echo "Sufficient form of pip detected under `which pip`. Resuming installation..."
+  echo "Sufficient form of pip detected at `which pip`. Resuming installation..."
 fi
 
 echo
@@ -74,19 +75,22 @@ if [[ -z $VIRTUAL_ENV ]]; then
     case $choice in
       Yes )
           echo "Would you like to generate the environment automatically, or configure it yourself?"
-          echo "If you choose to create it automatically, virtualenv will be installed if it isn't already."
           select choice in "Yes" "No"
           do
             case $choice in
               "Yes" )
-                  pip install virtualenv
-                  virtualenv -p $augur_python_command augur_venv
-                  echo "*** Your environment was installed as \`augur_venv\`. Please activate and restart the installation using your shell's appropriate command. ***"
-                  echo "*** For example, if you're using bash run 'source augur_venv/bin/activate'. ***"
+                  echo
+                  $augur_python_command -m venv $HOME/.virtualenvs/augur_env
+                  echo "*** Your environment was installed to $HOME/.virtualenvs/augur_env/. Please activate and restart the installation using your shell's appropriate command. ***"
+                  echo "*** For example, if you're using bash, run '$HOME/.virtualenvs/source augur_env/bin/activate'. ***"
+                  echo
                   exit 0
                 ;;
               "No" )
+                  echo
                   echo "Please create the virtual environment and return to the installation when you're finished."
+                  echo "When you're creating the environment, please do not create it inside this directory. The recommended location is `$HOME`/.virtualenvs."
+                  echo
                   exit 0
                 ;;
             esac
@@ -131,6 +135,7 @@ do
         rm -rf build/*;
         rm -rf dist/*;
         python setup.py install;
+        pip install -e .
         cd ../..
     fi
 done
@@ -216,43 +221,10 @@ on_command_line=false
 echo
 echo "Would you like to enter your DB credentials at the command line or on a web page?"
 select choice in "Command Line" "Webpage"
-# choice="Webpage"
 do
   case $choice in
     "Command Line" )
-
-        echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
-        installpostgreslocally="Would you like to use a pre-existing Postgres 10 or 11 installation to which you can install the Augur schema?"
-        installpostgresremotely="Would you like to use a pre-existing Postgres 10 or 11 installation to which someone else can install the Augur schema?"
-        postgresalreadyinstalled="Would you like to use a pre-existing Postgres 10 or 11 installation with the Augur schema already installed? "
-        SKIP="Skip this section"
-
-        select haveinstalledpostgres in "$installpostgreslocally" "$installpostgresremotely" "$postgresalreadyinstalled" "$SKIP"
-        do
-          case $haveinstalledpostgres in
-              $SKIP )
-              echo "Skipping database configuration..."
-              break
-            ;;
-            $installpostgreslocally )
-                echo "After you have installed the Augur schema to your database, please return to this point in the installation."
-                echo "Please enter the credentials for your database."
-                enter_db_credentials
-                break
-              ;;
-            $installpostgresremotely )
-                echo "Once the Augur schema has been installed on to your database for you, please return to this point in the installation."
-                echo "Please enter the credentials for your database."
-                enter_db_credentials
-                break
-              ;;
-            $postgresalreadyinstalled )
-                echo "Please enter the credentials for your database."
-                enter_db_credentials
-                break
-              ;;
-          esac
-        done
+        util/scripts/install/setup_db.sh
         break
       ;;
     "Webpage" )
