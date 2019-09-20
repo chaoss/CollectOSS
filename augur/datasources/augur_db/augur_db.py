@@ -3046,7 +3046,7 @@ class Augur(object):
                 SELECT repo_id
                 FROM repo
                 WHERE repo_group_id = :repo_group_id
-                AND repo_id IN (SELECT repo_id FROM repo_insights WHERE data_collection_date > CURRENT_DATE - INTERVAL '10' DAY GROUP BY repo_id, ri_id HAVING 304 > count(repo_insights.repo_id) ORDER BY ri_id desc)
+                AND repo_id IN (SELECT repo_id FROM repo_insights GROUP BY repo_id, ri_id HAVING 304 > count(repo_insights.repo_id) ORDER BY ri_id desc)
                 LIMIT :num_repos
             )
         """)
