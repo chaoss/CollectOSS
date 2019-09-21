@@ -3,7 +3,8 @@
     <!-- Page Header -->
     <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
-        <h3 class="page-title" style="font-size: 1rem">Insights</h3>
+        <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
+        <h3 class="page-title">Most Anomalous Insights Across Your Repos</h3>
       </div>
     </div>
 
@@ -49,10 +50,10 @@
         </d-row>
 
         <div style="transform: translateY(-0px)">
-          <div class="page-header row no-gutters py-4" style="padding-top: 5 !important;">
-            <div class="col-12 col-sm-6 text-center text-sm-left mb-0">
-              <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-              <h3 class="page-title" style="font-size: 1rem">Top 5 Most Significant Anomalies In Your Repo Groups</h3>
+          <div class="page-header row no-gutters py-4">
+            <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+              <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
+              <h3 class="page-title">5 Most Anomalous Insights Across All Your Repo Groups</h3>
             </div>
           </div>
 

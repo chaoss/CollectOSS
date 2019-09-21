@@ -25,7 +25,7 @@
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th  scope="col" class="border-0" v-on:click="sortTable('url')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('url')"> 
                     <div class="row">
                       <div class="col col-9">URL</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
