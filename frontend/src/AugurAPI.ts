@@ -390,7 +390,7 @@ class Repo extends BaseRepo{
       this.Timeseries('closedIssues', 'issues/closed')
       this.Timeseries('closedIssueResolutionDuration', 'issues/time_to_close')
       this.Timeseries( 'codeCommits', 'commits')
-      // Timeseries('codeReviews', 'code_reviews')
+      // this.Timeseries('codeReviews', 'code_reviews')
       this.Timeseries('codeReviewIteration', 'code_review_iteration')
       this.Timeseries('contributionAcceptance', 'contribution_acceptance')
       this.Endpoint('contributingGithubOrganizations', 'contributing_github_organizations')
@@ -475,6 +475,11 @@ class Repo extends BaseRepo{
     this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
     this.addRepoMetric('topCommitters', 'top-committers')
+    this.addRepoMetric('reviews', 'reviews')
+    this.addRepoMetric('reviewsAccepted', 'reviews-accepted')
+    this.addRepoMetric('reviewsDeclined', 'reviews-declined')
+    this.addRepoMetric('reviewDuration', 'review-duration')
+    this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
   }
 }
 

@@ -25,7 +25,7 @@
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th width="20%" scope="col" class="border-0" v-on:click="sortTable('url')"> 
+                  <th  scope="col" class="border-0" v-on:click="sortTable('url')"> 
                     <div class="row">
                       <div class="col col-9">URL</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
@@ -37,18 +37,18 @@
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
+                  <!-- <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
                     <div class="row">
                       <div class="col col-9">Repo Description</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'description' == sortColumn"></div>
                     </div>
-                  </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
+                  </th> -->
+                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
                     <div class="row">
                       <div class="col col-9">Group's Repo Count</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
-                  </th>
+                  </th> -->
                   <th scope="col" class="border-0" v-on:click="sortTable('commits_all_time')">
                     <div class="row">
                       <div class="col col-9">Total Commit Count</div>
@@ -67,7 +67,7 @@
                       <div class="col col-2 arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_status' == sortColumn"></div>
                     </div>
                   </th> -->
-                  <th scope="col" class="border-0">Options</th>
+                  <!-- <th scope="col" class="border-0">Options</th> -->
                 </tr>
               </thead>
               <tbody>
@@ -76,12 +76,12 @@
                     <a href="#" @click="onGitRepo(repo)">{{ repo.url }}</a>
                   </td>
                   <td>{{ repo.rg_name }}</td>
-                  <td>{{ repo.description }}</td>
-                  <td>{{ repo.repo_count }}</td>
+                  <!-- <td>{{ repo.description }}</td> -->
+                  <!-- <td>{{ repo.repo_count }}</td> -->
                   <td>{{ repo.commits_all_time }}</td>
                   <td>{{ repo.issues_all_time }}</td>
                   <!-- <td>{{ repo.repo_status }}</td> -->
-                  <td>
+                  <!-- <td>
                     <div class="row">
                       <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0;border: none; background: none;">
                         <i class="material-icons" style="color:#007bff;">star_rate</i>
@@ -101,7 +101,7 @@
                         Add this repo group to your current compared repos
                       </d-tooltip>
                     </div>
-                  </td>
+                  </td> -->
                 </tr>
               </tbody>
             </table>

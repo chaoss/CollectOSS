@@ -5,10 +5,9 @@
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
           <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
-          <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
         </d-breadcrumb>
       </div>
-      <div class="col col-3" v-for="repo in comparedRepos">
+      <div class="col col-3" v-for="repo in compRepoNames">
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
           <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
           <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
@@ -16,6 +15,12 @@
       </div>
       <!-- <div class="col col-6"></div> -->
     </div>
+
+    <d-button-group>
+      <d-button outline pill active>Comparison Overview</d-button>
+      <!-- <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk</d-button> -->
+    </d-button-group>
+    <p></p>
 
     <!-- Page Header -->
     <!-- <div class="page-header row no-gutters py-4">
@@ -39,6 +44,33 @@
       <!-- <div class="col col-12">
         <dual-axis-contributions></dual-axis-contributions>
       </div> -->
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
+
+          <dynamic-line-chart v-if="loaded"
+                      source="codeChanges"
+                      title="Code Changes (Commits) / Week"
+                      cite-url=""
+                      cite-text="Code Changes"
+                      :repos="repos">
+          </dynamic-line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart v-if="loaded"
+                      source="codeChangesLines"
+                      title="Lines of Code Changed / Week"
+                      cite-url=""
+                      cite-text="Code Changes Lines"
+                      :repos="repos">
+          </dynamic-line-chart>
+        </d-card>
+      </div>
+
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
           <spinner v-if="!loaded"></spinner>
@@ -70,55 +102,98 @@
         </d-card>
       </div>
 
-      <!--<div class="col col-6" style="padding-top:3rem">
-        <spinner v-if="!loaded"></spinner>
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
 
-        <dynamic-line-chart v-if="loaded"
-                    source="issuesNew"
-                    title="New Issues / Week"
-                    cite-url=""
-                    cite-text="New Issues"
-                    :repos="repos">
-        </dynamic-line-chart>
-      </div> -->
-
-<!--       <div class="col col-6" style="padding-top:3rem">
-        <spinner v-if="!loaded"></spinner>
-
-        <dynamic-line-chart v-if="loaded"
-                    source="reviews"
-                    title="Pull Requests Opened / Week"
-                    cite-url=""
-                    cite-text="Pull Requests Opened"
-                    :repos="repos">
-        </dynamic-line-chart>
-      </div>
+          <dynamic-line-chart v-if="loaded"
+                      source="issuesNew"
+                      title="New Issues / Week"
+                      cite-url=""
+                      cite-text="New Issues"
+                      :repos="repos">
+          </dynamic-line-chart>
+        </d-card>
+      </div> 
 
       <div class="col col-6" style="padding-top:3rem">
-        <dynamic-line-chart v-if="loaded"
-                    source="pullRequestAcceptanceRate"
-                    title="Pull Request Acceptance Rate"
-                    cite-url=""
-                    cite-text="Pull Request Acceptance Rate"
-                    :repos="repos">
-        </dynamic-line-chart>
-      </div> -->
-<!-- 
-      <div class="col col-12">
-        <stacked-bar-chart source="issueActivity"
-                    title="Issue Activity"
-                    cite-url=""
-                    cite-text="Issue Activity">
-        </stacked-bar-chart>
-      </div> -->
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
 
-     <!--  <div class="col col-12">
-        <bubble-chart source="contributors"
-                      title="Contributor Overview"
-                      size="total"
+          <dynamic-line-chart v-if="loaded"
+                      source="reviews"
+                      title="Reviews (Pull Requests) / Week"
                       cite-url=""
-                      cite-text="Contributors">
-        </bubble-chart>
+                      cite-text="Reviews"
+                      :repos="repos">
+          </dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
+
+          <dynamic-line-chart v-if="loaded"
+                      source="reviewsAccepted"
+                      title="Reviews (Pull Requests) Accepted / Week"
+                      cite-url=""
+                      cite-text="Reviews Accepted"
+                      :repos="repos">
+          </dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
+
+          <dynamic-line-chart v-if="loaded"
+                      source="reviewsDeclined"
+                      title="Reviews (Pull Requests) Declined / Week"
+                      cite-url=""
+                      cite-text="Reviews Declined"
+                      :repos="repos">
+          </dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <!-- need to update metric to make it averages -->
+      <!-- <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
+
+          <dynamic-line-chart v-if="loaded"
+                      source="reviewDuration"
+                      title="Reviews (Pull Requests) Average Duration / Week"
+                      cite-url=""
+                      cite-text="Reviews Duration"
+                      :repos="repos">
+          </dynamic-line-chart>
+        </d-card>
+      </div>  -->
+
+      
+
+      <!-- <div class="col col-12">
+        <d-card>
+          <stacked-bar-chart source="issueActivity"
+                      title="Issue Activity"
+                      cite-url=""
+                      cite-text="Issue Activity">
+          </stacked-bar-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-12">
+        <d-card>
+          <bubble-chart source="contributors"
+                        title="Contributor Overview"
+                        size="total"
+                        cite-url=""
+                        cite-text="Contributors">
+          </bubble-chart>
+        </d-card>
       </div> -->
 
     </div>
@@ -178,6 +253,7 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
     ]),
     ...mapGetters('compare',[
       'base',
+      'comparedAPIRepos',
       'comparedRepos'
     ]),
   },
@@ -191,7 +267,7 @@ export default class SingleComparison extends Vue {
   projects = []
   themes = ['dark', 'info', 'royal-blue', 'warning']
   project = null
-  loaded: boolean = true
+  loaded: boolean = false
   values: any = {'issuesClosed':{}, 'changesByAuthor': {}, 'pullRequestAcceptanceRate': {}}
   loadedBars = false
 
@@ -201,31 +277,29 @@ export default class SingleComparison extends Vue {
   repo_groups!: any[];
   sortedRepoGroups!: any[];
   base!: any;
+  comparedRepos!: any;
+  comparedAPIRepos!: any;
+  apiRepos!: any;
+
   // actions
   endpoint!: any;
   setBaseGroup!: any;
-  comparedRepos!: any;
-  apiRepos!: any;
+
+  get compRepoNames () {
+    return 'names' in this.comparedRepos ? this.comparedRepos.names : this.comparedRepos
+  }
 
   created() {
+    console.log("here",this.comparedRepos, this.base)
     let promises = []
     promises.push(this.repos.push(this.base))
-    promises.push(this.comparedRepos.forEach((repo: any) => {
-      this.repos.push(this.apiRepos[repo])
+    promises.push(this.comparedAPIRepos.forEach((repo: any) => {
+      this.repos.push(repo)
     }))
-    Promise.all(promises)
-    // this.endpoint({endpoints:this.endpoints,repos: apiRepos}).then((tuples:any) => {
-    //   console.log(tuples)
-    //   Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-    //     this.values[endpoint] = {}
-    //     apiRepos.forEach((repo) => {
-    //       console.log(endpoint, repo, this.values)
-    //       this.values[endpoint][repo.repo_name] = {}
-    //       this.values[endpoint][repo.repo_name][endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
-    //     })
-    //   })
+    Promise.all(promises).then(() => {
+      console.log("singly comparison", "true", this.repos)
       this.loaded = true
-    // })
+    })
   }
 
   onRepoGroup(repo_group: any) {
@@ -234,6 +308,13 @@ export default class SingleComparison extends Vue {
         name: 'group_overview',
         params: {group: repo_group.rg_name}
       })
+    })
+  }
+
+  onTab(e: any) {
+    console.log("onTab", e.target.value)
+    this.$router.push({
+      name: e.target.value, params: {repo: this.base.repo_name, group: this.base.rg_name}
     })
   }
 

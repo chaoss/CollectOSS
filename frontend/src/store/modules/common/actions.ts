@@ -3,22 +3,48 @@ import RepoGroup from '@/AugurAPI';
 export default {
     retrieveRepoIds (context: any, payload: any){
         
-        let repo_name: string = payload.repo 
+        console.log(payload)
+        let repo_name: any = payload.repo 
         if (repo_name.includes('https://github.com/'))
             repo_name = repo_name.substr(19)
         if (repo_name.includes('.git'))
             repo_name = repo_name.substr(0,repo_name.length - 4)
         if (repo_name.includes('/'))
             repo_name = repo_name.split('/')[1]
-        console.log(context.getters['repoRelations'], payload.rg_name, repo_name)
-        return new Promise((resolve, reject) => {
-            resolve({
-                'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
-                'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+        console.log("retrieving ids",context.getters['repoRelations'], payload.rg_name, repo_name)
+        try {
+            console.log(context.getters['repoRelations'][payload.rg_name][repo_name].repo_id)
+            return new Promise((resolve, reject) => {
+                resolve({
+                    'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
+                    'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+                })
+            }).catch((e) => {
+                console.log('error occurred in retrieving ids: ', e)
             })
-        }).catch((e) => {
-            console.log('error occurred in retrieving ids: ', e)
-        });
+        } catch (e) {
+            return new Promise((resolve, reject) => {
+                resolve({
+                    'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
+                    'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+                })
+            }).catch((e) => {
+                console.log('error occurred in retrieving ids: ', e)
+            })
+        }
+        // return new Promise((resolve, reject) => {
+        //     resolve({
+        //         'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
+        //         'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+        //     })
+        // }).catch((e) => {
+        //     console.log('error occurred in retrieving ids: ', e, context, '\nloading repos and repogroups')
+        //     context.dispatch('loadRepoGroups').then(() => {
+        //         context.dispatch('loadRepos').then(() => {
+                    
+        //         })
+        //     })
+        // });
         // gitURL: to.params.url,
         // rg_name: to.params.repo_group_id
     },
@@ -59,11 +85,12 @@ export default {
                     tempCache = {}
                     let promises: any[] = []
                     payload.repos.forEach((repo: any) => {
+                        let ref = repo.url || repo.repo_name
                         // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
-                        tempCache[repo.url] = tempCache[repo.url] || {}
+                        tempCache[ref] = tempCache[repo.url] || {}
                         
                         payload.endpoints.forEach((endpoint: string) => {
-                            tempCache[repo.url][endpoint] = tempCache[repo.url][endpoint] ? tempCache[repo.url][endpoint] : null
+                            tempCache[ref][endpoint] = tempCache[ref][endpoint] ? tempCache[ref][endpoint] : null
                             promises.push(repo[endpoint]())
                         })
                     })
@@ -71,16 +98,19 @@ export default {
                         console.log("repo endpoints promise.all hit, data: ",data)
                         let i = 0
                         payload.repos.forEach((repo: any) => {
+                            let ref = repo.url || repo.repo_name
                             payload.endpoints.forEach((endpoint: string) => {
-                                tempCache[repo.url][endpoint] = data[i]// || []
+                                tempCache[ref][endpoint] = data[i]// || []
                             })
                             i++
                         })
                     }).finally(() => {
                         let allDone = true
+
                         payload.repos.forEach((repo: any) => {
+                            let ref = repo.url || repo.repo_name
                             payload.endpoints.forEach((endpoint: string) => {
-                                if (!tempCache[repo.url][endpoint])
+                                if (!tempCache[ref][endpoint])
                                     allDone = false
                             })
                         })

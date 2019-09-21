@@ -1,25 +1,31 @@
 <template>
   <d-card>
     <d-card-body :title="title" class="text-center">
-      <p v-if="values === undefined">There are no license coverage metrics available for this repository.</p>
-      <div style="float:left;text-align:right;width:49%;">
-        <p> Total Files
-        <br> Files with Declared Licenses
-        <br> License Coverage </p>
+      
+      <spinner v-if="!loaded"></spinner>
+      
+      <div v-else>
+        <p v-if="values === undefined">There are no license coverage metrics available for this repository.</p>
+        <div style="float:left;text-align:right;width:49%;">
+          <p> Total Files
+          <br> Files with Declared Licenses
+          <br> License Coverage </p>
+        </div>
+        <div style="float:right;text-align:left;width:49%;">
+          <strong>
+            <p> {{this.values[0]['sbom_scan']['Coverage']['TotalFiles']}}
+            <br> {{this.values[0]['sbom_scan']['Coverage']['DeclaredLicenseFiles']}}
+            <br> {{this.values[0]['sbom_scan']['Coverage']['PercentTotalLicenseCoverage']}} </p>
+          </strong>
+        </div>
       </div>
-      <div style="float:right;text-align:left;width:49%;">
-        <strong>
-          <p> {{this.values[0]['sbom_scan']['Coverage']['TotalFiles']}}
-          <br> {{this.values[0]['sbom_scan']['Coverage']['DeclaredLicenseFiles']}}
-          <br> {{this.values[0]['sbom_scan']['Coverage']['PercentTotalLicenseCoverage']}} </p>
-        </strong>
-      </div>
+      
     </d-card-body>
   </d-card>
 </template>
 
 <script lang="ts">
-
+  import Spinner from '@/components/Spinner.vue'
   import  { Component, Vue } from 'vue-property-decorator';
   import {mapActions, mapGetters} from "vuex";
 
@@ -34,22 +40,49 @@
   })
 
   @Component({
+    components: {
+      Spinner
+    },
     computed: {
       ...mapGetters('compare',[
         'comparedRepos',
         'base'
       ]),
+    },
+    methods: {
+      ...mapActions('common',[
+        'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
+                    // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+      ]),
     }
   })
   export default class CountBlock extends AppProps{
 
-    // compare.getter
+    // data props
+    loaded: boolean = false
+    
+    // compare getters
     base!:any
     comparedRepos!:any
 
+    // common actions
+    endpoint!:any
 
     get values(){
-      return this.data[this.source]
+      if (this.data){
+        this.loaded = true
+        return this.data[this.source]
+      }
+      
+      else {
+        this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
+          Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+            this.loaded = true
+            return tuples[this.base.url][endpoint]
+          })
+          
+        })
+      }
     }
 
     download (e: any) {

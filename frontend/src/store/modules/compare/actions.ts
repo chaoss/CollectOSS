@@ -82,21 +82,46 @@ export default {
     },
 
     async setComparedRepos(context:any, payload:any) {
+        console.log("yo",payload)
         return new Promise((resolve:any, reject:any)=>{
+            console.log("yo",payload)
             setTimeout(()=>{
+                console.log("yo",payload)
                 let promises:any[] = [];
                 let i = 0
+                console.log("setting compared repos: ",payload)
                 for(let repo of payload.names) {
+                    let id = null
+                    if (payload.ids[i]){
+                        id = payload.ids[i]
+                        if (!(repo in context.rootGetters['common/apiGroups'])) {
+                            let split:string[]= repo.split('/');
+                            promises.push(context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0],repo_id:id},{root:true}))
+                        }
+                    } else {
+                        console.log("need to retrieve ids: ", repo)
+                        context.dispatch('common/retrieveRepoIds', {
+                            repo: repo.split('/')[1],
+                            rg_name: repo.split('/')[0]
+                        },{root:true}).then((ids:any) => {
+                            console.log("Got ids: ", ids['repo_id'])
+                            if (!(repo in context.rootGetters['common/apiGroups'])) {
+                                let split:string[]= repo.split('/');
+                                promises.push(context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0],repo_id:ids.repo_id},{root:true}))
+                            }
+                        })
+                    }
+                    
                     if (!(repo in context.rootGetters['common/apiGroups'])) {
                         let split:string[]= repo.split('/');
-                        promises.push(context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0],repo_id:payload.ids[i]},{root:true}))
+                        promises.push(context.dispatch('common/addRepo',{repo_name:split[1],rg_name:split[0],repo_id:id},{root:true}))
                     }
                     i++
                 }
-                 Promise.all(promises).then( (values:any) => {
-                     context.state.comparedRepos = payload
-                     resolve(values)
-                  }
+                Promise.all(promises).then( (values:any) => {
+                        context.state.comparedRepos = payload
+                        resolve(values)
+                    }
                 )
             })
         })

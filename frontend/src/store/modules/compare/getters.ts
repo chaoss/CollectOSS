@@ -46,7 +46,8 @@ export default {
 
     comparedAPIRepos: (state:any, getters:any, rootState:any, rootGetters:any) => {
         let compares: Repo[] = []
-        for (let repo of state.comparedRepos) {
+        let compRepos = 'names' in state.comparedRepos ? state.comparedRepos.names : state.comparedRepos
+        for (let repo of compRepos) {
           if (rootGetters['common/apiRepos'][repo]) {
             compares.push(rootGetters['common/apiRepos'][repo])
           }

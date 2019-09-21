@@ -16,9 +16,20 @@
       </div>
     </div>
 
-    <div class="row">
-      <div v-if="!loaded_risk" class="col-md-12 col-lg-12">
-        <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+    <div v-if="!loaded_risk" class="row">
+      <div class="col-md-6 col-lg-6 col-sm-12">
+        <d-card>
+          <d-card-body>
+            <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+          </d-card-body>
+        </d-card>
+      </div>
+      <div class="col-md-6 col-lg-6 col-sm-12">
+        <d-card>
+          <d-card-body>
+            <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+          </d-card-body>
+        </d-card>
       </div>
     </div>
 

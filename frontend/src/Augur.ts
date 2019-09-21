@@ -79,6 +79,7 @@ export default function Augur() {
       NProgress.set(0.6);
       let repo_group_id = null
       let repo_id = null
+      let loaded = false
       if (!to.params.repo_group_id || !to.params.repo_id) {
         store.dispatch('common/retrieveRepoIds', {
           repo: to.params.repo,
@@ -93,13 +94,22 @@ export default function Augur() {
             repo_id: repo_id
           }).then(() => {
             NProgress.set(0.8);
+
             if(to.params.compares) {
-              let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
-              let ids = to.params.comparedRepoIds === '' ? [] : to.params.comparedRepoIds.split(',');
-              return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+              console.log("HERE,",store)
+              let compares = !to.params.compares ? [] : to.params.compares.split(',');
+              let ids = []
+              ids = !to.params.comparedRepoIds ? [] : to.params.comparedRepoIds.split(',');
+              store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids }).then(() => {
+                next()
+              })
+              // return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+            } else {
+              loaded = true
             }
           }).finally(()=>{
-            next()
+            if (loaded)
+              next()
           })
         })
       } else {
@@ -113,7 +123,8 @@ export default function Augur() {
           if(to.params.compares) {
             let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
             let ids = to.params.comparedRepoIds === '' ? [] : to.params.comparedRepoIds.split(',');
-            return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+            store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+            // return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
           }
         }).finally(()=>{
           next()

@@ -91,9 +91,6 @@ export default {
     },
   },
   computed: {
-    repo () {
-      return this.$store.state.compare.base
-    },
     gitRepos () {
       return this.$store.getters.gitRepo
     },
@@ -130,6 +127,9 @@ export default {
     ...mapGetters('common',[
       'repoRelations'
     ]),
+    ...mapGetters('compare',[
+      'base'
+    ]),
     
 
   }, // end computed
@@ -157,17 +157,18 @@ export default {
         if(this.status[key]) allFalse = false
     },
     renderError () {
-      console.log("ERROR ERROR")
+      console.log("DLC","ERROR ERROR")
       this.error = true
+      this.loaded = true
     },
     thisShouldTriggerRecompute() {
       this.forceRecomputeCounter++;
     },
     respec(){this.spec;},
     reloadImage (config) {
-      console.log(config, this.source)
+      console.log("DLC",config, this.source)
       if (config.data.values.length == 0){
-        console.log("yo")
+        console.log("DLC","yo")
         // this.spec;
         this.renderError()
         return
@@ -190,19 +191,22 @@ export default {
       return ary
     },
     spec(data) {
-      console.log("DATAAAA", data)
+      console.log("DLC","DATAAAA", data, this.$store.state)
 
       // declare constant for vegaEmbed module since we use its cdn in index.html rather than add it to package.json
       const vegaEmbed = window.vegaEmbed;
       // Get the repos we need
       let repos = []
 
-      if (this.repo) {
-        console.log(this.repo)
-        repos = [this.repo.url]
+      if (this.base) {
+        console.log("DLC",this.base)
+        let ref = this.base.url || this.base.repo_name
+        repos = [ref]
       }
       else {
-        repos.push(this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].url)
+        // console.log(this.$router.currentRoute.params)
+        // let ref = this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].url || this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].repo_name
+        // repos.push(ref)
       }
       if (this.data) repos = Object.keys(this.data)
       // Object.keys(this.data).forEach((key) => {
@@ -235,7 +239,7 @@ export default {
         // "padding": {'left': 0, 'top': 0, 'right': this.x / 2, 'bottom': 0},
         "config":{
               "axis":{
-                "grid": false
+                "grid": true
               },
               "legend": {
                 "offset": -(this.x / 3.15),
@@ -633,8 +637,9 @@ export default {
       }
 
       buildMetric()
-      console.log(repos[0], "YOYOY")
+      console.log("DLC",repos, "YOYOY")
       buildLines("valueRolling" + repos[0].replace(/\//g,'').replace(/\./g,''), colors[0])
+      buildLines("valueRolling" + repos[1].replace(/\//g,'').replace(/\./g,''), colors[1])
 
       //set dates from main control options
       let today = new Date()
@@ -718,9 +723,9 @@ export default {
             if (typeof(field) == "string") {
               field = [field]
             }
-            console.log("default process prior to convertKey:",obj, key, field)
+            console.log("DLC","default process prior to convertKey:",obj, key, field)
             d = this.convertKey(obj[key], field)
-            console.log("default process prior to convertDates:",d, this.earliest, this.latest, 'date')
+            console.log("DLC","default process prior to convertDates:",d, this.earliest, this.latest, 'date')
             d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
             return d
           }
@@ -730,7 +735,7 @@ export default {
           let normalized = []
           let aggregates = []
           let buildLines = (obj, onCreateData, repo) => {
-            console.log(obj, onCreateData, repo)
+            console.log("DLC",obj, onCreateData, repo)
             if (!obj) {
               return
             }
@@ -740,12 +745,12 @@ export default {
               }
             }
             let count = 0
-            // console.log("type", Object.getOwnPropertyNames(Object.getPrototypeOf(obj)))//Object.getOwnPropertyNames(Object.getPrototypeOf(err))
+            // console.log("DLC","type", Object.getOwnPropertyNames(Object.getPrototypeOf(obj)))//Object.getOwnPropertyNames(Object.getPrototypeOf(err))
             // obj = JSON.stringify(obj)
-            console.log(JSON.stringify(obj),obj['openIssuesCount'])
+            console.log("DLC",JSON.stringify(obj),obj['openIssuesCount'])
             // if (Object.keys(obj).length < 1) obj['openIssuesCount'] = 
             for (var key in obj) {
-              console.log(key)
+              console.log("DLC",key)
               if (obj.hasOwnProperty(key)) {
                 if (fields[key]) {
                   fields[key].forEach((field) => {
@@ -753,7 +758,7 @@ export default {
                     count++
                   })
                 } else {
-                  console.log("hehrere",Array.isArray(obj[key]),obj, key)
+                  console.log("DLC","hehrere",Array.isArray(obj[key]),obj, key)
                   if (Array.isArray(obj[key]) && obj[key].length > 0) {
                     let field = Object.keys(obj[key][0]).splice(1)
                     onCreateData(obj, key, field, count)
@@ -765,7 +770,7 @@ export default {
                       if (this.status[repo]) noRepoWithData = false
                     })
                     if (noRepoWithData){
-                      console.log("logging no data for any repo error")
+                      console.log("DLC","logging no data for any repo error")
                       this.renderError()
                     }
                     //return
@@ -783,11 +788,10 @@ export default {
           let baseDate = null
           let x = 0
           repos.forEach((repo) => {
-            console.log(repo, JSON.stringify(data))
               buildLines(data[repo], (obj, key, field, count) => {
                 // Build basic chart using rolling averages
                 let d = defaultProcess(obj, key, field, count)
-                console.log(d)
+                console.log("DLC",d)
                 let rolling = null
                 if (repo == this.repo && d[0]) baseDate = d[0].date
                 else d = AugurStats.alignDates(d, baseDate, this.period)
@@ -807,14 +811,14 @@ export default {
                     }
                   }
                 } else {
-                  console.log(d, this.period, repo)
+                  console.log("DLC",d, this.period, repo)
                   rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
                   while (rolling[0].valueRolling == 0)
                     rolling.shift()
                   rolling.forEach((tuple) => {
                     tuple.date.setDate(tuple.date.getDate() + x);
                   })
-                  console.log(rolling)
+                  console.log("DLC",rolling)
                 }
 
                 normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
@@ -867,7 +871,7 @@ export default {
 
             this.legendLabels = legend
             config.data = {"values": values}
-            console.log(config.data)
+            console.log("DLC",config.data)
             this.values = values
 
             this.renderChart()
@@ -896,7 +900,7 @@ export default {
     if (this.data) {
       let dataFilled = true
       Object.keys(this.data).forEach((key) => {
-        console.log(key, this.data[key])
+        console.log("DLC",key, this.data[key])
         if (this.data[key].length < 1) dataFilled = false
       })
       if (dataFilled){
@@ -905,15 +909,15 @@ export default {
       }
       
     } else {
-      console.log("did not detect data")
+      console.log("DLC","did not detect data")
       this.endpoint({repos:this.repos, endpoints:[this.source]}).then((data) => {
-        console.log("YAA",JSON.stringify(data))
-        console.log(Object.keys(data).length)
+        console.log("DLC","YAA",JSON.stringify(data))
+        console.log("DLC",Object.keys(data).length)
         if (Object.keys(data).length > 1)
           this.spec(data)
         // processData(data)
       }).catch((error) => {
-        console.log(error)
+        console.log("DLC",error)
         this.renderError()
       }) // end batch request
     }
