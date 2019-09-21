@@ -93,12 +93,16 @@
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
                       <a href="#" class="underline text-semibold text-fiord-blue" style="width:100%" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
-                        <div style="max-width:10rem">
-                          <span class="" style="font-size: 1rem; padding: 0;">{{ getRepo(repo) }}</span>
-                        </div>
-                        <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
-                          <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
-                        </div>
+                        <d-row>
+                          <d-col style="max-width:10rem" lg="6" md="6" sm="6">
+                            <span class="" style="font-size: 1rem; padding: 0;">{{ getRepo(repo) }}</span>
+                          </d-col>
+                          <d-col v-if="loadedInsights" lg="6" md="6" sm="6" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
+                            <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
+                          </d-col>
+                        </d-row>
+                        
+                        
                       </a>
                     </div>
                   </div>

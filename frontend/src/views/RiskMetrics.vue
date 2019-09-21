@@ -6,7 +6,10 @@
     </d-breadcrumb>
     <compare-control></compare-control>
 
-
+    <d-button-group>
+      <d-button outline pill @click="onTab" value="repo_overview">Overview</d-button>
+      <d-button outline pill active theme="secondary" >Risk</d-button>
+    </d-button-group>
 
     <!-- Overview Section -->
     <div class="page-header row no-gutters py-4" >

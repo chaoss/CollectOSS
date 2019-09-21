@@ -30,7 +30,7 @@
       <div class="nav-wrapper">
           <d-nav class="flex-column" style="margin: 0 !important"> <!--style="margin: 0 !important"-->
             <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
-              <d-link style="font-size: 1rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
+              <d-link style="font-size: 0.7rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
                 <span v-if="item.title" style="width: 240">{{ item.title }}</span>
                 <div class="item-icon-wrapper" v-if="item.htmlAfter" v-html="item.htmlAfter" />

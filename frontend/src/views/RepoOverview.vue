@@ -202,10 +202,10 @@ export default class RepoOverview extends Vue {
     //   repo = this.base
     // else repo = this.rout
     this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
-      console.log("tuples:",tuples)
-      Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+      let ref = this.base.url || this.base.repo_name
+      Object.keys(tuples[ref]).forEach((endpoint) => {
         console.log(endpoint)
-        this.values[endpoint] = tuples[this.base.url][endpoint]
+        this.values[endpoint] = tuples[ref][endpoint]
       })
       this.loadedBars = true
     })
