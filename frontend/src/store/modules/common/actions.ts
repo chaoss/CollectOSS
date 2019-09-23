@@ -1,6 +1,53 @@
 import Repo from '@/AugurAPI';
 import RepoGroup from '@/AugurAPI';
 export default {
+    retrieveRepoIds (context: any, payload: any){
+        
+        console.log(payload)
+        let repo_name: any = payload.repo 
+        if (repo_name.includes('https://github.com/'))
+            repo_name = repo_name.substr(19)
+        if (repo_name.includes('.git'))
+            repo_name = repo_name.substr(0,repo_name.length - 4)
+        if (repo_name.includes('/'))
+            repo_name = repo_name.split('/')[1]
+        console.log("retrieving ids",context.getters['repoRelations'], payload.rg_name, repo_name)
+        try {
+            console.log(context.getters['repoRelations'][payload.rg_name][repo_name].repo_id)
+            return new Promise((resolve, reject) => {
+                resolve({
+                    'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
+                    'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+                })
+            }).catch((e) => {
+                console.log('error occurred in retrieving ids: ', e)
+            })
+        } catch (e) {
+            return new Promise((resolve, reject) => {
+                resolve({
+                    'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
+                    'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+                })
+            }).catch((e) => {
+                console.log('error occurred in retrieving ids: ', e)
+            })
+        }
+        // return new Promise((resolve, reject) => {
+        //     resolve({
+        //         'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
+        //         'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+        //     })
+        // }).catch((e) => {
+        //     console.log('error occurred in retrieving ids: ', e, context, '\nloading repos and repogroups')
+        //     context.dispatch('loadRepoGroups').then(() => {
+        //         context.dispatch('loadRepos').then(() => {
+                    
+        //         })
+        //     })
+        // });
+        // gitURL: to.params.url,
+        // rg_name: to.params.repo_group_id
+    },
     async createAPIObjects(context: any, payload: any) {
         try {
             let apiGroups = context.state.getRepoGroups || {};
@@ -34,144 +81,110 @@ export default {
         try {
             return new Promise((resolve, reject) => {
                 let tempCache = context.state.cache || {};
-                if ('endpoints' in payload) {
-                    if ('repos' in payload) {
-                        tempCache = {}
-                        payload.repos.forEach((repo: any) => {
-                            // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
-                            tempCache[repo.url] = tempCache[repo.url] || {}
-                            let promises: any[] = []
-                            console.log(payload)
-                            // repo[payload.endpoints[0]]().then((data:any) => {
-                            //     tempCache[repo.url][payload.endpoints[0]] = data
-                            //     if (payload.endpoints[1]) {
-                            //         repo[payload.endpoints[1]]().then((data:any) => {
-                            //             tempCache[repo.url][payload.endpoints[1]] = data
-                            //             console.log("doin now")
-                            //             resolve(tempCache)
-                            //         })
-                            //     } else {
-                            //         resolve(tempCache)
-                            //     }
-                            // })
-                            payload.endpoints.forEach((endpoint: string) => {
-                                tempCache[repo.url][endpoint] = tempCache[repo.url][endpoint] || []
-                                console.log(repo, endpoint)
-                                promises.push(repo[endpoint]())
-                            })
-                            Promise.all(promises).then((data: any) => {
-                                console.log(data)
-                                let i = 0
-                                payload.endpoints.forEach((endpoint: string) => {
-                                    tempCache[repo.url][payload.endpoints[i]] = data[i]// || []
-                                    i++
-                                })
-                            }).finally(() => {
-                                let allDone = true
-                                payload.repos.forEach((repo: any) => {
-                                    
-                                    payload.endpoints.forEach((endpoint: string) => {
-                                        if (tempCache[repo.url]){
-                                            // console.log(JSON.stringify(tempCache[group.rg_name]))
-                                            if (tempCache[repo.url][endpoint].length < 1) {
-                                                allDone = false
-                                            }
-                                        } else 
-                                            allDone = false
-                                    })
-                                })
-                                if (allDone) {
-                                    console.log("yo", JSON.stringify(tempCache))
-                                    resolve(tempCache)
-                                }
-                            }).catch((error) => {
-                                console.log(error)
-                            })
-                            // })
-                            // Promise.all(promises).then((data: any) => {
-                            //     console.log("TEMP DATA", data, payload.endpoints[0])
-                            //     tempCache[repo.url][payload.endpoints[0]] = data// || []
-                            //     payload.endpoints.shift()
-                            //     console.log("Data returned: ", data)
-                            //     resolve(tempCache)
-                            // })
-                        })
-
-                        // context.state.AugurAPI.batchMapped(payload.repos, payload.endpoints).then(
-                        //     (data: object[]) => {
-                        //         console.log(data)
-                        //         tempCache = {...tempCache, ...data};
-                        //         payload.repos.forEach((repo: any) => {
-                        //             tempCache[repo.toString()] = {...tempCache[repo.toString()], ...data[repo.toString()]};
-                        //         });
-                        //         console.log(tempCache)
-                        //         resolve(tempCache)
-                        //     });
-                    }
-                    if ('repoGroups' in payload) {
-                        tempCache = {}
-                        let promises: any[] = []
-                        payload.repoGroups.forEach((group: any) => {
-                            tempCache[group.rg_name] = tempCache[group.rg_name] ? tempCache[group.rg_name] : {}
-                            tempCache[group.rg_name]['groupEndpoints'] = tempCache[group.rg_name]['groupEndpoints'] ? tempCache[group.rg_name]['groupEndpoints'] : {}
-
-                            payload.endpoints.forEach((endpoint: string) => {
-                                tempCache[group.rg_name]['groupEndpoints'][endpoint] = tempCache[group.rg_name]['groupEndpoints'][endpoint] ? tempCache[group.rg_name]['groupEndpoints'][endpoint] : null
-                                promises.push(group[endpoint]())
-                            })
-                        })
-
-                        console.log(promises, JSON.stringify(tempCache))
-
-                        Promise.all(promises).then((data: any) => {
-                            console.log(data)
-                            let i = 0
-                            payload.repoGroups.forEach((group: any) => {
-                                payload.endpoints.forEach((endpoint: string) => {
-                                    tempCache[group.rg_name]['groupEndpoints'][endpoint] = data[i]// || []
-                                })
-                                i++
-                            })
-                            console.log(tempCache)
-                        }).finally(() => {
-                            let allDone = true
-                            payload.repoGroups.forEach((group: any) => {
-                                payload.endpoints.forEach((endpoint: string) => {
-                                    if (!tempCache[group.rg_name]['groupEndpoints'][endpoint])
-                                        allDone = false
-                                })
-                            })
-                            if (allDone){
-                                console.log("All repo group endpoints loaded, tempCache is as follows: ", tempCache)
-                                resolve(tempCache)
-                            }
-                        }).catch((e) => {
-                            console.log("Endpoint for rg failed, error: ",e)
-                        })
-                            
+                if ('endpoints' in payload && 'repos' in payload) {
+                    tempCache = {}
+                    let promises: any[] = []
+                    payload.repos.forEach((repo: any) => {
+                        let ref = repo.url || repo.repo_name
+                        // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
+                        tempCache[ref] = tempCache[repo.url] || {}
                         
-                        // resolve(tempCache)
-                        // context.state.AugurAPI.batchMapped(payload.repoGroups, payload.endpoints).then(
-                        //     (data: object[]) => {
-                        //         tempCache = {...tempCache, ...data};
-                        //         payload.repoGroups.forEach((group: any) => {
-                        //             tempCache[group.rg_name] = {...tempCache[group.rg_name],
-                        //                 ...data[group.rg_name]};
-                        //         });
-                        //         console.log(tempCache)
-                        //         resolve(tempCache)
-                        //     });
-                    }
-                    if (!('repos' in payload) && !('repoGroups' in payload)) {
                         payload.endpoints.forEach((endpoint: string) => {
-                            console.log(endpoint)
-                            context.state.AugurAPI[endpoint]().then((data: object[]) => {
-                                tempCache[endpoint] = data;
-                                console.log(tempCache)
-                                resolve(tempCache)
-                            });
+                            tempCache[ref][endpoint] = tempCache[ref][endpoint] ? tempCache[ref][endpoint] : null
+                            promises.push(repo[endpoint]())
+                        })
+                    })
+                    Promise.all(promises).then((data: any) => {
+                        console.log("repo endpoints promise.all hit, data: ",data)
+                        let i = 0
+                        payload.repos.forEach((repo: any) => {
+                            let ref = repo.url || repo.repo_name
+                            payload.endpoints.forEach((endpoint: string) => {
+                                tempCache[ref][endpoint] = data[i]// || []
+                            })
+                            i++
+                        })
+                    }).finally(() => {
+                        let allDone = true
+
+                        payload.repos.forEach((repo: any) => {
+                            let ref = repo.url || repo.repo_name
+                            payload.endpoints.forEach((endpoint: string) => {
+                                if (!tempCache[ref][endpoint])
+                                    allDone = false
+                            })
+                        })
+                        if (allDone) {
+                            console.log("All repo endpoints loaded, tempCache is as follows:", tempCache)
+                            resolve(tempCache)
+                        }
+                    }).catch((error) => {
+                        console.log(error)
+                    })
+                }
+                if ('endpoints' in payload && 'repoGroups' in payload) {
+                    tempCache = {}
+                    let promises: any[] = []
+                    payload.repoGroups.forEach((group: any) => {
+                        tempCache[group.rg_name] = tempCache[group.rg_name] ? tempCache[group.rg_name] : {}
+                        tempCache[group.rg_name]['groupEndpoints'] = tempCache[group.rg_name]['groupEndpoints'] ? tempCache[group.rg_name]['groupEndpoints'] : {}
+
+                        payload.endpoints.forEach((endpoint: string) => {
+                            tempCache[group.rg_name]['groupEndpoints'][endpoint] = tempCache[group.rg_name]['groupEndpoints'][endpoint] ? tempCache[group.rg_name]['groupEndpoints'][endpoint] : null
+                            promises.push(group[endpoint]())
+                        })
+                    })
+
+                    console.log(promises, JSON.stringify(tempCache))
+
+                    Promise.all(promises).then((data: any) => {
+                        console.log(data)
+                        let i = 0
+                        payload.repoGroups.forEach((group: any) => {
+                            payload.endpoints.forEach((endpoint: string) => {
+                                tempCache[group.rg_name]['groupEndpoints'][endpoint] = data[i]// || []
+                            })
+                            i++
+                        })
+                        console.log(tempCache)
+                    }).finally(() => {
+                        let allDone = true
+                        payload.repoGroups.forEach((group: any) => {
+                            payload.endpoints.forEach((endpoint: string) => {
+                                if (!tempCache[group.rg_name]['groupEndpoints'][endpoint])
+                                    allDone = false
+                            })
+                        })
+                        if (allDone){
+                            console.log("All repo group endpoints loaded, tempCache is as follows: ", tempCache)
+                            resolve(tempCache)
+                        }
+                    }).catch((e) => {
+                        console.log("Endpoint for rg failed, error: ",e)
+                    })
+                        
+                    
+                    // resolve(tempCache)
+                    // context.state.AugurAPI.batchMapped(payload.repoGroups, payload.endpoints).then(
+                    //     (data: object[]) => {
+                    //         tempCache = {...tempCache, ...data};
+                    //         payload.repoGroups.forEach((group: any) => {
+                    //             tempCache[group.rg_name] = {...tempCache[group.rg_name],
+                    //                 ...data[group.rg_name]};
+                    //         });
+                    //         console.log(tempCache)
+                    //         resolve(tempCache)
+                    //     });
+                }
+                if ('endpoints' in payload && !('repos' in payload) && !('repoGroups' in payload)) {
+                    payload.endpoints.forEach((endpoint: string) => {
+                        console.log(endpoint)
+                        context.state.AugurAPI[endpoint]().then((data: object[]) => {
+                            tempCache[endpoint] = data;
+                            console.log(tempCache)
+                            resolve(tempCache)
                         });
-                    }
+                    });
                 }
                 // console.log(tempCache)
                 // resolve(tempCache)
@@ -274,11 +287,15 @@ export default {
         return new Promise((resolve, reject) => {
             setTimeout(()=> {
                 let rg_name = payload.rg_name || undefined
-                let repo_name = payload.repo_name || undefined
+                let repo_name = payload.repo_name || payload.repo || undefined
                 let repo_id = payload.repo_id || undefined
                 let repo_group_id = payload.repo_group_id || undefined
                 let gitURL = payload.gitURL || payload.url || undefined
-
+                console.log("about to add repo: ", gitURL,
+                  repo_id,
+                  repo_group_id,
+                  rg_name,
+                  repo_name)
                 let repo: Repo = context.state.AugurAPI.Repo({
                   gitURL: gitURL,
                   repo_id: repo_id,
@@ -286,6 +303,7 @@ export default {
                   rg_name: rg_name,
                   repo_name: repo_name
                 })
+                console.log("api repo: ", repo)
                 context.commit('mutateAPIRepo', {repo: repo, name: repo.toString()})
                 resolve(repo)
             })
@@ -301,7 +319,7 @@ export default {
                     rg_name: rg_name
                 })
                 context.commit('mutateAPIGroup', {group: group, rg_name: rg_name})
-                console.log("added api group to the state: ", group)
+                // console.log("added api group to the state: ", group)
                 resolve(group)
             })
         })

@@ -308,7 +308,21 @@
     }
 
     get getSelectedRepos() {
-      return this.selectedRepos
+      return this.selectedRepos.names
+    }
+
+    get selectedRepoEntities () {
+      console.log("Compare control")
+      let repos: any[] = []
+      let repo = null
+      let i = null
+      for (i in this.selectedRepos) {
+        repo = this.selectedRepos[i]
+        console.log(repo, this.repoRelations, this.selectedGroups)
+        console.log(this.repoRelations[this.selectedGroups][repo.split('/')[1]])
+        repos.push(this.repoRelations[this.selectedGroups][repo.split('/')[1]])
+      }
+      return repos
     }
 
     // get GroupOptions() {
@@ -376,7 +390,18 @@
 
     onCompare(e: any) {
       if(!this.isGroup) {
-        console.log(this.selectedRepos)
+        console.log("onCompare: ", e, this.base)
+        let comparedRepoIds = ''//String(this.base.repo_id)
+        let repo: any = null
+        let i = 0
+        for (repo of this.selectedRepoEntities) {
+          console.log(repo)
+          if (i == 0)
+            comparedRepoIds += String(repo.repo_id)
+          else 
+            comparedRepoIds += "," + String(repo.repo_id)
+          i++
+        }
         router.push({
           name: 'repo_overview_compare',
           params: {
@@ -384,7 +409,9 @@
             repo: this.base.repo_name,
             repo_group_id: this.base.repo_group_id,
             repo_id: this.base.repo_id,
-            compares: this.selectedRepos.join(',')}
+            compares: this.selectedRepos.join(','),
+            comparedRepoIds
+          }
         })
       } else {
         router.push({

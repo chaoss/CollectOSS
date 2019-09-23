@@ -18,24 +18,31 @@ def create_server(app, gw):
         """
         if request.method == 'POST': #will post a task to be added to the queue
             logging.info("Sending to work on task: {}".format(str(request.json)))
-            app.gh_worker.task = request.json
+            app.insight_worker.task = request.json
             
             #set task
             return jsonify({"success": "sucess"})
 
         if request.method == 'GET': #will retrieve the current tasks/status of the worker
             return jsonify({
-                "status": gh_worker._queue if condition else condition_if_false,
+                "status": insight_worker._queue if condition else condition_if_false,
                 "tasks": [{
-                    "given": list(gh_worker._queue)
+                    "given": list(insight_worker._queue)
                 }]
+            })
+
+    @app.route("/AUGWOP/heartbeat", methods=['GET'])
+    def heartbeat():
+        if request.method == 'GET':
+            return jsonify({
+                "status": "alive"
             })
 
     @app.route("/AUGWOP/config")
     def augwop_config():
         """ Retrieve worker's config
         """
-        return app.gh_worker.config
+        return app.insight_worker.config
 
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
@@ -67,7 +74,7 @@ def main(augur_url, host, port):
         }
 
     #create instance of the worker
-    app.gh_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
+    app.insight_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
     host = server['host']

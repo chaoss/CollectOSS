@@ -57,29 +57,80 @@ export default function Augur() {
       if (!to.params.compares) {
         store.commit('compare/resetCompared')
       }
-      store.dispatch('compare/setBaseRepo').then((data: any) => {
-        return store.dispatch('compare/setBaseGroup')
-      }).finally(() => {
-        next()
-      })
-    } else if (to.params.group && to.params.repo) {
-      console.log("bout to")
-      NProgress.set(0.6);
       store.dispatch('compare/setBaseRepo', {
         rg_name: to.params.group,
         repo_name: to.params.repo,
         repo_group_id: to.params.repo_group_id,
         repo_id: to.params.repo_id,
         gitURL: to.params.url
-      }).then(() => {
-        NProgress.set(0.8);
-        if(to.params.compares) {
-          let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
-          return store.dispatch('compare/setComparedRepos', compares)
-        }
-      }).finally(()=>{
+      }).then((data: any) => {
+        return store.dispatch('compare/setBaseGroup', {
+          rg_name: to.params.group,
+          repo_name: to.params.repo,
+          repo_group_id: to.params.repo_group_id,
+          repo_id: to.params.repo_id,
+          gitURL: to.params.url
+        })
+      }).finally(() => {
         next()
       })
+    } else if (to.params.group && to.params.repo) {
+      console.log("bout to", to.params, !to.params.repo_group_id || !to.params.repo_id)
+      NProgress.set(0.6);
+      let repo_group_id = null
+      let repo_id = null
+      let loaded = false
+      if (!to.params.repo_group_id || !to.params.repo_id) {
+        store.dispatch('common/retrieveRepoIds', {
+          repo: to.params.repo,
+          rg_name: to.params.group
+        }).then((ids: any) => {
+          repo_group_id = ids['repo_group_id']
+          repo_id = ids['repo_id']
+          store.dispatch('compare/setBaseRepo', {
+            rg_name: to.params.group,
+            repo: to.params.repo,
+            repo_group_id: repo_group_id,
+            repo_id: repo_id
+          }).then(() => {
+            NProgress.set(0.8);
+
+            if(to.params.compares) {
+              console.log("HERE,",store)
+              let compares = !to.params.compares ? [] : to.params.compares.split(',');
+              let ids = []
+              ids = !to.params.comparedRepoIds ? [] : to.params.comparedRepoIds.split(',');
+              store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids }).then(() => {
+                next()
+              })
+              // return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+            } else {
+              loaded = true
+            }
+          }).finally(()=>{
+            if (loaded)
+              next()
+          })
+        })
+      } else {
+        store.dispatch('compare/setBaseRepo', {
+          rg_name: to.params.group,
+          repo: to.params.repo,
+          repo_group_id: to.params.repo_group_id,
+          repo_id: to.params.repo_id
+        }).then(() => {
+          NProgress.set(0.8);
+          if(to.params.compares) {
+            let compares = to.params.compares === '' ? [] : to.params.compares.split(',');
+            let ids = to.params.comparedRepoIds === '' ? [] : to.params.comparedRepoIds.split(',');
+            store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+            // return store.dispatch('compare/setComparedRepos', { 'names': compares, 'ids': ids })
+          }
+        }).finally(()=>{
+          next()
+        })
+      }
+      
     } else if (to.params.group && !to.params.repo) {
       NProgress.set(0.6)
       store.dispatch('compare/setBaseGroup', {

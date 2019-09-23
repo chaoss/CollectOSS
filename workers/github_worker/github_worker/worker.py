@@ -80,7 +80,7 @@ class GitHubWorker:
         )
 
         #Database connections
-        logging.info("Making database connections...")
+        logging.info("Making database connections... {}".format(self.DB_STR))
         dbschema = 'augur_data'
         self.db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
@@ -95,7 +95,7 @@ class GitHubWorker:
         metadata.reflect(self.db, only=['contributors', 'issues', 'issue_labels', 'message',
             'issue_message_ref', 'issue_events',
             'issue_assignees','contributors_aliases'])
-        helper_metadata.reflect(self.helper_db, only=['gh_worker_history', 'gh_worker_job'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -112,26 +112,32 @@ class GitHubWorker:
         self.issue_assignees_table = Base.classes.issue_assignees.__table__
         self.contributors_aliases_table = Base.classes.contributors_aliases.__table__
 
-        self.history_table = HelperBase.classes.gh_worker_history.__table__
-        self.job_table = HelperBase.classes.gh_worker_job.__table__
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
 
         # Get max ids so we know where we are in our insertion and to have the current id when inserting FK's
-        logging.info("Querying starting ids info...")
-        maxIssueCntrbSQL = s.sql.text("""
-            SELECT max(issues.issue_id) AS issue_id, max(contributors.cntrb_id) AS cntrb_id
-            FROM issues, contributors
+        logging.info("Querying starting ids info...\n")
+        maxIssueSQL = s.sql.text("""
+            SELECT max(issues.issue_id) AS issue_id
+            FROM issues
         """)
-        rs = pd.read_sql(maxIssueCntrbSQL, self.db, params={})
-
+        rs = pd.read_sql(maxIssueSQL, self.db, params={})
         issue_start = int(rs.iloc[0]["issue_id"]) if rs.iloc[0]["issue_id"] is not None else 25150
+
+
+        maxCntrbSQL = s.sql.text("""
+            SELECT max(contributors.cntrb_id) AS cntrb_id
+            FROM contributors
+        """)
+        rs = pd.read_sql(maxCntrbSQL, self.db, params={})
         cntrb_start = int(rs.iloc[0]["cntrb_id"]) if rs.iloc[0]["cntrb_id"] is not None else 25150
+
 
         maxMsgSQL = s.sql.text("""
             SELECT max(msg_id) AS msg_id
             FROM message
         """)
         rs = pd.read_sql(maxMsgSQL, self.db, params={})
-
         msg_start = int(rs.iloc[0]["msg_id"]) if rs.iloc[0]["msg_id"] is not None else 25150
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
@@ -140,6 +146,8 @@ class GitHubWorker:
         self.msg_id_inc = (msg_start + 1)
 
         try:
+            logging.info("Sending hello message to broker... @ -> {} with info: {}\n".format('http://{}:{}/api/unstable/workers'.format(
+                self.config['broker_host'], self.config['broker_port']), specs))
             requests.post('http://{}:{}/api/unstable/workers'.format(
                 self.config['broker_host'], self.config['broker_port']), json=specs) #hello message
         except:
@@ -222,8 +230,6 @@ class GitHubWorker:
                             email = contributor['email']
                             if email != cmt_cntrb['email']:
                                 alias = True
-
-
 
                         # aliasSQL = s.sql.text("""
                         #     SELECT canonical_email
@@ -342,8 +348,14 @@ class GitHubWorker:
                 self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
             if 'focused_task' in value:
                 if value['focused_task'] == 1:
-                    logging.info("focused task is ON")
+                    logging.info("focused task is ON\n")
                     self.finishing_task = True
+                else:
+                    self.finishing_task = False
+                    logging.info("focused task is OFF\n")
+            else:
+                self.finishing_task = False
+                logging.info("focused task is OFF\n")
 
         except Exception as e:
             logging.info("error: {}, or that repo is not in our database: {}".format(str(e), str(value)))
@@ -360,7 +372,7 @@ class GitHubWorker:
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
-        logging.info("Running...")
+        logging.info("Running...\n")
         if self._child is None:
             self._child = Process(target=self.collect, args=())
             self._child.start()
@@ -377,7 +389,7 @@ class GitHubWorker:
             else:
                 if not self._maintain_queue.empty():
                     message = self._maintain_queue.get()
-                    logging.info("Popped off message: {}".format(str(message.entry_info)))
+                    logging.info("Popped off message: {}\n".format(str(message.entry_info)))
                     self.working_on = "MAINTAIN"
                 else:
                     break
@@ -473,7 +485,7 @@ class GitHubWorker:
             self.update_rate_limit(r)
 
             # If it lists the last page then there is more than 1
-            if 'last' in r.links and not multiple_pages and not self.finishing_task:
+            if ('last' in r.links and not multiple_pages) and not self.finishing_task:
                 param = r.links['last']['url'][-6:]
                 i = int(param.split('=')[1]) + 1
                 logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
@@ -512,7 +524,7 @@ class GitHubWorker:
 
             i = i + 1 if self.finishing_task else i - 1
 
-            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+            if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                 logging.info("No more pages to check, breaking from pagination.\n")
                 break
             
@@ -655,6 +667,18 @@ class GitHubWorker:
             logging.info("Hitting endpoint: " + url.format(i) + " ...\n")
             r = requests.get(url=url.format(i), headers=self.headers)
             self.update_rate_limit(r)
+
+            # Find last page so we can decrement from there
+            if 'last' in r.links and not multiple_pages and not self.finishing_task:
+                param = r.links['last']['url'][-6:]
+                i = int(param.split('=')[1]) + 1
+                logging.info("Multiple pages of request, last page is " + str(i - 1) + "\n")
+                multiple_pages = True
+            elif not multiple_pages and not self.finishing_task:
+                logging.info("Only 1 page of request\n")
+            elif self.finishing_task:
+                logging.info("Finishing a previous task, paginating forwards ... excess rate limit requests will be made\n")
+            
             j = r.json()
 
             # Checking contents of requests with what we already have in the db
@@ -672,7 +696,7 @@ class GitHubWorker:
             i = i + 1 if self.finishing_task else i - 1
 
             # Since we already wouldve checked the first page... break
-            if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+            if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                 logging.info("No more pages to check, breaking from pagination.\n")
                 break
 
@@ -716,6 +740,7 @@ class GitHubWorker:
             #   to determine if there are multiple pages and if the 1st page covers all
             i = 1
             multiple_pages = False
+
             while True:
                 logging.info("Hitting endpoint: " + events_url.format(i) + " ...\n")
                 r = requests.get(url=events_url.format(i), headers=self.headers)
@@ -747,7 +772,7 @@ class GitHubWorker:
                 i = i + 1 if self.finishing_task else i - 1
 
                 # Since we already wouldve checked the first page... break
-                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                     logging.info("No more pages to check, breaking from pagination.\n")
                     break
 
@@ -879,6 +904,7 @@ class GitHubWorker:
             #   to determine if there are multiple pages and if the 1st page covers all
             i = 1
             multiple_pages = False
+
             while True:
                 logging.info("Hitting endpoint: " + comments_url.format(i) + " ...\n")
                 r = requests.get(url=comments_url.format(i), headers=self.headers)
@@ -910,7 +936,7 @@ class GitHubWorker:
                 i = i + 1 if self.finishing_task else i - 1
 
                 # Since we already wouldve checked the first page... break
-                if i == 1 and multiple_pages or i < 1 or len(j) == 0:
+                if (i == 1 and multiple_pages and not self.finishing_task) or i < 1 or len(j) == 0:
                     logging.info("No more pages to check, breaking from pagination.\n")
                     break
 
@@ -996,9 +1022,6 @@ class GitHubWorker:
         #Register this task as completed
         self.register_task_completion(entry_info, "issues")
 
-        if self.finishing_task:
-            self.finishing_task = False
-            
             
     def get_table_values(self, cols, tables):
         table_str = tables[0]
@@ -1143,7 +1166,7 @@ class GitHubWorker:
         logging.info("Update job process for model: " + model + "\n")
 
         # Notify broker of completion
-        logging.info("Telling broker we completed task: " + str(task_completed) + "\n" + 
+        logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n" + 
             "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
 
         requests.post('http://{}:{}/api/unstable/completed_task'.format(
@@ -1179,7 +1202,7 @@ class GitHubWorker:
                         "exists in our db: {}\n".format(str(obj[key])))
                 else:
                     need_insertion.append(obj)
-        logging.info("Page recieved has {} tuples, while filtering duplicates this".format(str(len(new_data))) +
+        logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(str(len(new_data))) +
             " was reduced to {} tuples.\n".format(str(len(need_insertion))))
         return need_insertion
 
@@ -1198,13 +1221,13 @@ class GitHubWorker:
                     for col in update_col_map.keys():
                         if update_col_map[col] in obj:
                             if obj[update_col_map[col]] != existing_tuple[col]:
-                                logging.info("This tuple needs an " +
-                                    "update for column: {}".format(col, obj))
+                                logging.info("Tuple {} needs an " +
+                                    "update for column: {}\n".format(obj[duplicate_key_map[db_dupe_key]], col, obj))
                                 obj['flag'] = 'need_update'
                                 obj['pkey'] = existing_tuple[db_pkey]
                 else:
                     obj['flag'] = 'need_insertion'
                     need_insertion_count += 1
-        logging.info("Page recieved has {} tuples, while filtering duplicates this".format(len(new_data)) +
+        logging.info("Page recieved has {} tuples, while filtering duplicates this ".format(len(new_data)) +
             "was reduced to {} tuples.\n".format(need_insertion_count))
         return new_data

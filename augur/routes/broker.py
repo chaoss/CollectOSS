@@ -8,24 +8,46 @@ import json
 import requests
 
 def send_task(task, worker_proxy):
+
+    # Defining local variables for convenience/readability
     user_queue = worker_proxy['user_queue']
     maintain_queue = worker_proxy['maintain_queue']
     worker_id = worker_proxy['id']
     task_endpoint = worker_proxy['location'] + '/AUGWOP/task'
-    if len(user_queue) > 0:
-        new_task = user_queue.pop(0)
-        logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker_id, new_task['display_name'], task_endpoint))
-        requests.post(task_endpoint, json=new_task)
-        worker_proxy['status'] = 'Working'
-    elif len(maintain_queue) > 0:
-        new_task = maintain_queue.pop(0)
-        logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker_id, new_task['display_name'], task_endpoint))
-        requests.post(task_endpoint, json=new_task)
-        worker_proxy['status'] = 'Working'
+
+    # Check if worker is alive
+    r = requests.get('{}/AUGWOP/heartbeat'.format(
+        worker_proxy['location']))
+    j = r.json()
+
+    if 'status' in j:
+        if j['status'] == 'alive':
+            if len(user_queue) > 0:
+                new_task = user_queue.pop(0)
+                logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker_id, new_task['display_name'], task_endpoint))
+                try:
+                    requests.post(task_endpoint, json=new_task)
+                    worker_proxy['status'] = 'Working'
+                except:
+                    logging.info("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'".format(worker_id))
+                    worker_proxy['status'] = 'Disconnected'
+            elif len(maintain_queue) > 0:
+                new_task = maintain_queue.pop(0)
+                logging.info("Worker {} is idle, preparing to send the {} task to {}".format(worker_id, new_task['display_name'], task_endpoint))
+                try:
+                    requests.post(task_endpoint, json=new_task)
+                    worker_proxy['status'] = 'Working'
+                except:
+                    logging.info("Sending Worker: {} a task did not return a response, setting worker status as 'Disconnected'".format(worker_id))
+                    worker_proxy['status'] = 'Disconnected'
+            else:
+                logging.info("Both queues are empty for worker {}".format(worker_id))
+                worker_proxy['status'] = 'Idle'
+        else:
+            logging.info("Worker: {} is busy, setting its status as so.".format(worker_id))
     else:
-        logging.info("Both queues are empty for worker {}".format(worker_id))
-        # new idle check... old:
-        worker_proxy['status'] = 'Idle'
+        logging.info("Worker: {}'s heartbeat did not return a response, setting worker status as 'Disconnected'".format(worker_id))
+        worker_proxy['status'] = 'Disconnected'
 
 def create_broker_routes(server):
 
@@ -144,22 +166,12 @@ def create_broker_routes(server):
                         status=200,
                         mimetype="application/json")
 
-    @server.app.route('/{}/add_pids'.format(server.api_version), methods=['POST'])
-    def add_pids():
-        pids = request.json['pids']
-        # for pid in pids:
-        #     server.broker['worker_pids'].append(pid)
-        return Response(response=request.json,
-                        status=200,
-                        mimetype="application/json")
-
     @server.app.route('/{}/task_error'.format(server.api_version), methods=['POST'])
     def task_error():
         task = request.json
         worker = task['worker_id']
         logging.info("{} ran into error while completing task: {}".format(worker, task))
-        user_queue = server.broker[worker]['user_queue']
-        maintain_queue = server.broker[worker]['maintain_queue']
+
         if server.broker[worker]['status'] != 'Disconnected':
             send_task(task, server.broker[worker])
         return Response(response=request.json,

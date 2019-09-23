@@ -2900,3 +2900,5 @@ def create_routes(server):
                     ]
     """
     server.addRepoGroupMetric(augur_db.top_insights, 'top-insights')
+
+    server.addRepoMetric(augur_db.lines_of_code_commit_counts_by_calendar_year_grouped,'lines-of-code-commit-counts-by-calendar-year-grouped')

@@ -3,17 +3,22 @@
     <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
       <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
       <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
-      <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
+      <!-- <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button> -->
     </d-breadcrumb>
-    <!-- Page Header -->
-    <!-- <div class="page-header row no-gutters py-4">
-      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
-        <h3 class="page-title" style="font-size: 1rem">Insights</h3>
-      </div>
-    </div> -->
+
+    <d-button-group>
+      <d-button outline pill active>Overview</d-button>
+      <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk</d-button>
+    </d-button-group>
+
+    <p></p>
+    <!-- <d-nav :pills="true" id="repo_nav">
+      <d-nav-item :active="true" class="active">Overview</d-nav-item>
+      <d-nav-item><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-nav-item>
+    </d-nav> -->
+    
     <!-- Compare Control -->
     <compare-control></compare-control>
-
 
     <!-- Overview Section -->
     <!-- <div class="page-header row no-gutters py-4" >
@@ -75,6 +80,11 @@
         </d-card>
       </d-col>
       <d-col cols="12" md="6" lg="6" sm="12">
+
+        <coverage-card title="License Coverage" source="sbom"></coverage-card>
+
+        <p></p>
+
         <d-card>
           <spinner v-if="!loadedBars"></spinner>
           
@@ -95,12 +105,12 @@
 
     </d-row>
 
-  </d-container>
+  </d-container> 
 </template>
 
 <script lang="ts">
 import  { Component, Vue } from 'vue-property-decorator';
-import {mapActions, mapGetters} from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import SparkChart from '../components/charts/SparkChart.vue';
 import InsightChart from '../components/charts/InsightChart.vue';
 import TickChart from '../components/charts/TickChart.vue'
@@ -117,10 +127,11 @@ import CompareControl from '../components/common/CompareControl.vue'
 import router from "@/router";
 import BubbleChart from '../components/charts/BubbleChart.vue'
 import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
+import PieChart from '../components/charts/PieChart.vue'
+import CoverageCard from "@/components/charts/CoverageCard.vue";
 
 @Component({
   components: {
-    SparkChart, // <spark-chart></spark-chart>
     InsightChart,
     TickChart,
     LinesOfCodeChart,
@@ -135,6 +146,8 @@ import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
     CompareControl,
     BubbleChart,
     TimeIntervalBarChart,
+    PieChart,
+    CoverageCard
   },
   methods: {
     ...mapActions('common',[
@@ -189,10 +202,10 @@ export default class RepoOverview extends Vue {
     //   repo = this.base
     // else repo = this.rout
     this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
-      console.log("tuples:",tuples)
-      Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+      let ref = this.base.url || this.base.repo_name
+      Object.keys(tuples[ref]).forEach((endpoint) => {
         console.log(endpoint)
-        this.values[endpoint] = tuples[this.base.url][endpoint]
+        this.values[endpoint] = tuples[ref][endpoint]
       })
       this.loadedBars = true
     })
@@ -212,6 +225,13 @@ export default class RepoOverview extends Vue {
       return "" 
     else 
       return "padding-top: 3rem"
+  }
+
+  onTab(e: any) {
+    console.log("onTab", e.target.value)
+    this.$router.push({
+      name: e.target.value, params: {repo: this.base.repo_name, group: this.base.rg_name}
+    })
   }
 
 }

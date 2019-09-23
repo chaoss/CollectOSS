@@ -52,8 +52,9 @@ def upgrade(app, from_directory):
     """
     Print the location of the interpreter that is running this
     """
-    app.log.info(pyrcss.util.self_upgrade(from_directory=from_directory, dry_run=True))
-    pyrcss.util.self_upgrade(from_directory=from_directory)
+    pass
+    # app.log.info(pyrcss.util.self_upgrade(from_directory=from_directory, dry_run=true))
+    # pyrcss.util.self_upgrade(from_directory=from_directory)
 
 
 @cli.command('test', short_help='Test Augur')

@@ -2,6 +2,8 @@
 
 ./augur_localkill.sh
 
+# TODO: make sure the logs/ directory is present
+
 if [[ $(ps x -o pid= -p $(cat logs/augur_backend_pid.txt) | wc -l) -ge 1 ]]; then
     echo "Backend server already running."
 else

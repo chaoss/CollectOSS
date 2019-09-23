@@ -2630,7 +2630,7 @@ class Augur(object):
                 (select repo_id,    COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
                 repo.repo_id = a.repo_id
                 left outer join
-                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b
+                (select repo_id, count ( * ) as issues_all_time from issues where issues.pull_request IS NULL  group by repo_id) b
                 on
                 repo.repo_id = b.repo_id
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
@@ -3046,7 +3046,7 @@ class Augur(object):
                 SELECT repo_id
                 FROM repo
                 WHERE repo_group_id = :repo_group_id
-                AND repo_id IN (SELECT repo_id FROM repo_insights WHERE data_collection_date > CURRENT_DATE - INTERVAL '10' DAY GROUP BY repo_id, ri_id HAVING 304 > count(repo_insights.repo_id) ORDER BY ri_id desc)
+                AND repo_id IN (SELECT repo_id FROM repo_insights GROUP BY repo_id, ri_id HAVING 304 > count(repo_insights.repo_id) ORDER BY ri_id desc)
                 LIMIT :num_repos
             )
         """)
@@ -3227,3 +3227,55 @@ class Augur(object):
             results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
                                   params={'repo_id': repo_id, 'group_by': group_by})
             return results
+            
+    @annotate(tag='lines-of-code-commit-counts-by-calendar-year-grouped')
+    def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None):
+        """
+        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval (week or month)
+
+        :param repo_url: the repository's URL
+        :param calendar_year: the calendar year a repo is created in to be considered "new"
+        :param interval: Month or week. The periodocity of which to examine data within the given calendar_year
+        """
+
+        if calendar_year == None:
+            calendar_year = 2018
+
+        if interval == None:
+            interval = 'month'
+
+        cdRepTpIntervalLocCommitsSQL = None
+
+        if interval == "month":
+            cdRepTpIntervalLocCommitsSQL = s.sql.text("""
+                SELECT sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,
+                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,
+                IFNULL(patches, 0) as commits, a.month, IFNULL(year, :calendar_year) as year
+                FROM (select month from repo_monthly_cache group by month) a
+                LEFT JOIN (SELECT name, repo_monthly_cache.added, removed, whitespace, patches, month, IFNULL(year, :calendar_year) as year
+                FROM repo_monthly_cache, repos
+                WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
+                AND year = :calendar_year
+                AND repos.id = repos_id
+                GROUP BY month) b
+                ON a.month = b.month
+                GROUP BY month
+            """)
+        elif interval == "week":
+            cdRepTpIntervalLocCommitsSQL = s.sql.text("""
+                SELECT  sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,
+                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,
+                IFNULL(patches, 0) as commits, a.week, IFNULL(year, :calendar_year) as year
+                FROM (select week from repo_weekly_cache group by week) a
+                LEFT JOIN (SELECT name, repo_weekly_cache.added, removed, whitespace, patches, week, IFNULL(year, :calendar_year) as year
+                FROM repo_weekly_cache, repos
+                WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
+                AND year = :calendar_year
+                AND repos.id = repos_id
+                GROUP BY week) b
+                ON a.week = b.week
+                GROUP BY week
+            """)
+
+        results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
+        return results

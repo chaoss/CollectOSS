@@ -52,7 +52,7 @@ export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'data'],
   data() {
     let years = []
-    for (let i = 2; i >= 0; i--) {
+    for (let i = 5; i >= 0; i--) {
       years.push((new Date()).getFullYear() - i)
     }
     let monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
