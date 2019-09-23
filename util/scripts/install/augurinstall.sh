@@ -108,78 +108,76 @@ else
   echo "Virtual environment detected under `echo $VIRTUAL_ENV`. Resuming installation..."
 fi
 
-# echo
-# echo "**********************************"
-# echo "Installing backend dependencies..."
-# echo "**********************************"
-# echo
-
-# rm -rf build/*; rm -rf dist/*; rm $VIRTUAL_ENV/bin/*worker*;
-# pip install pipreqs sphinx xlsxwriter; 
-# pip install -e .; 
-# pip install xlsxwriter; 
-# pip install ipykernel; 
-# python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
-# npm install apidoc;
-# python setup.py install;
-
-# echo
-# echo "**********************************"
-# echo "Installing workers and their dependencies..."
-# echo "**********************************"
-# echo
-# for OUTPUT in $(ls -d workers/*/)
-# do
-#     if [[ $OUTPUT == *"_worker"* ]]; then
-#         cd $OUTPUT
-#         echo "Running setup for $(basename $(pwd))"
-#         rm -rf build/*;
-#         rm -rf dist/*;
-#         python setup.py install;
-#         pip install -e .
-#         cd ../..
-#     fi
-# done
-
-# echo "Would you like to install Augur's frontend dependencies?"
-# select choice in "Yes" "No"
-# do
-#   case $choice in
-#     "Yes" )
-#       echo
-#       echo "**********************************"
-#       echo "Installing frontend dependencies..."
-#       echo "**********************************"
-#       echo
-#       cd frontend/;
-#       npm install brunch canvas vega @vue/cli;
-#       npm install; 
-#       npm run build;
-#       cd ../;
-#       break
-#       ;;
-#     "No" )
-#       echo "Skipping frontend dependencies..."
-#       break
-#       ;;
-#    esac
-# done
-
-# echo
-# echo "**********************************"
-# echo "Setting up API documentation..."
-# echo "**********************************"
-# echo
-
-# cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
-
-
-on_command_line=false
 echo
-echo "Would you like to enter your DB credentials at the command line or on a web page?"
-select choice in "Command Line" "Webpage"
+echo "**********************************"
+echo "Installing backend dependencies..."
+echo "**********************************"
+echo
+
+rm -rf build/*; rm -rf dist/*; rm $VIRTUAL_ENV/bin/*worker*;
+pip install pipreqs sphinx xlsxwriter; 
+pip install -e .; 
+pip install xlsxwriter; 
+pip install ipykernel; 
+python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
+npm install apidoc;
+python setup.py install;
+
+echo
+echo "**********************************"
+echo "Installing workers and their dependencies..."
+echo "**********************************"
+echo
+for OUTPUT in $(ls -d workers/*/)
+do
+    if [[ $OUTPUT == *"_worker"* ]]; then
+        cd $OUTPUT
+        echo "Running setup for $(basename $(pwd))"
+        rm -rf build/*;
+        rm -rf dist/*;
+        python setup.py install;
+        pip install -e .
+        cd ../..
+    fi
+done
+
+echo "Would you like to install Augur's frontend dependencies?"
+select choice in "Yes" "No"
 do
   case $choice in
+    "Yes" )
+      echo
+      echo "**********************************"
+      echo "Installing frontend dependencies..."
+      echo "**********************************"
+      echo
+      cd frontend/;
+      npm install brunch canvas vega @vue/cli;
+      npm install; 
+      npm run build;
+      cd ../;
+      break
+      ;;
+    "No" )
+      echo "Skipping frontend dependencies..."
+      break
+      ;;
+   esac
+done
+
+echo
+echo "**********************************"
+echo "Setting up API documentation..."
+echo "**********************************"
+echo
+
+cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
+
+echo
+echo "Would you like to enter your DB credentials at the command line or on a web page?"
+select credential_setup_method in "Command Line" "Webpage"
+do
+  case $credential_setup_method in
     "Command Line" )
         util/scripts/install/setup_db.sh
         break
