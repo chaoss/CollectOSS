@@ -1,5 +1,5 @@
 <template>
-  <d-card-body title="Lines of code added by the top 10 authors visualized">
+  <div>
       <div :id="source"></div>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
@@ -22,7 +22,7 @@
         
       </div>
        -->
-  </d-card-body>
+  </div>
 </template>
 
 
@@ -114,9 +114,9 @@ export default {
               }
       }
       let config = {
-        "width": this.x / 1.9,
-        "height": this.y / 2,
-        "padding": {"left": -10, "top": 0, "right": 5, "bottom": -10},
+        "width": this.x / 1.5,
+        "height": this.y / 1.7,
+        "padding": {"left": -10, "top": 0, "right": 5, "bottom": 10},
         "config": {
           "tick": {
             "thickness": 8,

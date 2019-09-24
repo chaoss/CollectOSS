@@ -62,7 +62,7 @@
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
                   </th> -->
-                  <th scope="col" class="border-0">Options</th>
+                  <!-- <th scope="col" class="border-0">Options</th> -->
                 </tr>
               </thead>
               <tbody>
@@ -75,7 +75,7 @@
                   <td>{{ group.rg_last_modified }}</td>
                   <td>{{ group.rg_type }}</td>
                   <!-- <td>{{ group.repo_count }}</td> -->
-                  <td>
+                  <!-- <td>
                     <div class="row">
                       <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0; border: none; background: none;">
                         <i class="material-icons" style="color:#007bff;">star_rate</i>
@@ -97,7 +97,7 @@
                         Add this repo group to your current compared repos
                       </d-tooltip>
                     </div>
-                  </td>
+                  </td> -->
                 </tr>
               </tbody>
             </table>

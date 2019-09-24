@@ -1,7 +1,5 @@
 <template>
-
-  <d-card-body :title="title" class="text-center">
-    <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
+  <div>
     <div :id="source"></div>
     <div style="position: relative; top: -0px !important; transform: translateY(-0.45rem)"class="form-item form-checkboxes tickradios">
         <div class="inputGroup ">
@@ -18,8 +16,7 @@
         </div>
         
     </div>
-  </d-card-body>
-
+  </div>
 </template>
 
 

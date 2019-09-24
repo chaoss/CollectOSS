@@ -3,7 +3,8 @@
     <!-- Page Header -->
     <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
-        <h3 class="page-title" style="font-size: 1rem">Insights</h3>
+        <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
+        <h3 style="font-size: 1rem" class="page-title">Most Anomalous Insights Across Your Repos</h3>
       </div>
     </div>
 
@@ -32,14 +33,28 @@
 
               <d-card-body v-if="loadedInsights">
                 <h5 class="card-title">
-                  <a href="#" @click="onGitRepo(highest[idx])" class="text-fiord-blue underline">{{ highest[idx].repo_git.substr(19) }}</a>
+                  <a :id="idx" href="#" @click="onGitRepo(highest[idx])" class="text-fiord-blue underline">{{ highest[idx].repo_git.substr(19) }}</a>
+                  <d-tooltip 
+                    :target="'#' + idx"
+                    container=".shards-demo--example--tooltip-01"
+                    placement="right"
+                    offset="10">
+                    Click here to see an overview of this repository's metrics
+                  </d-tooltip>
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</p>
                 <d-row>
                   <d-col cols="12" sm="5"><span class="text-muted" style="font-size: .75rem">{{ timeframes[highest[idx].repo_git] }}</span></d-col>
                   <!-- View Full Report -->
                   <d-col cols="12" sm="7" style="transform: translateX(-1rem) !important;">
-                    <d-button size="sm" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
+                    <d-button :id="'inspect' + idx" size="sm" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
+                    <d-tooltip 
+                      :target="'#inspect' + idx"
+                      container=".shards-demo--example--tooltip-01"
+                      placement="right"
+                      offset="20">
+                      Click to see more about this insight.
+                    </d-tooltip>
                   </d-col>
 <!--                   <div class="col col-7"><span class="text-muted" style="font-size: .75rem"><a href="#" class="text-fiord-blue" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric])">See more here...</a></span></div>
  -->            </d-row>
@@ -49,10 +64,10 @@
         </d-row>
 
         <div style="transform: translateY(-0px)">
-          <div class="page-header row no-gutters py-4" style="padding-top: 5 !important;">
-            <div class="col-12 col-sm-6 text-center text-sm-left mb-0">
-              <!-- <span class="text-uppercase page-subtitle">Components</span> -->
-              <h3 class="page-title" style="font-size: 1rem">Top 5 Most Significant Anomalies In Your Repo Groups</h3>
+          <div class="page-header row no-gutters py-4">
+            <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
+              <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
+              <h3 style="font-size: 1rem" class="page-title">5 Most Anomalous Insights Across All Your Repo Groups</h3>
             </div>
           </div>
 
@@ -91,14 +106,23 @@
                 <div class="p-0 card-body">
                   <div class="list-group-small list-group list-group-flush">
                     <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                      <a href="#" class="underline text-semibold text-fiord-blue" style="width:100%" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
-                        <div style="max-width:10rem">
-                          <span class="" style="font-size: 1rem; padding: 0;">{{ getRepo(repo) }}</span>
-                        </div>
-                        <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
-                          <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
-                        </div>
+                      <a :id="repo" href="#" class="underline text-semibold text-fiord-blue" style="width:100%" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
+                        <d-row>
+                          <d-col style="max-width:10rem" lg="6" md="6" sm="6">
+                            <span class="" style="font-size: 1rem; padding: 0;">{{ getRepo(repo) }}</span>
+                          </d-col>
+                          <d-col v-if="loadedInsights" lg="6" md="6" sm="6" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
+                            <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; "/>
+                          </d-col>
+                        </d-row>
                       </a>
+                      <d-tooltip 
+                        :target="'#' + repo"
+                        container=".shards-demo--example--tooltip-01"
+                        placement="right"
+                        offset="10">
+                        This repository had a sharp {{ getPhrase(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)]) }}. Click to see more about this insight.
+                      </d-tooltip>
                     </div>
                   </div>
                 </div>
@@ -192,7 +216,9 @@ export default class Dashboard extends Vue {
       groups.forEach((group: any) => {
         addingGroupPromises.push(this.addRepoGroup(group))
       })
+
       Promise.all(addingGroupPromises).then((groups: any) => {
+        let dupesAllowed = 3 - groups.length
         groups.forEach((group: any) => {
           relevantApiGroups.push(this.apiGroups[group.rg_name])
         })
@@ -205,15 +231,17 @@ export default class Dashboard extends Vue {
                 let i = 0
                 let alreadyIncluded = false
 
-
                 this.highest.forEach((record:any) => {
                   if ((tuple.date > record.date && tuple.rg_name == record.rg_name)){
                     console.log("Update hightest condition met: ", tuple)
                     this.highest[i] = tuple
                   }
+                  if (record.repo_id == tuple.repo_id)
+                    alreadyIncluded = true
                   i++
                 })
-                if (this.highest.length < 3 && (this.highest.length == 0 || this.highest[this.highest.length-1].rg_name != tuple.rg_name)) {
+                if (this.highest.length < 3 && (this.highest.length == 0 || this.highest[this.highest.length-1].rg_name != tuple.rg_name || dupesAllowed > 0 && !alreadyIncluded)) {
+                  dupesAllowed--
                   console.log("Set hightest condition met: ", tuple)
                   this.highest.push(tuple)
                 }

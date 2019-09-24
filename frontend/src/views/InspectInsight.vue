@@ -21,7 +21,7 @@
           <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-40%);"></spinner>
 
         </d-card>
-        <d-card v-if="loadedInsights" class="card-small" style="margin-bottom:1rem; height:16% !important;"> 
+        <d-card v-if="loadedInsights" class="card-small" style="margin-bottom:1rem; height:16.5% !important;"> 
 
           <!-- Card Header -->
           <d-card-header class="border-bottom">
@@ -77,7 +77,7 @@
           </d-card>
         </d-col>
         
-        <d-col v-else style="transform: translateY(-61rem)" v-for="(group, idx) in Object.keys(insights).slice(0,5)" :key="idx" lg="12" sm="12" class="mb-4">
+        <d-col v-else style="transform: translateY(-0rem)" v-for="(group, idx) in Object.keys(insights).slice(0,5)" :key="idx" lg="12" sm="12" class="mb-4">
           <d-card class="card-small card">
             <div class="border-bottom card-header">
               <h6 class="m-0">{{ group }}</h6>

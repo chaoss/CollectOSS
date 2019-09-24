@@ -1,5 +1,5 @@
 <template>
-  <aside class="main-sidebar col-2 px-0" style="position: fixed !important"><!--:class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']">-->
+  <aside class="main-sidebar col-1 px-0" style="position: fixed !important"><!--:class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']">-->
       <div class="main-navbar">
         <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0">
           <a class="navbar-brand w-100 mr-0" href="#" style="line-height: 25px;">
@@ -30,7 +30,7 @@
       <div class="nav-wrapper">
           <d-nav class="flex-column" style="margin: 0 !important"> <!--style="margin: 0 !important"-->
             <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
-              <d-link :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
+              <d-link style="font-size: 0.7rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
                 <span v-if="item.title" style="width: 240">{{ item.title }}</span>
                 <div class="item-icon-wrapper" v-if="item.htmlAfter" v-html="item.htmlAfter" />
@@ -41,9 +41,8 @@
                 </d-dropdown-item>
               </d-collapse>
             </li>
-            <li class="nav-item dropdown comp_manager" >
+            <!-- <li class="nav-item dropdown comp_manager" >
               <d-link style="font-size: 0.85rem" class="nav-link">
-              <!-- <d-link style="font-size: 1.4rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`"> -->
                 <i class="material-icons">vertical_split</i>
                 <span>Comparison Manager</span>
                 <div class="item-icon-wrapper" />
@@ -83,13 +82,8 @@
                   </d-link>
                 </div>
               </div>
-              
-              <!-- <d-collapse v-if="item.items && item.items.length" :id="`snc-${navItemIdx}`" class="dropdown-menu dropdown-menu-small" accordion="sidebar-items-accordion">
-                <d-dropdown-item v-for="(subItem, subItemIdx) in item.items" :key="subItemIdx" :href="subItem.href" :to="subItem.to">
-                  {{ subItem.title }}
-                </d-dropdown-item>
-              </d-collapse> -->
-            </li>
+
+            </li> -->
           </d-nav>
       </div>
   </aside>
@@ -125,11 +119,11 @@
     sidebarVisible:boolean = false;
     items =  [
       {
-        title: 'Augur Dashboard',
+        title: 'Insights',
         to: {
           name: 'home',
         },
-        htmlBefore: '<i class="material-icons">vertical_split</i>',
+        htmlBefore: '<i class="material-icons">trending_up</i>', //vertical_split
         htmlAfter: '',
       }, {
         title: 'Repos',
@@ -148,7 +142,7 @@
       //   htmlAfter: '',
       // },
       {
-        title: 'Repo Groups',
+        title: 'Groups',
         to: {
           name: 'repo_groups',
         },
