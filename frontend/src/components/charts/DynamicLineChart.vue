@@ -215,7 +215,8 @@ export default {
       
       if (this.comparedAPIRepos){
         this.comparedAPIRepos.forEach(function(repo) {
-          repos.push(repo.url)//.split('/')[1])
+          let ref = repo.url || repo.repo_name
+          repos.push(ref)
         });
       } else {
         let compares = this.$router.currentRoute.params.compares
@@ -747,7 +748,6 @@ export default {
             let count = 0
             // console.log("DLC","type", Object.getOwnPropertyNames(Object.getPrototypeOf(obj)))//Object.getOwnPropertyNames(Object.getPrototypeOf(err))
             // obj = JSON.stringify(obj)
-            console.log("DLC",JSON.stringify(obj),obj['openIssuesCount'])
             // if (Object.keys(obj).length < 1) obj['openIssuesCount'] = 
             for (var key in obj) {
               console.log("DLC",key)
@@ -911,7 +911,7 @@ export default {
     } else {
       console.log("DLC","did not detect data")
       this.endpoint({repos:this.repos, endpoints:[this.source]}).then((data) => {
-        console.log("DLC","YAA",JSON.stringify(data))
+        console.log("DLC","YAA",data)
         console.log("DLC",Object.keys(data).length)
         if (Object.keys(data).length > 1)
           this.spec(data)
