@@ -8,7 +8,7 @@
 
     <d-button-group>
       <d-button outline pill @click="onTab" value="repo_overview">Overview</d-button>
-      <d-button outline pill active theme="secondary" >Risk</d-button>
+      <d-button outline pill active theme="secondary" >Risk Metrics</d-button>
     </d-button-group>
 
     <!-- Overview Section -->

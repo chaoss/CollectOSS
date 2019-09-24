@@ -3,50 +3,62 @@ import RepoGroup from '@/AugurAPI';
 export default {
     retrieveRepoIds (context: any, payload: any){
         
-        console.log(payload)
-        let repo_name: any = payload.repo 
-        if (repo_name.includes('https://github.com/'))
-            repo_name = repo_name.substr(19)
-        if (repo_name.includes('.git'))
-            repo_name = repo_name.substr(0,repo_name.length - 4)
-        if (repo_name.includes('/'))
-            repo_name = repo_name.split('/')[1]
+        let parseUrl = (repo_name: string) => {
+            if (repo_name.includes('https://github.com/'))
+                repo_name = repo_name.substr(19)
+            if (repo_name.includes('.git'))
+                repo_name = repo_name.substr(0,repo_name.length - 4)
+            if (repo_name.includes('/'))
+                repo_name = repo_name.split('/')[1]
+            return repo_name
+        }
+
+        let repo_name: any = parseUrl(payload.repo)
+        
         console.log("retrieving ids",context.getters['repoRelations'], payload.rg_name, repo_name)
         try {
-            console.log(context.getters['repoRelations'][payload.rg_name][repo_name].repo_id)
+            let group = payload.rg_name
+            if (!group) {
+                Object.keys(context.getters['repoRelations']).forEach((rg:any) => {
+                    context.getters['repoRelations'][group].forEach((repo:any) => {
+                        if (repo.repo_name == payload.repo || parseUrl(repo.repo_name) == repo_name)
+                            group = rg
+                    })
+                })
+            }
             return new Promise((resolve, reject) => {
                 resolve({
-                    'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
-                    'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+                    'repo_id': context.getters['repoRelations'][group][repo_name].repo_id,
+                    'repo_group_id': context.getters['repoRelations'][group][repo_name].repo_group_id,
+                    'rg_name': group
                 })
             }).catch((e) => {
                 console.log('error occurred in retrieving ids: ', e)
             })
         } catch (e) {
-            return new Promise((resolve, reject) => {
-                resolve({
-                    'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
-                    'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
+            context.dispatch('loadRepoGroups').then(() => {
+                context.dispatch('loadRepos').then(() => {
+                    let group = payload.rg_name
+                    if (!group) {
+                        Object.keys(context.getters['repoRelations']).forEach((rg:any) => {
+                            context.getters['repoRelations'][group].forEach((repo:any) => {
+                                if (repo.repo_name == payload.repo || parseUrl(repo.repo_name) == repo_name)
+                                    group = rg
+                            })
+                        })
+                    }
+                    return new Promise((resolve, reject) => {
+                        resolve({
+                            'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
+                            'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id,
+                            'rg_name': group
+                        })
+                    }).catch((e) => {
+                        console.log('error occurred in retrieving ids: ', e)
+                    })
                 })
-            }).catch((e) => {
-                console.log('error occurred in retrieving ids: ', e)
             })
         }
-        // return new Promise((resolve, reject) => {
-        //     resolve({
-        //         'repo_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_id,
-        //         'repo_group_id': context.getters['repoRelations'][payload.rg_name][repo_name].repo_group_id
-        //     })
-        // }).catch((e) => {
-        //     console.log('error occurred in retrieving ids: ', e, context, '\nloading repos and repogroups')
-        //     context.dispatch('loadRepoGroups').then(() => {
-        //         context.dispatch('loadRepos').then(() => {
-                    
-        //         })
-        //     })
-        // });
-        // gitURL: to.params.url,
-        // rg_name: to.params.repo_group_id
     },
     async createAPIObjects(context: any, payload: any) {
         try {

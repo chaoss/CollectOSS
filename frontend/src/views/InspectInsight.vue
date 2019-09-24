@@ -21,7 +21,7 @@
           <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-40%);"></spinner>
 
         </d-card>
-        <d-card v-if="loadedInsights" class="card-small" style="margin-bottom:1rem; height:19% !important;"> 
+        <d-card v-if="loadedInsights" class="card-small" style="margin-bottom:1rem; height:16.5% !important;"> 
 
           <!-- Card Header -->
           <d-card-header class="border-bottom">

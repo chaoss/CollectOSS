@@ -8,7 +8,7 @@
 
     <d-button-group>
       <d-button outline pill active>Overview</d-button>
-      <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk</d-button>
+      <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk Metrics</d-button>
     </d-button-group>
 
     <p></p>
@@ -39,27 +39,44 @@
             <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
           </div> -->
 
-          <d-row v-if="!loadedBars">
+          <!-- <d-row v-if="!loadedBars">
             <d-col>
               <spinner></spinner>
             </d-col>
-          </d-row>
+          </d-row> -->
 
           <d-container>
             <d-row>
-              <d-col v-if="loadedBars" style="">
-                <normalized-stacked-bar-chart 
-                title="Lines of code added by the top 10 authors as Percentages - By Time Period"
-                source="changesByAuthor1" :data="values['changesByAuthor']">
-                </normalized-stacked-bar-chart>
+              <d-col style="">
+                <d-card-body title="Lines of code added by the top 10 authors as Percentages - By Time Period" class="text-center">
+
+                  <spinner v-if="!loadedBars"></spinner>
+
+                  <normalized-stacked-bar-chart 
+                  v-if="loadedBars" 
+                  source="changesByAuthor1" 
+                  :data="values['changesByAuthor']"
+                  ></normalized-stacked-bar-chart>
+
+                </d-card-body>
               </d-col>
             </d-row>
 
             <d-row>
-              <d-col v-if="loadedBars" style="">
-                <div style="padding-top: 0px"></div>
-                <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
-                source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+              <d-col style="">
+                <d-card-body title="Average Lines of Code Per Commit" class="text-center">
+
+                  <spinner v-if="!loadedBars"></spinner>
+
+                  <horizontal-bar-chart 
+                  v-if="loadedBars"
+                  measure="lines" 
+                  title="Average Lines of Code Per Commit" 
+                  source="changesByAuthor2" 
+                  :data="values['changesByAuthor']"
+                  ></horizontal-bar-chart>
+                  
+                </d-card-body>
               </d-col>
             </d-row>
 
@@ -86,9 +103,17 @@
         <p></p>
 
         <d-card>
-          <spinner v-if="!loadedBars"></spinner>
-          
-          <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
+          <d-card-body title="Lines of code added by the top 10 authors" class="text-center">
+            
+            <spinner v-if="!loadedBars"></spinner>
+            
+            <lines-of-code-chart 
+              v-if="loadedBars" 
+              :data="values['changesByAuthor']" 
+              style="font-size: 0.6rem"
+            ></lines-of-code-chart>
+
+          </d-card-body>
         </d-card>
       </d-col>
 
@@ -98,8 +123,17 @@
 
       <d-col>
         <d-card>
-          <spinner v-if="!loadedBars"></spinner>
-          <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+          <d-card-body title="Lines of code added by the top 10 authors visualized" class="text-center">
+            
+            <spinner v-if="!loadedBars"></spinner>
+            
+            <tick-chart 
+              v-if="loadedBars" 
+              source="changesByAuthor" 
+              :data="values['changesByAuthor']"
+            ></tick-chart>
+
+          </d-card-body>
         </d-card>
       </d-col>
 
