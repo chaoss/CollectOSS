@@ -4,12 +4,6 @@ PS3="
 Please type the number corresponding to your selection and then press the Enter/Return key.
 Your choice: "
 
-echo
-echo "**********************************"
-echo "Setting up the database configuration..."
-echo "**********************************"
-echo
-
 function generate_config_file() {
 
   echo
@@ -87,12 +81,6 @@ echo
 select install_location in "$install_locally" "$install_remotely" "$already_installed" "$SKIP"
 do
   case $install_location in
-      $SKIP )
-      echo
-      echo "Skipping database configuration..."
-      echo
-      break
-    ;;
     $install_locally )
         echo "Please set the credentials for your database."
         set_local_db_credentials

@@ -5,9 +5,9 @@ Please type the number corresponding to your selection and then press the Enter/
 Your choice: "
 
 echo
-echo "**********************************"
-echo "Checking for python..."
-echo "**********************************"
+echo "***********************************************"
+echo "Checking for the correct version of Python 3..."
+echo "***********************************************"
 echo
 
 function check_python_version() {
@@ -128,20 +128,49 @@ echo "**********************************"
 echo "Installing workers and their dependencies..."
 echo "**********************************"
 echo
-for OUTPUT in $(ls -d workers/*/)
+for WORKER in $(ls -d workers/*/)
 do
-    if [[ $OUTPUT == *"_worker"* ]]; then
-        cd $OUTPUT
-        echo "Running setup for $(basename $(pwd))"
-        rm -rf build/*;
-        rm -rf dist/*;
-        python setup.py install;
-        pip install -e .
-        cd ../..
+    if [[ $WORKER == *"_worker"* ]]; then
+
+      # make it pretty for formatting
+      FORMATTED_WORKER=${WORKER/#workers\//}
+      FORMATTED_WORKER=${FORMATTED_WORKER/%\//}
+
+      echo "Would you like to install $FORMATTED_WORKER?"
+      select install_worker in "Yes" "No"
+      do
+        case $install_worker in
+          "Yes" )
+            echo
+            echo "**********************************"
+            echo "Installing $(basename $(pwd))..."
+            echo "**********************************"
+            echo
+
+            cd $WORKER
+            rm -rf build/*;
+            rm -rf dist/*;
+            python setup.py install;
+            pip install -e .
+            cd ../..
+            echo "Installing $FORMATTED_WORKER"
+            break
+            ;;
+          "No" )
+            echo
+            echo "Skipping $FORMATTED_WORKER."
+            echo
+            break
+            ;;
+        esac
+      done
+
     fi
 done
 
+echo
 echo "Would you like to install Augur's frontend dependencies?"
+echo
 select choice in "Yes" "No"
 do
   case $choice in
@@ -174,8 +203,12 @@ echo
 cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
 
 echo
-echo "Would you like to enter your DB credentials at the command line or on a web page?"
-select credential_setup_method in "Command Line" "Webpage"
+echo "**********************************"
+echo "Setting up the database configuration..."
+echo "**********************************"
+echo
+echo "Would you like to enter your database credentials at the command line or on a web page?"
+select credential_setup_method in "Command Line" "Webpage" "Skip this section"
 do
   case $credential_setup_method in
     "Command Line" )
@@ -183,15 +216,28 @@ do
         break
       ;;
     "Webpage" )
-        echo "Continuing installation via a webpage..."
+        echo "Continuing installation via webpage..."
         cd util/scripts/install
         python server.py
         python make_config.py
         rm temp.config.json
         break
       ;;
+    "Skip this section" )
+      echo
+      echo "Skipping database configuration..."
+      echo
+      break
+    ;;
   esac
 done
 
-
+echo "**********************************"
 echo "*** INSTALLATION COMPLETE ***"
+echo "**********************************"
+
+echo "**********************************"
+echo "To add repos to the database, run:
+augur db add_repos /path/to/file.csv"
+echo "**********************************"
+
