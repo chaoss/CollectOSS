@@ -96,13 +96,15 @@ export default {
                 if ('endpoints' in payload && 'repos' in payload) {
                     tempCache = {}
                     let promises: any[] = []
+                    console.log("Repos given to endpoint action: ", payload.repos)
                     payload.repos.forEach((repo: any) => {
                         let ref = repo.url || repo.repo_name
                         // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
-                        tempCache[ref] = tempCache[repo.url] || {}
+                        tempCache[ref] = tempCache[ref] || {}
                         
                         payload.endpoints.forEach((endpoint: string) => {
                             tempCache[ref][endpoint] = tempCache[ref][endpoint] ? tempCache[ref][endpoint] : null
+                            console.log("Attempting to call endpoint: ", endpoint, repo)
                             promises.push(repo[endpoint]())
                         })
                     })
@@ -111,7 +113,9 @@ export default {
                         let i = 0
                         payload.repos.forEach((repo: any) => {
                             let ref = repo.url || repo.repo_name
+
                             payload.endpoints.forEach((endpoint: string) => {
+                                console.log(ref, tempCache, endpoint)
                                 tempCache[ref][endpoint] = data[i]// || []
                             })
                             i++

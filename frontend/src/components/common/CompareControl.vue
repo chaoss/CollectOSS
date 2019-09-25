@@ -23,7 +23,7 @@
                 class="multiselect__single" v-if="values.length && !isOpen">{{ values.length }} options selected</span>
               </template>
               <template slot="option" slot-scope="props">
-                <div class="option__desc">{{props.option.split('/')[1]}}</div>
+                <div class="option__desc">{{ props.option.split('/')[1] }}</div>
               </template>
             </multiselect>
           </d-col>
@@ -389,7 +389,7 @@
     }
 
     onCompare(e: any) {
-      if(!this.isGroup) {
+      if (!this.isGroup) {
         console.log("onCompare: ", e, this.base)
         let comparedRepoIds = ''//String(this.base.repo_id)
         let repo: any = null
@@ -456,10 +456,12 @@
         })
       }
     }
+
     removeSelectedRepos(e:any) {
       let index = this.selectedRepos.indexOf(e);
       if (index !== -1) this.selectedRepos.splice(index, 1);
     }
+    
     removeSelectedGroups(e:any) {
       let index = this.selectedGroups.indexOf(e);
       if (index !== -1) this.selectedGroups.splice(index, 1);

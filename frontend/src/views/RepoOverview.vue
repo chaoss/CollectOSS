@@ -27,8 +27,9 @@
         <!-- <h3 class="page-title" style="font-size: 1rem">Overview</h3>
       </div>
     </div> -->
-    <p></p>
 
+    <p></p>
+    
     <d-row>
       
       <d-col cols="12" md="6" lg="6" sm="12">
@@ -139,6 +140,116 @@
 
     </d-row>
 
+    <p></p>
+
+    <d-row>
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <line-chart 
+                      filedTime="date" 
+                      fieldCount="pull_requests"
+                      source="reviews"
+                      title="Reviews (Pull Requests) / Week"
+                      cite-url=""
+                      cite-text="Reviews"
+          ></line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <line-chart 
+                      filedTime="date" 
+                      fieldCount="pull_requests"
+                      source="reviewsAccepted"
+                      title="Reviews (Pull Requests) Accepted / Week"
+                      cite-url=""
+                      cite-text="Reviews Accepted"
+          ></line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <line-chart 
+                      filedTime="date" 
+                      fieldCount="pull_requests"
+                      source="reviewsDeclined"
+                      title="Reviews (Pull Requests) Declined / Week"
+                      cite-url=""
+                      cite-text="Reviews Declined"
+          ></line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <line-chart 
+                      filedTime="date" 
+                      fieldCount="open_count"
+                      source="openIssuesCount"
+                      title="Open Issues / Week"
+                      cite-url=""
+                      cite-text="Open Issues"
+          ></line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <line-chart 
+                      filedTime="date" 
+                      fieldCount="closed_count"
+                      source="closedIssuesCount"
+                      title="Closed Issues / Week"
+                      cite-url=""
+                      cite-text="Closed Issues"
+          ></line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <line-chart 
+                      filedTime="date" 
+                      fieldCount="issues"
+                      source="issuesNew"
+                      title="New Issues / Week"
+                      cite-url=""
+                      cite-text="New Issues"
+          ></line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+
+          <line-chart 
+                      source="codeChanges"
+                      title="Code Changes (Commits) / Week"
+                      cite-url=""
+                      cite-text="Code Changes"
+                      filedTime="date" 
+                      fieldCount="commit_count"
+          ></line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <line-chart 
+                      source="codeChangesLines"
+                      title="Lines of Code Added / Week"
+                      cite-url=""
+                      cite-text="Code Changes Lines"
+                      filedTime="date" 
+                      fieldCount="added"
+          ></line-chart>
+        </d-card>
+      </div>
+
+    </d-row>
+
   </d-container> 
 </template>
 
@@ -163,6 +274,7 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
 import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
 import PieChart from '../components/charts/PieChart.vue'
 import CoverageCard from "@/components/charts/CoverageCard.vue";
+import LineChart from "@/components/charts/LineChart.vue";
 
 @Component({
   components: {
@@ -181,7 +293,8 @@ import CoverageCard from "@/components/charts/CoverageCard.vue";
     BubbleChart,
     TimeIntervalBarChart,
     PieChart,
-    CoverageCard
+    CoverageCard,
+    LineChart
   },
   methods: {
     ...mapActions('common',[
