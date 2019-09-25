@@ -17,6 +17,8 @@
     </div>
 
     <d-button-group>
+      <d-button outline pill theme="secondary" @click="onTab" value="repo_overview">Overview</d-button>
+      <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk Metrics</d-button>
       <d-button outline pill active>Comparison Overview</d-button>
       <!-- <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk</d-button> -->
     </d-button-group>

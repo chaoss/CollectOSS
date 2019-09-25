@@ -32,7 +32,7 @@ import NProgress from "nprogress";
 
 const routes = [
   {
-    path: '/',
+    path: '/insights',
     component: Default,
     children: [
       {
@@ -47,7 +47,7 @@ const routes = [
     ],
   },
   {
-    path: '/repo_groups',
+    path: '/', //repo_groups
     component: Default,
     children: [
       {

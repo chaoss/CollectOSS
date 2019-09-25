@@ -70,8 +70,7 @@
     endpoint!:any
 
     created () {
-      if (this.data){
-        console.log("sbom thinks it has data")
+      if (this.data) {
         this.loaded = true
         this.values = this.data[this.source]
       }
