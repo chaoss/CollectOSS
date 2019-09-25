@@ -40,4 +40,4 @@ def add_repos(app, filename):
         data = csv.reader(upload_repos_file, delimiter=',')
         for row in data:
             print(f"Adding repo with Git URL `{row[1]}` to repo group {row[0]}...")
-            # pd.read_sql(insertSQL, db, params={'repo_group_id': row[0], 'repo_id': row[1]})
+            pd.read_sql(insertSQL, db, params={'repo_group_id': row[0], 'repo_id': row[1]})
