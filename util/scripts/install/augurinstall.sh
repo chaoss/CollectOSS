@@ -83,7 +83,7 @@ if [[ -z $VIRTUAL_ENV ]]; then
                   echo
                   $augur_python_command -m venv $HOME/.virtualenvs/augur_env
                   echo "*** Your environment was installed to $HOME/.virtualenvs/augur_env/. Please activate and restart the installation using your shell's appropriate command. ***"
-                  echo "*** For example, if you're using bash, run '$HOME/.virtualenvs/source augur_env/bin/activate'. ***"
+                  echo "*** For example, if you're using bash, run 'source $HOME/.virtualenvs/augur_env/bin/activate'. ***"
                   echo
                   exit 0
                 ;;
