@@ -145,106 +145,106 @@
     <d-row>
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <line-chart 
+          <dynamic-line-chart 
                       filedTime="date" 
                       fieldCount="pull_requests"
                       source="reviews"
                       title="Reviews (Pull Requests) / Week"
                       cite-url=""
                       cite-text="Reviews"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div> 
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <line-chart 
+          <dynamic-line-chart 
                       filedTime="date" 
                       fieldCount="pull_requests"
                       source="reviewsAccepted"
                       title="Reviews (Pull Requests) Accepted / Week"
                       cite-url=""
                       cite-text="Reviews Accepted"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div> 
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <line-chart 
+          <dynamic-line-chart 
                       filedTime="date" 
                       fieldCount="pull_requests"
                       source="reviewsDeclined"
                       title="Reviews (Pull Requests) Declined / Week"
                       cite-url=""
                       cite-text="Reviews Declined"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div> 
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <line-chart 
+          <dynamic-line-chart 
                       filedTime="date" 
                       fieldCount="open_count"
                       source="openIssuesCount"
                       title="Open Issues / Week"
                       cite-url=""
                       cite-text="Open Issues"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div>
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <line-chart 
+          <dynamic-line-chart 
                       filedTime="date" 
                       fieldCount="closed_count"
                       source="closedIssuesCount"
                       title="Closed Issues / Week"
                       cite-url=""
                       cite-text="Closed Issues"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div>
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <line-chart 
+          <dynamic-line-chart 
                       filedTime="date" 
                       fieldCount="issues"
                       source="issuesNew"
                       title="New Issues / Week"
                       cite-url=""
                       cite-text="New Issues"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div> 
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
 
-          <line-chart 
+          <dynamic-line-chart 
                       source="codeChanges"
                       title="Code Changes (Commits) / Week"
                       cite-url=""
                       cite-text="Code Changes"
                       filedTime="date" 
                       fieldCount="commit_count"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div>
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <line-chart 
+          <dynamic-line-chart 
                       source="codeChangesLines"
                       title="Lines of Code Added / Week"
                       cite-url=""
                       cite-text="Code Changes Lines"
                       filedTime="date" 
                       fieldCount="added"
-          ></line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div>
 

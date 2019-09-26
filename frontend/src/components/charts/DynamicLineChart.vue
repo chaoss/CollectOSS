@@ -1,12 +1,12 @@
 <template>
-  <d-card-body :title="title">
+  <d-card-body v-if="!error" :title="title">
     
     <!-- <div style="color: black" class="error" :class="{hidden: !error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important"> {{ source }}</p></div> -->
     <div v-if="mount" :id="source"></div>
     <div v-if="!loaded">
       <spinner></spinner>
     </div>
-    <div v-if="loaded" class="linechart"> <!-- v-bind:class="{ invis: !detail, invisDet: detail }"> -->
+    <div v-if="loaded" class="linechart"> 
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
@@ -803,7 +803,7 @@ export default {
 
               normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
               aggregates.push(AugurStats.convertKey(d, 'value', 'value' + repo))
-              legend.push(repo + " " + field)
+              legend.push(repo + " " + key)
               // colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
             }, repo)
             x++
@@ -853,8 +853,14 @@ export default {
             config.data = {"values": values}
             this.values = values
 
-            this.renderChart()
-            this.loaded = true
+            if (values.length < 2)
+              this.renderError()
+            else {
+              this.renderChart()
+              this.loaded = true
+            }
+
+            
           }
       }
 
@@ -962,7 +968,7 @@ export default {
         this.endpoint({ repos:apiRepos, endpoints:[this.source] }).then((data) => {
           console.log("DLC","YAA",data)
           console.log("DLC",Object.keys(data).length)
-          if (Object.keys(data).length > 1)
+          if (Object.keys(data).length > 0)
             this.spec(data)
           // processData(data)
         }).catch((error) => {

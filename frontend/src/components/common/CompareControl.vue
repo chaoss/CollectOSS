@@ -402,17 +402,20 @@
             comparedRepoIds += "," + String(repo.repo_id)
           i++
         }
-        router.push({
-          name: 'repo_overview_compare',
-          params: {
-            group: this.base.rg_name,
-            repo: this.base.repo_name,
-            repo_group_id: this.base.repo_group_id,
-            repo_id: this.base.repo_id,
-            compares: this.selectedRepos.join(','),
-            comparedRepoIds
-          }
+        this.setComparedRepos({ 'names': [this.selectedRepos.join(',')], 'ids': [comparedRepoIds] }).then(() => {
+          router.push({
+            name: 'repo_overview_compare',
+            params: {
+              group: this.base.rg_name,
+              repo: this.base.repo_name,
+              repo_group_id: this.base.repo_group_id,
+              repo_id: this.base.repo_id,
+              compares: this.selectedRepos.join(','),
+              comparedRepoIds
+            }
+          })
         })
+        
       } else {
         router.push({
           name: 'group_overview_compare',
