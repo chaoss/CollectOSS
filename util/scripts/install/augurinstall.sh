@@ -180,11 +180,18 @@ do
       echo "Installing frontend dependencies..."
       echo "**********************************"
       echo
-      cd frontend/;
-      npm install brunch canvas vega @vue/cli;
-      npm install; 
-      npm run build;
-      cd ../;
+
+      if [[ $(command -V npm) ]]; then
+        cd frontend/;
+        npm install brunch canvas vega @vue/cli;
+        npm install; 
+        npm run build;
+        cd ../;
+      else
+        echo
+        echo "** npm not found. Please install NPM by either installing node (https://nodejs.org/en/download/) or by installing NPM itself."
+        echo
+      fi
       break
       ;;
     "n" )
@@ -200,7 +207,7 @@ echo "Setting up API documentation..."
 echo "**********************************"
 echo
 
-# cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
+cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
 
 echo
 echo "**********************************"

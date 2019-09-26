@@ -46,7 +46,7 @@ function set_remote_db_credentials() {
     \"key\": \"$key\"
   }"
 
-  # generate_config_file $config
+  generate_config_file $config
 }
 
 function set_local_db_credentials() {
@@ -67,7 +67,7 @@ function set_local_db_credentials() {
     \"key\": \"$key\"
   }"
 
-  # generate_config_file $config
+  generate_config_file $config
 }
 
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
