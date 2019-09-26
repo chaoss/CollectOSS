@@ -102,7 +102,7 @@ do
       ;;
     $already_installed )
         echo "Please enter the credentials for your database."
-        enter_db_credentials
+        set_remote_db_credentials
         break
       ;;
   esac
