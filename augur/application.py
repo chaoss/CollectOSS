@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from augur.models.common import Base
 from augur import logger
 import augur.plugins
-import augur.datasources
+import augur.metrics
 import logging
 
 logging.basicConfig(filename='test.log', level=logging.INFO)
@@ -130,11 +130,11 @@ class Application(object):
     @classmethod
     def import_plugins(cls):
         """
-        Imports all plugins and datasources 
+        Imports all plugins
         """
         if not hasattr(cls, 'plugins'):
             setattr(cls, 'plugins', {})
-        plugins = [augur.plugins, augur.datasources]
+        plugins = [augur.plugins]
         for module in plugins:
             for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
                 if ispkg:
