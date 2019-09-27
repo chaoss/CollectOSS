@@ -187,6 +187,7 @@ do
         npm install; 
         npm run build;
         cd ../;
+        exit 1
       else
         echo
         echo "** npm not found. Please install NPM by either installing node (https://nodejs.org/en/download/) or by installing NPM itself."
