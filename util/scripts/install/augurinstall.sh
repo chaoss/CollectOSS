@@ -68,36 +68,36 @@ echo "**********************************"
 echo "Checking for virtual environment..."
 echo "**********************************"
 echo
-if [[ -z $VIRTUAL_ENV ]]; then
+if [[ $(python -c "import sys; import os; print(0) if ((getattr(sys, 'base_prefix', sys.prefix) == sys.prefix) and 'CONDA_DEFAULT_ENV' not in os.environ) else print(1)") -eq 0 ]]; then
   echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virtual environment. ***"
   echo "*** Would you like to create a virtual environment? ***"
-  select choice in "Yes" "No"
+  select choice in "y" "n"
   do
     case $choice in
-      Yes )
+      "y" )
           echo "Would you like to generate the environment automatically, or configure it yourself?"
-          select choice in "Yes" "No"
+          select choice in "y" "n"
           do
             case $choice in
-              "Yes" )
+              "y" )
                   echo
                   $augur_python_command -m venv $HOME/.virtualenvs/augur_env
                   echo "*** Your environment was installed to $HOME/.virtualenvs/augur_env/. Please activate and restart the installation using your shell's appropriate command. ***"
                   echo "*** For example, if you're using bash, run 'source $HOME/.virtualenvs/augur_env/bin/activate'. ***"
                   echo
-                  exit 0
+                  exit 1
                 ;;
-              "No" )
+              "n" )
                   echo
                   echo "Please create the virtual environment and return to the installation when you're finished."
                   echo "When you're creating the environment, please do not create it inside this directory. The recommended location is `$HOME`/.virtualenvs."
                   echo
-                  exit 0
+                  exit 1
                 ;;
             esac
           done
         ;;
-      No )
+      "n" )
           echo "Resuming installation..."
           break
         ;;
@@ -137,10 +137,10 @@ do
       FORMATTED_WORKER=${FORMATTED_WORKER/%\//}
 
       echo "Would you like to install $FORMATTED_WORKER?"
-      select install_worker in "Yes" "No"
+      select install_worker in "y" "n"
       do
         case $install_worker in
-          "Yes" )
+          "y" )
             echo
             echo "**********************************"
             echo "Installing $(basename $(pwd))..."
@@ -156,7 +156,7 @@ do
             echo "Installing $FORMATTED_WORKER"
             break
             ;;
-          "No" )
+          "n" )
             echo
             echo "Skipping $FORMATTED_WORKER."
             echo
@@ -171,23 +171,31 @@ done
 echo
 echo "Would you like to install Augur's frontend dependencies?"
 echo
-select choice in "Yes" "No"
+select choice in "y" "n"
 do
   case $choice in
-    "Yes" )
+    "y" )
       echo
       echo "**********************************"
       echo "Installing frontend dependencies..."
       echo "**********************************"
       echo
-      cd frontend/;
-      npm install brunch canvas vega @vue/cli;
-      npm install; 
-      npm run build;
-      cd ../;
+
+      if [[ $(command -V npm) ]]; then
+        cd frontend/;
+        npm install brunch canvas vega @vue/cli;
+        npm install; 
+        npm run build;
+        cd ../;
+      else
+        echo
+        echo "** npm not found. Please install NPM by either installing node (https://nodejs.org/en/download/) or by installing NPM itself."
+        echo
+        exit 1
+      fi
       break
       ;;
-    "No" )
+    "n" )
       echo "Skipping frontend dependencies..."
       break
       ;;
@@ -224,10 +232,10 @@ do
         break
       ;;
     "Skip this section" )
-      echo
-      echo "Skipping database configuration..."
-      echo
-      break
+        echo
+        echo "Skipping database configuration..."
+        echo
+        break
     ;;
   esac
 done

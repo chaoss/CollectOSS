@@ -46,7 +46,7 @@ function set_remote_db_credentials() {
     \"key\": \"$key\"
   }"
 
-  # generate_config_file $config
+  generate_config_file $config
 }
 
 function set_local_db_credentials() {
@@ -67,7 +67,7 @@ function set_local_db_credentials() {
     \"key\": \"$key\"
   }"
 
-  # generate_config_file $config
+  generate_config_file $config
 }
 
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
@@ -75,10 +75,9 @@ echo
 install_locally="Would you like to use a LOCAL Postgres 10 or 11 installation without the database already installed?"
 install_remotely="Would you like to use a REMOTE Postgres 10 or 11 installation without the database already installed?"
 already_installed="Would you like to use a pre-existing Postgres 10 or 11 installation with the Augur database ALREADY installed? "
-SKIP="Skip this section"
 echo
 
-select install_location in "$install_locally" "$install_remotely" "$already_installed" "$SKIP"
+select install_location in "$install_locally" "$install_remotely" "$already_installed"
 do
   case $install_location in
     $install_locally )
@@ -103,7 +102,7 @@ do
       ;;
     $already_installed )
         echo "Please enter the credentials for your database."
-        enter_db_credentials
+        set_remote_db_credentials
         break
       ;;
   esac
