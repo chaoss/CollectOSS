@@ -1,5 +1,5 @@
 <template>
-  <d-card-body style="padding-top: 1rem" title="Lines of code added by the top 10 authors">
+  <d-card-body style="padding-top: 1rem">
     <table class="lines-of-code-table">
       <thead>
         <tr>
@@ -52,7 +52,7 @@ export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'data'],
   data() {
     let years = []
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 2; i >= 0; i--) {
       years.push((new Date()).getFullYear() - i)
     }
     let monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

@@ -8,7 +8,7 @@
 
     <d-button-group>
       <d-button outline pill @click="onTab" value="repo_overview">Overview</d-button>
-      <d-button outline pill active theme="secondary" >Risk</d-button>
+      <d-button outline pill active theme="secondary" >Risk Metrics</d-button>
     </d-button-group>
 
     <!-- Overview Section -->
@@ -19,49 +19,61 @@
       </div>
     </div>
 
-    <div v-if="!loaded_risk" class="row">
-      <div class="col-md-6 col-lg-6 col-sm-12">
-        <d-card>
-          <d-card-body>
-            <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
-          </d-card-body>
-        </d-card>
-      </div>
-      <div class="col-md-6 col-lg-6 col-sm-12">
-        <d-card>
-          <d-card-body>
-            <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
-          </d-card-body>
-        </d-card>
-      </div>
-    </div>
-
-    <div class="row mb-5" v-if="loaded_risk">
+    <div class="row mb-5">
       <div class="col-6">
-        <line-chart title="Forks Count by Week" :data="values" source="getForks" filedTime="date" fieldCount="forks">
+        <line-chart
+          title="Forks Count by Week"
+          source="getForks"
+          filedTime="date"
+          fieldCount="forks">
         </line-chart>
       </div>
       <div class="col-6">
-        <line-chart title="Committers by week" :data="values" source="committers" filedTime="date"
-                    fieldCount="count"></line-chart>
+        <line-chart
+          title="Committers by week"
+          source="committers"
+          filedTime="date"
+          fieldCount="count"
+        ></line-chart>
       </div>
     </div>
 
-    <div class="row mb-5" v-if="loaded_risk">
+    <div class="row mb-5">
       <div class="col-6">
-        <license-table :data="values" source="licenseDeclared"  :headers="['Short Name']"
-                      :ldata="licenses" :fields="['short_name']"  title="License Declared"></license-table>
-                      <br><br>
-        <download-card title="Software Bill of Materials" :data="values" source="sbom"></download-card>
+        <license-table
+          :data="values"
+          source="licenseDeclared"
+          :headers="['Short Name']"
+          :ldata="licenses"
+          :fields="['short_name']"
+          title="License Declared">
+        </license-table>
+        <br><br>
+        <download-card
+          title="Software Bill of Materials"
+          :data="values"
+          source="sbom">
+        </download-card>
       </div>
       <div class="col-6">
-        <cii-table :data="values" source="ciiBP"  :headers="['Passing Status','Badge Level', 'Date']"
-                       :fields="['achieve_passing_status', 'badge_level', 'date']"  title="CII Best Practices"></cii-table>
+        <cii-table
+          source="ciiBP"
+          :headers="['Passing Status','Badge Level', 'Date']"
+          :fields="['achieve_passing_status', 'badge_level', 'date']"
+          title="CII Best Practices"
+        ></cii-table>
         <br> <br>
-        <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
+        <count-block
+          title="Forks"
+          source="forkCount"
+          field="forks"
+        ></count-block>
         <br><br>
-        <coverage-card title="License Coverage" :data="values" source="sbom"></coverage-card>
-                             </div>
+        <coverage-card
+          title="License Coverage"
+          source="sbom"
+        ></coverage-card>
+      </div>
 
       </div>
     </div>
@@ -123,7 +135,6 @@
     licenses = Licenses
 
     loaded_cii:boolean = false
-    loaded_risk:boolean = false
     loaded_sbom:boolean = false
 
     values:any = {}
@@ -139,32 +150,35 @@
 
 
     // endpoints
-    risk_endpoints:any[] = ['forkCount', 'licenseDeclared', 'getForks', 'committers']
     cii_endpoint = ['ciiBP']
     sbom_endpoint = ['sbom']
 
     created() {
       console.log('####', this.base)
-
+      let ref = this.base.url || this.base.repo_name
       this.endpoint({endpoints:this.sbom_endpoint,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-          this.values[endpoint] = tuples[this.base.url][endpoint]
+        Object.keys(tuples[ref]).forEach((endpoint) => {
+
+          this.values[endpoint] = tuples[ref][endpoint]
+          console.log("sbom data loaded", endpoint, ref, tuples)
         })
         this.loaded_sbom = true
-      }),
+      })
       this.endpoint({endpoints:this.cii_endpoint,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-          this.values[endpoint] = tuples[this.base.url][endpoint]
+        Object.keys(tuples[ref]).forEach((endpoint) => {
+          this.values[endpoint] = tuples[ref][endpoint]
+          console.log("cii data loaded", endpoint, ref, tuples)
         })
         this.loaded_cii = true
-      }),
-      this.endpoint({endpoints:this.risk_endpoints,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-          this.values[endpoint] = tuples[this.base.url][endpoint]
-        })
-        this.loaded_risk = true
       })
 
+    }
+
+    onTab(e: any) {
+      console.log("onTab", e.target.value)
+      this.$router.push({
+        name: e.target.value, params: {repo: this.base.repo_name, group: this.base.rg_name}
+      })
     }
 
   }

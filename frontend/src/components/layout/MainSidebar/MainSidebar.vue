@@ -123,7 +123,7 @@
         to: {
           name: 'home',
         },
-        htmlBefore: '<i class="material-icons">vertical_split</i>',
+        htmlBefore: '<i class="material-icons">trending_up</i>', //vertical_split
         htmlAfter: '',
       }, {
         title: 'Repos',

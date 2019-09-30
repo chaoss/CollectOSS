@@ -3,6 +3,7 @@
 .PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
 
 SERVECOMMAND=augur run
+INSTALLCOMMAND=pip install -e .; python setup.py install;
 CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda activate augur; then conda env create -n=augur -f=environment.yml; else conda env update -n=augur -f=environment.yml; fi;
 CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
 OLDVERSION="null"
@@ -84,7 +85,8 @@ config:
 #
 dev-start: dev-stop
 	@ mkdir -p logs runtime
-	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
+	@ bash -c '$(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
+	@ bash -c 'sleep 4; cd frontend; npm run serve >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid'
 	@ echo "Server     Description       Log                   Monitoring                   PID                        "
 	@ echo "------------------------------------------------------------------------------------------                 "
 	@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
@@ -173,6 +175,7 @@ clean:
 	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs workers/**/build/** workers/**/dist**
 	find . -name \*.pyc -delete
 	@ echo "Run sudo make install-dev again to reinstall the environment."
+	$(INSTALLCOMMAND)
 
 #
 # Git

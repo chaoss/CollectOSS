@@ -4,7 +4,7 @@
       
       <spinner v-if="!loaded"></spinner>
       
-      <div v-else>
+      <div v-if="loaded">
         <p v-if="values === undefined">There are no license coverage metrics available for this repository.</p>
         <div style="float:left;text-align:right;width:49%;">
           <p> Total Files
@@ -60,6 +60,7 @@
 
     // data props
     loaded: boolean = false
+    values: any[] = []
     
     // compare getters
     base!:any
@@ -68,18 +69,25 @@
     // common actions
     endpoint!:any
 
-    get values(){
-      if (this.data){
+    created () {
+      if (this.data) {
         this.loaded = true
-        return this.data[this.source]
+        this.values = this.data[this.source]
       }
       
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
-          Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-            this.loaded = true
-            return tuples[this.base.url][endpoint]
+          console.log("sbom", tuples, this.base)
+          let ref = this.base.url || this.base.repo_name
+          let values:any = []
+          Object.keys(tuples[ref]).forEach((endpoint) => {
+            console.log("sbom", ref, endpoint)
+            values = tuples[ref][endpoint]
           })
+          console.log("sbom loaded", JSON.stringify(values))
+          this.values = values
+          this.loaded = true
+          console.log(this.loaded, this.values)
           
         })
       }
