@@ -70,16 +70,18 @@ class Housekeeper:
                         logging.info('Housekeeper updating {} model with given {}...'.format(
                             model, given[0]))
                         
-                        if given[0] == 'git_url':
+                        if given[0] == 'git_url' or given[0] == 'github_url':
                             for repo in repos:
+                                if given[0] == 'github_url' and 'github' not in repo['repo_git']:
+                                    continue
+                                given_key = 'git_url' if given[0] == 'git_url' else 'github_url'
                                 task = {
                                     "job_type": "MAINTAIN", 
                                     "models": [model], 
-                                    "display_name": "{} model for git url: {}".format(model, repo['repo_git']),
-                                    "given": {
-                                        "git_url": repo['repo_git']
-                                    }
+                                    "display_name": "{} model for url: {}".format(model, repo['repo_git']),
+                                    "given": {}
                                 }
+                                task['given'][given_key] = repo['repo_git']
                                 if "focused_task" in repo:
                                     task["focused_task"] = repo['focused_task']
                                 try:

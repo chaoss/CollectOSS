@@ -130,7 +130,6 @@ class InsightWorker:
         Adds this task to the queue, and calls method to process queue
         """
         repo_git = value['given']['git_url']
-        logging.info(value)
 
         """ Query all repos """
         repoUrlSQL = s.sql.text("""
@@ -138,8 +137,8 @@ class InsightWorker:
             """.format(repo_git))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
-            self._queue.put({"repo_git": repo_git, 
-                "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]})
+            self._queue.put({"git_url": repo_git, 
+                "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"], "job_type": value['job_type']})
         except Exception as e:
             logging.info("that repo is not in our database, {}".format(e))
         if self._queue.empty(): 
@@ -372,7 +371,7 @@ class InsightWorker:
         # Task to send back to broker
         task_completed = {
             'worker_id': self.config['id'],
-            'job_type': self.working_on,
+            'job_type': entry_info['job_type'],
             'repo_id': entry_info['repo_id'],
             'git_url': entry_info['git_url']
         }
