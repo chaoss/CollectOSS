@@ -2,21 +2,16 @@
   <d-card>
     <d-card-body :title="title" class="text-center">
       <spinner v-if="!loaded"></spinner>
-      <div v-if="loaded">
-        <strong><p>Click on the names of highlighted licenses to learn more</p></strong>
-        <table style="width: 100%">
-          <thead class="bg-light">
-            <th v-for="header in headers">{{header}}</th>
-          </thead>
-          <tbody>
-            <tr v-for="el in values">
-              <a v-bind:href="ldata[0][el['short_name']]" target="_blank">
-                <td>{{el['short_name']}}</td>
-              </a>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table v-if="loaded" style="width: 100%">
+        <thead class="bg-light">
+          <th v-for="header in headers">{{header}}</th>
+        </thead>
+        <tbody>
+          <tr v-for="el in values">
+            <td v-for="field in fields">{{el[field]}}</td>
+          </tr>
+        </tbody>
+      </table>
     </d-card-body>
   </d-card>
 </template>
@@ -33,7 +28,6 @@
       source: String,
       headers: Array,
       fields: Array,
-      ldata: Array,
     }
   })
 
@@ -59,7 +53,7 @@
     // data props
     loaded: boolean = false
     values: any[] = []
-
+    
     // compare getters
     base!:any
     comparedRepos!:any
@@ -72,7 +66,7 @@
         this.loaded = true
         this.values = this.data[this.source]
       }
-
+      
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
           console.log("sbom", tuples, this.base)
@@ -86,7 +80,7 @@
           this.values = values
           this.loaded = true
           console.log(this.loaded, this.values)
-
+          
         })
       }
     }
