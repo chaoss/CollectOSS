@@ -72,7 +72,7 @@ class Housekeeper:
                         
                         if given[0] == 'git_url' or given[0] == 'github_url':
                             for repo in repos:
-                                if given[0] == 'github_url' and 'github' not in repo['repo_git']:
+                                if given[0] == 'github_url' and 'github.com' not in repo['repo_git']:
                                     continue
                                 given_key = 'git_url' if given[0] == 'git_url' else 'github_url'
                                 task = {
