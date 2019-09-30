@@ -68,7 +68,7 @@ echo "**********************************"
 echo "Checking for virtual environment..."
 echo "**********************************"
 echo
-if [[ $(python -c "import sys; import os; print(0) if ((getattr(sys, 'base_prefix', sys.prefix) == sys.prefix) and 'CONDA_DEFAULT_ENV' not in os.environ) else print(1)") -eq 0 ]]; then
+if [[ $(python -c "import sys; import os; print(0) if ((getattr(sys, 'base_prefix', sys.prefix) != sys.prefix) and 'CONDA_DEFAULT_ENV' not in os.environ) else print(1)") -eq 0 ]]; then
   echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virtual environment. ***"
   echo "*** Would you like to create a virtual environment? ***"
   select choice in "y" "n"
