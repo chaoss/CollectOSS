@@ -41,7 +41,6 @@
     <div class="row mb-5">
       <div class="col-6">
         <license-table
-          :data="values"
           source="licenseDeclared"
           :headers="['Short Name']"
           :ldata="licenses"
@@ -50,6 +49,7 @@
         </license-table>
         <br><br>
         <download-card
+          v-if="loaded_sbom"
           title="Software Bill of Materials"
           :data="values"
           source="sbom">
