@@ -59,6 +59,7 @@ class Housekeeper:
             # Waiting for compatible worker
             while True:
                 for worker in list(broker._getvalue().keys()):
+                    # logging.info("{} {} {} {} {}".format(worker, model, broker[worker]['models'], given, broker[worker]['given']))
                     if model in broker[worker]['models'] and given in broker[worker]['given']:
                         compatible_worker_found = True
                 if compatible_worker_found:

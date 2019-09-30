@@ -16,14 +16,6 @@
       <!-- <div class="col col-6"></div> -->
     </div>
 
-    <d-button-group>
-      <d-button outline pill theme="secondary" @click="onTab" value="repo_overview">Overview</d-button>
-      <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk Metrics</d-button>
-      <d-button outline pill active>Comparison Overview</d-button>
-      <!-- <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk</d-button> -->
-    </d-button-group>
-    <p></p>
-
     <!-- Page Header -->
     <!-- <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
@@ -41,14 +33,11 @@
       </div>
     </div> -->
 
-    <div class="row">
+    <div class="row" v-if="comparedRepos.names.length > 0">
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="codeChanges"
                       title="Code Changes (Commits) / Week"
                       cite-url=""
@@ -60,7 +49,6 @@
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="codeChangesLines"
                       title="Lines of Code Changed / Week"
                       cite-url=""
@@ -71,10 +59,7 @@
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="openIssuesCount"
                       title="Open Issues / Week"
                       cite-url=""
@@ -86,10 +71,7 @@
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="closedIssuesCount"
                       title="Closed Issues / Week"
                       cite-url=""
@@ -100,10 +82,7 @@
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="issuesNew"
                       title="New Issues / Week"
                       cite-url=""
@@ -114,10 +93,7 @@
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="reviews"
                       title="Reviews (Pull Requests) / Week"
                       cite-url=""
@@ -128,10 +104,7 @@
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="reviewsAccepted"
                       title="Reviews (Pull Requests) Accepted / Week"
                       cite-url=""
@@ -142,10 +115,7 @@
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
           <dynamic-line-chart 
-                      v-if="loaded"
                       source="reviewsDeclined"
                       title="Reviews (Pull Requests) Declined / Week"
                       cite-url=""
@@ -192,6 +162,12 @@
         </d-card>
       </div> -->
 
+    </div>
+    
+    <div v-else>
+      <p></p>
+      <p></p>
+      Please select a compared repo above.
     </div>
 
   </d-container>

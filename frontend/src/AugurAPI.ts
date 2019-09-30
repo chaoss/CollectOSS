@@ -288,7 +288,6 @@ abstract class BaseRepo {
   }
 }
 
-
 class Repo extends BaseRepo{
   public rg_name?:string
   public repo_name?:string

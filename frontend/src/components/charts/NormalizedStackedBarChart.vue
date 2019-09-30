@@ -96,7 +96,7 @@ export default {
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": this.x / 2.5,
-        "height": this.y / 2.4,
+        "height": this.y / 3,
         "padding": {"left": 0, "top": 0, "right": 0, "bottom": -70},
         "config": {
           "axis":{

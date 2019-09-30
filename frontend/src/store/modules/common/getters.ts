@@ -24,6 +24,9 @@ export default {
   apiRepos: (state: any) => {
     return state.apiRepos;
   },
+  tab: (state: any) => {
+    return state.tab
+  },
   cache: (state:any) => (repo: string, endpoint: string) =>{
     return state.cache[repo][endpoint];
   },
