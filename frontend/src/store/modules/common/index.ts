@@ -31,6 +31,7 @@ const state = {
   showDetail: false,
   showTooltip: true,
   byDate: false,
+  tab: null,
 };
 
 export default {

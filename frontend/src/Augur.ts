@@ -52,6 +52,7 @@ export default function Augur() {
   router.beforeEach((to: any, from: any, next: any) => {
     NProgress.start()
     NProgress.set(0.4);
+    store.commit('common/mutate', { property: 'tab', with: to.name })
     if (to.name == 'inspect_insight' && !('metric' in to.params)) {
       to.params.metric = from.params.metric
     }

@@ -7,7 +7,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData, and_
 import statistics
 import logging
-import json
+import json, time
 import numpy as np
 import scipy.stats
 import datetime
@@ -50,7 +50,7 @@ class InsightWorker:
             "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [["repo_git"]],
+                    "given": [["git_url"]],
                     "models":["insights"]
                 }
             ],
@@ -73,6 +73,9 @@ class InsightWorker:
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
+        helper_schema = 'augur_operations'
+        self.helper_db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
         
         # produce our own MetaData object
         metadata = MetaData()
@@ -126,7 +129,7 @@ class InsightWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        repo_git = value['given']['repo_git']
+        repo_git = value['given']['git_url']
 
         """ Query all repos """
         repoUrlSQL = s.sql.text("""
@@ -134,10 +137,10 @@ class InsightWorker:
             """.format(repo_git))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"repo_git": repo_git, 
-                "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]}))
-        except:
-            print("that repo is not in our database")
+            self._queue.put({"git_url": repo_git, 
+                "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"], "job_type": value['job_type']})
+        except Exception as e:
+            logging.info("that repo is not in our database, {}".format(e))
         if self._queue.empty(): 
             if 'github.com' in repo_git:
                 self._task = value
@@ -162,11 +165,12 @@ class InsightWorker:
         Determines what action to take based off the message type
         """
         while True:
+            time.sleep(2)
             if not self._queue.empty():
                 message = self._queue.get()
-            else:
-                break
-            self.discover_insights(message)
+            # else:
+            #     break
+                self.discover_insights(message)
 
     def discover_insights(self, entry_info):
         """ Data collection function
@@ -194,8 +198,8 @@ class InsightWorker:
         """"""
 
         # If we are discovering insights for a group vs repo, the base url will change
-        if 'repo_group_id' in entry_info:
-            base_url = 'http://{}:{}/api/unstable/repo-groups/{}'.format(
+        if 'repo_group_id' in entry_info and 'repo_id' not in entry_info:
+            base_url = 'http://{}:{}/api/unstable/repo-groups/{}/'.format(
                 self.config['broker_host'],self.config['broker_port'], entry_info['repo_group_id'])
         else:
             base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
@@ -216,6 +220,7 @@ class InsightWorker:
             
             # Filter out keys that we do not want to analyze (e.g. repo_id)
             raw_values = {}
+            unique_keys = None
             if len(data) > 0:
                 try:
                     unique_keys = list(filter(is_unique_key, data[0].keys()))
@@ -359,6 +364,52 @@ class InsightWorker:
                                     break
                 else:
                     logging.info("Key: {} has empty raw_values, should not have key here".format(key))
+
+        self.register_task_completion(entry_info, "insights")
+
+    def register_task_completion(self, entry_info, model):
+        # Task to send back to broker
+        task_completed = {
+            'worker_id': self.config['id'],
+            'job_type': entry_info['job_type'],
+            'repo_id': entry_info['repo_id'],
+            'git_url': entry_info['git_url']
+        }
+        # Add to history table
+        task_history = {
+            "repo_id": entry_info['repo_id'],
+            "worker": self.config['id'],
+            "job_model": model,
+            "oauth_id": self.config['zombie_id'],
+            "timestamp": datetime.datetime.now(),
+            "status": "Success",
+            "total_results": self.results_counter
+        }
+        self.helper_db.execute(self.history_table.update().where(
+            self.history_table.c.history_id==self.history_id).values(task_history))
+
+        logging.info("Recorded job completion for: " + str(task_completed) + "\n")
+
+        # Update job process table
+        updated_job = {
+            "since_id_str": entry_info['repo_id'],
+            "last_count": self.results_counter,
+            "last_run": datetime.datetime.now(),
+            "analysis_state": 0
+        }
+        self.helper_db.execute(self.job_table.update().where(
+            self.job_table.c.job_model==model).values(updated_job))
+        logging.info("Update job process for model: " + model + "\n")
+
+        # Notify broker of completion
+        logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n" + 
+            "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
+
+        requests.post('http://{}:{}/api/unstable/completed_task'.format(
+            self.config['broker_host'],self.config['broker_port']), json=task_completed)
+
+        # Reset results counter for next task
+        self.results_counter = 0
 
     def send_insight(self, insight, units_from_mean):
         

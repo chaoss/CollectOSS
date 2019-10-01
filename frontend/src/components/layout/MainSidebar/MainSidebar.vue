@@ -84,7 +84,11 @@
               </div>
 
             </li> -->
+            <li v-if="'repo_id' in base" style="text-align: center; padding-top: 1rem"><span>Different views <p style="margin-bottom:0.2rem">for this repo:</p></span></li>
+            <li v-if="'repo_id' in base" style="text-align: center"><tab-selector></tab-selector></li>
+
           </d-nav>
+
       </div>
   </aside>
 </template>
@@ -93,7 +97,7 @@
   import Component from 'vue-class-component';
   import Vue from 'vue';
   import {mapActions, mapGetters, mapMutations} from "vuex";
-  import Spinner from '../components/Spinner.vue'
+  import TabSelector from "../../TabSelector.vue";
 
   @Component({
     props: {
@@ -101,6 +105,9 @@
         type: Boolean,
         default: false,
       },
+    },
+    components: {
+      TabSelector
     },
     computed: {
       ...mapGetters('compare',[

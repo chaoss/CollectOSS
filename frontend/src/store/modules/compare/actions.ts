@@ -39,24 +39,24 @@ export default {
     async setBaseRepo(context: any, payload: any) {
         return new Promise((resolve:any, reject:any)=>{
             console.log("setting base repo w payload: ",payload)
-                setTimeout(()=> {
-                    if (payload == null || Object.keys(payload).length === 0) {
-                        context.state.baseRepo = ''
-                        resolve()
+            setTimeout(()=> {
+                if (payload == null || Object.keys(payload).length === 0) {
+                    context.state.baseRepo = ''
+                    resolve()
+                } else {
+                    let baseRepo = payload.rg_name && payload.repo ? payload.rg_name + '/' + payload.repo : payload.repo
+                    if (!(baseRepo in context.rootGetters['common/apiRepos'])) {
+                        context.dispatch('common/addRepo', payload, {root: true}).then((data: any) => {
+                          context.state.baseRepo = baseRepo
+                          resolve(data)
+                        })
+                        context.commit('mutate', {property: baseRepo, with: payload.repo})
                     } else {
-                        let baseRepo = payload.rg_name && payload.repo ? payload.rg_name + '/' + payload.repo : payload.repo
-                        if (!(baseRepo in context.rootGetters['common/apiRepos'])) {
-                            context.dispatch('common/addRepo', payload, {root: true}).then((data: any) => {
-                              context.state.baseRepo = baseRepo
-                              resolve(data)
-                            })
-                            context.commit('mutate', {property: baseRepo, with: payload.repo})
-                        } else {
-                            context.state.baseRepo = baseRepo
-                            resolve({})
-                        }
+                        context.state.baseRepo = baseRepo
+                        resolve({})
                     }
-                })
+                }
+            })
         })
     },
 
@@ -82,11 +82,8 @@ export default {
     },
 
     async setComparedRepos(context:any, payload:any) {
-        console.log("yo",payload)
         return new Promise((resolve:any, reject:any)=>{
-            console.log("yo",payload)
             setTimeout(()=>{
-                console.log("yo",payload)
                 let promises:any[] = [];
                 let i = 0
                 console.log("setting compared repos: ",payload)
