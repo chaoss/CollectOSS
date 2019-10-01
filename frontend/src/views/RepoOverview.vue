@@ -6,10 +6,7 @@
       <!-- <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button> -->
     </d-breadcrumb>
 
-    <d-button-group>
-      <d-button outline pill active>Overview</d-button>
-      <d-button outline pill theme="secondary" @click="onTab" value="repo_risk">Risk Metrics</d-button>
-    </d-button-group>
+    <!-- <tab-selector></tab-selector> -->
 
     <p></p>
     <!-- <d-nav :pills="true" id="repo_nav">
@@ -272,9 +269,11 @@ import CompareControl from '../components/common/CompareControl.vue'
 import router from "@/router";
 import BubbleChart from '../components/charts/BubbleChart.vue'
 import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
+import TabSelector from '../components/TabSelector.vue'
 import PieChart from '../components/charts/PieChart.vue'
 import CoverageCard from "@/components/charts/CoverageCard.vue";
 import LineChart from "@/components/charts/LineChart.vue";
+
 
 @Component({
   components: {
@@ -294,7 +293,8 @@ import LineChart from "@/components/charts/LineChart.vue";
     TimeIntervalBarChart,
     PieChart,
     CoverageCard,
-    LineChart
+    LineChart,
+    TabSelector,
   },
   methods: {
     ...mapActions('common',[
@@ -374,12 +374,7 @@ export default class RepoOverview extends Vue {
       return "padding-top: 3rem"
   }
 
-  onTab(e: any) {
-    console.log("onTab", e.target.value)
-    this.$router.push({
-      name: e.target.value, params: {repo: this.base.repo_name, group: this.base.rg_name}
-    })
-  }
+
 
 }
 </script>

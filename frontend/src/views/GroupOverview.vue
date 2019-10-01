@@ -1,8 +1,9 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-    <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
-      <d-breadcrumb-item :active="true" :text="base.rg_name" href="#" />
-    </d-breadcrumb>
+        <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
+          <span style="padding-right:1rem">Repo Group:</span><d-breadcrumb-item :active="true" :text="base.rg_name" href="#" />
+        </d-breadcrumb>
+
     <!-- Page Header -->
     <!-- <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">

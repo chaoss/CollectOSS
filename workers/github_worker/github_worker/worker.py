@@ -68,7 +68,7 @@ class GitHubWorker:
             "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [["git_url"]],
+                    "given": [["github_url"]],
                     "models":["issues", "contributors"]
                 }
             ],
@@ -333,12 +333,12 @@ class GitHubWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        git_url = value['given']['git_url']
+        github_url = value['given']['github_url']
 
         """ Query all repos """
         repoUrlSQL = s.sql.text("""
             SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-            """.format(git_url))
+            """.format(github_url))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
             repo_id = int(rs.iloc[0]['repo_id'])
@@ -402,11 +402,11 @@ class GitHubWorker:
 
             if message.type == 'TASK':
                 try:
-                    git_url = message.entry_info['task']['given']['git_url']
+                    github_url = message.entry_info['task']['given']['github_url']
                     if message.entry_info['task']['models'][0] == 'contributors':
-                        self.search_users({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                        self.search_users({'github_url': github_url, 'repo_id': message.entry_info['repo_id']})
                     if message.entry_info['task']['models'][0] == 'issues':
-                        self.query_issues({'git_url': git_url, 'repo_id': message.entry_info['repo_id']})
+                        self.query_issues({'github_url': github_url, 'repo_id': message.entry_info['repo_id']})
                 except Exception as e:
                     logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
                     logging.info("Error encountered: " + repr(e) + "\n")
@@ -450,7 +450,7 @@ class GitHubWorker:
         logging.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
 
         # Url of repo we are querying for
-        url = entry_info['git_url']
+        url = entry_info['github_url']
 
         # Extract owner/repo from the url for the endpoint
         path = urlparse(url)
@@ -621,19 +621,19 @@ class GitHubWorker:
         """ Data collection function
         Query the GitHub API for issues
         """
-        logging.info("Beginning filling the issues model for repo: " + entry_info['git_url'] + "\n")
+        logging.info("Beginning filling the issues model for repo: " + entry_info['github_url'] + "\n")
         self.record_model_process(entry_info, 'issues')
 
-        #if str.find('github.com', str(entry_info['git_url']) < 0
+        #if str.find('github.com', str(entry_info['github_url']) < 0
         ### I have repos not on github and I need to skip them 
-        #@if str.find('github.com', str(entry_info['git_url']) < 0
+        #@if str.find('github.com', str(entry_info['github_url']) < 0
         #    return 
 
         # Contributors are part of this model, and finding all for the repo saves us 
         #   from having to add them as we discover committers in the issue process
         self.query_contributors(entry_info)
 
-        url = entry_info['git_url']
+        url = entry_info['github_url']
 
         # Extract the owner/repo for the endpoint
         path = urlparse(url)
@@ -1137,7 +1137,7 @@ class GitHubWorker:
             'worker_id': self.config['id'],
             'job_type': self.working_on,
             'repo_id': entry_info['repo_id'],
-            'git_url': entry_info['git_url']
+            'github_url': entry_info['github_url']
         }
         # Add to history table
         task_history = {

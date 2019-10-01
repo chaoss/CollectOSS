@@ -63,6 +63,7 @@ def main(augur_url, host, port):
             "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
             "broker_port": server["port"],
             "broker_host": server["host"],
+            "zombie_id": 22,
             "host": credentials["host"],
             "location": "http://{}:{}".format(server["host"],worker_port),
             "password": credentials["password"],

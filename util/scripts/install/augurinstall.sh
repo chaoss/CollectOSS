@@ -68,7 +68,7 @@ echo "**********************************"
 echo "Checking for virtual environment..."
 echo "**********************************"
 echo
-if [[ $(python -c "import sys; import os; print(0) if ((getattr(sys, 'base_prefix', sys.prefix) == sys.prefix) and 'CONDA_DEFAULT_ENV' not in os.environ) else print(1)") -eq 0 ]]; then
+if [[ -z "$VIRTUAL_ENV" ]]; then
   echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virtual environment. ***"
   echo "*** Would you like to create a virtual environment? ***"
   select choice in "y" "n"
@@ -210,35 +210,35 @@ echo
 
 cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
 
-echo
-echo "**********************************"
-echo "Setting up the database configuration..."
-echo "**********************************"
-echo
-echo "Would you like to enter your database credentials at the command line or on a web page?"
-select credential_setup_method in "Command Line" "Webpage" "Skip this section"
-do
-  case $credential_setup_method in
-    "Command Line" )
-        util/scripts/install/setup_db.sh
-        break
-      ;;
-    "Webpage" )
-        echo "Continuing installation via webpage..."
-        cd util/scripts/install
-        python server.py
-        python make_config.py
-        rm temp.config.json
-        break
-      ;;
-    "Skip this section" )
-        echo
-        echo "Skipping database configuration..."
-        echo
-        break
-    ;;
-  esac
-done
+if [[ ! -e augur.config.json ]]; then
+  echo "** No config file was found. Starting config creation process. **"
+
+  echo
+  echo "**********************************"
+  echo "Setting up the database configuration..."
+  echo "**********************************"
+  echo
+  echo "Would you like to enter your database credentials at the command line or on a web page?"
+  select credential_setup_method in "Command Line" "Webpage"
+  do
+    case $credential_setup_method in
+      "Command Line" )
+          util/scripts/install/setup_db.sh
+          break
+        ;;
+      "Webpage" )
+          echo "Continuing installation via webpage..."
+          cd util/scripts/install
+          python server.py
+          python make_config.py
+          rm temp.config.json
+          break
+        ;;
+    esac
+  done
+else
+  echo "** Config file was found. Resuming installation... **"
+fi
 
 echo "**********************************"
 echo "*** INSTALLATION COMPLETE ***"

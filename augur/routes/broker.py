@@ -4,8 +4,7 @@ Creates routes for the broker
 """
 from flask import request, jsonify, Response
 import logging
-import json
-import requests
+import json, requests, time
 
 def send_task(task, worker_proxy):
 
@@ -118,6 +117,9 @@ def create_broker_routes(server):
             givens = server.broker[worker['id']]['given']
             user_queue = server.broker[worker['id']]['user_queue']
             maintain_queue = server.broker[worker['id']]['maintain_queue']
+
+            time.sleep(10)
+            server.broker[worker['id']]['status'] = 'Idle'
             send_task(task, server.broker[worker['id']])
 
         return Response(response=worker['id'],

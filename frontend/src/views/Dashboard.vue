@@ -137,13 +137,11 @@
 import { mapActions, mapGetters, mapMutations } from "vuex";
 import Component from 'vue-class-component';
 import Vue from 'vue';
+
+
 import SparkChart from '../components/charts/SparkChart.vue';
 import InsightChart from '../components/charts/InsightChart.vue';
 import Spinner from '../components/Spinner.vue';
-
-interface FlexObject<TValue> {
-  [id: string]: TValue;
-}
 
 @Component({
   methods: {
@@ -222,6 +220,7 @@ export default class Dashboard extends Vue {
         groups.forEach((group: any) => {
           relevantApiGroups.push(this.apiGroups[group.rg_name])
         })
+
         this.endpoint({repoGroups: relevantApiGroups, endpoints: ['topInsights']}).then((tuples: any) => {
           groups.forEach((group: any) => {
             console.log("Group tuples: ", tuples[group.rg_name].groupEndpoints.topInsights)

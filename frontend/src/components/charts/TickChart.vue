@@ -115,7 +115,7 @@ export default {
       }
       let config = {
         "width": this.x / 1.5,
-        "height": this.y / 1.7,
+        "height": this.y / 2.4,
         "padding": {"left": -10, "top": 0, "right": 5, "bottom": 10},
         "config": {
           "tick": {
@@ -149,7 +149,7 @@ export default {
                 "as": "Net lines added"
               },
               {
-                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
+                "calculate": "(datum.additions + datum.deletions) < 0000 ? 0000 : ((datum.additions + datum.deletions) > 100000000 ? 100000000 : (datum.additions + datum.deletions))",
                 "as": "Total lines changed"
               },
             ],
@@ -181,7 +181,7 @@ export default {
                 "as": "Net lines added"
               },
               {
-                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
+                "calculate": "(datum.additions + datum.deletions) < 0000 ? 0000 : ((datum.additions + datum.deletions) > 1000000000 ? 1000000000 : (datum.additions + datum.deletions))",
                 "as": "Total lines changed"
               },
             ],
