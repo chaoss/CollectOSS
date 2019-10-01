@@ -70,19 +70,19 @@ def configure_defaults(config):
             "jobs": [
                 {
                     "delay": 150000,
-                    "given": ["git_url"],
+                    "given": ["github_url"],
                     "model": "issues",
                     "repo_group_id": 0
                 },
                 {
                     "delay": 150000,
-                    "given": ["git_url"],
+                    "given": ["github_url"],
                     "model": "repo_info",
                     "repo_group_id": 0
                 },
                 {
                     "delay": 150000,
-                    "given": ["git_url"],
+                    "given": ["github_url"],
                     "model": "pull_requests",
                     "repo_group_id": 0
                 }
