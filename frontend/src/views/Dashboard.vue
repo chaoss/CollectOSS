@@ -227,7 +227,7 @@ export default class Dashboard extends Vue {
   // themes: string[] = ['info', 'danger','royal-blue', 'warning', 'dark'];
   loadedInsights: boolean = false
   desiredReposPerGroup: number = 5
-  desiredTopInsights: number = 13
+  desiredTopInsights: number = 12
   insights: any = {}
   timeframes: any = {}
   test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/Comcast/Hygieia.git','https://github.com/apache/jclouds-site.git',
