@@ -81,8 +81,9 @@ export default class TabSelector extends Vue {
       // }
       // if (names == '') names = 'none_selected'
       this.onReset()
+      let ref = this.base.repo_name || this.base.url
 	    this.$router.push({
-	      	name: e.target.value, params: {repo: this.base.repo_name, group: this.base.rg_name}//, compares: names}
+	      	name: e.target.value, params: {repo: ref, group: this.base.rg_name}//, compares: names}
 	    })
 	}
 }
