@@ -15,10 +15,13 @@ function generate_config_file() {
   INSTALL_SCRIPT_HOME="util/scripts/install"
   cd $INSTALL_SCRIPT_HOME
 
-  rm temp.config.json
+  if [[ -e temp.config.json ]]; then
+    rm temp.config.json
+  fi
+
   touch temp.config.json
 
-  echo $1 > temp.config.json
+  echo "$1" > temp.config.json
 
   python make_config.py
 
@@ -27,47 +30,62 @@ function generate_config_file() {
   cd ../../.. #get back to augur root
 }
 
+function get_github_api_key() {
+  echo
+  echo "You will also need your GitHub API key."
+  read -p "GitHub API Key: " github_api_key
+  echo
+}
+
 function set_remote_db_credentials() {
 
-  read -p "database: " database
-  read -p "host: " host
-  read -p "port: " port
-  read -p "user: " user
-  read -p "password: " password
-  read -p "key: " key
+  read -p "Database: " database
+  read -p "Host: " host
+  read -p "Port: " port
+  read -p "User: " user
+  read -p "Password: " password
+  read -p "Key: " key
 
-  config="
-  {
-    \"database\": \"$database\",
-    \"host\": \"$host\",
-    \"port\": \"$port\",
-    \"user\": \"$user\",
-    \"password\": \"$password\",
-    \"key\": \"$key\"
-  }"
+  get_github_api_key
 
-  generate_config_file $config
+  IFS='' read -r -d '' config <<EOF
+    {
+      "database": "$database",
+      "host": "$host",
+      "port": "$port",
+      "user": "$user",
+      "password": "$password",
+      "key": "$key",
+      "github_api_key": "$github_api_key"
+    }
+EOF
+
+  generate_config_file "$config"
 }
 
 function set_local_db_credentials() {
 
-  read -p "database: " database
-  read -p "user: " user
-  read -p "port: " port
-  read -p "password: " password
-  read -p "key: " key
+  read -p "Database: " database
+  read -p "User: " user
+  read -p "Port: " port
+  read -p "Password: " password
+  read -p "Key: " key
 
-  config="
+  get_github_api_key
+
+  IFS='' read -r -d '' config <<EOF
   {
-    \"database\": \"$database\",
-    \"host\": \"localhost\",
-    \"port\": \"$port\",
-    \"user\": \"$augur\",
-    \"password\": \"$password\",
-    \"key\": \"$key\"
-  }"
+    "database": "$database",
+    "host": "localhost",
+    "port": "$port",
+    "user": "$user",
+    "password": "$password",
+    "key": "$key",
+    "github_api_key": "$github_api_key"
+  }
+EOF
 
-  generate_config_file $config
+  generate_config_file "$config"
 }
 
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
