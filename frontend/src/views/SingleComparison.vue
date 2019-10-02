@@ -33,7 +33,7 @@
       </div>
     </div> -->
 
-    <div class="row" v-if="comparedRepos.names.length > 0">
+    <div class="row" v-if="getComparedReposNames.length > 0">
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
@@ -301,6 +301,10 @@ export default class SingleComparison extends Vue {
 
   get compRepoNames () {
     return 'names' in this.comparedRepos ? this.comparedRepos.names : this.comparedRepos
+  }
+
+  get getComparedReposNames () {
+    return this.comparedRepos.names || []
   }
 
   created() {

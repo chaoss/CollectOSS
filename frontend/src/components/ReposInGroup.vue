@@ -33,18 +33,18 @@
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
                     </div>
                   </th>
-                  <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
+                  <!-- <th width="30%" scope="col" class="border-0" v-on:click="sortTable('description')">
                     <div class="row">
                       <div class="col col-9">Repo Description</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'description' == sortColumn"></div>
                     </div>
-                  </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
+                  </th> -->
+                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_count')">
                     <div class="row">
                       <div class="col col-9">Group's Repo Count</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
-                  </th>
+                  </th> -->
                   <th scope="col" class="border-0" v-on:click="sortTable('commits_all_time')">
                     <div class="row">
                       <div class="col col-9">Total Commit Count</div>

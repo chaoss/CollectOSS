@@ -117,7 +117,7 @@
 
     </d-row>
 
-    <d-row style="padding-top: 2rem">
+<!--     <d-row style="padding-top: 2rem">
 
       <d-col>
         <d-card>
@@ -135,9 +135,9 @@
         </d-card>
       </d-col>
 
-    </d-row>
+    </d-row> 
 
-    <p></p>
+    <p></p>-->
 
     <d-row>
       <div class="col col-6" style="padding-top:3rem">
