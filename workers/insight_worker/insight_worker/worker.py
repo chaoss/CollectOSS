@@ -179,6 +179,7 @@ class InsightWorker:
 
         # Update table of endpoints before we query them all
         logging.info("Discovering insights for task with entry info: {}".format(entry_info))
+        self.record_model_process(entry_info, 'insights')
 
         # Set the endpoints we want to discover insights for
         endpoints = [{'cm_info': "issues-new"}, {'cm_info': "code-changes"}, {'cm_info': "code-changes-lines"}, 
@@ -366,6 +367,24 @@ class InsightWorker:
                     logging.info("Key: {} has empty raw_values, should not have key here".format(key))
 
         self.register_task_completion(entry_info, "insights")
+
+    def record_model_process(self, entry_info, model):
+        task_history = {
+            "repo_id": entry_info['repo_id'],
+            "worker": self.config['id'],
+            "job_model": model,
+            "oauth_id": self.config['zombie_id'],
+            "timestamp": datetime.datetime.now(),
+            "status": "Stopped",
+            "total_results": self.results_counter
+        }
+        if self.finishing_task:
+            result = self.helper_db.execute(self.history_table.update().where(
+                self.history_table.c.history_id==self.history_id).values(task_history))
+        else:
+            result = self.helper_db.execute(self.history_table.insert().values(task_history))
+            logging.info("Record incomplete history tuple: {}".format(result.inserted_primary_key))
+            self.history_id = int(result.inserted_primary_key[0])
 
     def register_task_completion(self, entry_info, model):
         # Task to send back to broker

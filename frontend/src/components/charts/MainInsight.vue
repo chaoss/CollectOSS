@@ -211,7 +211,7 @@ export default {
           {
             "mark": {
               "type": "line",
-              "interpolate": "basis",
+              // "interpolate": "basis",
               "clip": true
             },
             "encoding": {
