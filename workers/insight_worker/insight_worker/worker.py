@@ -41,7 +41,7 @@ class InsightWorker:
         self.tool_version = '0.0.2' # See __init__.py
         self.data_source = 'Augur API'
         self.refresh = True
-        self.send_insights = False
+        self.send_insights = True
 
         logging.info("Worker initializing...")
         
@@ -329,7 +329,7 @@ class InsightWorker:
                             }
                             result = self.db.execute(self.repo_insights_records_table.insert().values(record))
                             logging.info("Primary key inserted into the repo_insights_records table: {}".format(result.inserted_primary_key))
-
+                            self.insight_results_counter += 1
                             # Send insight to Jonah for slack bot
                             self.send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean))
 
@@ -383,7 +383,7 @@ class InsightWorker:
             "oauth_id": self.config['zombie_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Success",
-            "total_results": self.results_counter
+            "total_results": self.insight_results_counter
         }
         self.helper_db.execute(self.history_table.update().where(
             self.history_table.c.history_id==self.history_id).values(task_history))
@@ -393,7 +393,7 @@ class InsightWorker:
         # Update job process table
         updated_job = {
             "since_id_str": entry_info['repo_id'],
-            "last_count": self.results_counter,
+            "last_count": self.insight_results_counter,
             "last_run": datetime.datetime.now(),
             "analysis_state": 0
         }
@@ -403,31 +403,34 @@ class InsightWorker:
 
         # Notify broker of completion
         logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n" + 
-            "This task inserted: " + str(self.results_counter) + " tuples.\n\n")
+            "This task inserted: " + str(self.insight_results_counter) + " tuples.\n\n")
 
         requests.post('http://{}:{}/api/unstable/completed_task'.format(
             self.config['broker_host'],self.config['broker_port']), json=task_completed)
 
         # Reset results counter for next task
-        self.results_counter = 0
+        self.insight_results_counter = 0
 
     def send_insight(self, insight, units_from_mean):
-        
-        begin_date = datetime.datetime.now() - datetime.timedelta(days=7)
-        dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
-        if dict_date > begin_date and self.send_insights:
-            logging.info("Insight less than 7 days ago date found: {}\n\nSending to Jonah...".format(insight))
-            to_send = {
-                'insight': True,
-                'rg_name': insight['rg_name'],
-                'repo_git': insight['repo_git'],
-                'value': insight['ri_value'],
-                'field': insight['ri_field'],
-                'metric': insight['ri_metric'],
-                'units_from_mean': units_from_mean,
-                'detection_method': insight['ri_detection_method']
-            }
-            requests.post('https://7oksmwzsy7.execute-api.us-east-2.amazonaws.com/dev-1/insight-event', json=to_send)
+        try:
+            begin_date = datetime.datetime.now() - datetime.timedelta(days=7)
+            dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
+            if dict_date > begin_date and self.send_insights:
+                logging.info("Insight less than 7 days ago date found: {}\n\nSending to Jonah...".format(insight))
+                to_send = {
+                    'insight': True,
+                    'rg_name': insight['rg_name'],
+                    'repo_git': insight['repo_git'],
+                    'value': insight['ri_value'],
+                    'field': insight['ri_field'],
+                    'metric': insight['ri_metric'],
+                    'units_from_mean': units_from_mean,
+                    'detection_method': insight['ri_detection_method']
+                }
+                requests.post('https://7oksmwzsy7.execute-api.us-east-2.amazonaws.com/dev-1/insight-event', json=to_send)
+        except Exception as e:
+            logging.info("sending insight to jonah failed: {}".format(e))
+
 
 
     def clear_insight(self, repo_id, new_score, new_metric, new_field):

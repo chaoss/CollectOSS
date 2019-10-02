@@ -91,21 +91,21 @@ const routes = [
       },
     ],
   },
-  {
-    path: '/insights',
-    component: Default,
-    children: [
-      {
-        path: '',
-        name: 'insights',
-        components: {
-          sidebar: MainSidebar,
-          navbar: MainNavbar,
-          content: ExploreInsights,
-        },
-      },
-    ],
-  },
+  // {
+  //   path: '/insights',
+  //   component: Default,
+  //   children: [
+  //     {
+  //       path: '',
+  //       name: 'insights',
+  //       components: {
+  //         sidebar: MainSidebar,
+  //         navbar: MainNavbar,
+  //         content: ExploreInsights,
+  //       },
+  //     },
+  //   ],
+  // },
   {
     path: '/config',
     component: Default,
