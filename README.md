@@ -40,20 +40,20 @@ If you would like to use Augur but only have access to a Windows system, we reco
 ### Installation
 ----------------
 
-0. Clone the repository and switch to the `osd-2019` branch.
+0. Clone the repository and switch to the `osd-2019` branch
 ```bash
 git clone https://github.com/chaoss/augur.git
 cd augur/
 git checkout osd-2019
 ```
 
-1. Create a virtual environment in your home environment. Be sure to use the correct `python` command for your installation of Python 3.6+
+1. Create a virtual environment in your home directory. Be sure to use the correct `python` command for your installation of Python 3.6+
 ```bash
 python -m venv $HOME/.virtualenvs/augur_env
 ```
 
 
-2. Being the installation process.
+2. Begin the installation process
 ```bash
 make install
 ```
@@ -69,7 +69,7 @@ After Augur is installed, given that you provided a correct set of credentials y
 
 ### Usage
 ----------------
-To start the frontend and backend processes together, run `make dev`. The output should like something like this (note that your process IDs and network will be different):  
+To start & monitor the frontend and backend processes together, run `make dev`. The output should like something like this (note that your process IDs and network will be different):  
 ```
 sending SIGTERM to node (Brunch) at PID 9239; bash: line 0: kill: (9239) - No such process
 sending SIGTERM to python (Gunicorn) at PID 9224; bash: line 0: kill: (9224) - No such process
@@ -119,6 +119,8 @@ Stop servers:  make dev-stop
   - Network: http://192.168.1.141:8080/
 ```
 _Note: there will be a lot of linting warnings in the frontend section (indicated here by the ...). Don't worry about them: it's the last 3 lines that indicate success._
+
+
 
 Once you see this you're good to go! Head to the local URL specified in the frontend logs section (in this example it's `http://localhost:8080/`) to check it out!
 
