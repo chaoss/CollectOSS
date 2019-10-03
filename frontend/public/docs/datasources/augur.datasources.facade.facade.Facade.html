@@ -16,8 +16,6 @@
     <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="augur.datasources.librariesio.librariesio.LibrariesIO" href="augur.datasources.librariesio.librariesio.LibrariesIO.html" />
-    <link rel="prev" title="augur.datasources.githubapi.githubapi.GitHubAPI" href="augur.datasources.githubapi.githubapi.GitHubAPI.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -36,50 +34,6 @@
             
   <div class="section" id="augur-datasources-facade-facade-facade">
 <h1>augur.datasources.facade.facade.Facade<a class="headerlink" href="#augur-datasources-facade-facade-facade" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="augur.datasources.facade.facade.Facade">
-<em class="property">class </em><code class="descclassname">augur.datasources.facade.facade.</code><code class="descname">Facade</code><span class="sig-paren">(</span><em>user</em>, <em>password</em>, <em>host</em>, <em>port</em>, <em>dbname</em>, <em>projects=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/datasources/facade/facade.html#Facade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.datasources.facade.facade.Facade" title="Permalink to this definition">¶</a></dt>
-<dd><p>Queries Facade</p>
-<dl class="method">
-<dt id="augur.datasources.facade.facade.Facade.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>user</em>, <em>password</em>, <em>host</em>, <em>port</em>, <em>dbname</em>, <em>projects=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/augur/datasources/facade/facade.html#Facade.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#augur.datasources.facade.facade.Facade.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Connect to the database</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dbstr</strong> – The [database string](<a class="reference external" href="http://docs.sqlalchemy.org/en/latest/core/engines.html">http://docs.sqlalchemy.org/en/latest/core/engines.html</a>) to connect to the GHTorrent database</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#augur.datasources.facade.facade.Facade.__init__" title="augur.datasources.facade.facade.Facade.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(user,&nbsp;password,&nbsp;host,&nbsp;port,&nbsp;dbname)</td>
-<td>Connect to the database</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">downloaded_repos</span></code>()</td>
-<td>Returns all repository names, URLs, and base64 URLs in the facade database</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_changed_by_author</span></code>(repo_url)</td>
-<td>Returns number of lines changed per author per day</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_changed_by_month</span></code>(repo_url)</td>
-<td>Returns lines changed of a sent repository per month</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">lines_changed_by_week</span></code>(repo_url)</td>
-<td>Returns lines changed of a sent repository per week</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 
 
@@ -90,26 +44,20 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">Table of Contents</a></h3>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../create-a-metric.html">Create Your First Metric</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dev-guide-toc.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Augur Python Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker-install.html">Docker Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../use-cases-toc.html">Use Cases</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="../python.html">Augur Python Library</a><ul>
-      <li>Previous: <a href="augur.datasources.githubapi.githubapi.GitHubAPI.html" title="previous chapter">augur.datasources.githubapi.githubapi.GitHubAPI</a></li>
-      <li>Next: <a href="augur.datasources.librariesio.librariesio.LibrariesIO.html" title="next chapter">augur.datasources.librariesio.librariesio.LibrariesIO</a></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

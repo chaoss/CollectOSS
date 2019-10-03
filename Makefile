@@ -32,7 +32,6 @@ default:
 	@ echo "    test                            Runs all pytest unit tests and API tests"
 	@ echo "    test-functions MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
 	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
-	@ echo "    build                           Builds documentation and frontend - use before pushing"
 	@ echo "    frontend                        Builds frontend with Brunch"
 	@ echo "    update-deps                     Generates updated requirements.txt and environment.yml"
 	@ echo "    python-docs                     Generates new Sphinx documentation"
@@ -139,10 +138,6 @@ api-docs:
 	@ bash -c 'cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
 
 docs: api-docs python-docs
-
-build: frontend docs
-	cd augur/static/ \
-	&& brunch build --production
 
 test:test-functions test-routes
 

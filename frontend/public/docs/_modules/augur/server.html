@@ -48,7 +48,6 @@
 <span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span><span class="p">,</span> <span class="n">metric_metadata</span><span class="p">,</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">augur.routes</span> <span class="k">import</span> <span class="n">create_routes</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">augur.broker.broker</span> <span class="k">import</span> <span class="n">Broker</span>
 <span class="kn">from</span> <span class="nn">augur.housekeeper.housekeeper</span> <span class="k">import</span> <span class="n">Housekeeper</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
@@ -103,6 +102,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">worker_pids</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">create_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">augur_app</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">create_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c1">#####################################</span>
         <span class="c1">###          UTILITY              ###</span>
@@ -378,7 +378,7 @@
                 <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
                                 <span class="n">status</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
                                 <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span>
-            <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot; _&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot; _&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
             <span class="k">return</span> <span class="n">generated_function</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">def</span> <span class="nf">generated_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -386,7 +386,7 @@
                 <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()),</span>
                                 <span class="n">status</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
                                 <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span>
-            <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot; _&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot; _&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
             <span class="k">return</span> <span class="n">generated_function</span>
 
     <span class="k">def</span> <span class="nf">routify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">type_</span><span class="p">):</span>
@@ -404,7 +404,7 @@
             <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
                             <span class="n">status</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
                             <span class="n">mimetype</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span>
-        <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="n">f</span><span class="s2">&quot;_</span><span class="si">{type_}</span><span class="s2">_&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">generated_function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="n">f</span><span class="s2">&quot;_</span><span class="si">{type_}</span><span class="s2">_&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="k">return</span> <span class="n">generated_function</span>
 
     <span class="k">def</span> <span class="nf">addRepoGroupMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -452,7 +452,7 @@
         <span class="c1">#</span>
         <span class="c1"># Get the unbound function from the bound function&#39;s class so that we can modify metadata</span>
         <span class="c1"># across instances of that class.</span>
-        <span class="n">real_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">function</span><span class="o">.</span><span class="vm">__self__</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">real_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_augur</span><span class="o">.</span><span class="n">metrics</span><span class="p">,</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="n">annotate</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">real_func</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">admin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -513,8 +513,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docker-install.html">Docker Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../use-cases-toc.html">Use Cases</a></li>
 </ul>
 <div class="relations">

@@ -51,13 +51,11 @@
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">sessionmaker</span><span class="p">,</span> <span class="n">scoped_session</span>
 <span class="kn">from</span> <span class="nn">augur.models.common</span> <span class="k">import</span> <span class="n">Base</span>
 <span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">augur.metrics</span> <span class="k">import</span> <span class="n">MetricDefinitions</span>
 <span class="kn">import</span> <span class="nn">augur.plugins</span>
-<span class="kn">import</span> <span class="nn">augur.datasources</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;test.log&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
-
-
 
 <div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../application/augur.application.Application.html#augur.application.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Initalizes all classes from Augur using a config file or environment variables&quot;&quot;&quot;</span>
@@ -139,13 +137,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span><span class="p">()</span>
         <span class="n">Base</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__Session</span><span class="o">.</span><span class="n">query_property</span><span class="p">()</span>
 
-        <span class="c1"># Initalize all objects to None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__metrics_status</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">MetricDefinitions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+        <span class="c1"># # Initalize all objects to None</span>
+        <span class="c1"># self.__metrics_status = None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_plugins</span> <span class="o">=</span> <span class="p">{}</span></div>
 
         <span class="c1"># Application.default_plugins</span>
-        <span class="k">for</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">Application</span><span class="o">.</span><span class="n">default_plugins</span><span class="p">:</span>
-            <span class="bp">self</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span></div>
+        <span class="c1"># for plugin_name in Application.default_plugins:</span>
+        <span class="c1">#     self[plugin_name]</span>
 
 
 
@@ -165,11 +166,11 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">import_plugins</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Imports all plugins and datasources </span>
+<span class="sd">        Imports all plugins</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">):</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;plugins&#39;</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="n">plugins</span> <span class="o">=</span> <span class="p">[</span><span class="n">augur</span><span class="o">.</span><span class="n">plugins</span><span class="p">,</span> <span class="n">augur</span><span class="o">.</span><span class="n">datasources</span><span class="p">]</span>
+        <span class="n">plugins</span> <span class="o">=</span> <span class="p">[</span><span class="n">augur</span><span class="o">.</span><span class="n">plugins</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">importer</span><span class="p">,</span> <span class="n">modname</span><span class="p">,</span> <span class="n">ispkg</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">__path__</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">ispkg</span><span class="p">:</span>
@@ -379,8 +380,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../python.html">Augur Python Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docker-install.html">Docker Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../windows-install.html">Windows Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../ghtorrent-restore.html">GHTorrent Restoration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../use-cases-toc.html">Use Cases</a></li>
 </ul>
 <div class="relations">
