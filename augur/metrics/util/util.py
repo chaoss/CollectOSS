@@ -1,3 +1,7 @@
+"""
+Directory, which is for utility/non-metric endpoints.
+"""
+
 import datetime
 import sqlalchemy as s
 import pandas as pd

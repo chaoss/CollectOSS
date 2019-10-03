@@ -1,3 +1,7 @@
+"""
+Metrics that provide data about messages (of any form) & their associated activity
+"""
+
 import datetime
 import sqlalchemy as s
 import pandas as pd

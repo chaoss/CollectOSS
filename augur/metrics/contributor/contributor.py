@@ -1,3 +1,7 @@
+"""
+Metrics that provides data about contributors & their associated activity
+"""
+
 import datetime
 import sqlalchemy as s
 import pandas as pd

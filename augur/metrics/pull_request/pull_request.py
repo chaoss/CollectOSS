@@ -1,3 +1,7 @@
+"""
+Metrics that provide data about pull requests & their associated activity
+"""
+
 import datetime
 import sqlalchemy as s
 import pandas as pd

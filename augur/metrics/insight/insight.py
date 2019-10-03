@@ -1,3 +1,7 @@
+"""
+Metrics that provide data about with insight detection and reporting
+"""
+
 import datetime
 import sqlalchemy as s
 import pandas as pd

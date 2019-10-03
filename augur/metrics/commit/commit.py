@@ -1,3 +1,7 @@
+"""
+Metrics that provide data about commits & their associated activity
+"""
+
 import inspect
 import sys
 import types

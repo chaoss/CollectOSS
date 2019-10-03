@@ -1,3 +1,7 @@
+"""
+General repo metrics like provides general overview data about repositories, including things like lines of code change, licenses, stars, CII best practices badging, and more
+"""
+
 import datetime
 import sqlalchemy as s
 import pandas as pd
