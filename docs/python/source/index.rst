@@ -42,15 +42,11 @@ Our core team has a long standing interest in social computing, software enginee
    create-a-metric
    
    dev-guide-toc
-   deployment
    architecture
    python
-   
 
-   docker-install
-   windows-install
-
-   ghtorrent-restore
-   use-cases-toc
-
+.. TODO: add me back later
+.. docker-install
+.. use-cases-toc
+.. deployment
 

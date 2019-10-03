@@ -1,6 +1,6 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop
-.PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
-.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
+.PHONY: all test clean install python-docs api-docs python-docs dev-start dev-stop
+.PHONY: dev-restart monitor monitor-backend monitor-frontend upgrade
+.PHONY: frontend install-ubuntu-dependencies version
 
 SERVECOMMAND=augur run
 INSTALLCOMMAND=pip install -e .; python setup.py install;
@@ -16,8 +16,6 @@ AUGUR_PIP?='pip'
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                         Installs augur using pip"
-	@ echo "    install-dev                     Installs augur's developer dependencies (requires npm and pip)"
-	@ echo "    install-msr                     Installs MSR14 dataset"
 	@ echo "    clean                           Cleans the developer environment"
 	@ echo "    upgrade                         Pulls newest version, installs, performs migrations"
 	@ echo "    version                         Print the currently installed version"
@@ -28,17 +26,16 @@ default:
 	@ echo "    dev-start                       Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop                        Stops the backgrounded commands"
 	@ echo "    dev-restart                     Runs dev-stop then dev-restart"
-	@ echo "    server                          Runs a single instance of the server (useful for debugging)"
+	@ echo
+	@ echo "Testing Commands:"
 	@ echo "    test                            Runs all pytest unit tests and API tests"
 	@ echo "    test-functions MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
 	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
-	@ echo "    frontend                        Builds frontend with Brunch"
-	@ echo "    update-deps                     Generates updated requirements.txt and environment.yml"
+	@ echo
+	@ echo "Documentation Commands:"
 	@ echo "    python-docs                     Generates new Sphinx documentation"
 	@ echo "    api-docs                        Generates new apidocjs documentation"
 	@ echo "    docs                            Generates all documentation"
-	@ echo "Git commands"
-	@ echo "    update                          Pull the latest version of your current branch"
 	@ echo
 	@ echo "Prototyping:"
 	@ echo "    jupyter                         Launches the jupyter"
@@ -59,17 +56,11 @@ install:
 install-dev:
 	bash -c '$(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
-install-msr:
-	@ ./util/install-msr.sh
-
 version:
 	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
 	@ echo "installed version: $(OLDVERSION)"
 
-download-upgrade:
-	git pull
-
-upgrade: version download-upgrade install-dev
+upgrade: version install-dev
 	@ $(AUGUR_PYTHON) util/post-upgrade.py $(OLDVERSION)
 	@ echo "Upgraded from $(OLDVERSION) to $(shell $(AUGUR_PYTHON) util/print-version.py)."
 
@@ -131,15 +122,7 @@ backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-python-docs:
-	@ bash -c 'cd docs/python && rm -rf _build && make html; rm -rf ../../frontend/public/docs; mv build/html ../../frontend/public/docs'
-
-api-docs:
-	@ bash -c 'cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
-
-docs: api-docs python-docs
-
-test:test-functions test-routes
+test: test-functions test-routes
 
 test-functions:
 	@ bash -c '$(AUGUR_PYTHON) -m pytest -ra -s augur/metrics/$(MODEL)/test_$(MODEL)_functions.py'
@@ -147,21 +130,26 @@ test-functions:
 test-routes:
 	@ python test/api/test_api.py $(MODEL)
 
+# 
+# Documentation
+# 
+python-docs:
+	@ bash -c 'cd docs/python && rm -rf _build && make html;'
+
+python-docs-view: python-docs
+	@ bash -c 'open docs/python/build/html/index.html'
+
+api-docs:
+	@ bash -c 'cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
+
+api-docs-view: api-docs
+	@ bash -c "open frontend/public/api_docs/index.html"
+
+docs: api-docs python-docs
+
 .PHONY: unlock
 unlock:
 	find . -type f -name "*.lock" -delete
-
-update-deps:
-	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; $(AUGUR_PIP) install pipreqs; exit 1; }
-	pipreqs ./augur/
-	bash -c "conda env  --no-builds > environment.yml"
-
-vagrant:
-	@ vagrant up
-	@ vagrant ssh
-	@ echo "****************************************************"
-	@ echo "Don't forget to shutdown the VM with 'vagrant halt'!"
-	@ echo "****************************************************"
 
 clean:
 	@ echo "Removes node_modules, logs, caches, and some other dumb stuff that can be annoying."

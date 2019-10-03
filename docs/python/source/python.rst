@@ -3,22 +3,24 @@ Augur Python Library
 
 This documentation is for using Augur as a Python library.
 
-
-Data Source Modules
+Metric Modules
 ---------------------------------
-.. currentmodule:: augur.datasources
+.. currentmodule:: augur.metrics
 
 .. autosummary::
    :nosignatures:
-   :toctree: datasources
+   :toctree: metrics
 
-   ghtorrent.ghtorrent.GHTorrent
-   githubapi.githubapi.GitHubAPI
-   facade.facade.Facade
-   librariesio.librariesio.LibrariesIO
-   localcsv.localcsv.LocalCSV
-   downloads.downloads.Downloads
-
+   commit.commit
+   contributor.contributor
+   experimental.experimental
+   insight.insight
+   issue.issue
+   message.message
+   platform.platform
+   pull_request.pull_request
+   repo_meta.repo_meta
+   util.util
 
 Application Modules
 ---------------------------------
@@ -29,20 +31,22 @@ Application Modules
    :toctree: application
 
    application.Application
-   augurplugin.AugurPlugin
    server.Server
+   routes.broker
+   housekeeper.housekeeper.Housekeeper
    runtime
    util
+   augurplugin.AugurPlugin
 
-.. CLI Modules
-.. ---------------------------------
-.. .. currentmodule:: augur.cli
+CLI Modules
+---------------------------------
+.. currentmodule:: augur.cli
 
-.. .. autosummary::
-..    :nosignatures:
-..    :toctree: cli
+.. autosummary::
+   :nosignatures:
+   :toctree: cli
 
-..    db
-..    run
-..    util
+   db
+   run
+   util
 
