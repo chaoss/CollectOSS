@@ -4,31 +4,44 @@ Create Your First Metric
 .. role:: raw-html-m2r(raw)
    :format: html
 
-Building a new metric in Augur involves four main steps. Two steps are in the "back end" and two are in the "front end".
+To create your first metric, you'll first need some data. The data served by Augur comes from a variety of sources, including Git repositories, issue trackers, mailing lists, Linux Foundation Badging programs, code coverage analysis tools and others. All of this data is persisted by Augur's workers in our unified data model. Once the data is persisted, it's ready to be served through API endpoints; which can be presented in Augur's frontend or by any other presentation environment chosen.
+
+Once you have this data, fully implementing a new metric in Augur involves four main steps. Two steps are in the backend and two are in the frontend. We will go over each of these in great detail, but here they are at a high level overview:
 
 1. Backend:
-	- Pull the result set you need out of the Augur Unified Schema.
-	- Define the API Route for the endpoint.
+	- Pull and transform the result set you need out of the data model
+	- Define the API Route for the endpoint
 2. Frontend
-	- Map the route to the front end in `augurAPI.js`
-	- Reference the endpoint from `augurAPI.js` as a datasource in a .VUE card.
-
+	- Map the route to the front end in ``augurAPI.js``
+	- Reference the endpoint from ``augurAPI.js`` as a datasource in a ``.vue`` card.
 
 .. image:: images/new-metric.png
 
-*The data served by Augur comes from a variety of sources, including .git repositories, issue trackers, mailing lists, Linux Foundation Badging programs, code coverage analysis tools and others.  All of the data is persisted by Augur's workers in a unified data model. Once the data is persisted, its ready to be served as API endpoints; which can be presented in Augur's front end or by any other presentation environment chosen.  There are four basic steps, two in the front end, and two in the backend.  In the backend, there's a <datasource>.py file in the `augur/datasources/<data-source>/` directory. Several are included, like `ghtorrent`, `facade`, `augurDB` and others. Look in the `datasources` directory for specific existing implementations. API Endpoints are served by the `routes.py` file in each `<data-source>` directory. Once the API "exists", the endpoint can be mapped in Augur's frontend through the `augurAPI.js` file in `augur/frontend/app/`. VUE cards present that data graphically in `<card>.vue` files.*
 
-Follow the Steps
+Backend
 --------------------------------------
 1. **Metric Implementation**
-  - Metrics based on the Augur Unified Database are implemented in  ``augur/datasources/augur_db/augur_db.py``
-  - Any new metric you want to implement must be implemented in ``augur/datasources/augur_db/augur_db.py`` as a function of the ``Augur`` class.
-  - The metric implementation must accept ``repo_group_id`` and ``repo_id`` arguments.
-  - Consider the following metric implementation as an example:
+
+Any new metric you want to implement must be implemented as a standalone method in ``augur/metrics/<model>/<model>.py``, where ``model`` is the name of the conceptual data model for which the metric provides data. For all model definitions please refer to the documentation in the Python guide_.
+
+.. _guide: python.html
+
+Metrics come in 3 forms: ``repo``, ``repo_group``, and ``other``. All ``repo`` and ``repo_group`` metrics have the following signature:
+
+``metric_name(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None)``
+
+By default, specifying only a ``repo_group_id`` will calculate the ``repo_group`` form of the metric across a collection of repositories, while specifying both a ``repo_id`` and a ``repo_group_id`` will calculate the ``repo`` form of the metric for a single repository. We will see that there are APi endpoint creation helper methods written for these types of metrics later in this guide.
+
+All metrics with methods that deviate from this signature fall under the ``other`` and must be defined more explicity when exposing them through an API enpoint.
+
+All metrics must also return the data as a Pandas ``DataFrame`` for ease of computation and usage.
+
+Consider the following metric implementation as an example:
 
   .. code-block:: python
     :linenos:
 
+    # in augur.metrics.repo_meta.repo_meta.py
     @annotate(tag='code-changes')
     def code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
         """
@@ -81,27 +94,25 @@ Follow the Steps
                                                                      'begin_date': begin_date, 'end_date': end_date})
             return results
 
-  - Let's breakdown this example:
+Let's breakdown this example.
 
-    - The metric being implemented here is the 'Code Changes' metric.
-    - It is placed in the *Evolution* section because it is an Evolution Metric. Other such groups of metrics that exists are Value, Risk and Diversity & Inclusion. If the metric you want to implement is not a part of any of these metric groups, it must be placed in the *Experimental* section.
-    - ``@annotate(tag='code-changes')`` makes the function visible in the metrics-status.
-    - ``def  code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None)`` defines the function ``code_changes`` that implements the metric 'Code Changes.'
+The metric being implemented here is the 'Code Changes' metric. This metric falls into the ``repo_meta`` model, so it will go in ``augur/metrics/commit/commit.py``.
 
-      - All metric implementation functions must be able to work on single repositories and repository groups. Therefore they must accept ``repo_group_id`` and ``repo_id`` arguments.
-      - Additional arguments can also be accepted by the function. In the example above, ``code_changes`` function takes in additional arguments such as ``period``, ``begin_date`` and ``end_date``.
+The ``@annotate(tag='code-changes')`` decoration denotes the function as a metric, which is required to let Augur know this is a special type of function.
 
-    - The ``code_changes`` function has two SQL queries that query the Unified Augur Database. One query handles Repository Groups while the other handles Repositories.
-    - The function returns a pandas DataFrame.
+``def  code_changes(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None)`` defines the function ``code_changes`` that implements the metric 'Code Changes.'
+
+The ``code_changes`` function has two SQL queries that query the Unified Augur Database. One query handles repository groups while the other handles single repositories. The function returns a Pandas ``DataFrame``.
 
 2. **Adding Routes**
-  - After implementing the metric, you must add a Route or API endpoint to access the metric. Routes for the metrics are added in the ``routes.py`` file in the ``augur/datasources/augur_db`` directory.
-  - In the ``create_routes`` function in ``routes.py`` file you can add routes using the following two methods:
 
-    - ``server.addRepoGroupMetric(augur_db.<metric>, '<endpoint>')`` to add the endpoint ``/repo-groups/:repo_group_id/<endpoint>`` corresponding to the metric implementation function ``<metric>``.
-    - ``server.addRepoMetric(augur_db.<metric>, '<endpoint>')`` to add the endpoint ``/repo-groups/:repo_group_id/repos/:repo_id/<endpoint>`` corresponding to the metric implementation function ``<metric>``
+After implementing the metric, you must add an API endpoint to access the metric remotely. Routes for the metrics are added in the ``routes.py`` file in the ``augur/metrics/<model>/<model>.py`` directory.
+In the ``create_routes`` function in ``routes.py`` file you can add routes using the following two methods:
 
-  - Consider the following example:
+``server.addRepoGroupMetric(metrics.<metric>, '<endpoint>')`` to add the endpoint ``/repo-groups/:repo_group_id/<endpoint>`` corresponding to the metric implementation function ``<metric>``.
+``server.addRepoMetric(metrics.<metric>, '<endpoint>')`` to add the endpoint ``/repo-groups/:repo_group_id/repos/:repo_id/<endpoint>`` corresponding to the metric implementation function ``<metric>``
+
+Consider the following example:
 
   .. code-block:: python
     :linenos:
@@ -134,256 +145,161 @@ Follow the Steps
                           }
                       ]
       """
-      server.addRepoGroupMetric(augur_db.code_changes, 'code-changes')
+      server.addRepoGroupMetric(metrics.code_changes, 'code-changes')
 
 
-  - The last line ``server.addRepoGroupMetric(augur_db.code_changes, 'code-changes')`` is what actually creates the ``/repo-groups/:repo_group_id/code-changes`` endpoint and links it to ``code_changes`` metric implementation function.
-  - The rest is just annotation used to create documentation.
+The last line ``server.addRepoGroupMetric(metrics.code_changes, 'code-changes')`` is what actually creates the ``/repo-groups/:repo_group_id/code-changes`` endpoint and links it to ``code_changes`` metric implementation function.
+The rest is just annotation used to create documentation.
+
+After you've completed these two steps, run ``make dev`` in the root of your directory and navigate to ``https:localhost:<port>api/unstable/repo-groups/:repo_group_id/code-changes`` where ``<port>`` is the port of backend is running on (default ``5000``) and ``repo_group_id`` is the ID of the repo group about which you wish to learn.
+
+The rest of the process can be found in the frontend doc_.
+
+.. _doc: frontend.html
+
+.. 3.   example file 3: 'augurAPI.js' in the ``augur/frontend/app/`` directory needs to have the the metric from ``routes.py`` mapped to an API endpoint that the frontend will then access.
 
 
-1. augur/augur/datasources/\ :raw-html-m2r:`<directory for data source>`
+..    * Metrics from the facade.py that take a git url should go under the //GIT section in this file
+..    * Most of your metrics are going to belong in the //GROWTH, MATURITY AND DECLINE section.
 
-   #. example: ghtorrent
-   #. example file 1: ghtorrent.py
+.. .. code-block:: javascript
+..    :linenos:
 
-      * create a new function that has the sql query to the database, or API call to GitHub or whatever. But if you're in ``ghtorrent.py`` (or ``facade.py``\ ), its a sql query. Here's an example breakdown:
+..      // IN THIS SECTION of augurAPI.js DEVELOPER NOTE
 
-        * ``@annotate(tag='code-review-iteration') makes the function visible in metrics-status``
+..      if (repo.owner && repo.name) {
+..       // DIVERSITY AND INCLUSION
+..       // GROWTH, MATURITY, AND DECLINE
 
-          * ``def code_review_iteration..`` is the name of the function called in ``routes.py`` **in the same data source folder** (which is ``augur/augur/datasources/ghtorrent`` in our example
+..       // FIND THE RIGHT SECTION, like "GROWTH, MATURITY AND DECLINE" and ADD YOUR code
+..       Timeseries(repo, 'closedIssues', 'issues/closed')
+..       Timeseries(repo, 'closedIssueResolutionDuration', 'issues/time_to_close')
+..       Timeseries(repo, 'codeCommits', 'commits')
+..       // Timeseries(repo, 'codeReviews', 'code_reviews')
 
-.. code-block:: python
-   :linenos:
-
-   @annotate(tag='code-review-iteration')
-           def code_review_iteration(self, owner, repo=None):
-           """
-           Timeseries of the count of iterations (being closed and reopened) that a merge request (code review) goes through until it is finally merged
-
-           :param owner: The name of the project owner or the id of the project in the projects table of the project in the projects table. Use repoid() to get this.
-           :param repo: The name of the repo. Unneeded if repository id was passed as owner.
-           :return: DataFrame with iterations/issue for each issue that week
-           """
-           repoid = self.repoid(owner, repo)
-
-           codeReviewIterationSQL = s.sql.text("""
-           SELECT
-               DATE(issues.created_at) AS "created_at",
-               DATE(pull_request_history.created_at) AS "merged_at",
-               issues.issue_id AS "issue_id",
-               pull_request_history.pull_request_id AS "pull_request_id",
-               pull_request_history.action AS "action",
-               COUNT(CASE WHEN action = "closed" THEN 1 ELSE NULL END) AS "iterations"
-           FROM issues, pull_request_history
-           WHERE find_in_set(pull_request_history.action, "closed,merged")>0
-           AND pull_request_history.pull_request_id IN(
-               SELECT pull_request_id
-               FROM pull_request_history
-               WHERE pull_request_history.action = "closed")   #go by reopened or closed??? (min: completed 1 iteration and has started another OR min: completed 1 iteration)
-           AND pull_request_history.pull_request_id = issues.issue_id
-           AND issues.pull_request = 1
-           AND issues.repo_id = :repoid
-           GROUP BY YEARWEEK(issues.created_at) #YEARWEEK to get (iterations (all PRs in repo) / week) instead of (iterations / PR)?
-           """)
-
-           df = pd.read_sql(codeReviewIterationSQL, self.db, params={"repoid": str(repoid)})
-           return pd.DataFrame({'date': df['created_at'], 'iterations': df['iterations']})
-
-	* Need the New API Documentation Here.
-
-`server.py`
-
-.. code-block:: python
-	:linenos:
-
-	    def addRepoGroupMetric(self, function, endpoint, **kwargs):
-	        """Simplifies adding routes that accept repo_group_id"""
-	        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/{endpoint}'
-	        self.app.route(endpoint)(self.routify(function, 'repo_group'))
-	        self.updateMetricMetadata(function, endpoint, **kwargs)
-
-	    def addRepoMetric(self, function, endpoint, **kwargs):
-	        """Simplifies adding routes that accept repo_group_id and repo_id"""
-	        endpoint = f'/{self.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
-	        self.app.route(endpoint)(self.routify(function, 'repo'))
-	        self.updateMetricMetadata(function, endpoint, **kwargs)
+..       // THIS IS THE NEW METRIC IN OUR EXAMPLE
+..       Timeseries(repo, 'codeReviewIteration', 'code_review_iteration')
+..      }
 
 
+.. 4. Example file 4: `ExperimentalCard.vue` in the `augur/frontend/app/components/` directory. We will need to import and insert a chart component that we will be creating next or a chart component that already exists in the `augur/frontend/app/components/charts/ ` directory.
 
-2. example file 2: ``routes.py`` in the same directory, ``augur/augur/datasources/ghtorrent/``
+..       In the `<script>` section of `ExperimentalCard.vue`, we must import the chart file and add it to the `components` section under `module.exports` like this:
 
-   * ``server.addTimeseries`` (most of the below is annotation. The very last line is what makes it actually work.);;;;
+.. .. code-block::
+..    :linenos:
 
-.. code-block:: python
-   :linenos:
+..       import ExampleChart from `./charts/ExampleChart`
 
-       """
-       @api {get} /:owner/:repo/timeseries/code_review_iteration Code Review Iteration
-       @apiName code-review-iteration
-       @apiGroup Growth-Maturity-Decline
-       @apiDescription <a href="com/chaoss/metrics/blob/master/activity-metrics/code-review-iteration.md">CHAOSS Metric Definition</a>. Source: <a href="http://ghtorrent.org/">GHTorrent</a>
+..       import DynamicLineChart from './charts/DynamicLineChart'
+..       import BubbleChart from './charts/BubbleChart'
+..       import StackedBarChart from './charts/StackedBarChart'
+..       import DualAxisContributions from './charts/DualAxisContributions'
 
-       @apiParam {String} owner Username of the owner of the GitHub repository
-       @apiParam {String} repo Name of the GitHub repository
+..       module.exports = {
+..         data() {
+..           return {
+..             colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+..           }
+..         },
+..         components: {
+..           ExampleChart,
 
-       @apiSuccessExample {json} Success-Response:
-                           [
-                               {
-                                   "date": "2012-05-16T00:00:00.000Z",
-                                   "iterations": 2
-                               },
-                               {
-                                   "date": "2012-05-16T00:00:00.000Z",
-                                   "iterations": 1
-                               }
-                           ]
-       """
-       server.addTimeseries(ghtorrent.code_review_iteration, 'code_review_iteration')
-
-
-3.   example file 3: 'augurAPI.js' in the ``augur/frontend/app/`` directory needs to have the the metric from ``routes.py`` mapped to an API endpoint that the frontend will then access.
+..           DynamicLineChart,
+..           BubbleChart,
+..           StackedBarChart,
+..           DualAxisContributions
+..         }
+..       }
 
 
-   * Metrics from the facade.py that take a git url should go under the //GIT section in this file
-   * Most of your metrics are going to belong in the //GROWTH, MATURITY AND DECLINE section.
-
-.. code-block:: javascript
-   :linenos:
-
-     // IN THIS SECTION of augurAPI.js DEVELOPER NOTE
-
-     if (repo.owner && repo.name) {
-      // DIVERSITY AND INCLUSION
-      // GROWTH, MATURITY, AND DECLINE
-
-      // FIND THE RIGHT SECTION, like "GROWTH, MATURITY AND DECLINE" and ADD YOUR code
-      Timeseries(repo, 'closedIssues', 'issues/closed')
-      Timeseries(repo, 'closedIssueResolutionDuration', 'issues/time_to_close')
-      Timeseries(repo, 'codeCommits', 'commits')
-      // Timeseries(repo, 'codeReviews', 'code_reviews')
-
-      // THIS IS THE NEW METRIC IN OUR EXAMPLE
-      Timeseries(repo, 'codeReviewIteration', 'code_review_iteration')
-     }
+.. **TODO** Can we keep the example from above in place?
 
 
-4. Example file 4: `ExperimentalCard.vue` in the `augur/frontend/app/components/` directory. We will need to import and insert a chart component that we will be creating next or a chart component that already exists in the `augur/frontend/app/components/charts/ ` directory.
+.. 5. Example file 5: **TODO** <\ :raw-html-m2r:`<FILL IN FILE NAME and PATH>`\ > We insert the ``ExampleChart`` component with our endpoint name (\ ``closedIssues``\ ) defined as the ``source`` property (prop) of the component (Vue converts a string name like 'ExampleChart' to 'example-chart' to be used as an html tag):
 
-      In the `<script>` section of `ExperimentalCard.vue`, we must import the chart file and add it to the `components` section under `module.exports` like this:
-
-.. code-block::
-   :linenos:
-
-      import ExampleChart from `./charts/ExampleChart`
-
-      import DynamicLineChart from './charts/DynamicLineChart'
-      import BubbleChart from './charts/BubbleChart'
-      import StackedBarChart from './charts/StackedBarChart'
-      import DualAxisContributions from './charts/DualAxisContributions'
-
-      module.exports = {
-        data() {
-          return {
-            colors: ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
-          }
-        },
-        components: {
-          ExampleChart,
-
-          DynamicLineChart,
-          BubbleChart,
-          StackedBarChart,
-          DualAxisContributions
-        }
-      }
+.. .. code-block:: html
+..    :linenos:
 
 
-**TODO** Can we keep the example from above in place?
+..       <example-chart source="closedIssues"
+..                           title="Closed Issues / Week "
+..                           cite-url=""
+..                           cite-text="Closed Issues">
+..       </example-chart>
 
 
-5. Example file 5: **TODO** <\ :raw-html-m2r:`<FILL IN FILE NAME and PATH>`\ > We insert the ``ExampleChart`` component with our endpoint name (\ ``closedIssues``\ ) defined as the ``source`` property (prop) of the component (Vue converts a string name like 'ExampleChart' to 'example-chart' to be used as an html tag):
+.. 6. You will need to create a chart file. **TODO** << Where? What will it be called? What example are we using? >> Here is an example of a chart file that calls the endpoint that is passed as the ``source`` property. The template section holds the vega-lite tag that renders the chart. The Vega-lite ``spec`` is being bound to what is being returned by the ``spec()`` method inside the ``computed`` properties (\ ``:spec="spec"``\ ), and the ``data`` being used for the chart is bound to the ``values`` array being returned by the ``data()`` method (\ ``:data="values"``\ ):
 
-.. code-block:: html
-   :linenos:
+.. **TODO** Where it goes in this file. Same file?
 
+.. .. code-block:: html
+..    :linenos:
 
-      <example-chart source="closedIssues"
-                          title="Closed Issues / Week "
-                          cite-url=""
-                          cite-text="Closed Issues">
-      </example-chart>
+..       <template>
+..         <div ref="holder" style="position: relative; z-index: 5">
+..           <div class="chart">
+..             <h3 style="text-align: center">{{ title }}</h3>
+..             <vega-lite :spec="spec" :data="values"></vega-lite>
+..             <p> {{ chart }} </p>
+..           </div>
+..         </div>
+..       </template>
 
+.. **TODO** Where it goes in this file. Same file?
 
-6. You will need to create a chart file. **TODO** << Where? What will it be called? What example are we using? >> Here is an example of a chart file that calls the endpoint that is passed as the ``source`` property. The template section holds the vega-lite tag that renders the chart. The Vega-lite ``spec`` is being bound to what is being returned by the ``spec()`` method inside the ``computed`` properties (\ ``:spec="spec"``\ ), and the ``data`` being used for the chart is bound to the ``values`` array being returned by the ``data()`` method (\ ``:data="values"``\ ):
+.. .. code-block:: javascript
+..    :linenos:
 
-**TODO** Where it goes in this file. Same file?
+..       import { mapState } from 'vuex'
+..       import AugurStats from 'AugurStats'
 
-.. code-block:: html
-   :linenos:
+..       export default {
+..         props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
+..         data() {
+..           return {
+..             values: [],
+..           }
+..         },
+..         computed: {
+..           repo() {
+..             return this.$store.state.baseRepo
+..           },
+..           spec() {
+..               // IF YOU WANT TO CALL YOUR ENDPOINT IN THE CHART FILE, THIS IS WHERE/HOW YOU SHOULD DO IT:
+..             let repo = window.AugurAPI.Repo({ githubURL: this.repo })
+..             repo[this.source]().then((data) => {
+..                // you can print your data in a console.log() to make                   // sure the endpoint is returning what it needs to
+..               // console.log("HERE", data)
+..               this.values = data
+..             })
+..             //FINISH CALLING ENDPOINT
 
-      <template>
-        <div ref="holder" style="position: relative; z-index: 5">
-          <div class="chart">
-            <h3 style="text-align: center">{{ title }}</h3>
-            <vega-lite :spec="spec" :data="values"></vega-lite>
-            <p> {{ chart }} </p>
-          </div>
-        </div>
-      </template>
-
-**TODO** Where it goes in this file. Same file?
-
-.. code-block:: javascript
-   :linenos:
-
-      import { mapState } from 'vuex'
-      import AugurStats from 'AugurStats'
-
-      export default {
-        props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
-        data() {
-          return {
-            values: [],
-          }
-        },
-        computed: {
-          repo() {
-            return this.$store.state.baseRepo
-          },
-          spec() {
-              // IF YOU WANT TO CALL YOUR ENDPOINT IN THE CHART FILE, THIS IS WHERE/HOW YOU SHOULD DO IT:
-            let repo = window.AugurAPI.Repo({ githubURL: this.repo })
-            repo[this.source]().then((data) => {
-               // you can print your data in a console.log() to make                   // sure the endpoint is returning what it needs to
-              // console.log("HERE", data)
-              this.values = data
-            })
-            //FINISH CALLING ENDPOINT
-
-            // THIS IS A SAMPLE 'spec', SPECS ARE WHAT CREATE THE VEGA-LITE FILE,
-            // YOU CAN PLAY WITH SAMPLE SPEC OF A LINE CHART AT:
-            // https://vega.github.io/editor/#/examples/vega-lite/line
-            // AND SEE THE DATA THAT THEY ARE USING AT:
-            // https://vega.github.io/vega-lite/data/stocks.csv
-            let config = {
-              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-              "width": 950,
-              "height": 300,
-              "mark": "line",
-              "encoding": {
-                "x": {
-                  "field": "date", "type": "temporal",
-                },
-                "y": {
-                  "field": "value","type": "quantitative",
-                },
-              }
-            }
-            return config
-          }
-        },
-        methods: {
-          //define any methods you may need here
-          //you can call them anywhere with: this.methodName()
-        }
-      }
+..             // THIS IS A SAMPLE 'spec', SPECS ARE WHAT CREATE THE VEGA-LITE FILE,
+..             // YOU CAN PLAY WITH SAMPLE SPEC OF A LINE CHART AT:
+..             // https://vega.github.io/editor/#/examples/vega-lite/line
+..             // AND SEE THE DATA THAT THEY ARE USING AT:
+..             // https://vega.github.io/vega-lite/data/stocks.csv
+..             let config = {
+..               "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+..               "width": 950,
+..               "height": 300,
+..               "mark": "line",
+..               "encoding": {
+..                 "x": {
+..                   "field": "date", "type": "temporal",
+..                 },
+..                 "y": {
+..                   "field": "value","type": "quantitative",
+..                 },
+..               }
+..             }
+..             return config
+..           }
+..         },
+..         methods: {
+..           //define any methods you may need here
+..           //you can call them anywhere with: this.methodName()
+..         }
+..       }

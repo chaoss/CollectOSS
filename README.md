@@ -9,8 +9,6 @@ master | [![Build Status](https://travis-ci.org/chaoss/augur.svg?branch=master)]
 
 ## About Augur
 
-<!-- TODO: change this -->
-
 Augur is focused on prototyping open source software metrics.
 
 Functionally, Augur is a prototyped implementation of the Linux Foundation's [CHAOSS Project](http://chaoss.community) on [open source software metrics](https://github.com/chaoss/metrics). Technically, Augur is a [Flask web application](http://augurlabs.io), [Python library](http://augur.augurlabs.io/static/docs/) and [REST server](http://augur.augurlabs.io/static/api_docs/) that presents metrics on open source software development project health and sustainability.
@@ -143,8 +141,7 @@ If you have any issues, please feel free to request to email straight into our s
 
 To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming development community that is open to anyone and everyone of every skill level!
 
-The [development guide](./docs/dev-guide/overview.md)
-
+Check out our [documentation](https://oss-augur.readthedocs.io/en/documentation/) for information about our system.
 
 Please note we require all commits to be signed off with a [Developer Certificate of Origin](https://developercertificate.org/) in accordance with the [CHAOSS Project Charter section 8.2.1](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy). This can be easily done by using the `-s` flag when using `git commit`, e.g. `git commit -s -m "Update README.md"`. **Any pull request containing commits that are not signed off will not be eligible to be merged until all commits are signed off.** 
 

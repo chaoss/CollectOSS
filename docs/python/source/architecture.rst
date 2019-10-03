@@ -6,19 +6,18 @@ Augur's architecture consists of 5 primary pieces:
 Backend:
 ~~~~~~~~
 
-1. Python plugins that know how to produce metrics from a given
-   datasource (``augur.datasources.GHTorrent``,
-   ``augur.datasources.Facade``, etc.) or provide a given functionality
-2. A main class that's in charge of caching, registering plugins, and
+1. Workers (``workers`` in the root ``augur/`` directory) which are reponsible for collecting data and inserting it into our unified data model 
+2. Broker (``augur.routes.broker``) which is reponsible for distributing data collection tasks to the correct workers
+3. Housekeeper (``augur.housekeeper.housekeeper.Housekeeper``) which is reponsible for keeping the data up to date
+4. A main class that's in charge of caching, registering plugins, and
    reading the configuration file (``augur.Application``)
-3. A WSGI server built with Flask that exposes the datasources as a REST
+5. A WSGI server built with Flask that exposes the datasources as a REST
    API (``augur.Server``, ``augur.runtime``)
 
 Frontend:
 ~~~~~~~~~
 
-4. Vue frontend to display visualizations and controls, compiled with
-   Brunch
+4. Vue frontend to display visualizations and controls
 5. Visualizations made with Vega-Lite for the metrics exposed by the
    backend
 

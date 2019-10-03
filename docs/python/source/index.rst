@@ -10,14 +10,12 @@ Augur is a software suite that provides open source health and sustainability me
 
 The latest version of Augur includes an :doc:`images/Augur-Unified-Data-Model` that brings together data from : 
 
-
 1. git repositories, including GitHub
 2. issue trackers
 3. mailing lists
 4. library dependency trees
 5. the Linux Foundation's badging program
 6. code complexity and contribution counting ... and MUCH MUCH MORE. 
-   
 
 What is Augur?
 ============================================
@@ -39,11 +37,11 @@ Our core team has a long standing interest in social computing, software enginee
    :maxdepth: 1
 
    installation
-   create-a-metric
-   
    dev-guide-toc
-   architecture
+   create-a-metric
    python
+   frontend
+   architecture
 
 .. TODO: add me back later
 .. docker-install
