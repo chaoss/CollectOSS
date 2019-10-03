@@ -42,6 +42,7 @@ Our core team has a long standing interest in social computing, software enginee
    python
    frontend
    architecture
+   ghc-todo
 
 .. TODO: add me back later
 .. docker-install
