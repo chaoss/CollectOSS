@@ -17,7 +17,7 @@ Installation
 
    python -m venv $HOME/.virtualenvs/augur_env
 
-2. Being the installation process.
+2. Bring the installation process.
 
 .. code:: bash
 
