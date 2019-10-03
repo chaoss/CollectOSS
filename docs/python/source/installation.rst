@@ -16,7 +16,7 @@ Installation
 .. code:: bash
 
    python -m venv $HOME/.virtualenvs/augur_env
-   source $HOME/.virtualenvs/augur_env
+   source $HOME/.virtualenvs/augur_env/bin/activate
    # if you installed its somewhere else this path will be different
 
 2. Bring the installation process.
