@@ -1006,7 +1006,58 @@ def issue_comments_mean_std(self, repo_group_id, repo_id=None, group_by='week'):
         results = pd.read_sql(issue_comments_mean_std_SQL, self.database,
                               params={'repo_id': repo_id, 'group_by': group_by})
         return results
-        
+
+@annotate(tag='abandoned_issues')
+def abandoned_issues(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+    if not begin_date:
+        begin_date = '1970-1-1 00:00:01'
+    if not end_date:
+        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    abandonedSQL = None
+
+    if repo_id:
+        abandonedSQL = s.sql.text(
+            '''
+            SELECT
+	            updated_at,
+	            issue_id
+            FROM
+	            issues
+            WHERE
+	            repo_id = :repo_id
+	            AND issue_state = 'open'
+	            AND DATE_PART('year',current_date) - DATE_PART('year', updated_at) >= 1
+            GROUP BY
+	            updated_at, issue_id
+            ORDER BY 
+                updated_at, issue_id
+            '''
+        )
+    else:
+        abandonedSQL = s.sql.text(
+            '''
+            SELECT
+	            updated_at,
+	            issue_id,
+                repo_id
+            FROM
+	            issues
+            WHERE
+	            repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+	            AND issue_state = 'open'
+	            AND DATE_PART('year',current_date) - DATE_PART('year', updated_at) >= 1
+            GROUP BY
+	            updated_at, issue_id, repo_id
+            ORDER BY 
+                updated_at, issue_id, repo_id
+            '''
+        )
+
+    results = pd.read_sql(abandonedSQL, self.database, params={'repo_id': repo_id, 'repo_group_id': repo_group_id, 'period': period,
+                                                                 'begin_date': begin_date, 'end_date': end_date})
+    return results
+    
 
 def create_issue_metrics(metrics):
     add_metrics(metrics, __name__)

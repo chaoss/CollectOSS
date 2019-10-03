@@ -940,3 +940,26 @@ def create_issue_routes(server):
                     ]
     """
     server.addRepoMetric(metrics.issue_comments_mean_std, 'issue-comments-mean-std')
+
+    """
+    @api {get} /repo-groups/:repo_group_id/abandoned_issues Abandoned Issues (Repo)
+    @apiName Abandoned Issues
+    @apiGroup Experimental
+    @apiDescription List of abandoned issues (last updated >= 1 year ago)
+    @apiParam {string} repo_group_id Repository Group ID
+    @apiParam {string} repo_id Repository ID.
+    @apiSuccessExample {json} Success-Response:
+                    [
+                        {
+                            "updated_at": "2017-10-30T06:52:19.000Z",
+                            "issue_id": 125071,
+                            "repo_id": 22004
+                        },
+                        {
+                            "updated_at": "2018-01-10T06:02:16.000Z",
+                            "issue_id": 125070,
+                            "repo_id": 22003
+                        }
+                    ]
+    """
+    server.addRepoGroupMetric(metrics.abandoned_issues, 'abandoned_issues')
