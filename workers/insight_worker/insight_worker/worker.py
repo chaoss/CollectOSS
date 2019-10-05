@@ -42,6 +42,7 @@ class InsightWorker:
         self.data_source = 'Augur API'
         self.refresh = True
         self.send_insights = True
+        self.finishing_task = False
 
         logging.info("Worker initializing...")
         
@@ -138,7 +139,7 @@ class InsightWorker:
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
             self._queue.put({"git_url": repo_git, 
-                "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"], "job_type": value['job_type']})
+                "repo_id": int(rs.iloc[0]["repo_id"]), "repo_group_id": int(rs.iloc[0]["repo_group_id"]), "job_type": value['job_type']})
         except Exception as e:
             logging.info("that repo is not in our database, {}".format(e))
         if self._queue.empty(): 
@@ -369,6 +370,7 @@ class InsightWorker:
         self.register_task_completion(entry_info, "insights")
 
     def record_model_process(self, entry_info, model):
+
         task_history = {
             "repo_id": entry_info['repo_id'],
             "worker": self.config['id'],
@@ -376,7 +378,7 @@ class InsightWorker:
             "oauth_id": self.config['zombie_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Stopped",
-            "total_results": self.results_counter
+            "total_results": self.insight_results_counter
         }
         if self.finishing_task:
             result = self.helper_db.execute(self.history_table.update().where(
