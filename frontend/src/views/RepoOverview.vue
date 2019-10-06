@@ -37,12 +37,6 @@
             <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
           </div> -->
 
-          <!-- <d-row v-if="!loadedBars">
-            <d-col>
-              <spinner></spinner>
-            </d-col>
-          </d-row> -->
-
           <d-container>
             <d-row>
               <d-col style="">
@@ -95,6 +89,29 @@
         </d-card>
       </d-col>
       <d-col cols="12" md="6" lg="6" sm="12">
+
+        <d-row>
+          <d-col>
+            <d-card>
+              <pie-chart
+              title="Commits by User"
+              source="contributorsCodeDevelopment"
+              field="commits"
+              ></pie-chart>
+            </d-card>
+          </d-col>
+          <d-col>
+            <d-card>
+              <pie-chart
+              title="Lines of Code by User"
+              source="contributorsCodeDevelopment"
+              field="lines_added"
+              ></pie-chart>
+            </d-card>
+          </d-col>
+        </d-row>
+        
+        <p></p>
 
         <coverage-card title="License Coverage" source="sbom"></coverage-card>
 
@@ -353,7 +370,9 @@ export default class RepoOverview extends Vue {
       Object.keys(tuples[ref]).forEach((endpoint) => {
         console.log(endpoint)
         this.values[endpoint] = tuples[ref][endpoint]
+        console.log("lines data: ", this.values)
       })
+
       this.loadedBars = true
     })
   }

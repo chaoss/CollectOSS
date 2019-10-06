@@ -240,7 +240,8 @@ export default {
                 "condition":{
                   "selection": {"not": "tooltip"}, "value": "transparent"
                 },
-                "value": "black"
+                // "value": "black"
+                "value": "transparent"
               }
             }
           }

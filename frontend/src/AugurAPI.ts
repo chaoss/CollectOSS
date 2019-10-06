@@ -479,6 +479,7 @@ class Repo extends BaseRepo{
     this.addRepoMetric('reviewsDeclined', 'reviews-declined')
     this.addRepoMetric('reviewDuration', 'review-duration')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
+    this.addRepoMetric('contributorsCodeDevelopment', 'contributors-code-development')
   }
 }
 
