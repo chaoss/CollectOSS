@@ -123,7 +123,7 @@ export default class PieChart extends Vue {
           "name": "color",
           "type": "ordinal",
           "domain": {"data": "table", "field": "email"},
-          "range": {"scheme": "category20"}
+          "range": {"scheme": "category10"}
         },
         {
           "name": "r",

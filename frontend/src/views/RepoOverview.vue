@@ -90,7 +90,7 @@
       </d-col>
       <d-col cols="12" md="6" lg="6" sm="12">
 
-        <d-row>
+  <!--       <d-row>
           <d-col>
             <d-card>
               <pie-chart
@@ -112,7 +112,7 @@
         </d-row>
         
         <p></p>
-
+ -->
         <coverage-card title="License Coverage" source="sbom"></coverage-card>
 
         <p></p>
