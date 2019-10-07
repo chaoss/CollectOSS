@@ -16,17 +16,17 @@
 
     <div class="row mb-5">
       <div class="col-6">
-        <line-chart 
-          title="Forks Count by Week" 
-          source="getForks" 
-          filedTime="date" 
+        <line-chart
+          title="Forks Count by Week"
+          source="getForks"
+          filedTime="date"
           fieldCount="forks">
         </line-chart>
       </div>
       <div class="col-6">
-        <line-chart 
-          title="Committers by week" 
-          source="committers" 
+        <line-chart
+          title="Committers by week"
+          source="committers"
           filedTime="date"
           fieldCount="count"
         ></line-chart>
@@ -35,31 +35,37 @@
 
     <div class="row mb-5">
       <div class="col-6">
-        <license-table 
-          source="licenseDeclared"  
-          :headers="['Short Name','Note']"
-          :fields="['short_name','note']"  
-          title="License Declared"
-        ></license-table>
+        <license-table
+          source="licenseDeclared"
+          :headers="['Short Name']"
+          :ldata="licenses"
+          :fields="['short_name']"
+          title="License Declared">
+        </license-table>
         <br><br>
-        <download-card v-if="loaded_sbom" title="Software Bill of Materials" :data="values" source="sbom"></download-card>
+        <download-card
+          v-if="loaded_sbom"
+          title="Software Bill of Materials"
+          :data="values"
+          source="sbom">
+        </download-card>
       </div>
       <div class="col-6">
-        <cii-table 
-          source="ciiBP"  
+        <cii-table
+          source="ciiBP"
           :headers="['Passing Status','Badge Level', 'Date']"
-          :fields="['achieve_passing_status', 'badge_level', 'date']" 
+          :fields="['achieve_passing_status', 'badge_level', 'date']"
           title="CII Best Practices"
         ></cii-table>
         <br> <br>
-        <count-block 
-          title="Forks" 
-          source="forkCount" 
+        <count-block
+          title="Forks"
+          source="forkCount"
           field="forks"
         ></count-block>
         <br><br>
-        <coverage-card 
-          title="License Coverage" 
+        <coverage-card
+          title="License Coverage"
           source="sbom"
         ></coverage-card>
       </div>
@@ -84,6 +90,7 @@
   import DownloadCard from "@/components/charts/DownloadCard.vue";
   import CoverageCard from "@/components/charts/CoverageCard.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
+  import Licenses from "@/components/Licenses.json";
   import router from "@/router";
 
   @Component({
@@ -120,6 +127,7 @@
     projects = []
     themes = ['dark', 'info', 'royal-blue', 'warning']
     project = null
+    licenses = Licenses
 
     loaded_cii:boolean = false
     loaded_sbom:boolean = false
@@ -147,14 +155,14 @@
         Object.keys(tuples[ref]).forEach((endpoint) => {
 
           this.values[endpoint] = tuples[ref][endpoint]
-          // console.log("sbom data loaded", endpoint, ref, tuples)
+          console.log("sbom data loaded", endpoint, ref, tuples)
         })
         this.loaded_sbom = true
       })
       this.endpoint({endpoints:this.cii_endpoint,repos:[this.base]}).then((tuples:any) => {
         Object.keys(tuples[ref]).forEach((endpoint) => {
           this.values[endpoint] = tuples[ref][endpoint]
-          // console.log("cii data loaded", endpoint, ref, tuples)
+          console.log("cii data loaded", endpoint, ref, tuples)
         })
         this.loaded_cii = true
       })
