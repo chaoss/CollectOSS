@@ -1,0 +1,913 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>augur.datasources.facade.facade &#8212; Augur  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for augur.datasources.facade.facade</h1><div class="highlight"><pre>
+<span></span><span class="c1">#SPDX-License-Identifier: MIT</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data source that uses Facade&#39;s tables</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">s</span>
+<span class="kn">from</span> <span class="nn">augur</span> <span class="k">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">augur.util</span> <span class="k">import</span> <span class="n">annotate</span>
+
+
+
+<span class="c1"># end imports</span>
+<span class="c1"># (don&#39;t remove the above line, it&#39;s for a script)</span>
+
+
+<div class="viewcode-block" id="Facade"><a class="viewcode-back" href="../../../../datasources/augur.datasources.facade.facade.Facade.html#augur.datasources.facade.facade.Facade">[docs]</a><span class="k">class</span> <span class="nc">Facade</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Queries Facade&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Facade.__init__"><a class="viewcode-back" href="../../../../datasources/augur.datasources.facade.facade.Facade.html#augur.datasources.facade.facade.Facade.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">,</span> <span class="n">projects</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Connect to the database</span>
+
+<span class="sd">        :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DB_STR</span> <span class="o">=</span> <span class="s1">&#39;mysql+pymysql://</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">@</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Facade: Connecting to </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1"> as </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">dbname</span><span class="p">,</span> <span class="n">user</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DB_STR</span><span class="p">,</span> <span class="n">poolclass</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">NullPool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projects</span> <span class="o">=</span> <span class="n">projects</span></div>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###    DIVERSITY AND INCLUSION    ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="c1">#####################################</span>
+    <span class="c1">### GROWTH, MATURITY, AND DECLINE ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            RISK               ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###            VALUE              ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###           ACTIVITY            ###</span>
+    <span class="c1">#####################################</span>
+
+
+    <span class="c1">#####################################</span>
+    <span class="c1">###         EXPERIMENTAL          ###</span>
+    <span class="c1">#####################################</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;downloaded-repos&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">downloaded_repos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all repository names, URLs, and base64 URLs in the facade database</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">downloadedReposSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT git AS url, status, projects.name as project_name</span>
+<span class="s2">            FROM repos</span>
+<span class="s2">            JOIN projects</span>
+<span class="s2">            ON repos.projects_id = projects.id</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">downloadedReposSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">datum</span><span class="p">:</span> <span class="n">datum</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;//&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">project_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">:</span>
+              <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">results</span><span class="o">.</span><span class="n">project_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projects</span><span class="p">)]</span>
+
+        <span class="n">b64_urls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">b64_urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">((</span><span class="n">results</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">()))</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;base64_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b64_urls</span>
+
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-by-author&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_changed_by_author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns number of lines changed per author per day</span>
+
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">linesChangedByAuthorSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT author_email, author_date, author_affiliation as affiliation, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace</span>
+<span class="s2">            FROM analysis_data</span>
+<span class="s2">            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">            GROUP BY repos_id, author_date, author_affiliation, author_email</span>
+<span class="s2">            ORDER BY author_date ASC;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">linesChangedByAuthorSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-by-week&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_changed_by_week</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns lines changed of a sent repository per week</span>
+
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">linesChangedByWeekSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT date(author_date) as date, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace</span>
+<span class="s2">            FROM analysis_data</span>
+<span class="s2">            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">            GROUP BY YEARWEEK(author_date)</span>
+<span class="s2">            ORDER BY YEARWEEK(author_date) ASC</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">linesChangedByWeekSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-changed-by-month&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_changed_by_month</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns lines changed of a sent repository per month</span>
+
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">linesChangedByMonthSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT email as author_email, affiliation, month, year, SUM(added) as additions, SUM(removed) as deletions, SUM(whitespace) as whitespace FROM repo_monthly_cache</span>
+<span class="s2">            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">            GROUP BY email, month, year</span>
+<span class="s2">            ORDER BY year, month, email ASC</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">linesChangedByMonthSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;commits-by-week&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">commits_by_week</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns number of patches per commiter per week</span>
+
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">commitsByMonthSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT email AS author_email, affiliation, WEEK AS `week`, YEAR AS `year`, patches FROM repo_weekly_cache</span>
+<span class="s2">            WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">            GROUP BY email, WEEK, YEAR</span>
+<span class="s2">            ORDER BY YEAR, WEEK, email ASC</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">commitsByMonthSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;facade-project&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">facade_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns number of patches per commiter per week</span>
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">facadeProjectSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT projects.name FROM repos, projects</span>
+<span class="s2">            WHERE git LIKE :repourl</span>
+<span class="s2">            and repos.projects_id = projects.id</span>
+<span class="s2">            LIMIT 1</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">facadeProjectSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">)})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="c1"># cd - code</span>
+    <span class="c1"># rg - repo group</span>
+    <span class="c1"># tp - time period (fixed time period)</span>
+    <span class="c1"># interval</span>
+    <span class="c1"># ranked - ordered top to bottom</span>
+    <span class="c1"># commits</span>
+    <span class="c1"># loc - lines of code</span>
+    <span class="c1"># rep - repo</span>
+    <span class="c1"># ua - unaffiliated</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-commit-count-ranked-by-new-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_commit_count_ranked_by_new_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized</span>
+<span class="sd">        calendar year (a new repo in that year),</span>
+<span class="sd">        show all commits for that year (total for year by repo).</span>
+<span class="sd">        Result ranked from highest number of commits to lowest by default.</span>
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        :param calendar_year: the calendar year a repo is created in to be considered &quot;new&quot;</span>
+<span class="sd">        :param repo_group: the group of repositories to analyze</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">calendar_year</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">calendar_year</span> <span class="o">=</span> <span class="mi">2018</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repo_group</span> <span class="o">=</span> <span class="s1">&#39;facade_project&#39;</span>
+
+        <span class="n">cdRgNewrepRankedCommitsSQL</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="s1">&#39;facade_project&#39;</span><span class="p">:</span>
+            <span class="n">cdRgNewrepRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">               SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, repos.name</span>
+<span class="s2">               FROM repo_annual_cache, projects, repos</span>
+<span class="s2">               where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">               WHERE git LIKE :repourl</span>
+<span class="s2">               and repos.projects_id = projects.id</span>
+<span class="s2">               and YEAR(repos.added) = :calendar_year</span>
+<span class="s2">               LIMIT 1)</span>
+<span class="s2">               and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">               and repos.projects_id = projects.id</span>
+<span class="s2">               group by repos_id</span>
+<span class="s2">               ORDER BY net desc</span>
+<span class="s2">               LIMIT 10</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cdRgNewrepRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">               SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name</span>
+<span class="s2">               FROM repo_annual_cache, projects, repos</span>
+<span class="s2">               where projects.name = :repo_group</span>
+<span class="s2">               and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">               and repos.projects_id = projects.id</span>
+<span class="s2">               and YEAR(repos.added) = :calendar_year</span>
+<span class="s2">               group by repos_id</span>
+<span class="s2">               ORDER BY net desc</span>
+<span class="s2">               LIMIT 10</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgNewrepRankedCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">,</span> <span class="s2">&quot;calendar_year&quot;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-lines-of-code-count-ranked-by-new-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_lines_of_code_count_ranked_by_new_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each repository in a collection of repositories being managed, each REPO that first appears in the parameterized</span>
+<span class="sd">        calendar year (a new repo in that year),</span>
+<span class="sd">        show all lines of code for that year (total for year by repo). Result ranked from highest number of commits to lowest by default.</span>
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        :param calendar_year: the calendar year a repo is created in to be considered &quot;new&quot;</span>
+<span class="sd">        :param repo_group: the group of repositories to analyze</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">calendar_year</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">calendar_year</span> <span class="o">=</span> <span class="mi">2018</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repo_group</span> <span class="o">=</span> <span class="s1">&#39;facade_project&#39;</span>
+
+        <span class="n">cdRgNewrepRankedLocSQL</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="s1">&#39;facade_project&#39;</span><span class="p">:</span>
+            <span class="n">cdRgNewrepRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, repos.name</span>
+<span class="s2">                FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">                WHERE git LIKE :repourl</span>
+<span class="s2">                and YEAR(repos.added) = :calendar_year</span>
+<span class="s2">                and repos.projects_id = projects.id</span>
+<span class="s2">                LIMIT 1)</span>
+<span class="s2">                and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                and repos.projects_id = projects.id</span>
+<span class="s2">                group by repos_id</span>
+<span class="s2">                ORDER BY net desc</span>
+<span class="s2">                LIMIT 10</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cdRgNewrepRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT repos_id, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches, projects.name</span>
+<span class="s2">                FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                where projects.name = :repo_group</span>
+<span class="s2">                and repos.projects_id = projects.id</span>
+<span class="s2">                and YEAR(repos.added) = :calendar_year</span>
+<span class="s2">                and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                and repos.projects_id = projects.id</span>
+<span class="s2">                group by repos_id</span>
+<span class="s2">                ORDER BY net desc</span>
+<span class="s2">                LIMIT 10</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgNewrepRankedLocSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">,</span> <span class="s2">&quot;calendar_year&quot;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-commit-count-ranked-by-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_commit_count_ranked_by_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each repository in a collection of repositories being managed, each REPO&#39;s total commits during the current Month,</span>
+<span class="sd">        Year or Week. Result ranked from highest number of commits to lowest by default.</span>
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        :param timeframe: All, year, month, or week. Contribution data from the timeframe that the current date is within will be considered</span>
+<span class="sd">        :param repo_group: the group of repositories to analyze</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repo_group</span> <span class="o">=</span> <span class="s1">&#39;facade_project&#39;</span>
+
+        <span class="k">if</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">timeframe</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span>
+
+        <span class="n">cdRgTpRankedCommitsSQL</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="s1">&#39;facade_project&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                   SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">                   WHERE git LIKE :repourl</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   LIMIT 1)</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                   SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">                   WHERE git LIKE :repourl</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   LIMIT 1)</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s1">&#39;month&#39;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                   SELECT repos_id, repos.name as name, sum(cast(repo_monthly_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_monthly_cache, projects, repos</span>
+<span class="s2">                   where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">                   WHERE git LIKE :repourl</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   and MONTH(repos.added) = MONTH(CURDATE())</span>
+<span class="s2">                   LIMIT 1)</span>
+<span class="s2">                   and repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                   SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = :repo_group</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                   SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = :repo_group</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s1">&#39;month&#39;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                   SELECT repos_id, repos.name as name, sum(cast(repo_monthly_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_monthly_cache, projects, repos</span>
+<span class="s2">                   where projects.name = :repo_group</span>
+<span class="s2">                   and repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   and MONTH(repos.added) = MONTH(CURDATE())</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgTpRankedCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;annual-lines-of-code-count-ranked-by-repo-in-repo-group&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">annual_lines_of_code_count_ranked_by_repo_in_repo_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">timeframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each repository in a collection of repositories being managed, each REPO&#39;s total commits during the current Month,</span>
+<span class="sd">        Year or Week. Result ranked from highest number of LOC to lowest by default.</span>
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        :param timeframe: All, year, month, or week. Contribution data from the timeframe that the current date is within will be considered</span>
+<span class="sd">        :param repo_group: the group of repositories to analyze</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repo_group</span> <span class="o">=</span> <span class="s1">&#39;facade_project&#39;</span>
+
+        <span class="k">if</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">timeframe</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span>
+
+        <span class="n">cdRgTpRankedLocSQL</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="s1">&#39;facade_project&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">                   WHERE git LIKE :repourl</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   LIMIT 1)</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">                   WHERE git LIKE :repourl</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   LIMIT 1)</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s1">&#39;month&#39;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT repos_id, repos.name as name, sum(cast(repo_monthly_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_monthly_cache, projects, repos</span>
+<span class="s2">                   where projects.name = (SELECT projects.name FROM repos, projects</span>
+<span class="s2">                   WHERE git LIKE :repourl</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   and MONTH(repos.added) = MONTH(CURDATE())</span>
+<span class="s2">                   LIMIT 1)</span>
+<span class="s2">                   and repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = :repo_group</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT repos_id, repos.name as name, sum(cast(repo_annual_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_annual_cache, projects, repos</span>
+<span class="s2">                   where projects.name = :repo_group</span>
+<span class="s2">                   and repo_annual_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">timeframe</span> <span class="o">==</span> <span class="s1">&#39;month&#39;</span><span class="p">:</span>
+                <span class="n">cdRgTpRankedLocSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT repos_id, repos.name as name, sum(cast(repo_monthly_cache.added as signed) - cast(removed as signed) - cast(whitespace as signed)) as net, patches</span>
+<span class="s2">                   FROM repo_monthly_cache, projects, repos</span>
+<span class="s2">                   where projects.name = :repo_group</span>
+<span class="s2">                   and repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                   and repos.projects_id = projects.id</span>
+<span class="s2">                   and YEAR(repos.added) = YEAR(CURDATE())</span>
+<span class="s2">                   and MONTH(repos.added) = MONTH(CURDATE())</span>
+<span class="s2">                   group by repos_id</span>
+<span class="s2">                   ORDER BY net desc</span>
+<span class="s2">                   LIMIT 10</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgTpRankedLocSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;lines-of-code-commit-counts-by-calendar-year-grouped&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lines_of_code_commit_counts_by_calendar_year_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval (week or month)</span>
+
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        :param calendar_year: the calendar year a repo is created in to be considered &quot;new&quot;</span>
+<span class="sd">        :param interval: Month or week. The periodocity of which to examine data within the given calendar_year</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">calendar_year</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">calendar_year</span> <span class="o">=</span> <span class="mi">2018</span>
+
+        <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="s1">&#39;month&#39;</span>
+
+        <span class="n">cdRepTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+            <span class="n">cdRepTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,</span>
+<span class="s2">                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,</span>
+<span class="s2">                IFNULL(patches, 0) as commits, a.month, IFNULL(year, :calendar_year) as year</span>
+<span class="s2">                FROM (select month from repo_monthly_cache group by month) a</span>
+<span class="s2">                LEFT JOIN (SELECT name, repo_monthly_cache.added, removed, whitespace, patches, month, IFNULL(year, :calendar_year) as year</span>
+<span class="s2">                FROM repo_monthly_cache, repos</span>
+<span class="s2">                WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">                AND year = :calendar_year</span>
+<span class="s2">                AND repos.id = repos_id</span>
+<span class="s2">                GROUP BY month) b</span>
+<span class="s2">                ON a.month = b.month</span>
+<span class="s2">                GROUP BY month</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+            <span class="n">cdRepTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT  sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,</span>
+<span class="s2">                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,</span>
+<span class="s2">                IFNULL(patches, 0) as commits, a.week, IFNULL(year, :calendar_year) as year</span>
+<span class="s2">                FROM (select week from repo_weekly_cache group by week) a</span>
+<span class="s2">                LEFT JOIN (SELECT name, repo_weekly_cache.added, removed, whitespace, patches, week, IFNULL(year, :calendar_year) as year</span>
+<span class="s2">                FROM repo_weekly_cache, repos</span>
+<span class="s2">                WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)</span>
+<span class="s2">                AND year = :calendar_year</span>
+<span class="s2">                AND repos.id = repos_id</span>
+<span class="s2">                GROUP BY week) b</span>
+<span class="s2">                ON a.week = b.week</span>
+<span class="s2">                GROUP BY week</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRepTpIntervalLocCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s1">&#39;calendar_year&#39;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;unaffiliated-contributors-lines-of-code-commit-counts-by-calendar-year-grouped&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">unaffiliated_contributors_lines_of_code_commit_counts_by_calendar_year_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval</span>
+<span class="sd">        (week or month) and by the affiliation of individuals and domains that are not mapped as &quot;inside&quot; within the repositories gitdm file.</span>
+<span class="sd">        &quot;Unknown&quot; is, in this case, interpreted as &quot;outside&quot;</span>
+
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        :param calendar_year: the calendar year a repo is created in to be considered &quot;new&quot;</span>
+<span class="sd">        :param interval: Month or week. The periodocity of which to examine data within the given calendar_year</span>
+<span class="sd">        :param repo_group: the group of repositories to analyze</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">calendar_year</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">calendar_year</span> <span class="o">=</span> <span class="mi">2018</span>
+
+        <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="s1">&#39;month&#39;</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repo_group</span> <span class="o">=</span> <span class="s1">&#39;facade_project&#39;</span>
+
+        <span class="n">cdRepTpIntervalLocCommitsUaSQL</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="s1">&#39;facade_project&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+                <span class="n">cdRepTpIntervalLocCommitsUaSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month, affiliation</span>
+<span class="s2">                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches, repo_monthly_cache.`affiliation` as affiliation</span>
+<span class="s2">                        FROM repo_monthly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = (SELECT projects.id FROM repos, projects</span>
+<span class="s2">                        WHERE git LIKE :repourl</span>
+<span class="s2">                        and repos.projects_id = projects.id</span>
+<span class="s2">                        LIMIT 1)</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repo_monthly_cache.`affiliation` &lt;&gt; projects.name</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY month, affiliation</span>
+<span class="s2">                    ) b ON a.month = b.month</span>
+<span class="s2">                    ORDER BY month</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+                <span class="n">cdRepTpIntervalLocCommitsUaSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week, affiliation</span>
+<span class="s2">                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches, repo_weekly_cache.`affiliation` as affiliation</span>
+<span class="s2">                        FROM repo_weekly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_weekly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = (SELECT projects.id FROM repos, projects</span>
+<span class="s2">                        WHERE git LIKE :repourl</span>
+<span class="s2">                        and repos.projects_id = projects.id</span>
+<span class="s2">                        LIMIT 1)</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repo_weekly_cache.`affiliation` &lt;&gt; projects.name</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY week, affiliation</span>
+<span class="s2">                    ) b ON a.week = b.week</span>
+<span class="s2">                    ORDER BY week</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+                <span class="n">cdRepTpIntervalLocCommitsUaSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month, affiliation</span>
+<span class="s2">                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches, repo_monthly_cache.`affiliation` as affiliation</span>
+<span class="s2">                        FROM repo_monthly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = :repo_group</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repo_monthly_cache.`affiliation` &lt;&gt; projects.name</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY month, affiliation</span>
+<span class="s2">                    ) b ON a.month = b.month</span>
+<span class="s2">                    ORDER BY month</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+                <span class="n">cdRepTpIntervalLocCommitsUaSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week, affiliation</span>
+<span class="s2">                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches, repo_weekly_cache.`affiliation` as affiliation</span>
+<span class="s2">                        FROM repo_weekly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_weekly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = :repo_group</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repo_weekly_cache.`affiliation` &lt;&gt; projects.name</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY month, affiliation</span>
+<span class="s2">                    ) b ON a.week = b.week</span>
+<span class="s2">                    ORDER BY week</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRepTpIntervalLocCommitsUaSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">,</span> <span class="s1">&#39;calendar_year&#39;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="nd">@annotate</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;repo-group-lines-of-code-commit-counts-calendar-year-grouped&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">repo_group_lines_of_code_commit_counts_calendar_year_grouped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">calendar_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">repo_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each repository in a collection of repositories, all the commits and lines of code occuring for the specified year,</span>
+<span class="sd">        grouped by repository and the specified interval (week or month). Results ordered by repo.</span>
+
+<span class="sd">        :param repo_url: the repository&#39;s URL</span>
+<span class="sd">        :param calendar_year: the calendar year a repo is created in to be considered &quot;new&quot;</span>
+<span class="sd">        :param interval: Month or week. The periodocity of which to examine data within the given calendar_year</span>
+<span class="sd">        :param repo_group: the group of repositories to analyze</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">calendar_year</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">calendar_year</span> <span class="o">=</span> <span class="mi">2019</span>
+
+        <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="s1">&#39;month&#39;</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">repo_group</span> <span class="o">=</span> <span class="s1">&#39;facade_project&#39;</span>
+
+        <span class="n">cdRgTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">repo_group</span> <span class="o">==</span> <span class="s1">&#39;facade_project&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month</span>
+<span class="s2">                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT repos.name, SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches</span>
+<span class="s2">                        FROM repo_monthly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = (SELECT projects.id FROM repos, projects</span>
+<span class="s2">                            WHERE git LIKE :repourl</span>
+<span class="s2">                            and repos.projects_id = projects.id</span>
+<span class="s2">                            LIMIT 1)</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repos_id = repos.id</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY month, repos.name</span>
+<span class="s2">                    ) b ON a.month = b.month</span>
+<span class="s2">                    ORDER BY month, name</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week</span>
+<span class="s2">                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT repos.name, SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches</span>
+<span class="s2">                        FROM repo_weekly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_weekly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = (SELECT projects.id FROM repos, projects</span>
+<span class="s2">                            WHERE git LIKE :repourl</span>
+<span class="s2">                            and repos.projects_id = projects.id</span>
+<span class="s2">                            LIMIT 1)</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repos_id = repos.id</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY week, repos.name</span>
+<span class="s2">                    ) b ON a.week = b.week</span>
+<span class="s2">                    ORDER BY week, name</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.month</span>
+<span class="s2">                    FROM (SELECT month FROM repo_monthly_cache GROUP BY month) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT repos.name, SUM(repo_monthly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, month, SUM(patches) as patches</span>
+<span class="s2">                        FROM repo_monthly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_monthly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = :repo_group</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repos_id = repos.id</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY month, repos.name</span>
+<span class="s2">                    ) b ON a.month = b.month</span>
+<span class="s2">                    ORDER BY month, name</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">interval</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+                <span class="n">cdRgTpIntervalLocCommitsSQL</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT name, added, whitespace, removed, (cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace, patches, a.week</span>
+<span class="s2">                    FROM (SELECT week FROM repo_weekly_cache GROUP BY week) a</span>
+<span class="s2">                    LEFT JOIN</span>
+<span class="s2">                    (</span>
+<span class="s2">                        SELECT repos.name, SUM(repo_weekly_cache.added) AS added, SUM(whitespace) as whitespace, SUM(removed) as removed, week, SUM(patches) as patches</span>
+<span class="s2">                        FROM repo_weekly_cache, repos, projects</span>
+<span class="s2">                        WHERE repo_weekly_cache.repos_id = repos.id</span>
+<span class="s2">                        AND repos.projects_id = :repo_group</span>
+<span class="s2">                        AND projects.id = repos.projects_id</span>
+<span class="s2">                        AND repos_id = repos.id</span>
+<span class="s2">                        AND year = :calendar_year</span>
+<span class="s2">                        GROUP BY week, repos.name</span>
+<span class="s2">                    ) b ON a.week = b.week</span>
+<span class="s2">                    ORDER BY week, name</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="n">cdRgTpIntervalLocCommitsSQL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;repourl&quot;</span><span class="p">:</span> <span class="s1">&#39;%</span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">),</span> <span class="s2">&quot;calendar_year&quot;</span><span class="p">:</span> <span class="n">calendar_year</span><span class="p">,</span> <span class="s2">&quot;repo_group&quot;</span><span class="p">:</span> <span class="n">repo_group</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+
+    <span class="k">def</span> <span class="nf">cli_add_repo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_project_id</span><span class="p">,</span> <span class="n">new_git_repo</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                        INSERT INTO repos (projects_id, git, status)</span>
+<span class="s2">                        VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">);</span>
+<span class="s2">                        &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">new_project_id</span><span class="p">,</span> <span class="n">new_git_repo</span><span class="p">,</span> <span class="s1">&#39;New&#39;</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">cli_delete_repo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">git_repo</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT status FROM repos WHERE id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">git_repo</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;New&#39;</span><span class="p">:</span>
+        <span class="c1"># Nothing was cloned, so delete it immediately</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                DELETE FROM repos WHERE id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">git_repo</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Something may have been cloned, let facade-worker.py clean it</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;UPDATE repos SET status = &#39;Delete&#39; WHERE id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">git_repo</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">cli_add_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_name</span><span class="p">,</span> <span class="n">new_description</span><span class="p">,</span> <span class="n">new_website</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                INSERT INTO projects (name,description,website)</span>
+<span class="s2">                VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">);</span>
+<span class="s2">               &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">new_description</span><span class="p">,</span> <span class="n">new_website</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">cli_delete_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">):</span>
+        <span class="n">repos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT id FROM repos WHERE projects_id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">project_id</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">repos</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cli_delete_repo</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+
+        <span class="c1"># Remove entries from the exclude table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            DELETE FROM exclude WHERE projects_id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">project_id</span><span class="p">))</span>
+        <span class="c1"># facade-worker.py will clean up the rest</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                          UPDATE projects SET name = &#39;(Queued for removal)&#39;</span>
+<span class="s2">                          WHERE id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">                          &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">project_id</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">cli_add_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_alias</span><span class="p">,</span> <span class="n">new_canonical</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                     INSERT INTO aliases (alias,canonical)</span>
+<span class="s2">                     VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)</span>
+<span class="s2">                     ON DUPLICATE KEY UPDATE active = TRUE</span>
+<span class="s2">                     &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">new_alias</span><span class="p">,</span> <span class="n">new_canonical</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">cli_delete_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                     UPDATE aliases SET active = FALSE WHERE id= </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">                     &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">alias_id</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">cli_add_affiliation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ndomain</span><span class="p">,</span> <span class="n">Naffiliation</span><span class="p">,</span> <span class="n">Nstart_date</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">Nstart_date</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                INSERT INTO affiliations (domain, affiliation, start_date)</span>
+<span class="s2">                VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) ON DUPLICATE KEY UPDATE active = TRUE</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">Ndomain</span><span class="p">,</span> <span class="n">Naffiliation</span><span class="p">,</span> <span class="n">Nstart_date</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                INSERT INTO affiliations (domain, affiliation)</span>
+<span class="s2">                VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)</span>
+<span class="s2">                ON DUPLICATE KEY UPDATE active = TRUE</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">Ndomain</span><span class="p">,</span> <span class="n">Naffiliation</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">cli_delete_affiliation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">affiliation_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            UPDATE affiliations SET active = FALSE</span>
+<span class="s2">            WHERE id = </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">affiliation_id</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../create-a-metric.html">Create Your First Metric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev-guide-toc.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../python.html">Augur Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../docker-install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../windows-install.html">Windows Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../ghtorrent-restore.html">GHTorrent Restoration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../use-cases-toc.html">Use Cases</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Augur Contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

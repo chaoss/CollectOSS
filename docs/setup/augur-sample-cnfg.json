@@ -20,8 +20,7 @@
         "password": "YOUR PASSWORD",
         "port": "5433",
         "schema": "augur_data",
-        "user": "augur",
-        "zombie_id": "22"
+        "user": "augur"
     },
     "Development": {
         "developer": "0",

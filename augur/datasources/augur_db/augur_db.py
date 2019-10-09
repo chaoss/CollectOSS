@@ -11,6 +11,8 @@ import datetime
 from augur import logger
 from augur.util import annotate
 import base64
+import subprocess
+from subprocess import PIPE
 
 class Augur(object):
     """Uses the Augur database to return dataframes with interesting GitHub indicators"""
@@ -24,7 +26,7 @@ class Augur(object):
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
             user, password, host, port, dbname
         )
-        
+
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(schema)})
 
@@ -183,6 +185,7 @@ class Augur(object):
                         issues JOIN repo ON issues.repo_id = repo.repo_id
                     WHERE
                         issues.repo_id = :repo_id
+                        AND issues.pull_request IS NULL
                         AND issues.created_at BETWEEN :begin_date AND :end_date
                     GROUP BY gh_user_id, repo_name
                 ) as abc
@@ -206,7 +209,8 @@ class Augur(object):
                     FROM
                         issues
                     WHERE
-                        repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
+                        issues.pull_request IS NULL 
+                        AND repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                         AND created_at BETWEEN :begin_date AND :end_date
                     GROUP BY gh_user_id, repo_id
                 ) as abc, repo
@@ -250,6 +254,7 @@ class Augur(object):
                         WHERE repo.repo_id = :repo_id
                         AND action = 'closed'
                         AND repo.repo_id = issues.repo_id
+                        AND issues.pull_request IS NULL 
                         AND issues.issue_id = issue_events.issue_id
                         And issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY issue_events.cntrb_id, repo_name
@@ -269,6 +274,7 @@ class Augur(object):
                             repo,
                             issues
                         WHERE repo.repo_group_id = :repo_group_id
+                        AND issues.pull_request IS NULL 
                         AND action = 'closed'
                         AND repo.repo_id = issues.repo_id
                         AND issues.issue_id = issue_events.issue_id
@@ -375,6 +381,7 @@ class Augur(object):
                         WHERE repo_id = :repo_id
                             AND created_at BETWEEN :begin_date AND :end_date
                             AND gh_user_id IS NOT NULL
+                            AND pull_request IS NULL
                         GROUP BY gh_user_id, repo_id)
                         UNION ALL
                         (SELECT cmt_ght_author_id AS id,
@@ -424,6 +431,7 @@ class Augur(object):
                             AND gh_user_id IS NOT NULL
                             AND issues.issue_id = issue_message_ref.issue_id
                             AND issue_message_ref.msg_id = message.msg_id
+                            AND issues.pull_request IS NULL
                             AND created_at BETWEEN :begin_date AND :end_date
                             GROUP BY id, repo_id
                         )
@@ -459,6 +467,7 @@ class Augur(object):
                         WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                             AND created_at BETWEEN :begin_date AND :end_date
                             AND gh_user_id IS NOT NULL
+                            AND pull_request IS NULL
                         GROUP BY gh_user_id, repo_id)
                         UNION ALL
                         (SELECT cmt_ght_author_id AS id,
@@ -508,6 +517,7 @@ class Augur(object):
                             AND gh_user_id IS NOT NULL
                             AND issues.issue_id = issue_message_ref.issue_id
                             AND issue_message_ref.msg_id = message.msg_id
+                            AND issues.pull_request IS NULL
                             AND created_at BETWEEN :begin_date AND :end_date
                             GROUP BY id, repo_id
                         )
@@ -520,6 +530,101 @@ class Augur(object):
             results = pd.read_sql(contributorsSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
         return results
+
+    @annotate(tag='contributors-code-development')
+    def contributors_code_development(self, repo_group_id, repo_id=None, period='all', begin_date=None, end_date=None):
+        """
+        Returns a timeseries of all the contributions to a project.
+
+        DataFrame has these columns:
+        date
+        commits
+
+        :param repo_id: The repository's id
+        :param repo_group_id: The repository's group id
+      -----  :param period: To set the periodicity to 'all', day', 'week', 'month' or 'year', defaults to 'all'
+      -----  :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:00'
+      -----  :param end_date: Specifies the end date, defaults to datetime.now()
+        :return: DataFrame of persons/period
+        """
+
+        # In this version, pull request, pr request comments,issue comments haven't be calculated
+        if not begin_date:
+            begin_date = '1970-1-1 00:00:01'
+        if not end_date:
+            end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        if repo_id:
+            contributorsSQL = s.sql.text("""
+                SELECT 
+                    email                        AS email,
+                    SUM(commits)                 AS commits,
+                    SUM(lines_added)                   AS lines_added,
+                    a.repo_id, repo.repo_name
+                FROM (
+                        (
+                        SELECT repo_id, email, SUM(patches)::int as commits, 0 as lines_added
+                        FROM
+                            (SELECT repo_id, email, patches
+                            FROM dm_repo_annual
+                            WHERE repo_id = :repo_id
+                            ORDER BY patches DESC) a
+                        GROUP BY email, a.repo_id
+                        )
+                        UNION ALL
+                        (
+                        SELECT repo_id, cmt_author_email as email, 0 as commits, SUM(cmt_added) as lines_added
+                        -- cmt_author_affiliation as affiliation,
+                            -- SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace, 
+                        FROM commits
+                        WHERE commits.repo_id = :repo_id
+                        GROUP BY commits.repo_id, cmt_author_date, cmt_author_affiliation, cmt_author_email
+                        ORDER BY cmt_author_date ASC
+                        )
+                    ) a, repo
+                WHERE a.repo_id = repo.repo_id
+                GROUP BY a.email, a.repo_id, repo_name
+            """)
+
+            results = pd.read_sql(contributorsSQL, self.db, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+        else:
+            contributorsSQL = s.sql.text("""
+                SELECT 
+                    email                        AS email,
+                    SUM(commits)                 AS commits,
+                    SUM(lines_added)                   AS lines_added,
+                    a.repo_id, repo.repo_name
+                FROM (
+                        (
+                        SELECT repo_id, email, SUM(patches)::INT AS commits, 0 AS lines_added
+                        FROM
+                            (SELECT dm_repo_annual.repo_id, email, patches
+                            FROM dm_repo_annual JOIN repo ON repo.repo_id = dm_repo_annual.repo_id
+                            WHERE repo_group_id = :repo_group_id
+                            ORDER BY patches DESC) a
+                        GROUP BY email, a.repo_id
+                        )
+                        UNION ALL
+                        (
+                        SELECT commits.repo_id, cmt_author_email AS email, 0 AS commits, SUM(cmt_added) AS lines_added
+                        -- cmt_author_affiliation as affiliation,
+                            -- SUM(cmt_added) as additions, SUM(cmt_removed) as deletions, SUM(cmt_whitespace) as whitespace, 
+                        FROM commits JOIN repo ON repo.repo_id = commits.repo_id
+                        WHERE repo_group_id = :repo_group_id
+                        GROUP BY commits.repo_id, cmt_author_date, cmt_author_affiliation, cmt_author_email
+                        ORDER BY cmt_author_date ASC
+                        )
+                    ) a, repo
+                WHERE a.repo_id = repo.repo_id
+                GROUP BY  a.email, a.repo_id, repo_name
+                ORDER BY commits desc, email
+            """)
+
+            results = pd.read_sql(contributorsSQL, self.db, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+        return results
+
 
     @annotate(tag='contributors-new')
     def contributors_new(self, repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -551,6 +656,7 @@ class Augur(object):
                                 WHERE repo_id = :repo_id
                                     AND created_at BETWEEN :begin_date AND :end_date
                                     AND gh_user_id IS NOT NULL
+                                    AND pull_request IS NULL
                                 GROUP BY gh_user_id, repo_id)
                                 UNION ALL
                                 (SELECT cmt_ght_author_id                                AS id,
@@ -575,6 +681,7 @@ class Augur(object):
                                 FROM issue_events, issues
                                 WHERE issues.repo_id = :repo_id
                                     AND issues.issue_id = issue_events.issue_id
+                                    AND issues.pull_request IS NULL
                                     AND issue_events.created_at BETWEEN :begin_date AND :end_date
                                     AND issue_events.cntrb_id IS NOT NULL
                                     AND action = 'closed'
@@ -598,6 +705,7 @@ class Augur(object):
                                 WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                                     AND created_at BETWEEN :begin_date AND :end_date
                                     AND gh_user_id IS NOT NULL
+                                    AND pull_request IS NULL
                                 GROUP BY gh_user_id, repo_id)
                                 UNION ALL
                                 (SELECT cmt_ght_author_id                                AS id,
@@ -622,6 +730,7 @@ class Augur(object):
                                 FROM issue_events, issues
                                 WHERE issues.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                                     AND issues.issue_id = issue_events.issue_id
+                                    AND issues.pull_request IS NULL
                                     AND issue_events.created_at BETWEEN :begin_date AND :end_date
                                     AND issue_events.cntrb_id IS NOT NULL
                                     AND action = 'closed'
@@ -896,6 +1005,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issues.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY issues.repo_id, date, repo_name
                 ORDER BY issues.repo_id, date
             """)
@@ -914,6 +1024,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
                 AND issues.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY date, repo_name
                 ORDER BY date;
             """)
@@ -950,6 +1061,7 @@ class Augur(object):
                 AND issues.repo_id = repo.repo_id
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                and issues.pull_request IS NULL
                 GROUP BY issues.repo_id, date, repo_name
                 ORDER BY issues.repo_id, date
             """)
@@ -969,6 +1081,7 @@ class Augur(object):
                 AND issues.repo_id = repo.repo_id
                 AND issues.repo_id = :repo_id
                 AND issue_events.created_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY date, repo_name
                 ORDER BY date
             """)
@@ -1004,6 +1117,7 @@ class Augur(object):
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY issues.repo_id, date, repo_name
                 ORDER BY issues.repo_id, date
             """)
@@ -1023,6 +1137,7 @@ class Augur(object):
                 WHERE issues.repo_id = :repo_id
                 AND closed_at IS NOT NULL
                 AND closed_at BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS') AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
+                AND issues.pull_request IS NULL
                 GROUP BY date, repo_name
                 ORDER BY date;
             """)
@@ -1122,6 +1237,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
+                AND issues.pull_request IS NULL
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
                     AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
@@ -1144,6 +1260,7 @@ class Augur(object):
                     (closed_at - issues.created_at) AS duration
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL
                 AND closed_at IS NOT NULL
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
@@ -1181,18 +1298,19 @@ class Augur(object):
                     issues.created_at,
                     COUNT(DISTINCT derived.cntrb_id) AS participants
                 FROM (
-                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL AND issues.pull_request IS NULL)
                     UNION
                     (SELECT issue_id, cntrb_id FROM issue_message_ref, message
                     WHERE issue_message_ref.msg_id = message.msg_id)
                 ) AS derived, issues, repo
                 WHERE derived.issue_id = issues.issue_id
                 AND issues.repo_id = repo.repo_id
+                AND issues.pull_request IS NULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
                     AND to_timestamp(:end_date, 'YYYY-MM-DD HH24:MI:SS')
-                GROUP BY issues.repo_id, repo_name, derived.issue_id, issues.created_at
+                GROUP BY issues.repo_id, repo.repo_name, derived.issue_id, issues.created_at
                 ORDER BY issues.repo_id, issues.created_at
             """)
 
@@ -1208,13 +1326,14 @@ class Augur(object):
                     issues.created_at,
                     COUNT(DISTINCT derived.cntrb_id) AS participants
                 FROM (
-                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL)
+                    (SELECT issue_id, cntrb_id FROM issues WHERE cntrb_id IS NOT NULL AND issues.pull_request IS NULL)
                     UNION
                     (SELECT issue_id, cntrb_id FROM issue_message_ref, message
                     WHERE issue_message_ref.msg_id = message.msg_id)
                 ) AS derived, issues, repo
                 WHERE derived.issue_id = issues.issue_id
                 AND issues.repo_id = repo.repo_id
+                AND issues.pull_request IS NULL
                 AND issues.repo_id = :repo_id
                 AND issues.created_at
                     BETWEEN to_timestamp(:begin_date, 'YYYY-MM-DD HH24:MI:SS')
@@ -1242,6 +1361,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND issue_state = 'open'
+                AND issues.pull_request IS NULL
                 GROUP BY issues.repo_id, repo_name
                 ORDER BY issues.repo_id
             """)
@@ -1253,6 +1373,7 @@ class Augur(object):
                 SELECT repo_name, COUNT(issue_id) as issue_backlog
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL
                 AND issue_state='open'
                 GROUP BY repo_name
             """)
@@ -1273,12 +1394,12 @@ class Augur(object):
                 SELECT table1.repo_id, repo.repo_name, (tot1 / tot2) AS throughput
                 FROM
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot1
-                    FROM issues WHERE issue_state='closed'
+                    FROM issues WHERE issue_state='closed' AND issues.pull_request IS NULL
                     AND repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                     GROUP BY repo_id) AS table1,
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot2
                     FROM issues
-                    WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
+                    WHERE repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id AND issues.pull_request IS NULL)
                     GROUP BY repo_id) AS table2,
                     repo
                 WHERE table1.repo_id = table2.repo_id
@@ -1293,10 +1414,10 @@ class Augur(object):
                 SELECT repo.repo_name, (tot1 / tot2) AS throughput
                 FROM
                     (SELECT repo_id, COUNT(issue_id)::REAL AS tot1 FROM issues
-                    WHERE issue_state='closed' AND repo_id=:repo_id
+                    WHERE issue_state='closed' AND repo_id=:repo_id AND issues.pull_request IS NULL
                     GROUP BY repo_id) AS table1,
                     (SELECT COUNT(issue_id)::REAL AS tot2 FROM issues
-                    WHERE repo_id=:repo_id) AS table2,
+                    WHERE repo_id=:repo_id AND issues.pull_request IS NULL) AS table2,
                     repo
                 WHERE table1.repo_id = repo.repo_id
             """)
@@ -1328,6 +1449,7 @@ class Augur(object):
                     repo,
                     repo_groups
                 WHERE issue_state = 'open'
+                AND issues.pull_request IS NULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
@@ -1342,6 +1464,7 @@ class Augur(object):
                     repo_groups
                 WHERE issue_state = 'open'
                 AND issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
                 GROUP BY repo.repo_id,issue_id, date, open_date
@@ -1380,7 +1503,8 @@ class Augur(object):
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
-                WHERE issues.closed_at NOTNULL
+                WHERE issues.closed_at IS NOT NULL
+                AND issues.pull_request IS NULL
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
@@ -1398,7 +1522,8 @@ class Augur(object):
                     EXTRACT(DAY FROM closed_at - issues.created_at) AS DIFFDATE
                 FROM issues,
                     repo
-                WHERE issues.closed_at NOTNULL
+                WHERE issues.closed_at IS NOT NULL
+                AND issues.pull_request IS NULL
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
                 AND issues.created_at BETWEEN :begin_date and :end_date
@@ -1418,6 +1543,24 @@ class Augur(object):
     ###              RISK             ###
     #####################################
 
+    @annotate(tag='sbom-download')
+    def sbom_download(self, repo_group_id, repo_id=None):
+        """REQUIRES SBOMS TO BE PRESENT IN THE DATABASE
+        
+        :param repo_id: The repository's repo_id, defaults to None
+        :return: dosocs sbom
+        """
+        dosocs_SQL = s.sql.text("""
+            select * from augur_data.repo_sbom_scans
+            where repo_id = :repo_id;
+        """)
+
+        logger.debug(dosocs_SQL)
+        params = {'repo_id': repo_id}
+
+        return pd.read_sql(dosocs_SQL, self.db, params=params)
+        #return [json.dumps(license_information)]
+
     @annotate(tag='cii-best-practices-badge')
     def cii_best_practices_badge(self, repo_group_id, repo_id=None):
         """Returns the CII best practices badge level
@@ -1430,11 +1573,12 @@ class Augur(object):
         if repo_id:
             cii_best_practices_badge_SQL = s.sql.text("""
                 SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
-                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                    achieve_silver_status, tiered_percentage, repo_url, id, repo_badging.updated_at as date
                 FROM repo_badging, repo, repo_groups
                 WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
                 AND repo_badging.repo_id = :repo_id
                 ORDER BY date DESC
+                LIMIT 1
             """)
 
             logger.debug(cii_best_practices_badge_SQL)
@@ -1443,15 +1587,16 @@ class Augur(object):
         else:
             cii_best_practices_badge_SQL = s.sql.text("""
                 SELECT repo_name, rg_name, repo_badging.badge_level, achieve_passing_status,
-                    achieve_silver_status, tiered_percentage, repo_badging.updated_at as date
+                    achieve_silver_status, tiered_percentage, repo_url, id, repo_badging.updated_at as date
                 FROM repo_badging, repo, repo_groups
                 WHERE repo.repo_group_id = repo_groups.repo_group_id AND repo.repo_id = repo_badging.repo_id
                 AND repo.repo_group_id = :repo_group_id
                 ORDER BY date DESC
+                LIMIT 1
             """)
 
             logger.debug(cii_best_practices_badge_SQL)
-            params = {'repo_group_id': repo_group_id}
+            params = {'repo_group_id': repo_group_id, 'repo_id': repo_id}
 
         return pd.read_sql(cii_best_practices_badge_SQL, self.db, params=params)
 
@@ -1474,6 +1619,7 @@ class Augur(object):
                 WHERE issues.repo_id IN
                     (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND closed_at IS NOT NULL
+                AND pull_request IS NULL 
                 GROUP BY issues.repo_id, repo.repo_name
                 ORDER BY issues.repo_id
             """)
@@ -1490,6 +1636,7 @@ class Augur(object):
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id
                 WHERE issues.repo_id = :repo_id
                 AND closed_at IS NOT NULL
+                AND pull_request IS NULL 
                 GROUP BY repo.repo_name
             """)
 
@@ -1799,6 +1946,7 @@ class Augur(object):
                                     message
                                 where repo.repo_id = :repo_id
                                     and repo.repo_id = issues.repo_id
+                                    AND issues.pull_request IS NULL
                                     and issues.issue_id = issue_message_ref.issue_id
                                     and issue_message_ref.msg_id = message.msg_id
                                     and issues.created_at between :begin_date and :end_date
@@ -1828,6 +1976,7 @@ class Augur(object):
                                     message
                                 where repo.repo_id IN (SELECT repo.repo_id from repo where repo_group_id = :repo_group_id)
                                     and repo.repo_id = issues.repo_id
+                                    AND issues.pull_request IS NULL
                                     and issues.issue_id = issue_message_ref.issue_id
                                     and issue_message_ref.msg_id = message.msg_id
                                     and issues.created_at between :begin_date and :end_date
@@ -2051,7 +2200,7 @@ class Augur(object):
     #####################################
 
     @annotate(tag='lines-changed-by-author')
-    def lines_changed_by_author(self, repo_group_id, repo_id = None):
+    def lines_changed_by_author(self, repo_group_id, repo_id=None):
         """
         Returns number of lines changed per author per day
 
@@ -2096,6 +2245,7 @@ class Augur(object):
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo_groups.rg_name
                 ORDER BY date
             """)
@@ -2109,6 +2259,7 @@ class Augur(object):
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo.repo_id
                 ORDER BY date
             """)
@@ -2131,6 +2282,7 @@ class Augur(object):
                 AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo_groups.rg_name
                 ORDER BY date
             """)
@@ -2144,6 +2296,7 @@ class Augur(object):
                 AND issues.repo_id = :repo_id
                 AND repo.repo_id = issues.repo_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
+                AND issues.pull_request IS NULL 
                 GROUP BY date, repo.repo_id
                 ORDER BY date
             """)
@@ -2572,7 +2725,7 @@ class Augur(object):
                 (select repo_id,    COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
                 repo.repo_id = a.repo_id
                 left outer join
-                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b
+                (select repo_id, count ( * ) as issues_all_time from issues where issues.pull_request IS NULL  group by repo_id) b
                 on
                 repo.repo_id = b.repo_id
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
@@ -2614,7 +2767,7 @@ class Augur(object):
                 (select repo_id, COUNT ( commits.cmt_id ) AS commits_all_time from commits group by repo_id ) a on
                 repo.repo_id = a.repo_id
                 left outer join
-                (select repo_id, count ( issues.issue_id) as issues_all_time from issues  group by repo_id) b
+                (select repo_id, count ( issues.issue_id) as issues_all_time from issues where issues.pull_request IS NULL group by repo_id) b
                 on
                 repo.repo_id = b.repo_id
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
@@ -2708,6 +2861,7 @@ class Augur(object):
                     issue_events
                 WHERE issues.repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND issues.issue_id = issue_events.issue_id
+                AND issues.pull_request is NULL
                 GROUP BY issues.issue_id
                 ORDER by OPEN_DAY DESC
             """)
@@ -2727,6 +2881,7 @@ class Augur(object):
                     repo_name
                 FROM issues JOIN repo ON issues.repo_id = repo.repo_id, issue_events
                 WHERE issues.repo_id = :repo_id
+                AND issues.pull_request IS NULL 
                 AND issues.issue_id = issue_events.issue_id
                 GROUP BY issues.issue_id, repo_name
                 ORDER by OPEN_DAY DESC
@@ -2751,7 +2906,7 @@ class Augur(object):
         if not repo_id:
             summarySQL = s.sql.text("""
                 SELECT
-                (   
+                (
                     SELECT watchers_count AS watcher_count
                     FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
                     WHERE repo_group_id = :repo_group_id
@@ -2801,7 +2956,7 @@ class Augur(object):
                         WHERE action = 'merged'
                         AND repo_group_id = :repo_group_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
-                    ) a 
+                    ) a
                 ) AS merged_count,
                 committer_count, commit_count FROM (
                     SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
@@ -2869,7 +3024,7 @@ class Augur(object):
                         WHERE action = 'merged'
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
-                    ) a 
+                    ) a
                 ) AS merged_count,
                 committer_count, commit_count FROM (
                     SELECT count(cmt_author_name) AS committer_count, sum(commit_count) AS commit_count
@@ -2905,11 +3060,12 @@ class Augur(object):
                 SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
                 FROM
                     (
-                        SELECT count(issue_events.issue_id) AS num_approved, 
+                        SELECT count(issue_events.issue_id) AS num_approved,
                             date_trunc(:group_by,issue_events.created_at) AS accepted_on
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                             JOIN repo ON issues.repo_id = repo.repo_id
                         WHERE action = 'merged'
+                        AND issues.pull_request IS NOT NULL 
                         AND repo_group_id = :repo_group_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY accepted_on
@@ -2917,11 +3073,12 @@ class Augur(object):
                     ) accepted
                 JOIN
                     (
-                        SELECT count(issue_events.issue_id) AS num_open, 
+                        SELECT count(issue_events.issue_id) AS num_open,
                             date_trunc(:group_by,issue_events.created_at) AS date_created
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                             JOIN repo ON issues.repo_id = repo.repo_id
                         WHERE action = 'ready_for_review'
+                        AND issues.pull_request IS NOT NULL 
                         AND repo_group_id = :repo_group_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY date_created
@@ -2937,10 +3094,11 @@ class Augur(object):
                 SELECT DATE(date_created) AS "date", CAST(num_approved AS DECIMAL)/CAST(num_open AS DECIMAL) AS "rate"
                 FROM
                     (
-                        SELECT count(issue_events.issue_id) AS num_approved, 
+                        SELECT count(issue_events.issue_id) AS num_approved,
                             date_trunc(:group_by,issue_events.created_at) AS accepted_on
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                         WHERE action = 'merged'
+                        AND issues.pull_request IS NOT NULL
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY accepted_on
@@ -2948,10 +3106,11 @@ class Augur(object):
                     ) accepted
                 JOIN
                     (
-                        SELECT count(issue_events.issue_id) AS num_open, 
+                        SELECT count(issue_events.issue_id) AS num_open,
                             date_trunc(:group_by,issue_events.created_at) AS date_created
-                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id 
+                        FROM issue_events JOIN issues ON issues.issue_id = issue_events.issue_id
                         WHERE action = 'ready_for_review'
+                        AND issues.pull_request IS NOT NULL 
                         AND repo_id = :repo_id
                         AND issue_events.created_at BETWEEN :begin_date AND :end_date
                         GROUP BY date_created
@@ -2975,17 +3134,243 @@ class Augur(object):
         """
 
         topInsightsSQL = s.sql.text("""
-            SELECT rg_name, repo.repo_group_id, repo_insights.repo_id, repo_git, ri_metric, ri_value AS value, 
-                ri_date AS date, cms_id AS rating, ri_fresh AS discovered
+            SELECT rg_name, repo.repo_group_id, repo_insights.repo_id, repo_git, ri_metric, ri_field, ri_value AS value,
+                ri_date AS date, ri_fresh AS discovered
             FROM repo_insights JOIN repo ON repo.repo_id = repo_insights.repo_id JOIN repo_groups ON repo.repo_group_id = repo_groups.repo_group_id
             WHERE repo_insights.repo_id IN (
                 SELECT repo_id
                 FROM repo
                 WHERE repo_group_id = :repo_group_id
-                AND repo_id IN (SELECT repo_id FROM repo_insights WHERE data_collection_date > CURRENT_DATE - INTERVAL '10' DAY GROUP BY repo_id, ri_id HAVING 304 > count(repo_insights.repo_id) ORDER BY ri_id desc)
+                AND repo_id IN (SELECT repo_id FROM repo_insights GROUP BY repo_id, ri_id HAVING 304 > count(repo_insights.repo_id) ORDER BY ri_id desc)
                 LIMIT :num_repos
             )
         """)
         results = pd.read_sql(topInsightsSQL, self.db, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
         return results
 
+    @annotate(tag='issue-comments-mean')
+    def issue_comments_mean(self, repo_group_id, repo_id=None, group_by='week'):
+        group_by = group_by.lower()
+
+        if not repo_id:
+            if group_by == 'week':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 7.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'month':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 30.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'year':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 365.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND im.msg_id = m.msg_id
+                    AND i.pull_request IS NULL 
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            else:
+                raise ValueError("Incorrect value for 'group_by'")
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id})
+            return results
+
+        else:
+            if group_by == 'week':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 7.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
+                    AND i.repo_id = :repo_id
+                    AND im.msg_id = m.msg_id
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'month':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 30.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
+                    AND i.repo_id = :repo_id
+                    AND im.msg_id = m.msg_id
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            elif group_by == 'year':
+                issue_comments_mean_std_SQL = s.sql.text("""
+                    SELECT
+                        i.repo_id,
+                        DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
+                        COUNT(*) / 365.0 AS mean
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
+                    AND i.repo_id = :repo_id
+                    AND im.msg_id = m.msg_id
+                    GROUP BY i.repo_id, date
+                    ORDER BY i.repo_id
+                """)
+
+            else:
+                raise ValueError("Incorrect value for 'group_by'")
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_id': repo_id})
+            return results
+
+    @annotate(tag='issue-comments-mean-std')
+    def issue_comments_mean_std(self, repo_group_id, repo_id=None, group_by='week'):
+        if not repo_id:
+            issue_comments_mean_std_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    DATE_TRUNC(:group_by, daily) AS date,
+                    avg(total) AS average,
+                    stddev(total) AS standard_deviation
+                FROM
+                    (SELECT
+                        i.repo_id,
+                        DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                        COUNT(*) AS total
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id IN
+                        (SELECT repo_id FROM repo
+                         WHERE  repo_group_id = :repo_group_id)
+                    GROUP BY i.repo_id, daily
+                    ORDER BY i.repo_id) a
+                GROUP BY repo_id, date
+                ORDER BY repo_id, date
+            """)
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_group_id': repo_group_id,
+                                          'group_by': group_by})
+            return results
+
+        else:
+            issue_comments_mean_std_SQL = s.sql.text("""
+                SELECT
+                    repo_id,
+                    DATE_TRUNC(:group_by, daily) AS date,
+                    avg(total) AS average,
+                    stddev(total) AS standard_deviation
+                FROM
+                    (SELECT
+                        i.repo_id,
+                        DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                        COUNT(*) AS total
+                    FROM issues i, issue_message_ref im, message m
+                    WHERE i.issue_id = im.issue_id
+                    AND i.pull_request IS NULL 
+                    AND im.msg_id = m.msg_id
+                    AND i.repo_id = :repo_id
+                    GROUP BY i.repo_id, daily
+                    ORDER BY i.repo_id) a
+                GROUP BY repo_id, date
+                ORDER BY date
+            """)
+
+            results = pd.read_sql(issue_comments_mean_std_SQL, self.db,
+                                  params={'repo_id': repo_id, 'group_by': group_by})
+            return results
+            
+    @annotate(tag='lines-of-code-commit-counts-by-calendar-year-grouped')
+    def lines_of_code_commit_counts_by_calendar_year_grouped(self, repo_url, calendar_year=None, interval=None):
+        """
+        For a single repository, all the commits and lines of code occuring for the specified year, grouped by the specified interval (week or month)
+
+        :param repo_url: the repository's URL
+        :param calendar_year: the calendar year a repo is created in to be considered "new"
+        :param interval: Month or week. The periodocity of which to examine data within the given calendar_year
+        """
+
+        if calendar_year == None:
+            calendar_year = 2018
+
+        if interval == None:
+            interval = 'month'
+
+        cdRepTpIntervalLocCommitsSQL = None
+
+        if interval == "month":
+            cdRepTpIntervalLocCommitsSQL = s.sql.text("""
+                SELECT sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,
+                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,
+                IFNULL(patches, 0) as commits, a.month, IFNULL(year, :calendar_year) as year
+                FROM (select month from repo_monthly_cache group by month) a
+                LEFT JOIN (SELECT name, repo_monthly_cache.added, removed, whitespace, patches, month, IFNULL(year, :calendar_year) as year
+                FROM repo_monthly_cache, repos
+                WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
+                AND year = :calendar_year
+                AND repos.id = repos_id
+                GROUP BY month) b
+                ON a.month = b.month
+                GROUP BY month
+            """)
+        elif interval == "week":
+            cdRepTpIntervalLocCommitsSQL = s.sql.text("""
+                SELECT  sum(cast(IFNULL(added, 0) as signed) - cast(IFNULL(removed, 0) as signed) - cast(IFNULL(whitespace, 0) as signed)) as net_lines_minus_whitespace,
+                sum(IFNULL(added, 0)) as added, sum(IFNULL(removed, 0)) as removed, sum(IFNULL(whitespace, 0)) as whitespace,
+                IFNULL(patches, 0) as commits, a.week, IFNULL(year, :calendar_year) as year
+                FROM (select week from repo_weekly_cache group by week) a
+                LEFT JOIN (SELECT name, repo_weekly_cache.added, removed, whitespace, patches, week, IFNULL(year, :calendar_year) as year
+                FROM repo_weekly_cache, repos
+                WHERE repos_id = (SELECT id FROM repos WHERE git LIKE :repourl LIMIT 1)
+                AND year = :calendar_year
+                AND repos.id = repos_id
+                GROUP BY week) b
+                ON a.week = b.week
+                GROUP BY week
+            """)
+
+        results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, self.db, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
+        return results

@@ -114,8 +114,8 @@ class GHRepoInfoWorker:
             self.info_id_inc = repo_info_start_id + 1
 
         try:
-            requests.post('http://localhost:{}/api/unstable/workers'.format(
-                self.config['broker_port']), json=specs)
+            requests.post('http://{}:{}/api/unstable/workers'.format(
+                self.config['broker_host'],self.config['broker_port']), json=specs)
         except requests.exceptions.ConnectionError:
             logger.error('Cannot connect to the broker. Quitting...')
             sys.exit('Cannot connect to the broker! Quitting...')
@@ -171,8 +171,6 @@ class GHRepoInfoWorker:
         if self._child is None:
             self._child = Process(target=self.collect, args=())
             self._child.start()
-            # requests.post("http://localhost:{}/api/unstable/add_pids".format(
-            #     self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self, repos=None):
 
@@ -373,7 +371,7 @@ class GHRepoInfoWorker:
                 else:
                     url = r.links['next']['url']
         except Exception:
-            logger.exceptioin('An error occured while querying contributor count')
+            logger.exception('An error occured while querying contributor count')
 
         return committers
 
@@ -414,7 +412,7 @@ class GHRepoInfoWorker:
         logger.info(f"[Rate Limit]: Updated rate limit, you have: {self.rate_limit} requests remaining")
         if self.rate_limit <= 0:
             reset_time = response.headers['X-RateLimit-Reset']
-            time_diff = datetime.datetime.fromtimestamp(int(reset_time)) - datetime.datetime.now()
+            time_diff = datetime.fromtimestamp(int(reset_time)) - datetime.now()
             logger.info(f"[Rate Limit]: Rate limit exceeded, waiting {time_diff.total_seconds()} seconds")
             time.sleep(time_diff.total_seconds())
             self.rate_limit = int(response.headers['X-RateLimit-Limit'])
@@ -431,8 +429,8 @@ class GHRepoInfoWorker:
         logger.info(f"This task inserted {self.results_counter} tuples\n")
 
         try:
-            requests.post('http://localhost:{}/api/unstable/completed_task'.format(
-                self.config['broker_port']), json=task_completed)
+            requests.post('http://{}:{}/api/unstable/completed_task'.format(
+                self.config['broker_host'],self.config['broker_port']), json=task_completed)
         except requests.exceptions.ConnectionError:
             logger.info("Broker is booting and cannot accept the worker's message currently")
         self.results_counter = 0
@@ -450,8 +448,8 @@ class GHRepoInfoWorker:
         logger.info(f'This task inserted {self.results_counter} tuples\n')
 
         try:
-            requests.post('http://localhost:{}/api/unstable/task_error'.format(
-                          self.config['broker_port']), json=task_failed)
+            requests.post('http://{}:{}/api/unstable/task_error'.format(
+                self.config['broker_host'],self.config['broker_port']), json=task_failed)
         except requests.exceptions.ConnectionError:
             logger.error('Could not send task failure message to the broker')
         except Exception:

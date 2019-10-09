@@ -9,15 +9,19 @@
     </div>
 
 
-    <spinner v-if="!loaded_groups"></spinner>
     <!-- Default Light Table -->
-    <div v-if="loaded_groups" class="row">
+    <div class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
             <h6 class="m-0">Currently Stored Groups</h6>
           </div>
-          <div class="card-body p-0 pb-3 text-center">
+
+          <d-card-body v-if="!loadedGroups">
+            <spinner></spinner>
+          </d-card-body>
+
+          <div v-if="loadedGroups" class="card-body p-0 pb-3 text-center">
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
@@ -52,17 +56,17 @@
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_type' == sortColumn"></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
+                  <!-- <th scope="col" class="border-0" v-on:click="sortTable('repo_count')"> 
                     <div class="row">
                       <div class="col col-9">Repo Count</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
-                  </th>
-                  <th scope="col" class="border-0">Options</th>
+                  </th> -->
+                  <!-- <th scope="col" class="border-0">Options</th> -->
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(group, index) in sorted_repo_groups(sortColumn, ascending)">
+                <tr v-for="(group, index) in sortedRepoGroups(sortColumn, ascending)">
                   <td>
                     <a href="#" @click="onRepoGroup(group)">{{ group.rg_name }}</a>
                   </td>
@@ -70,8 +74,8 @@
                   <td>{{ group.rg_website }}</td>
                   <td>{{ group.rg_last_modified }}</td>
                   <td>{{ group.rg_type }}</td>
-                  <td>{{ group.repo_count }}</td>
-                  <td>
+                  <!-- <td>{{ group.repo_count }}</td> -->
+                  <!-- <td>
                     <div class="row">
                       <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0; border: none; background: none;">
                         <i class="material-icons" style="color:#007bff;">star_rate</i>
@@ -93,7 +97,7 @@
                         Add this repo group to your current compared repos
                       </d-tooltip>
                     </div>
-                  </td>
+                  </td> -->
                 </tr>
               </tbody>
             </table>
@@ -131,9 +135,8 @@
     },
     computed: {
       ...mapGetters('common',[
-        'sorted_repo_groups',
-        'repo_groups',
-        'loaded_groups',
+        'sortedRepoGroups',
+        'repoGroups'
       ])
     },
   })
@@ -155,8 +158,7 @@
     getRepoRelations!: any;
     loadRepoGroups!:any;
     repo_groups!:any[];
-    sorted_repo_groups!:any[];
-    loaded_groups!:boolean;
+    sortedRepoGroups!:any[];
     addRepoGroup!:any;
     setBaseGroup!:any;
 
@@ -164,8 +166,10 @@
     addComparedGroup!:any;
 
     created() {
-      if(!this.loaded_groups){
-        this.loadRepoGroups()
+      if(!this.loadedGroups){
+        this.loadRepoGroups().then(() => {
+          this.loadedGroups = true
+        })
       }
     }
 

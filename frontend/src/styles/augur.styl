@@ -6,6 +6,12 @@ body
   background: background
   padding-bottom: 216px
 
+#repo_nav:hover
+  background: #eaeaea
+
+.btn-white 
+  margin-top: 0.2rem !important
+
 header
   width: 100%
   min-height: 50px
@@ -30,9 +36,9 @@ header .search
 
 #logo
   display: inline-block
-  margin-top: 0px
-  max-width: 200px
-  transform: translateY(-12px)
+  margin-top: -0rem
+  max-width: 7rem
+  transform: translateY(-0px)
 
 .content
 
@@ -252,9 +258,12 @@ cite.metric a
 
 .error
   justify-content: center
-  padding: 30px 0px 31px 20px
   text-align: center
   margin: auto
+  max-height: 6rem
+
+.underline
+  text-decoration: underline
 
 .error:before
   font-size: 3em;
@@ -407,7 +416,11 @@ cite.metric a
   max-height: 0px !important
 
 .lines-of-code-table th, .lines-of-code-table td
-  padding: 0.5rem
+  font-size:0.78rem
+  padding: 0.7rem
+
+.lines-of-code-table
+  max-width:100%
 
 .clickable-header
   cursor: pointer
@@ -1407,4 +1420,8 @@ details summary svg
 
 .text-semibold:hover {
   color: black !important
+}
+
+.chart-title {
+  padding-top: 7rem
 }

@@ -135,50 +135,60 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
 
 		# Check if email already exists in db
-		email_check = ("""SELECT cntrb_email 
+		email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
 			FROM contributors WHERE cntrb_email = %s OR cntrb_email = %s""")
-		cursor_local.execute(email_check,(author_email,committer_email,))
-		db_local.commit()
-
-		emails = list(cursor_local)
-		emails_to_add = emails
+		try:
+			cursor_local.execute(email_check,(author_email,committer_email))
+			db_local.commit()
+			emails = list(cursor_local) if cursor_local else []
+			emails_to_add = [committer_email, author_email]
+		except Exception as e:
+			db_local.rollback()
+			emails = []
+			emails_to_add = []
+			cfg.log_activity('Info','Setting emails to empty array, '
+				'Executing select statement did not work:'
+				' {}, {} with params {} and {}'.format(e, email_check, author_email,committer_email))
+		
 		emails_to_update = []
 
 		for email in emails:
 			if email[0] == committer_email or email[0] == author_email:
-				emails_to_add = [tuple for tuple in emails_to_add if tuple != email]
+				if email[0] in emails_to_add:
+					emails_to_add.remove(email[0])
 				emails_to_update.append(email)
 
-		if len(emails_to_add) > 0:
-			for email in emails_to_add:
-				cntrb = ("INSERT INTO contributors "
-					"(cntrb_email,cntrb_canonical,cntrb_full_name) "
-					"VALUES (%s,%s,%s)")
-				if email[0] == author_email:
-					cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name)))
-					db_local.commit()
-					cfg.log_activity('Debug','Stored contributor with email: %s' % author_email)
+		for email in emails_to_add:
+			cntrb = ("INSERT INTO contributors "
+				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
+				"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
+			if email == author_email:
+				cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name)))
+				db_local.commit()
+				cfg.log_activity('Debug','Stored contributor with email: %s' % author_email)
 
-				elif email[0] == committer_email:
-					cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)))
-					db_local.commit()
-					cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
+			elif email == committer_email:
+				cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)))
+				db_local.commit()
+				cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
 
-		if len(emails_to_update) > 0:
-			for email in emails_to_update:
-				email_update = ("UPDATE contributors "
-					"SET cntrb_canonical=%s, cntrb_full_name=%s "
-					"WHERE cntrb_email=%s")
-				if email[0] == author_email:
-					cursor_local.execute(email_update, (discover_alias(author_email),
-						str(author_name), email[0]))
-					db_local.commit()
-					cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
-				elif email[0] == committer_email:
-					cursor_local.execute(email_update, (discover_alias(committer_email),
-						str(committer_name), email[0]))
-					db_local.commit()
-					cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
+		for email in emails_to_update:
+			email_update = ("UPDATE contributors "
+				"SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source='%s, FacadeAugur'"
+				"tool_version='%s, 0.0.1', data_source='%s, git_repository'"
+				"WHERE cntrb_email=%s")
+			if email[0] == author_email:
+				# cursor_local.execute(email_update, (discover_alias(author_email),
+				# 	str(author_name), email[1], email[2], 
+				# 	email[3], email[0]))
+				# db_local.commit()
+				cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
+			elif email[0] == committer_email:
+				# cursor_local.execute(email_update, (discover_alias(committer_email),
+				# 	str(committer_name), email[1], email[2], 
+				# 	email[3], email[0]))
+				# db_local.commit()
+				cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
 				
 
 ### The real function starts here ###

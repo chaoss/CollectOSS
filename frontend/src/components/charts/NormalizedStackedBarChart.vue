@@ -1,31 +1,33 @@
 <template>
-  <div ref="holder">
 
-    <div style="margin-bottom: 0 !important" class="tickchart ">
-      <h3 style="font-size: 0.9rem;text-align: center;transform: translateY(-3px);">{{ title }}</h3>
-      <div :id="source" style="padding: 0"></div>
-      <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
-          <div class="inputGroup "  style="padding-top: 5px;">
-            <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
-            <label id="front" for="yearradio" >Year</label>
-          </div>
-          <div class="inputGroup "  style="padding-top: 5px;">
-            <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
-            <label id="front" for="monthradio" >Month</label>
-          </div>
-          <div class="inputGroup " style="padding-top: 5px;">
-            <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
-            <label id="front" for="contradio">Continuous</label>
-          </div>
-      </div> -->
-    </div>
+  
+
+  <div style="margin-bottom: 0 !important" class="tickchart ">
+    <!-- <div :id="source" style="padding: 0"></div> -->
+    <vega-lite :spec="spec" :data="values"></vega-lite>
+    <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
+        <div class="inputGroup "  style="padding-top: 5px;">
+          <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
+          <label id="front" for="yearradio" >Year</label>
+        </div>
+        <div class="inputGroup "  style="padding-top: 5px;">
+          <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
+          <label id="front" for="monthradio" >Month</label>
+        </div>
+        <div class="inputGroup " style="padding-top: 5px;">
+          <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
+          <label id="front" for="contradio">Continuous</label>
+        </div>
+    </div> -->
   </div>
+
 </template>
 
 
 <script>
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
+import vegaEmbed from 'vega-embed'
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
@@ -45,7 +47,9 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      group: 1
+      group: 1,
+      x: 0,
+      y: 0
     }
   },
   computed: {
@@ -62,7 +66,7 @@ export default {
       return this.$store.state.endDate
     },
     spec() {
-      
+      console.log("HEY")
       let type = null, bin = null, size = null, timeUnit = null, format = null;
 
       if(this.group == 0) {
@@ -91,23 +95,23 @@ export default {
       var colors = ["#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 450,
-        "height": 250,
-        "padding": {"left": 0, "top": 0, "right": 0, "bottom": 0},
+        "width": this.x / 2.5,
+        "height": this.y / 3,
+        "padding": {"left": 0, "top": 0, "right": 0, "bottom": -70},
         "config": {
           "axis":{
                 "grid": false
               },
           "legend": {
-            "offset": -20,
-            "orient": "right",
+            "offset": -0,
+            "orient": "bottom",
             "titlePadding": 10,
-            "padding": 40,
-            "labelFontSize": 13,
+            "padding": 20,
+            "labelFontSize": 16,
             // "labelFont": "Open Sans",
             "labelOffset": 3,
-            "titleFontSize": 14,
-            "labelLimit": 260 
+            "titleFontSize": 18,
+            "labelLimit": 460 
           },
           // "scale": {"minSize": 100, "maxSize": 500},
           "bar": {
@@ -236,7 +240,8 @@ export default {
                 "condition":{
                   "selection": {"not": "tooltip"}, "value": "transparent"
                 },
-                "value": "black"
+                // "value": "black"
+                "value": "transparent"
               }
             }
           }
@@ -353,7 +358,16 @@ export default {
     }
   },
   mounted() {
+    var win = window,
+    doc = document,
+    docElem = doc.documentElement,
+    body = doc.getElementsByTagName('body')[0],
+    x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+    y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
     this.spec;
+
   },
   methods: {
     reloadImage (config) {

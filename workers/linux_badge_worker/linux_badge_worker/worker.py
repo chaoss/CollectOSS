@@ -42,10 +42,10 @@ class BadgeWorker:
         self.config = config
         self.db = None
         self.table = None
-        
+
         specs = {
             "id": "com.augurlabs.core.badge_worker",
-            "location": "http://localhost:51235",
+            "location": self.config['location'],
             "qualifications":  [
                 {
                     "given": [["git_url"]],
@@ -57,7 +57,7 @@ class BadgeWorker:
 
         """
         Connect to GHTorrent
-        
+
         :param dbstr: The [database string](http://docs.sqlalchemy.org/en/latest/core/engines.html) to connect to the GHTorrent database
         """
         self.DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
@@ -68,7 +68,7 @@ class BadgeWorker:
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
-        
+
         # produce our own MetaData object
         metadata = MetaData()
 
@@ -99,14 +99,13 @@ class BadgeWorker:
 
         self.run()
 
-        requests.post('http://localhost:5000/api/workers', json=specs) #hello message
-        
+        requests.post('http://{}:{}/api/workers'.format(self.config['broker_host'],self.config['broker_port'], json=specs)) #hello message
+
 
     def update_config(self, config):
         """ Method to update config and set a default
         """
         self.config = {
-            'database_connection_string': 'psql://localhost:5432/augur',
             "key": "",
             "display_name": "",
             "description": "",
@@ -121,7 +120,7 @@ class BadgeWorker:
         """ Property that is returned when the worker's current task is referenced
         """
         return self._task
-    
+
     @task.setter
     def task(self, value):
         """ entry point for the broker to add a task to the queue
@@ -136,13 +135,13 @@ class BadgeWorker:
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
             self._queue.put(CollectorTask(message_type='TASK', entry_info={"git_url": git_url, "repo_id": rs.iloc[0]["repo_id"]}))
-        
+
         # list_queue = dump_queue(self._queue)
         # logging.info("worker's queue after adding the job: " + list_queue)
 
         except:
             logging.info("that repo is not in our database")
-        if self._queue.empty(): 
+        if self._queue.empty():
             if 'github.com' in git_url:
                 self._task = value
                 self.run()
@@ -153,63 +152,48 @@ class BadgeWorker:
         """
         self._task = None
 
+    def collect(self, num):
+        """ Data collection and storage method
+        Query the github api for contributors and issues (not yet implemented)
+        """
+        git_url = str(num)
+
+        # Handles git url case by removing the extension
+        #if ".git" in git_url:
+        #    git_url = git_url[:-4]
+
+        extension = "/en/projects/" + str(git_url) + ".json"
+
+        url = self.config['endpoint'] + extension
+        print("******************")
+        print(url)
+        logging.info("Hitting endpoint: " + url + " ...\n")
+        r = requests.get(url=url)
+        #print(r)
+        data = r.json()
+        if data != 0 and "404" not in str(r):
+            #print(data)
+            print("FOUND")
+            #data[0]['repo_id'] = entry_info['repo_id']
+
+            self.db.execute(self.table.insert().values(data))
+            #logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")
+            """
+            task_completed = entry_info
+            task_completed['worker_id'] = self.config['id']
+
+            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
+            requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
+            """
+        else:
+            logging.info("Endpoint did not return any data.")
+        #if num < 3500:
+        #    self.collect(num + 1)
+
     def run(self):
         """ Kicks off the processing of the queue if it is not already being processed
         Gets run whenever a new task is added
         """
         # if not self._child:
-        self._child = Process(target=self.collect, args=())
-        self._child.start()
-
-    def collect(self):
-        """ Function to process each entry in the worker's task queue
-        Determines what action to take based off the message type
-        """
-        while True:
-            if not self._queue.empty():
-                message = self._queue.get()
-            else:
-                break
-
-            if message.type == 'EXIT':
-                break
-            if message.type != 'TASK':
-                raise ValueError(f'{message.type} is not a recognized task type')
-
-            if message.type == 'TASK':
-                self.query(message.entry_info)
-
-    def query(self, entry_info):
-        """ Data collection and storage method
-        Query the github api for contributors and issues (not yet implemented)
-        """
-
-        git_url = entry_info['git_url']
-
-        # Handles git url case by removing the extension
-        if ".git" in git_url:
-            git_url = git_url[:-4]
-
-        extension = "?pq=" + git_url
-
-        url = self.config['endpoint'] + extension
-        logging.info("Hitting endpoint: " + url + " ...\n")
-        r = requests.get(url=url)
-        data = r.json()
-        if len(data) != 0:
-        
-            data[0]['repo_id'] = entry_info['repo_id']
-                 
-            self.db.execute(self.table.insert().values(data[0]))
-            logging.info("Inserted badging info for repo: " + str(entry_info['repo_id']) + "\n")   
-
-            task_completed = entry_info.to_dict()
-            task_completed['worker_id'] = self.config['id']
-
-            logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n")
-            requests.post('http://localhost:5000/api/completed_task', json=entry_info['git_url'])
-        else:
-            logging.info("Endpoint did not return any data.")
-
-
-
+        for i in range(1571, 3500):
+            self.collect(i)

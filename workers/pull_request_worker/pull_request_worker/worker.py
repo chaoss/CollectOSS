@@ -109,7 +109,7 @@ class GHPullRequestWorker:
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
             'pull_request_reviewers', 'pull_request_teams', 'message'])
 
-        helper_metadata.reflect(self.helper_db, only=['gh_worker_history', 'gh_worker_job'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -129,8 +129,8 @@ class GHPullRequestWorker:
         self.pull_request_teams_table = Base.classes.pull_request_teams.__table__
         self.message_table = Base.classes.message.__table__
 
-        self.history_table = HelperBase.classes.gh_worker_history.__table__
-        self.job_table = HelperBase.classes.gh_worker_job.__table__
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
 
         logger.info("Querying starting ids info...")
 
@@ -200,8 +200,8 @@ class GHPullRequestWorker:
         self.pr_meta_id_inc = (pr_meta_id_start + 1)
 
         try:
-            requests.post('http://localhost:{}/api/unstable/workers'.format(
-                self.config['broker_port']), json=specs) #hello message
+            requests.post('http://{}:{}/api/unstable/workers'.format(
+                self.config['broker_host'],self.config['broker_port']), json=specs) #hello message
         except:
             logger.info("Broker's port is busy, worker will not be able to accept tasks, "
                 "please restart Augur if you want this worker to attempt connection again.")
@@ -210,7 +210,6 @@ class GHPullRequestWorker:
         """ Method to update config and set a default
         """
         self.config = {
-            'database_connection_string': 'psql://localhost:5433/augur',
             "display_name": "",
             "description": "",
             "required": 1,
@@ -265,8 +264,6 @@ class GHPullRequestWorker:
         logger.info("Running...")
         self._child = Process(target=self.collect, args=())
         self._child.start()
-        # requests.post("http://localhost:{}/api/unstable/add_pids".format(
-        #     self.config['broker_port']), json={'pids': [self._child.pid, os.getpid()]})
 
     def collect(self):
         """ Function to process each entry in the worker's task queue
@@ -1104,8 +1101,8 @@ class GHPullRequestWorker:
         logger.info(f"This task inserted {self.results_counter} tuples\n")
 
         try:
-            requests.post('http://localhost:{}/api/unstable/completed_task'.format(
-                self.config['broker_port']), json=task_completed)
+            requests.post('http://{}:{}/api/unstable/completed_task'.format(
+                self.config['broker_host'],self.config['broker_port']), json=task_completed)
         except requests.exceptions.ConnectionError:
             logger.info("Broker is booting and cannot accept the worker's message currently")
         except Exception:
@@ -1155,8 +1152,8 @@ class GHPullRequestWorker:
         logger.info(f'This task inserted {self.results_counter} tuples\n')
 
         try:
-            requests.post('http://localhost:{}/api/unstable/task_error'.format(
-                          self.config['broker_port']), json=task_failed)
+            requests.post('http://{}:{}/api/unstable/task_error'.format(
+                self.config['broker_host'],self.config['broker_port']), json=task_failed)
         except requests.exceptions.ConnectionError:
             logger.error('Could not send task failure message to the broker')
         except Exception:

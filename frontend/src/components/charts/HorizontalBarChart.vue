@@ -1,33 +1,29 @@
 <template>
-  <div ref="holder">
-    <div class="normalbar">
-      <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-      <h3 style="font-size: 0.9rem;width: 17rem;text-align: center;transform: translateY(0px) translateX(0rem);">{{ title }}</h3>
-      <div :id="source"></div>
-      <p> {{ chart }} </p>
-      <div style="position: relative; top: -0px !important; transform: translateY(-0.45rem)"class="form-item form-checkboxes tickradios">
-          <div class="inputGroup ">
-            <input id="totalradio" name="lines" value="1" type="radio" v-model="type">
-            <label id="front" for="totalradio">Total</label>
-          </div>
-          <div class="inputGroup ">
-            <input id="netradio" name="lines" value="0" type="radio" v-model="type">
-            <label id="front" for="netradio">Net</label>
-          </div>
-          <div class="inputGroup ">
-            <input id="addedradio" name="lines" value="2" type="radio" v-model="type">
-            <label id="front" for="addedradio">Added</label>
-          </div>
-          
-      </div>
+  <div>
+    <div :id="source"></div>
+    <div style="position: relative; top: -0px !important; transform: translateY(-0.45rem)"class="form-item form-checkboxes tickradios">
+        <div class="inputGroup ">
+          <input id="totalradio" name="lines" value="1" type="radio" v-model="type">
+          <label id="front" for="totalradio">Total</label>
+        </div>
+        <div class="inputGroup ">
+          <input id="netradio" name="lines" value="0" type="radio" v-model="type">
+          <label id="front" for="netradio">Net</label>
+        </div>
+        <div class="inputGroup ">
+          <input id="addedradio" name="lines" value="2" type="radio" v-model="type">
+          <label id="front" for="addedradio">Added</label>
+        </div>
+        
     </div>
   </div>
 </template>
 
 
 <script>
-import { mapState } from 'vuex';
-import AugurStats from '@/AugurStats.ts';
+import { mapState } from 'vuex'
+import AugurStats from '@/AugurStats.ts'
+import vegaEmbed from 'vega-embed'
 
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data', 'measure'],
@@ -49,12 +45,19 @@ export default {
       setYear: 0,
       tick: 0,
       type: 1,
+      x:0,
+      y:0
     };
   },
-  created() {
-    this.type = 1;
-  },
   mounted() {
+    var win = window,
+    doc = document,
+    docElem = doc.documentElement,
+    body = doc.getElementsByTagName('body')[0],
+    x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+    y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
     this.spec;
   },
   computed: {
@@ -86,8 +89,8 @@ export default {
       const colors = ['#FF3647', '#4736FF', '#3cb44b', '#ffe119', '#f58231', '#911eb4', '#42d4f4', '#f032e6'];
       const config = {
         $schema: 'https://vega.github.io/schema/vega-lite/v2.json',
-        width: 250,
-        height: 150,
+        width: this.x / 3.4,
+        height: this.y / 4.3,
         padding: {left: 0, top: 0, right: 0, bottom: 0},
         config: {
           tick: {

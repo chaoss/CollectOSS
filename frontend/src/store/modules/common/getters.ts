@@ -13,7 +13,7 @@ export default {
     return repoRelations;
   },
   repoGroups: (state:any) => {
-    return state.cache.getRepoGroups || [];
+    return state.cache.getRepoGroups || []
   },
   repos: (state: any) => {
     return state.cache.getRepos || []
@@ -23,6 +23,9 @@ export default {
   },
   apiRepos: (state: any) => {
     return state.apiRepos;
+  },
+  tab: (state: any) => {
+    return state.tab
   },
   cache: (state:any) => (repo: string, endpoint: string) =>{
     return state.cache[repo][endpoint];
@@ -36,11 +39,11 @@ export default {
   repo_groups: (state: any) => {
     return state.cache.getRepoGroups
   },
-  sorted_repos: (state:any) => (col: string, ascending: boolean) => {
-      if (state.cache.getRepos == undefined) {
-          return []
-      }
-      const items = [...state.cache.getRepos].sort((a,b) => {
+  sortedRepos: (state:any) => (col: string, ascending: boolean) => {
+    if (state.cache.getRepos == undefined) {
+        return []
+    }
+    const items = [...state.cache.getRepos].sort((a,b) => {
       if (a[col] > b[col]) {
         return ascending ? 1 : -1
       } else if (a[col] < b[col]) {
@@ -50,7 +53,31 @@ export default {
     })
     return items
   },
-  sorted_repo_groups: (state:any) => (col:string, ascending: boolean) => {
+  sortedReposInGroup: (state:any) => (group:any, col: string, ascending: boolean) => {
+    if (state.cache.getRepos == undefined) {
+        return []
+    }
+    let careAbout:any[] = []
+    let i:number = 0
+    console.log(group, state.cache.getRepos, state.cache.getRepos[0].rg_name, state.cache.getRepos[0].rg_name == group.rg_name)
+    for (i = 0; i < state.cache.getRepos.length; i++) {
+      if (state.cache.getRepos[i].rg_name == group.rg_name)
+        careAbout.push(state.cache.getRepos[i])
+    }
+    console.log(careAbout)
+    const items = careAbout.sort((a:any,b:any) => {
+      if (a[col] > b[col]) {
+        return ascending ? 1 : -1
+      } else if (a[col] < b[col]) {
+        return ascending ? -1 : 1
+      }
+      return 0;
+    })
+    console.log(items)
+    return items
+  },
+  sortedRepoGroups: (state:any) => (col:string, ascending: boolean) => {
+    console.log(state.cache)
     const items = [...state.cache.getRepoGroups].sort((a,b) => {
       if (a[col] > b[col]) {
         return ascending ? 1 : -1
@@ -61,10 +88,10 @@ export default {
     })
     return items
   },
-  loaded_repos: (state:any) => {
+  loadedRepos: (state:any) => {
       return state.cache.getRepos != null;
   },
-  loaded_groups: (state:any) => {
+  loadedGroups: (state:any) => {
       return state.cache.getRepoGroups != null;
   },
   trailingAverage: (state:any) => {

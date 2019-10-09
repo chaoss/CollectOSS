@@ -11,9 +11,10 @@
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
 import Spinner from '../Spinner.vue'
+import vegaEmbed from 'vega-embed'
 
 export default {
-  props: ['url', 'source', 'title', 'color', 'data', 'field', 'insight'],
+  props: ['url', 'source', 'title', 'color', 'data', 'insight'],
   components: {
     Spinner
   },
@@ -23,7 +24,10 @@ export default {
       user: null,
       loaded: true,
       computedField: 'value',
-      first_discovered: null
+      first_discovered: null,
+      x: 0,
+      y: 0,
+      field: null
     }
   },
   computed: {
@@ -55,6 +59,14 @@ export default {
     }
   },
   mounted() {
+    var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName('body')[0],
+      x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+      y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
     this.loaded = false
     if (this.data) {
       let dataFilled = true
@@ -88,9 +100,9 @@ export default {
 
       let config = {
         // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 780,
-        "height": 280,
-        "padding": {'left': 0, 'top': 0, 'right': 0, 'bottom': 0},
+        "width": this.x / 1.9,
+        "height": this.y / 2.5,
+        "padding": {'left': 0, 'top': 10, 'right': 20, 'bottom': 0},
         "selection": {
           "grid": {
             "type": "interval", "bind": "scales"
@@ -199,7 +211,7 @@ export default {
           {
             "mark": {
               "type": "line",
-              "interpolate": "basis",
+              // "interpolate": "basis",
               "clip": true
             },
             "encoding": {
@@ -218,7 +230,7 @@ export default {
                 "field": this.computedField,"type": "quantitative",
                 "axis": {
                   "labels": true,
-                  "title": this.computedField
+                  "title": this.field
                 }
               },
               "color": {"value": this.color}
@@ -296,9 +308,12 @@ export default {
         
         let keys = Object.keys(el)
         let field = null
+        let found = false
         keys.forEach((key) => {
-          if (el[key] != null && key != 'date' && key != 'repo_name' && key != 'field' && key != 'value'){
+          if (el[key] != null && key != 'date' && key != 'repo_name' && key != 'field' && key != 'value' && !found){
+            this.field = key
             field = key
+            found = true
           }
         })
         el['value'] = el[field]

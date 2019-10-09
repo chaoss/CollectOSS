@@ -1,12 +1,12 @@
 <template>
-  <d-container style="max-width: 1240px;">
+  <d-container style="max-width: 1240px; padding-bottom:1rem">
     <d-card>
       <d-card-header>
         <d-row class="align-items-center">
           <d-col cols="12" lg="2">
             <div class="text-center text-lg-center ">Compare from your repos:</div>
           </d-col>
-          <d-col cols="12" lg="3">
+          <d-col cols="12" lg="4">
             <multiselect v-model="selectedGroups" :options="GroupOptions"
                          placeholder="Select Group" :close-on-select="false" :clear-on-select="false"
                          :preserve-search="true"  :multiple="isGroup">
@@ -15,7 +15,7 @@
               </template>
             </multiselect>
           </d-col>
-          <d-col cols="12" lg="3" v-if="!isGroup">
+          <d-col cols="12" lg="4" v-if="!isGroup">
             <multiselect v-model="selectedRepos" :multiple="true" :close-on-select="false" :clear-on-select="false"
                          :preserve-search="true" :options="RepoOptions"
                          :disabled="getSelectedGroups.length === 0" placeholder="Select Repo" >
@@ -23,7 +23,7 @@
                 class="multiselect__single" v-if="values.length && !isOpen">{{ values.length }} options selected</span>
               </template>
               <template slot="option" slot-scope="props">
-                <div class="option__desc">{{props.option.split('/')[1]}}</div>
+                <div class="option__desc">{{ props.option.split('/')[1] }}</div>
               </template>
             </multiselect>
           </d-col>
@@ -33,15 +33,17 @@
               <d-button @click="onReset">Reset</d-button>
             </d-button-group>
           </d-col>
+          <!--
           <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
             <div v-d-toggle.my-collapse variant="primary" size="small" class="float-right"
                  @click="isCollpase = !isCollpase">
-              <div v-if="isCollpase">More configuration options<i class="material-icons" style="font-size: 1.3rem
+               <div v-if="isCollpase">More configuration options<i class="material-icons" style="font-size: 1.3rem
 ">keyboard_arrow_down</i></div>
-              <div v-if="!isCollpase">Less configuration options<i class="material-icons" style="font-size: 1.3rem">keyboard_arrow_up</i>
+               <div v-if="!isCollpase">Less configuration options<i class="material-icons" style="font-size: 1.3rem">keyboard_arrow_up</i>
               </div>
             </div>
           </d-col>
+          -->
         </d-row>
         <d-row>
             <d-badge theme="primary" v-if="!isGroup" pill class="mx-2 mt-2" v-for="item in getSelectedRepos">
@@ -182,8 +184,6 @@
       ...mapGetters('common', [
         'repos',
         'repoGroups',
-        'loaded_repos',
-        'loaded_groups',
         'repoRelations'
       ]),
       ...mapGetters('compare', [
@@ -227,9 +227,13 @@
   })
 
   export default class CompareControl extends Vue {
-    selectedGroups: any = [];
-    selectedRepos: any = [];
-    isCollpase: boolean = true;
+    selectedGroups: any = []
+    selectedRepos: any = []
+    GroupOptions: string[] = []
+    loadedGroups: boolean = false;
+    loadedRepos: boolean = false;
+
+    isCollpase: boolean = true
     options: string[] = ['list', 'of', 'options']
     disabledDates: any = {
       // Disable all the dates up to specific date.
@@ -252,8 +256,8 @@
     startDate!: Date;
     endDate!: Date;
     isGroup!: boolean;
-    loaded_repos!: boolean;
-    loaded_groups!: boolean;
+
+
     comparedRepoGroups!:any;
     comparedRepos!:any;
     comparisionSize!:any;
@@ -278,14 +282,23 @@
     repoGroups!: any;
 
 
-    mounted() {
+    created() {
       // if not cached, load repo groups and repos
-      if (!this.loaded_groups) {
-        this.loadRepoGroups()
+      if (!this.loadedGroups) {
+        this.loadRepoGroups().then(() => {
+          let rg_names:string[] = []
+          this.repoGroups.forEach((rg:any) => {
+            rg_names.push(rg.rg_name)
+          })
+          this.GroupOptions = rg_names
+          this.loadedGroups = true
+        })
       }
       // when comparision is group type, we don't need to load repos
-      if (!this.isGroup && !this.loaded_repos) {
-        this.loadRepos()
+      if (!this.isGroup && !this.loadedRepos) {
+        this.loadRepos().then(() => {
+          this.loadedRepos = true
+        })
       }
 
       this.selectedRepos = this.comparedRepos
@@ -297,16 +310,31 @@
     }
 
     get getSelectedRepos() {
-      return this.selectedRepos
+      return this.selectedRepos.names
     }
 
-    get GroupOptions() {
-      let rg_names:string[] = []
-      this.repoGroups.forEach((rg:any)=>{
-        rg_names.push(rg.rg_name)
-      })
-      return rg_names
+    get selectedRepoEntities () {
+      console.log("Compare control")
+      let repos: any[] = []
+      let repo = null
+      let i = null
+      for (i in this.selectedRepos) {
+        repo = this.selectedRepos[i]
+        console.log(repo, this.repoRelations, this.selectedGroups)
+        console.log(this.repoRelations[this.selectedGroups][repo.split('/')[1]])
+        repos.push(this.repoRelations[this.selectedGroups][repo.split('/')[1]])
+      }
+      return repos
     }
+
+    // get GroupOptions() {
+    //   let rg_names:string[] = []
+    //   this.repoGroups.forEach((rg:any) => {
+    //     console.log("GROUP")
+    //     rg_names.push(rg.rg_name)
+    //   })
+    //   return rg_names
+    // }
 
     get RepoOptions() {
       let repos =  Object.values(this.repoRelations[this.selectedGroups] || [])
@@ -363,17 +391,33 @@
     }
 
     onCompare(e: any) {
-      if(!this.isGroup) {
-        console.log(this.selectedRepos)
-        router.push({
-          name: 'repo_overview_compare',
-          params: {
-            group: this.base.rg_name,
-            repo: this.base.repo_name,
-            repo_group_id: this.base.repo_group_id,
-            repo_id: this.base.repo_id,
-            compares: this.selectedRepos.join(',')}
+      if (!this.isGroup) {
+        console.log("onCompare: ", e, this.base)
+        let comparedRepoIds = ''//String(this.base.repo_id)
+        let repo: any = null
+        let i = 0
+        for (repo of this.selectedRepoEntities) {
+          console.log(repo)
+          if (i == 0)
+            comparedRepoIds += String(repo.repo_id)
+          else
+            comparedRepoIds += "," + String(repo.repo_id)
+          i++
+        }
+        this.setComparedRepos({ 'names': [this.selectedRepos.join(',')], 'ids': [comparedRepoIds] }).then(() => {
+          router.push({
+            name: 'repo_overview_compare',
+            params: {
+              group: this.base.rg_name,
+              repo: this.base.repo_name,
+              repo_group_id: this.base.repo_group_id,
+              repo_id: this.base.repo_id,
+              compares: this.selectedRepos.join(','),
+              comparedRepoIds
+            }
+          })
         })
+
       } else {
         router.push({
           name: 'group_overview_compare',
@@ -417,10 +461,12 @@
         })
       }
     }
+
     removeSelectedRepos(e:any) {
       let index = this.selectedRepos.indexOf(e);
       if (index !== -1) this.selectedRepos.splice(index, 1);
     }
+
     removeSelectedGroups(e:any) {
       let index = this.selectedGroups.indexOf(e);
       if (index !== -1) this.selectedGroups.splice(index, 1);

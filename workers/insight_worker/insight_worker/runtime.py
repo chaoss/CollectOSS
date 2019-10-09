@@ -18,24 +18,31 @@ def create_server(app, gw):
         """
         if request.method == 'POST': #will post a task to be added to the queue
             logging.info("Sending to work on task: {}".format(str(request.json)))
-            app.gh_worker.task = request.json
+            app.insight_worker.task = request.json
             
             #set task
             return jsonify({"success": "sucess"})
 
         if request.method == 'GET': #will retrieve the current tasks/status of the worker
             return jsonify({
-                "status": gh_worker._queue if condition else condition_if_false,
+                "status": insight_worker._queue if condition else condition_if_false,
                 "tasks": [{
-                    "given": list(gh_worker._queue)
+                    "given": list(insight_worker._queue)
                 }]
+            })
+
+    @app.route("/AUGWOP/heartbeat", methods=['GET'])
+    def heartbeat():
+        if request.method == 'GET':
+            return jsonify({
+                "status": "alive"
             })
 
     @app.route("/AUGWOP/config")
     def augwop_config():
         """ Retrieve worker's config
         """
-        return app.gh_worker.config
+        return app.insight_worker.config
 
 @click.command()
 @click.option('--augur-url', default='http://localhost:5000/', help='Augur URL')
@@ -55,22 +62,25 @@ def main(augur_url, host, port):
     config = {
             "id": "com.augurlabs.core.insight_worker.{}".format(worker_port),
             "broker_port": server["port"],
+            "broker_host": server["host"],
+            "zombie_id": 22,
             "host": credentials["host"],
-            "location": "http://localhost:{}".format(worker_port),
+            "location": "http://{}:{}".format(server["host"],worker_port),
             "password": credentials["password"],
             "port": credentials["port"],
             "user": credentials["user"],
-            "endpoint": "http://localhost:{}/api/unstable/metrics/status".format(server['port']),
+            "endpoint": "http://{}:{}/api/unstable/metrics/status".format(server["host"],server['port']),
             "database": credentials["database"],
             "type": "string"
         }
 
     #create instance of the worker
-    app.gh_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
+    app.insight_worker = InsightWorker(config) # declares the worker that will be running on this server with specified config
     
     create_server(app, None)
-    print("Starting Flask App with pid: " + str(os.getpid()) + "...")
-    app.run(debug=app.debug, host=host, port=port)
+    host = server['host']
+    print("Starting Flask App on host {} with port {} with pid: ".format(server['host'], worker_port) + str(os.getpid()) + "...")
+    app.run(debug=app.debug, host=server['host'], port=worker_port)
     print("Killing Flask App: " + str(os.getpid()))
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):

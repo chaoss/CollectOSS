@@ -14,27 +14,62 @@
       </div>
     </div>
 
-    <div class="row mb-5" v-if="loaded_rsik_1">
-      <div class="col-3">
-        <count-block title="Forks" :data="values" source="forkCount" field="forks"></count-block>
-      </div>
-    </div>
-
-    <div class="row mb-5" v-if="loaded_rsik_2">
+    <div class="row mb-5">
       <div class="col-6">
-        <line-chart title="Forks Count by Week" :data="values" source="getForks" filedTime="date" fieldCount="forks">
+        <line-chart
+          title="Forks Count by Week"
+          source="getForks"
+          filedTime="date"
+          fieldCount="forks">
         </line-chart>
       </div>
       <div class="col-6">
-        <line-chart title="Committers by week" :data="values" source="committers" filedTime="date"
-                    fieldCount="count"></line-chart>
+        <line-chart
+          title="Committers by week"
+          source="committers"
+          filedTime="date"
+          fieldCount="count"
+        ></line-chart>
       </div>
     </div>
 
-    <div class="row mb-5" v-if="loaded_rsik_1">
+    <div class="row mb-5">
       <div class="col-6">
-        <license-table :data="values" source="licenseDeclared"  :headers="['Short Name','Note']"
-                       :fields="['short_name','note']"  title="License Declared"></license-table>
+        <license-table
+          source="licenseDeclared"
+          :headers="['Short Name']"
+          :ldata="licenses"
+          :fields="['short_name']"
+          title="License Declared">
+        </license-table>
+        <br><br>
+        <download-card
+          v-if="loaded_sbom"
+          title="Software Bill of Materials"
+          :data="values"
+          source="sbom">
+        </download-card>
+      </div>
+      <div class="col-6">
+        <cii-table
+          source="ciiBP"
+          :headers="['Passing Status','Badge Level', 'Date']"
+          :fields="['achieve_passing_status', 'badge_level', 'date']"
+          title="CII Best Practices"
+        ></cii-table>
+        <br> <br>
+        <count-block
+          title="Forks"
+          source="forkCount"
+          field="forks"
+        ></count-block>
+        <br><br>
+        <coverage-card
+          title="License Coverage"
+          source="sbom"
+        ></coverage-card>
+      </div>
+
       </div>
     </div>
 
@@ -51,7 +86,11 @@
   import CountBlock from "@/components/charts/CountBlock.vue";
   import LineChart from "@/components/charts/LineChart.vue";
   import LicenseTable from "@/components/charts/LicenseTable.vue";
+  import CiiTable from "@/components/charts/CiiTable.vue";
+  import DownloadCard from "@/components/charts/DownloadCard.vue";
+  import CoverageCard from "@/components/charts/CoverageCard.vue";
   // import PieChart from "@/components/charts/PieChart.vue";
+  import Licenses from "@/components/Licenses.json";
   import router from "@/router";
 
   @Component({
@@ -62,6 +101,9 @@
       CountBlock,
       LineChart,
       LicenseTable,
+      CiiTable,
+      DownloadCard,
+      CoverageCard
       // PieChart,
     },
     methods: {
@@ -85,9 +127,10 @@
     projects = []
     themes = ['dark', 'info', 'royal-blue', 'warning']
     project = null
+    licenses = Licenses
 
-    loaded_rsik_1:boolean = false;
-    loaded_rsik_2:boolean = false;
+    loaded_cii:boolean = false
+    loaded_sbom:boolean = false
 
     values:any = {}
 
@@ -95,34 +138,43 @@
     groupsInfo!: any;
     getRepoGroups!: any;
     repo_groups!: any[];
-    sorted_repo_groups!: any[];
+    sortedRepoGroups!: any[];
     base!: any;
     // actions
     endpoint!: any;
 
 
     // endpoints
-    risk_endpoints_1 = ['forkCount','licenseDeclared']
-
-    risk_endpoints_2 = ['getForks', 'committers']
+    cii_endpoint = ['ciiBP']
+    sbom_endpoint = ['sbom']
 
     created() {
       console.log('####', this.base)
-      this.endpoint({endpoints:this.risk_endpoints_1,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.url][endpoint]
+      let ref = this.base.url || this.base.repo_name
+      this.endpoint({endpoints:this.sbom_endpoint,repos:[this.base]}).then((tuples:any) => {
+        Object.keys(tuples[ref]).forEach((endpoint) => {
+
+          this.values[endpoint] = tuples[ref][endpoint]
+          console.log("sbom data loaded", endpoint, ref, tuples)
         })
-        this.loaded_rsik_1 = true
+        this.loaded_sbom = true
       })
-      this.endpoint({endpoints:this.risk_endpoints_2,repos:[this.base]}).then((tuples:any) => {
-        Object.keys(tuples[this.base.url]).forEach((endpoint) => {
-        this.values[endpoint] = tuples[this.base.url][endpoint]
+      this.endpoint({endpoints:this.cii_endpoint,repos:[this.base]}).then((tuples:any) => {
+        Object.keys(tuples[ref]).forEach((endpoint) => {
+          this.values[endpoint] = tuples[ref][endpoint]
+          console.log("cii data loaded", endpoint, ref, tuples)
         })
-        this.loaded_rsik_2 = true
+        this.loaded_cii = true
       })
 
     }
 
+    onTab(e: any) {
+      console.log("onTab", e.target.value)
+      this.$router.push({
+        name: e.target.value, params: {repo: this.base.repo_name, group: this.base.rg_name}
+      })
+    }
+
   }
 </script>
-

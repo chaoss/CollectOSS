@@ -1,10 +1,7 @@
 <template>
-  <div ref="holder">
-    <div class="tickchart ">
-      <h3>Lines of code added by the top 10 authors visualized</h3>
+  <div>
       <div :id="source"></div>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-      <p> {{ chart }} </p>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
       <!-- <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
 
@@ -25,7 +22,6 @@
         
       </div>
        -->
-    </div>
   </div>
 </template>
 
@@ -33,6 +29,8 @@
 <script>
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
+import vegaEmbed from 'vega-embed'
+
 export default {
   props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'data'],
   data() {
@@ -51,10 +49,20 @@ export default {
       monthDecimals: monthDecimals,
       years: years,
       setYear: 0,
-      tick: 0
+      tick: 0,
+      x:0,
+      y:0
     }
   },
   mounted() {
+    var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName('body')[0],
+      x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+      y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+    this.x = x
+    this.y = y
     this.spec;
   },
   computed: {
@@ -87,8 +95,8 @@ export default {
       }
       if (this.tick == 1) {
         type = "tick"
-            bin = false
-            size = {}
+        bin = false
+        size = {}
         opacity = {
                 "field": "Total lines changed",
                 "type": "quantitative",
@@ -97,8 +105,8 @@ export default {
       }
       if (this.tick == 2) {
         type = "rect"
-            bin = {"maxbins": 40}
-            size = {}
+        bin = {"maxbins": 40}
+        size = {}
         opacity = {
                 "field": "Total lines changed",
                 "type": "quantitative",
@@ -106,29 +114,27 @@ export default {
               }
       }
       let config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-
-        "width": 1000,
-        "height": 360,
-        "padding": {"left": -10, "top": 35, "right": 5, "bottom": -18},
+        "width": this.x / 1.5,
+        "height": this.y / 2.4,
+        "padding": {"left": -10, "top": 0, "right": 5, "bottom": 10},
         "config": {
           "tick": {
             "thickness": 8,
             "bandSize": 23
           },
           "axis":{
-                "grid": false,
-                "title": null,
-                'labels': {
-                  'labelFontSize': 20
-                },
-              },
-
-              "legend": {
-               // "offset": -505,
-                "titleFontSize": 10,
-                "titlePadding": 10
-              },"scale": {"minSize": 100, "maxSize": 500}
+            "grid": false,
+            "title": null,
+            'labels': {
+              'labelFontSize': 20
+            },
+          },
+          "legend": {
+           // "offset": -505,
+            "titleFontSize": 10,
+            "titlePadding": 10
+          },
+          "scale": {"minSize": 100, "maxSize": 500}
         },
         "layer": [
           {
@@ -143,7 +149,7 @@ export default {
                 "as": "Net lines added"
               },
               {
-                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
+                "calculate": "(datum.additions + datum.deletions) < 0000 ? 0000 : ((datum.additions + datum.deletions) > 100000000 ? 100000000 : (datum.additions + datum.deletions))",
                 "as": "Total lines changed"
               },
             ],
@@ -175,7 +181,7 @@ export default {
                 "as": "Net lines added"
               },
               {
-                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
+                "calculate": "(datum.additions + datum.deletions) < 0000 ? 0000 : ((datum.additions + datum.deletions) > 1000000000 ? 1000000000 : (datum.additions + datum.deletions))",
                 "as": "Total lines changed"
               },
             ],
@@ -185,18 +191,19 @@ export default {
             "encoding": {
               "size": {"value": 8},
               "opacity": {"value": 1.051},
-              "x": {"field": "cmt_author_date", "type": "temporal"},
-              // "y": {"field": "cmt_author_email", "type": "nominal"},
+              "x": {"field": "cmt_author_date", "type": "temporal"},              
               "tooltip": [{"field": "cmt_author_email", "type": "nominal"},{
                 "field": "Total lines changed",
                 "type": "quantitative",
-              },{
+              },
+              {
                 "field": "Net lines added",
                 "type": "quantitative",
               }],
               "color": {
                 "condition":{
-                  "selection": {"not": "tooltip"}, "value": "transparent"
+                  "selection": {"not": "tooltip"}, 
+                  "value": "transparent"
                 }
               }
             }

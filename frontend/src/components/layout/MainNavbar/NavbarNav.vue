@@ -4,11 +4,11 @@
       <a class="nav-link nav-link-icon text-center" v-d-toggle.notifications>
         <div class="nav-link-icon__wrapper">
           <i class="material-icons">&#xE7F4;</i>
-          <d-badge pill theme="danger">2</d-badge>
+          <d-badge pill theme="danger">0</d-badge>
         </div>
       </a>
-      <d-collapse id="notifications" class="dropdown-menu dropdown-menu-small">
-        <d-dropdown-item>
+      <!-- <d-collapse id="notifications" class="dropdown-menu dropdown-menu-small"> -->
+        <!-- <d-dropdown-item>
           <div class="notification__icon-wrapper">
             <div class="notification__icon">
               <i class="material-icons">&#xE6E1;</i>
@@ -30,8 +30,8 @@
             <p>Last week your store’s sales count decreased by <span class="text-danger text-semibold">5.52%</span>. It could have been worse!</p>
           </div>
         </d-dropdown-item>
-        <d-dropdown-item class="notification__all text-center">View all Notifications</d-dropdown-item>
-      </d-collapse>
+        <d-dropdown-item class="notification__all text-center">View all Notifications</d-dropdown-item> -->
+      <!-- </d-collapse> -->
     </li>
     <li class="nav-item dropdown" style="width: auto !important;">
       <a class="nav-link dropdown-toggle text-nowrap px-3" v-d-toggle.user-actions style="position: relative; top: 50%; transform: translateY(-50%);font-size: 0.8125rem !important">
@@ -39,7 +39,7 @@
         <i class="material-icons">person</i>
         <span class="d-none d-md-inline-block">User</span>
       </a>
-      <d-collapse id="user-actions" class="dropdown-menu dropdown-menu-small">
+      <!-- <d-collapse id="user-actions" class="dropdown-menu dropdown-menu-small">
         <d-dropdown-item><i class="material-icons">&#xE7FD;</i> Profile</d-dropdown-item>
         <d-dropdown-item><i class="material-icons">&#xE8B8;</i> Edit Profile</d-dropdown-item>
         <d-dropdown-item><i class="material-icons">&#xE2C7;</i> Files</d-dropdown-item>
@@ -48,7 +48,7 @@
         <d-dropdown-item href="#" class="text-danger">
           <i class="material-icons text-danger">&#xE879;</i> Logout
         </d-dropdown-item>
-      </d-collapse>
+      </d-collapse> -->
     </li>
   </d-navbar-nav>
 </template>

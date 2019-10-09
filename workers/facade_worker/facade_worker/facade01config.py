@@ -62,7 +62,7 @@ class Config:
                 "to the directory in which you want to clone repos. Exiting...")
             sys.exit(1)
         self.tool_source = '\'FacadeAugur\''
-        self.tool_version = '\'0.1\''
+        self.tool_version = '\'0.0.1\''
         self.data_source = '\'git_repository\''
 
     #### Database update functions ####

@@ -8,16 +8,30 @@
     </div>
 
     <div class="row" style="transform: translateX(1rem)">
-      <div class="row col col-9">
-        <d-card class="card-small h-100" style="height:10% !important; margin-bottom:1rem">
+      <div class="row col col-8">
 
-          <!-- Card Header -->
+        <d-card v-if="!loadedInsights">
           <d-card-header class="border-bottom">
-            <h6 class="m-0">{{ getRepo }}</h6>
+            <a href="#" class="underline text-fiord-blue" @click="onRepoOverview()">
+              <h6 class="m-0">{{ getRepo }}</h6>
+            </a>
             <div class="block-handle"></div>
           </d-card-header>
 
-          <d-card-body class="pt-0" style="margin-bottom: 21rem" :style="{loadedInsights: 'margin-bottom: 0rem !important'}">
+          <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-40%);"></spinner>
+
+        </d-card>
+        <d-card v-if="loadedInsights" class="card-small" style="margin-bottom:1rem; height:16.5% !important;"> 
+
+          <!-- Card Header -->
+          <d-card-header class="border-bottom">
+            <a href="#" class="underline text-fiord-blue" @click="onRepoOverview()">
+              <h6 class="m-0">{{ getRepo }}</h6>
+            </a>
+            <div class="block-handle"></div>
+          </d-card-header>
+
+          <d-card-body class="pt-0" style="margin-bottom: 126rem !important"> <!--  -->
             <!-- <d-row class="border-bottom py-2 bg-light">
 
               <d-col col sm="6" class="d-flex mb-2 mb-sm-0">
@@ -37,31 +51,33 @@
             </d-row> -->
 
             <!-- Main insight -->
-            <div v-if="!loadedInsights" style=""></div>
-            <div v-if="!loadedInsights" style="padding: 3.5rem 0 0 3.7rem;" class="col-md-8 col-lg-9">
-
-              <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-40%);"></spinner>
-            </div>
+            
             <main-insight v-if="loadedInsights"
-              :data="values" :url="getRepo" color="black" source="main" :insight="insights[getGroup][getRepo][getMetric]"
+              :data="values" :url="getRepo" color="black" source="main" :insight="insights[getGroup][getRepo][getApiMetric]"
             ></main-insight>
 
           </d-card-body>
         </d-card>
         
-        
-        
-        
       </div>
 
       <!-- sidebar of other repo groups -->
-      <div class="row col col-3" style="transform: translateX(3rem)">
+      <div class="row col col-4" style="transform: translateX(3rem)">
         <div class="col-12 page-header row no-gutters py-4">
           <div class="col-12 text-center text-sm-left mb-0">
             <h3 class="page-title" style="font-size: 1rem">View insights for other repo groups</h3>
           </div>
         </div>
-        <d-col v-if="loadedInsights" v-for="(group, idx) in Object.keys(insights).slice(0,6)" :key="idx" lg="12" sm="12" class="mb-4">
+        
+        <d-col v-if="!loadedInsights">
+          <d-card>
+            <div style="">
+              <spinner></spinner>
+            </div>
+          </d-card>
+        </d-col>
+        
+        <d-col v-else style="transform: translateY(-0rem)" v-for="(group, idx) in Object.keys(insights).slice(0,5)" :key="idx" lg="12" sm="12" class="mb-4">
           <d-card class="card-small card">
             <div class="border-bottom card-header">
               <h6 class="m-0">{{ group }}</h6>
@@ -70,13 +86,13 @@
             <div class="p-0 card-body">
               <div class="list-group-small list-group list-group-flush">
                 <div v-for="(repo, i) in Object.keys(insights[group]).slice(0,5)" class="d-flex px-3 list-group-item" style="text-align: left">
-                  <a href="#" style="max-width:5.74rem" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]])">
-                    <span class="text-semibold text-fiord-blue" style="font-size: .65rem; padding: 0; ">{{ repo }}</span>
-                  </a>
-                  <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
-                    <spark-chart :color="colors[idx]" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; transform:translateX(-1rem)"/>
-                  </div>
+                  <a href="#" class="underline text-semibold text-fiord-blue" style="width:100%" @click="onInspectInsight(insights[group][repo][Object.keys(insights[group][repo]).slice(0,1)[0]][0])">
+                    <span class="text-semibold text-fiord-blue underline" style="font-size: 1rem; padding: 0; max-width:10rem">{{ getRepoName(repo) }}</span>
                   
+                    <div v-if="loadedInsights" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)" style="margin: 0 0 0 auto; float:right">
+                      <spark-chart :color="colors[idx]" :title="metric + ' (' + insights[group][repo][metric][0].ri_field + ')'" :url="repo" :data="insights[group][repo][metric]" style="max-height: 50px; padding-bottom: 0px; transform:translateX(-1rem)"/>
+                    </div>
+                  </a>
                 </div>
               </div>
             </div>
@@ -84,9 +100,9 @@
         </d-col>
         
       </div>
-      <!-- Others for this repo -->
+      <!-- Others top insights -->
         
-      <d-row class="col-12" style="transform: translateY(-228rem); padding: 0 !important; ">
+      <d-row class="col-12" style="transform: translateY(-128rem); padding: 0 !important; ">
         <div class="col-12 page-header row no-gutters py-4">
           <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
             <h3 class="page-title" style="font-size: 1rem">View other top insights</h3> <!-- insights for this repo -->
@@ -96,12 +112,12 @@
           <spinner style="padding: 1.5rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
         </div>
 
-        <d-col v-if="loadedInsights" v-for="(group, idx) in Object.keys(insights).slice(0,3)" :key="idx" lg="3" md="4" sm="8" class="mb-4">
+        <d-col v-if="loadedInsights" v-for="(group, idx) in Object.keys(insights).slice(0,2)" :key="idx" lg="4" md="4" sm="8" class="mb-4">
           
           <d-card v-if="idx < 4" v-for="repo in Object.keys(insights[group]).slice(0,1)" class="card-small card-post card-post--1">
             <div class="card-post__image" v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
               <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ group }}</d-badge>
-              <insight-chart style="transform: translateX(-3.35rem)" :data="insights[group][repo][metric]" :url="repo" :color="colors[idx]"></insight-chart>
+              <insight-chart style="" :data="insights[group][repo][metric]" :url="repo" :color="colors[idx]"></insight-chart>
 
               <div class="card-post__author d-flex">
                 <a href="#" :style="colors[idx]" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
@@ -111,10 +127,17 @@
             </div>
             <d-card-body v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
               <h5 class="card-title">
-                <a href="#" @click="onInspectInsight(insights[group][repo][metric])" class="text-fiord-blue">{{ repo.substr(19) }}</a>
+                <a href="#" @click="onGitRepo(insights[group][repo][metric])" class="text-fiord-blue underline">{{ repo.substr(19) }}</a>
               </h5>
-              <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[group][repo][metric]) }}</p>
-              <span class="text-muted" style="font-size: .75rem">{{ timeframes[repo] }}</span>
+              <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had {{ getPhrase(insights[group][repo][metric]) }}</p>
+              <d-row>
+                <d-col cols="12" sm="5"><span class="text-muted" style="font-size: .75rem">{{ timeframes[repo] }}</span></d-col>
+                <!-- View Full Report -->
+                <d-col cols="12" sm="7" style="transform: translateX(-1rem) !important;">
+                  <d-button size="sm" @click="onInspectInsight(insights[group][repo][metric][0])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
+                </d-col>
+<!--                   <div class="col col-7"><span class="text-muted" style="font-size: .75rem"><a href="#" class="text-fiord-blue" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric])">See more here...</a></span></div>
+-->            </d-row>
             </d-card-body>
           </d-card>
         </d-col>
@@ -154,8 +177,9 @@ import Spinner from '../components/Spinner.vue';
       'apiRepos',
       'apiGroups',
       'cache'
-      
-      // 'repoRelations'
+    ]),
+    ...mapGetters('compare', [
+      'base'
     ]),
 
   },
@@ -171,9 +195,6 @@ export default class InspectInsight extends Vue {
   // Data properties
   chart: any = null //"#343A40", 
   colors: string[] = ["#24a2b7", "#FF3647","#159dfb", "#FFC107","#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
-  tempInsightEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
-  tempInsightRepos: any[] = [];
-  tempInsightTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
   themes: string[] = ['info', 'danger','royal-blue', 'warning', 'dark'];
   loadedRelations: boolean = false
   loadedInsights: boolean = false
@@ -181,8 +202,7 @@ export default class InspectInsight extends Vue {
   insights: any = {}
   timeframes: any = {}
   values: any = []
-  test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/Comcast/Hygieia.git','https://github.com/apache/jclouds-site.git',
-    'https://github.com/apache/karaf-jclouds.git', 'https://github.com/openssl/openssl', 'https://github.com/rails/ruby-coffee-script.git']
+
   dateRange: any = {
     from: null,
     to: null,
@@ -196,6 +216,7 @@ export default class InspectInsight extends Vue {
   apiRepos!:any;
   apiGroups!:any;
   cache!:any;
+  base!:any;
 
   // Allow access to vuex actions
   loadRepoGroups!:any;
@@ -247,8 +268,8 @@ export default class InspectInsight extends Vue {
                   this.addedRepo = true
                   this.addRepo(tuple).then((repo:any) => {
                     console.log("added main repo: ", repo)
-                    repo[this.apiMetric]().then((values: any) => {
-                      console.log("hit endpoint for repo", this.apiMetric, values)
+                    repo[this.getMetric]().then((values: any) => {
+                      console.log("hit endpoint for repo", this.getMetric, values)
                       this.values = values
                     }).catch(function () {
                       console.log("Promise Rejected");
@@ -285,27 +306,30 @@ export default class InspectInsight extends Vue {
     })
   }
 
-  get getRepo() {
-    return this.$route.params.repo_git
+  get getApiMetric () {
+    return this.$route.params.metric
+  }
+
+  get getRepo () {
+    return this.$route.params.repo
   }
 
   get getMetric() {
-    return this.$route.params.ri_metric
-  }
-
-  get apiMetric() {
-    if (this.$route.params.ri_metric == 'New Issues (issues)'){
-      return 'issueNew'
-    } else if (this.$route.params.ri_metric == 'Code Changes' || this.$route.params.ri_metric == 'Commit Count (commit_count)'){
-      return 'codeChanges'
-    } else if (this.$route.params.ri_metric == 'Code Changes Lines'){
-      return 'codeChangesLines'
-    } 
-    return ''
+    let words = this.$route.params.metric.split('-')
+    let fWord = words.shift()
+    while (words.length > 0) {
+      let word = words.shift()
+      if (!word) break
+      word = word.charAt(0).toUpperCase() + word.slice(1)
+      fWord += word
+    }
+    if (!fWord) fWord = "code-changes";
+    console.log("API met: ", fWord)
+    return fWord
   }
 
   get getGroup() {
-    return this.$route.params.rg_name
+    return this.$route.params.group
   }
 
   getOwner (url: string) {
@@ -376,11 +400,11 @@ export default class InspectInsight extends Vue {
     this.timeframes[values[0].repo_git] = date + ' days'
     if (values[i+1]){
       if (values[i+1].value > values[i].value) 
-        return 'increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+        return 'a sharp increase in ' + values[0].ri_metric + ' within the past ' + date + ' days'
       else
-        return 'decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+        return 'a sharp decrease in ' + values[0].ri_metric + ' within the past ' + date + ' days'
     } else {
-      return 'insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
+      return 'an insight in ' + values[0].ri_metric + ' within the past ' + date + ' days'
     }
   }
 
@@ -391,12 +415,47 @@ export default class InspectInsight extends Vue {
     })
   }
 
+  onRepoOverview () {
+    console.log("onRepoOverview: ", this.base)
+    // this.$router.push({
+    //   name: 'repo_overview',
+    //   params: {group:this.base.rg_name, repo:this.base.repo_name, repo_group_id: this.base.repo_group_id, repo_id: this.base.repo_id}
+    // })
+  }
+
   onInspectInsight (e: any) {
-    console.log(e[0])
+    console.log("onInspectInsight: ",e)
     this.$router.push({
       name: 'inspect_insight',
-      params: {'rg_name': e[0].rg_name, 'repo_git': e[0].repo_git, 'ri_metric': e[0].ri_metric}
+      params: {'group': e.rg_name, 'repo': e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id, 'metric': e.ri_metric}
     })
+  }
+
+  getRepoName (url: string) {
+    let first = url.indexOf(".")
+    let last = url.lastIndexOf(".")
+    let domain = null
+    let owner = null
+    let repo = null
+    let extension = false
+
+    if (first == last){ //normal github
+      domain = url.substring(0, first)
+      owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.slice(url.lastIndexOf('/') + 1)
+      return repo
+    } else if (url.slice(last) == '.git'){ //github with extension
+      domain = url.substring(0, first)
+      extension = true
+      owner = url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.substring(url.lastIndexOf('/') + 1, url.length - 4)
+      return repo
+    } else { //gluster
+      domain = url.substring(first + 1, last)
+      owner = null //url.substring(url.indexOf('/') + 1, url.lastIndexOf('/'))
+      repo = url.slice(url.lastIndexOf('/') + 1)
+      return repo
+    }
   }
 
 }

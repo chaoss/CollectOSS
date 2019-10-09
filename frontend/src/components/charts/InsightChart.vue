@@ -1,7 +1,7 @@
 <template>
-  <div ref="holder" style="position: relative; z-index: 5; transform: translateY(-50%); ">
-    <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 5.9rem 0px auto;"></spinner>
-    <div v-if="loaded" class="chart hidefirst ">
+  <div ref="holder" style="position: relative; z-index: 5; transform: translateY(-40%); transform: translateX(-2rem);">
+    <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-40%); margin: 3.5rem 5.9rem 0px auto;"></spinner>
+    <div v-if="loaded" class="">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <!-- <p> {{ chart }} </p> -->
 
@@ -25,11 +25,21 @@ export default {
     return {
       values: [],
       user: null,
-      loaded: true
+      loaded: true,
+      x:0,
+      y:0
     }
   },
   computed: {
     spec() {
+      var win = window,
+      doc = document,
+      docElem = doc.documentElement,
+      body = doc.getElementsByTagName('body')[0],
+      x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+      y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
+      this.x = x
+      this.y = y
       // repo[this.source]().then((data) => {
         this.values = this.data//this.convertKey(this.data)
       // })
@@ -37,8 +47,8 @@ export default {
 
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-        "width": 263.7,
-        "height": 166,
+        "width": this.x / 4,//263.7,
+        "height": this.y / 4,//166,
         "padding": {'left': 0, 'top': 0, 'right': 0, 'bottom': 0},
         "mark": {
           "type":"line",
@@ -46,13 +56,13 @@ export default {
         },
         "encoding": {
           "x": {
-            "timeUnit": "yearmonth", "field": "date", "type": "temporal",
-            "axis": {"labels": false, "grid": false, "title": false, "ticks": false}
+            "timeUnit": "yearmonthdate", "field": "date", "type": "temporal",
+            "axis": {"grid": false, "format": "%b %d"}
           },
           "y": {
             // "aggregate": "sum", 
             "field": "value","type": "quantitative",
-            "axis": {"labels": false, "grid": false, "title": false, "ticks": false},
+            "axis": {"grid": false, "title":false, "ticks": false},
           },
           "color": {"value": this.color}
         }

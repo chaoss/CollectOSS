@@ -29,6 +29,13 @@ def create_server(app, gw):
                         status=200,
                         mimetype="application/json")
 
+    @app.route("/AUGWOP/heartbeat", methods=['GET'])
+    def heartbeat():
+        if request.method == 'GET':
+            return jsonify({
+                "status": "alive"
+            })
+
     @app.route("/AUGWOP/config")
     def augwop_config():
         """ Retrieve worker's config
@@ -54,8 +61,9 @@ def main(augur_url, host, port):
     config = {
             "id": "com.augurlabs.core.repo_info_worker.{}".format(worker_port),
             "broker_port": server['port'],
-            "location": "http://localhost:{}".format(worker_port),
-            #"zombie_id": credentials["zombie_id"],
+            "broker_host": server['host'],
+            "location": "http://{}:{}".format(server['host'],worker_port),
+            "zombie_id": 22,
             "host": credentials["host"],
             "key": credentials["key"],
             "password": credentials["password"],
@@ -76,11 +84,11 @@ def main(augur_url, host, port):
 
     create_server(app, None)
     logging.info("Starting Flask App with pid: " + str(os.getpid()) + "...")
-    app.run(debug=app.debug, host=host, port=worker_port)
+    app.run(debug=app.debug, host=server['host'], port=worker_port)
     if app.gh_repo_info_worker._child is not None:
         app.gh_repo_info_worker._child.terminate()
     try:
-        requests.post('http://localhost:{}/api/unstable/workers/remove'.format(server['port']), json={"id": config['id']})
+        requests.post('http://{}:{}/api/unstable/workers/remove'.format(server['host'],server['port']), json={"id": config['id']})
     except:
         pass
 
