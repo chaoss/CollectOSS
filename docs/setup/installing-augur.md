@@ -41,7 +41,7 @@
 
 **For Mac OSX**  
 ```
-    $ pgsql postgres
+    $ psql postgres
     postgres=# create database augur;
     postgres=# create user augur with encrypted password 'mypass';
     postgres=# grant all privileges on database augur to augur;
