@@ -1,4 +1,4 @@
-Augur Python Library
+Python Library
 ==================================
 
 This documentation is for using Augur as a Python library.

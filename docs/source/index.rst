@@ -37,12 +37,12 @@ Our core team has a long standing interest in social computing, software enginee
    :maxdepth: 1
 
    installation
+   usage
    dev-guide-toc
    create-a-metric
    python
    frontend
    architecture
-   ghc-todo
 
 .. TODO: add me back later
 .. docker-install
