@@ -5,18 +5,16 @@ matrix:
     language: python
     python: '3.6'
     script:
-    - pip install zmq
-    - python -m pytest augur/datasources/**/test_**_functions.py
+    - python -m pytest augur/metrics/**/test_**_functions.py
 
   - name: API Unit Tests
     install: python setup.py install; pip install .
     language: python
     python: '3.6'
     script:
-    - pip install zmq
     - augur run > /dev/null 2>&1 &
     - sleep 10
-    - python -m pytest -ra augur/datasources/**/test_**_routes.py
+    - python -m pytest -ra augur/metrics/**/test_**_routes.py
 
 notifications:
   slack:

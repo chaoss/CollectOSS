@@ -648,7 +648,7 @@ class GHPullRequestWorker:
         new_base = self.check_duplicates([base], meta_table_values, pseudo_key_gh)
 
         if new_head:
-            if 'login' in new_head[0]['user']:
+            if new_head[0]['user'] and 'login' in new_head[0]['user']:
                 cntrb_id = self.find_id_from_login(new_head[0]['user']['login'])
             else:
                 cntrb_id = 1
@@ -675,7 +675,7 @@ class GHPullRequestWorker:
             logger.info('No new PR Head data to add')
 
         if new_base:
-            if 'login' in new_base[0]['user']:
+            if new_base[0]['user'] and 'login' in new_base[0]['user']:
                 cntrb_id = self.find_id_from_login(new_base[0]['user']['login'])
             else:
                 cntrb_id = 1
