@@ -46,6 +46,9 @@ export default class PieChart extends Vue {
 
   //props
   source!:any
+  field!:any
+  data!:any
+
 
 
   get spec() {
@@ -172,7 +175,7 @@ export default class PieChart extends Vue {
     }
 
     //define function that does any operation needed on data before sending it to the chart
-    let processData = (data) => {
+    let processData = (data: any) => {
 
       console.log("PIECHART data",data)
 
