@@ -25,7 +25,7 @@ def test_contributors(metrics):
 
 
 def test_contributors_new(metrics):
-    assert metrics.contributors_new(21, repo_id=21222, period='year').isin(
+    assert metrics.contributors_new(20, repo_id=21000, period='year').isin(
         [pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
     # repo_group_id
@@ -36,7 +36,7 @@ def test_contributors_new(metrics):
     assert metrics.contributors_new(24, period='year', begin_date='2019-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
-    assert metrics.contributors_new(21, repo_id=21222, period='year', begin_date='2019-1-1 00:00:00',
+    assert metrics.contributors_new(20, repo_id=21000, period='year', begin_date='2019-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59').isin([pd.Timestamp('2019-01-01 00:00:00', tz='UTC')]).any().any()
 
 def test_top_committers(metrics):
