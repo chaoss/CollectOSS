@@ -16,16 +16,16 @@
             
             <d-card v-if="idx < highest_frame.length" class="card-small card-post card-post--1">
 
-              <div v-if="!loadedInsights">
+              <div style="min-height: 34.2px !important;" v-if="!loadedInsights">
                 <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
               </div>
 
               <div class="card-post__image" v-if="loadedInsights">
-                <d-badge pill :class="['card-post__category', 'bg-' + themes[idx] ]">{{ highest[idx].ri_metric }} ({{ highest[idx].ri_field }})</d-badge>
-                <insight-chart style="" :data="insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]" :url="highest[idx].repo_git" :color="colors[idx]"></insight-chart>
+                <d-badge pill :class="['card-post__category', 'bg-' + (color_mapping[highest[idx].ri_metric].theme || 'info') ]">{{ highest[idx].ri_metric }} ({{ highest[idx].ri_field }})</d-badge>
+                <insight-chart style="" :data="insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]" :url="highest[idx].repo_git" :color="color_mapping[highest[idx].ri_metric].hex || '#FFC107'"></insight-chart>
 
                 <div class="card-post__author d-flex">
-                  <a href="#" :style="colors[idx]" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
+                  <a href="#" :style="color_mapping[highest[idx].ri_metric].hex" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
                     <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%)">{{ getDirection(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</i>
                   </a>
                 </div>
@@ -44,36 +44,82 @@
                 </h5>
                 <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</p>
                 <d-row>
-                  <d-col cols="12" sm="5"><span class="text-muted" style="font-size: .75rem">{{ timeframes[highest[idx].repo_git] }}</span></d-col>
-                  <!-- View Full Report -->
-                  <d-col cols="12" sm="7" style="transform: translateX(-1rem) !important;">
-                    <d-button :id="'inspect' + idx" size="sm" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</d-button>
-                    <d-tooltip 
-                      :target="'#inspect' + idx"
-                      container=".shards-demo--example--tooltip-01"
-                      placement="right"
-                      offset="20">
-                      Click to see more about this insight.
-                    </d-tooltip>
+                  <d-col cols="12" sm="5">
+                    <d-row>
+                      <d-col cols="12" sm="12">
+                        <span class="text-muted" style="font-size: .75rem">{{ timeframes[highest[idx].repo_git] }}</span>
+                      </d-col>
+                      <p></p>
+                      <d-col cols="12" sm="12">
+                        <d-button 
+                        theme="info" size="sm" 
+                        :id="'inspect' + idx" 
+                        @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" 
+                        style="color: white !important" 
+                        class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Insight Details &rarr;</d-button>
+                        <d-tooltip 
+                          :target="'#inspect' + idx"
+                          container=".shards-demo--example--tooltip-01"
+                          placement="right"
+                          offset="20">
+                          Click to see more about this insight.
+                        </d-tooltip>
+                      </d-col>
+                    </d-row>
                   </d-col>
-<!--                   <div class="col col-7"><span class="text-muted" style="font-size: .75rem"><a href="#" class="text-fiord-blue" @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric])">See more here...</a></span></div>
- -->            </d-row>
+                  <!-- View Full Report -->
+
+                  <d-col cols="12" sm="7" style="transform: translateX(-1rem) !important;">
+                    <d-row>
+                      
+
+                      <d-col cols="12" sm="12">
+                        <d-button 
+                        :id="'ev' + idx" 
+                        size="sm" 
+                        @click="onGitRepo(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" 
+                        style="color: white !important" 
+                        class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Evolution &rarr;</d-button>
+                        <d-tooltip 
+                          :target="'#ev' + idx"
+                          container=".shards-demo--example--tooltip-01"
+                          placement="right"
+                          offset="20">
+                          Click to see evolution metrics for this repo.
+                        </d-tooltip>
+                      </d-col>
+                      <p></p>
+                      <d-col cols="12" sm="12">
+                        <d-button theme="secondary" :id="'ri' + idx" size="sm" @click="onRisk(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Risk &rarr;</d-button>
+                        <d-tooltip 
+                          :target="'#ri' + idx"
+                          container=".shards-demo--example--tooltip-01"
+                          placement="right"
+                          offset="20">
+                          Click to see risk metrics for this repo.
+                        </d-tooltip>
+                      </d-col>
+                    </d-row>
+                  </d-col>
+                </d-row>
               </d-card-body>
             </d-card>
           </d-col>
         </d-row>
 
+
+
+        <!-- grouped by repo group, remove for now bc confusion w difference of scope -->
+
+        <!--
         <div style="transform: translateY(-0px)">
           <div class="page-header row no-gutters py-4">
             <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
-              <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
               <h3 style="font-size: 1rem" class="page-title">5 Most Anomalous Insights Across All Your Repo Groups</h3>
             </div>
           </div>
-
-          <!-- Second Row of Posts -->
           
-          <d-row>
+           <d-row>
             <d-col v-if="!loadedInsights">
               <d-card>
                 <div style="">
@@ -88,9 +134,7 @@
                   
                   <div v-for="repo in Object.keys(insights[group]).slice(0,1)">
                     <div v-for="metric in Object.keys(insights[group][repo]).slice(0,1)">
-                      <!-- <a href="#" @click="onRepoGroup(insights[group][repo][metric][0])"> -->
                         <h6 class="m-0" style="color: black">{{ group }}</h6>
-                      <!-- </a> -->
                     </div>
                   </div>
 
@@ -128,7 +172,7 @@
                 </div>
               </d-card>
             </d-col>
-          </d-row>
+          </d-row> -->
         </div>
   </d-container>
 </template>
@@ -173,18 +217,22 @@ export default class Dashboard extends Vue {
   
   // Data properties
   chart: any = null //"#343A40", 
-  colors: string[] = ["#24a2b7", "#FF3647","#159dfb", "#FFC107","#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"];
-  tempInsightEndpoints: string[] = ['issuesClosed', 'codeChangesLines', 'issueNew'];
-  tempInsightRepos: any[] = [];
-  tempInsightTimeframes: string[] = ['past 1 month', 'past 3 months', 'past 2 weeks'];
-  themes: string[] = ['info', 'danger','royal-blue', 'warning', 'dark'];
+  // colors: string[] = ["#24a2b7", "#FF3647","#159dfb", "#FFC107", '343a40'];
+  color_mapping: any = {
+    'code-changes': { 'hex': "#FFC107", 'theme': 'warning' },
+    'code-changes-lines': { 'hex': "#FF3647", 'theme': 'danger' },
+    'issues-new': { 'hex': "#159dfb", 'theme': 'royal-blue' },
+    'reviews': { 'hex': '#343a40', 'theme': 'dark' },
+  }
+  // themes: string[] = ['info', 'danger','royal-blue', 'warning', 'dark'];
   loadedInsights: boolean = false
   desiredReposPerGroup: number = 5
+  desiredTopInsights: number = 12
   insights: any = {}
   timeframes: any = {}
   test: any[] = ['https://github.com/rails/ruby-coffee-script.git', 'https://github.com/Comcast/Hygieia.git','https://github.com/apache/jclouds-site.git',
     'https://github.com/apache/karaf-jclouds.git', 'https://github.com/openssl/openssl', 'https://github.com/rails/ruby-coffee-script.git']
-  highest_frame: any = [{},{},{}]
+  highest_frame: any = [{}, {}, {}, {}, {}, {}]
   highest: any = []
 
   // Allow access to vuex getters
@@ -202,6 +250,9 @@ export default class Dashboard extends Vue {
   endpoint!:any;
   addRepoGroup!:any;
 
+  getHex (metric) {
+    return color_mapping[highest[idx].ri_metric].hex || '#FFC107'
+  }
   // 'created' lifecycle hook
   // Gets ran on component initialization, data collection should be handled here
   created () {
@@ -216,7 +267,7 @@ export default class Dashboard extends Vue {
       })
 
       Promise.all(addingGroupPromises).then((groups: any) => {
-        let dupesAllowed = 3 - groups.length
+        let dupesAllowed = this.desiredTopInsights - groups.length
         groups.forEach((group: any) => {
           relevantApiGroups.push(this.apiGroups[group.rg_name])
         })
@@ -225,24 +276,44 @@ export default class Dashboard extends Vue {
           groups.forEach((group: any) => {
             console.log("Group tuples: ", tuples[group.rg_name].groupEndpoints.topInsights)
             if ('topInsights' in tuples[group.rg_name].groupEndpoints){
-              tuples[group.rg_name].groupEndpoints.topInsights.forEach((tuple:any) => {
-                // tuple.value = +tuple.value
+              let n = null
+              for (n = 0; n < tuples[group.rg_name].groupEndpoints.topInsights.length; n++) {
+              // tuples[group.rg_name].groupEndpoints.topInsights.forEach((tuple:any) => {
+
+                let tuple = tuples[group.rg_name].groupEndpoints.topInsights[n]
+
                 let i = 0
                 let alreadyIncluded = false
 
+
                 this.highest.forEach((record:any) => {
-                  if ((tuple.date > record.date && tuple.rg_name == record.rg_name)){
-                    console.log("Update hightest condition met: ", tuple)
-                    this.highest[i] = tuple
-                  }
-                  if (record.repo_id == tuple.repo_id)
+                  // console.log(record.repo_git, tuple.repo_git)
+                  if (record.repo_git == tuple.repo_git || record.repo_id == tuple.repo_id)
                     alreadyIncluded = true
-                  i++
                 })
-                if (this.highest.length < 3 && (this.highest.length == 0 || this.highest[this.highest.length-1].rg_name != tuple.rg_name || dupesAllowed > 0 && !alreadyIncluded)) {
-                  dupesAllowed--
-                  console.log("Set hightest condition met: ", tuple)
-                  this.highest.push(tuple)
+
+
+                for (let i = 0; i < this.highest.length; i++) {
+                  if (tuple.date > this.highest[i].date && !alreadyIncluded && this.highest.length >= this.desiredTopInsights){ 
+                    
+                    if (tuples[group.rg_name].groupEndpoints.topInsights[n + 1] && tuples[group.rg_name].groupEndpoints.topInsights[n - 1]) {
+                      if (tuples[group.rg_name].groupEndpoints.topInsights[n + 1].repo_git == tuple.repo_git || tuples[group.rg_name].groupEndpoints.topInsights[n - 1].repo_git == tuple.repo_git) {
+                        console.log("Update hightest condition met: ", tuple)
+                        this.highest[i] = tuple
+                        break
+                      }
+                    }
+                  }
+                }
+                //if (this.highest.length < this.desiredTopInsights && (this.highest.length == 0 || this.highest[this.highest.length - 1].rg_name != tuple.rg_name || dupesAllowed > 0 && !alreadyIncluded)) {
+                if (this.highest.length < this.desiredTopInsights && !alreadyIncluded) {
+                  if (tuples[group.rg_name].groupEndpoints.topInsights[n + 1] && tuples[group.rg_name].groupEndpoints.topInsights[n - 1]) {
+                    if (tuples[group.rg_name].groupEndpoints.topInsights[n + 1].repo_git == tuple.repo_git || tuples[group.rg_name].groupEndpoints.topInsights[n - 1].repo_git == tuple.repo_git) {
+                      dupesAllowed--
+                      console.log("Set hightest condition met: ", tuple)
+                      this.highest.push(tuple)
+                    }
+                  }
                 }
                 if (this.insights[group.rg_name]){
                   if (this.insights[group.rg_name][tuple.repo_git]) {
@@ -260,7 +331,7 @@ export default class Dashboard extends Vue {
                   this.insights[group.rg_name][tuple.repo_git] = {}
                   this.insights[group.rg_name][tuple.repo_git][tuple.ri_metric] = [tuple]
                 }
-              })
+              }
               this.highest_frame = this.highest
 
               
@@ -279,6 +350,11 @@ export default class Dashboard extends Vue {
     }).catch((e: any) => {
       console.log("Error occurred loading repo groups on Dashboard level: ",e)
     })
+
+    for (let i = 0; i < this.highest.length; i++) {
+      if (!color_mapping[this.highest[i].ri_metric])
+        this.highest.splice(i, 1)
+    }
   }
 
   getOwner (url: string) {
@@ -390,6 +466,14 @@ export default class Dashboard extends Vue {
     console.log("onGitRepo: ",e)
     this.$router.push({
       name: 'repo_overview',
+      params: {'group':e.rg_name, 'repo':e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id}
+    })
+  }
+
+  onRisk (e: any) {
+    console.log("onRisk: ",e)
+    this.$router.push({
+      name: 'repo_risk',
       params: {'group':e.rg_name, 'repo':e.repo_git, 'repo_group_id': e.repo_group_id, 'repo_id': e.repo_id}
     })
   }

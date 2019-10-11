@@ -8,7 +8,7 @@
       </div>
     </div>
 
-    
+
 
     <div class="row">
       <div class="col">
@@ -20,18 +20,18 @@
           <d-card-body v-if="!loadedRepos">
             <spinner></spinner>
           </d-card-body>
-          
+
           <div v-if="loadedRepos" class="card-body p-0 pb-3 text-center">
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th scope="col" class="border-0" v-on:click="sortTable('url')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('url')">
                     <div class="row">
                       <div class="col col-9">URL</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'url' == sortColumn"></div>
                     </div>
                   </th>
-                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')"> 
+                  <th scope="col" class="border-0" v-on:click="sortTable('rg_name')">
                     <div class="row">
                       <div class="col col-9">Repo Group Name</div>
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'rg_name' == sortColumn"></div>
@@ -160,20 +160,20 @@ export default class Repos extends Vue{
   getRepoRelations!: any
   sortedRepos!:any
   loadRepos!:any;
-  
+
   addRepo!:any;
   setBaseRepo!:any;
   addComparedRepo!:any;
 
 
   created() {
-    
+
     this.loadRepos().then(() => {
       this.loadedRepos = true
     })
 
   }
-  
+
   sortTable(col: string) {
       if (this.sortColumn === col) {
         this.ascending = !this.ascending;

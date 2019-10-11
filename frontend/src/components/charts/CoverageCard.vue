@@ -77,18 +77,13 @@
       
       else {
         this.endpoint({endpoints:[this.source],repos:[this.base]}).then((tuples:any) => {
-          console.log("sbom", tuples, this.base)
           let ref = this.base.url || this.base.repo_name
           let values:any = []
           Object.keys(tuples[ref]).forEach((endpoint) => {
-            console.log("sbom", ref, endpoint)
             values = tuples[ref][endpoint]
           })
-          console.log("sbom loaded", JSON.stringify(values))
           this.values = values
-          this.loaded = true
-          console.log(this.loaded, this.values)
-          
+          this.loaded = true          
         })
       }
     }
