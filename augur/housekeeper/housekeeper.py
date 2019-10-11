@@ -1,3 +1,7 @@
+"""
+Keeps data up to date
+"""
+
 import logging
 import requests
 from multiprocessing import Process, Queue

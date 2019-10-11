@@ -39,7 +39,7 @@ def cli(app):
     logger.info("Booting broker and its manager...")
     manager = mp.Manager()
     broker = manager.dict()
-        
+    
     logger.info("Booting housekeeper...")
     jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
     housekeeper = Housekeeper(

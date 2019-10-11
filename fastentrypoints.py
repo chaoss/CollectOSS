@@ -1,3 +1,5 @@
+# DO NOT REMOVE THIS FILE
+
 # noqa: D300,D400
 # Copyright (c) 2016, Aaron Christianson
 # All rights reserved.

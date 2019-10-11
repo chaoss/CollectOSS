@@ -169,40 +169,6 @@ do
 done
 
 echo
-echo "Would you like to install Augur's frontend dependencies?"
-echo
-select choice in "y" "n"
-do
-  case $choice in
-    "y" )
-      echo
-      echo "**********************************"
-      echo "Installing frontend dependencies..."
-      echo "**********************************"
-      echo
-
-      if [[ $(command -V npm) ]]; then
-        cd frontend/;
-        npm install brunch canvas vega @vue/cli;
-        npm install; 
-        npm run build;
-        cd ../;
-      else
-        echo
-        echo "** npm not found. Please install NPM by either installing node (https://nodejs.org/en/download/) or by installing NPM itself."
-        echo
-        exit 1
-      fi
-      break
-      ;;
-    "n" )
-      echo "Skipping frontend dependencies..."
-      break
-      ;;
-   esac
-done
-
-echo
 echo "**********************************"
 echo "Setting up API documentation..."
 echo "**********************************"
@@ -239,6 +205,40 @@ if [[ ! -e augur.config.json ]]; then
 else
   echo "** Config file was found. Resuming installation... **"
 fi
+
+echo
+echo "Would you like to install Augur's frontend dependencies?"
+echo
+select choice in "y" "n"
+do
+  case $choice in
+    "y" )
+      echo
+      echo "**********************************"
+      echo "Installing frontend dependencies..."
+      echo "**********************************"
+      echo
+
+      if [[ $(command -V npm) ]]; then
+        cd frontend/;
+        npm install brunch canvas vega @vue/cli;
+        npm install; 
+        npm run build;
+        cd ../;
+      else
+        echo
+        echo "** npm not found. Please install NPM by either installing node (https://nodejs.org/en/download/) or by installing NPM itself."
+        echo
+        exit 1
+      fi
+      break
+      ;;
+    "n" )
+      echo "Skipping frontend dependencies..."
+      break
+      ;;
+   esac
+done
 
 echo "**********************************"
 echo "*** INSTALLATION COMPLETE ***"
