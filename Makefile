@@ -134,10 +134,10 @@ test-routes:
 # Documentation
 # 
 python-docs:
-	@ bash -c 'cd docs/python && rm -rf _build && make html;'
+	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
 
 python-docs-view: python-docs
-	@ bash -c 'open docs/python/build/html/index.html'
+	@ bash -c 'open docs/build/html/index.html'
 
 api-docs:
 	@ bash -c 'cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
