@@ -255,6 +255,15 @@ class GHRepoInfoWorker:
                     pr_merged: pullRequests(states: MERGED) {
                         totalCount
                     }
+                    ref(qualifiedName: "master") {
+                        target {
+                            ... on Commit {
+                                history(first: 0){
+                                    totalCount
+                                }
+                            }
+                        }
+                    }
                 }
             }
         """ % (owner, repo)
@@ -277,7 +286,7 @@ class GHRepoInfoWorker:
             logger.exception(f'Caught Exception: {e}')
 
         committers_count = self.query_committers_count(owner, repo)
-        commit_count = self.query_commit_count(owner, repo)
+        # commit_count = self.query_commit_count(owner, repo)
 
         logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
 
@@ -306,7 +315,7 @@ class GHRepoInfoWorker:
             'security_audit_file': None,
             'status': None,
             'keywords': None,
-            'commit_count': commit_count,
+            'commit_count': j['ref']['target']['history']['totalCount'],
             'issues_count': j['issue_count']['totalCount'] if j['issue_count'] else None,
             'issues_closed': j['issues_closed']['totalCount'] if j['issues_closed'] else None,
             'pull_request_count': j['pr_count']['totalCount'] if j['pr_count'] else None,
@@ -349,32 +358,30 @@ class GHRepoInfoWorker:
 
         return committers
 
-    def query_commit_count(self, owner, repo):
-        logger.info('Querying commit count')
-        commits_url = f'https://api.github.com/repos/{owner}/{repo}/commits'
-        r = requests.get(commits_url, headers=self.headers)
-        self.update_rate_limit(r)
+    # def query_commit_count(self, owner, repo):
+    #     logger.info('Querying commit count')
+    #     commits_url = f'https://api.github.com/repos/{owner}/{repo}/commits'
+    #     r = requests.get(commits_url, headers=self.headers)
+    #     self.update_rate_limit(r)
 
-        first_commit_sha = None
-        last_commit_sha = r.json()[0]['sha']
+    #     first_commit_sha = None
+    #     last_commit_sha = r.json()[0]['sha']
 
-        if 'last' in r.links:
-            r = requests.get(r.links['last']['url'], headers=self.headers)
-            self.update_rate_limit(r)
+    #     if 'last' in r.links:
+    #         r = requests.get(r.links['last']['url'], headers=self.headers)
+    #         self.update_rate_limit(r)
 
-            first_commit_sha = r.json()[-1]['sha']
+    #         first_commit_sha = r.json()[-1]['sha']
 
-        else:
-            first_commit_sha = r.json()[-1]['sha']
+    #     else:
+    #         first_commit_sha = r.json()[-1]['sha']
 
-        compare_url = (f'https://api.github.com/repos/{owner}/{repo}/'
-                    + f'compare/{first_commit_sha}...{last_commit_sha}')
-        r = requests.get(compare_url, headers=self.headers)
-        self.update_rate_limit(r)
+    #     compare_url = (f'https://api.github.com/repos/{owner}/{repo}/'
+    #                 + f'compare/{first_commit_sha}...{last_commit_sha}')
+    #     r = requests.get(compare_url, headers=self.headers)
+    #     self.update_rate_limit(r)
 
-        return r.json()['total_commits'] + 1
-
-
+    #     return r.json()['total_commits'] + 1
 
     def update_rate_limit(self, response):
         try:
