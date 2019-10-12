@@ -35,7 +35,7 @@ def dump_queue(queue):
     queue.put("STOP")
     for i in iter(queue.get, 'STOP'):
         result.append(i)
-    # time.sleep(.1)
+
     return result
 
 
@@ -125,14 +125,6 @@ class GHRepoInfoWorker:
         """ Property that is returned when the worker's current task is referenced """
         return self._task
 
-    # @task.setter
-    # def task(self, value):
-        # repo_id_sql = s.sql.text("""
-        #     SELECT repo_id, repo_git FROM repo
-        # """)
-
-        # repos = pd.read_sql(repo_id_sql, self.db)
-
     @task.setter
     def task(self, value):
         git_url = value['given']['git_url']
@@ -199,23 +191,7 @@ class GHRepoInfoWorker:
                 except Exception:
                     logger.exception(f'Worker ran into an error for task {message.entry_info}')
                     self.register_task_failure(message.entry_info['repo_id'],
-                                                  message.entry_info['git_url'])
-
-
-        # if repos == None:
-        #     repo_id_sql = s.sql.text("""
-        #         SELECT repo_id, repo_git FROM repo
-        #     """)
-
-        #     repos = pd.read_sql(repo_id_sql, self.db)
-
-        # for _, row in repos.iterrows():
-        #     owner, repo = self.get_owner_repo(row['repo_git'])
-        #     print(f'Querying: {owner}/{repo}')
-        #     self.query_repo_info(row['repo_id'], owner, repo)
-
-        # print(f'Added repo info for {self.results_counter} repos')
-
+                                               message.entry_info['git_url'])
 
     def get_owner_repo(self, git_url):
         split = git_url.split('/')
@@ -229,7 +205,6 @@ class GHRepoInfoWorker:
         return owner, repo
 
     def query_repo_info(self, repo_id, git_url):
-        # url = f'https://api.github.com/repos/{owner}/{repo}'
         url = 'https://api.github.com/graphql'
 
         owner, repo = self.get_owner_repo(git_url)
@@ -286,7 +261,6 @@ class GHRepoInfoWorker:
 
         logger.info(f'Hitting endpoint {url}')
         try:
-            # r = requests.get(url, headers=self.headers)
             r = requests.post(url, json={'query': query}, headers=self.headers)
             self.update_rate_limit(r)
 
