@@ -96,7 +96,7 @@ export default {
                 if ('endpoints' in payload && 'repos' in payload) {
                     tempCache = {}
                     let promises: any[] = []
-                    console.log("Repos given to endpoint action: ", payload.repos)
+                    console.log("Repos given to endpoint action: ", payload.endpoints[0],payload.repos)
                     payload.repos.forEach((repo: any) => {
                         let ref = repo.url || repo.repo_name
                         // tempCache[repo.rg_name] = tempCache[repo.rg_name] || {}
@@ -109,7 +109,7 @@ export default {
                         })
                     })
                     Promise.all(promises).then((data: any) => {
-                        console.log("repo endpoints promise.all hit, data: ",data)
+                        console.log("repo endpoints promise.all hit, data: ", payload.endpoints[0], data)
                         let i = 0
                         payload.repos.forEach((repo: any) => {
                             let ref = repo.url || repo.repo_name
@@ -135,7 +135,7 @@ export default {
                             resolve(tempCache)
                         }
                     }).catch((error) => {
-                        console.log(error)
+                        console.log("error occurred: ", payload.endpoints[0], error)
                     })
                 }
                 if ('endpoints' in payload && 'repoGroups' in payload) {
