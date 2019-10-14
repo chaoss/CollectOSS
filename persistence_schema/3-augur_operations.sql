@@ -1,21 +1,3 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : mudcats augur
- Source Server Type    : PostgreSQL
- Source Server Version : 110005
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_science
- Source Schema         : augur_operations
-
- Target Server Type    : PostgreSQL
- Target Server Version : 110005
- File Encoding         : 65001
-
- Date: 11/09/2019 06:00:46
-*/
-
-
 -- ----------------------------
 -- Sequence structure for gh_worker_history_history_id_seq
 -- ----------------------------
@@ -68,98 +50,6 @@ CREATE TABLE "augur_operations"."cncf_users" (
 ALTER TABLE "augur_operations"."cncf_users" OWNER TO "augur";
 
 -- ----------------------------
--- Table structure for gh_worker_history
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."gh_worker_history";
-CREATE TABLE "augur_operations"."gh_worker_history" (
-  "history_id" int8 NOT NULL DEFAULT nextval('"augur_operations".gh_worker_history_history_id_seq'::regclass),
-  "repo_id" int8,
-  "worker" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "job_model" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "oauth_id" int4 NOT NULL,
-  "timestamp" timestamp(0) NOT NULL,
-  "status" varchar(7) COLLATE "pg_catalog"."default" NOT NULL,
-  "total_results" int4
-)
-;
-ALTER TABLE "augur_operations"."gh_worker_history" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for gh_worker_job
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."gh_worker_job";
-CREATE TABLE "augur_operations"."gh_worker_job" (
-  "job_model" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "state" int4 NOT NULL DEFAULT 0,
-  "zombie_head" int4,
-  "since_id_str" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT '0'::character varying,
-  "description" varchar(255) COLLATE "pg_catalog"."default" DEFAULT 'I am a lazy piece of shit and I did not enter a description'::character varying,
-  "last_count" int4,
-  "last_run" timestamp(0) DEFAULT NULL::timestamp without time zone,
-  "analysis_state" int4 DEFAULT 0,
-  "oauth_id" int4 NOT NULL
-)
-;
-ALTER TABLE "augur_operations"."gh_worker_job" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for gh_worker_oauth
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."gh_worker_oauth";
-CREATE TABLE "augur_operations"."gh_worker_oauth" (
-  "oauth_id" int4 NOT NULL,
-  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "consumer_key" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "consumer_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "access_token" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "access_token_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "repo_directory" varchar COLLATE "pg_catalog"."default"
-)
-;
-ALTER TABLE "augur_operations"."gh_worker_oauth" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for new_repos
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."new_repos";
-CREATE TABLE "augur_operations"."new_repos" (
-  "OSS_Name" varchar(255) COLLATE "pg_catalog"."default",
-  "Library_Status" varchar(255) COLLATE "pg_catalog"."default",
-  "repo_git" varchar(255) COLLATE "pg_catalog"."default"
-)
-;
-ALTER TABLE "augur_operations"."new_repos" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for repos
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."repos";
-CREATE TABLE "augur_operations"."repos" (
-  "repo_git" varchar(255) COLLATE "pg_catalog"."default" NOT NULL
-)
-;
-ALTER TABLE "augur_operations"."repos" OWNER TO "augur";
-
--- ----------------------------
--- Table structure for repos_orgs
--- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."repos_orgs";
-CREATE TABLE "augur_operations"."repos_orgs" (
-  "repo_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "repo_group_id" varchar(255) COLLATE "pg_catalog"."default",
-  "repo_git" varchar(255) COLLATE "pg_catalog"."default",
-  "f4" varchar(255) COLLATE "pg_catalog"."default",
-  "f5" varchar(255) COLLATE "pg_catalog"."default",
-  "f6" varchar(255) COLLATE "pg_catalog"."default",
-  "f7" varchar(255) COLLATE "pg_catalog"."default",
-  "f8" varchar(255) COLLATE "pg_catalog"."default",
-  "f9" varchar(255) COLLATE "pg_catalog"."default",
-  "f10" varchar(255) COLLATE "pg_catalog"."default"
-)
-;
-ALTER TABLE "augur_operations"."repos_orgs" OWNER TO "augur";
-
--- ----------------------------
 -- Table structure for science
 -- ----------------------------
 DROP TABLE IF EXISTS "augur_operations"."science";
@@ -181,49 +71,69 @@ CREATE TABLE "augur_operations"."science" (
 ALTER TABLE "augur_operations"."science" OWNER TO "augur";
 
 -- ----------------------------
--- Table structure for scirepos
+-- Table structure for worker_history
 -- ----------------------------
-DROP TABLE IF EXISTS "augur_operations"."scirepos";
-CREATE TABLE "augur_operations"."scirepos" (
-  "oss" varchar(255) COLLATE "pg_catalog"."default",
-  "website" varchar(255) COLLATE "pg_catalog"."default",
-  "library" varchar(255) COLLATE "pg_catalog"."default",
-  "description" varchar(255) COLLATE "pg_catalog"."default",
-  "type" varchar(255) COLLATE "pg_catalog"."default",
-  "firstrelease" varchar(255) COLLATE "pg_catalog"."default",
-  "connection" varchar(255) COLLATE "pg_catalog"."default",
-  "funding" varchar(255) COLLATE "pg_catalog"."default",
-  "suggested" varchar(255) COLLATE "pg_catalog"."default",
-  "repo_git" varchar(255) COLLATE "pg_catalog"."default",
-  "notes" varchar(255) COLLATE "pg_catalog"."default",
-  "exclude" varchar(255) COLLATE "pg_catalog"."default"
+DROP TABLE IF EXISTS "augur_operations"."worker_history";
+CREATE TABLE "augur_operations"."worker_history" (
+  "history_id" int8 NOT NULL DEFAULT nextval('"augur_operations".gh_worker_history_history_id_seq'::regclass),
+  "repo_id" int8,
+  "worker" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "job_model" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "oauth_id" int4 NOT NULL,
+  "timestamp" timestamp(0) NOT NULL,
+  "status" varchar(7) COLLATE "pg_catalog"."default" NOT NULL,
+  "total_results" int4
 )
 ;
-ALTER TABLE "augur_operations"."scirepos" OWNER TO "augur";
+ALTER TABLE "augur_operations"."worker_history" OWNER TO "augur";
+
+-- ----------------------------
+-- Table structure for worker_job
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_operations"."worker_job";
+CREATE TABLE "augur_operations"."worker_job" (
+  "job_model" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "state" int4 NOT NULL DEFAULT 0,
+  "zombie_head" int4,
+  "since_id_str" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT '0'::character varying,
+  "description" varchar(255) COLLATE "pg_catalog"."default" DEFAULT 'I am a lazy piece of shit and I did not enter a description'::character varying,
+  "last_count" int4,
+  "last_run" timestamp(0) DEFAULT NULL::timestamp without time zone,
+  "analysis_state" int4 DEFAULT 0,
+  "oauth_id" int4 NOT NULL
+)
+;
+ALTER TABLE "augur_operations"."worker_job" OWNER TO "augur";
+
+-- ----------------------------
+-- Table structure for worker_oauth
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_operations"."worker_oauth";
+CREATE TABLE "augur_operations"."worker_oauth" (
+  "oauth_id" int4 NOT NULL,
+  "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "consumer_key" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "consumer_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "access_token" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "access_token_secret" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "repo_directory" varchar COLLATE "pg_catalog"."default"
+)
+;
+ALTER TABLE "augur_operations"."worker_oauth" OWNER TO "augur";
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "augur_operations"."gh_worker_history_history_id_seq"
-OWNED BY "augur_operations"."gh_worker_history"."history_id";
-SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 40007, true);
+OWNED BY "augur_operations"."worker_history"."history_id";
+SELECT setval('"augur_operations"."gh_worker_history_history_id_seq"', 39841, true);
 
 -- ----------------------------
--- Primary Key structure for table gh_worker_history
+-- Primary Key structure for table worker_history
 -- ----------------------------
-ALTER TABLE "augur_operations"."gh_worker_history" ADD CONSTRAINT "history_pkey" PRIMARY KEY ("history_id");
+ALTER TABLE "augur_operations"."worker_history" ADD CONSTRAINT "history_pkey" PRIMARY KEY ("history_id");
 
 -- ----------------------------
--- Primary Key structure for table gh_worker_job
+-- Primary Key structure for table worker_job
 -- ----------------------------
-ALTER TABLE "augur_operations"."gh_worker_job" ADD CONSTRAINT "job_pkey" PRIMARY KEY ("job_model");
-
--- ----------------------------
--- Primary Key structure for table repos
--- ----------------------------
-ALTER TABLE "augur_operations"."repos" ADD CONSTRAINT "repos_pkey" PRIMARY KEY ("repo_git");
-
--- ----------------------------
--- Primary Key structure for table repos_orgs
--- ----------------------------
-ALTER TABLE "augur_operations"."repos_orgs" ADD CONSTRAINT "repos_orgs_pkey" PRIMARY KEY ("repo_id");
+ALTER TABLE "augur_operations"."worker_job" ADD CONSTRAINT "job_pkey" PRIMARY KEY ("job_model");
