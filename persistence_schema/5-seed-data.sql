@@ -1,21 +1,3 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : mudcats augur
- Source Server Type    : PostgreSQL
- Source Server Version : 110005
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_science
- Source Schema         : augur_data
-
- Target Server Type    : PostgreSQL
- Target Server Version : 110005
- File Encoding         : 65001
-
- Date: 10/09/2019 11:35:35
-*/
-
-
 
 BEGIN;
 INSERT INTO "augur_data"."platform" VALUES (25150, 'GitHub', '3', '2019-06-05', 'Manual Entry', 'Sean Goggins', 'GitHub', '2019-06-05 17:23:42');
