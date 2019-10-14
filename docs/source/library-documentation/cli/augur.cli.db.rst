@@ -5,6 +5,12 @@ augur.cli.db
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      execute
+   
    
 
    

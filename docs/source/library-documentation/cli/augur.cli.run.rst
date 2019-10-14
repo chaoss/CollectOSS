@@ -5,6 +5,12 @@ augur.cli.run
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      worker_start
+   
    
 
    

@@ -11,10 +11,6 @@ then we would essentially be duplicating their documentation.
 If you want to contribute to the frontend, installing
 ``Vue Devtools`` is also a huge help.
 
-==================================
-The Basics
-==================================
-
 Adding visualizations
 ----------------------------
 
