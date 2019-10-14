@@ -15,7 +15,7 @@ Once you have this data, fully implementing a new metric in Augur involves four 
 	- Map the route to the front end in ``augurAPI.js``
 	- Reference the endpoint from ``augurAPI.js`` as a datasource in a ``.vue`` card.
 
-.. image:: images/new-metric.png
+.. image:: new-metric.png
 
 
 Backend

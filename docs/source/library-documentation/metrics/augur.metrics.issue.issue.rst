@@ -9,6 +9,7 @@ augur.metrics.issue.issue
 
    .. autosummary::
    
+      abandoned_issues
       average_issue_resolution_time
       closed_issues_count
       create_issue_metrics

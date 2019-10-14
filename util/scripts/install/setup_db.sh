@@ -105,7 +105,7 @@ do
         psql -c "create user $user with encrypted password '$password';"
         psql -c "alter database $database owner to $user;"
         psql -c "grant all privileges on database $database to $user;"
-        psql -h "localhost" -d $database -U $user -p $port -a -w -f augur/persistence_schema/0-all.sql
+        psql -h "localhost" -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
         break
       ;;
     $install_remotely )
@@ -115,7 +115,7 @@ do
         psql -h $host -p $port -c "create user $user with encrypted password '$password';"
         psql -h $host -p $port -c "alter database $database owner to $user;"
         psql -h $host -p $port -c "grant all privileges on database $database to $user;"
-        psql -h $host -d $database -U $user -p $port -a -w -f augur/persistence_schema/0-all.sql
+        psql -h $host -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
         break
       ;;
     $already_installed )

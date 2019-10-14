@@ -4,8 +4,6 @@
 
 SERVECOMMAND=augur run
 INSTALLCOMMAND=pip install -e .; python setup.py install;
-# CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda activate augur; then conda env create -n=augur -f=environment.yml; else conda env update -n=augur -f=environment.yml; fi;
-# CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
 OLDVERSION="null"
 EDITOR?="vi"
 MODEL=**
