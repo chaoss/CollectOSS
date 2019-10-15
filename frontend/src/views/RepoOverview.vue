@@ -3,17 +3,19 @@
     <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
       <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
       <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
-      <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
+      <!-- <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button> -->
     </d-breadcrumb>
-    <!-- Page Header -->
-    <!-- <div class="page-header row no-gutters py-4">
-      <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
-        <h3 class="page-title" style="font-size: 1rem">Insights</h3>
-      </div>
-    </div> -->
+
+    <!-- <tab-selector></tab-selector> -->
+
+    <p></p>
+    <!-- <d-nav :pills="true" id="repo_nav">
+      <d-nav-item :active="true" class="active">Overview</d-nav-item>
+      <d-nav-item><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-nav-item>
+    </d-nav> -->
+    
     <!-- Compare Control -->
     <compare-control></compare-control>
-
 
     <!-- Overview Section -->
     <!-- <div class="page-header row no-gutters py-4" >
@@ -22,8 +24,9 @@
         <!-- <h3 class="page-title" style="font-size: 1rem">Overview</h3>
       </div>
     </div> -->
-    <p></p>
 
+    <p></p>
+    
     <d-row>
       
       <d-col cols="12" md="6" lg="6" sm="12">
@@ -34,27 +37,38 @@
             <commit-chart source="changesByAuthor" :data="values['changesByAuthor']"></commit-chart>
           </div> -->
 
-          <d-row v-if="!loadedBars">
-            <d-col>
-              <spinner></spinner>
-            </d-col>
-          </d-row>
-
           <d-container>
             <d-row>
-              <d-col v-if="loadedBars" style="">
-                <normalized-stacked-bar-chart 
-                title="Lines of code added by the top 10 authors as Percentages - By Time Period"
-                source="changesByAuthor1" :data="values['changesByAuthor']">
-                </normalized-stacked-bar-chart>
+              <d-col style="">
+                <d-card-body title="Lines of code added by the top 10 authors as Percentages - By Time Period" class="text-center">
+
+                  <spinner v-if="!loadedBars"></spinner>
+
+                  <normalized-stacked-bar-chart 
+                  v-if="loadedBars" 
+                  source="changesByAuthor1" 
+                  :data="values['changesByAuthor']"
+                  ></normalized-stacked-bar-chart>
+
+                </d-card-body>
               </d-col>
             </d-row>
 
             <d-row>
-              <d-col v-if="loadedBars" style="">
-                <div style="padding-top: 0px"></div>
-                <horizontal-bar-chart measure="lines" title="Average Lines of Code Per Commit"
-                source="changesByAuthor2" :data="values['changesByAuthor']"></horizontal-bar-chart>
+              <d-col style="">
+                <d-card-body title="Average Lines of Code Per Commit" class="text-center">
+
+                  <spinner v-if="!loadedBars"></spinner>
+
+                  <horizontal-bar-chart 
+                  v-if="loadedBars"
+                  measure="lines" 
+                  title="Average Lines of Code Per Commit" 
+                  source="changesByAuthor2" 
+                  :data="values['changesByAuthor']"
+                  ></horizontal-bar-chart>
+                  
+                </d-card-body>
               </d-col>
             </d-row>
 
@@ -75,32 +89,187 @@
         </d-card>
       </d-col>
       <d-col cols="12" md="6" lg="6" sm="12">
+
+  <!--       <d-row>
+          <d-col>
+            <d-card>
+              <pie-chart
+              title="Commits by User"
+              source="contributorsCodeDevelopment"
+              field="commits"
+              ></pie-chart>
+            </d-card>
+          </d-col>
+          <d-col>
+            <d-card>
+              <pie-chart
+              title="Lines of Code by User"
+              source="contributorsCodeDevelopment"
+              field="lines_added"
+              ></pie-chart>
+            </d-card>
+          </d-col>
+        </d-row>
+        
+        <p></p>
+ -->
+        <coverage-card title="License Coverage" source="sbom"></coverage-card>
+
+        <p></p>
+
         <d-card>
-          <spinner v-if="!loadedBars"></spinner>
-          
-          <lines-of-code-chart v-if="loadedBars" :data="values['changesByAuthor']" style="font-size: 0.6rem"></lines-of-code-chart>
+          <d-card-body title="Lines of code added by the top 10 authors" class="text-center">
+            
+            <spinner v-if="!loadedBars"></spinner>
+            
+            <lines-of-code-chart 
+              v-if="loadedBars" 
+              :data="values['changesByAuthor']" 
+              style="font-size: 0.6rem"
+            ></lines-of-code-chart>
+
+          </d-card-body>
         </d-card>
       </d-col>
 
     </d-row>
 
-    <d-row style="padding-top: 2rem">
+     <!-- <d-row style="padding-top: 2rem">
 
       <d-col>
         <d-card>
-          <spinner v-if="!loadedBars"></spinner>
-          <tick-chart v-if="loadedBars" source="changesByAuthor" :data="values['changesByAuthor']"></tick-chart>
+          <d-card-body title="Lines of code added by the top 10 authors visualized" class="text-center">
+            
+            <spinner v-if="!loadedBars"></spinner>
+            
+            <tick-chart 
+              v-if="loadedBars" 
+              source="changesByAuthor5" 
+              :data="values['changesByAuthor']"
+            ></tick-chart>
+
+          </d-card-body>
         </d-card>
       </d-col>
 
+    </d-row> 
+
+    <p></p> -->
+
+    <d-row>
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      filedTime="date" 
+                      fieldCount="pull_requests"
+                      source="reviews"
+                      title="Reviews (Pull Requests) / Week"
+                      cite-url=""
+                      cite-text="Reviews"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      filedTime="date" 
+                      fieldCount="pull_requests"
+                      source="reviewsAccepted"
+                      title="Reviews (Pull Requests) Accepted / Week"
+                      cite-url=""
+                      cite-text="Reviews Accepted"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      filedTime="date" 
+                      fieldCount="pull_requests"
+                      source="reviewsDeclined"
+                      title="Reviews (Pull Requests) Declined / Week"
+                      cite-url=""
+                      cite-text="Reviews Declined"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      filedTime="date" 
+                      fieldCount="open_count"
+                      source="openIssuesCount"
+                      title="Open Issues / Week"
+                      cite-url=""
+                      cite-text="Open Issues"
+          ></dynamic-line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      filedTime="date" 
+                      fieldCount="closed_count"
+                      source="closedIssuesCount"
+                      title="Closed Issues / Week"
+                      cite-url=""
+                      cite-text="Closed Issues"
+          ></dynamic-line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      filedTime="date" 
+                      fieldCount="issues"
+                      source="issuesNew"
+                      title="New Issues / Week"
+                      cite-url=""
+                      cite-text="New Issues"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+
+          <dynamic-line-chart 
+                      source="codeChanges"
+                      title="Code Changes (Commits) / Week"
+                      cite-url=""
+                      cite-text="Code Changes"
+                      filedTime="date" 
+                      fieldCount="commit_count"
+          ></dynamic-line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      source="codeChangesLines"
+                      title="Lines of Code Added / Week"
+                      cite-url=""
+                      cite-text="Code Changes Lines"
+                      filedTime="date" 
+                      fieldCount="added"
+          ></dynamic-line-chart>
+        </d-card>
+      </div>
+
     </d-row>
 
-  </d-container>
+  </d-container> 
 </template>
 
 <script lang="ts">
 import  { Component, Vue } from 'vue-property-decorator';
-import {mapActions, mapGetters} from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import SparkChart from '../components/charts/SparkChart.vue';
 import InsightChart from '../components/charts/InsightChart.vue';
 import TickChart from '../components/charts/TickChart.vue'
@@ -117,10 +286,14 @@ import CompareControl from '../components/common/CompareControl.vue'
 import router from "@/router";
 import BubbleChart from '../components/charts/BubbleChart.vue'
 import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
+import TabSelector from '../components/TabSelector.vue'
+import PieChart from '../components/charts/PieChart.vue'
+import CoverageCard from "@/components/charts/CoverageCard.vue";
+import LineChart from "@/components/charts/LineChart.vue";
+
 
 @Component({
   components: {
-    SparkChart, // <spark-chart></spark-chart>
     InsightChart,
     TickChart,
     LinesOfCodeChart,
@@ -135,6 +308,10 @@ import TimeIntervalBarChart from '../components/charts/TimeIntervalBarChart.vue'
     CompareControl,
     BubbleChart,
     TimeIntervalBarChart,
+    PieChart,
+    CoverageCard,
+    LineChart,
+    TabSelector,
   },
   methods: {
     ...mapActions('common',[
@@ -189,11 +366,13 @@ export default class RepoOverview extends Vue {
     //   repo = this.base
     // else repo = this.rout
     this.endpoint({endpoints:this.barEndpoints,repos:[this.base]}).then((tuples:any) => {
-      console.log("tuples:",tuples)
-      Object.keys(tuples[this.base.url]).forEach((endpoint) => {
+      let ref = this.base.url || this.base.repo_name
+      Object.keys(tuples[ref]).forEach((endpoint) => {
         console.log(endpoint)
-        this.values[endpoint] = tuples[this.base.url][endpoint]
+        this.values[endpoint] = tuples[ref][endpoint]
+        console.log("lines data: ", this.values)
       })
+
       this.loadedBars = true
     })
   }
@@ -213,6 +392,8 @@ export default class RepoOverview extends Vue {
     else 
       return "padding-top: 3rem"
   }
+
+
 
 }
 </script>

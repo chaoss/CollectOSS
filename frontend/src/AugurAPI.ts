@@ -29,7 +29,7 @@ export default class AugurAPI {
     this.__downloadedGitRepos = []
 
     this._version = version || '/api/unstable'
-    this._host = hostURL// || 'http://localhost:5000'
+    this._host = hostURL || 'http://localhost:5000'
     console.log(this._host)
     this.__cache = {}
     this.__timeout = null
@@ -288,7 +288,6 @@ abstract class BaseRepo {
   }
 }
 
-
 class Repo extends BaseRepo{
   public rg_name?:string
   public repo_name?:string
@@ -390,7 +389,7 @@ class Repo extends BaseRepo{
       this.Timeseries('closedIssues', 'issues/closed')
       this.Timeseries('closedIssueResolutionDuration', 'issues/time_to_close')
       this.Timeseries( 'codeCommits', 'commits')
-      // Timeseries('codeReviews', 'code_reviews')
+      // this.Timeseries('codeReviews', 'code_reviews')
       this.Timeseries('codeReviewIteration', 'code_review_iteration')
       this.Timeseries('contributionAcceptance', 'contribution_acceptance')
       this.Endpoint('contributingGithubOrganizations', 'contributing_github_organizations')
@@ -402,6 +401,8 @@ class Repo extends BaseRepo{
       this.Timeseries('openIssues', 'issues')
       this.Timeseries('pullRequestComments', 'pulls/comments')
       this.Timeseries('pullRequestsOpen', 'pulls')
+
+      this.Timeseries('linesOfCodeCommitCountsByCalendarYearGrouped','lines-of-code-commit-counts-by-calendar-year-grouped')
 
       // RISK
 
@@ -472,6 +473,13 @@ class Repo extends BaseRepo{
     this.addRepoMetric('ciiBP','cii-best-practices-badge')
     this.addRepoMetric('changesByAuthor', 'lines-changed-by-author')
     this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
+    this.addRepoMetric('topCommitters', 'top-committers')
+    this.addRepoMetric('reviews', 'reviews')
+    this.addRepoMetric('reviewsAccepted', 'reviews-accepted')
+    this.addRepoMetric('reviewsDeclined', 'reviews-declined')
+    this.addRepoMetric('reviewDuration', 'review-duration')
+    this.addRepoMetric('pullRequestAcceptanceRate', 'pull-request-acceptance-rate')
+    this.addRepoMetric('contributorsCodeDevelopment', 'contributors-code-development')
   }
 }
 

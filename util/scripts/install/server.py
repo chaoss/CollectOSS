@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import unicode_literals
 from __future__ import print_function
 import binascii
@@ -23,17 +21,12 @@ import subprocess
 import sys
 from itertools import chain
 
-FISH_BIN_PATH = False  # will be set later
-IS_PY2 = sys.version_info[0] == 2
+import http.server as SimpleHTTPServer
+import socketserver as SocketServer
+from urllib.parse import parse_qs
 
-if IS_PY2:
-    import SimpleHTTPServer
-    import SocketServer
-    from urlparse import parse_qs
-else:
-    import http.server as SimpleHTTPServer
-    import socketserver as SocketServer
-    from urllib.parse import parse_qs
+# This code is (heavily) adapted from the fish shell web config functionality. Many thanks to them!
+# Find more info about fish here: https://fishshell.com/
 
 def isMacOS10_12_5_OrLater():
     """ Return whether this system is macOS 10.12.5 or a later version. """
@@ -47,7 +40,6 @@ def is_wsl():
             if 'Microsoft' in f.read():
                 return True
     return False
-
 
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
@@ -63,17 +55,17 @@ except ImportError:
     import simplejson as json
 
 
-class FishConfigTCPServer(SocketServer.TCPServer):
+class AugurConfigTCPServer(SocketServer.TCPServer):
     """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
     WHITELIST = set(['::1', '::ffff:127.0.0.1', '127.0.0.1'])
 
     address_family = socket.AF_INET6 if socket.has_ipv6 else socket.AF_INET
 
     def verify_request(self, request, client_address):
-        return client_address[0] in FishConfigTCPServer.WHITELIST
+        return client_address[0] in AugurConfigTCPServer.WHITELIST
 
 
-class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class AugurConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         p = self.path
@@ -149,13 +141,11 @@ redirect_template_html = """
   <meta http-equiv="refresh" content="0;URL='%s'" />
  </head>
  <body>
-  <p><a href="%s">Start the Fish Web config</a></p>
+  <p><a href="%s">Starting the Augur web config</a></p>
  </body>
 </html>
 """
 
-# We want to show the demo prompts in the directory from which this was invoked,
-# so get the current working directory
 initial_wd = os.getcwd()
 
 # Generate a 16-byte random key as a hexadecimal string
@@ -166,8 +156,8 @@ PORT = 8000
 HOST = "::" if socket.has_ipv6 else "localhost"
 while PORT <= 9000:
     try:
-        Handler = FishConfigHTTPRequestHandler
-        httpd = FishConfigTCPServer((HOST, PORT), Handler)
+        Handler = AugurConfigHTTPRequestHandler
+        httpd = AugurConfigTCPServer((HOST, PORT), Handler)
         # Success
         break
     except socket.error:
@@ -180,11 +170,9 @@ while PORT <= 9000:
 
 if PORT > 9000:
     # Nobody say it
+    # But if you must, say it quietly please. There are people trying to work
     print("Unable to find an open port between 8000 and 9000")
     sys.exit(-1)
-
-# Get any initial tab (functions, colors, etc)
-# Just look at the first letter
 
 url = 'http://localhost:%d/%s/' % (PORT, authkey)
 
@@ -192,9 +180,9 @@ url = 'http://localhost:%d/%s/' % (PORT, authkey)
 # the URL containing the authentication key on the command line (see
 # CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
 if 'XDG_CACHE_HOME' in os.environ:
-    dirname = os.path.expanduser(os.path.expandvars('$XDG_CACHE_HOME/fish/'))
+    dirname = os.path.expanduser(os.path.expandvars('$XDG_CACHE_HOME/augur/'))
 else:
-    dirname = os.path.expanduser('~/.cache/fish/')
+    dirname = os.path.expanduser('~/.cache/augur/')
 
 os.umask(0o0077)
 try:

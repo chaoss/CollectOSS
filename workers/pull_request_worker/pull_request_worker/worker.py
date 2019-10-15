@@ -109,7 +109,7 @@ class GHPullRequestWorker:
             'pull_request_message_ref', 'pull_request_meta', 'pull_request_repo',
             'pull_request_reviewers', 'pull_request_teams', 'message'])
 
-        helper_metadata.reflect(self.helper_db, only=['gh_worker_history', 'gh_worker_job'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
 
         Base = automap_base(metadata=metadata)
         HelperBase = automap_base(metadata=helper_metadata)
@@ -129,8 +129,8 @@ class GHPullRequestWorker:
         self.pull_request_teams_table = Base.classes.pull_request_teams.__table__
         self.message_table = Base.classes.message.__table__
 
-        self.history_table = HelperBase.classes.gh_worker_history.__table__
-        self.job_table = HelperBase.classes.gh_worker_job.__table__
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
 
         logger.info("Querying starting ids info...")
 
@@ -648,7 +648,7 @@ class GHPullRequestWorker:
         new_base = self.check_duplicates([base], meta_table_values, pseudo_key_gh)
 
         if new_head:
-            if 'login' in new_head[0]['user']:
+            if new_head[0]['user'] and 'login' in new_head[0]['user']:
                 cntrb_id = self.find_id_from_login(new_head[0]['user']['login'])
             else:
                 cntrb_id = 1
@@ -675,7 +675,7 @@ class GHPullRequestWorker:
             logger.info('No new PR Head data to add')
 
         if new_base:
-            if 'login' in new_base[0]['user']:
+            if new_base[0]['user'] and 'login' in new_base[0]['user']:
                 cntrb_id = self.find_id_from_login(new_base[0]['user']['login'])
             else:
                 cntrb_id = 1

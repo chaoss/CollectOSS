@@ -1,3 +1,7 @@
+"""
+Keeps data up to date
+"""
+
 import logging
 import requests
 from multiprocessing import Process, Queue
@@ -59,6 +63,7 @@ class Housekeeper:
             # Waiting for compatible worker
             while True:
                 for worker in list(broker._getvalue().keys()):
+                    # logging.info("{} {} {} {} {}".format(worker, model, broker[worker]['models'], given, broker[worker]['given']))
                     if model in broker[worker]['models'] and given in broker[worker]['given']:
                         compatible_worker_found = True
                 if compatible_worker_found:
@@ -69,16 +74,18 @@ class Housekeeper:
                         logging.info('Housekeeper updating {} model with given {}...'.format(
                             model, given[0]))
                         
-                        if given[0] == 'git_url':
+                        if given[0] == 'git_url' or given[0] == 'github_url':
                             for repo in repos:
+                                if given[0] == 'github_url' and 'github.com' not in repo['repo_git']:
+                                    continue
+                                given_key = 'git_url' if given[0] == 'git_url' else 'github_url'
                                 task = {
                                     "job_type": "MAINTAIN", 
                                     "models": [model], 
-                                    "display_name": "{} model for git url: {}".format(model, repo['repo_git']),
-                                    "given": {
-                                        "git_url": repo['repo_git']
-                                    }
+                                    "display_name": "{} model for url: {}".format(model, repo['repo_git']),
+                                    "given": {}
                                 }
+                                task['given'][given_key] = repo['repo_git']
                                 if "focused_task" in repo:
                                     task["focused_task"] = repo['focused_task']
                                 try:

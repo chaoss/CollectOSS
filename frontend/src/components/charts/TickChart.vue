@@ -1,7 +1,7 @@
 <template>
-  <d-card-body title="Lines of code added by the top 10 authors visualized">
+  <div>
       <div :id="source"></div>
-      <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
+      <vega-lite :spec="spec" :data="values"></vega-lite>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
       <!-- <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
 
@@ -22,7 +22,7 @@
         
       </div>
        -->
-  </d-card-body>
+  </div>
 </template>
 
 
@@ -114,9 +114,9 @@ export default {
               }
       }
       let config = {
-        "width": this.x / 1.9,
-        "height": this.y / 2,
-        "padding": {"left": -10, "top": 0, "right": 5, "bottom": -10},
+        "width": this.x / 1.5,
+        "height": this.y / 2.4,
+        "padding": {"left": -10, "top": 0, "right": 5, "bottom": 10},
         "config": {
           "tick": {
             "thickness": 8,
@@ -140,18 +140,18 @@ export default {
           {
             "transform": [
              
-              {
-                "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
-                "as": "Majority type of changes"
-              },
-              {
-                "calculate": "(datum.additions - datum.deletions)",
-                "as": "Net lines added"
-              },
-              {
-                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
-                "as": "Total lines changed"
-              },
+              // {
+              //   "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+              //   "as": "Majority type of changes"
+              // },
+              // {
+              //   "calculate": "(datum.additions - datum.deletions)",
+              //   "as": "Net lines added"
+              // },
+              // {
+              //   "calculate": "(datum.additions + datum.deletions) < 0000 ? 0000 : ((datum.additions + datum.deletions) > 100000000 ? 100000000 : (datum.additions + datum.deletions))",
+              //   "as": "Total lines changed"
+              // },
             ],
             "mark": type,
             
@@ -169,45 +169,45 @@ export default {
             },
             
           },
-          {
-            "mark": "rule",
-            "transform": [
-              {
-                "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
-                "as": "Majority type of changes"
-              },
-              {
-                "calculate": "(datum.additions - datum.deletions)",
-                "as": "Net lines added"
-              },
-              {
-                "calculate": "(datum.additions + datum.deletions) < 50000 ? 50000 : ((datum.additions + datum.deletions) > 1000000 ? 1000000 : (datum.additions + datum.deletions))",
-                "as": "Total lines changed"
-              },
-            ],
-            "selection": {
-              "tooltip": {"type": "multi", "on": "mouseover","nearest": false, "empty": "none"}
-            },
-            "encoding": {
-              "size": {"value": 8},
-              "opacity": {"value": 1.051},
-              "x": {"field": "cmt_author_date", "type": "temporal"},              
-              "tooltip": [{"field": "cmt_author_email", "type": "nominal"},{
-                "field": "Total lines changed",
-                "type": "quantitative",
-              },
-              {
-                "field": "Net lines added",
-                "type": "quantitative",
-              }],
-              "color": {
-                "condition":{
-                  "selection": {"not": "tooltip"}, 
-                  "value": "transparent"
-                }
-              }
-            }
-          }
+          // {
+          //   "mark": "rule",
+          //   "transform": [
+          //     {
+          //       "calculate": "(datum.additions > datum.deletions) ? 'more deletions' : 'more additions'",
+          //       "as": "Majority type of changes"
+          //     },
+          //     {
+          //       "calculate": "(datum.additions - datum.deletions)",
+          //       "as": "Net lines added"
+          //     },
+          //     {
+          //       "calculate": "(datum.additions + datum.deletions) < 0000 ? 0000 : ((datum.additions + datum.deletions) > 1000000000 ? 1000000000 : (datum.additions + datum.deletions))",
+          //       "as": "Total lines changed"
+          //     },
+          //   ],
+            // "selection": {
+            //   "tooltip": {"type": "multi", "on": "mouseover","nearest": false, "empty": "none"}
+            // },
+            // "encoding": {
+            //   "size": {"value": 8},
+            //   "opacity": {"value": 1.051},
+            //   "x": {"field": "cmt_author_date", "type": "temporal"},              
+              // "tooltip": [{"field": "cmt_author_email", "type": "nominal"},{
+              //   "field": "Total lines changed",
+              //   "type": "quantitative",
+              // },
+              // {
+              //   "field": "Net lines added",
+              //   "type": "quantitative",
+              // }],
+              // "color": {
+                // "condition":{
+                  // "selection": {"not": "tooltip"}, 
+                  // "value": "transparent"
+                // }
+              // }
+            // }
+          // }
         ]
         
       }
@@ -308,6 +308,7 @@ export default {
   },
   methods: {
     reloadImage (config) {
+      console.log("TICK",this.values, config)
       config.data = {"values": this.values}
       vegaEmbed('#' + this.source, config, {tooltip: {offsetY: -110}, mode: 'vega-lite',}) 
     }

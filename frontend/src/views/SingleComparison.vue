@@ -5,10 +5,9 @@
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
           <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
           <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
-          <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button>
         </d-breadcrumb>
       </div>
-      <div class="col col-3" v-for="repo in comparedRepos">
+      <div class="col col-3" v-for="repo in compRepoNames">
         <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
           <d-breadcrumb-item :active="false" :text="repo.split('/')[0]" href="#"/>
           <d-breadcrumb-item :active="true" :text="repo.split('/')[1]" href="#" />
@@ -34,93 +33,141 @@
       </div>
     </div> -->
 
-    <div class="row">
+    <div class="row" v-if="getComparedReposNames.length > 0">
 
-      <!-- <div class="col col-12">
-        <dual-axis-contributions></dual-axis-contributions>
-      </div> -->
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
+          <dynamic-line-chart 
+                      source="codeChanges"
+                      title="Code Changes (Commits) / Week"
+                      cite-url=""
+                      cite-text="Code Changes"
+          ></dynamic-line-chart>
+        </d-card>
+      </div>
 
-          <dynamic-line-chart v-if="loaded"
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      source="codeChangesLines"
+                      title="Lines of Code Changed / Week"
+                      cite-url=""
+                      cite-text="Code Changes Lines"
+          ></dynamic-line-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
                       source="openIssuesCount"
                       title="Open Issues / Week"
                       cite-url=""
                       cite-text="Open Issues"
-                      :repos="repos">
-                      <!-- :data="values['openIssuesCount']"> -->
-          </dynamic-line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div>
 
 
       <div class="col col-6" style="padding-top:3rem">
         <d-card>
-          <spinner v-if="!loaded"></spinner>
-
-          <dynamic-line-chart v-if="loaded"
+          <dynamic-line-chart 
                       source="closedIssuesCount"
                       title="Closed Issues / Week"
                       cite-url=""
                       cite-text="Closed Issues"
-                      :repos="repos">
-                      <!-- :data="values['closedIssuesCount']"> -->
-          </dynamic-line-chart>
+          ></dynamic-line-chart>
         </d-card>
       </div>
 
-      <!--<div class="col col-6" style="padding-top:3rem">
-        <spinner v-if="!loaded"></spinner>
-
-        <dynamic-line-chart v-if="loaded"
-                    source="issuesNew"
-                    title="New Issues / Week"
-                    cite-url=""
-                    cite-text="New Issues"
-                    :repos="repos">
-        </dynamic-line-chart>
-      </div> -->
-
-<!--       <div class="col col-6" style="padding-top:3rem">
-        <spinner v-if="!loaded"></spinner>
-
-        <dynamic-line-chart v-if="loaded"
-                    source="reviews"
-                    title="Pull Requests Opened / Week"
-                    cite-url=""
-                    cite-text="Pull Requests Opened"
-                    :repos="repos">
-        </dynamic-line-chart>
-      </div>
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      source="issuesNew"
+                      title="New Issues / Week"
+                      cite-url=""
+                      cite-text="New Issues"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
 
       <div class="col col-6" style="padding-top:3rem">
-        <dynamic-line-chart v-if="loaded"
-                    source="pullRequestAcceptanceRate"
-                    title="Pull Request Acceptance Rate"
-                    cite-url=""
-                    cite-text="Pull Request Acceptance Rate"
-                    :repos="repos">
-        </dynamic-line-chart>
-      </div> -->
-<!-- 
-      <div class="col col-12">
-        <stacked-bar-chart source="issueActivity"
-                    title="Issue Activity"
-                    cite-url=""
-                    cite-text="Issue Activity">
-        </stacked-bar-chart>
-      </div> -->
-
-     <!--  <div class="col col-12">
-        <bubble-chart source="contributors"
-                      title="Contributor Overview"
-                      size="total"
+        <d-card>
+          <dynamic-line-chart 
+                      source="reviews"
+                      title="Reviews (Pull Requests) / Week"
                       cite-url=""
-                      cite-text="Contributors">
-        </bubble-chart>
+                      cite-text="Reviews"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      source="reviewsAccepted"
+                      title="Reviews (Pull Requests) Accepted / Week"
+                      cite-url=""
+                      cite-text="Reviews Accepted"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <dynamic-line-chart 
+                      source="reviewsDeclined"
+                      title="Reviews (Pull Requests) Declined / Week"
+                      cite-url=""
+                      cite-text="Reviews Declined"
+          ></dynamic-line-chart>
+        </d-card>
+      </div> 
+
+      <!-- need to update metric to make it averages -->
+      <!-- <div class="col col-6" style="padding-top:3rem">
+        <d-card>
+          <spinner v-if="!loaded"></spinner>
+
+          <dynamic-line-chart 
+                      v-if="loaded"
+                      source="reviewDuration"
+                      title="Reviews (Pull Requests) Average Duration / Week"
+                      cite-url=""
+                      cite-text="Reviews Duration"
+          ></dynamic-line-chart>
+        </d-card>
+      </div>  -->
+
+      
+
+      <!-- <div class="col col-12">
+        <d-card>
+          <stacked-bar-chart source="issueActivity"
+                      title="Issue Activity"
+                      cite-url=""
+                      cite-text="Issue Activity">
+          </stacked-bar-chart>
+        </d-card>
+      </div>
+
+      <div class="col col-12">
+        <d-card>
+          <bubble-chart source="contributors"
+                        title="Contributor Overview"
+                        size="total"
+                        cite-url=""
+                        cite-text="Contributors">
+          </bubble-chart>
+        </d-card>
       </div> -->
 
+    </div>
+    
+    <div v-else>
+      <p></p>
+      <p></p>
+      Please select a compared repo above.
     </div>
 
   </d-container>
@@ -128,7 +175,7 @@
 
 <script lang="ts">
 import  { Component, Vue } from 'vue-property-decorator';
-import {mapActions, mapGetters} from "vuex";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 import SparkChart from '../components/charts/SparkChart.vue';
 import InsightChart from '../components/charts/InsightChart.vue';
 import TickChart from '../components/charts/TickChart.vue'
@@ -163,6 +210,15 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
     BubbleChart,
   },
   methods: {
+    ...mapMutations('compare', [
+      'setCompare',
+      'setVizOptions',
+      'mutateStartDateChange',
+      'mutateEndDateChange',
+      'resetCompared',
+      'mutateComparedRepo',
+      'mutateComparedGroup'
+    ]),
     ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
@@ -178,6 +234,7 @@ import BubbleChart from '../components/charts/BubbleChart.vue'
     ]),
     ...mapGetters('compare',[
       'base',
+      'comparedAPIRepos',
       'comparedRepos'
     ]),
   },
@@ -191,7 +248,7 @@ export default class SingleComparison extends Vue {
   projects = []
   themes = ['dark', 'info', 'royal-blue', 'warning']
   project = null
-  loaded: boolean = true
+  loaded: boolean = false
   values: any = {'issuesClosed':{}, 'changesByAuthor': {}, 'pullRequestAcceptanceRate': {}}
   loadedBars = false
 
@@ -201,31 +258,99 @@ export default class SingleComparison extends Vue {
   repo_groups!: any[];
   sortedRepoGroups!: any[];
   base!: any;
+  comparedRepos!: any;
+  comparedAPIRepos!: any;
+  apiRepos!: any;
+
   // actions
   endpoint!: any;
   setBaseGroup!: any;
-  comparedRepos!: any;
-  apiRepos!: any;
+
+  //decalre for vuex state
+    compare!: any;
+    trailingAverage!: number;
+    setVizOptions!: any;
+    rawWeekly!: boolean;
+    showTooltip!: boolean;
+    showArea!: boolean;
+    showDetail!: boolean;
+    showBelowAverage!: boolean;
+    startDate!: Date;
+    endDate!: Date;
+    isGroup!: boolean;
+    
+    comparedRepoGroups!:any;
+    comparisionSize!:any;
+
+    mutateStartDateChange!: any;
+    mutateEndDateChange!: any;
+    mutateComparedRepo!:any;
+    mutateComparedGroup!:any;
+    setCompare!:any;
+
+    setComparedRepos!:any;
+    setComparedGroup!:any;
+    setBaseRepo!:any;
+
+    loadRepoGroups!: any;
+    loadRepos!: any;
+
+    resetCompared!: any;
+    repoRelations!: any;
+    repoGroups!: any;
+
+  get compRepoNames () {
+    return 'names' in this.comparedRepos ? this.comparedRepos.names : this.comparedRepos
+  }
+
+  get getComparedReposNames () {
+    return this.comparedRepos.names || []
+  }
 
   created() {
+    console.log("here",this.comparedRepos, this.base)
     let promises = []
     promises.push(this.repos.push(this.base))
-    promises.push(this.comparedRepos.forEach((repo: any) => {
-      this.repos.push(this.apiRepos[repo])
+    promises.push(this.comparedAPIRepos.forEach((repo: any) => {
+      this.repos.push(repo)
     }))
-    Promise.all(promises)
-    // this.endpoint({endpoints:this.endpoints,repos: apiRepos}).then((tuples:any) => {
-    //   console.log(tuples)
-    //   Object.keys(tuples[this.base.rg_name][this.base.url]).forEach((endpoint) => {
-    //     this.values[endpoint] = {}
-    //     apiRepos.forEach((repo) => {
-    //       console.log(endpoint, repo, this.values)
-    //       this.values[endpoint][repo.repo_name] = {}
-    //       this.values[endpoint][repo.repo_name][endpoint] = tuples[this.base.rg_name][this.base.url][endpoint]
-    //     })
-    //   })
+    Promise.all(promises).then(() => {
+      console.log("singly comparison", "true", this.repos)
       this.loaded = true
-    // })
+    })
+  }
+
+  onReset() {
+    let initialState: any = {
+      startDate: new Date('1 February 2011'),
+      endDate: new Date(),
+      trailingAverage: 180,
+      compare: 'rolling',
+      rawWeekly: false,
+      showArea: true,
+      showDetail: false,
+      showTooltip: true,
+      byDate: false,
+      showBelowAverage: false,
+    }
+    this.setVizOptions(
+      initialState
+    )
+    this.mutateStartDateChange(initialState.startDate)
+    this.mutateEndDateChange(initialState.endDate)
+    this.resetCompared()
+
+    if (!this.isGroup) {
+      router.push({
+        name: 'repo_overview',
+        params: {group: this.base.rg_name, repo: this.base.repo_name}
+      })
+    } else {
+      router.push({
+        name: 'group_overview',
+        params: {group: this.base.rg_name}
+      })
+    }
   }
 
   onRepoGroup(repo_group: any) {
@@ -234,6 +359,14 @@ export default class SingleComparison extends Vue {
         name: 'group_overview',
         params: {group: repo_group.rg_name}
       })
+    })
+  }
+
+  onTab(e: any) {
+    this.onReset()
+    console.log("onTab", e.target.value)
+    this.$router.push({
+      name: e.target.value, params: {repo: this.base.repo_name, group: this.base.rg_name}
     })
   }
 

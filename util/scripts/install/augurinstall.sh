@@ -1,11 +1,13 @@
 #!/bin/bash
 
-PS3="Your choice: "
+PS3="
+Please type the number corresponding to your selection and then press the Enter/Return key.
+Your choice: "
 
 echo
-echo "**********************************"
-echo "Checking for python..."
-echo "**********************************"
+echo "***********************************************"
+echo "Checking for the correct version of Python 3..."
+echo "***********************************************"
 echo
 
 function check_python_version() {
@@ -35,11 +37,11 @@ if [[ $? -eq 1 ]]; then
     echo "Python 3.6 and higher can be found here: https://www.python.org/downloads/"
     exit 1
   else
-    echo "Sufficient version of Python found under `which python3`. Resuming installation..."
+    echo "Sufficient version of Python found at `which python3`. Resuming installation..."
     augur_python_command="python3"
   fi
 else
-  echo "Sufficient version of Python found under `which python`. Resuming installation..."
+  echo "Sufficient version of Python found at `which python`. Resuming installation..."
   augur_python_command="python"
 fi
 
@@ -55,10 +57,10 @@ if [[ ! $(command -v pip) ]]; then
     echo "Installation instructions can be found here: https://pip.pypa.io/en/stable/installing/"
     exit 1
   else
-    echo "Sufficient form of pip detected under `which pip3`. Resuming installation..."
+    echo "Sufficient form of pip detected at `which pip3`. Resuming installation..."
   fi
 else
-  echo "Sufficient form of pip detected under `which pip`. Resuming installation..."
+  echo "Sufficient form of pip detected at `which pip`. Resuming installation..."
 fi
 
 echo
@@ -66,33 +68,36 @@ echo "**********************************"
 echo "Checking for virtual environment..."
 echo "**********************************"
 echo
-if [[ -z $VIRTUAL_ENV ]]; then
-  echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virutal environment. ***"
+if [[ -z "$VIRTUAL_ENV" ]]; then
+  echo "*** We noticed you're not using a virtual environment. It is STRONGLY recommended to install Augur in its own virtual environment. ***"
   echo "*** Would you like to create a virtual environment? ***"
-  select choice in "Yes" "No"
+  select choice in "y" "n"
   do
     case $choice in
-      Yes )
+      "y" )
           echo "Would you like to generate the environment automatically, or configure it yourself?"
-          echo "If you choose to create it automatically, virtualenv will be installed if it isn't already."
-          select choice in "Yes" "No"
+          select choice in "y" "n"
           do
             case $choice in
-              "Yes" )
-                  pip install virtualenv
-                  virtualenv -p $augur_python_command augur_venv
-                  echo "*** Your environment was installed as \`augur_venv\`. Please activate and restart the installation using your shell's appropriate command. ***"
-                  echo "*** For example, if you're using bash run 'source augur_venv/bin/activate'. ***"
-                  exit 0
+              "y" )
+                  echo
+                  $augur_python_command -m venv $HOME/.virtualenvs/augur_env
+                  echo "*** Your environment was installed to $HOME/.virtualenvs/augur_env/. Please activate and restart the installation using your shell's appropriate command. ***"
+                  echo "*** For example, if you're using bash, run 'source $HOME/.virtualenvs/augur_env/bin/activate'. ***"
+                  echo
+                  exit 1
                 ;;
-              "No" )
+              "n" )
+                  echo
                   echo "Please create the virtual environment and return to the installation when you're finished."
-                  exit 0
+                  echo "When you're creating the environment, please do not create it inside this directory. The recommended location is `$HOME`/.virtualenvs."
+                  echo
+                  exit 1
                 ;;
             esac
           done
         ;;
-      No )
+      "n" )
           echo "Resuming installation..."
           break
         ;;
@@ -123,40 +128,44 @@ echo "**********************************"
 echo "Installing workers and their dependencies..."
 echo "**********************************"
 echo
-for OUTPUT in $(ls -d workers/*/)
+for WORKER in $(ls -d workers/*/)
 do
-    if [[ $OUTPUT == *"_worker"* ]]; then
-        cd $OUTPUT
-        echo "Running setup for $(basename $(pwd))"
-        rm -rf build/*;
-        rm -rf dist/*;
-        python setup.py install;
-        cd ../..
-    fi
-done
+    if [[ $WORKER == *"_worker"* ]]; then
 
-echo "Would you like to install Augur's frontend dependencies?"
-select choice in "Yes" "No"
-do
-  case $choice in
-    "Yes" )
-      echo
-      echo "**********************************"
-      echo "Installing frontend dependencies..."
-      echo "**********************************"
-      echo
-      cd frontend/;
-      npm install brunch canvas vega @vue/cli;
-      npm install; 
-      npm run build;
-      cd ../;
-      break
-      ;;
-    "No" )
-      echo "Skipping frontend dependencies..."
-      break
-      ;;
-   esac
+      # make it pretty for formatting
+      FORMATTED_WORKER=${WORKER/#workers\//}
+      FORMATTED_WORKER=${FORMATTED_WORKER/%\//}
+
+      echo "Would you like to install $FORMATTED_WORKER?"
+      select install_worker in "y" "n"
+      do
+        case $install_worker in
+          "y" )
+            echo
+            echo "**********************************"
+            echo "Installing $(basename $(pwd))..."
+            echo "**********************************"
+            echo
+
+            cd $WORKER
+            rm -rf build/*;
+            rm -rf dist/*;
+            python setup.py install;
+            pip install -e .
+            cd ../..
+            echo "Installing $FORMATTED_WORKER"
+            break
+            ;;
+          "n" )
+            echo
+            echo "Skipping $FORMATTED_WORKER."
+            echo
+            break
+            ;;
+        esac
+      done
+
+    fi
 done
 
 echo
@@ -167,104 +176,76 @@ echo
 
 cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs; cd ..
 
-echo
-echo "**********************************"
-echo "Setting up the database configuration..."
-echo "**********************************"
-echo
+if [[ ! -e augur.config.json ]]; then
+  echo "** No config file was found. Starting config creation process. **"
 
-function generate_config_file() {
   echo
   echo "**********************************"
-  echo "Generating configuration file..."
+  echo "Setting up the database configuration..."
   echo "**********************************"
   echo
-  python make_config.py
-  rm temp.config.json
-}
+  echo "Would you like to enter your database credentials at the command line or on a web page?"
+  select credential_setup_method in "Command Line" "Webpage"
+  do
+    case $credential_setup_method in
+      "Command Line" )
+          util/scripts/install/setup_db.sh
+          break
+        ;;
+      "Webpage" )
+          echo "Continuing installation via webpage..."
+          cd util/scripts/install
+          python server.py
+          python make_config.py
+          rm temp.config.json
+          break
+        ;;
+    esac
+  done
+else
+  echo "** Config file was found. Resuming installation... **"
+fi
 
-function enter_db_credentials() {
-
-  cd util/scripts/install
-
-  read -p "database: " database
-  read -p "host: " host
-  read -p "port: " port
-  read -p "user: " user
-  read -p "password: " password
-  read -p "key: " key
-
-  config="
-  {
-    \"database\": \"$database\",
-    \"host\": \"$host\",
-    \"port\": \"$port\",
-    \"user\": \"$user\",
-    \"password\": \"$password\",
-    \"key\": \"$key\"
-  }"
-
-  rm temp.config.json
-  touch temp.config.json
-  echo $config > temp.config.json
-
-  python make_config.py
-  rm temp.config.json
-}
-
-on_command_line=false
 echo
-echo "Would you like to enter your DB credentials at the command line or on a web page?"
-select choice in "Command Line" "Webpage"
-# choice="Webpage"
+echo "Would you like to install Augur's frontend dependencies?"
+echo
+select choice in "y" "n"
 do
   case $choice in
-    "Command Line" )
+    "y" )
+      echo
+      echo "**********************************"
+      echo "Installing frontend dependencies..."
+      echo "**********************************"
+      echo
 
-        echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
-        installpostgreslocally="Would you like to use a pre-existing Postgres 10 or 11 installation to which you can install the Augur schema?"
-        installpostgresremotely="Would you like to use a pre-existing Postgres 10 or 11 installation to which someone else can install the Augur schema?"
-        postgresalreadyinstalled="Would you like to use a pre-existing Postgres 10 or 11 installation with the Augur schema already installed? "
-        SKIP="Skip this section"
-
-        select haveinstalledpostgres in "$installpostgreslocally" "$installpostgresremotely" "$postgresalreadyinstalled" "$SKIP"
-        do
-          case $haveinstalledpostgres in
-              $SKIP )
-              echo "Skipping database configuration..."
-              break
-            ;;
-            $installpostgreslocally )
-                echo "After you have installed the Augur schema to your database, please return to this point in the installation."
-                echo "Please enter the credentials for your database."
-                enter_db_credentials
-                break
-              ;;
-            $installpostgresremotely )
-                echo "Once the Augur schema has been installed on to your database for you, please return to this point in the installation."
-                echo "Please enter the credentials for your database."
-                enter_db_credentials
-                break
-              ;;
-            $postgresalreadyinstalled )
-                echo "Please enter the credentials for your database."
-                enter_db_credentials
-                break
-              ;;
-          esac
-        done
-        break
+      if [[ $(command -V npm) ]]; then
+        cd frontend/;
+        npm install brunch canvas vega @vue/cli;
+        npm install; 
+        npm run build;
+        cd ../;
+      else
+        echo
+        echo "** npm not found. Please install NPM by either installing node (https://nodejs.org/en/download/) or by installing NPM itself."
+        echo
+        exit 1
+      fi
+      break
       ;;
-    "Webpage" )
-        echo "Continuing installation via a webpage..."
-        cd util/scripts/install
-        python server.py
-        python make_config.py
-        rm temp.config.json
-        break
+    "n" )
+      echo "Skipping frontend dependencies..."
+      break
       ;;
-  esac
+   esac
 done
 
-
+echo "**********************************"
 echo "*** INSTALLATION COMPLETE ***"
+echo "**********************************"
+
+echo "**********************************"
+echo "To add repos to the database, run:
+augur db add_repos /path/to/file.csv"
+echo "**********************************"
+

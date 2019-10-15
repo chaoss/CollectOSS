@@ -1,5 +1,5 @@
 <template>
-  <d-card-body style="padding-top: 1rem" title="Lines of code added by the top 10 authors">
+  <d-card-body style="padding-top: 1rem">
     <table class="lines-of-code-table">
       <thead>
         <tr>

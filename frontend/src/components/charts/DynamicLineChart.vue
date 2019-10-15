@@ -1,14 +1,12 @@
 <template>
-
-  <d-card-body>
+  <d-card-body v-if="!error" :title="title">
     
-    <div style="color: black" class="error" :class="{hidden: !error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important"> {{ source }}</p></div>
-    <!-- <div v-if="!loaded" :class="{hidden: !error}" class="spinner loader"></div> -->
+    <!-- <div style="color: black" class="error" :class="{hidden: !error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important"> {{ source }}</p></div> -->
     <div v-if="mount" :id="source"></div>
     <div v-if="!loaded">
       <spinner></spinner>
     </div>
-    <div v-if="loaded" class="linechart"> <!-- v-bind:class="{ invis: !detail, invisDet: detail }"> -->
+    <div v-if="loaded" class="linechart"> 
       <!-- <div class="row">
         <div class="col col-4" ><input type="radio" name="timeoption" value="month" v-model="timeperiod">Month</div>
         <div class="col col-4" ><input type="radio" name="timeoption" value="year" v-model="timeperiod">Year</div>
@@ -51,7 +49,7 @@ import Spinner from '../../components/Spinner.vue'
 
 export default {
 
-  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data', 'repos', 'endpoints'],
+  props: ['source', 'citeUrl', 'citeText', 'title', 'disableRollingAverage', 'alwaysByDate', 'domain', 'data', 'endpoints'],
   components: {
     Spinner
   },
@@ -91,9 +89,6 @@ export default {
     },
   },
   computed: {
-    repo () {
-      return this.$store.state.compare.base
-    },
     gitRepos () {
       return this.$store.getters.gitRepo
     },
@@ -112,9 +107,6 @@ export default {
     comparedRepos () {
       return this.$store.state.compare.comparedRepos
     },
-    comparedAPIRepos () {
-      return this.$store.state.compare.comparedAPIRepos
-    },
     rawWeekly () {
       return this.$store.state.compare.rawWeekly
     },
@@ -128,7 +120,12 @@ export default {
       return this.$store.state.common.showDetail
     },
     ...mapGetters('common',[
-      'repoRelations'
+      'repoRelations',
+      'apiRepos'
+    ]),
+    ...mapGetters('compare',[
+      'base',
+      'comparedAPIRepos'
     ]),
     
 
@@ -137,6 +134,9 @@ export default {
     ...mapActions('common',[
       'endpoint', // map `this.endpoint({...})` to `this.$store.dispatch('endpoint', {...})`
                   // uses: this.endpoint({endpoints: [], repos (optional): [], repoGroups (optional): []})
+    ]),
+    ...mapActions('compare',[
+      'setComparedRepos'
     ]),
     thisShouldTriggerRecompute() {
       this.forceRecomputeCounter++;
@@ -157,17 +157,18 @@ export default {
         if(this.status[key]) allFalse = false
     },
     renderError () {
-      console.log("ERROR ERROR")
+      // console.log("DLC","ERROR ERROR")
       this.error = true
+      this.loaded = true
     },
     thisShouldTriggerRecompute() {
       this.forceRecomputeCounter++;
     },
     respec(){this.spec;},
     reloadImage (config) {
-      console.log(config, this.source)
+      // console.log("DLC",config, this.source)
       if (config.data.values.length == 0){
-        console.log("yo")
+        // console.log("DLC","yo")
         // this.spec;
         this.renderError()
         return
@@ -180,7 +181,7 @@ export default {
         let keys = Object.keys(el)
         let field = null
         keys.forEach((key) => {
-          if (el[key] != null && key != 'date' && key != 'repo_name' && key != 'repo_id'){
+          if (el[key] != null && key != 'date' && key != 'repo_name' && key != 'repo_id' && key != 'field' && key != 'value'){
             field = key
           }
         })
@@ -190,52 +191,25 @@ export default {
       return ary
     },
     spec(data) {
-      console.log("DATAAAA", data)
+      // console.log("DLC","DATAAAA", data, this.$store.state)
+
+      let repos = this.repos
 
       // declare constant for vegaEmbed module since we use its cdn in index.html rather than add it to package.json
-      const vegaEmbed = window.vegaEmbed;
-      // Get the repos we need
-      let repos = []
-
-      if (this.repo) {
-        console.log(this.repo)
-        repos = [this.repo.url]
-      }
-      else {
-        repos.push(this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].url)
-      }
-      if (this.data) repos = Object.keys(this.data)
-      // Object.keys(this.data).forEach((key) => {
-
-      // }) 
-      
-      if (this.comparedAPIRepos){
-        this.comparedAPIRepos.forEach(function(repo) {
-          repos.push(repo.url)//.split('/')[1])
-        });
-      } else {
-        let compares = this.$router.currentRoute.params.compares
-        repos.push(this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].url)
-      }
-      
-
-
-      repos.forEach((repo) => {
-        this.status[repo] = true
-      })
+      // const vegaEmbed = window.vegaEmbed
 
       //COLORS TO PICK FOR EACH REPO
-      var colors = ["black", "#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
+      var colors = ["black", "#FF3647","#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let brush = this.showDetail ? {"filter": {"selection": "brush"}} : {"filter": "datum.date > 0"}
       let config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "data": {
           "values": []//this.data
         },
         // "padding": {'left': 0, 'top': 0, 'right': this.x / 2, 'bottom': 0},
         "config":{
               "axis":{
-                "grid": false
+                "grid": true
               },
               "legend": {
                 "offset": -(this.x / 3.15),
@@ -246,12 +220,8 @@ export default {
         // "resolve": {"scale": {"x": "independent"}},
         "vconcat": [
           {
-            "title": {
-            "text": this.title,
-            "offset": 15
-            },
             "width": this.x / 3,
-            "height": this.y / 1.8,
+            "height": this.y / 3,
             
             "layer": [
               {
@@ -633,8 +603,11 @@ export default {
       }
 
       buildMetric()
-      console.log(repos[0], "YOYOY")
+
+
       buildLines("valueRolling" + repos[0].replace(/\//g,'').replace(/\./g,''), colors[0])
+      if (repos[1])
+        buildLines("valueRolling" + repos[1].replace(/\//g,'').replace(/\./g,''), colors[1])
 
       //set dates from main control options
       let today = new Date()
@@ -705,6 +678,13 @@ export default {
       })
 
       let processData = (data) => {
+
+          // this.repos.forEach((repo) => {
+          //   Object.keys(data[repo]).forEach((metric) => {
+          //     data = this.convertKey(data[repo][metric])
+          //   })
+          // })
+          
         // Make it so the user can save the data we are using
           this.__download_data = data
           this.__download_file = this.title.replace(/ /g, '-').replace('/', 'by').toLowerCase()
@@ -714,13 +694,19 @@ export default {
 
           // We usually want to limit dates and convert the key to being vega-lite friendly
           let defaultProcess = (obj, key, field, count) => {
-            let d = null
+            // console.log("DLC begin default process: ", obj, key, field, count)
+            let d = obj[key]
             if (typeof(field) == "string") {
               field = [field]
             }
-            console.log("default process prior to convertKey:",obj, key, field)
-            d = this.convertKey(obj[key], field)
-            console.log("default process prior to convertDates:",d, this.earliest, this.latest, 'date')
+            console.log("DLC","default process prior to convertKey:",obj, key, field)
+            // let goodField = null
+            // for (let f in field) {
+            //   if (f != 'date' && f != 'value' && f != 'field')
+            //     goodField = f
+            // }
+            // d = AugurStats.convertKey(obj[key], field)
+            // console.log("DLC","default process prior to convertDates:",d, this.earliest, this.latest, 'date')
             d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
             return d
           }
@@ -730,7 +716,7 @@ export default {
           let normalized = []
           let aggregates = []
           let buildLines = (obj, onCreateData, repo) => {
-            console.log(obj, onCreateData, repo)
+            // console.log("DLC start of buildLines",obj, repo)
             if (!obj) {
               return
             }
@@ -740,12 +726,9 @@ export default {
               }
             }
             let count = 0
-            // console.log("type", Object.getOwnPropertyNames(Object.getPrototypeOf(obj)))//Object.getOwnPropertyNames(Object.getPrototypeOf(err))
-            // obj = JSON.stringify(obj)
-            console.log(JSON.stringify(obj),obj['openIssuesCount'])
-            // if (Object.keys(obj).length < 1) obj['openIssuesCount'] = 
+
             for (var key in obj) {
-              console.log(key)
+              // console.log("DLC key:",key)
               if (obj.hasOwnProperty(key)) {
                 if (fields[key]) {
                   fields[key].forEach((field) => {
@@ -753,7 +736,7 @@ export default {
                     count++
                   })
                 } else {
-                  console.log("hehrere",Array.isArray(obj[key]),obj, key)
+                  // console.log("DLC","hehrere",Array.isArray(obj[key]),obj, key)
                   if (Array.isArray(obj[key]) && obj[key].length > 0) {
                     let field = Object.keys(obj[key][0]).splice(1)
                     onCreateData(obj, key, field, count)
@@ -765,7 +748,7 @@ export default {
                       if (this.status[repo]) noRepoWithData = false
                     })
                     if (noRepoWithData){
-                      console.log("logging no data for any repo error")
+                      // console.log("DLC","logging no data for any repo error")
                       this.renderError()
                     }
                     //return
@@ -782,46 +765,47 @@ export default {
           let baselineVals = null
           let baseDate = null
           let x = 0
-          repos.forEach((repo) => {
-            console.log(repo, JSON.stringify(data))
-              buildLines(data[repo], (obj, key, field, count) => {
-                // Build basic chart using rolling averages
-                let d = defaultProcess(obj, key, field, count)
-                console.log(d)
-                let rolling = null
-                if (repo == this.repo && d[0]) baseDate = d[0].date
-                else d = AugurStats.alignDates(d, baseDate, this.period)
-                if (this.compare == 'zscore') { // && this.comparedRepos.length > 0
-                  rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
-                } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
-                else if (this.compare == 'baseline') { //&& this.comparedRepos.length > 0
-                  if(repo.githubURL == this.repo){
-                    baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                  }
-                  rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                  if(baselineVals){
-
-                    for (var i = 0; i < baselineVals.length; i++){
-                    if (rolling[i] && baselineVals[i])
-                      rolling[i].valueRolling -= baselineVals[i].valueRolling
-                    }
-                  }
-                } else {
-                  console.log(d, this.period, repo)
-                  rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                  while (rolling[0].valueRolling == 0)
-                    rolling.shift()
-                  rolling.forEach((tuple) => {
-                    tuple.date.setDate(tuple.date.getDate() + x);
-                  })
-                  console.log(rolling)
+          this.repos.forEach((repo) => {
+            buildLines(data[repo], (obj, key, field, count) => {
+              // Build basic chart using rolling averages
+              let d = defaultProcess(obj, key, field, count)
+              // console.log("DLC",d)
+              let rolling = null
+              if (repo == this.repo && d[0]) baseDate = d[0].date
+              else d = AugurStats.alignDates(d, baseDate, this.period)
+              if (this.compare == 'zscore') { // && this.comparedRepos.length > 0
+                rolling = AugurStats.rollingAverage(AugurStats.zscores(d, 'value'), 'value', this.period, repo)
+              } //else if (this.rawWeekly || this.disableRollingAverage) rolling = AugurStats.convertKey(d, 'value', 'value' + repo)
+              else if (this.compare == 'baseline') { //&& this.comparedRepos.length > 0
+                if(repo.githubURL == this.repo){
+                  baselineVals = AugurStats.rollingAverage(d, 'value', this.period, repo)
                 }
+                rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                if(baselineVals){
 
-                normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
-                aggregates.push(AugurStats.convertKey(d, 'value', 'value' + repo))
-                legend.push(repo + " " + field)
-                // colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
-              }, repo)
+                  for (var i = 0; i < baselineVals.length; i++){
+                  if (rolling[i] && baselineVals[i])
+                    rolling[i].valueRolling -= baselineVals[i].valueRolling
+                  }
+                }
+              } else {
+                d = this.convertKey(d)
+                // console.log("DLC prerolling",d, this.period, repo)
+                rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
+                // console.log("DLC rolling:",rolling)
+                while (rolling[0].valueRolling == 0)
+                  rolling.shift()
+                rolling.forEach((tuple) => {
+                  tuple.date.setDate(tuple.date.getDate() + x);
+                })
+                // console.log("DLC",rolling)
+              }
+
+              normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
+              aggregates.push(AugurStats.convertKey(d, 'value', 'value' + repo))
+              legend.push(repo + " " + key)
+              // colors.push(window.AUGUR_CHART_STYLE.brightColors[count])
+            }, repo)
             x++
           });
 
@@ -853,7 +837,7 @@ export default {
                 })
               }
             }
-            repos.forEach((repo) => {
+            this.repos.forEach((repo) => {
               if(!this.status[repo]) {
                 let temp = JSON.parse(JSON.stringify(values))
                 temp = temp.map((datum) => {
@@ -867,11 +851,16 @@ export default {
 
             this.legendLabels = legend
             config.data = {"values": values}
-            console.log(config.data)
             this.values = values
 
-            this.renderChart()
-            this.loaded = true
+            if (values.length < 2)
+              this.renderError()
+            else {
+              this.renderChart()
+              this.loaded = true
+            }
+
+            
           }
       }
 
@@ -893,30 +882,102 @@ export default {
     y = win.innerHeight|| docElem.clientHeight|| body.clientHeight;
     this.x = x
     this.y = y
-    if (this.data) {
-      let dataFilled = true
-      Object.keys(this.data).forEach((key) => {
-        console.log(key, this.data[key])
-        if (this.data[key].length < 1) dataFilled = false
-      })
-      if (dataFilled){
-        this.spec(this.data)
-        repos = Object.keys(this.data)
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Get the repos we need
+    let repos = []
+    let apiRepos = []
+    let promises = []
+
+    if (this.base) {
+      apiRepos.push(this.base)
+      // console.log("DLC base",this.base)
+      let ref = this.base.url || this.base.repo_name
+      repos = [ref]
+    }
+    else {
+      //allow to retrieve from route... eventually
+
+      // console.log(this.$router.currentRoute.params)
+      // let ref = this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].url || this.repoRelations[this.$router.currentRoute.params.group][this.$router.currentRoute.params.repo].repo_name
+      // repos.push(ref)
+    }
+    
+    // if (this.comparedAPIRepos){
+    //   this.comparedAPIRepos.forEach((repo) => {
+    //     apiRepos.push(repo)
+    //     let ref = repo.url || repo.repo_name
+    //     repos.push(ref)
+    //   });
+    // } else {
+    let compares = null
+    if ('compares' in this.$router.currentRoute.params) {
+      
+      compares = this.$router.currentRoute.params.compares
+      
+      if (compares in this.apiRepos) {
+
+        // console.log("DLC Api repos already loaded",this.apiRepos, compares)
+        apiRepos.push(this.apiRepos[compares])
+        let ref = this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].url || this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].repo_name
+        repos.push(ref)
+
+      } else {
+
+        // console.log("DLC Api repos not loaded, getting repo from route then setting comp repos: ", compares)
+        let ids = !this.$router.currentRoute.params.comparedRepoIds ? [] : this.$router.currentRoute.params.comparedRepoIds.split(',')
+        promises.append(this.setComparedRepos({ 'names': [compares], 'ids': ids }))
+
+      }
+      //got api repos
+      
+    }
+    //got repo names
+
+    // console.log("DLC starting promises...")
+    Promise.all(promises).then(() => {
+      if (compares) {
+        apiRepos.push(this.apiRepos[compares])
+        let ref = this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].url || this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].repo_name
+        repos.push(ref)
       }
       
-    } else {
-      console.log("did not detect data")
-      this.endpoint({repos:this.repos, endpoints:[this.source]}).then((data) => {
-        console.log("YAA",JSON.stringify(data))
-        console.log(Object.keys(data).length)
-        if (Object.keys(data).length > 1)
-          this.spec(data)
-        // processData(data)
-      }).catch((error) => {
-        console.log(error)
-        this.renderError()
-      }) // end batch request
-    }
+    
+      repos.forEach((repo) => {
+        this.status[repo] = true
+      })
+      this.repos = repos
+
+      if (this.data) {
+        let dataFilled = true
+        Object.keys(this.data).forEach((key) => {
+          // console.log("DLC",key, this.data[key])
+          if (this.data[key].length < 1) dataFilled = false
+        })
+        if (dataFilled){
+          this.spec(this.data)
+          repos = Object.keys(this.data)
+        }
+        
+      } else {
+        // console.log("DLC","did not detect data")
+        this.endpoint({ repos:apiRepos, endpoints:[this.source] }).then((data) => {
+          // console.log("DLC","YAA",data)
+          // console.log("DLC",Object.keys(data).length)
+          if (Object.keys(data).length > 0)
+            this.spec(data)
+          // processData(data)
+        }).catch((error) => {
+          // console.log("DLC",error)
+          this.renderError()
+        }) // end batch request
+      }
+
+    })
+      
   },
   created () {
     var query_string = "chart_mapping=" + this.source

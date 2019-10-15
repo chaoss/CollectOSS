@@ -1,26 +1,25 @@
 <template>
 
-  <d-card-body :title="title" class="text-center">
+  
 
-    <div style="margin-bottom: 0 !important" class="tickchart ">
-      <!-- <div :id="source" style="padding: 0"></div> -->
-      <vega-lite :spec="spec" :data="values"></vega-lite>
-      <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
-          <div class="inputGroup "  style="padding-top: 5px;">
-            <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
-            <label id="front" for="yearradio" >Year</label>
-          </div>
-          <div class="inputGroup "  style="padding-top: 5px;">
-            <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
-            <label id="front" for="monthradio" >Month</label>
-          </div>
-          <div class="inputGroup " style="padding-top: 5px;">
-            <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
-            <label id="front" for="contradio">Continuous</label>
-          </div>
-      </div> -->
-    </div>
-  </d-card-body>
+  <div style="margin-bottom: 0 !important" class="tickchart ">
+    <!-- <div :id="source" style="padding: 0"></div> -->
+    <vega-lite :spec="spec" :data="values"></vega-lite>
+    <!-- <div style="position: relative; top: -0px !important; transform: translateY(-0rem)"class="form-item form-checkboxes tickradios">
+        <div class="inputGroup "  style="padding-top: 5px;">
+          <input id="yearradio" name="timeframe" value="0" type="radio" v-model="group">
+          <label id="front" for="yearradio" >Year</label>
+        </div>
+        <div class="inputGroup "  style="padding-top: 5px;">
+          <input id="monthradio" name="timeframe" value="1" type="radio" v-model="group">
+          <label id="front" for="monthradio" >Month</label>
+        </div>
+        <div class="inputGroup " style="padding-top: 5px;">
+          <input id="contradio" name="timeframe" value="2" type="radio" v-model="group">
+          <label id="front" for="contradio">Continuous</label>
+        </div>
+    </div> -->
+  </div>
 
 </template>
 
@@ -97,7 +96,7 @@ export default {
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": this.x / 2.5,
-        "height": this.y / 2.4,
+        "height": this.y / 3,
         "padding": {"left": 0, "top": 0, "right": 0, "bottom": -70},
         "config": {
           "axis":{
@@ -241,7 +240,8 @@ export default {
                 "condition":{
                   "selection": {"not": "tooltip"}, "value": "transparent"
                 },
-                "value": "black"
+                // "value": "black"
+                "value": "transparent"
               }
             }
           }

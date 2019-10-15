@@ -1,8 +1,5 @@
 {
   "defaultSeverity": "warning",
-  "extends": [
-    "tslint:recommended"
-  ],
   "linterOptions": {
     "exclude": [
       "node_modules/**",
@@ -11,7 +8,7 @@
     ]
   },
   "rules": {
-    "quotemark": [true, "single"],
+    "quotemark": false,
     "indent": [true, "spaces", 2],
     "interface-name": false,
     "ordered-imports": false,
@@ -20,7 +17,17 @@
     "no-console": false,
     "strictFunctionTypes": false,
     "no-var-requires": false,
-    "semicolon": false
+    "semicolon": false,
+    "prefer-const": false,
+    "trailing-comma": false,
+    "whitespace": false,
+    "typedef-whitespace": false,
+    "triple-equals": false,
+    "object-literal-key-quotes": false,
+    "check-else": false,
+    "object-literal-shorthand": false,
+    "max-line-length": false,
+    "one-line": false
   },
   "strictFunctionTypes": false
 }

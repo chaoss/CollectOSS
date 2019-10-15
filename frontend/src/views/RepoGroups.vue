@@ -9,15 +9,19 @@
     </div>
 
 
-    <spinner v-if="!loadedGroups"></spinner>
     <!-- Default Light Table -->
-    <div v-if="loadedGroups" class="row">
+    <div class="row">
       <div class="col">
         <div class="card card-small mb-4">
           <div class="card-header border-bottom">
             <h6 class="m-0">Currently Stored Groups</h6>
           </div>
-          <div class="card-body p-0 pb-3 text-center">
+
+          <d-card-body v-if="!loadedGroups">
+            <spinner></spinner>
+          </d-card-body>
+
+          <div v-if="loadedGroups" class="card-body p-0 pb-3 text-center">
             <table style="table-layout:fixed;" class="table mb-0">
               <thead class="bg-light">
                 <tr>
@@ -58,7 +62,7 @@
                       <div class="arrow" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'" v-if="'repo_count' == sortColumn"></div>
                     </div>
                   </th> -->
-                  <th scope="col" class="border-0">Options</th>
+                  <!-- <th scope="col" class="border-0">Options</th> -->
                 </tr>
               </thead>
               <tbody>
@@ -71,7 +75,7 @@
                   <td>{{ group.rg_last_modified }}</td>
                   <td>{{ group.rg_type }}</td>
                   <!-- <td>{{ group.repo_count }}</td> -->
-                  <td>
+                  <!-- <td>
                     <div class="row">
                       <button :id="'favorite'+index" class="nav-link col col-2" style="margin-left: 2rem; margin-right: 1rem; padding: 0; border: none; background: none;">
                         <i class="material-icons" style="color:#007bff;">star_rate</i>
@@ -93,7 +97,7 @@
                         Add this repo group to your current compared repos
                       </d-tooltip>
                     </div>
-                  </td>
+                  </td> -->
                 </tr>
               </tbody>
             </table>

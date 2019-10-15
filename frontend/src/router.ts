@@ -32,7 +32,7 @@ import NProgress from "nprogress";
 
 const routes = [
   {
-    path: '/',
+    path: '/insights',
     component: Default,
     children: [
       {
@@ -47,7 +47,7 @@ const routes = [
     ],
   },
   {
-    path: '/repo_groups',
+    path: '/', //repo_groups
     component: Default,
     children: [
       {
@@ -91,21 +91,21 @@ const routes = [
       },
     ],
   },
-  {
-    path: '/insights',
-    component: Default,
-    children: [
-      {
-        path: '',
-        name: 'insights',
-        components: {
-          sidebar: MainSidebar,
-          navbar: MainNavbar,
-          content: ExploreInsights,
-        },
-      },
-    ],
-  },
+  // {
+  //   path: '/insights',
+  //   component: Default,
+  //   children: [
+  //     {
+  //       path: '',
+  //       name: 'insights',
+  //       components: {
+  //         sidebar: MainSidebar,
+  //         navbar: MainNavbar,
+  //         content: ExploreInsights,
+  //       },
+  //     },
+  //   ],
+  // },
   {
     path: '/config',
     component: Default,
@@ -122,7 +122,7 @@ const routes = [
     ],
   },
   {
-    path: '/inspect_insight/:rg_name/:repo_git/:ri_metric',
+    path: '/inspect_insight/:group/:repo/:metric',
     component: Default,
     children: [
       {

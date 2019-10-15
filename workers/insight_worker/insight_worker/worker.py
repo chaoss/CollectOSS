@@ -7,7 +7,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData, and_
 import statistics
 import logging
-import json
+import json, time
 import numpy as np
 import scipy.stats
 import datetime
@@ -41,7 +41,8 @@ class InsightWorker:
         self.tool_version = '0.0.2' # See __init__.py
         self.data_source = 'Augur API'
         self.refresh = True
-        self.send_insights = False
+        self.send_insights = True
+        self.finishing_task = False
 
         logging.info("Worker initializing...")
         
@@ -50,7 +51,7 @@ class InsightWorker:
             "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [["repo_git"]],
+                    "given": [["git_url"]],
                     "models":["insights"]
                 }
             ],
@@ -73,42 +74,38 @@ class InsightWorker:
         self.db = s.create_engine(self.DB_STR, poolclass=s.pool.NullPool,
             connect_args={'options': '-csearch_path={}'.format(dbschema)})
 
+        helper_schema = 'augur_operations'
+        self.helper_db = s.create_engine(self.DB_STR, poolclass = s.pool.NullPool,
+            connect_args={'options': '-csearch_path={}'.format(helper_schema)})
         
         # produce our own MetaData object
         metadata = MetaData()
+        helper_metadata = MetaData()
 
         # we can reflect it ourselves from a database, using options
         # such as 'only' to limit what tables we look at...
         metadata.reflect(self.db, only=['chaoss_metric_status', 'repo_insights', 'repo_insights_records'])
+        helper_metadata.reflect(self.helper_db, only=['worker_history', 'worker_job'])
 
         # we can then produce a set of mappings from this MetaData.
         Base = automap_base(metadata=metadata)
+        HelperBase = automap_base(metadata=helper_metadata)
 
         # calling prepare() just sets up mapped classes and relationships.
         Base.prepare()
+        HelperBase.prepare()
 
         # mapped classes are ready
         self.chaoss_metric_status_table = Base.classes['chaoss_metric_status'].__table__
         self.repo_insights_table = Base.classes['repo_insights'].__table__
         self.repo_insights_records_table = Base.classes['repo_insights_records'].__table__
 
+        self.history_table = HelperBase.classes.worker_history.__table__
+        self.job_table = HelperBase.classes.worker_job.__table__
+
         requests.post('http://{}:{}/api/unstable/workers'.format(
             self.config['broker_host'],self.config['broker_port']), json=specs) #hello message
 
-        # Query all repos and last repo id
-        repoUrlSQL = s.sql.text("""
-            SELECT repo_git, repo_id FROM repo order by repo_id asc
-        """)
-        rs = pd.read_sql(repoUrlSQL, self.db, params={}).to_records()
-        pop_off = 0
-        i = 0
-        while i < pop_off:
-            rs = rs[1:]
-            i += 1
-        for row in rs:
-            self._queue.put({'repo_id': row['repo_id'], 'repo_git': row['repo_git']})
-        self.run()
-        # self.discover_insights({'repo_id': 21000, 'repo_git': 'https://github.com/rails/rails.git'})
 
     def update_config(self, config):
         """ Method to update config and set a default
@@ -133,7 +130,7 @@ class InsightWorker:
         """ entry point for the broker to add a task to the queue
         Adds this task to the queue, and calls method to process queue
         """
-        repo_git = value['given']['repo_git']
+        repo_git = value['given']['git_url']
 
         """ Query all repos """
         repoUrlSQL = s.sql.text("""
@@ -141,10 +138,10 @@ class InsightWorker:
             """.format(repo_git))
         rs = pd.read_sql(repoUrlSQL, self.db, params={})
         try:
-            self._queue.put(CollectorTask(message_type='TASK', entry_info={"repo_git": repo_git, 
-                "repo_id": rs.iloc[0]["repo_id"], "repo_group_id": rs.iloc[0]["repo_group_id"]}))
-        except:
-            print("that repo is not in our database")
+            self._queue.put({"git_url": repo_git, 
+                "repo_id": int(rs.iloc[0]["repo_id"]), "repo_group_id": int(rs.iloc[0]["repo_group_id"]), "job_type": value['job_type']})
+        except Exception as e:
+            logging.info("that repo is not in our database, {}".format(e))
         if self._queue.empty(): 
             if 'github.com' in repo_git:
                 self._task = value
@@ -169,11 +166,12 @@ class InsightWorker:
         Determines what action to take based off the message type
         """
         while True:
+            time.sleep(2)
             if not self._queue.empty():
                 message = self._queue.get()
-            else:
-                break
-            self.discover_insights(message)
+            # else:
+            #     break
+                self.discover_insights(message)
 
     def discover_insights(self, entry_info):
         """ Data collection function
@@ -182,6 +180,7 @@ class InsightWorker:
 
         # Update table of endpoints before we query them all
         logging.info("Discovering insights for task with entry info: {}".format(entry_info))
+        self.record_model_process(entry_info, 'insights')
 
         # Set the endpoints we want to discover insights for
         endpoints = [{'cm_info': "issues-new"}, {'cm_info': "code-changes"}, {'cm_info': "code-changes-lines"}, 
@@ -201,8 +200,8 @@ class InsightWorker:
         """"""
 
         # If we are discovering insights for a group vs repo, the base url will change
-        if 'repo_group_id' in entry_info:
-            base_url = 'http://{}:{}/api/unstable/repo-groups/{}'.format(
+        if 'repo_group_id' in entry_info and 'repo_id' not in entry_info:
+            base_url = 'http://{}:{}/api/unstable/repo-groups/{}/'.format(
                 self.config['broker_host'],self.config['broker_port'], entry_info['repo_group_id'])
         else:
             base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
@@ -223,6 +222,7 @@ class InsightWorker:
             
             # Filter out keys that we do not want to analyze (e.g. repo_id)
             raw_values = {}
+            unique_keys = None
             if len(data) > 0:
                 try:
                     unique_keys = list(filter(is_unique_key, data[0].keys()))
@@ -331,7 +331,7 @@ class InsightWorker:
                             }
                             result = self.db.execute(self.repo_insights_records_table.insert().values(record))
                             logging.info("Primary key inserted into the repo_insights_records table: {}".format(result.inserted_primary_key))
-
+                            self.insight_results_counter += 1
                             # Send insight to Jonah for slack bot
                             self.send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean))
 
@@ -367,23 +367,91 @@ class InsightWorker:
                 else:
                     logging.info("Key: {} has empty raw_values, should not have key here".format(key))
 
+        self.register_task_completion(entry_info, "insights")
+
+    def record_model_process(self, entry_info, model):
+
+        task_history = {
+            "repo_id": entry_info['repo_id'],
+            "worker": self.config['id'],
+            "job_model": model,
+            "oauth_id": self.config['zombie_id'],
+            "timestamp": datetime.datetime.now(),
+            "status": "Stopped",
+            "total_results": self.insight_results_counter
+        }
+        if self.finishing_task:
+            result = self.helper_db.execute(self.history_table.update().where(
+                self.history_table.c.history_id==self.history_id).values(task_history))
+        else:
+            result = self.helper_db.execute(self.history_table.insert().values(task_history))
+            logging.info("Record incomplete history tuple: {}".format(result.inserted_primary_key))
+            self.history_id = int(result.inserted_primary_key[0])
+
+    def register_task_completion(self, entry_info, model):
+        # Task to send back to broker
+        task_completed = {
+            'worker_id': self.config['id'],
+            'job_type': entry_info['job_type'],
+            'repo_id': entry_info['repo_id'],
+            'git_url': entry_info['git_url']
+        }
+        # Add to history table
+        task_history = {
+            "repo_id": entry_info['repo_id'],
+            "worker": self.config['id'],
+            "job_model": model,
+            "oauth_id": self.config['zombie_id'],
+            "timestamp": datetime.datetime.now(),
+            "status": "Success",
+            "total_results": self.insight_results_counter
+        }
+        self.helper_db.execute(self.history_table.update().where(
+            self.history_table.c.history_id==self.history_id).values(task_history))
+
+        logging.info("Recorded job completion for: " + str(task_completed) + "\n")
+
+        # Update job process table
+        updated_job = {
+            "since_id_str": entry_info['repo_id'],
+            "last_count": self.insight_results_counter,
+            "last_run": datetime.datetime.now(),
+            "analysis_state": 0
+        }
+        self.helper_db.execute(self.job_table.update().where(
+            self.job_table.c.job_model==model).values(updated_job))
+        logging.info("Update job process for model: " + model + "\n")
+
+        # Notify broker of completion
+        logging.info("Telling broker we completed task: " + str(task_completed) + "\n\n" + 
+            "This task inserted: " + str(self.insight_results_counter) + " tuples.\n\n")
+
+        requests.post('http://{}:{}/api/unstable/completed_task'.format(
+            self.config['broker_host'],self.config['broker_port']), json=task_completed)
+
+        # Reset results counter for next task
+        self.insight_results_counter = 0
+
     def send_insight(self, insight, units_from_mean):
-        
-        begin_date = datetime.datetime.now() - datetime.timedelta(days=7)
-        dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
-        if dict_date > begin_date and self.send_insights:
-            logging.info("Insight less than 7 days ago date found: {}\n\nSending to Jonah...".format(insight))
-            to_send = {
-                'insight': True,
-                'rg_name': insight['rg_name'],
-                'repo_git': insight['repo_git'],
-                'value': insight['ri_value'],
-                'field': insight['ri_field'],
-                'metric': insight['ri_metric'],
-                'units_from_mean': units_from_mean,
-                'detection_method': insight['ri_detection_method']
-            }
-            requests.post('https://7oksmwzsy7.execute-api.us-east-2.amazonaws.com/dev-1/insight-event', json=to_send)
+        try:
+            begin_date = datetime.datetime.now() - datetime.timedelta(days=7)
+            dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
+            if dict_date > begin_date and self.send_insights:
+                logging.info("Insight less than 7 days ago date found: {}\n\nSending to Jonah...".format(insight))
+                to_send = {
+                    'insight': True,
+                    'rg_name': insight['rg_name'],
+                    'repo_git': insight['repo_git'],
+                    'value': insight['ri_value'],
+                    'field': insight['ri_field'],
+                    'metric': insight['ri_metric'],
+                    'units_from_mean': units_from_mean,
+                    'detection_method': insight['ri_detection_method']
+                }
+                requests.post('https://7oksmwzsy7.execute-api.us-east-2.amazonaws.com/dev-1/insight-event', json=to_send)
+        except Exception as e:
+            logging.info("sending insight to jonah failed: {}".format(e))
+
 
 
     def clear_insight(self, repo_id, new_score, new_metric, new_field):
@@ -428,7 +496,7 @@ class InsightWorker:
             insertion_directions['record'] = True
 
         # Query current insights and rank by score
-        num_insights_per_repo = 3
+        num_insights_per_repo = 2
         insightSQL = s.sql.text("""
             SELECT distinct(ri_metric),repo_id, ri_score
             FROM repo_insights

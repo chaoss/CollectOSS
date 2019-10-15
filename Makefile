@@ -1,13 +1,12 @@
-.PHONY: all test clean install install-dev python-docs api-docs docs dev-start dev-stop
-.PHONY: dev-restart monitor monitor-backend monitor-frontend download-upgrade upgrade build-metrics-status
-.PHONY: frontend install-ubuntu-dependencies metric-status edit-metrics-status version
+.PHONY: all test clean install python-docs api-docs python-docs dev-start dev-stop
+.PHONY: dev-restart monitor monitor-backend monitor-frontend upgrade
+.PHONY: frontend install-ubuntu-dependencies version
 
 SERVECOMMAND=augur run
-CONDAUPDATE=. $(shell conda info --root)/etc/profile.d/conda.sh; if ! conda activate augur; then conda env create -n=augur -f=environment.yml; else conda env update -n=augur -f=environment.yml; fi;
-CONDAACTIVATE=. $(shell conda info --root)/etc/profile.d/conda.sh; conda activate augur;
+INSTALLCOMMAND=pip install -e .; python setup.py install;
 OLDVERSION="null"
 EDITOR?="vi"
-PLUGIN=**
+MODEL=**
 AUGUR_PIP?='pip'
 AUGUR_PYTHON?='python'
 AUGUR_PIP?='pip'
@@ -15,8 +14,6 @@ AUGUR_PIP?='pip'
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                         Installs augur using pip"
-	@ echo "    install-dev                     Installs augur's developer dependencies (requires npm and pip)"
-	@ echo "    install-msr                     Installs MSR14 dataset"
 	@ echo "    clean                           Cleans the developer environment"
 	@ echo "    upgrade                         Pulls newest version, installs, performs migrations"
 	@ echo "    version                         Print the currently installed version"
@@ -27,18 +24,16 @@ default:
 	@ echo "    dev-start                       Runs 'make serve' and 'brunch w -s' in the background"
 	@ echo "    dev-stop                        Stops the backgrounded commands"
 	@ echo "    dev-restart                     Runs dev-stop then dev-restart"
-	@ echo "    server                          Runs a single instance of the server (useful for debugging)"
+	@ echo
+	@ echo "Testing Commands:"
 	@ echo "    test                            Runs all pytest unit tests and API tests"
-	@ echo "    test-functions PLUGIN={plugin}  Run pytest unit tests for the specified data plugin. Defaults to all"
-	@ echo "    test-routes PLUGIN={plugin}     Run API tests"
-	@ echo "    build                           Builds documentation and frontend - use before pushing"
-	@ echo "    frontend                        Builds frontend with Brunch"
-	@ echo "    update-deps                     Generates updated requirements.txt and environment.yml"
+	@ echo "    test-functions MODEL={model}    Run pytest unit tests for the specified metrics model. Defaults to all"
+	@ echo "    test-routes MODEL={model}       Run API tests for the specified metrics model. Defaults to all"
+	@ echo
+	@ echo "Documentation Commands:"
 	@ echo "    python-docs                     Generates new Sphinx documentation"
 	@ echo "    api-docs                        Generates new apidocjs documentation"
 	@ echo "    docs                            Generates all documentation"
-	@ echo "Git commands"
-	@ echo "    update                          Pull the latest version of your current branch"
 	@ echo
 	@ echo "Prototyping:"
 	@ echo "    jupyter                         Launches the jupyter"
@@ -53,25 +48,17 @@ default:
 #
 #  Installation
 #
-# install:
-# 	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install --upgrade .'
 install:
 	@ ./util/scripts/install/augurinstall.sh
 
 install-dev:
-	bash -c '$(CONDAUPDATE) $(CONDAACTIVATE) $(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
-
-install-msr:
-	@ ./util/install-msr.sh
+	bash -c '$(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
 
 version:
 	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
 	@ echo "installed version: $(OLDVERSION)"
 
-download-upgrade:
-	git pull
-
-upgrade: version download-upgrade install-dev
+upgrade: version install-dev
 	@ $(AUGUR_PYTHON) util/post-upgrade.py $(OLDVERSION)
 	@ echo "Upgraded from $(OLDVERSION) to $(shell $(AUGUR_PYTHON) util/print-version.py)."
 
@@ -84,7 +71,8 @@ config:
 #
 dev-start: dev-stop
 	@ mkdir -p logs runtime
-	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
+	@ bash -c '$(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
+	@ bash -c 'sleep 4; cd frontend; npm run serve >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid'
 	@ echo "Server     Description       Log                   Monitoring                   PID                        "
 	@ echo "------------------------------------------------------------------------------------------                 "
 	@ echo "Frontend   Brunch            logs/frontend.log     make monitor-backend         $$( cat logs/frontend.pid ) "
@@ -118,7 +106,7 @@ server:
 
 frontend:
 	@ bash -c 'cd frontend; brunch build'
-	@ bash -c '($(CONDAACTIVATE) sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid)'
+	@ bash -c '(sleep 4; cd frontend; brunch w -s >../logs/frontend.log 2>&1 & echo $$! > ../logs/frontend.pid)'
 
 backend-stop:
 	@ bash -c 'if [[ -s logs/backend.pid  && (( `cat logs/backend.pid`  > 1 )) ]]; then printf "sending SIGTERM to python (Gunicorn) at PID $$(cat logs/backend.pid); "; kill `cat logs/backend.pid` ; rm logs/backend.pid  > /dev/null 2>&1; fi;'
@@ -126,53 +114,47 @@ backend-stop:
 
 backend-start:
 	@ mkdir -p logs runtime
-	@ bash -c '($(CONDAACTIVATE) $(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;)'
+	@ bash -c '$(SERVECOMMAND) >logs/backend.log 2>&1 & echo $$! > logs/backend.pid;'
 
 backend-restart: backend-stop backend-start
 
 backend: backend-restart
 
-python-docs:
-	@ bash -c '$(CONDAACTIVATE) cd docs/python && rm -rf _build && make html; rm -rf ../../frontend/public/docs; mv build/html ../../frontend/public/docs'
-
-api-docs:
-	@ bash -c '$(CONDAACTIVATE) cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
-
-docs: api-docs python-docs
-
-build: frontend docs
-	cd augur/static/ \
-	&& brunch build --production
-
-test:test-functions test-routes
+test: test-functions test-routes
 
 test-functions:
-	bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m pytest -ra augur/datasources/$(PLUGIN)/test_$(PLUGIN)_functions.py'
+	@ bash -c '$(AUGUR_PYTHON) -m pytest -ra -s augur/metrics/$(MODEL)/test_$(MODEL)_functions.py'
 
 test-routes:
-	@ python test/api/test_api.py $(PLUGIN)
+	@ python test/api/test_api.py $(MODEL)
+
+# 
+# Documentation
+# 
+python-docs:
+	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
+
+python-docs-view: python-docs
+	@ bash -c 'open docs/build/html/index.html'
+
+api-docs:
+	@ bash -c 'cd docs && apidoc --debug -f "\.py" -i ../augur/ -o api/; rm -rf ../frontend/public/api_docs; mv api ../frontend/public/api_docs'
+
+api-docs-view: api-docs
+	@ bash -c "open frontend/public/api_docs/index.html"
+
+docs: api-docs python-docs
 
 .PHONY: unlock
 unlock:
 	find . -type f -name "*.lock" -delete
-
-update-deps:
-	@ hash pipreqs 2>/dev/null || { echo "This command needs pipreqs, installing..."; $(AUGUR_PIP) install pipreqs; exit 1; }
-	pipreqs ./augur/
-	bash -c "$(CONDAACTIVATE) conda env  --no-builds > environment.yml"
-
-vagrant:
-	@ vagrant up
-	@ vagrant ssh
-	@ echo "****************************************************"
-	@ echo "Don't forget to shutdown the VM with 'vagrant halt'!"
-	@ echo "****************************************************"
 
 clean:
 	@ echo "Removes node_modules, logs, caches, and some other dumb stuff that can be annoying."
 	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs workers/**/build/** workers/**/dist**
 	find . -name \*.pyc -delete
 	@ echo "Run sudo make install-dev again to reinstall the environment."
+	$(INSTALLCOMMAND)
 
 #
 # Git
@@ -187,10 +169,10 @@ update:
 #  Prototyping
 #
 jupyter:
-		@ bash -c '$(CONDAACTIVATE) cd notebooks; jupyter notebook'
+		@ bash -c 'cd notebooks; jupyter notebook'
 
 create-jupyter-env:
-		bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)";'
+		bash -c '$(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)";'
 
 
 
@@ -199,11 +181,11 @@ create-jupyter-env:
 #
 .PHONY: to-json
 to-json:
-	@ bash -c '$(CONDAACTIVATE) $(AUGUR_PYTHON) util/post-upgrade.py migrate_config_to_json'
+	@ bash -c '$(AUGUR_PYTHON) util/post-upgrade.py migrate_config_to_json'
 
 .PHONY: to-env
 to-env:
-	@ bash -c '$(CONDAACTIVATE) AUGUR_EXPORT_ENV=1; AUGUR_INIT_ONLY=1; augur'
+	@ bash -c 'AUGUR_EXPORT_ENV=1; AUGUR_INIT_ONLY=1; augur'
 
 
 

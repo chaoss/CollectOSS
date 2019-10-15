@@ -7,6 +7,9 @@ import re
 import logging
 import coloredlogs
 import beaker
+import inspect
+import types
+import sys
 
 # Logging
 coloredlogs.install(level=os.getenv('AUGUR_LOG_LEVEL', 'INFO'))
@@ -80,6 +83,14 @@ def annotate(metadata=None, **kwargs):
         return func
     return decorate
 
+def add_metrics(metrics, module_name):
+    # find all unbound endpoint functions objects (ones that have metadata) defined the given module_name 
+    # and bind them to the metrics class
+    # Derek are you proud of me
+    for name, obj in inspect.getmembers(sys.modules[module_name]):
+        if inspect.isfunction(obj) == True:
+            if hasattr(obj, 'metadata') == True:
+                setattr(metrics, name, types.MethodType(obj, metrics))
 
 #
 # IPython
@@ -114,3 +125,5 @@ def init_shell_config():
         cfg = Config()
         nested = 1
     return cfg
+
+
