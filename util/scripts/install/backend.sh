@@ -6,11 +6,8 @@ echo "Installing backend dependencies..."
 echo "**********************************"
 echo
 
-rm -rf build/*; rm -rf dist/*; rm $VIRTUAL_ENV/bin/*worker*;
-pip install pipreqs sphinx xlsxwriter; 
-pip install -e .; 
-pip install xlsxwriter; 
-pip install ipykernel; 
-python -m ipykernel install --user --name augur --display-name "Python (augur)"; 
+rm -rf build/ dist/ docs/build/ workers/**/build/** workers/**/dist**
+pip install xlsxwriter pip install setuptools; 
 npm install apidoc;
+pip install -e .; 
 python setup.py install;

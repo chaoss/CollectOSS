@@ -4,7 +4,7 @@ PS3="
 Please type the number corresponding to your selection and then press the Enter/Return key.
 Your choice: "
 
-# check for python, pip, and a virtual environment
+# check for python, pip, and a virtual environment being active
 # if the script exit value != 0 indicating some failure, then stop
 util/scripts/install/checks.sh
 
