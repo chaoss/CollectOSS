@@ -44,7 +44,6 @@ function set_remote_db_credentials() {
   read -p "Port: " port
   read -p "User: " user
   read -p "Password: " password
-  read -p "Key: " key
 
   get_github_api_key
 
@@ -55,7 +54,7 @@ function set_remote_db_credentials() {
       "port": "$port",
       "user": "$user",
       "password": "$password",
-      "key": "$key",
+      "key": "$github_api_key",
       "github_api_key": "$github_api_key"
     }
 EOF
@@ -69,7 +68,6 @@ function set_local_db_credentials() {
   read -p "User: " user
   read -p "Port: " port
   read -p "Password: " password
-  read -p "Key: " key
 
   get_github_api_key
 
@@ -80,7 +78,7 @@ function set_local_db_credentials() {
     "port": "$port",
     "user": "$user",
     "password": "$password",
-    "key": "$key",
+    "key": "$github_api_key",
     "github_api_key": "$github_api_key"
   }
 EOF
@@ -105,7 +103,7 @@ do
         psql -c "create user $user with encrypted password '$password';"
         psql -c "alter database $database owner to $user;"
         psql -c "grant all privileges on database $database to $user;"
-        psql -h "localhost" -d $database -U $user -p $port -a -w -f augur/persistence_schema/0-all.sql
+        psql -h "localhost" -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
         break
       ;;
     $install_remotely )
@@ -115,7 +113,7 @@ do
         psql -h $host -p $port -c "create user $user with encrypted password '$password';"
         psql -h $host -p $port -c "alter database $database owner to $user;"
         psql -h $host -p $port -c "grant all privileges on database $database to $user;"
-        psql -h $host -d $database -U $user -p $port -a -w -f augur/persistence_schema/0-all.sql
+        psql -h $host -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
         break
       ;;
     $already_installed )

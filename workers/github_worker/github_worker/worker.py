@@ -11,7 +11,6 @@ import logging
 import json
 import ast
 import os
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -41,13 +40,14 @@ class GitHubWorker:
     config: holds info like api keys, descriptions, and database connection strings
     """
     def __init__(self, config, task=None):
+        self.config = config
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
         logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self._task = task
         self._child = None
         self._queue = Queue()
         self._maintain_queue = Queue()
         self.working_on = None
-        self.config = config
         self.db = None
         self.table = None
         self.API_KEY = self.config['key']

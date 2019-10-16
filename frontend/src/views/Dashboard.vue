@@ -250,9 +250,6 @@ export default class Dashboard extends Vue {
   endpoint!:any;
   addRepoGroup!:any;
 
-  getHex (metric) {
-    return color_mapping[highest[idx].ri_metric].hex || '#FFC107'
-  }
   // 'created' lifecycle hook
   // Gets ran on component initialization, data collection should be handled here
   created () {
@@ -352,7 +349,7 @@ export default class Dashboard extends Vue {
     })
 
     for (let i = 0; i < this.highest.length; i++) {
-      if (!color_mapping[this.highest[i].ri_metric])
+      if (!this.color_mapping[this.highest[i].ri_metric])
         this.highest.splice(i, 1)
     }
   }

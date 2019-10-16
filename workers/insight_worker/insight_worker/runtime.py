@@ -1,9 +1,6 @@
 from flask import Flask, jsonify, request
-import click
 from insight_worker.worker import InsightWorker
-import os
-import json
-import logging
+import click, os, json, logging, requests
 
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
@@ -81,7 +78,17 @@ def main(augur_url, host, port):
     host = server['host']
     print("Starting Flask App on host {} with port {} with pid: ".format(server['host'], worker_port) + str(os.getpid()) + "...")
     app.run(debug=app.debug, host=server['host'], port=worker_port)
-    print("Killing Flask App: " + str(os.getpid()))
+    print("Killing Flask App: {} and telling broker that this worker is disconnected.".format(str(os.getpid())))
+    try:
+        logging.info("Sending disconnected message to broker... @ -> {} with info: {}\n".format('http://{}:{}/api/unstable/workers'.format(
+            config['broker_host'], config['broker_port']), config))
+        requests.post('http://{}:{}/api/unstable/workers/remove'.format(
+            config['broker_host'], config['broker_port']), json=config) #hello message
+    except Exception as e:
+        logging.info("Ran into error: {}".format(e))
+        logging.info("Broker's port is busy, worker will not be able to accept tasks, "
+            "please restart Augur if you want this worker to attempt connection again.")
+    
 
 def read_config(section, name=None, environment_variable=None, default=None, config_file='augur.config.json', no_config_file=0, use_main_config=0):
     """

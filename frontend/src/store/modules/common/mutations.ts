@@ -89,6 +89,14 @@ export default {
   mutateAPIGroup(state:any, payload:any) {
     Vue.set(state.apiGroups, payload.rg_name, payload.group)
   },
+  // mutateStartDateChange(state:any, payload:any) {
+  //   console.log('PAYLOAD: ');
+  //   console.log(payload);
+  //   // state.startDate = payload;
+  //   Vue.set(state, 'startDate', payload);
+
+  //   // console.log(state.startDate);
+  // }
   // setDates (state: any, payload: any) {
   //   if (payload.startDate) {
   //     state.startDate = new Date(payload.startDate)

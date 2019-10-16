@@ -157,7 +157,7 @@ export default {
         if(this.status[key]) allFalse = false
     },
     renderError () {
-      console.log("DLC","ERROR ERROR")
+      // console.log("DLC","ERROR ERROR")
       this.error = true
       this.loaded = true
     },
@@ -166,9 +166,9 @@ export default {
     },
     respec(){this.spec;},
     reloadImage (config) {
-      console.log("DLC",config, this.source)
+      // console.log("DLC",config, this.source)
       if (config.data.values.length == 0){
-        console.log("DLC","yo")
+        // console.log("DLC","yo")
         // this.spec;
         this.renderError()
         return
@@ -191,7 +191,7 @@ export default {
       return ary
     },
     spec(data) {
-      console.log("DLC","DATAAAA", data, this.$store.state)
+      // console.log("DLC","DATAAAA", data, this.$store.state)
 
       let repos = this.repos
 
@@ -202,7 +202,7 @@ export default {
       var colors = ["black", "#FF3647","#FF3647", "#4736FF","#3cb44b","#ffe119","#f58231","#911eb4","#42d4f4","#f032e6"]
       let brush = this.showDetail ? {"filter": {"selection": "brush"}} : {"filter": "datum.date > 0"}
       let config = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+        // "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "data": {
           "values": []//this.data
         },
@@ -694,19 +694,19 @@ export default {
 
           // We usually want to limit dates and convert the key to being vega-lite friendly
           let defaultProcess = (obj, key, field, count) => {
-            console.log("DLC begin default process: ", obj, key, field, count)
+            // console.log("DLC begin default process: ", obj, key, field, count)
             let d = obj[key]
             if (typeof(field) == "string") {
               field = [field]
             }
-            // console.log("DLC","default process prior to convertKey:",obj, key, field)
+            console.log("DLC","default process prior to convertKey:",obj, key, field)
             // let goodField = null
             // for (let f in field) {
             //   if (f != 'date' && f != 'value' && f != 'field')
             //     goodField = f
             // }
             // d = AugurStats.convertKey(obj[key], field)
-            console.log("DLC","default process prior to convertDates:",d, this.earliest, this.latest, 'date')
+            // console.log("DLC","default process prior to convertDates:",d, this.earliest, this.latest, 'date')
             d = AugurStats.convertDates(d, this.earliest, this.latest, 'date')
             return d
           }
@@ -716,7 +716,7 @@ export default {
           let normalized = []
           let aggregates = []
           let buildLines = (obj, onCreateData, repo) => {
-            console.log("DLC start of buildLines",obj, repo)
+            // console.log("DLC start of buildLines",obj, repo)
             if (!obj) {
               return
             }
@@ -728,7 +728,7 @@ export default {
             let count = 0
 
             for (var key in obj) {
-              console.log("DLC key:",key)
+              // console.log("DLC key:",key)
               if (obj.hasOwnProperty(key)) {
                 if (fields[key]) {
                   fields[key].forEach((field) => {
@@ -736,7 +736,7 @@ export default {
                     count++
                   })
                 } else {
-                  console.log("DLC","hehrere",Array.isArray(obj[key]),obj, key)
+                  // console.log("DLC","hehrere",Array.isArray(obj[key]),obj, key)
                   if (Array.isArray(obj[key]) && obj[key].length > 0) {
                     let field = Object.keys(obj[key][0]).splice(1)
                     onCreateData(obj, key, field, count)
@@ -748,7 +748,7 @@ export default {
                       if (this.status[repo]) noRepoWithData = false
                     })
                     if (noRepoWithData){
-                      console.log("DLC","logging no data for any repo error")
+                      // console.log("DLC","logging no data for any repo error")
                       this.renderError()
                     }
                     //return
@@ -769,7 +769,7 @@ export default {
             buildLines(data[repo], (obj, key, field, count) => {
               // Build basic chart using rolling averages
               let d = defaultProcess(obj, key, field, count)
-              console.log("DLC",d)
+              // console.log("DLC",d)
               let rolling = null
               if (repo == this.repo && d[0]) baseDate = d[0].date
               else d = AugurStats.alignDates(d, baseDate, this.period)
@@ -790,15 +790,15 @@ export default {
                 }
               } else {
                 d = this.convertKey(d)
-                console.log("DLC prerolling",d, this.period, repo)
+                // console.log("DLC prerolling",d, this.period, repo)
                 rolling = AugurStats.rollingAverage(d, 'value', this.period, repo)
-                console.log("DLC rolling:",rolling)
+                // console.log("DLC rolling:",rolling)
                 while (rolling[0].valueRolling == 0)
                   rolling.shift()
                 rolling.forEach((tuple) => {
                   tuple.date.setDate(tuple.date.getDate() + x);
                 })
-                console.log("DLC",rolling)
+                // console.log("DLC",rolling)
               }
 
               normalized.push(AugurStats.standardDeviationLines(rolling, 'valueRolling', repo))
@@ -894,7 +894,7 @@ export default {
 
     if (this.base) {
       apiRepos.push(this.base)
-      console.log("DLC base",this.base)
+      // console.log("DLC base",this.base)
       let ref = this.base.url || this.base.repo_name
       repos = [ref]
     }
@@ -909,7 +909,6 @@ export default {
     // if (this.comparedAPIRepos){
     //   this.comparedAPIRepos.forEach((repo) => {
     //     apiRepos.push(repo)
-    //     console.log("COMPARED REPO: ", repo)
     //     let ref = repo.url || repo.repo_name
     //     repos.push(ref)
     //   });
@@ -921,14 +920,14 @@ export default {
       
       if (compares in this.apiRepos) {
 
-        console.log("DLC Api repos already loaded",this.apiRepos, compares)
+        // console.log("DLC Api repos already loaded",this.apiRepos, compares)
         apiRepos.push(this.apiRepos[compares])
         let ref = this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].url || this.repoRelations[compares.split('/')[0]][compares.split('/')[1]].repo_name
         repos.push(ref)
 
       } else {
 
-        console.log("DLC Api repos not loaded, getting repo from route then setting comp repos: ", compares)
+        // console.log("DLC Api repos not loaded, getting repo from route then setting comp repos: ", compares)
         let ids = !this.$router.currentRoute.params.comparedRepoIds ? [] : this.$router.currentRoute.params.comparedRepoIds.split(',')
         promises.append(this.setComparedRepos({ 'names': [compares], 'ids': ids }))
 
@@ -938,7 +937,7 @@ export default {
     }
     //got repo names
 
-    console.log("DLC starting promises...")
+    // console.log("DLC starting promises...")
     Promise.all(promises).then(() => {
       if (compares) {
         apiRepos.push(this.apiRepos[compares])
@@ -955,7 +954,7 @@ export default {
       if (this.data) {
         let dataFilled = true
         Object.keys(this.data).forEach((key) => {
-          console.log("DLC",key, this.data[key])
+          // console.log("DLC",key, this.data[key])
           if (this.data[key].length < 1) dataFilled = false
         })
         if (dataFilled){
@@ -964,15 +963,15 @@ export default {
         }
         
       } else {
-        console.log("DLC","did not detect data")
+        // console.log("DLC","did not detect data")
         this.endpoint({ repos:apiRepos, endpoints:[this.source] }).then((data) => {
-          console.log("DLC","YAA",data)
-          console.log("DLC",Object.keys(data).length)
+          // console.log("DLC","YAA",data)
+          // console.log("DLC",Object.keys(data).length)
           if (Object.keys(data).length > 0)
             this.spec(data)
           // processData(data)
         }).catch((error) => {
-          console.log("DLC",error)
+          // console.log("DLC",error)
           this.renderError()
         }) // end batch request
       }

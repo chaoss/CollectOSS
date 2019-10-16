@@ -10,8 +10,6 @@
         <h3 class="page-title" style="font-size: 1rem">Insights</h3>
       </div>
     </div> -->
-    <!-- Compare Control -->
-    <compare-control></compare-control>
 
 <!--     <div class="row" style="transform: translateY(-0px) !important">
       <div class="col col-6" style="padding-right: 35px">

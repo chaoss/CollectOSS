@@ -65,24 +65,33 @@ def create_broker_routes(server):
             logging.info("Broker recieved a new user task ... checking for compatible workers for given: " + str(given) + " and model(s): " + str(model) + "")
 
         worker_found = False
-        for worker in list(server.broker._getvalue().keys()):
-            if type(server.broker[worker]._getvalue()) == dict:
-                models = server.broker[worker]['models']
-                givens = server.broker[worker]['given']
-                user_queue = server.broker[worker]['user_queue']
-                maintain_queue = server.broker[worker]['maintain_queue']
+        compatible_workers = {}
+        for worker_id in [id for id in list(server.broker._getvalue().keys()) if model in server.broker[id]['models'] and given in server.broker[id]['given']]:
+            if type(server.broker[worker_id]._getvalue()) != dict:
+                continue
+            compatible_workers[worker_id.split('.')[len(worker_id.split('.'))-2]] = compatible_workers[worker_id.split('.')[len(worker_id.split('.'))-2]] if worker_id.split('.')[len(worker_id.split('.'))-2] in compatible_workers else {'task_load': len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), 'worker_id': worker_id}
+            logging.info("{}, {}, {}".format(worker_id.split('.')[len(worker_id.split('.'))-2], compatible_workers.keys(), compatible_workers))
+            logging.info("\n here is the list we about to compose: {} \n".format([compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_id.split('.')[len(worker_id.split('.'))-2] == w]))
+            if (len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])) < min([compatible_workers[w]['task_load'] for w in compatible_workers.keys() if worker_id.split('.')[len(worker_id.split('.'))-2] == w]):
+                logging.info("Compatible worker: {} with smallest task load: {} found to work on task: {}".format(worker_id, len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue']), task))
+                compatible_workers[worker_id.split('.')[len(worker_id.split('.'))-2]]['task_load'] = len(server.broker[worker_id]['user_queue']) + len(server.broker[worker_id]['maintain_queue'])
+                compatible_workers[worker_id.split('.')[len(worker_id.split('.'))-2]]['worker_id'] = worker_id
 
-                if model in models and given in givens:
-                    if task['job_type'] == "UPDATE":
-                        server.broker[worker]['user_queue'].append(task)
-                        logging.info("New length of worker {}'s user queue: {}".format(worker, str(len(server.broker[worker]['user_queue']))))
-                    elif task['job_type'] == "MAINTAIN":
-                        server.broker[worker]['maintain_queue'].append(task)
-                        # logging.info("New length of worker {}'s maintain queue: {}".format(worker, str(len(server.broker[worker]['maintain_queue']))))
 
-                    if server.broker[worker]['status'] == 'Idle':
-                        send_task(task, server.broker[worker])
-                    worker_found = True
+        for worker_type in compatible_workers.keys():
+            worker_id = compatible_workers[worker_type]['worker_id']
+            worker = server.broker[worker_id]
+
+            if task['job_type'] == "UPDATE":
+                worker['user_queue'].append(task)
+                logging.info("New length of worker {}'s user queue: {}".format(worker_id, str(len(server.broker[worker_id]['user_queue']))))
+            elif task['job_type'] == "MAINTAIN":
+                worker['maintain_queue'].append(task)
+                logging.info("New length of worker {}'s maintain queue: {}".format(worker_id, str(len(server.broker[worker_id]['maintain_queue']))))
+
+            if worker['status'] == 'Idle':
+                send_task(task, worker)
+            worker_found = True
         # Otherwise, let the frontend know that the request can't be served
         if not worker_found:
             logging.info(f"Augur does not have knowledge of any workers that are capable of handing the request: " + str(task))

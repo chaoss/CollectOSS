@@ -336,3 +336,7 @@ def create_contributor_routes(server):
                     ]
     """
     server.addRepoMetric(metrics.top_committers, 'top-committers')
+
+    server.addRepoGroupMetric(metrics.contributors_code_development, 'contributors-code-development')
+
+    server.addRepoMetric(metrics.contributors_code_development, 'contributors-code-development')

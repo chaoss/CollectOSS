@@ -134,7 +134,7 @@
 
     </d-row>
 
-<!--     <d-row style="padding-top: 2rem">
+     <!-- <d-row style="padding-top: 2rem">
 
       <d-col>
         <d-card>
@@ -144,7 +144,7 @@
             
             <tick-chart 
               v-if="loadedBars" 
-              source="changesByAuthor" 
+              source="changesByAuthor5" 
               :data="values['changesByAuthor']"
             ></tick-chart>
 
@@ -154,7 +154,7 @@
 
     </d-row> 
 
-    <p></p>-->
+    <p></p> -->
 
     <d-row>
       <div class="col col-6" style="padding-top:3rem">
