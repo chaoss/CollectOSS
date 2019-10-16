@@ -42,7 +42,7 @@ function set_remote_db_credentials() {
   read -p "Database: " database
   read -p "Host: " host
   read -p "Port: " port
-  read -p "User: " user
+  read -p "User: " db_user
   read -p "Password: " password
 
   get_github_api_key
@@ -52,7 +52,7 @@ function set_remote_db_credentials() {
       "database": "$database",
       "host": "$host",
       "port": "$port",
-      "user": "$user",
+      "user": "$db_user",
       "password": "$password",
       "key": "$github_api_key",
       "github_api_key": "$github_api_key"
@@ -76,7 +76,7 @@ function set_local_db_credentials() {
     "database": "$database",
     "host": "localhost",
     "port": "$port",
-    "user": "$user",
+    "user": "$db_user",
     "password": "$password",
     "key": "$github_api_key",
     "github_api_key": "$github_api_key"
@@ -100,20 +100,20 @@ do
         echo "Please set the credentials for your database."
         set_local_db_credentials
         psql -c "create database $database;"
-        psql -c "create user $user with encrypted password '$password';"
-        psql -c "alter database $database owner to $user;"
-        psql -c "grant all privileges on database $database to $user;"
-        psql -h "localhost" -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
+        psql -c "create user $db_user with encrypted password '$password';"
+        psql -c "alter database $database owner to $db_user;"
+        psql -c "grant all privileges on database $database to $db_user;"
+        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f /persistence_schema/0-all.sql
         break
       ;;
     $install_remotely )
         echo "Please set the credentials for your database."
         set_remote_db_credentials
         psql -h $host -p $port -c "create database $database;"
-        psql -h $host -p $port -c "create user $user with encrypted password '$password';"
-        psql -h $host -p $port -c "alter database $database owner to $user;"
-        psql -h $host -p $port -c "grant all privileges on database $database to $user;"
-        psql -h $host -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
+        psql -h $host -p $port -c "create user $db_user with encrypted password '$password';"
+        psql -h $host -p $port -c "alter database $database owner to $db_user;"
+        psql -h $host -p $port -c "grant all privileges on database $database to $db_user;"
+        psql -h $host -d $database -U $db_user -p $port -a -w -f /persistence_schema/0-all.sql
         break
       ;;
     $already_installed )
