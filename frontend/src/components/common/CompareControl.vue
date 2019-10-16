@@ -33,8 +33,8 @@
               <d-button @click="onReset">Reset</d-button>
             </d-button-group>
           </d-col>
-          <!--
-          <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
+          
+          <!-- <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
             <div v-d-toggle.my-collapse variant="primary" size="small" class="float-right"
                  @click="isCollpase = !isCollpase">
                <div v-if="isCollpase">More configuration options<i class="material-icons" style="font-size: 1.3rem
@@ -42,8 +42,8 @@
                <div v-if="!isCollpase">Less configuration options<i class="material-icons" style="font-size: 1.3rem">keyboard_arrow_up</i>
               </div>
             </div>
-          </d-col>
-          -->
+          </d-col> -->
+         
         </d-row>
         <d-row>
             <d-badge theme="primary" v-if="!isGroup" pill class="mx-2 mt-2" v-for="item in getSelectedRepos">
@@ -382,9 +382,10 @@
       })
     }
 
-    onStartDate(e: any) {
-      this.mutateStartDateChange(e)
-    }
+    // onStartDate(e: any) {
+    //   console.log(e);
+    //   this.mutateStartDateChange(e)
+    // }
 
     onEndDate(e: any) {
       this.mutateEndDateChange(e)

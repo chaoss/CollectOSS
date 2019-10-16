@@ -44,7 +44,6 @@ function set_remote_db_credentials() {
   read -p "Port: " port
   read -p "User: " user
   read -p "Password: " password
-  read -p "Key: " key
 
   get_github_api_key
 
@@ -55,7 +54,7 @@ function set_remote_db_credentials() {
       "port": "$port",
       "user": "$user",
       "password": "$password",
-      "key": "$key",
+      "key": "$github_api_key",
       "github_api_key": "$github_api_key"
     }
 EOF
@@ -69,7 +68,6 @@ function set_local_db_credentials() {
   read -p "User: " user
   read -p "Port: " port
   read -p "Password: " password
-  read -p "Key: " key
 
   get_github_api_key
 
@@ -80,7 +78,7 @@ function set_local_db_credentials() {
     "port": "$port",
     "user": "$user",
     "password": "$password",
-    "key": "$key",
+    "key": "$github_api_key",
     "github_api_key": "$github_api_key"
   }
 EOF
