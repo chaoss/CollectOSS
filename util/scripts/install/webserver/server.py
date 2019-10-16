@@ -105,7 +105,7 @@ class AugurConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for key, value in parse_qs(url_str, keep_blank_values=1).items():
             postvars[key] = value[0]
 
-        with open('temp.config.json', 'w') as temp_config_file:
+        with open('../temp.config.json', 'w') as temp_config_file:
             temp_config_file.write(json.dumps(postvars, indent=4))
 
         # Return valid output
