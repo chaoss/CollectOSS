@@ -1,21 +1,3 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : mudcats augur
- Source Server Type    : PostgreSQL
- Source Server Version : 110005
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_science
- Source Schema         : spdx
-
- Target Server Type    : PostgreSQL
- Target Server Version : 110005
- File Encoding         : 65001
-
- Date: 11/09/2019 06:01:06
-*/
-
-
 -- ----------------------------
 -- Sequence structure for annotation_types_annotation_type_id_seq
 -- ----------------------------
@@ -628,73 +610,73 @@ ALTER TABLE "spdx"."scanners" OWNER TO "augur";
 -- ----------------------------
 ALTER SEQUENCE "spdx"."annotation_types_annotation_type_id_seq"
 OWNED BY "spdx"."annotation_types"."annotation_type_id";
-SELECT setval('"spdx"."annotation_types_annotation_type_id_seq"', 8, true);
+SELECT setval('"spdx"."annotation_types_annotation_type_id_seq"', 3, true);
 ALTER SEQUENCE "spdx"."annotations_annotation_id_seq"
 OWNED BY "spdx"."annotations"."annotation_id";
-SELECT setval('"spdx"."annotations_annotation_id_seq"', 5, false);
+SELECT setval('"spdx"."annotations_annotation_id_seq"', 2, false);
 ALTER SEQUENCE "spdx"."augur_repo_map_map_id_seq"
 OWNED BY "spdx"."augur_repo_map"."map_id";
-SELECT setval('"spdx"."augur_repo_map_map_id_seq"', 2339, true);
+SELECT setval('"spdx"."augur_repo_map_map_id_seq"', 220, true);
 ALTER SEQUENCE "spdx"."creator_types_creator_type_id_seq"
 OWNED BY "spdx"."creator_types"."creator_type_id";
-SELECT setval('"spdx"."creator_types_creator_type_id_seq"', 10, true);
+SELECT setval('"spdx"."creator_types_creator_type_id_seq"', 4, true);
 ALTER SEQUENCE "spdx"."creators_creator_id_seq"
 OWNED BY "spdx"."creators"."creator_id";
-SELECT setval('"spdx"."creators_creator_id_seq"', 6, true);
+SELECT setval('"spdx"."creators_creator_id_seq"', 2, true);
 ALTER SEQUENCE "spdx"."document_namespaces_document_namespace_id_seq"
 OWNED BY "spdx"."document_namespaces"."document_namespace_id";
-SELECT setval('"spdx"."document_namespaces_document_namespace_id_seq"', 2575, true);
+SELECT setval('"spdx"."document_namespaces_document_namespace_id_seq"', 220, true);
 ALTER SEQUENCE "spdx"."documents_creators_document_creator_id_seq"
 OWNED BY "spdx"."documents_creators"."document_creator_id";
-SELECT setval('"spdx"."documents_creators_document_creator_id_seq"', 2575, true);
+SELECT setval('"spdx"."documents_creators_document_creator_id_seq"', 220, true);
 ALTER SEQUENCE "spdx"."documents_document_id_seq"
 OWNED BY "spdx"."documents"."document_id";
-SELECT setval('"spdx"."documents_document_id_seq"', 2575, true);
+SELECT setval('"spdx"."documents_document_id_seq"', 220, true);
 ALTER SEQUENCE "spdx"."external_refs_external_ref_id_seq"
 OWNED BY "spdx"."external_refs"."external_ref_id";
-SELECT setval('"spdx"."external_refs_external_ref_id_seq"', 5, false);
+SELECT setval('"spdx"."external_refs_external_ref_id_seq"', 2, false);
 ALTER SEQUENCE "spdx"."file_contributors_file_contributor_id_seq"
 OWNED BY "spdx"."file_contributors"."file_contributor_id";
-SELECT setval('"spdx"."file_contributors_file_contributor_id_seq"', 5, false);
+SELECT setval('"spdx"."file_contributors_file_contributor_id_seq"', 2, false);
 ALTER SEQUENCE "spdx"."file_types_file_type_id_seq"
 OWNED BY "spdx"."file_types"."file_type_id";
-SELECT setval('"spdx"."file_types_file_type_id_seq"', 26, true);
+SELECT setval('"spdx"."file_types_file_type_id_seq"', 12, true);
 ALTER SEQUENCE "spdx"."files_file_id_seq"
 OWNED BY "spdx"."files"."file_id";
-SELECT setval('"spdx"."files_file_id_seq"', 2800510, true);
+SELECT setval('"spdx"."files_file_id_seq"', 115077, true);
 ALTER SEQUENCE "spdx"."files_licenses_file_license_id_seq"
 OWNED BY "spdx"."files_licenses"."file_license_id";
-SELECT setval('"spdx"."files_licenses_file_license_id_seq"', 1246263, true);
+SELECT setval('"spdx"."files_licenses_file_license_id_seq"', 42644, true);
 ALTER SEQUENCE "spdx"."files_scans_file_scan_id_seq"
 OWNED BY "spdx"."files_scans"."file_scan_id";
-SELECT setval('"spdx"."files_scans_file_scan_id_seq"', 2785078, true);
+SELECT setval('"spdx"."files_scans_file_scan_id_seq"', 115077, true);
 ALTER SEQUENCE "spdx"."identifiers_identifier_id_seq"
 OWNED BY "spdx"."identifiers"."identifier_id";
-SELECT setval('"spdx"."identifiers_identifier_id_seq"', 3561080, true);
+SELECT setval('"spdx"."identifiers_identifier_id_seq"', 231198, true);
 ALTER SEQUENCE "spdx"."licenses_license_id_seq"
 OWNED BY "spdx"."licenses"."license_id";
-SELECT setval('"spdx"."licenses_license_id_seq"', 833, true);
+SELECT setval('"spdx"."licenses_license_id_seq"', 362, true);
 ALTER SEQUENCE "spdx"."packages_files_package_file_id_seq"
 OWNED BY "spdx"."packages_files"."package_file_id";
-SELECT setval('"spdx"."packages_files_package_file_id_seq"', 5565710, true);
+SELECT setval('"spdx"."packages_files_package_file_id_seq"', 228816, true);
 ALTER SEQUENCE "spdx"."packages_package_id_seq"
 OWNED BY "spdx"."packages"."package_id";
-SELECT setval('"spdx"."packages_package_id_seq"', 3193, true);
+SELECT setval('"spdx"."packages_package_id_seq"', 218, true);
 ALTER SEQUENCE "spdx"."packages_scans_package_scan_id_seq"
 OWNED BY "spdx"."packages_scans"."package_scan_id";
-SELECT setval('"spdx"."packages_scans_package_scan_id_seq"', 2908, true);
+SELECT setval('"spdx"."packages_scans_package_scan_id_seq"', 218, true);
 ALTER SEQUENCE "spdx"."projects_project_id_seq"
 OWNED BY "spdx"."projects"."project_id";
-SELECT setval('"spdx"."projects_project_id_seq"', 5, false);
+SELECT setval('"spdx"."projects_project_id_seq"', 2, false);
 ALTER SEQUENCE "spdx"."relationship_types_relationship_type_id_seq"
 OWNED BY "spdx"."relationship_types"."relationship_type_id";
-SELECT setval('"spdx"."relationship_types_relationship_type_id_seq"', 64, true);
+SELECT setval('"spdx"."relationship_types_relationship_type_id_seq"', 31, true);
 ALTER SEQUENCE "spdx"."relationships_relationship_id_seq"
 OWNED BY "spdx"."relationships"."relationship_id";
-SELECT setval('"spdx"."relationships_relationship_id_seq"', 14228346, true);
+SELECT setval('"spdx"."relationships_relationship_id_seq"', 923475, true);
 ALTER SEQUENCE "spdx"."scanners_scanner_id_seq"
 OWNED BY "spdx"."scanners"."scanner_id";
-SELECT setval('"spdx"."scanners_scanner_id_seq"', 6, true);
+SELECT setval('"spdx"."scanners_scanner_id_seq"', 2, true);
 
 -- ----------------------------
 -- Uniques structure for table annotation_types

@@ -35,7 +35,7 @@ def dump_queue(queue):
     queue.put("STOP")
     for i in iter(queue.get, 'STOP'):
         result.append(i)
-    # time.sleep(.1)
+
     return result
 
 
@@ -125,14 +125,6 @@ class GHRepoInfoWorker:
         """ Property that is returned when the worker's current task is referenced """
         return self._task
 
-    # @task.setter
-    # def task(self, value):
-        # repo_id_sql = s.sql.text("""
-        #     SELECT repo_id, repo_git FROM repo
-        # """)
-
-        # repos = pd.read_sql(repo_id_sql, self.db)
-
     @task.setter
     def task(self, value):
         git_url = value['given']['git_url']
@@ -199,23 +191,7 @@ class GHRepoInfoWorker:
                 except Exception:
                     logger.exception(f'Worker ran into an error for task {message.entry_info}')
                     self.register_task_failure(message.entry_info['repo_id'],
-                                                  message.entry_info['git_url'])
-
-
-        # if repos == None:
-        #     repo_id_sql = s.sql.text("""
-        #         SELECT repo_id, repo_git FROM repo
-        #     """)
-
-        #     repos = pd.read_sql(repo_id_sql, self.db)
-
-        # for _, row in repos.iterrows():
-        #     owner, repo = self.get_owner_repo(row['repo_git'])
-        #     print(f'Querying: {owner}/{repo}')
-        #     self.query_repo_info(row['repo_id'], owner, repo)
-
-        # print(f'Added repo info for {self.results_counter} repos')
-
+                                               message.entry_info['git_url'])
 
     def get_owner_repo(self, git_url):
         split = git_url.split('/')
@@ -229,7 +205,6 @@ class GHRepoInfoWorker:
         return owner, repo
 
     def query_repo_info(self, repo_id, git_url):
-        # url = f'https://api.github.com/repos/{owner}/{repo}'
         url = 'https://api.github.com/graphql'
 
         owner, repo = self.get_owner_repo(git_url)
@@ -280,13 +255,21 @@ class GHRepoInfoWorker:
                     pr_merged: pullRequests(states: MERGED) {
                         totalCount
                     }
+                    ref(qualifiedName: "master") {
+                        target {
+                            ... on Commit {
+                                history(first: 0){
+                                    totalCount
+                                }
+                            }
+                        }
+                    }
                 }
             }
         """ % (owner, repo)
 
         logger.info(f'Hitting endpoint {url}')
         try:
-            # r = requests.get(url, headers=self.headers)
             r = requests.post(url, json={'query': query}, headers=self.headers)
             self.update_rate_limit(r)
 
@@ -303,7 +286,7 @@ class GHRepoInfoWorker:
             logger.exception(f'Caught Exception: {e}')
 
         committers_count = self.query_committers_count(owner, repo)
-        commit_count = self.query_commit_count(owner, repo)
+        # commit_count = self.query_commit_count(owner, repo)
 
         logger.info(f'Inserting repo info for repo with id:{repo_id}, owner:{owner}, name:{repo}')
 
@@ -332,7 +315,7 @@ class GHRepoInfoWorker:
             'security_audit_file': None,
             'status': None,
             'keywords': None,
-            'commit_count': commit_count,
+            'commit_count': j['ref']['target']['history']['totalCount'],
             'issues_count': j['issue_count']['totalCount'] if j['issue_count'] else None,
             'issues_closed': j['issues_closed']['totalCount'] if j['issues_closed'] else None,
             'pull_request_count': j['pr_count']['totalCount'] if j['pr_count'] else None,
@@ -375,32 +358,30 @@ class GHRepoInfoWorker:
 
         return committers
 
-    def query_commit_count(self, owner, repo):
-        logger.info('Querying commit count')
-        commits_url = f'https://api.github.com/repos/{owner}/{repo}/commits'
-        r = requests.get(commits_url, headers=self.headers)
-        self.update_rate_limit(r)
+    # def query_commit_count(self, owner, repo):
+    #     logger.info('Querying commit count')
+    #     commits_url = f'https://api.github.com/repos/{owner}/{repo}/commits'
+    #     r = requests.get(commits_url, headers=self.headers)
+    #     self.update_rate_limit(r)
 
-        first_commit_sha = None
-        last_commit_sha = r.json()[0]['sha']
+    #     first_commit_sha = None
+    #     last_commit_sha = r.json()[0]['sha']
 
-        if 'last' in r.links:
-            r = requests.get(r.links['last']['url'], headers=self.headers)
-            self.update_rate_limit(r)
+    #     if 'last' in r.links:
+    #         r = requests.get(r.links['last']['url'], headers=self.headers)
+    #         self.update_rate_limit(r)
 
-            first_commit_sha = r.json()[-1]['sha']
+    #         first_commit_sha = r.json()[-1]['sha']
 
-        else:
-            first_commit_sha = r.json()[-1]['sha']
+    #     else:
+    #         first_commit_sha = r.json()[-1]['sha']
 
-        compare_url = (f'https://api.github.com/repos/{owner}/{repo}/'
-                    + f'compare/{first_commit_sha}...{last_commit_sha}')
-        r = requests.get(compare_url, headers=self.headers)
-        self.update_rate_limit(r)
+    #     compare_url = (f'https://api.github.com/repos/{owner}/{repo}/'
+    #                 + f'compare/{first_commit_sha}...{last_commit_sha}')
+    #     r = requests.get(compare_url, headers=self.headers)
+    #     self.update_rate_limit(r)
 
-        return r.json()['total_commits'] + 1
-
-
+    #     return r.json()['total_commits'] + 1
 
     def update_rate_limit(self, response):
         try:
