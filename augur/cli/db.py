@@ -7,12 +7,7 @@ from sqlalchemy import exc
 from augur.application import Application
 from augur.runtime import pass_application
 
-def execute(self, engine, query):
-    with engine.begin() as transaction:
-        result = transaction.execute(query)
-        return result
-
-@click.group('db', short_help='Database maintenance')
+@click.group('db', short_help='Database utilities')
 def cli():
     pass
 
@@ -21,18 +16,7 @@ def cli():
 @pass_application
 def add_repos(app, filename):
 
-    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
-    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
-    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
-    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
-
-    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            user, password, host, port, dbname
-    )
-
-    db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+    db = get_db_connection(app)
 
     df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"), db)
     repo_group_IDs = df['repo_group_id'].values.tolist()
@@ -61,18 +45,8 @@ def add_repos(app, filename):
 @cli.command('get_repo_groups', short_help="List all repo groups and their associated IDs")
 @pass_application
 def get_repo_groups(app):
-    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
-    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
-    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
-    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
 
-    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            user, password, host, port, dbname
-    )
-
-    db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+    db = get_db_connection(app)
 
     df = pd.read_sql(s.sql.text("SELECT repo_group_id, rg_name, rg_description FROM augur_data.repo_groups"), db)
     print(df)
@@ -84,18 +58,7 @@ def get_repo_groups(app):
 @pass_application
 def add_repo_groups(app, filename):
 
-    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
-    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
-    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
-    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
-    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
-    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
-
-    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
-            user, password, host, port, dbname
-    )
-
-    db = s.create_engine(DB_STR, poolclass=s.pool.NullPool)
+    db = get_db_connection(app)
 
     df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"), db)
     repo_group_IDs = df['repo_group_id'].values.tolist()
@@ -120,3 +83,17 @@ def add_repo_groups(app, filename):
                 # Since there's no rows to fetch after a successful insert, this is how we know it worked.
                 # I know it's weird, sue me (jk please don't)
 
+def get_db_connection(app):
+
+    user = app.read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
+    password = app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password')
+    host = app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1')
+    port = app.read_config('Database', 'port', 'AUGUR_DB_PORT', '5433')
+    dbname = app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'augur')
+    schema = app.read_config('Database', 'schema', 'AUGUR_DB_SCHEMA', 'augur_data')
+
+    DB_STR = 'postgresql://{}:{}@{}:{}/{}'.format(
+            user, password, host, port, dbname
+    )
+
+    return s.create_engine(DB_STR, poolclass=s.pool.NullPool)
