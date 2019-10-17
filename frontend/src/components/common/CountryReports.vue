@@ -8,7 +8,7 @@
 
     <div class="card-body p-0">
 
-      <div ref="mContainer" width="100%" height="100%" style="width: 100%; height: 180px;"></div>
+      <div ref="mContainer" width="100%" height="100%" class="countryReportsDiv"></div>
 
       <table class="table m-0">
         <tbody>
@@ -25,7 +25,7 @@
       <d-row>
 
         <d-col>
-          <d-select size="sm" value="last-week" style="max-width: 130px;">
+          <d-select size="sm" value="last-week" class="generalSize">
             <option value="last-week">Last Week</option>
             <option value="today">Today</option>
             <option value="last-month">Last Month</option>

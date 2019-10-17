@@ -1,6 +1,6 @@
 <template>
-  <div ref="holder" style="position: relative; z-index: 5; transform: translateY(-40%); transform: translateX(-2rem);">
-    <spinner v-if="!loaded" style="top: 30%; position: relative; transform: translateY(-40%); margin: 3.5rem 5.9rem 0px auto;"></spinner>
+  <div ref="holder" class="insightChartDiv">
+    <spinner v-if="!loaded" class="insightChartSpinner"></spinner>
     <div v-if="loaded" class="">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <!-- <p> {{ chart }} </p> -->
@@ -15,7 +15,6 @@
 import { mapState } from 'vuex'
 import AugurStats from '@/AugurStats.ts'
 import Spinner from '../Spinner.vue'
-
 export default {
   props: ['url', 'source', 'title', 'color', 'data'],
   components: {
@@ -44,7 +43,6 @@ export default {
         this.values = this.data//this.convertKey(this.data)
       // })
       console.log(this.values)
-
       let config = {
         "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "width": this.x / 4,//263.7,
@@ -74,7 +72,6 @@ export default {
   },
   methods: {
     renderChart() {
-
     },
     convertKey(ary) {
       ary.forEach((el) => {
@@ -94,5 +91,4 @@ export default {
   }
   
 }
-
 </script>

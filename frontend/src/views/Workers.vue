@@ -16,7 +16,7 @@
             <h6 class="m-0">Currently Implemented Data Collection Workers</h6>
           </div>
           <div class="card-body p-0 pb-3 text-center">
-            <table style="table-layout:fixed;" class="table mb-0">
+            <table class="workersTable table mb-0">
               <thead class="bg-light">
                 <tr>
                   <th scope="col" class="border-0" v-on:click="sortTable('url')"> 

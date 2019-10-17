@@ -27,6 +27,14 @@ full-shadow = 5px 5px 20px 2px rgba(0, 0, 0, 0.03)
   animation: slide 60s linear infinite !important;
 }
 
+/* new classes */
+.baseRepoActivity {
+  display: inline-block;
+}
+.baseRepoh2 {
+  display: inline-block;
+  color: black !important;
+}
 .below-chart
   position: relative
   z-index: 2
@@ -215,13 +223,6 @@ cite.metric a
   max-width: 1240px;
   padding-bottom: 1rem;
 }
-.compareControlDiv1 {
-  font-size: 1.3rem;
-}
-.compareControlDiv2 {
-  font-size: 18px;
-  font-weight: 500;
-}
 
 
 #comparetext
@@ -248,17 +249,17 @@ cite.metric a
   margin-bottom: 20px
 
 /*new style*/
-.CountBlockSpan {
+.countBlockSpan {
   font-size: 1.3em;
 }
 /* new style */
-.CoverageCardDiv1 {
+.coverageCardDiv1 {
   float:left;
   text-align:right;
   width:49%;
 }
 /* new style*/
-.CoverageCardDiv2 {
+.coverageCardDiv2 {
   float:right;
   text-align: left;
   width:49%;
@@ -268,6 +269,42 @@ cite.metric a
 .countryReportsDiv {
   width: 100%;
   height: 180px;
+}
+
+.generalSize{
+  max-width: 130px;
+}
+
+/* new class */
+.dashboardButton {
+  color: white !important
+}
+.dashboardCol {
+  transform: translateX(-1rem) !important
+}
+.dashboardDiv {
+  min-height: 34.2px !important;
+}
+.dashboardDiv2 {
+  text-indent: 0; 
+  text-align: center; 
+  font-size: 1rem
+}
+.dashboardHeader {
+  font-size: 1rem
+}
+.dashboardI {
+  position: relative; 
+  top: 50%; 
+  transform: translateY(-60%)
+}
+.dashboardP {
+  font-size: .75rem
+}
+.dashboardSpinner {
+  padding: 1rem 0 1rem 0; 
+  position: relative; 
+  transform: translateY(-50%);
 }
 
 details summary
@@ -385,6 +422,41 @@ div.checkbox_select .select_input
   max-width: 130px;
 }
 
+/*new class */
+.gitCardHeader {
+  display: inline-block;
+  margin-bottom: 20px;
+}
+.gitCardHeader2{
+  display: inline-block;
+  color: black !important;
+  margin-bottom: 20px;
+}
+.gitCardDiv1{
+  text-align: center; 
+  margin-left: 44.4%; 
+  position: relative !important
+}
+.gitCardDiv2 {
+  transform: translateY(-10px) !important;
+}
+.gitCardDiv3 {
+  padding-right: 35px;
+  transform: translateY(-0px) !important;
+}
+.gitCardDiv4 {
+  padding-left: 0px;
+  transform: translateY(-0px) !important;
+}
+.gitCardDiv5 {
+  padding-top: 0px;
+}
+.gitCardDiv6 {
+  transform: translateY(-30px) !important;
+}
+.gitCardDiv7 {
+  transform: translateY(-40px) !important;
+}
 .graph-download /* used */
   background: 0
   color: #ccc
@@ -400,15 +472,34 @@ div.checkbox_select .select_input
   color: #000
 
   /*new style*/
-.GroupedBarChartSpinner {
+.groupedBarChartSpinner {
   top: 30%;
   position: relative;
   transform: translateY(-50%);
   margin: 3.5rem 3.9rem 0px auto;
 }
-.GroupedBarChartDiv {
+.groupedBarChartDiv {
   padding: 0 50px 0 50px; 
   font-size: 12px;
+}
+
+/* new Class */
+.groupOverview {
+  margin: 0;
+  padding-top: 26px;
+  padding-left: 0px;
+}
+.groupOverviewSpan {
+  padding-right: 1rem
+}
+
+/* new class */
+.growthMaturity {
+  display: inline-block;
+}
+.growthMaturityHeader {
+  display: inline-block;
+  color: black !important;
 }
 
 header
@@ -477,6 +568,10 @@ header .search
   opacity: 0 !important;
   max-height: 191px !important;
 
+/*new class */
+.issuesCard {
+  padding-right: 35px;
+}
 /*new class */
 .issueChartCellA {
   width: 5%;
@@ -1203,13 +1298,24 @@ header .search
 
 #logo
   display: inline-block
-  margin-top: 0px
-  max-width: 200px
-  transform: translateY(-12px)
+  max-width: 6.5rem
+  
 
 .list-group-small .list-group-item { /* used Dashboard.vue InspectInsight.vue */
   font-size: 1.3rem !important
 }
+
+/* new class */
+.mainControlsDiv1 {
+  text-align: center !important
+}
+.mainControlsDiv2 {
+  display: inline !important
+}
+.mainControlsDiv3 {
+  max-width: 69.9px;
+}
+
 /* new class */
 .mainInsightDiv {
   position: relative;
@@ -1218,6 +1324,34 @@ header .search
   transform: translateY(3rem);
 }
 
+
+/* new class */
+.mainSideBaraside {
+  position:fixed !important;
+}
+.mainSideBara {
+  line-height: 25px;
+}
+.mainSideBarNav {
+  margin: 0 !important;
+  width: 200px;
+}
+.mainSideBarLink {
+  font-size: 0.7rem;
+}
+.mainSideBarV {
+  width: 240;
+}
+.mainSideBarViF {
+  text-align: center;
+  padding-top: 1rem;
+}
+.mainSideBarSpan {
+  margin-bottom: 0.2rem;
+}
+.mainSideBarVIF {
+  text-align: center;
+}
 @media (min-width: 1230px) 
   .tabs ul
     border-bottom-style: none !important
@@ -1269,6 +1403,46 @@ header .search
     visibility: visible;
     opacity: 1;
   }
+}
+
+/* new class */
+.metricsCardBody {
+  display: block;
+  height: 400px;
+  overflow-y: scroll;
+  text-align: center;
+  background: #eaeaea
+}
+.metricsCardTH {
+  font-weight: 600;
+  text-align: center;
+}
+.metricsCardCellA {
+  width:119px !important;
+}
+.metricsCardCellB {
+  width: 135px !important
+}
+.metricsCardCellC {
+  width:170px !important;
+}
+.metricsCardCellD {
+  width: 121px !important
+}
+.metricsCardCellE {
+  width: 569px !important
+}
+.metricsCardCellF {
+  width: 120px !important
+}
+.metricsCardCellG {
+  width: 85px !important
+}
+.metricsCardDiv {
+  overflow: hidden;
+}
+.metricsCardThread {
+  display:block;
 }
 
 .modal-mask { /* used IssusOverViewModal.vue */
@@ -1341,13 +1515,8 @@ header .search
   height: 40px !important
 }
 
-/* new class */
-.navbarNavli {
-  width: auto !important;
-}
-.nav
 
-/*.normalbar       /* do not believed this is used  
+/*.normalbar      
   overflow: visible !important;
   width: 100%;
   // position: relative
@@ -1377,13 +1546,54 @@ header .search
   text-align: center
 }
 
+/* new class */
+.navbarNavli {
+  width: auto !important;
+}
+.navbarNavA {
+  position: relative; 
+  top: 50%; 
+  transform: translateY(-50%);
+  font-size: 0.8125rem !important
+}
+
+/* new class */
+.navbarSearchDiv {
+  margin-bottom: 0 !important
+}
+.navbarSearchInput {
+  padding-left: 40px !important
+}
+/* new class */
+.overviewCard {
+  display: inline-block;
+}
+.overviewCardDiv {
+  transform: translateY(-50px) !important;
+}
+.overviewCardHeader {
+  display: inline-block;
+  color: black !important
+}
+.overviewCardPadding {
+  padding-right: 35px;
+}
+
 .parent{
   position: absolute
   z-index: 1 !important
   align-content: center
 }
 
-/*.quality  
+/*  new class */
+.projectDropdown {
+  display: inline-block;
+}
+.projectDropdownForm {
+  margin: 0
+}
+/*
+.quality  
   
   position: relative
   display: inline-block
@@ -1426,6 +1636,16 @@ header .search
   position: relative !important
 }
 
+/* new class */
+.reposTable {
+  table-layout: fixed;
+}
+
+/* new class */
+.repoGroupsTable {
+  table-layout: fixed;
+}
+
 .repolisting { /* used in a lot of places */
   margin-left:1.25em;
 }
@@ -1436,6 +1656,70 @@ header .search
 
 .repo-link-table-body /* used */ 
   background: rgb(234, 234, 234)
+
+/* new class */
+.reposInGroupTable {
+  table-layout: fixed;
+}
+
+/* new class */
+.repo_Overview {
+  margin:0; 
+  padding-top: 26px; 
+  padding-left: 0px
+}
+.repo_Overview_Chart {
+  font-size: 0.6rem;
+}
+.repo_Overview_Col {
+  padding-top: 3rem
+}
+
+/* new class */
+.riskCard {
+  display: inline-block;
+}
+.riskCardButton {
+  border:2px 
+  solid black; 
+  width:100%
+}
+.riskCardDiv1 {
+  text-align: center;
+  width:100%
+  display:none;
+}
+.riskCardDiv2 {
+  width:419px;
+  height:146px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.riskCardDiv3 {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top:20px;
+}
+.riskCardHeader {
+  display: inline-block;
+  color: black !important
+}
+.riskCardHeader2 {
+  margin-bottom: 20px;
+}
+.riskCardImg {
+  transform: scale(2);
+}
+
+/* new class */
+.riskMetrics {
+  margin:0; 
+  padding-top: 26px; 
+  padding-left: 0px
+}
+.riskMetricsHeader {
+  font-size: 1rem
+}
 
 section#landing h1
   font-size: 25px
@@ -1499,6 +1783,17 @@ section.status
 .shrunk
   max-height: 0px !important
 
+
+/* new class */
+.singleComparison {
+  margin:0; 
+  padding-top: 26px; 
+  padding-left: 0px
+}
+.singleComparisonCol {
+  padding-top: 3rem
+}
+
 .stackedbarchart *
   overflow: visible !important;
   width: 100%;
@@ -1522,6 +1817,10 @@ section.status
   top: 5%; 
   position: relative; 
   transform: translateY(-50%);
+}
+
+.spinner {
+  margin: 2rem auto;
 }
 
 .switch
@@ -1560,6 +1859,10 @@ section.status
   border: 1px solid transparent;
   color: rgba(0, 0, 0, 0.5);
   text-decoration: none;
+
+.tabSelectorButton {
+  font-size: 0.8rem
+}
 
 thead tr {
   border-bottom: 10px solid rgb(234, 234, 234);
@@ -1613,9 +1916,22 @@ th,td
   max-width: 130px;
 }
 
+.valueCard {
+  display: inline-block;
+}
+
+.valueCardHeader{
+  display: inline-block;
+  color: black !important;
+}
+
 .warn
   color: #f00
 
 .warn:before
   content: ' ⚠ '
+
+.workersTable {
+  table-layout: fixed;
+}
 

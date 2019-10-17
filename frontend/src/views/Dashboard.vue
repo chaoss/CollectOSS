@@ -4,7 +4,7 @@
     <div class="page-header row no-gutters py-4">
       <div class="col-12 col-sm-4 text-center text-sm-left mb-0">
         <!-- <span class="text-uppercase page-subtitle">Viewing all</span> -->
-        <h3 style="font-size: 1rem" class="page-title">Most Anomalous Insights Across Your Repos</h3>
+        <h3 class="dashboardHeader page-title">Most Anomalous Insights Across Your Repos</h3>
       </div>
     </div>
 
@@ -16,8 +16,8 @@
             
             <d-card v-if="idx < highest_frame.length" class="card-small card-post card-post--1">
 
-              <div style="min-height: 34.2px !important;" v-if="!loadedInsights">
-                <spinner style="padding: 1rem 0 1rem 0; position: relative; transform: translateY(-50%);"></spinner>
+              <div class="dashboardDiv" v-if="!loadedInsights">
+                <spinner class="dashboardSpinner"></spinner>
               </div>
 
               <div class="card-post__image" v-if="loadedInsights">
@@ -25,8 +25,8 @@
                 <insight-chart style="" :data="insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]" :url="highest[idx].repo_git" :color="color_mapping[highest[idx].ri_metric].hex || '#FFC107'"></insight-chart>
 
                 <div class="card-post__author d-flex">
-                  <a href="#" :style="color_mapping[highest[idx].ri_metric].hex" class="card-post__author-avatar card-post__author-avatar--small" style="text-indent: 0; text-align: center; font-size: 1rem">
-                    <i class="material-icons" style="position: relative; top: 50%; transform: translateY(-60%)">{{ getDirection(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</i>
+                  <a href="#" :style="color_mapping[highest[idx].ri_metric].hex" class="card-post__author-avatar card-post__author-avatar--small dashboardDiv2">
+                    <i class="material-icons dashboardI">{{ getDirection(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</i>
                   </a>
                 </div>
               </div>
@@ -42,12 +42,12 @@
                     Click here to see an overview of this repository's metrics
                   </d-tooltip>
                 </h5>
-                <p class="card-text d-inline-block mb-1" style="font-size: .75rem">This repository had a sharp {{ getPhrase(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</p>
+                <p class="card-text d-inline-block mb-1 dashboardP">This repository had a sharp {{ getPhrase(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric]) }}</p>
                 <d-row>
                   <d-col cols="12" sm="5">
                     <d-row>
                       <d-col cols="12" sm="12">
-                        <span class="text-muted" style="font-size: .75rem">{{ timeframes[highest[idx].repo_git] }}</span>
+                        <span class="text-muted dashboardP">{{ timeframes[highest[idx].repo_git] }}</span>
                       </d-col>
                       <p></p>
                       <d-col cols="12" sm="12">
@@ -55,8 +55,7 @@
                         theme="info" size="sm" 
                         :id="'inspect' + idx" 
                         @click="onInspectInsight(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" 
-                        style="color: white !important" 
-                        class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Insight Details &rarr;</d-button>
+                        class="dashboardButton d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Insight Details &rarr;</d-button>
                         <d-tooltip 
                           :target="'#inspect' + idx"
                           container=".shards-demo--example--tooltip-01"
@@ -69,7 +68,7 @@
                   </d-col>
                   <!-- View Full Report -->
 
-                  <d-col cols="12" sm="7" style="transform: translateX(-1rem) !important;">
+                  <d-col cols="12" sm="7" class="dashboardCol">
                     <d-row>
                       
 
@@ -78,8 +77,8 @@
                         :id="'ev' + idx" 
                         size="sm" 
                         @click="onGitRepo(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" 
-                        style="color: white !important" 
-                        class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Evolution &rarr;</d-button>
+                       
+                        class="dashboardButton d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Evolution &rarr;</d-button>
                         <d-tooltip 
                           :target="'#ev' + idx"
                           container=".shards-demo--example--tooltip-01"
@@ -90,7 +89,7 @@
                       </d-col>
                       <p></p>
                       <d-col cols="12" sm="12">
-                        <d-button theme="secondary" :id="'ri' + idx" size="sm" @click="onRisk(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" style="color: white !important" class="d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Risk &rarr;</d-button>
+                        <d-button theme="secondary" :id="'ri' + idx" size="sm" @click="onRisk(insights[highest[idx].rg_name][highest[idx].repo_git][highest[idx].ri_metric][0])" class="dashboardButton d-flex btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">Risk &rarr;</d-button>
                         <d-tooltip 
                           :target="'#ri' + idx"
                           container=".shards-demo--example--tooltip-01"

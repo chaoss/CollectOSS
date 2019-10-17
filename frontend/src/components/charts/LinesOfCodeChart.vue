@@ -1,5 +1,5 @@
 <template>
-  <d-card-body style="padding-top: 1rem">
+  <d-card-body class="linesofCodeChart">
     <table class="lines-of-code-table">
       <thead>
         <tr>

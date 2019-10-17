@@ -3,7 +3,7 @@
     <div class="tickchart">
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <p> {{ chart }} </p>
-      <div style="padding: 0 50px 0 50px; font-size: 12px">
+      <div class="DualLineChartDiv3">
         <p></p>
       </div>
     </div>
