@@ -2914,3 +2914,9 @@ ALTER TABLE "augur_data"."repo_stats" ADD CONSTRAINT "fk_repo_stats_repo_1" FORE
 -- Foreign Keys structure for table repo_test_coverage
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_test_coverage" ADD CONSTRAINT "fk_repo_test_coverage_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+
+ALTER TABLE "augur_data"."repo" 
+  ALTER COLUMN "repo_status" SET DEFAULT 'New';
+
+  
