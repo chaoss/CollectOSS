@@ -109,7 +109,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(self, repo_group_id, repo_i
     Year or Week. Result ranked from highest number of commits to lowest by default.
     :param repo_group_id: The repository's repo_group_id
     :param repo_id: The repository's repo_id, defaults to None
-    :param calendar_year: the calendar year a repo is created in to be considered "new"
+    :param timeframe: all, year, or month for the episodic summary timeframe. 
     """
     if timeframe == None:
         timeframe = 'all'
