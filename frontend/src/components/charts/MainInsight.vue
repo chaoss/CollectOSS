@@ -1,6 +1,6 @@
 <template>
-  <div ref="holder" style="position: relative;">
-    <spinner v-if="!loaded" style="transform:translateY(3rem)"></spinner>
+  <div ref="holder" class="mainInsightDiv">
+    <spinner v-if="!loaded" class="mainInsightSpinner"></spinner>
     <div :id="source"></div>
 
   </div>

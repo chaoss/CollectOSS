@@ -6,13 +6,13 @@
         <table class="is-responsive issue_overview">
             <thead class="issue_overview issue_overview_head">
               <tr>
-                <th v-on:click="sortTable('issue_id')" style="width:5%">ID<div class="arrow" v-if="'issue_id' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
-                <th v-on:click="sortTable('issue_title')" style="width:40%">Title<div class="arrow" v-if="'issue_title' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
-                <th v-on:click="sortTable('status')" style="width:5%">Status<div class="arrow" v-if="'status' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
-                <th v-on:click="sortTable('count')" style="width:5%">Events Count<div class="arrow" v-if="'count' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
-                <th v-on:click="sortTable('date')" style="width:20%">Open Date<div class="arrow" v-if="'last_event_date' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
-                <th v-on:click="sortTable('last_event_date')" style="width:20%">Last Event Date<div class="arrow" v-if="'last_event_date' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
-                <th v-on:click="sortTable('open_day')" style="width:5%">Open Day<div class="arrow" v-if="'open_day' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('issue_id')" class="issueChartCellA">ID<div class="arrow" v-if="'issue_id' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('issue_title')" class="issueChartCellB">Title<div class="arrow" v-if="'issue_title' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('status')" class="issueChartCellA">Status<div class="arrow" v-if="'status' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('count')" class="issueChartCellA">Events Count<div class="arrow" v-if="'count' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('date')" class="issueChartCellC">Open Date<div class="arrow" v-if="'last_event_date' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('last_event_date')" class="issueChartCellC">Last Event Date<div class="arrow" v-if="'last_event_date' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
+                <th v-on:click="sortTable('open_day')" class="issueChartCellA">Open Day<div class="arrow" v-if="'open_day' == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div></th>
               </tr>
           </thead>
         </table>
@@ -21,13 +21,13 @@
         <table>
           <tbody class="issue_overview">
             <tr v-for="issue in issues" >
-              <td style="width:5%">{{ issue.issue_id }}</td>
-              <td style="width:40%"><a href="#" @click.prevent="toggleModal(issue)">{{ issue.issue_title }}</a></td>
-              <td style="width:5%">{{ issue.status }}</td>
-              <td style="width:5%">{{ issue.count }}</td>
-              <td style="width:20%">{{ issue.date }}</td>
-              <td style="width:20%">{{ issue.last_event_date }}</td>
-              <td style="width:5%">{{ issue.open_day }}</td>
+              <td class="issueChartCellA">{{ issue.issue_id }}</td>
+              <td class="issueChartCellB"><a href="#" @click.prevent="toggleModal(issue)">{{ issue.issue_title }}</a></td>
+              <td class="issueChartCellA">{{ issue.status }}</td>
+              <td class="issueChartCellA">{{ issue.count }}</td>
+              <td class="issueChartCellC">{{ issue.date }}</td>
+              <td class="issueChartCellC">{{ issue.last_event_date }}</td>
+              <td class="issueChartCellA">{{ issue.open_day }}</td>
             </tr>
           </tbody>
         </table>       

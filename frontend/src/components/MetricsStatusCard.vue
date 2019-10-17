@@ -72,35 +72,35 @@
     </div>
     <p></p>
     <table class="is-responsive" >
-      <thead style="display:block;">
-        <tr style="font-weight: 600; text-align: center">
-          <td style="width: 119px !important">Backend Status</td>
-          <td style="width: 135px !important">Frontend Status</td>
-          <td style="width: 170px !important">Name</td>
-          <td style="width: 121px !important">Group</td>
-          <td style="width: 569px !important">Endpoint</td>
-          <td style="width: 120px !important">Source</td>
-          <td style="width: 85px !important">Metric Type</td>
+      <thead class="metricsCardThread">
+        <tr class="metricsCardTH">
+          <td class="metricsCardCellA">Backend Status</td>
+          <td class="metricsCardCellB">Frontend Status</td>
+          <td class="metricsCardCellC">Name</td>
+          <td class="metricsCardCellD">Group</td>
+          <td class="metricsCardCellE">Endpoint</td>
+          <td class="metricsCardCellF">Source</td>
+          <td class="metricsCardCellG">Metric Type</td>
         </tr>
       </thead>
 
-      <tbody style="display:block; height: 400px; overflow-y: scroll; text-align: center; background: #eaeaea">
+      <tbody class="metricsCardBody">
         <tr v-for="metric in metricsStatus">
-          <div style="overflow: hidden">
-            <td v-bind:style="{ color: getBackendStatusColor(metric) }" style="width: 119px !important">{{ metric.backend_status }}</td>
-            <td v-bind:style="{ color: getFrontendStatusColor(metric) }" style="width: 135px !important">{{ metric.frontend_status }}</td>
+          <div class="metricsCardDiv">
+            <td v-bind:style="{ color: getBackendStatusColor(metric) }" class="metricsCardCellA">{{ metric.backend_status }}</td>
+            <td v-bind:style="{ color: getFrontendStatusColor(metric) }" class="metricsCardCellB">{{ metric.frontend_status }}</td>
 
             <template v-if="metric.url != '/'" >
-              <td style="width: 170px !important"><a :href="metric.documentation_url">{{ metric.display_name }}</a></td>
+              <td class="metricsCardCellC"><a :href="metric.documentation_url">{{ metric.display_name }}</a></td>
             </template>
             <template v-else >
-            <td style="width: 170px !important">{{ metric.display_name }}</td>
+            <td class="metricsCardCellC">{{ metric.display_name }}</td>
             </template>
 
-            <td style="width: 121px !important">{{ metric.group }}</td>
-            <td style="width: 569px !important">{{ metric.endpoint }}</td>
-            <td style="width: 120px !important">{{ metric.data_source }}</td>
-            <td style="width: 85px !important">{{ metric.metric_type }}</td>
+            <td class="metricsCardCellD">{{ metric.group }}</td>
+            <td class="metricsCardCellE">{{ metric.endpoint }}</td>
+            <td class="metricsCardCellF">{{ metric.data_source }}</td>
+            <td class="metricsCardCellG">{{ metric.metric_type }}</td>
           </div>
         </tr>
       </tbody>

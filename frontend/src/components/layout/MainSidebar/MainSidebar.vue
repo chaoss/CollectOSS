@@ -1,8 +1,8 @@
 <template>
-  <aside class="main-sidebar col-1 px-0" style="position: fixed !important"><!--:class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']">-->
+  <aside class="main-sidebar col-1 px-0 mainSideBaraside"><!--:class="['main-sidebar', 'col-12', 'col-md-3', 'col-lg-2', 'px-0', sidebarVisible ? 'open' : '']">-->
       <div class="main-navbar">
         <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0">
-          <a class="navbar-brand w-100 mr-0" href="#" style="line-height: 25px;">
+          <a class="navbar-brand w-100 mr-0 mainSideBara" href="#">
             <div class="d-table m-auto">
               <a href="/">
                 <img src="@/assets/logo.png" id="logo" alt="CHAOSS: Community Health Analytics for Open Source Software"/>
@@ -28,11 +28,11 @@
       </form>
 
       <div class="nav-wrapper">
-          <d-nav class="flex-column" style="margin: 0 !important"> <!--style="margin: 0 !important"-->
+          <d-nav class="flex-column mainSideBarNav"> <!--style="margin: 0 !important"-->
             <li v-for="(item, navItemIdx) in items" :key="navItemIdx" class="nav-item dropdown">
-              <d-link style="font-size: 0.7rem" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
+              <d-link class="mainSideBarLink" :class="['nav-link', item.items && item.items.length ? 'dropdown-toggle' : '']" :to="item.to" v-d-toggle="`snc-${navItemIdx}`">
                 <div class="item-icon-wrapper" v-if="item.htmlBefore" v-html="item.htmlBefore" />
-                <span v-if="item.title" style="width: 240">{{ item.title }}</span>
+                <span v-if="item.title" class="mainSideBarV">{{ item.title }}</span>
                 <div class="item-icon-wrapper" v-if="item.htmlAfter" v-html="item.htmlAfter" />
               </d-link>
               <d-collapse v-if="item.items && item.items.length" :id="`snc-${navItemIdx}`" class="dropdown-menu dropdown-menu-small" accordion="sidebar-items-accordion">
@@ -47,22 +47,18 @@
                 <span>Comparison Manager</span>
                 <div class="item-icon-wrapper" />
               </d-link>
-
               <div style="text-align: center; border-bottom: 1px solid #e1e5eb;">
                 <div class="comp_info">
                   {{comparisonType}}
                 </div>
-
                 <div class="comp_info">
                   {{  base.repo_name ? base.rg_name+'/'+base.repo_name : base.rg_name || 'No base repo/group selected'}}
                 </div>
-
                 <div class="comp_info">
                   {{comparisionSize == 0? 'No': comparisionSize}} comparison(s) selected
                 </div>
               </div>
               
-
               <div class="row" style="position: absolute; bottom: 0; padding-left: 0px; width: 240px !important">
                 <div class="col col-6" style="padding: 0px">
                   <a href="" v-on:click="onReset()">
@@ -82,10 +78,9 @@
                   </d-link>
                 </div>
               </div>
-
             </li> -->
-            <li v-if="'repo_id' in base" style="text-align: center; padding-top: 1rem"><span>Different views <p style="margin-bottom:0.2rem">for this repo:</p></span></li>
-            <li v-if="'repo_id' in base" style="text-align: center"><tab-selector></tab-selector></li>
+            <li v-if="'repo_id' in base" class="mainSideBarViF"><span>Different views <p class="mainSideBarSpan">for this repo:</p></span></li>
+            <li v-if="'repo_id' in base" class="mainSideBarVIF"><tab-selector></tab-selector></li>
 
           </d-nav>
 
@@ -98,7 +93,6 @@
   import Vue from 'vue';
   import {mapActions, mapGetters, mapMutations} from "vuex";
   import TabSelector from "../../TabSelector.vue";
-
   @Component({
     props: {
       hideLogoText: {
@@ -173,18 +167,15 @@
       //   htmlAfter: '',
       // },
     ];
-
     // state declared computed
     comparisonType!: string;
     base!:string;
     resetCompared!:any;
     comparisionSize!:any;
-
     // method
     handleToggleSidebar() {
       this.sidebarVisible = !this.sidebarVisible;
     }
-
     onReset() {
       this.resetCompared()
       if (!this.$route.params.repo && this.$route.params.group) {
@@ -197,8 +188,6 @@
         })
       }
     }
-
-
   }
 </script>
 

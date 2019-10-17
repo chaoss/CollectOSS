@@ -6,14 +6,15 @@
     </div>
 
     <div class="card-body d-flex py-0">
-      <canvas height="220" ref="canvas" class="blog-users-by-device m-auto"></canvas>
+    /*new class added*/
+      <canvas class="UsersByDeviceCanvas" ref="canvas" class="blog-users-by-device m-auto"></canvas>
     </div>
 
     <d-card-footer class="border-top">
       <d-row>
 
         <d-col>
-          <d-select size="sm" value="last-week" style="max-width: 130px;">
+          <d-select size="sm" value="last-week" class="UsersByDeviceD-Select">
             <option value="last-week">Last Week</option>
             <option value="today">Today</option>
             <option value="last-month">Last Month</option>
