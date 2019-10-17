@@ -158,6 +158,9 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 					emails_to_add.remove(email[0])
 				emails_to_update.append(email)
 
+		# remove any duplicates
+		emails_to_add = list(set(emails_to_add))
+
 		for email in emails_to_add:
 			cntrb = ("INSERT INTO contributors "
 				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
@@ -173,22 +176,29 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 				cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
 
 		for email in emails_to_update:
-			email_update = ("UPDATE contributors "
-				"SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source='%s, FacadeAugur'"
-				"tool_version='%s, 0.0.1', data_source='%s, git_repository'"
-				"WHERE cntrb_email=%s")
+			email_update = ("""UPDATE contributors 
+				SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source="%s, FacadeAugur"
+				tool_version="%s, 0.0.1", data_source="%s, git_repository"
+				WHERE cntrb_email=%s""")
 			if email[0] == author_email:
-				# cursor_local.execute(email_update, (discover_alias(author_email),
-				# 	str(author_name), email[1], email[2], 
-				# 	email[3], email[0]))
-				# db_local.commit()
-				cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
+				try:
+					cursor_local.execute(email_update, (discover_alias(author_email),
+						str(author_name), email[1], email[2], 
+						email[3], email[0]))
+					db_local.commit()
+					cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
+				except Exception as e:
+					cfg.log_activity('Info','Attempted to update an existing contributor: {} that could have missing info included, but an error occurred: {}'.format(author_email,e))
 			elif email[0] == committer_email:
-				# cursor_local.execute(email_update, (discover_alias(committer_email),
-				# 	str(committer_name), email[1], email[2], 
-				# 	email[3], email[0]))
-				# db_local.commit()
-				cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
+				try:
+					cursor_local.execute(email_update, (discover_alias(committer_email),
+						str(committer_name), email[1], email[2], 
+						email[3], email[0]))
+					db_local.commit()
+					cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
+				except Exception as e:
+					cfg.log_activity('Info','Attempted to update an existing contributor: {} that could have missing info included, but an error occurred: {}'.format(committer_email,e))
+
 				
 
 ### The real function starts here ###
