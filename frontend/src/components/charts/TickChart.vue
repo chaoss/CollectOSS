@@ -3,7 +3,7 @@
       <div :id="source"></div>
       <vega-lite :spec="spec" :data="values"></vega-lite>
       <!-- <p class="note">*point values with total lines changed outside the bounds of [50.000, 1.000.000] are rounded to the corresponding edge limit</p> -->
-      <!-- <div class="form-item form-checkboxes tickradios" style="transform: translateY(-35px) !important">
+      <!-- <div class="form-item form-checkboxes tickradios" class="tickChartDiv">
 
 
           <div class="inputGroup" >

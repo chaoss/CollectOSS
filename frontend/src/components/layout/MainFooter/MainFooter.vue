@@ -30,7 +30,6 @@ const defaultMenuItems = [{
   title: 'Blog',
   to: '#',
 }];
-
 export default {
   name: 'main-footer',
   props: {

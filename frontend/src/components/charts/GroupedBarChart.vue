@@ -1,10 +1,10 @@
 <template>
   <div ref="holder">
-    <spinner :v-show="!loaded" style="top: 30%; position: relative; transform: translateY(-50%); margin: 3.5rem 3.9rem 0px auto;"></spinner>
+    <spinner :v-show="!loaded" class="groupedBarChartSpinner"></spinner>
     <div class="groupedbarchart">
       <div :id="source"></div>
       <!-- <vega-lite :spec="spec" :data="values"></vega-lite> -->
-      <div style="padding: 0 50px 0 50px; font-size: 12px">
+      <div class="groupedBarChartDiv">
         <p>*The black "baseline" represents the averages of both LoC and commits across all repositories within the selected repository's overlying Facade organization during the calendar year shown. Wherever this bar stretches to shows how far above or below the raw value of the statistic is from the regular average.</p>
       </div>
     </div>

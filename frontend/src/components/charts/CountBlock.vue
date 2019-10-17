@@ -2,7 +2,8 @@
   <d-card>
     <d-card-body :title="title" class="text-center">
       <spinner v-if="!loaded"></spinner>
-      <span v-if="loaded" style="font-size:1.3em">{{ count }}</span>
+      <span v-if="loaded" class="countBlockSpan">{{ count }}</span>
+
     </d-card-body>
     </d-card>
     </template>

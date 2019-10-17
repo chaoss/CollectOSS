@@ -1,17 +1,17 @@
 <template>
   <section>
-    <div style="display: inline-block;">
-      <h2 v-if="this.loaded" style="display: inline-block; color: black !important">{{$store.state.baseRepo}}</h2>
+    <div class="growthMaturity">
+      <h2 v-if="this.loaded" class="growthMaturityHeader">{{$store.state.baseRepo}}</h2>
       <p></p>
-      <h2 style="display: inline-block;" class="repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
-      <h2 style="display: inline-block;" v-for="(repo, index) in $store.state.comparedRepos">
+      <h2 class="growthMaturity repolisting" v-if="$store.state.comparedRepos.length > 0"> compared to: </h2>
+      <h2 class="growthMaturity" v-for="(repo, index) in $store.state.comparedRepos">
         <span v-bind:style="{ 'color': colors[index] }" class="repolisting"> {{ repo }} </span> 
       </h2>
     </div>
 
     
 
-    <div class="row" style="transform: translateY(-40px) !important" v-if="loaded1">
+    <div class="row gitCardDiv7" v-if="loaded1">
         <issue-chart source="issuesOverview" 
                     title = "issue Overview"
                     :data="values['getIssues']">
@@ -37,7 +37,7 @@
     </div>
 
     <div v-if="loaded3" class="row">
-        <div class="col col-12" style="padding-right: 35px">
+        <div class="col col-12 issuesCard" >
         <dual-line-chart source=""
         :title="'Issue Count History for this Repo :  ' + this.repo + ' - Grouped by Week'"
         fieldone="open_count"

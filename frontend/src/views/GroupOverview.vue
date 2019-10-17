@@ -1,7 +1,7 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-        <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
-          <span style="padding-right:1rem">Repo Group:</span><d-breadcrumb-item :active="true" :text="base.rg_name" href="#" />
+        <d-breadcrumb class="groupOverview">
+          <span class="groupOverviewSpan">Repo Group:</span><d-breadcrumb-item :active="true" :text="base.rg_name" href="#" />
         </d-breadcrumb>
 
     <!-- Page Header -->

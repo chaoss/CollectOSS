@@ -1,6 +1,6 @@
 <template>
   <d-container fluid class="main-content-container px-4">
-    <d-breadcrumb style="margin:0; padding-top: 26px; padding-left: 0px">
+    <d-breadcrumb class="repo_Overview">
       <d-breadcrumb-item :active="false" :text="base.rg_name" href="#" @click="onRepoGroup({rg_name: base.rg_name, repo_group_id: base.repo_group_id})"/>
       <d-breadcrumb-item :active="true" :text="base.repo_name" href="#" />
       <!-- <d-button style="line-height:1;transform: translateX(0.5rem) translateY(-0.1rem);"><d-link :to="{name: 'repo_risk', params: {repo: base.repo_name, group:base.rg_name}}"><span>Risk</span></d-link></d-button> -->
@@ -125,7 +125,7 @@
             <lines-of-code-chart 
               v-if="loadedBars" 
               :data="values['changesByAuthor']" 
-              style="font-size: 0.6rem"
+              class="repo_Overview_Chart"
             ></lines-of-code-chart>
 
           </d-card-body>
@@ -157,7 +157,7 @@
     <p></p> -->
 
     <d-row>
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -170,7 +170,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -183,7 +183,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -196,7 +196,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -209,7 +209,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -222,7 +222,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       filedTime="date" 
@@ -235,7 +235,7 @@
         </d-card>
       </div> 
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
 
           <dynamic-line-chart 
@@ -249,7 +249,7 @@
         </d-card>
       </div>
 
-      <div class="col col-6" style="padding-top:3rem">
+      <div class="col col-6 repo_Overview_Col">
         <d-card>
           <dynamic-line-chart 
                       source="codeChangesLines"

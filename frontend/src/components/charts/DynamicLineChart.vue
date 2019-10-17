@@ -1,7 +1,8 @@
 <template>
+
   <d-card-body v-if="!error" :title="title">
-    
-    <!-- <div style="color: black" class="error" :class="{hidden: !error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important"> {{ source }}</p></div> -->
+  <!-- <div style="color: black" class="error" :class="{hidden: !error}"><br><p style="font-size: 70px; padding-bottom: 3px">🕵️</p> Data is missing or unavailable for metric: <p style="color: blue !important"> {{ source }}</p></div> -->
+  <d-card-body>
     <div v-if="mount" :id="source"></div>
     <div v-if="!loaded">
       <spinner></spinner>
@@ -25,15 +26,15 @@
       </nav> -->
     </div>
 <!-- 
-    <div class="row below-chart" style="top: -28px !important">
+    <div class="row below-chart DynamicLineChartDiv13">
       <div class="col col-1"></div>
-      <div class="col col-3" style="padding-left: 10px; position: relative; top: -8px !important;">
-        <span style="font-size: 12px">Data source: {{ metricSource }}</span>
+      <div class="col col-3 DynamicLineChartDiv15">
+        <span class="DynamicLineChartSpan">Data source: {{ metricSource }}</span>
       </div>
-      <div class="col col-2" style="width:154px !important;height: 38px !important; position: relative; top: -12px !important;">
-        <cite class="metric"><a style="width:100px !important;height: 38px !important; position: absolute;" v-bind:href="citeUrl" target="_blank"><img style="width:100px;position: relative;" src="https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png" alt="Chaoss-Definition-Logo" border="0"></a></cite>
+      <div class="col col-2 DynamicLinechartDiv17">
+        <cite class="metric"><a class="DynamicLineChartDiv18-1" v-bind:href="citeUrl" target="_blank"><img class="DynamicLineChart18-2" src="https://i.ibb.co/VmxHk3q/Chaoss-Definition-Logo.png" alt="Chaoss-Definition-Logo" border="0"></a></cite>
       </div>
-      <div class="col col-4" style="position: relative; top: -8px !important;">
+      <div class="col col-4 DynamicLineChart20">
         <a class="button graph-download download" ref="downloadJSON" role="button">&#11015; JSON</a></div>
     </div>
  -->
