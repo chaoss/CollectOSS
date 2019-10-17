@@ -158,6 +158,9 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 					emails_to_add.remove(email[0])
 				emails_to_update.append(email)
 
+		# remove any duplicates
+		emails_to_add = list(set(emails_to_add))
+
 		for email in emails_to_add:
 			cntrb = ("INSERT INTO contributors "
 				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
@@ -173,10 +176,10 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 				cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
 
 		for email in emails_to_update:
-			email_update = ("UPDATE contributors "
-				"SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source='%s, FacadeAugur'"
-				"tool_version='%s, 0.0.1', data_source='%s, git_repository'"
-				"WHERE cntrb_email=%s")
+			email_update = ("""UPDATE contributors 
+				SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source="%s, FacadeAugur"
+				tool_version="%s, 0.0.1", data_source="%s, git_repository"
+				WHERE cntrb_email=%s""")
 			if email[0] == author_email:
 				# cursor_local.execute(email_update, (discover_alias(author_email),
 				# 	str(author_name), email[1], email[2], 
