@@ -47,7 +47,7 @@ class InsightWorker:
         logging.info("Worker initializing...")
         
         specs = {
-            "id": "com.augurlabs.core.insight_worker",
+            "id": self.config['id'],
             "location": self.config['location'],
             "qualifications":  [
                 {

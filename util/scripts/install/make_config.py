@@ -11,10 +11,9 @@ def configure_database(config, credentials):
     config['Database']['user'] = credentials['user']
     config['Database']['password'] = credentials['password']
     config['Database']['schema'] = "augur_data"
-    config['Database']['key'] = credentials['key']
+    config['Database']['key'] = credentials['github_api_key']
 
     config['GitHub'] = {'apikey': credentials['github_api_key']}
-    print()
 
 def configure_defaults(config):
     print("==Setting up defaults==")
@@ -124,13 +123,6 @@ def configure_defaults(config):
     print()
 
 def main():
-    if os.path.isfile("../../../augur.config.json"):
-        print("augur.config.json already exists!")
-        inp = input("Do you want to rewrite it? (Y/N): ")
-        if inp.lower() != 'y':
-            print('Exiting...')
-            return
-
     print("Beginning 'augur.config.json' creation process...\n")
     config = {}
 
@@ -142,6 +134,7 @@ def main():
     try:
         with open('../../../augur.config.json', 'w') as f:
             f.write(json.dumps(config, indent=4))
+            print(config)
             print('augur.config.json successfully created')
     except Exception as e:
         print("Error writing augur.config.json " + str(e))
