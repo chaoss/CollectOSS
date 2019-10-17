@@ -6,12 +6,13 @@
       
       <div v-if="loaded">
         <p v-if="values === undefined">There are no license coverage metrics available for this repository.</p>
-        <div style="float:left;text-align:right;width:49%;">
+        <div class="coverageCardDiv1">
+        <p> Total Files>
           <p> Total Files
           <br> Files with Declared Licenses
           <br> License Coverage </p>
         </div>
-        <div style="float:right;text-align:left;width:49%;">
+        <div class="coverageCardDiv2">
           <strong>
             <p> {{this.values[0]['sbom_scan']['Coverage']['TotalFiles']}}
             <br> {{this.values[0]['sbom_scan']['Coverage']['DeclaredLicenseFiles']}}

@@ -42,9 +42,8 @@ function set_remote_db_credentials() {
   read -p "Database: " database
   read -p "Host: " host
   read -p "Port: " port
-  read -p "User: " user
+  read -p "User: " db_user
   read -p "Password: " password
-  read -p "Key: " key
 
   get_github_api_key
 
@@ -53,14 +52,14 @@ function set_remote_db_credentials() {
       "database": "$database",
       "host": "$host",
       "port": "$port",
-      "user": "$user",
+      "user": "$db_user",
       "password": "$password",
-      "key": "$key",
+      "key": "$github_api_key",
       "github_api_key": "$github_api_key"
     }
 EOF
 
-  generate_config_file "$config"
+  save_credentials
 }
 
 function set_local_db_credentials() {
@@ -69,7 +68,6 @@ function set_local_db_credentials() {
   read -p "User: " user
   read -p "Port: " port
   read -p "Password: " password
-  read -p "Key: " key
 
   get_github_api_key
 
@@ -78,21 +76,30 @@ function set_local_db_credentials() {
     "database": "$database",
     "host": "localhost",
     "port": "$port",
-    "user": "$user",
+    "user": "$db_user",
     "password": "$password",
-    "key": "$key",
+    "key": "$github_api_key",
     "github_api_key": "$github_api_key"
   }
 EOF
 
+  save_credentials
+}
+
+function save_credentials() {
+
   generate_config_file "$config"
+
+  echo $host:$port:$database:$db_user:$password >> ~/.pgpass 
+  chmod 0600 ~/.pgpass 
+
 }
 
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
 echo
-install_locally="Would you like to use a LOCAL Postgres 10 or 11 installation without the database already installed?"
-install_remotely="Would you like to use a REMOTE Postgres 10 or 11 installation without the database already installed?"
-already_installed="Would you like to use a pre-existing Postgres 10 or 11 installation with the Augur database ALREADY installed? "
+install_locally="Would you like create the Augur database, user and schema LOCALLY?"
+install_remotely="Would you like to add the Augur schema to a REMOTE Postgres 10 or 11 database?"
+already_installed="Would you like to connect to a database already configured with Augur's schema? "
 echo
 
 select install_location in "$install_locally" "$install_remotely" "$already_installed"
@@ -101,21 +108,27 @@ do
     $install_locally )
         echo "Please set the credentials for your database."
         set_local_db_credentials
-        psql -c "create database $database;"
-        psql -c "create user $user with encrypted password '$password';"
-        psql -c "alter database $database owner to $user;"
-        psql -c "grant all privileges on database $database to $user;"
-        psql -h "localhost" -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
+        psql -c "CREATE DATABASE $database;"
+        psql -c "CREATE USER $db_user WITH ENCRYPTED PASSWORD '$password';"
+        psql -c "ALTER DATABASE $database OWNER TO $db_user;"
+        psql -c "GRANT ALL PRIVILEGES ON DATABASE $database TO $db_user;"
+        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
+        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
+        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
+        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
+        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
         break
       ;;
     $install_remotely )
         echo "Please set the credentials for your database."
         set_remote_db_credentials
-        psql -h $host -p $port -c "create database $database;"
-        psql -h $host -p $port -c "create user $user with encrypted password '$password';"
-        psql -h $host -p $port -c "alter database $database owner to $user;"
-        psql -h $host -p $port -c "grant all privileges on database $database to $user;"
-        psql -h $host -d $database -U $user -p $port -a -w -f /persistence_schema/0-all.sql
+        # https://www.youtube.com/watch?v=rs9wuaVV33I
+        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
+        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
+        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
+        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
+        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
+
         break
       ;;
     $already_installed )

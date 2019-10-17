@@ -1,5 +1,5 @@
 <template>
-  <d-container style="max-width: 1240px; padding-bottom:1rem">
+  <d-container class="compareControlContainer">
     <d-card>
       <d-card-header>
         <d-row class="align-items-center">
@@ -33,17 +33,14 @@
               <d-button @click="onReset">Reset</d-button>
             </d-button-group>
           </d-col>
-          <!--
-          <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
+          
+          <!-- <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
             <div v-d-toggle.my-collapse variant="primary" size="small" class="float-right"
                  @click="isCollpase = !isCollpase">
-               <div v-if="isCollpase">More configuration options<i class="material-icons" style="font-size: 1.3rem
-">keyboard_arrow_down</i></div>
-               <div v-if="!isCollpase">Less configuration options<i class="material-icons" style="font-size: 1.3rem">keyboard_arrow_up</i>
               </div>
             </div>
-          </d-col>
-          -->
+          </d-col> -->
+         
         </d-row>
         <d-row>
             <d-badge theme="primary" v-if="!isGroup" pill class="mx-2 mt-2" v-for="item in getSelectedRepos">
@@ -62,7 +59,7 @@
             <d-col cols="5">
               <div>
                 <label class="d-block">
-                  <div style="font-size: 18px;font-weight:500;" class="mb-3">
+                  <div class="compareControlDiv3 mb-3">
                     Line Chart Options
                   </div>
                   <d-row>
@@ -85,7 +82,7 @@
                   </d-row>
                 </label>
                 <label>
-                  <div style="font-size: 18px;font-weight:500;" class="mb-3">Bubble Chart Options</div>
+                  <div class="compareControlDiv2 mb-3">Bubble Chart Options</div>
                   <d-row>
                     <d-col>
                       <d-form-checkbox name="comparebaseline" :checked="showBelowAverage"
@@ -108,7 +105,7 @@
             <d-col cols="7">
               <d-row>
                 <d-col cols="6">
-                  <div style="font-size: 18px;font-weight:500;" class="mb-3">Chart Timeline Configuration</div>
+                  <div class="compareControlDiv2 mb-3">Chart Timeline Configuration</div>
                   <d-row>
                     <d-col>
                       <div>Start Date</div>
@@ -132,7 +129,7 @@
                 </d-col>
                 <d-col cols="5" offset-md="1">
                   <d-row>
-                    <div style="font-size: 18px;font-weight:500;" class="mb-3">Rendering</div>
+                    <div class="compareControlDiv2 mb-3">Rendering</div>
                   </d-row>
                   <d-row>
                     <d-col>
@@ -145,7 +142,7 @@
                   </d-row>
                   <d-row>
                     <d-col>
-                      <div style="font-size: 18px;font-weight:500;">Comparison Type</div>
+                      <div class="compareControlDiv2">Comparison Type</div>
                       <d-form-radio name="comparebaseline" value="zscore" :checked="compare === 'zscore'"
                                     @change="setCompare">Z-score
                       </d-form-radio>
@@ -382,9 +379,10 @@
       })
     }
 
-    onStartDate(e: any) {
-      this.mutateStartDateChange(e)
-    }
+    // onStartDate(e: any) {
+    //   console.log(e);
+    //   this.mutateStartDateChange(e)
+    // }
 
     onEndDate(e: any) {
       this.mutateEndDateChange(e)
