@@ -11,12 +11,12 @@ and network will be different):
 
 .. code:: bash
 
-   sending SIGTERM to node (Brunch) at PID 9239; bash: line 0: kill: (9239) - No such process
+   sending SIGTERM to node (npm) at PID 9239; bash: line 0: kill: (9239) - No such process
    sending SIGTERM to python (Gunicorn) at PID 9224; bash: line 0: kill: (9224) - No such process
 
    Server     Description       Log                   Monitoring                   PID
    ------------------------------------------------------------------------------------------
-   Frontend   Brunch            logs/frontend.log     make monitor-backend         9339
+   Frontend   npm               logs/frontend.log     make monitor-backend         9339
    Backend    Augur/Gunicorn    logs/backend.log      make monitor-frontend        9324
 
    Monitor both:  make monitor
@@ -58,19 +58,22 @@ and network will be different):
      - Local:   http://localhost:8080/
      - Network: http://192.168.1.141:8080/
 
-*Note: there will be a lot of linting warnings in the frontend section
-(indicated here by the …). Don’t worry about them: it’s the last 3 lines
-that indicate success.*
+
+.. note:: 
+
+  You'll likely see some linting warnings in the frontend section
+  (indicated here by the …). Don’t worry about them: it’s the last 3 lines
+  that indicate success.
 
 Once you see this you’re good to go! Head to the local URL specified in
-the frontend logs section (in this example it’s
+the frontend section (in this example it’s
 ``http://localhost:8080/``) to check it out!
 
-**Important note: if you chose to set up your own database & installed
-the frontend dependencies, please make sure you’ve added a few
-repositories to collect data for (instructions for which are directly
-below), as otherwise the frontend will not have any data to display!**
+.. note::
 
+  Important note: if you chose to install and configure your own database 
+  and also installed the frontend dependencies, please make sure you’ve added a few
+  repositories to collect data for (instructions `here <#db>`_), as otherwise the frontend will not have any data to display!
 
 Backend
 ========
