@@ -177,7 +177,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 		for email in emails_to_update:
 			email_update = ("""UPDATE contributors 
-				SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source="%s, FacadeAugur"
+				SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source="%s, FacadeAugur",
 				tool_version="%s, 0.0.1", data_source="%s, git_repository"
 				WHERE cntrb_email=%s""")
 			if email[0] == author_email:
