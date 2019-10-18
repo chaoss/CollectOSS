@@ -2,9 +2,7 @@
 Create a Metric Endpoint
 --------------------------------------
 
-2. **Adding Routes**
-
-After implementing the metric, you must add an API endpoint to access the metric remotely. Routes for the metrics are added in the ``routes.py`` file in the ``augur/metrics/<model>/<model>.py`` directory.
+After implementing the metric function, you must add an API endpoint to access the metric remotely. Routes for the metrics are added in the ``routes.py`` file in the ``augur/metrics/<model>/<model>.py`` directory.
 In the ``create_routes`` function in ``routes.py`` file you can add routes using the following two methods:
 
 ``server.addRepoGroupMetric(metrics.<metric>, '<endpoint>')`` to add the endpoint ``/repo-groups/:repo_group_id/<endpoint>`` corresponding to the metric implementation function ``<metric>``.
