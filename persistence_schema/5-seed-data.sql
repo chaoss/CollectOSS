@@ -29,6 +29,13 @@ INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', '1900-0
 COMMIT;
 
 
+-- Job for GitHub Worker
+BEGIN;
+INSERT INTO "augur_operations"."worker_job" VALUES ('issues', 5, 0, '203', 'The issues model consists of contributors, issues, issue events, issue labels, and issue comments.', 1997, '2019-10-19 14:17:40', 0, 22);
+COMMIT;
+
+
+
 -- ----------------------------
 -- Records of chaoss_metric_status
 -- ----------------------------
