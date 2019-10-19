@@ -37,7 +37,9 @@ import getopt
 import xlsxwriter
 import configparser
 import logging
+import traceback 
 logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
+
 
 def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
@@ -96,13 +98,11 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		# For each email address. So, for each email address, we need to check if it exists in the contributor
 		# Table. 
 		def contributor_exists(some_email):
+
 			#SQL String to insert values into the contributors table
-			cntrb = ("INSERT INTO contributors "
-				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
-				"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
 			
 			email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
-			FROM contributors WHERE cntrb_email = %(some_email)s""")
+			FROM contributors WHERE cntrb_email = %s""")
 
 			cursor_local.execute(email_check, (some_email))
 
@@ -112,7 +112,12 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 				return True
 			else: 
 				return False
+		#SQL to update the contributors table 
+		cntrb = ("INSERT INTO contributors "
+			"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
+			"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
 
+		## Logic block for updating contributors. 
 		if contributor_exists(author_em): 
 			cfg.log_activity('Info', 'Author contributor record already exists: %(author_em)s')
 		else: 
@@ -181,8 +186,8 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		
 		try: 
 			update_contributors(author_email, committer_email, author_name, committer_name) 
-		except: 
-			cfg.log_activity('Info', 'contributor update shit the bed.')
+		except Exception: #print(e) 
+			cfg.log_activity('Info', str(traceback.print_exc()))
 
 ### The real function starts here ###
 
