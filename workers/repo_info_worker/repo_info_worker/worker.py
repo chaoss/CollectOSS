@@ -5,18 +5,11 @@ import time
 from datetime import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
-
 import pandas as pd
 import requests
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-
-
-LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
-logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w', format=LOG_FORMAT)
-logger = logging.getLogger('RepoInfoWorker')
-
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -35,9 +28,7 @@ def dump_queue(queue):
     queue.put("STOP")
     for i in iter(queue.get, 'STOP'):
         result.append(i)
-
     return result
-
 
 class GHRepoInfoWorker:
     def __init__(self, config, task=None):
@@ -47,6 +38,10 @@ class GHRepoInfoWorker:
         self._maintain_queue = Queue()
         self.working_on = None
         self.config = config
+        LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO, format=LOG_FORMAT)
+        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
+        logger = logging.getLogger('RepoInfoWorker')
         self.db = None
         self.table = None
         self.API_KEY = self.config['key']

@@ -8,18 +8,11 @@ import traceback
 import datetime
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
-
 import pandas as pd
 import requests
 import sqlalchemy as s
 from sqlalchemy import MetaData
 from sqlalchemy.ext.automap import automap_base
-
-
-LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO, format=LOG_FORMAT)
-logger = logging.getLogger('PullRequestWorker')
-
 
 class CollectorTask:
     """ Worker's perception of a task in its queue
@@ -52,13 +45,16 @@ class GHPullRequestWorker:
     :param config: holds info like api keys, descriptions, and database connection strings
     """
     def __init__(self, config, task=None):
-        logger.info(f'Worker (PID: {os.getpid()}) initializing...')
         self._task = task
         self._child = None
         self._queue = Queue()
         self._maintain_queue = Queue()
         self.working_on = None
         self.config = config
+        LOG_FORMAT = '%(levelname)s:[%(name)s]: %(message)s'
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO, format=LOG_FORMAT)
+        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
+        logger = logging.getLogger('PullRequestWorker')
         self.db = None
         self.table = None
         self.API_KEY = self.config['key']

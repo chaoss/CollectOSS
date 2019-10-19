@@ -154,7 +154,139 @@ class GitHubWorker:
             logging.info("Broker's port is busy, worker will not be able to accept tasks, "
                 "please restart Augur if you want this worker to attempt connection again.")
 
-        # self.search_users({'repo_git': 'https://github.com/rails/rails.git', 'repo_id': 21000})
+
+    def update_config(self, config):
+        """ Method to update config and set a default
+        """
+        self.config = {
+            'database_connection_string': 'psql://{}:5433/augur'.format(self.config['broker_host']),
+            "display_name": "",
+            "description": "",
+            "required": 1,
+            "type": "string"
+        }
+        self.config.update(config)
+        self.API_KEY = self.config['key']
+
+    @property
+    def task(self):
+        """ Property that is returned when the worker's current task is referenced
+        """
+        return self._task
+    
+    @task.setter
+    def task(self, value):
+        """ entry point for the broker to add a task to the queue
+        Adds this task to the queue, and calls method to process queue
+        """
+        github_url = value['given']['github_url']
+
+        """ Query all repos """
+        repoUrlSQL = s.sql.text("""
+            SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
+            """.format(github_url))
+        rs = pd.read_sql(repoUrlSQL, self.db, params={})
+        try:
+            repo_id = int(rs.iloc[0]['repo_id'])
+            if value['job_type'] == "UPDATE":
+                self._queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
+            elif value['job_type'] == "MAINTAIN":
+                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
+            if 'focused_task' in value:
+                if value['focused_task'] == 1:
+                    logging.info("focused task is ON\n")
+                    self.finishing_task = True
+                else:
+                    self.finishing_task = False
+                    logging.info("focused task is OFF\n")
+            else:
+                self.finishing_task = False
+                logging.info("focused task is OFF\n")
+
+        except Exception as e:
+            logging.info("error: {}, or that repo is not in our database: {}".format(str(e), str(value)))
+        
+        self._task = CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id})
+        self.run()
+
+    def cancel(self):
+        """ Delete/cancel current task
+        """
+        self._task = None
+
+    def run(self):
+        """ Kicks off the processing of the queue if it is not already being processed
+        Gets run whenever a new task is added
+        """
+        logging.info("Running...\n")
+        if self._child is None:
+            self._child = Process(target=self.collect, args=())
+            self._child.start()
+            
+    def collect(self):
+        """ Function to process each entry in the worker's task queue
+        Determines what action to take based off the message type
+        """
+        while True:
+            time.sleep(0.5)
+            if not self._queue.empty():
+                message = self._queue.get()
+                self.working_on = "UPDATE"
+            else:
+                if not self._maintain_queue.empty():
+                    message = self._maintain_queue.get()
+                    logging.info("Popped off message: {}\n".format(str(message.entry_info)))
+                    self.working_on = "MAINTAIN"
+                else:
+                    break
+
+            if message.type == 'EXIT':
+                break
+
+            if message.type != 'TASK':
+                raise ValueError(f'{message.type} is not a recognized task type')
+
+            if message.type == 'TASK':
+                try:
+                    github_url = message.entry_info['task']['given']['github_url']
+                    if message.entry_info['task']['models'][0] == 'contributors':
+                        self.search_users({'github_url': github_url, 'repo_id': message.entry_info['repo_id']})
+                    if message.entry_info['task']['models'][0] == 'issues':
+                        self.query_issues({'github_url': github_url, 'repo_id': message.entry_info['repo_id']})
+                except Exception as e:
+                    logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
+                    logging.info("Error encountered: " + repr(e) + "\n")
+                    logging.info("Notifying broker and logging task failure in database...\n")
+                    message.entry_info['task']['worker_id'] = self.config['id']
+                    requests.post("http://{}:{}/api/unstable/task_error".format(
+                        self.config['broker_host'],self.config['broker_port']), json=message.entry_info['task'])
+                    # Add to history table
+                    task_history = {
+                        "repo_id": message.entry_info['repo_id'],
+                        "worker": self.config['id'],
+                        "job_model": message.entry_info['task']['models'][0],
+                        "oauth_id": self.config['zombie_id'],
+                        "timestamp": datetime.datetime.now(),
+                        "status": "Error",
+                        "total_results": self.results_counter
+                    }
+                    self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
+
+                    logging.info("Recorded job error for: " + str(message.entry_info['task']) + "\n")
+
+                    # Update job process table
+                    updated_job = {
+                        "since_id_str": message.entry_info['repo_id'],
+                        "last_count": self.results_counter,
+                        "last_run": datetime.datetime.now(),
+                        "analysis_state": 0
+                    }
+                    self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
+                    logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
+
+                    # Reset results counter for next task
+                    self.results_counter = 0
+                    pass
 
     def search_users(self, entry_info):
         logging.info("Searching users for commits from the facade worker for repo with entry info: {}".format(entry_info))
@@ -305,142 +437,8 @@ class GitHubWorker:
                             except Exception as e:
                                 logging.info("Error inserting alias w emails {} and {}: {}".format(contributor['email'], cmt_cntrb['email'], e))
 
-
-
-
-
-    def update_config(self, config):
-        """ Method to update config and set a default
-        """
-        self.config = {
-            'database_connection_string': 'psql://{}:5433/augur'.format(self.config['broker_host']),
-            "display_name": "",
-            "description": "",
-            "required": 1,
-            "type": "string"
-        }
-        self.config.update(config)
-        self.API_KEY = self.config['key']
-
-    @property
-    def task(self):
-        """ Property that is returned when the worker's current task is referenced
-        """
-        return self._task
-    
-    @task.setter
-    def task(self, value):
-        """ entry point for the broker to add a task to the queue
-        Adds this task to the queue, and calls method to process queue
-        """
-        github_url = value['given']['github_url']
-
-        """ Query all repos """
-        repoUrlSQL = s.sql.text("""
-            SELECT min(repo_id) as repo_id FROM repo WHERE repo_git = '{}'
-            """.format(github_url))
-        rs = pd.read_sql(repoUrlSQL, self.db, params={})
-        try:
-            repo_id = int(rs.iloc[0]['repo_id'])
-            if value['job_type'] == "UPDATE":
-                self._queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
-            elif value['job_type'] == "MAINTAIN":
-                self._maintain_queue.put(CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id}))
-            if 'focused_task' in value:
-                if value['focused_task'] == 1:
-                    logging.info("focused task is ON\n")
-                    self.finishing_task = True
-                else:
-                    self.finishing_task = False
-                    logging.info("focused task is OFF\n")
-            else:
-                self.finishing_task = False
-                logging.info("focused task is OFF\n")
-
-        except Exception as e:
-            logging.info("error: {}, or that repo is not in our database: {}".format(str(e), str(value)))
-        
-        self._task = CollectorTask(message_type='TASK', entry_info={"task": value, "repo_id": repo_id})
-        self.run()
-
-    def cancel(self):
-        """ Delete/cancel current task
-        """
-        self._task = None
-
-    def run(self):
-        """ Kicks off the processing of the queue if it is not already being processed
-        Gets run whenever a new task is added
-        """
-        logging.info("Running...\n")
-        if self._child is None:
-            self._child = Process(target=self.collect, args=())
-            self._child.start()
-            
-    def collect(self):
-        """ Function to process each entry in the worker's task queue
-        Determines what action to take based off the message type
-        """
-        while True:
-            time.sleep(0.5)
-            if not self._queue.empty():
-                message = self._queue.get()
-                self.working_on = "UPDATE"
-            else:
-                if not self._maintain_queue.empty():
-                    message = self._maintain_queue.get()
-                    logging.info("Popped off message: {}\n".format(str(message.entry_info)))
-                    self.working_on = "MAINTAIN"
-                else:
-                    break
-
-            if message.type == 'EXIT':
-                break
-
-            if message.type != 'TASK':
-                raise ValueError(f'{message.type} is not a recognized task type')
-
-            if message.type == 'TASK':
-                try:
-                    github_url = message.entry_info['task']['given']['github_url']
-                    if message.entry_info['task']['models'][0] == 'contributors':
-                        self.search_users({'github_url': github_url, 'repo_id': message.entry_info['repo_id']})
-                    if message.entry_info['task']['models'][0] == 'issues':
-                        self.query_issues({'github_url': github_url, 'repo_id': message.entry_info['repo_id']})
-                except Exception as e:
-                    logging.info("Worker ran into an error for task: {}\n".format(message.entry_info['task']))
-                    logging.info("Error encountered: " + repr(e) + "\n")
-                    logging.info("Notifying broker and logging task failure in database...\n")
-                    message.entry_info['task']['worker_id'] = self.config['id']
-                    requests.post("http://{}:{}/api/unstable/task_error".format(
-                        self.config['broker_host'],self.config['broker_port']), json=message.entry_info['task'])
-                    # Add to history table
-                    task_history = {
-                        "repo_id": message.entry_info['repo_id'],
-                        "worker": self.config['id'],
-                        "job_model": message.entry_info['task']['models'][0],
-                        "oauth_id": self.config['zombie_id'],
-                        "timestamp": datetime.datetime.now(),
-                        "status": "Error",
-                        "total_results": self.results_counter
-                    }
-                    self.helper_db.execute(self.history_table.update().where(self.history_table.c.history_id==self.history_id).values(task_history))
-
-                    logging.info("Recorded job error for: " + str(message.entry_info['task']) + "\n")
-
-                    # Update job process table
-                    updated_job = {
-                        "since_id_str": message.entry_info['repo_id'],
-                        "last_count": self.results_counter,
-                        "last_run": datetime.datetime.now(),
-                        "analysis_state": 0
-                    }
-                    self.helper_db.execute(self.job_table.update().where(self.job_table.c.job_model==message.entry_info['task']['models'][0]).values(updated_job))
-                    logging.info("Updated job process for model: " + message.entry_info['task']['models'][0] + "\n")
-
-                    # Reset results counter for next task
-                    self.results_counter = 0
-                    pass
+        #Register this task as completed
+        self.register_task_completion(entry_info, "contributors")
 
     def query_contributors(self, entry_info):
 
@@ -1137,7 +1135,8 @@ class GitHubWorker:
             'worker_id': self.config['id'],
             'job_type': self.working_on,
             'repo_id': entry_info['repo_id'],
-            'github_url': entry_info['github_url']
+            'github_url': entry_info['github_url'],
+            'job_model': model
         }
         # Add to history table
         task_history = {

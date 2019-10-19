@@ -48,7 +48,6 @@ from facade_worker.facade05repofetch import git_repo_initialize, check_for_repo_
 from facade_worker.facade06analyze import analysis
 from facade_worker.facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 import logging
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql
 # else:
@@ -68,8 +67,12 @@ class CollectorTask:
 
 class FacadeWorker:
     def __init__(self, config, task=None):
+        self.config = config
+        logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
+        
         print('Worker (PID: {}) initializing...'.format(os.getpid()))
         logging.info('Worker (PID: {}) initializing...'.format(os.getpid()))
+        
         self._task = task
         self._child = None
         self._queue = Queue()
