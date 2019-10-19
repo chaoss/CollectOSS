@@ -91,43 +91,43 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 	def update_contributors(author_em, committer_em, auth_nm, cmtr_nm): 
 
-		#SQL String to insert values into the contributors table
-		cntrb = ("INSERT INTO contributors "
-				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
-				"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
-
 		#Check if an email already exists in the database for either the committer or the author 
 		#There is a committer and an author on each commit, but only one record in the contributor table (ideally)
 		# For each email address. So, for each email address, we need to check if it exists in the contributor
 		# Table. 
 		def contributor_exists(some_email):
+			#SQL String to insert values into the contributors table
+			cntrb = ("INSERT INTO contributors "
+				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
+				"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
 			
 			email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
 			FROM contributors WHERE cntrb_email = %(some_email)s""")
 
-    		cursor_local.execute(email_check, (some_email))
-    		if cursor_local.fetchone() is not None: 
-    			cursor_local.commit()
-    			emails_to_add = some_email
-    			return True
-    		else: 
-    			return False
+			cursor_local.execute(email_check, (some_email))
 
-	    	if contributor_exists(author_em): 
-	    		cfg.log_activity('Info', 'Author contributor record already exists: %(author_em)s')
-	    	elif: 
-	    		# add a contributor record for the author
-				cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
-				db_local.commit()
-				cfg.log_activity('Info','Stored contributor with email: %(author_em)s')
+			if cursor_local.fetchone() is not None: 
+				cursor_local.commit()
+				emails_to_add = some_email
+				return True
+			else: 
+				return False
 
-	    	if  contributor_exists(committer_em): 
-	    		cfg.log_activity('Info', 'Author contributor record already exists: %(committer_em)s')
-	    	elif: 
-	    		#add a contributor record for the committer 
-				cursor_local.execute(cntrb, (committer_em, discover_alias(committer_em), str(cmtr_nm)))
-				db_local.commit()
-				cfg.log_activity('Info','Stored contributor with email: %(committer_em)s')
+		if contributor_exists(author_em): 
+			cfg.log_activity('Info', 'Author contributor record already exists: %(author_em)s')
+		else: 
+			# add a contributor record for the author
+			cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
+			db_local.commit()
+			cfg.log_activity('Info','Stored contributor with email: %(author_em)s')
+
+		if  contributor_exists(committer_em): 
+			cfg.log_activity('Info', 'Author contributor record already exists: %(committer_em)s')
+		else: 
+			#add a contributor record for the committer 
+			cursor_local.execute(cntrb, (committer_em, discover_alias(committer_em), str(cmtr_nm)))
+			db_local.commit()
+			cfg.log_activity('Info','Stored contributor with email: %(committer_em)s')
 				
 
 	def store_commit(repos_id,commit,filename,
