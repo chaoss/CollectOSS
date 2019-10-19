@@ -68,7 +68,7 @@ class CollectorTask:
 class FacadeWorker:
     def __init__(self, config, task=None):
         self.config = config
-        logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
         
         print('Worker (PID: {}) initializing...'.format(os.getpid()))
         logging.info('Worker (PID: {}) initializing...'.format(os.getpid()))
