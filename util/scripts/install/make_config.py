@@ -8,7 +8,7 @@ def configure_database(config, credentials):
     config['Database']['database'] = credentials['database']
     config['Database']['host'] = credentials['host']
     config['Database']['port'] = credentials['port']
-    config['Database']['user'] = credentials['user']
+    config['Database']['user'] = credentials['db_user']
     config['Database']['password'] = credentials['password']
     config['Database']['schema'] = "augur_data"
     config['Database']['key'] = credentials['github_api_key']
@@ -95,7 +95,7 @@ def configure_defaults(config):
                 "port": 51246,
                 "switch": 0,
                 "workers": 1,
-                "repo_directory": "$HOME/augur_repos"
+                "repo_directory": "$HOME/augur_repos/"
             },
             "pull_request_worker": {
                 "port": 51252,
