@@ -95,7 +95,7 @@ def configure_defaults(config):
                 "port": 51246,
                 "switch": 0,
                 "workers": 1,
-                "repo_directory": "$HOME/augur_repos"
+                "repo_directory": "$HOME/augur_repos/"
             },
             "pull_request_worker": {
                 "port": 51252,
