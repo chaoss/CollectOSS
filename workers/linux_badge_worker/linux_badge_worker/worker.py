@@ -1,11 +1,10 @@
 from multiprocessing import Process, Queue
 from urllib.parse import urlparse
-import requests
+import requests, logging, os
 import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
-import logging
 logging.basicConfig(filename='worker.log', level=logging.INFO, filemode='w')
 
 class CollectorTask:
@@ -40,6 +39,8 @@ class BadgeWorker:
         self._child = None
         self._queue = Queue()
         self.config = config
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
+        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self.db = None
         self.table = None
 
