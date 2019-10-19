@@ -89,6 +89,47 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		else:
 			return email
 
+	def update_contributors(author_em, committer_em, auth_nm, cmtr_nm): 
+
+		#SQL String to insert values into the contributors table
+		cntrb = ("INSERT INTO contributors "
+				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
+				"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
+
+		#Check if an email already exists in the database for either the committer or the author 
+		#There is a committer and an author on each commit, but only one record in the contributor table (ideally)
+		# For each email address. So, for each email address, we need to check if it exists in the contributor
+		# Table. 
+		def contributor_exists(some_email):
+			
+			email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
+			FROM contributors WHERE cntrb_email = %(some_email)s""")
+
+    		cursor_local.execute(email_check, (some_email))
+    		if cursor_local.fetchone() is not None: 
+    			cursor_local.commit()
+    			emails_to_add = some_email
+    			return True
+    		else: 
+    			return False
+
+	    	if contributor_exists(author_em): 
+	    		cfg.log_activity('Info', 'Author contributor record already exists: %(author_em)s')
+	    	elif: 
+	    		# add a contributor record for the author
+				cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
+				db_local.commit()
+				cfg.log_activity('Info','Stored contributor with email: %(author_em)s')
+
+	    	if  contributor_exists(committer_em): 
+	    		cfg.log_activity('Info', 'Author contributor record already exists: %(committer_em)s')
+	    	elif: 
+	    		#add a contributor record for the committer 
+				cursor_local.execute(cntrb, (committer_em, discover_alias(committer_em), str(cmtr_nm)))
+				db_local.commit()
+				cfg.log_activity('Info','Stored contributor with email: %(committer_em)s')
+				
+
 	def store_commit(repos_id,commit,filename,
 		author_name,author_email,author_date,author_timestamp,
 		committer_name,committer_email,committer_date,committer_timestamp,
@@ -135,71 +176,13 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		cfg.log_activity('Debug','Stored commit: %s' % commit)
 
 		# Check if email already exists in db
-		email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
-			FROM contributors WHERE cntrb_email = %s OR cntrb_email = %s""")
-		try:
-			cursor_local.execute(email_check,(author_email,committer_email))
-			db_local.commit()
-			emails = list(cursor_local) if cursor_local else []
-			emails_to_add = [committer_email, author_email]
-		except Exception as e:
-			db_local.rollback()
-			emails = []
-			emails_to_add = []
-			cfg.log_activity('Info','Setting emails to empty array, '
-				'Executing select statement did not work:'
-				' {}, {} with params {} and {}'.format(e, email_check, author_email,committer_email))
+#		email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
+#			FROM contributors WHERE cntrb_email = {augur_email} OR cntrb_email = {committer_email}}""")
 		
-		emails_to_update = []
-
-		for email in emails:
-			if email[0] == committer_email or email[0] == author_email:
-				if email[0] in emails_to_add:
-					emails_to_add.remove(email[0])
-				emails_to_update.append(email)
-
-		# remove any duplicates
-		emails_to_add = list(set(emails_to_add))
-
-		for email in emails_to_add:
-			cntrb = ("INSERT INTO contributors "
-				"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
-				"VALUES (%s,%s,%s,'FacadeAugur','0.0.1','git_repository')")
-			if email == author_email:
-				cursor_local.execute(cntrb, (author_email, discover_alias(author_email), str(author_name)))
-				db_local.commit()
-				cfg.log_activity('Debug','Stored contributor with email: %s' % author_email)
-
-			elif email == committer_email:
-				cursor_local.execute(cntrb, (committer_email, discover_alias(committer_email), str(committer_name)))
-				db_local.commit()
-				cfg.log_activity('Debug','Stored contributor with email: %s' % committer_email)
-
-		for email in emails_to_update:
-			email_update = ("""UPDATE contributors 
-				SET cntrb_canonical=%s, cntrb_full_name=%s, tool_source="%s, FacadeAugur",
-				tool_version="%s, 0.0.1", data_source="%s, git_repository"
-				WHERE cntrb_email=%s""")
-			# if email[0] == author_email:
-				# try:
-				# 	cursor_local.execute(email_update, (discover_alias(author_email),
-				# 		str(author_name), email[1], email[2], 
-				# 		email[3], email[0]))
-				# 	db_local.commit()
-				# 	cfg.log_activity('Debug','Updated contributor with email: %s' % author_email)
-				# except Exception as e:
-				# 	cfg.log_activity('Info','Attempted to update an existing contributor: {} that could have missing info included, but an error occurred: {}'.format(author_email,e))
-			# elif email[0] == committer_email:
-				# try:
-				# 	cursor_local.execute(email_update, (discover_alias(committer_email),
-				# 		str(committer_name), email[1], email[2], 
-				# 		email[3], email[0]))
-				# 	db_local.commit()
-				# 	cfg.log_activity('Debug','Updated contributor with email: %s' % committer_email)
-				# except Exception as e:
-				# 	cfg.log_activity('Info','Attempted to update an existing contributor: {} that could have missing info included, but an error occurred: {}'.format(committer_email,e))
-
-				
+		try: 
+			update_contributors(author_email, committer_email, author_name, committer_name) 
+		except: 
+			cfg.log_activity('Info', 'contributor update shit the bed.')
 
 ### The real function starts here ###
 
