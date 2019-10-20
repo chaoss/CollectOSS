@@ -54,7 +54,7 @@ def cli(app):
     for worker in controller.keys():
         if controller[worker]['switch'] == 0:
             continue
-        logger.info("Your config has the option set to automatically boot {} instances of the {}".format(controller[worker]['workers'], worker))
+        logger.info("Your config has the option set to automatically boot {} instance(s) of the {}".format(controller[worker]['workers'], worker))
         pids = get_process_id("/bin/sh -c cd workers/{} && {}_start".format(worker, worker))
         worker_pids += pids
         if len(pids) > 0:
