@@ -16,6 +16,8 @@ import sys
 import atexit
 import click
 import subprocess
+from signal import SIGTERM
+from multiexit import install, register
 
 @click.command('run')
 @pass_application
@@ -35,32 +37,22 @@ def cli(app):
     manager = None
     broker = None
     housekeeper = None
+
+    install(signals=(SIGTERM, ), except_hook=True)
     
     logger.info("Booting broker and its manager...")
     manager = mp.Manager()
     broker = manager.dict()
-    
-    logger.info("Booting housekeeper...")
-    jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
-    housekeeper = Housekeeper(
-            jobs,
-            broker,
-            broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
-            broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
-            user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-            password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
-            host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-            port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-            dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
-        )
 
     controller = app.read_config('Workers')
     worker_pids = []
     worker_processes = []
+    is_running = manager.dict()
+    is_running['switch'] = 1
     if not controller:
         return
     for worker in controller.keys():
-        if not controller[worker]['switch']:
+        if controller[worker]['switch'] == 0:
             continue
         logger.info("Your config has the option set to automatically boot {} instances of the {}".format(controller[worker]['workers'], worker))
         pids = get_process_id("/bin/sh -c cd workers/{} && {}_start".format(worker, worker))
@@ -83,39 +75,60 @@ def cli(app):
 
     @atexit.register
     def exit():
+        # kill any worker processes directly spawned by Augur
         try:
             for pid in worker_pids:
                 os.kill(pid, 9)
+                logger.info("Killing worker {}".format(pid))
         except:
-            logger.info("Worker process {} already killed".format(pid))
+            pass
+            # logger.info("Worker process {} already killed".format(pid))
         for process in worker_processes:
             logger.info("Shutting down worker process with pid: {} ...".format(process))
             process.terminate()
 
-        if master is not None:
-            master.halt()
-        logger.info("Shutting down app updates...")
-        app.shutdown_updates()
-        logger.info("Finalizing config...")
-        app.finalize_config()
-        logger.info("Shutting down housekeeper updates...")
-        if housekeeper is not None:
-            housekeeper.shutdown_updates()
-    
-        # if hasattr(manager, "shutdown"):
-            # wait for the spawner and the worker threads to go down
-            # 
-        if manager is not None:
-            manager.shutdown()
-            # check if it is still alive and kill it if necessary
-            # if manager._process.is_alive():
-            manager._process.terminate()
+            # kill any other worker processes running on the machine
+            # os.system("kill -9 $(ps aux | grep -ie $VIRTUAL_ENV/ | grep -ie bin | grep worker  |  awk '{print $2}') 2> dev")
+
+            if master is not None:
+                master.halt()
+            # logger.info("Shutting down app updates...")
+            app.shutdown_updates()
+            # logger.info("Finalizing config...")
+            app.finalize_config()
+            # logger.info("Shutting down housekeeper updates...")
+            if housekeeper is not None:
+                housekeeper.shutdown_updates()
         
-        # Prevent multiprocessing's atexit from conflicting with gunicorn
-        logger.info("killing self pid: {}".format(os.getpid()))
-        logger.info("\nIf you are seeing this you probably need to restart Augur\n")
-        os.kill(os.getpid(), 9)
-        os._exit(0)
+            # if hasattr(manager, "shutdown"):
+                # wait for the spawner and the worker threads to go down
+                # 
+            if manager is not None:
+                manager.shutdown()
+                # check if it is still alive and kill it if necessary
+                # if manager._process.is_alive():
+                manager._process.terminate()
+            
+            # Prevent multiprocessing's atexit from conflicting with gunicorn
+            os.kill(os.getpid(), 9)
+            os._exit(0)
+
+    logger.info("Booting housekeeper...")
+    jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
+    try:
+        housekeeper = Housekeeper(
+                jobs,
+                broker,
+                broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
+                broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
+                user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
+                password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
+                host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+                port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
+                dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
+            )
+    except KeyboardInterrupt as e:
+        exit()
 
     host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
     port = app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
