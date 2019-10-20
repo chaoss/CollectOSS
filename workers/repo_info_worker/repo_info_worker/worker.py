@@ -61,7 +61,7 @@ class GHRepoInfoWorker:
             "location": self.config['location'],
             "qualifications":  [
                 {
-                    "given": [["git_url"]],
+                    "given": [["github_url"]],
                     "models":["repo_info"]
                 }
             ],
