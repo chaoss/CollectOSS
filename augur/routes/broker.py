@@ -172,6 +172,7 @@ def create_broker_routes(server):
     @server.app.route('/{}/workers/remove'.format(server.api_version), methods=['POST'])
     def remove_worker():
         worker = request.json
+        logging.info("Recieved a message to disconnect worker: {}".format(worker))
         server.broker[worker['id']]['status'] = 'Disconnected'
         return Response(response=worker,
                         status=200,
@@ -181,7 +182,7 @@ def create_broker_routes(server):
     def task_error():
         task = request.json
         worker_id = task['worker_id']
-
+        logging.info("Recieved a message that {} ran into an error on task: {}".format(worker_id, task))
         if worker_id in server.broker:
             if server.broker[worker_id]['status'] != 'Disconnected':
                 logging.info("{} ran into error while completing task: {}".format(worker_id, task))
