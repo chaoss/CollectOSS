@@ -63,6 +63,7 @@ export default {
   },
   data() {
     return {
+      chartKey: 0, 
       legendLabels: [],
       values: [],
       status: {},
@@ -75,15 +76,27 @@ export default {
       loaded: false,
       error: false,
       x: 0,
-      y: 0
+      y: 0, 
+      loadedData: null
     };
   },
 
   watch: {
     '$store.state.common.startDate'() {
       console.log('store startDate has changed');
-      // this.$parent.$forceUpdate();
-      this.spec(this.data);
+      if (this.data) {
+        this.spec(this.data);
+      } else if (this.loadedData) {
+        this.spec(this.loadedData);
+      }
+    }, 
+    '$store.state.common.endDate'() {
+      console.log('store endDate has changed');
+      if (this.data) {
+        this.spec(this.data);
+      } else if (this.loadedData) {
+        this.spec(this.loadedData);
+      }
     }, 
     compare: function() {
       this.spec;
@@ -130,7 +143,7 @@ export default {
     showDetail() {
       return this.$store.state.common.showDetail;
     },
-    ...mapGetters("common", ["repoRelations", "apiRepos"]),
+    ...mapGetters("common", ["repoRelations", "apiRepos", "startDate", "endDate"]),
     ...mapGetters("compare", ["base", "comparedAPIRepos"])
   }, // end computed
   methods: {
@@ -660,11 +673,16 @@ export default {
 
       //set dates from main control options
 
-      let today = new Date();
+      // let today = new Date();
       let startDateFromVuex = this.$store.state.common.startDate;
       let startyear = startDateFromVuex.getFullYear();
       let startmonth = startDateFromVuex.getMonth();
       let startdate = startDateFromVuex.getDate();
+
+      let endDateFromVuex = this.$store.state.common.endDate;
+      let endyear = endDateFromVuex.getFullYear();
+      let endmonth = endDateFromVuex.getMonth();
+      let enddate = endDateFromVuex.getDate();
       // let startyear =
       //   this.timeperiod && this.timeperiod != "all"
       //     ? (() => {
@@ -923,7 +941,7 @@ export default {
           // let today = new Date()
           for (var i = 0; i < legend.length; i++) {
             normalized[i].forEach(d => {
-              if (d.date < new Date(startyear, startmonth, startdate)) {
+              if (d.date < new Date(startyear, startmonth, startdate) || d.date > new Date(endyear, endmonth, enddate)) {
                 d = {};
               } else {
                 d.name = legend[i];
@@ -933,7 +951,7 @@ export default {
             });
             if (this.rawWeekly) {
               aggregates[i].forEach(d => {
-                if (d.date < new Date(startyear, startmonth, startdate)) {
+                if (d.date < new Date(startyear, startmonth, startdate) || d.date > new Date(endyear, endmonth, enddate)) {
                   d = {};
                 } else {
                   d.name = legend[i];
@@ -1067,10 +1085,12 @@ export default {
         // console.log("DLC","did not detect data")
         this.endpoint({ repos: apiRepos, endpoints: [this.source] })
           .then(data => {
+            this.loadedData = data;
             // console.log("DLC","YAA",data)
             // console.log("DLC",Object.keys(data).length)
-            if (Object.keys(data).length > 0) this.spec(data);
-            // processData(data)
+            if (Object.keys(this.loadedData).length > 0) {
+              this.spec(this.loadedData);
+            }// processData(data)
           })
           .catch(error => {
             // console.log("DLC",error)
