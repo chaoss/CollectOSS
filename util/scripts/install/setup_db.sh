@@ -52,6 +52,8 @@ function get_api_key_and_repo_path() {
     echo
   done
 
+  [[ "${facade_repo_path}" != */ ]] && facade_repo_path="${facade_repo_path}/"
+
 }
 
 function set_remote_db_credentials() {
@@ -136,6 +138,7 @@ do
         psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
         psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
         psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
+        psql -h "localhost" -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = \"$facade_repo_directory\" WHERE setting='repo_directory';"
         break
       ;;
     $install_remotely )
@@ -147,6 +150,8 @@ do
         psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
         psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
         psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
+        psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = \"$facade_repo_directory\" WHERE setting='repo_directory';"
+
         break
       ;;
     $already_installed )
