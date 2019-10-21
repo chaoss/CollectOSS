@@ -19,10 +19,17 @@
   <input type="text" name="password"><br>
   GitHub API Key:<br>
   <input type="text" name="github_api_key"><br>
+  <br>
+  <p>The Facade data collection worker needs to clone repositories to run its analysis.</p>
+  <p>Please specify the directory to which these repos will be cloned.</p>
+  <p>The directory must already exist, and the path must be explicit (no environment variables allowed) and absolute.</p>
+  Facade Repo Storage Path:<br>
+  <input type="text" name="facade_repo_path"><br>
+  <p>NOTE: Augur is not currently able to validate this path for you. <strong>You must make sure it is valid.</strong></p>
   <input type="submit" value="Submit" onclick="saveConfigValues()">
  </form> 
 
- <p>After you've entered the corresponding values for each item, please return to the terminal and press the Enter/Return key to finish the installation.</p>
+ <p>After you've entered the corresponding values for each item, please press Submit, return to the terminal, and then press the Enter/Return key to finish the installation.</p>
 </center> 
 
 </body></html>

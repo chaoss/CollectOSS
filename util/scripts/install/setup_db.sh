@@ -30,11 +30,28 @@ function generate_config_file() {
   cd ../../.. #get back to augur root
 }
 
-function get_github_api_key() {
+function get_api_key_and_repo_path() {
   echo
-  echo "You will also need your GitHub API key."
+  echo "Additionally, you'll need to provide a valid GitHub API key."
+  echo "** This is required for Augur to gather data ***"
   read -p "GitHub API Key: " github_api_key
   echo
+
+  echo
+  echo "The Facade data collection worker needs to clone repositories to run its analysis."
+  echo "Please specify the directory to which these repos will be cloned."
+  echo "The directory must already exist, and the path must be explicit (no environment variables allowed) and absolute."
+  read -p "Facade repo path: " facade_repo_path
+  echo
+
+  while [ ! -d "$facade_repo_path" ]; do
+    echo
+    echo "Invalid path specified. Please provide a valid directory."
+    echo "The directory must already exist, and the path must be explicit (no environment variables allowed) and absolute."
+    read -p "Facade repo path: " facade_repo_path
+    echo
+  done
+
 }
 
 function set_remote_db_credentials() {
@@ -45,17 +62,18 @@ function set_remote_db_credentials() {
   read -p "User: " db_user
   read -p "Password: " password
 
-  get_github_api_key
+  get_api_key_and_repo_path
 
   IFS='' read -r -d '' config <<EOF
     {
       "database": "$database",
       "host": "$host",
       "port": "$port",
-      "user": "$db_user",
+      "db_user": "$db_user",
       "password": "$password",
       "key": "$github_api_key",
-      "github_api_key": "$github_api_key"
+      "github_api_key": "$github_api_key",
+      "facade_repo_path": "$facade_repo_path"
     }
 EOF
 
@@ -69,17 +87,18 @@ function set_local_db_credentials() {
   read -p "Port: " port
   read -p "Password: " password
 
-  get_github_api_key
+  get_api_key_and_repo_path
 
   IFS='' read -r -d '' config <<EOF
   {
     "database": "$database",
     "host": "localhost",
     "port": "$port",
-    "user": "$db_user",
+    "db_user": "$db_user",
     "password": "$password",
     "key": "$github_api_key",
-    "github_api_key": "$github_api_key"
+    "github_api_key": "$github_api_key",
+    "facade_repo_path": "$facade_repo_path"
   }
 EOF
 
@@ -128,7 +147,6 @@ do
         psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
         psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
         psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
-
         break
       ;;
     $already_installed )
