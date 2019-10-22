@@ -100,7 +100,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		def contributor_exists(some_email):
 
 			#SQL String to insert values into the contributors table
-			
+			some_email = some_email.replace("'","")
 			email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source FROM contributors WHERE cntrb_email = '{}'""".format(some_email))
 
 			cursor_local.execute(email_check)
