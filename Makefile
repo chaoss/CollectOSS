@@ -3,7 +3,6 @@
 .PHONY: frontend install-ubuntu-dependencies version
 
 SERVECOMMAND=augur run
-INSTALLCOMMAND=pip install -e .; python setup.py install;
 OLDVERSION="null"
 EDITOR?="vi"
 MODEL=**
@@ -49,10 +48,7 @@ default:
 #  Installation
 #
 install:
-	@ ./util/scripts/install/augurinstall.sh
-
-install-dev:
-	bash -c '$(AUGUR_PIP) install pipreqs sphinx; sudo npm install -g apidoc brunch newman; $(AUGUR_PIP) install -e .; $(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)"; cd frontend/ && npm install'
+	@ ./util/scripts/install/install.sh
 
 version:
 	$(eval OLDVERSION=$(shell $(AUGUR_PYTHON) ./util/print-version.py))
@@ -150,19 +146,14 @@ unlock:
 	find . -type f -name "*.lock" -delete
 
 clean:
-	@ echo "Removes node_modules, logs, caches, and some other dumb stuff that can be annoying."
-	rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs workers/**/build/** workers/**/dist**
-	find . -name \*.pyc -delete
-	@ echo "Run sudo make install-dev again to reinstall the environment."
-	$(INSTALLCOMMAND)
+	@ echo "Removing node_modules, logs, caches, and some other dumb stuff that can be annoying..."
+	@ rm -rf runtime node_modules frontend/node_modules frontend/public augur.egg-info .pytest_cache logs 
+	@ find . -name \*.pyc -delete
 
-#
-# Git
-#
-update:
-	git stash
-	git pull
-	git stash pop
+rebuild: clean
+	@ util/scripts/install/rebuild.sh
+
+
 
 
 #
@@ -173,7 +164,6 @@ jupyter:
 
 create-jupyter-env:
 		bash -c '$(AUGUR_PYTHON) -m ipykernel install --user --name augur --display-name "Python (augur)";'
-
 
 
 #

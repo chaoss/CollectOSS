@@ -1,21 +1,3 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : mudcats augur
- Source Server Type    : PostgreSQL
- Source Server Version : 110005
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_science
- Source Schema         : augur_data
-
- Target Server Type    : PostgreSQL
- Target Server Version : 110005
- File Encoding         : 65001
-
- Date: 10/09/2019 11:35:35
-*/
-
-
 
 BEGIN;
 INSERT INTO "augur_data"."platform" VALUES (25150, 'GitHub', '3', '2019-06-05', 'Manual Entry', 'Sean Goggins', 'GitHub', '2019-06-05 17:23:42');
@@ -39,12 +21,19 @@ INSERT INTO "augur_data"."settings" VALUES (12, 'database_version', '7', '2019-0
 INSERT INTO "augur_data"."settings" VALUES (13, 'results_visibility', 'show', '2019-05-07 12:47:26');
 INSERT INTO "augur_data"."settings" VALUES (1, 'start_date', '2001-01-01', '1900-01-22 20:34:51');
 INSERT INTO "augur_data"."settings" VALUES (4, 'log_level', 'Debug', '2019-05-07 12:47:26');
-INSERT INTO "augur_data"."settings" VALUES (2, 'repo_directory', '/mnt/md0/repos/science-repos/', '2019-05-07 12:47:26');
+INSERT INTO "augur_data"."settings" VALUES (2, 'repo_directory', '$HOME/augur_repos/', '2019-05-07 12:47:26');
 INSERT INTO "augur_data"."settings" VALUES (8, 'affiliations_processed', '2019-06-17 17:49:58.004522+00', '1900-01-22 20:36:27');
 INSERT INTO "augur_data"."settings" VALUES (9, 'aliases_processed', '2019-06-17 17:49:58.0067+00', '1900-01-22 20:36:27');
 INSERT INTO "augur_data"."settings" VALUES (7, 'working_author', 'done', '1900-01-22 20:23:43');
 INSERT INTO "augur_data"."settings" VALUES (3, 'utility_status', 'Idle', '1900-01-22 20:38:07');
 COMMIT;
+
+
+-- Job for GitHub Worker
+BEGIN;
+INSERT INTO "augur_operations"."worker_job" VALUES ('issues', 5, 0, '203', 'The issues model consists of contributors, issues, issue events, issue labels, and issue comments.', 1997, '2019-10-19 14:17:40', 0, 22);
+COMMIT;
+
 
 
 -- ----------------------------

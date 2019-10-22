@@ -1,21 +1,3 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : mudcats augur
- Source Server Type    : PostgreSQL
- Source Server Version : 110005
- Source Host           : mudcats.augurlabs.io:5433
- Source Catalog        : augur_science
- Source Schema         : augur_data
-
- Target Server Type    : PostgreSQL
- Target Server Version : 110005
- File Encoding         : 65001
-
- Date: 11/09/2019 06:00:28
-*/
-
-
 -- ----------------------------
 -- Sequence structure for augur_data.repo_insights_ri_id_seq
 -- ----------------------------
@@ -531,6 +513,20 @@ MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 ALTER SEQUENCE "augur_data"."utility_log_id_seq1" OWNER TO "augur";
+
+-- ----------------------------
+-- Table structure for _git_census
+-- ----------------------------
+DROP TABLE IF EXISTS "augur_data"."_git_census";
+CREATE TABLE "augur_data"."_git_census" (
+  "rank" varchar(255) COLLATE "pg_catalog"."default",
+  "zscore" varchar(255) COLLATE "pg_catalog"."default",
+  "name" varchar(255) COLLATE "pg_catalog"."default",
+  "source" varchar(255) COLLATE "pg_catalog"."default",
+  "git_url" varchar(255) COLLATE "pg_catalog"."default"
+)
+;
+ALTER TABLE "augur_data"."_git_census" OWNER TO "augur";
 
 -- ----------------------------
 -- Table structure for analysis_log
@@ -1785,7 +1781,7 @@ CREATE TABLE "augur_data"."repo_groups" (
   "rg_recache" int2 DEFAULT 1,
   "rg_last_modified" timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "rg_type" varchar COLLATE "pg_catalog"."default",
-  "tool_source" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "tool_source" varchar(255) COLLATE "pg_catalog"."default",
   "tool_version" varchar(255) COLLATE "pg_catalog"."default",
   "data_source" varchar(255) COLLATE "pg_catalog"."default",
   "data_collection_date" timestamp(0)
@@ -2092,53 +2088,53 @@ OWNED BY "augur_data"."chaoss_metric_status"."cms_id";
 SELECT setval('"augur_data"."chaoss_metric_status_cms_id_seq"', 42, true);
 SELECT setval('"augur_data"."commit_comment_ref_cmt_comment_id_seq"', 25152, false);
 SELECT setval('"augur_data"."commit_parents_parent_id_seq"', 25152, false);
-SELECT setval('"augur_data"."commits_cmt_id_seq"', 30718307, true);
+SELECT setval('"augur_data"."commits_cmt_id_seq"', 34304724, true);
 SELECT setval('"augur_data"."contributor_affiliations_ca_id_seq"', 25152, false);
 SELECT setval('"augur_data"."contributors_aliases_cntrb_a_id_seq"', 25152, false);
-SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 86530, true);
+SELECT setval('"augur_data"."contributors_cntrb_id_seq"', 277108, true);
 ALTER SEQUENCE "augur_data"."contributors_history_cntrb_history_id_seq"
 OWNED BY "augur_data"."contributors_history"."cntrb_history_id";
 SELECT setval('"augur_data"."contributors_history_cntrb_history_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."issue_assignees_issue_assignee_id_seq"
 OWNED BY "augur_data"."issue_assignees"."issue_assignee_id";
-SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 10213, true);
-SELECT setval('"augur_data"."issue_events_event_id_seq"', 647620, true);
-SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 62764, true);
-SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 298690, true);
-SELECT setval('"augur_data"."issue_seq"', 128940, true);
+SELECT setval('"augur_data"."issue_assignees_issue_assignee_id_seq"', 41184, true);
+SELECT setval('"augur_data"."issue_events_event_id_seq"', 2083474, true);
+SELECT setval('"augur_data"."issue_labels_issue_label_id_seq"', 257612, true);
+SELECT setval('"augur_data"."issue_message_ref_issue_msg_ref_id_seq"', 1193782, true);
+SELECT setval('"augur_data"."issue_seq"', 336304, true);
 SELECT setval('"augur_data"."libraries_library_id_seq"', 25152, false);
 SELECT setval('"augur_data"."library_dependencies_lib_dependency_id_seq"', 25152, false);
 SELECT setval('"augur_data"."library_version_library_version_id_seq"', 25152, false);
-SELECT setval('"augur_data"."message_msg_id_seq"', 744920, true);
+SELECT setval('"augur_data"."message_msg_id_seq"', 1691706, true);
 SELECT setval('"augur_data"."platform_pltfrm_id_seq"', 25152, true);
 ALTER SEQUENCE "augur_data"."pull_request_assignees_pr_assignee_map_id_seq"
 OWNED BY "augur_data"."pull_request_assignees"."pr_assignee_map_id";
 SELECT setval('"augur_data"."pull_request_assignees_pr_assignee_map_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."pull_request_events_pr_event_id_seq"
 OWNED BY "augur_data"."pull_request_events"."pr_event_id";
-SELECT setval('"augur_data"."pull_request_events_pr_event_id_seq"', 1319857, true);
+SELECT setval('"augur_data"."pull_request_events_pr_event_id_seq"', 1290254, true);
 ALTER SEQUENCE "augur_data"."pull_request_labels_pr_label_id_seq"
 OWNED BY "augur_data"."pull_request_labels"."pr_label_id";
-SELECT setval('"augur_data"."pull_request_labels_pr_label_id_seq"', 1517, true);
+SELECT setval('"augur_data"."pull_request_labels_pr_label_id_seq"', 1800, true);
 ALTER SEQUENCE "augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"
 OWNED BY "augur_data"."pull_request_message_ref"."pr_msg_ref_id";
-SELECT setval('"augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"', 445240, true);
+SELECT setval('"augur_data"."pull_request_message_ref_pr_msg_ref_id_seq"', 496934, true);
 ALTER SEQUENCE "augur_data"."pull_request_meta_pr_repo_meta_id_seq"
 OWNED BY "augur_data"."pull_request_meta"."pr_repo_meta_id";
-SELECT setval('"augur_data"."pull_request_meta_pr_repo_meta_id_seq"', 299249, true);
+SELECT setval('"augur_data"."pull_request_meta_pr_repo_meta_id_seq"', 289457, true);
 ALTER SEQUENCE "augur_data"."pull_request_repo_pr_repo_id_seq"
 OWNED BY "augur_data"."pull_request_repo"."pr_repo_id";
 SELECT setval('"augur_data"."pull_request_repo_pr_repo_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"
 OWNED BY "augur_data"."pull_request_reviewers"."pr_reviewer_map_id";
-SELECT setval('"augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"', 20059, true);
+SELECT setval('"augur_data"."pull_request_reviewers_pr_reviewer_map_id_seq"', 18780, true);
 ALTER SEQUENCE "augur_data"."pull_request_teams_pr_team_id_seq"
 OWNED BY "augur_data"."pull_request_teams"."pr_team_id";
 SELECT setval('"augur_data"."pull_request_teams_pr_team_id_seq"', 4, false);
 ALTER SEQUENCE "augur_data"."pull_requests_pull_request_id_seq"
 OWNED BY "augur_data"."pull_requests"."pull_request_id";
-SELECT setval('"augur_data"."pull_requests_pull_request_id_seq"', 213364, true);
-SELECT setval('"augur_data"."repo_badging_badge_collection_id_seq"', 27645, true);
+SELECT setval('"augur_data"."pull_requests_pull_request_id_seq"', 209021, true);
+SELECT setval('"augur_data"."repo_badging_badge_collection_id_seq"', 29237, true);
 ALTER SEQUENCE "augur_data"."repo_group_insights_rgi_id_seq"
 OWNED BY "augur_data"."repo_group_insights"."rgi_id";
 SELECT setval('"augur_data"."repo_group_insights_rgi_id_seq"', 7, false);
@@ -2153,8 +2149,8 @@ OWNED BY "augur_data"."repo_insights"."ri_id";
 SELECT setval('"augur_data"."repo_insights_ri_id_seq"', 540351, true);
 SELECT setval('"augur_data"."repo_labor_repo_labor_id_seq"', 25152, false);
 SELECT setval('"augur_data"."repo_meta_rmeta_id_seq"', 25152, false);
-SELECT setval('"augur_data"."repo_repo_id_seq"', 25236, true);
-SELECT setval('"augur_data"."repo_sbom_scans_rsb_id_seq"', 27134, true);
+SELECT setval('"augur_data"."repo_repo_id_seq"', 25429, true);
+SELECT setval('"augur_data"."repo_sbom_scans_rsb_id_seq"', 27353, true);
 SELECT setval('"augur_data"."repo_stats_rstat_id_seq"', 25152, false);
 ALTER SEQUENCE "augur_data"."repo_test_coverage_repo_id_seq"
 OWNED BY "augur_data"."repo_test_coverage"."repo_id";
@@ -2162,7 +2158,7 @@ SELECT setval('"augur_data"."repo_test_coverage_repo_id_seq"', 3, false);
 SELECT setval('"augur_data"."utility_log_id_seq"', 3, false);
 ALTER SEQUENCE "augur_data"."utility_log_id_seq1"
 OWNED BY "augur_data"."utility_log"."id";
-SELECT setval('"augur_data"."utility_log_id_seq1"', 298756, true);
+SELECT setval('"augur_data"."utility_log_id_seq1"', 289296, true);
 
 -- ----------------------------
 -- Indexes structure for table analysis_log
@@ -2627,7 +2623,7 @@ CREATE UNIQUE INDEX "rgidm" ON "augur_data"."repo_groups" USING btree (
 -- ----------------------------
 -- Primary Key structure for table repo_groups
 -- ----------------------------
-ALTER TABLE "augur_data"."repo_groups" ADD CONSTRAINT "rgid" PRIMARY KEY ("repo_group_id", "tool_source");
+ALTER TABLE "augur_data"."repo_groups" ADD CONSTRAINT "rgid" PRIMARY KEY ("repo_group_id");
 
 -- ----------------------------
 -- Indexes structure for table repo_groups_list_serve
@@ -2918,3 +2914,9 @@ ALTER TABLE "augur_data"."repo_stats" ADD CONSTRAINT "fk_repo_stats_repo_1" FORE
 -- Foreign Keys structure for table repo_test_coverage
 -- ----------------------------
 ALTER TABLE "augur_data"."repo_test_coverage" ADD CONSTRAINT "fk_repo_test_coverage_repo_1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+
+ALTER TABLE "augur_data"."repo" 
+  ALTER COLUMN "repo_status" SET DEFAULT 'New';
+
+  

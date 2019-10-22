@@ -5,13 +5,13 @@ This is the development guide for Augur. See our `Contributing to Augur <https:/
 
 **THIS SECTION IS UNDER CONSTRUCTION.**
 
-If you have questions please contact ccarterlandis@gmail.com or open an issue on GitHub_.
+If you have questions or would like to help please open an issue on GitHub_.
 
 .. _GitHub: https://github.com/chaoss/augur
 
-.. toctree::
-   :maxdepth: 2
-   :numbered:
+.. .. toctree:
+..    :maxdepth: 2
+..    :numbered:
 
 
 .. dev-guide/1-overview
