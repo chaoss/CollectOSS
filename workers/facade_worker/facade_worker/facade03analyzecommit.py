@@ -123,7 +123,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			# add a contributor record for the author
 			cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
 			db_local.commit()
-			cfg.log_activity('Info','Stored author contributor with email: {}'.format(augur_em))
+			cfg.log_activity('Info','Stored author contributor with email: {}'.format(author_em))
 
 		if  contributor_exists(committer_em): 
 			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(committer_em))
