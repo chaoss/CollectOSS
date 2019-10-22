@@ -34,12 +34,12 @@
             </d-button-group>
           </d-col>
           
-          <!-- <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
+          <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
             <div v-d-toggle.my-collapse variant="primary" size="small" class="float-right"
                  @click="isCollpase = !isCollpase">
               </div>
             </div>
-          </d-col> -->
+          </d-col>
          
         </d-row>
         <d-row>
@@ -201,11 +201,13 @@
       ])
     },
     methods: {
+      ...mapMutations('common', [
+        'mutateStartDate', 
+        'mutateEndDate'        
+      ]), 
       ...mapMutations('compare', [
         'setCompare',
         'setVizOptions',
-        'mutateStartDateChange',
-        'mutateEndDateChange',
         'resetCompared',
         'mutateComparedRepo',
         'mutateComparedGroup'
@@ -259,8 +261,8 @@
     comparedRepos!:any;
     comparisionSize!:any;
 
-    mutateStartDateChange!: any;
-    mutateEndDateChange!: any;
+    mutateStartDate!: any;
+    mutateEndDate!: any;
     mutateComparedRepo!:any;
     mutateComparedGroup!:any;
     setCompare!:any;
@@ -379,13 +381,12 @@
       })
     }
 
-    // onStartDate(e: any) {
-    //   console.log(e);
-    //   this.mutateStartDateChange(e)
-    // }
+    onStartDate(e: any) {
+      this.mutateStartDate(e)
+    }
 
     onEndDate(e: any) {
-      this.mutateEndDateChange(e)
+      this.mutateEndDate(e)
     }
 
     onCompare(e: any) {
@@ -443,8 +444,8 @@
       this.setVizOptions(
         initialState
       )
-      this.mutateStartDateChange(initialState.startDate)
-      this.mutateEndDateChange(initialState.endDate)
+      this.mutateStartDate(initialState.startDate)
+      this.mutateEndDate(initialState.endDate)
       this.resetCompared()
 
       if (!this.isGroup) {
