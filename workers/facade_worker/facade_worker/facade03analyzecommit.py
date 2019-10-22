@@ -100,7 +100,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		def contributor_exists(some_email):
 
 			#SQL String to insert values into the contributors table
-			
+			some_email = some_email.replace("'","")
 			email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source FROM contributors WHERE cntrb_email = '{}'""".format(some_email))
 
 			cursor_local.execute(email_check)
@@ -123,7 +123,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 			# add a contributor record for the author
 			cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
 			db_local.commit()
-			cfg.log_activity('Info','Stored author contributor with email: {}'.format(augur_em))
+			cfg.log_activity('Info','Stored author contributor with email: {}'.format(author_em))
 
 		if  contributor_exists(committer_em): 
 			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(committer_em))
