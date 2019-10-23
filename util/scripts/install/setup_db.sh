@@ -177,7 +177,6 @@ do
     $already_installed )
         echo "Please enter the credentials for your database."
         set_remote_db_credentials
-        psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
         break
       ;;
   esac
