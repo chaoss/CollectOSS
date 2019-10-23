@@ -73,16 +73,16 @@ def test_aggregate_summary(metrics):
     assert metrics.aggregate_summary(24,21471,begin_date='2018-1-1 00:00:00',
                                      end_date='2019-12-31 23:59:59').iloc[0]['commit_count'] > 0
 
-def test_license_declared(metrics):
-    assert metrics.license_declared(21).iloc[0]['name']
-    assert metrics.license_declared(21, 21116).iloc[0]['name']
+# def test_license_declared(metrics):
+#     assert metrics.license_declared(21).iloc[0]['name']
+#     assert metrics.license_declared(21, 21116).iloc[0]['name']
 
-def test_license_count(metrics):
-    assert metrics.license_count(21).iloc[0]['number_of_license'] >= 1
-    assert metrics.license_count(21, 21116).iloc[0]['number_of_license'] >= 1
+# def test_license_count(metrics):
+#     assert metrics.license_count(21).iloc[0]['number_of_license'] >= 1
+#     assert metrics.license_count(21, 21116).iloc[0]['number_of_license'] >= 1
 
-def test_license_coverage(metrics):
-    assert metrics.license_coverage(21).iloc[0]['total_files'] >= 1
-    assert metrics.license_coverage(21, 21116).iloc[0]['total_files'] >= 1
+# def test_license_coverage(metrics):
+#     assert metrics.license_coverage(21).iloc[0]['total_files'] >= 1
+#     assert metrics.license_coverage(21, 21116).iloc[0]['total_files'] >= 1
 
 
