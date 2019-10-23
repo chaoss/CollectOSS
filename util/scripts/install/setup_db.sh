@@ -89,12 +89,13 @@ function set_local_db_credentials() {
   read -p "Port: " port
   read -p "Password: " password
 
+  host="localhost"
   get_api_key_and_repo_path
 
   IFS='' read -r -d '' config <<EOF
   {
     "database": "$database",
-    "host": "localhost",
+    "host": "$host",
     "port": "$port",
     "db_user": "$db_user",
     "password": "$password",
@@ -116,6 +117,31 @@ function save_credentials() {
 
 }
 
+function create_db_schema() {
+    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
+    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
+    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
+    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
+    psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
+    psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = \"$facade_repo_path\" WHERE setting='repo_directory';"
+
+    echo "Would you like to load your database with some sample data provided by Augur?"
+    select should_load_db in "Yes" "No"
+    do
+      case $should_load_db in
+        "Yes" )
+          "Loading database with sample dataset."
+          persistence_schema/db_load.sh $host $database $db_user $port
+          break
+          ;;
+        "No" )
+          echo "Database will not be loaded. Resuming installation..."
+          break
+          ;;
+      esac
+    done
+}
+
 echo "If you need to install Postgres, the downloads can be found here: https://www.postgresql.org/download/"
 echo
 install_locally="Would you like create the Augur database, user and schema LOCALLY?"
@@ -129,29 +155,18 @@ do
     $install_locally )
         echo "Please set the credentials for your database."
         set_local_db_credentials
-        psql -c "CREATE DATABASE $database;"
-        psql -c "CREATE USER $db_user WITH ENCRYPTED PASSWORD '$password';"
-        psql -c "ALTER DATABASE $database OWNER TO $db_user;"
-        psql -c "GRANT ALL PRIVILEGES ON DATABASE $database TO $db_user;"
-        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
-        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
-        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
-        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
-        psql -h "localhost" -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
-        psql -h "localhost" -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = \"$facade_repo_path\" WHERE setting='repo_directory';"
+        psql -h $host -d $database -U $db_user -p $port -a -w -c "CREATE DATABASE $database;"
+        psql -h $host -d $database -U $db_user -p $port -a -w -c "CREATE USER $db_user WITH ENCRYPTED PASSWORD '$password';"
+        psql -h $host -d $database -U $db_user -p $port -a -w -c "ALTER DATABASE $database OWNER TO $db_user;"
+        psql -h $host -d $database -U $db_user -p $port -a -w -c "GRANT ALL PRIVILEGES ON DATABASE $database TO $db_user;"
+        create_db_schema
         break
       ;;
     $install_remotely )
         echo "Please set the credentials for your database."
         set_remote_db_credentials
         # https://www.youtube.com/watch?v=rs9wuaVV33I
-        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/1-schema.sql
-        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/2-augur_data.sql
-        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
-        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
-        psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
-        psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = \"$facade_repo_path\" WHERE setting='repo_directory';"
-
+        create_db_schema
         break
       ;;
     $already_installed )
@@ -161,3 +176,6 @@ do
       ;;
   esac
 done
+
+
+
