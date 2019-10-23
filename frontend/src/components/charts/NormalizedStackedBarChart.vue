@@ -2,7 +2,7 @@
 
   
 
-<<<<<<< Updated upstream
+<!-- <<<<<<< Updated upstream -->
   <div class="normalizedStackedDiv1 tickchart">
     <!-- <div :id="source" style="padding: 0"></div> -->
     <vega-lite :spec="spec" :data="values"></vega-lite>

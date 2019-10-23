@@ -18,8 +18,9 @@ import click
 import subprocess
 
 @click.command('run')
+@click.option('--enable-housekeeper/--no-enable-housekeeper', default=True)
 @pass_application
-def cli(app):
+def cli(app, enable_housekeeper):
 
     def get_process_id(name):
         """Return process ids found by name or command
@@ -40,46 +41,34 @@ def cli(app):
     manager = mp.Manager()
     broker = manager.dict()
     
-    logger.info("Booting housekeeper...")
-    jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
-    housekeeper = Housekeeper(
-            jobs,
-            broker,
-            broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
-            broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
-            user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-            password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
-            host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-            port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-            dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
-        )
-
     controller = app.read_config('Workers')
     worker_pids = []
     worker_processes = []
-    if not controller:
-        return
-    for worker in controller.keys():
-        if not controller[worker]['switch']:
-            continue
-        logger.info("Your config has the option set to automatically boot {} instances of the {}".format(controller[worker]['workers'], worker))
-        pids = get_process_id("/bin/sh -c cd workers/{} && {}_start".format(worker, worker))
-        worker_pids += pids
-        if len(pids) > 0:
-            worker_pids.append(pids[0] + 1)
-            pids.append(pids[0] + 1)
-            logger.info("Found and preparing to kill previous {} worker pids: {}".format(worker,pids))
-            for pid in pids:
-                try:
-                    os.kill(pid, 9)
-                except:
-                    logger.info("Worker process {} already killed".format(pid))
 
-        for i in range(controller[worker]['workers']):
-            logger.info("Booting {} #{}".format(worker, i + 1))
-            worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i}, daemon=True)
-            worker_process.start()
-            worker_processes.append(worker_process)
+    if enable_housekeeper:
+        if not controller:
+            return
+        for worker in controller.keys():
+            if not controller[worker]['switch']:
+                continue
+            logger.info("Your config has the option set to automatically boot {} instances of the {}".format(controller[worker]['workers'], worker))
+            pids = get_process_id("/bin/sh -c cd workers/{} && {}_start".format(worker, worker))
+            worker_pids += pids
+            if len(pids) > 0:
+                worker_pids.append(pids[0] + 1)
+                pids.append(pids[0] + 1)
+                logger.info("Found and preparing to kill previous {} worker pids: {}".format(worker,pids))
+                for pid in pids:
+                    try:
+                        os.kill(pid, 9)
+                    except:
+                        logger.info("Worker process {} already killed".format(pid))
+
+            for i in range(controller[worker]['workers']):
+                logger.info("Booting {} #{}".format(worker, i + 1))
+                worker_process = mp.Process(target=worker_start, kwargs={'worker_name': worker, 'instance_number': i}, daemon=True)
+                worker_process.start()
+                worker_processes.append(worker_process)
 
     @atexit.register
     def exit():
@@ -89,7 +78,7 @@ def cli(app):
         except:
             logger.info("Worker process {} already killed".format(pid))
         for process in worker_processes:
-            logger.info("Shutting down worker process with pid: {} ...".format(process))
+            logger.info("Shutting down worker process with pid: {} ...".format(process.pid))
             process.terminate()
 
         if master is not None:
@@ -112,10 +101,27 @@ def cli(app):
             manager._process.terminate()
         
         # Prevent multiprocessing's atexit from conflicting with gunicorn
-        logger.info("killing self pid: {}".format(os.getpid()))
-        logger.info("\nIf you are seeing this you probably need to restart Augur\n")
+        logger.info("Killing main augur process with PID: {}".format(os.getpid()))
         os.kill(os.getpid(), 9)
         os._exit(0)
+
+    if enable_housekeeper:
+        logger.info("Booting housekeeper...")
+        jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
+        try:
+            housekeeper = Housekeeper(
+                    jobs,
+                    broker,
+                    broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
+                    broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
+                    user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
+                    password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
+                    host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+                    port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
+                    dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
+                )
+        except KeyboardInterrupt as e:
+            exit()
 
     host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
     port = app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
