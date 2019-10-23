@@ -178,8 +178,7 @@ def main():
 
     try:
         with open('../../../augur.config.json', 'w') as f:
-            # f.write(json.dumps(config, indent=4))
-            pp.pprint(config)
+            f.write(json.dumps(config, indent=4))
             print('augur.config.json successfully created')
     except Exception as e:
         print("Error writing augur.config.json " + str(e))
