@@ -1,20 +1,19 @@
 matrix:
   include:
-  - name: Python Datasource Unit Tests
-    install: python setup.py install; pip install .
-    language: python
-    python: '3.6'
-    script:
-    - python -m pytest augur/metrics/**/test_**_functions.py
+  # - name: Python Datasource Unit Tests
+  #   install: python setup.py install; pip install .
+  #   language: python
+  #   python: '3.6'
+  #   script:
+  #   - python -m pytest augur/metrics/**/test_**_functions.py
 
   - name: API Unit Tests
     install: python setup.py install; pip install .
     language: python
     python: '3.6'
     script:
-    - augur run > /dev/null 2>&1 &
-    - sleep 210
-    - python -m pytest -ra augur/metrics/**/test_**_routes.py
+    - augur run &
+    - sleep 240
 
 notifications:
   slack:
