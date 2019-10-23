@@ -1,5 +1,5 @@
 <template>
-  <d-container class="compareControlContainer">
+  <d-container style="max-width: 1240px; padding-bottom:1rem">
     <d-card>
       <d-card-header>
         <d-row class="align-items-center">
@@ -37,6 +37,9 @@
           <!-- <d-col cols="12" lg="3" :class="{'offset-md-3':isGroup}">
             <div v-d-toggle.my-collapse variant="primary" size="small" class="float-right"
                  @click="isCollpase = !isCollpase">
+               <div v-if="isCollpase">More configuration options<i class="material-icons" style="font-size: 1.3rem
+">keyboard_arrow_down</i></div>
+               <div v-if="!isCollpase">Less configuration options<i class="material-icons" style="font-size: 1.3rem">keyboard_arrow_up</i>
               </div>
             </div>
           </d-col> -->
@@ -59,7 +62,7 @@
             <d-col cols="5">
               <div>
                 <label class="d-block">
-                  <div class="compareControlDiv3 mb-3">
+                  <div style="font-size: 18px;font-weight:500;" class="mb-3">
                     Line Chart Options
                   </div>
                   <d-row>
@@ -82,7 +85,7 @@
                   </d-row>
                 </label>
                 <label>
-                  <div class="compareControlDiv2 mb-3">Bubble Chart Options</div>
+                  <div style="font-size: 18px;font-weight:500;" class="mb-3">Bubble Chart Options</div>
                   <d-row>
                     <d-col>
                       <d-form-checkbox name="comparebaseline" :checked="showBelowAverage"
@@ -105,7 +108,7 @@
             <d-col cols="7">
               <d-row>
                 <d-col cols="6">
-                  <div class="compareControlDiv2 mb-3">Chart Timeline Configuration</div>
+                  <div style="font-size: 18px;font-weight:500;" class="mb-3">Chart Timeline Configuration</div>
                   <d-row>
                     <d-col>
                       <div>Start Date</div>
@@ -129,7 +132,7 @@
                 </d-col>
                 <d-col cols="5" offset-md="1">
                   <d-row>
-                    <div class="compareControlDiv2 mb-3">Rendering</div>
+                    <div style="font-size: 18px;font-weight:500;" class="mb-3">Rendering</div>
                   </d-row>
                   <d-row>
                     <d-col>
@@ -142,7 +145,7 @@
                   </d-row>
                   <d-row>
                     <d-col>
-                      <div class="compareControlDiv2">Comparison Type</div>
+                      <div style="font-size: 18px;font-weight:500;">Comparison Type</div>
                       <d-form-radio name="comparebaseline" value="zscore" :checked="compare === 'zscore'"
                                     @change="setCompare">Z-score
                       </d-form-radio>
@@ -201,11 +204,13 @@
       ])
     },
     methods: {
+      ...mapMutations('common', [
+        'mutateStartDate', 
+        'mutateEndDate'        
+      ]), 
       ...mapMutations('compare', [
         'setCompare',
         'setVizOptions',
-        'mutateStartDateChange',
-        'mutateEndDateChange',
         'resetCompared',
         'mutateComparedRepo',
         'mutateComparedGroup'
@@ -259,8 +264,8 @@
     comparedRepos!:any;
     comparisionSize!:any;
 
-    mutateStartDateChange!: any;
-    mutateEndDateChange!: any;
+    mutateStartDate!: any;
+    mutateEndDate!: any;
     mutateComparedRepo!:any;
     mutateComparedGroup!:any;
     setCompare!:any;
@@ -379,13 +384,12 @@
       })
     }
 
-    // onStartDate(e: any) {
-    //   console.log(e);
-    //   this.mutateStartDateChange(e)
-    // }
+    onStartDate(e: any) {
+      this.mutateStartDate(e)
+    }
 
     onEndDate(e: any) {
-      this.mutateEndDateChange(e)
+      this.mutateEndDate(e)
     }
 
     onCompare(e: any) {
@@ -443,8 +447,8 @@
       this.setVizOptions(
         initialState
       )
-      this.mutateStartDateChange(initialState.startDate)
-      this.mutateEndDateChange(initialState.endDate)
+      this.mutateStartDate(initialState.startDate)
+      this.mutateEndDate(initialState.endDate)
       this.resetCompared()
 
       if (!this.isGroup) {

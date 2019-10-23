@@ -50,6 +50,8 @@ class MetricStatusWorker:
         self._queue = Queue()
         self._maintain_queue = Queue()
         self.config = config
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
+        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self.db = None
         self.table = None
         self.API_KEY = self.config['key']
