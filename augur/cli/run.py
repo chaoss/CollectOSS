@@ -40,20 +40,6 @@ def cli(app):
     manager = mp.Manager()
     broker = manager.dict()
     
-    logger.info("Booting housekeeper...")
-    jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
-    housekeeper = Housekeeper(
-            jobs,
-            broker,
-            broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
-            broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
-            user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
-            password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
-            host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
-            port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
-            dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
-        )
-
     controller = app.read_config('Workers')
     worker_pids = []
     worker_processes = []
@@ -89,7 +75,7 @@ def cli(app):
         except:
             logger.info("Worker process {} already killed".format(pid))
         for process in worker_processes:
-            logger.info("Shutting down worker process with pid: {} ...".format(process))
+            logger.info("Shutting down worker process with pid: {} ...".format(process.pid))
             process.terminate()
 
         if master is not None:
@@ -112,10 +98,26 @@ def cli(app):
             manager._process.terminate()
         
         # Prevent multiprocessing's atexit from conflicting with gunicorn
-        logger.info("killing self pid: {}".format(os.getpid()))
-        logger.info("\nIf you are seeing this you probably need to restart Augur\n")
+        logger.info("Killing main augur process with PID: {}".format(os.getpid()))
         os.kill(os.getpid(), 9)
         os._exit(0)
+
+    logger.info("Booting housekeeper...")
+    jobs = app.read_config('Housekeeper', 'jobs', 'AUGUR_JOBS', [])
+    try:
+        housekeeper = Housekeeper(
+                jobs,
+                broker,
+                broker_host=app.read_config('Server', 'host', 'AUGUR_HOST', 'localhost'),
+                broker_port=app.read_config('Server', 'port', 'AUGUR_PORT', '5000'),
+                user=app.read_config('Database', 'user', 'AUGUR_DB_USER', 'root'),
+                password=app.read_config('Database', 'password', 'AUGUR_DB_PASS', 'password'),
+                host=app.read_config('Database', 'host', 'AUGUR_DB_HOST', '127.0.0.1'),
+                port=app.read_config('Database', 'port', 'AUGUR_DB_PORT', '3306'),
+                dbname=app.read_config('Database', 'database', 'AUGUR_DB_NAME', 'msr14')
+            )
+    except KeyboardInterrupt as e:
+        exit()
 
     host = app.read_config('Server', 'host', 'AUGUR_HOST', '0.0.0.0')
     port = app.read_config('Server', 'port', 'AUGUR_PORT', '5000')
