@@ -70,7 +70,7 @@ function set_remote_db_credentials() {
     {
       "database": "$database",
       "host": "$host",
-      "port": "$port",
+      "port": $port,
       "db_user": "$db_user",
       "password": "$password",
       "key": "$github_api_key",
@@ -96,7 +96,7 @@ function set_local_db_credentials() {
   {
     "database": "$database",
     "host": "$host",
-    "port": "$port",
+    "port": $port,
     "db_user": "$db_user",
     "password": "$password",
     "key": "$github_api_key",
@@ -123,7 +123,7 @@ function create_db_schema() {
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/3-augur_operations.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/4-spdx.sql
     psql -h $host -d $database -U $db_user -p $port -a -w -f persistence_schema/5-seed-data.sql
-    psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = \"$facade_repo_path\" WHERE setting='repo_directory';"
+    psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
 
     echo "Would you like to load your database with some sample data provided by Augur?"
     select should_load_db in "Yes" "No"
@@ -172,6 +172,7 @@ do
     $already_installed )
         echo "Please enter the credentials for your database."
         set_remote_db_credentials
+        psql -h $host -d $database -U $db_user -p $port -a -w -c "UPDATE augur_data.settings SET VALUE = '$facade_repo_path' WHERE setting='repo_directory';"
         break
       ;;
   esac
