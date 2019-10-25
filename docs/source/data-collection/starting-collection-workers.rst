@@ -8,7 +8,7 @@ Starting Data Collection Workers
 Workers in Software
 --------------------
 .. image:: workers-dir.png
-  :width: 600
+  :width: 300
   :alt: Augur Workers 
 
 .. note:: 
