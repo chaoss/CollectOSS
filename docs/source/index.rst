@@ -15,6 +15,7 @@ Augur is a software suite that provides open source health and sustainability me
    development-guide/development-guide-toc
    architecture/architecture-toc
    library-documentation/library-documentation-toc
+   data-collection/data-collection-toc
 
 .. TODO: add me back later
 .. docker-install

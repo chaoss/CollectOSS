@@ -32,17 +32,16 @@ Frontend:
    cd augur/
 
 1. Create a virtual environment in your home environment. Be sure to use
-   the correct ``python`` command for your installation of Python 3.6+.
+   the correct ``python`` command for your installation of Python 3.6+ - on most systems, this is ``python3``,
+   but yours may differ.
 
 .. code:: bash
 
     # to create the environment
-    python -m venv $HOME/.virtualenvs/augur_env
+    python3 -m venv $HOME/.virtualenvs/augur_env
 
     # to activate it in bash
     source $HOME/.virtualenvs/augur_env/bin/activate
-
-Note: please do not install it in the Augur directory itself, as if you do so it will get checked our repository.
 
 2. Begin the installation process.
 
@@ -50,13 +49,12 @@ Note: please do not install it in the Augur directory itself, as if you do so it
 
    make install
 
-This procces will: - install augur’s backend and its dependencies -
-install data collection workers and their dependencies (you will be able
-to select which workers you would like: we recommend all of them) -
-optionally install augur’s frontend and its dependencies - generate
-documentation - prompt the user for **connection credentials for a
-Postgres 11 installation**
+This process will:
 
-After Augur is installed, given that you provided a correct set of
-credentials you should have a functioning version of Augur.
+- install Augur’s backend and its dependencies 
+- install the included data collection workers and their dependencies
+- generate documentation files
+- set up the configuration file
+- optionally, install Augur’s frontend and its dependencies 
 
+Now that you've got everything installed, it's time to test it out!

@@ -5,13 +5,10 @@ import pandas as pd
 import sqlalchemy as s
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData, and_
-import statistics
-import logging
-import json, time
+import statistics, logging, os, json, time
 import numpy as np
 import scipy.stats
 import datetime
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
 
 def dump_queue(queue):
     """
@@ -32,10 +29,12 @@ class InsightWorker:
     config: holds info like api keys, descriptions, and database connection strings
     """
     def __init__(self, config, task=None):
+        self.config = config
+        logging.basicConfig(filename='worker_{}.log'.format(self.config['id'].split('.')[len(self.config['id'].split('.')) - 1]), filemode='w', level=logging.INFO)
+        logging.info('Worker (PID: {}) initializing...'.format(str(os.getpid())))
         self._task = task
         self._child = None
         self._queue = Queue()
-        self.config = config
         self.db = None
         self.tool_source = 'Insight Worker'
         self.tool_version = '0.0.2' # See __init__.py
@@ -47,7 +46,7 @@ class InsightWorker:
         logging.info("Worker initializing...")
         
         specs = {
-            "id": "com.augurlabs.core.insight_worker",
+            "id": self.config['id'],
             "location": self.config['location'],
             "qualifications":  [
                 {
@@ -434,8 +433,9 @@ class InsightWorker:
 
     def send_insight(self, insight, units_from_mean):
         try:
-            begin_date = datetime.datetime.now() - datetime.timedelta(days=7)
+            begin_date = datetime.datetime.now() - datetime.timedelta(days=30)
             dict_date = datetime.datetime.strptime(insight['ri_date'], '%Y-%m-%dT%H:%M:%S.%fZ')#2018-08-20T00:00:00.000Z
+            logging.info("about to send to jonah")
             if dict_date > begin_date and self.send_insights:
                 logging.info("Insight less than 7 days ago date found: {}\n\nSending to Jonah...".format(insight))
                 to_send = {
@@ -448,7 +448,7 @@ class InsightWorker:
                     'units_from_mean': units_from_mean,
                     'detection_method': insight['ri_detection_method']
                 }
-                requests.post('https://7oksmwzsy7.execute-api.us-east-2.amazonaws.com/dev-1/insight-event', json=to_send)
+                requests.post('https://fgrmv7bswc.execute-api.us-east-2.amazonaws.com/dev/insight-event', json=to_send)
         except Exception as e:
             logging.info("sending insight to jonah failed: {}".format(e))
 

@@ -21,10 +21,7 @@
             <input id="rectradio"name="comparebaseline" value="2" type="radio" v-model="tick">
             <label id="front" for="rectradio">Rectangle</label>
           </div>
-
-        
       </div>
-      
     </div>
   </div>
 </template>

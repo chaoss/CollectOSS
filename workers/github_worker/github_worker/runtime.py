@@ -1,8 +1,6 @@
 from flask import Flask, jsonify, request, Response
 import click, os, json, requests, logging
 from github_worker.worker import GitHubWorker
-logging.basicConfig(filename='worker.log', filemode='w', level=logging.INFO)
-
 
 def create_server(app, gw):
     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
@@ -59,15 +57,16 @@ def main(augur_url, host, port):
 
     worker_port = worker_info['port'] if 'port' in worker_info else port
 
-    # while True:
-    #     try:
-    #         print("trying")
-    #         r = requests.get("http://localhost:{}".format(worker_port) + '/AUGWOP/task', timeout=5)
-    #         print(r.json)
-    #         if r.status == 200:
-    #             worker_port += 1
-    #     except:
-    #         break
+    while True:
+        try:
+            r = requests.get("http://{}:{}/AUGWOP/heartbeat".format(server['host'],worker_port)).json()
+            if 'status' in r:
+                if r['status'] == 'alive':
+                    worker_port += 1
+        except:
+            break
+
+    logging.basicConfig(filename='worker_{}.log'.format(worker_port), filemode='w', level=logging.INFO)
 
     config = { 
             "id": "com.augurlabs.core.github_worker.{}".format(worker_port),

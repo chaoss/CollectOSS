@@ -10,12 +10,12 @@
             <div class="col col-9">
               <div class="row">
                 <div class="col col-3" align="center" id="comparetext"><h6>Compare from your repos:</h6></div>
-                <div style="text-align:center !important" class="row col col-4" v-click-outside="stopSelecting">
-                  <div class="col col-6" style="display:inline !important" @click="keepSelecting">
+                <div class="mainControlsDiv1 row col col-4" v-click-outside="stopSelecting">
+                  <div class="col col-6 mainControlsDiv2" @click="keepSelecting">
 
                     <multiselect class="search reposearch special" v-model="project" :options="projects" :placeholder="project"></multiselect>
                   </div>
-                  <div class="col col-6" style="display:inline !important" @click="keepSelecting">
+                  <div class="col col-6 mainControlsDiv2"  @click="keepSelecting">
                     <multiselect 
                       v-model="values" 
                       :options="options"
@@ -28,8 +28,8 @@
                   </div>
                 </div>
                 
-                <div class="col col-1"><input type="button" @click="onArrayCompare(); onValuesClear()" value="Apply" style="max-width:69.9px"></div>
-                <div class="col col-1"><input type="button" @click="onClear()" value="Reset" style="max-width:69.9px"></div>
+                <div class="col col-1"><input type="button" @click="onArrayCompare(); onValuesClear()" value="Apply" class="mainControlsDiv3"></div>
+                <div class="col col-1"><input type="button" @click="onClear()" value="Reset" class="mainControlsDiv3"></div>
                 <div class="col col-3">
                   <input type="text" class="search reposearch" placeholder="Search other GitHub URL" @change="onCompare"/>
                   <p></p>

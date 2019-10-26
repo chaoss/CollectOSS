@@ -79,13 +79,6 @@ export default {
         }
       },
 
-    mutateStartDateChange(state:any, payload:Date) {
-        state.startDate = payload
-    },
-    mutateEndDateChange(state:any, payload:Date) {
-        state.endDate = payload
-    }
-
 
     // addComparedRepo(state: any, payload: any) {
     //     state.compare = 'zscore'

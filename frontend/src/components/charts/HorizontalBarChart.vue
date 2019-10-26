@@ -1,7 +1,7 @@
 <template>
   <div>
     <div :id="source"></div>
-    <div style="position: relative; top: -0px !important; transform: translateY(-0.45rem)"class="form-item form-checkboxes tickradios">
+    <div class="horizontalBarChartDiv form-item form-checkboxes tickradios">
         <div class="inputGroup ">
           <input id="totalradio" name="lines" value="1" type="radio" v-model="type">
           <label id="front" for="totalradio">Total</label>
