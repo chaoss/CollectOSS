@@ -1,4 +1,28 @@
 ## Readme File for Value Worker Creation
+
+### Installing the value worker: 
+
+#### Housekeeper Block for `augur.config.json`
+
+```json
+      {
+    "delay": 100000,
+    "given": ["git_url"],
+    "model": "value",
+    "repo_group_id": 0
+      }
+```
+
+#### Worker Block for `augur.config.json`
+```json
+        "value_worker": {
+            "port": 58611,
+            "scc_bin": "scc",
+            "switch": 0,
+            "workers": 1
+        }
+```
+
 1. This is how I ran SCC against facade repositories on a server: 
 `/root/go/bin/scc /home/sean/facade/git-repos/15/github.com/microprofile/wpsite/ . >> https:--github.com-microprofile-wpsite.git.csv`
 2. We want to wrap this in Python: https://github.com/boyter/scc as an Augur worker/plugin. 
