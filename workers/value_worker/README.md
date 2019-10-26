@@ -20,7 +20,7 @@
 ```json
         "value_worker": {
             "port": 58611,
-            "scc_bin": "scc",
+            "scc_bin": "/home/sean/go/bin/scc",
             "switch": 0,
             "workers": 1
         }
