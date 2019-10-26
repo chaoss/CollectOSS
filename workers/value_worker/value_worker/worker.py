@@ -196,7 +196,11 @@ class ValueWorker:
                 self.config['broker_host'],self.config['broker_port'])).json()
 
         for repo in repos:
-            self.generate_value_data(repo['repo_id'], repo['path'])
+            try:
+                self.generate_value_data(repo['repo_id'], repo['path'])
+            except Exception as e:
+                logger.error(f'Error occured for Repo: {repo}')
+                logger.exception(e)
 
         self.register_task_completion('value')
 
