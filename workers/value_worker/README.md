@@ -1,6 +1,9 @@
 ## Readme File for Value Worker Creation
 
 ### Installing the value worker: 
+1. Install the go language following operating system specific instructions at : https://golang.org/doc/install 
+2. Install scc with `go get -u github.com/boyter/scc/`
+3. set the `scc_bin` value in the value_worker block of `augur.config.json` to the location of the scc excecutable installed above. For example, `/home/sean/go/bin/scc`
 
 #### Housekeeper Block for `augur.config.json`
 
