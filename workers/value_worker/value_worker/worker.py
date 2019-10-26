@@ -197,6 +197,7 @@ class ValueWorker:
 
         for repo in repos:
             try:
+                logger.info(f'Adding Repo Labor Data for Repo: {repo}')
                 self.generate_value_data(repo['repo_id'], repo['path'])
             except Exception as e:
                 logger.error(f'Error occured for Repo: {repo}')
