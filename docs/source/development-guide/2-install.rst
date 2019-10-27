@@ -89,7 +89,7 @@ A Note about Anaconda
 ---------------------
 In the past, we've had new developers struggle with getting Anaconda to work, especially on Ubuntu.
 Despite these troubles, the development team feels that continuing to support Anaconda is ultimately worthwhile,
-as no longer doing so means mainting detailed builds for each package manager, which we'd rather not do.
+as no longer doing so means maintaining detailed builds for each package manager, which we'd rather not do.
 However, we still want people to work on Augur, and so here are a few tips and tricks to making sure Anaconda
 works for you.
 
