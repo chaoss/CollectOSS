@@ -4,8 +4,6 @@ Starting Data Collection Workers
 Workers are continuous collection processes that populate parts of Augur's data model. Each worker follows a consistent design that includes: 
 
 1. Having the housekeeper notify the broker of what work needs to be done (1), the worker notifying the housekeeper that its ready to work when it starts (2), the broker passing work to the worker (3), and the worker letting the broker know when its finished (4). 
-   
-.. _workers-dir:
 
 .. image:: workflow.png
   :alt: Housekeeper, Broker & Worker
@@ -17,7 +15,7 @@ Workers are continuous collection processes that populate parts of Augur's data 
     - delay: How long to pause between collection cycles, expressed in seconds
     - repo_group_id: You can specify an array of repo_group_ids, or "0", which will collect all data for all repo_group_id's. 
 		   
-.. code:: json 
+.. code-block:: json 
     :linenos: 
 
     "Housekeeper": {
@@ -68,9 +66,9 @@ Workers are continuous collection processes that populate parts of Augur's data 
 
 .. _workers-dir:
 
---------------------
+-------------------------------------------
 Locating the Workers: Augur's Oompa Loompas 
---------------------
+-------------------------------------------
 .. image:: workers-dir.png
   :alt: Augur Workers 
 
